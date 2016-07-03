@@ -17,7 +17,7 @@ public class ShadowUndefined extends ShadowValue {
 	}
 
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException {
+	public ShadowValue cast(Type type) throws ShadowException {
 		return new ShadowUndefined(type);
 	}
 

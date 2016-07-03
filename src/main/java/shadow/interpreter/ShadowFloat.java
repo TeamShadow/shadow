@@ -32,7 +32,7 @@ public class ShadowFloat extends ShadowNumber
 	}
 
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
 		BigInteger integer = BigInteger.valueOf(Math.round((double)value));
 
@@ -53,9 +53,11 @@ public class ShadowFloat extends ShadowNumber
 		if (type.equals(Type.ULONG))
 			return new ShadowInteger(integer, 8, false);
 		if (type.equals(Type.FLOAT))
-			return new ShadowFloat(getValue());
+			return this;
 		if (type.equals(Type.DOUBLE))
 			return new ShadowDouble(getValue());
+		if( type.equals(Type.CODE) )
+			return new ShadowCode( integer.intValue() );
 
 		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}

@@ -26,7 +26,7 @@ public class ShadowCode extends ShadowValue
 	}
 
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
 		if (type.equals(Type.BYTE))
 			return new ShadowInteger(BigInteger.valueOf(getValue()), 1, true);
@@ -44,6 +44,10 @@ public class ShadowCode extends ShadowValue
 			return new ShadowInteger(BigInteger.valueOf(getValue()), 4, false);
 		if (type.equals(Type.ULONG))
 			return new ShadowInteger(BigInteger.valueOf(getValue()), 8, false);
+		if (type.equals(Type.FLOAT))
+			return new ShadowFloat(getValue());
+		if (type.equals(Type.DOUBLE))
+			return new ShadowDouble(getValue());
 		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
 	@Override

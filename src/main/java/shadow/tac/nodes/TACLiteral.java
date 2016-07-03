@@ -20,6 +20,13 @@ public class TACLiteral extends TACOperand
 	{
 		return value;
 	}
+	
+	@Override 
+	public ShadowValue getData() 
+	{
+		return value;
+	}
+	
 	@Override
 	public Modifiers getModifiers()
 	{

@@ -1,5 +1,9 @@
 package shadow.tac.nodes;
 
+import java.util.Set;
+
+import shadow.interpreter.ShadowInterpreter;
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.MethodSignature;
@@ -14,7 +18,7 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  */
 
-public class TACUnary extends TACOperand
+public class TACUnary extends TACUpdate
 {
 	//private UnaryOperation operation;
 	private TACOperand operand;
@@ -82,5 +86,43 @@ public class TACUnary extends TACOperand
 	public String toString()
 	{
 		return "" + operation + operand;
+	}
+
+	@Override
+	public TACOperand getValue()
+	{
+		if( getUpdatedValue() == null )
+			return this;
+		else
+			return getUpdatedValue();
+	}
+
+	@Override
+	public boolean update(Set<TACUpdate> currentlyUpdating) {
+		if( currentlyUpdating.contains(this) )
+			return false;
+		
+		currentlyUpdating.add(this);
+		boolean changed = false;		
+		
+		if( operand instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) operand;
+			if( update.update(currentlyUpdating) )
+				changed = true;			
+			operand = update.getValue();
+		}
+		
+		if( (changed || getUpdatedValue() == null) && operand instanceof TACLiteral ) {
+			try {
+				ShadowValue result = ShadowInterpreter.evaluate(this);
+				setUpdatedValue(new TACLiteral(this, result));
+				changed = true;
+			}
+			catch(ShadowException e)
+			{} //do nothing, failed to evaluate
+		}
+		
+		currentlyUpdating.remove(this);
+		return changed;	
 	}
 }

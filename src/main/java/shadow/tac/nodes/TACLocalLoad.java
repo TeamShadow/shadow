@@ -9,7 +9,7 @@ import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACLocalLoad extends TACOperand implements TACUpdate {
+public class TACLocalLoad extends TACUpdate {
 
 	private final TACVariable variable;
 	private TACOperand previousStore;

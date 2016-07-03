@@ -155,16 +155,27 @@ public class TACModule {
 			//don't bother with unimplemented methods
 			if( !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() ) {			
 				ControlFlowGraph graph = new ControlFlowGraph(method);
-				graph.removeUnreachableCode();
+				
+				//do first pass always
+				boolean changed = graph.removeUnreachableCode();
 				graph.removeRedundantErrors(); //some unreachable code errors are redundant
-			
+				
 				if( !signature.isVoid() && !graph.returns() )
 					graph.addError(signature.getNode(), Error.NOT_ALL_PATHS_RETURN, "Value-returning method " + signature.getSymbol() + signature.getMethodType() + " may not return on all paths");
-				
+
 				graph.addPhiNodes();
-				graph.propagateConstants();				
+				if( graph.propagateConstants() )
+					changed = true;
 				
 				reporter.addAll(graph); //adds errors (if any) to main reporter
+				
+				//now keep cycling if there is more unreachable code or 
+				//more constants propagated
+				while( changed ) {	
+					changed = graph.removeUnreachableCode();					
+					if( changed )
+						changed = graph.propagateConstants();
+				}				
 				
 				graphs.add(graph);
 			}

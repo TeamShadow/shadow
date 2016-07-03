@@ -47,7 +47,6 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACNodeRef;
-import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
@@ -874,7 +873,7 @@ public class TACBuilder implements ShadowParserVisitor {
 						value = new TACSame(tree, value, other);
 				}
 				if (c == '!' || c == 'n')
-					value = new TACNot(tree, value);
+					value = new TACUnary(tree, "!", value);
 			}
 		}
 		return POST_CHILDREN;

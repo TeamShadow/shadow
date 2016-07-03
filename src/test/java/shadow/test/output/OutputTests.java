@@ -1123,4 +1123,14 @@ public class OutputTests {
 				"Ceiling (5): 9\n" + 
 				"Elements (10-100): [16, 25, 36, 49, 64, 81, 100]\n");		
 	}
+	
+	@Test public void testConstantPropagation() throws Exception {
+		args.add("shadow/test/ConstantPropagation.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"13\n" + 
+				"130\n" + 
+				"false\n" + 
+				"countrytime\n");	
+	}
 }

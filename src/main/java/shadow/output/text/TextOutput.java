@@ -30,7 +30,6 @@ import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhiRef;
@@ -325,15 +324,6 @@ public class TextOutput extends AbstractOutput
 			sb = builder;
 			node.accept(this);
 			return builder;
-		}
-
-		@Override
-		public void visit(TACNot node) throws ShadowException
-		{
-			sb.append('!');
-			parentheses = true;
-			visit(sb, node.getOperand());
-			parentheses = false;
 		}
 
 		@Override

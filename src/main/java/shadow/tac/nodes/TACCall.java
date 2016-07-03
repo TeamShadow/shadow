@@ -5,7 +5,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
@@ -13,7 +16,7 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
-public class TACCall extends TACOperand
+public class TACCall extends TACUpdate
 {	
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
@@ -103,5 +106,51 @@ public class TACCall extends TACOperand
 		if (getNumParameters() != 0)
 			sb.delete(sb.length() - 2, sb.length());
 		return sb.append(')').toString();
+	}
+	
+	@Override
+	public boolean update(Set<TACUpdate> currentlyUpdating) {
+		if( currentlyUpdating.contains(this) )
+			return false;
+		
+		currentlyUpdating.add(this);
+		boolean changed = false;		
+		boolean allLiterals = true;
+		
+		for( int i = 0; i < parameters.size(); ++i ) {
+			if( parameters.get(i) instanceof TACUpdate ) {
+				TACUpdate update = (TACUpdate) parameters.get(i);
+				if( update.update(currentlyUpdating) )
+					changed = true;
+				parameters.set(i, update.getValue());				
+			}
+			
+			if( !(parameters.get(0) instanceof TACLiteral) )
+				allLiterals = false;
+		}
+				
+		//right now, the only calls we're doing are on String objects 
+		if( (changed || getUpdatedValue() == null) && allLiterals && methodRef.getSignature().getOuter().equals(Type.STRING) && ShadowString.isSupportedMethod(methodRef.getSignature())  ) {
+			try {
+				TACLiteral string = (TACLiteral)parameters.get(0);				
+				ShadowValue result = ((ShadowString)string.getValue()).callMethod(this);
+				setUpdatedValue(new TACLiteral(this, result));
+				changed = true;
+			}
+			catch(ShadowException e)
+			{} //do nothing, failed to evaluate
+		}
+		
+		currentlyUpdating.remove(this);
+		return changed;	
+	}
+	
+	@Override
+	public TACOperand getValue()
+	{
+		if( getUpdatedValue() == null )
+			return this;
+		else
+			return getUpdatedValue();
 	}
 }

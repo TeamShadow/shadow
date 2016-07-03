@@ -73,7 +73,7 @@ public class ShadowArray extends ShadowValue
 		return copy;
 	}
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
 		return this;
 	}

@@ -28,8 +28,10 @@ public class ShadowBoolean extends ShadowValue
 	}
 
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
+		if (type.equals(Type.BOOLEAN))
+			return this;
 		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
 	@Override

@@ -50,8 +50,11 @@ public class ShadowObject extends ShadowValue
 		return copy;
 	}
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
-		return this;
+		if( type instanceof ClassType )
+			return new ShadowObject((ClassType)type);
+		
+		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
 }

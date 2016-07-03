@@ -53,7 +53,6 @@ import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
-import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStorage;
@@ -62,7 +61,6 @@ import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACNot;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
@@ -876,11 +874,6 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	@Override
-	public void visit(TACLiteral node) throws ShadowException {
-		node.setData(literal(node.getValue()));
-	}
-
-	@Override
 	public void visit(TACClass node) throws ShadowException {		
 		node.setData(node.getClassData().getData());
 	}
@@ -1025,129 +1018,136 @@ public class LLVMOutput extends AbstractOutput {
 	
 	@Override
 	public void visit(TACCast node) throws ShadowException { 
-		TACOperand source = node.getOperand(0);		
-		Type destType = node.getType();
-		Type srcType = source.getType();
-		String back1, back2;		
-		String srcTypeName;
-		String destTypeName;
-		
-		switch(node.getKind()) {		
-		case ARRAY_TO_OBJECT:
-			writeArrayToObject(node, (ArrayType)srcType, source, (TACClass)node.getOperand(1));
-			break;
-		case INTERFACE_TO_OBJECT:
-			writer.write(nextTemp(node) + " = extractvalue " +
-					typeSymbol(source) + ", 1");			
-			break;
-		case ITEM_TO_SEQUENCE:
-			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
-					" undef, " + typeSymbol(node.getOperand(1)) + ", 0");	
-			break;
-		case NULL_TO_ARRAY:
-			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
-					" zeroinitializer, " + type(((ArrayType)node.getType()).getBaseType()) + "* null, 0");
-			break;		
-		case NULL_TO_INTERFACE:
-			writer.write(nextTemp(node) + " = insertvalue " + type(node) +
-					" zeroinitializer, " + type(Type.OBJECT) + "* null, 1");
-			break;
-		case OBJECT_TO_ARRAY:
-			writeObjectToArray(node, (ArrayType)destType, source);
-			break;
-		case OBJECT_TO_INTERFACE:
-			//operand 1 is the interface method table
-			writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getOperand(1)) +
-					" to " + methodTableType(destType) + '*');
-			writer.write(nextTemp() + " = insertvalue " + type(destType) +
-					" undef, " + methodTableType(destType) + "* " + temp(1) +
-					", 0");
-			writer.write(nextTemp() + " = bitcast " +
-					typeSymbol(source) + " to " + type(Type.OBJECT));			
-			back1 = temp(0);
-			back2 = temp(1);
-			writer.write(nextTemp(node) + " = insertvalue " + typeText(destType,
-					back2) + ", " + typeText(Type.OBJECT, back1) + ", 1");
-			break;			
-		case OBJECT_TO_OBJECT:
-			srcTypeName = type(srcType, true); // nullable takes care of primitives in object form
-			destTypeName = type(destType, true);
-			writer.write(nextTemp(node) + " = bitcast " +
+		TACOperand value = node.getUpdatedValue(); 
+		//no precomputation done
+		if( value == null ) {
+			TACOperand source = node.getOperand(0);		
+			Type destType = node.getType();
+			Type srcType = source.getType();
+			String back1, back2;		
+			String srcTypeName;
+			String destTypeName;
+			
+			switch(node.getKind()) {		
+			case ARRAY_TO_OBJECT:
+				writeArrayToObject(node, (ArrayType)srcType, source, (TACClass)node.getOperand(1));
+				break;
+			case INTERFACE_TO_OBJECT:
+				writer.write(nextTemp(node) + " = extractvalue " +
+						typeSymbol(source) + ", 1");			
+				break;
+			case ITEM_TO_SEQUENCE:
+				writer.write(nextTemp(node) + " = insertvalue " + type(node) +
+						" undef, " + typeSymbol(node.getOperand(1)) + ", 0");	
+				break;
+			case NULL_TO_ARRAY:
+				writer.write(nextTemp(node) + " = insertvalue " + type(node) +
+						" zeroinitializer, " + type(((ArrayType)node.getType()).getBaseType()) + "* null, 0");
+				break;		
+			case NULL_TO_INTERFACE:
+				writer.write(nextTemp(node) + " = insertvalue " + type(node) +
+						" zeroinitializer, " + type(Type.OBJECT) + "* null, 1");
+				break;
+			case OBJECT_TO_ARRAY:
+				writeObjectToArray(node, (ArrayType)destType, source);
+				break;
+			case OBJECT_TO_INTERFACE:
+				//operand 1 is the interface method table
+				writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getOperand(1)) +
+						" to " + methodTableType(destType) + '*');
+				writer.write(nextTemp() + " = insertvalue " + type(destType) +
+						" undef, " + methodTableType(destType) + "* " + temp(1) +
+						", 0");
+				writer.write(nextTemp() + " = bitcast " +
+						typeSymbol(source) + " to " + type(Type.OBJECT));			
+				back1 = temp(0);
+				back2 = temp(1);
+				writer.write(nextTemp(node) + " = insertvalue " + typeText(destType,
+						back2) + ", " + typeText(Type.OBJECT, back1) + ", 1");
+				break;			
+			case OBJECT_TO_OBJECT:
+				srcTypeName = type(srcType, true); // nullable takes care of primitives in object form
+				destTypeName = type(destType, true);
+				writer.write(nextTemp(node) + " = bitcast " +
+						srcTypeName + ' ' + symbol(source) + " to " + destTypeName);
+				break;			
+			case OBJECT_TO_PRIMITIVE:
+				writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to %" + raw(destType) +  "*");
+				writer.write(nextTemp() + " = getelementptr inbounds %" +
+						raw(destType) + ", %" + 
+						raw(destType) + "* " + temp(1) + ", i32 0, i32 2");
+				back1 = temp(0);
+				writer.write(nextTemp(node) + " = load " +  type(destType) + ", " + typeText(destType, back1, true));			
+				break;
+			case PRIMITIVE_TO_OBJECT:
+				writer.write(nextTemp() + " = call noalias " +	type(Type.OBJECT) + " @" +
+						raw(Type.CLASS, "_Mallocate") + '(' + type(Type.CLASS) + ' ' +
+						classOf(srcType) + ", " + methodTableType(Type.OBJECT) + "* bitcast(" +
+						methodTableType(srcType) + "* " + methodTable(srcType) + " to " +
+						methodTableType(Type.OBJECT) + "*)" + ")");			
+				back1 = temp(0);
+				String result = nextTemp(node); 
+				writer.write(result + " = bitcast " + typeText(Type.OBJECT,
+						back1) + " to %" + raw(srcType) + "*");
+				writer.write(nextTemp() + " = getelementptr inbounds %" +
+						raw(srcType) + ", %" + raw(srcType) + "* " + result + ", i32 0, i32 2");
+				writer.write("store " + typeSymbol(source) + ", " +
+						typeText(srcType, temp(0), true));
+				break;
+			case PRIMITIVE_TO_PRIMITIVE:	
+				String instruction;
+				int srcWidth = Type.getWidth(source), destWidth = Type.getWidth(node);
+				srcTypeName = type(srcType);
+				destTypeName = type(destType);
+				if( srcType.isFloating() ) {
+					if( destType.isFloating() )
+						instruction = srcWidth > destWidth ? "fptrunc" : (srcWidth < destWidth ? "fpext" : "bitcast");
+					else if( destType.isSigned() )
+						instruction = "fptosi";
+					else
+						instruction = "fptoui";
+				}
+				else if( srcType.isSigned() ) {
+					if( destType.isFloating() )
+						instruction = "sitofp";
+					else if( destType.isSigned() )
+						instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "sext" : "bitcast");
+					else
+						instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+				}
+				else {//  srcType.isUnsigned() must be true
+					if( destType.isFloating() )
+						instruction = "uitofp";
+					else
+						instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+				}		
+				writer.write(nextTemp(node) + " = " + instruction + ' ' +
 					srcTypeName + ' ' + symbol(source) + " to " + destTypeName);
-			break;			
-		case OBJECT_TO_PRIMITIVE:
-			writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to %" + raw(destType) +  "*");
-			writer.write(nextTemp() + " = getelementptr inbounds %" +
-					raw(destType) + ", %" + 
-					raw(destType) + "* " + temp(1) + ", i32 0, i32 2");
-			back1 = temp(0);
-			writer.write(nextTemp(node) + " = load " +  type(destType) + ", " + typeText(destType, back1, true));			
-			break;
-		case PRIMITIVE_TO_OBJECT:
-			writer.write(nextTemp() + " = call noalias " +	type(Type.OBJECT) + " @" +
-					raw(Type.CLASS, "_Mallocate") + '(' + type(Type.CLASS) + ' ' +
-					classOf(srcType) + ", " + methodTableType(Type.OBJECT) + "* bitcast(" +
-					methodTableType(srcType) + "* " + methodTable(srcType) + " to " +
-					methodTableType(Type.OBJECT) + "*)" + ")");			
-			back1 = temp(0);
-			String result = nextTemp(node); 
-			writer.write(result + " = bitcast " + typeText(Type.OBJECT,
-					back1) + " to %" + raw(srcType) + "*");
-			writer.write(nextTemp() + " = getelementptr inbounds %" +
-					raw(srcType) + ", %" + raw(srcType) + "* " + result + ", i32 0, i32 2");
-			writer.write("store " + typeSymbol(source) + ", " +
-					typeText(srcType, temp(0), true));
-			break;
-		case PRIMITIVE_TO_PRIMITIVE:	
-			String instruction;
-			int srcWidth = Type.getWidth(source), destWidth = Type.getWidth(node);
-			srcTypeName = type(srcType);
-			destTypeName = type(destType);
-			if( srcType.isFloating() ) {
-				if( destType.isFloating() )
-					instruction = srcWidth > destWidth ? "fptrunc" : (srcWidth < destWidth ? "fpext" : "bitcast");
-				else if( destType.isSigned() )
-					instruction = "fptosi";
-				else
-					instruction = "fptoui";
+				break;
+			case SEQUENCE_TO_ITEM:			
+				writer.write(nextTemp(node) + " = extractvalue " +
+						typeSymbol(source) + ", 0");	
+				break;
+			case SEQUENCE_TO_SEQUENCE:
+				String current = "undef";
+				String location;
+				int index = 0;			
+				for (int i = 0; i < node.getNumOperands(); i++) {
+					if( i == node.getNumOperands() - 1 )
+						location = nextTemp(node);
+					else
+						location = nextTemp();
+					writer.write(location + " = insertvalue " + typeText(node,current) + ", " +
+							typeSymbol(node.getOperand(i)) + ", " + index);
+					current = location;
+					index++;
+				}			
+				break;
 			}
-			else if( srcType.isSigned() ) {
-				if( destType.isFloating() )
-					instruction = "sitofp";
-				else if( destType.isSigned() )
-					instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "sext" : "bitcast");
-				else
-					instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
-			}
-			else {//  srcType.isUnsigned() must be true
-				if( destType.isFloating() )
-					instruction = "uitofp";
-				else
-					instruction = srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
-			}		
-			writer.write(nextTemp(node) + " = " + instruction + ' ' +
-				srcTypeName + ' ' + symbol(source) + " to " + destTypeName);
-			break;
-		case SEQUENCE_TO_ITEM:			
-			writer.write(nextTemp(node) + " = extractvalue " +
-					typeSymbol(source) + ", 0");	
-			break;
-		case SEQUENCE_TO_SEQUENCE:
-			String current = "undef";
-			String location;
-			int index = 0;			
-			for (int i = 0; i < node.getNumOperands(); i++) {
-				if( i == node.getNumOperands() - 1 )
-					location = nextTemp(node);
-				else
-					location = nextTemp();
-				writer.write(location + " = insertvalue " + typeText(node,current) + ", " +
-						typeSymbol(node.getOperand(i)) + ", " + index);
-				current = location;
-				index++;
-			}			
-			break;
 		}
+		else
+			//unusual case when casting from one primitive constant to another			
+			node.setData(value.getData());
 	}	
 
 	@Override
@@ -1205,92 +1205,106 @@ public class LLVMOutput extends AbstractOutput {
 
 	@Override
 	public void visit(TACUnary node) throws ShadowException {
-		switch (node.getOperation()) {
-			case "-":
-				if( node.getType().isFloating() )
-					visitUnary(node, "fsub", "-0.0");
-				else
-					visitUnary(node, "sub", "0");
-				break;
-			case "~":
-			case "!":
-				visitUnary(node, "xor", "-1");
-				break;
+		TACOperand value = node.getUpdatedValue();
+		//no precomputation done
+		if( value == null ) {
+			switch (node.getOperation()) {
+				case "-":
+					if( node.getType().isFloating() )
+						visitUnary(node, "fsub", "-0.0");
+					else
+						visitUnary(node, "sub", "0");
+					break;
+				case "~":
+				case "!":
+					visitUnary(node, "xor", "-1");
+					break;
+			}
 		}
+		else
+			node.setData(value.getData());
 	}
 	private void visitUnary(TACUnary node, String instruction, String first)
 			throws ShadowException {
+		
 		writer.write(nextTemp(node) + " = " + instruction + ' ' + typeText(node,
 				first) + ", " + symbol(node.getOperand()));
 	}	
 	
 	@Override
 	public void visit(TACBinary node) throws ShadowException {	
-		switch (node.getOperation().toString()) {
-			case "+":
-				visitUnsignedOperation(node, "add");
-				break;
-			case "-":
-				visitUnsignedOperation(node, "sub");
-				break;
-			case "*":
-				visitUnsignedOperation(node, "mul");
-				break;
-			case "/":
-				visitSignedOperation(node, "div");
-				break;
-			case "%":
-				visitSignedOperation(node, "rem");
-				break;
-
-			case "or":
-			case "|":
-				visitNormalOperation(node, "or");
-				break;
-			case "xor":
-			case "^":
-				visitNormalOperation(node, "xor");
-				break;
-			case "and":
-			case "&":
-				visitNormalOperation(node, "and");
-				break;
-
-			case "<<":
-				visitNormalOperation(node, "shl");
-				break;
-			case ">>":
-				visitShiftOperation(node, "shr");
-				break;
-			case "<<<":
-				visitRotateLeft(node);
-				break;
-			case ">>>":
-				visitRotateRight(node);
-				break;
-
-			case "==":
-				visitEqualityOperation(node, "eq");
-				break;
-			case "!=":
-				visitEqualityOperation(node, "ne");
-				break;
-			case "<":
-				visitRelationalOperation(node, "lt");
-				break;
-			case ">":
-				visitRelationalOperation(node, "gt");
-				break;
-			case "<=":
-				visitRelationalOperation(node, "le");
-				break;
-			case ">=":
-				visitRelationalOperation(node, "ge");
-				break;
-			default:
-				throw new UnsupportedOperationException(
-						"Binary operation " + node.getOperation() + " not supported on current types" );
-		}		
+		TACOperand value = node.getUpdatedValue(); 
+		//no precomputation done
+		if( value == null ) {
+			switch (node.getOperation().toString()) {
+				case "+":
+					visitUnsignedOperation(node, "add");
+					break;
+				case "-":
+					visitUnsignedOperation(node, "sub");
+					break;
+				case "*":
+					visitUnsignedOperation(node, "mul");
+					break;
+				case "/":
+					visitSignedOperation(node, "div");
+					break;
+				case "%":
+					visitSignedOperation(node, "rem");
+					break;
+	
+				case "or":
+				case "|":
+					visitNormalOperation(node, "or");
+					break;
+				case "xor":
+				case "^":
+					visitNormalOperation(node, "xor");
+					break;
+				case "and":
+				case "&":
+					visitNormalOperation(node, "and");
+					break;
+	
+				case "<<":
+					visitNormalOperation(node, "shl");
+					break;
+				case ">>":
+					visitShiftOperation(node, "shr");
+					break;
+				case "<<<":
+					visitRotateLeft(node);
+					break;
+				case ">>>":
+					visitRotateRight(node);
+					break;
+	
+				case "==":
+					visitEqualityOperation(node, "eq");
+					break;
+				case "!=":
+					visitEqualityOperation(node, "ne");
+					break;
+				case "<":
+					visitRelationalOperation(node, "lt");
+					break;
+				case ">":
+					visitRelationalOperation(node, "gt");
+					break;
+				case "<=":
+					visitRelationalOperation(node, "le");
+					break;
+				case ">=":
+					visitRelationalOperation(node, "ge");
+					break;
+				default:
+					throw new UnsupportedOperationException(
+							"Binary operation " + node.getOperation() + " not supported on current types" );
+			}
+		}
+		else
+			node.setData(value.getData());
+			
 	}
 	private void visitUnsignedOperation(TACBinary node, String instruction)
 			throws ShadowException {
@@ -1362,41 +1376,41 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	@Override
-	public void visit(TACNot node) throws ShadowException {
-		writer.write(nextTemp(node) + " = xor " +
-				typeSymbol(node.getOperand()) + ", true");
-	}
-	
-	@Override
 	public void visit(TACSame node) throws ShadowException {
-		Type type = node.getOperand(0).getType();
-		
-		if( type instanceof ArrayType ) {
-			ArrayType arrayType = (ArrayType)type;
-			writer.write(nextTemp() + " = extractvalue " +
-					typeSymbol(node.getOperand(0)) + ", 0");
-			writer.write(nextTemp() + " = extractvalue " +
-					typeSymbol(node.getOperand(1)) + ", 0");
-			String back1 = temp(0);
-			String back2 = temp(1);
-			writer.write(nextTemp(node) + " = icmp eq" + type(arrayType.getBaseType())
-					+ "* " + back2 + ", " + back1);			
+		TACOperand value = node.getUpdatedValue(); 
+		//no precomputation done
+		if( value == null ) {		
+			Type type = node.getOperand(0).getType();
+			
+			if( type instanceof ArrayType ) {
+				ArrayType arrayType = (ArrayType)type;
+				writer.write(nextTemp() + " = extractvalue " +
+						typeSymbol(node.getOperand(0)) + ", 0");
+				writer.write(nextTemp() + " = extractvalue " +
+						typeSymbol(node.getOperand(1)) + ", 0");
+				String back1 = temp(0);
+				String back2 = temp(1);
+				writer.write(nextTemp(node) + " = icmp eq" + type(arrayType.getBaseType())
+						+ "* " + back2 + ", " + back1);			
+			}
+			else if( type instanceof InterfaceType ) {			
+				writer.write(nextTemp() + " = extractvalue " +
+						typeSymbol(node.getOperand(0)) + ", 1");
+				writer.write(nextTemp() + " = extractvalue " +
+						typeSymbol(node.getOperand(0)) + ", 1");
+				String back1 = temp(0);
+				String back2 = temp(1);
+				writer.write(nextTemp(node) + " = icmp eq" + type(Type.OBJECT)
+						+ back2 + ", " + back1);		
+			}
+			else {		
+				String op = type.isFloating() ? "fcmp oeq " : "icmp eq " ;
+				writer.write(nextTemp(node) + " = " + op + typeSymbol(
+						node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
+			}
 		}
-		else if( type instanceof InterfaceType ) {			
-			writer.write(nextTemp() + " = extractvalue " +
-					typeSymbol(node.getOperand(0)) + ", 1");
-			writer.write(nextTemp() + " = extractvalue " +
-					typeSymbol(node.getOperand(0)) + ", 1");
-			String back1 = temp(0);
-			String back2 = temp(1);
-			writer.write(nextTemp(node) + " = icmp eq" + type(Type.OBJECT)
-					+ back2 + ", " + back1);		
-		}
-		else {		
-			String op = type.isFloating() ? "fcmp oeq " : "icmp eq " ;
-			writer.write(nextTemp(node) + " = " + op + typeSymbol(
-					node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
-		}
+		else
+			node.setData(value.getData());
 	}
 
 	@Override
@@ -1554,28 +1568,37 @@ public class LLVMOutput extends AbstractOutput {
 
 	@Override
 	public void visit(TACCall node) throws ShadowException {
-		TACMethodRef method = node.getMethodRef();
-		StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
-				"invoke" : "call").append(' ').
-				append(methodToString(method, false, false)).append(symbol(method)).append('(');
-		boolean first = true;
-		for (TACOperand param : node.getParameters())
-			if (first) {
-				first = false;			
-				sb.append(typeSymbol(param));
+		TACOperand value = node.getUpdatedValue(); 
+		//no precomputation done
+		if( value == null ) {
+			TACMethodRef method = node.getMethodRef();
+			StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
+					"invoke" : "call").append(' ').
+					append(methodToString(method, false, false)).append(symbol(method)).append('(');
+			boolean first = true;
+			for (TACOperand param : node.getParameters())
+				if (first) {
+					first = false;			
+					sb.append(typeSymbol(param));
+				}
+				else
+					sb.append(", ").append(typeSymbol(param));
+			
+			if (!method.getReturnTypes().isEmpty())
+				sb.insert(0, nextTemp(node) + " = ");
+			
+			writer.write(sb.append(')').toString());
+			if (node.getBlock().hasLandingpad()) {						
+				writer.indent(2);
+				writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
+						symbol(node.getBlock().getLandingpad()));			
+				writer.outdent(2);
 			}
-			else
-				sb.append(", ").append(typeSymbol(param));
-		
-		if (!method.getReturnTypes().isEmpty())
-			sb.insert(0, nextTemp(node) + " = ");
-		
-		writer.write(sb.append(')').toString());
-		if (node.getBlock().hasLandingpad()) {						
-			writer.indent(2);
-			writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
-					symbol(node.getBlock().getLandingpad()));			
-			writer.outdent(2);
+		}
+		else {
+			node.setData(value.getData());
+			if( node.getBlock().hasLandingpad() )
+				writer.write("br label " + symbol(node.getNoExceptionLabel()));			
 		}
 	}
 
@@ -1935,10 +1958,12 @@ public class LLVMOutput extends AbstractOutput {
 		return '%' + node.toString();
 	}
 
-	private String symbol(TACOperand node) {
-		if( node instanceof TACLiteral )
-			node.setData(literal(((TACLiteral)node).getValue()));		
+	private String symbol(TACOperand node) {			
 		Object symbol = node.getData();
+		
+		if( symbol instanceof ShadowValue )
+			symbol = literal((ShadowValue)symbol);	
+		
 		if (symbol instanceof String)
 			return (String)symbol;
 		throw new NullPointerException();

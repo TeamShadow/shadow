@@ -437,11 +437,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	 */	
 	public boolean propagateConstants()
 	{		
-		Collection<Block> blocks = nodeBlocks.values();
+		List<Block> blocks = getReversePostorder();
 		
 		boolean done = false;
 		boolean changed = false;
 		Set<TACLocalLoad> undefinedLoads = new HashSet<TACLocalLoad>();
+		
 		while( !done ) {
 			done = true;
 			undefinedLoads.clear();
@@ -936,6 +937,36 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACLocalLoad load = (TACLocalLoad)node;
 					if( load.isUndefined() )
 						undefinedLoads.add(load);
+				}
+				
+				if( node instanceof TACBranch ) {
+					TACBranch branch = (TACBranch) node;
+					if( branch.isConditional() && branch.getCondition() instanceof TACUpdate  ) {
+						TACUpdate update = (TACUpdate) branch.getCondition();
+						if( update.update(currentlyUpdating) )
+							changed = true;
+						
+						//simplifying branch
+						if( update.getValue() instanceof TACLiteral ) {
+							TACLiteral literal = (TACLiteral) update.getValue();
+							boolean value = ((ShadowBoolean)literal.getValue()).getValue();
+							TACLabel trueLabel = branch.getTrueLabel();
+							TACLabel falseLabel = branch.getFalseLabel();							
+							if( value ) {
+								branch.convertToDirect(trueLabel);
+								Block falseBlock = nodeBlocks.get(falseLabel);
+								outgoing.remove(falseBlock);
+								falseBlock.incoming.remove(this);
+							}
+							else {								
+								branch.convertToDirect(falseLabel);
+								Block trueBlock = nodeBlocks.get(trueLabel);
+								outgoing.remove(trueBlock);
+								trueBlock.incoming.remove(this);								
+							}
+							changed = true;
+						}
+					}
 				}
 			}
 			

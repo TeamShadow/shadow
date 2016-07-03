@@ -1,5 +1,8 @@
 package shadow.tac.nodes;
 
+import java.util.Set;
+
+import shadow.interpreter.ShadowBoolean;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
@@ -10,7 +13,7 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  */
 
-public class TACSame extends TACOperand
+public class TACSame extends TACUpdate
 {
 	private TACOperand first, second;
 
@@ -83,5 +86,54 @@ public class TACSame extends TACOperand
 	public void accept(TACVisitor visitor) throws ShadowException
 	{
 		visitor.visit(this);
+	}
+	
+	@Override
+	public boolean update(Set<TACUpdate> currentlyUpdating) {
+		if( currentlyUpdating.contains(this) )
+			return false;
+		
+		currentlyUpdating.add(this);
+		boolean changed = false;		
+		
+		if( first instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) first;
+			if( update.update(currentlyUpdating) )
+				changed = true;			
+			first = update.getValue();
+		}		
+
+		if( second instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) second;
+			if( update.update(currentlyUpdating) )
+				changed = true;			
+			second = update.getValue();
+		}
+		
+		if( (changed || getUpdatedValue() == null) && first instanceof TACLiteral && second instanceof TACLiteral
+				&& first.getType().isPrimitive() && second.getType().isPrimitive() ) {
+			try {
+				TACLiteral firstLiteral = (TACLiteral) first;
+				TACLiteral secondLiteral = (TACLiteral) second;
+				
+				ShadowBoolean result = firstLiteral.getValue().equal(secondLiteral.getValue());
+				setUpdatedValue(new TACLiteral(this, result));
+				changed = true;
+			}
+			catch(ShadowException e)
+			{} //do nothing, failed to evaluate
+		}
+		
+		currentlyUpdating.remove(this);
+		return changed;	
+	}
+	
+	@Override
+	public TACOperand getValue()
+	{
+		if( getUpdatedValue() == null )
+			return this;
+		else
+			return getUpdatedValue();
 	}
 }

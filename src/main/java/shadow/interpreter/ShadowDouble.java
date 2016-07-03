@@ -32,10 +32,9 @@ public class ShadowDouble extends ShadowNumber
 	}
 
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
 		BigInteger integer = BigInteger.valueOf(Math.round(value));
-
 		if (type.equals(Type.BYTE))
 			return new ShadowInteger(integer, 1, true);
 		if (type.equals(Type.SHORT))
@@ -55,7 +54,9 @@ public class ShadowDouble extends ShadowNumber
 		if (type.equals(Type.FLOAT))
 			return new ShadowFloat((float)getValue());
 		if (type.equals(Type.DOUBLE))
-			return new ShadowDouble(getValue());
+			return this;
+		if( type.equals(Type.CODE) )
+			return new ShadowCode( integer.intValue() );
 		return this;
 	}
 

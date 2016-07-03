@@ -18,7 +18,7 @@ public class ShadowNull extends ShadowValue {
 	}
 
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
 		return new ShadowNull(type);
 	}

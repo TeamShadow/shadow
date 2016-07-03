@@ -147,7 +147,7 @@ public abstract class ShadowValue implements ModifiedType {
         return getType().isStrictSubtype(other.getType());
     }
 
-    protected abstract ShadowValue cast(Type type) throws ShadowException;
+    public abstract ShadowValue cast(Type type) throws ShadowException;
 
     public abstract ShadowValue copy() throws ShadowException;
 

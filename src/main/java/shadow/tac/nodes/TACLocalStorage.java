@@ -3,10 +3,9 @@ package shadow.tac.nodes;
 import shadow.tac.TACVariable;
 import shadow.typecheck.type.Type;
 
-public abstract class TACLocalStorage extends TACOperand implements TACUpdate {
+public abstract class TACLocalStorage extends TACUpdate {
 	
 	private final TACVariable variable;
-	private TACOperand updatedValue;
 	private final int number;
 
 	protected TACLocalStorage(TACNode node, TACVariable variable) {
@@ -17,24 +16,16 @@ public abstract class TACLocalStorage extends TACOperand implements TACUpdate {
 	
 	@Override
 	public Object getData() {	
-		if( updatedValue == null )	
+		if( getUpdatedValue() == null )	
 			return '%' + variable.getName() + '.' + number;		
 		else
-			return updatedValue.getData();		
+			return getUpdatedValue().getData();		
 	}
 
 	@Override
 	public Type getType() {		
 		return variable.getType();
-	}
-	
-	public TACOperand getUpdatedValue() {
-		return updatedValue;
-	}
-	
-	public void setUpdatedValue(TACOperand op) {
-		updatedValue = op;
-	}
+	}	
 	
 	public TACVariable getVariable() {
 		return variable;

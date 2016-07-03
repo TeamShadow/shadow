@@ -194,7 +194,7 @@ public class ShadowInteger extends ShadowNumber {
 
 
 	@Override
-	protected ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws ShadowException
 	{
 		if (type.equals(Type.BYTE))
 			return new ShadowInteger(value, 1, true);
@@ -216,6 +216,8 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowDouble( value.doubleValue() );
 		if (type.equals(Type.FLOAT ))
 			return new ShadowFloat( value.floatValue() );
+		if( type.equals(Type.CODE) )
+			return new ShadowCode( value.intValue() );
 		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
 

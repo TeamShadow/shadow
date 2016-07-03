@@ -1,0 +1,24 @@
+import shadow:io@Console;
+
+class shadow:test@
+	ConstantPropagation
+{
+	public main() => ()
+	{
+		int x = 4 + 9;		
+		Console.printLine(x);
+		
+		int y = x * 10;
+		Console.printLine(y);
+		
+		boolean b = !(x < y);
+		Console.printLine(b);		
+		
+		String value = "country" # "time";
+		Console.printLine(value);
+				
+		//will get completely removed
+		if( 42 > y - 2 )
+			Console.printLine("Boom!");					
+	}
+}

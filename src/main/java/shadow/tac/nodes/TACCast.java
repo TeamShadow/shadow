@@ -2,9 +2,11 @@ package shadow.tac.nodes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
@@ -19,7 +21,7 @@ import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public class TACCast extends TACOperand
+public class TACCast extends TACUpdate
 {
 	private Type type;
 	private Modifiers modifiers;
@@ -420,5 +422,44 @@ public class TACCast extends TACOperand
 		}		
 		sb.append(')');		
 		return sb.toString();
+	}
+
+	@Override
+	public TACOperand getValue()
+	{
+		if( getUpdatedValue() == null )
+			return this;
+		else
+			return getUpdatedValue();
+	}
+
+	@Override
+	public boolean update(Set<TACUpdate> currentlyUpdating) {
+		if( currentlyUpdating.contains(this) )
+			return false;
+		
+		currentlyUpdating.add(this);
+		boolean changed = false;
+			
+		if( operands.get(0) instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) operands.get(0);
+			if( update.update(currentlyUpdating) )
+				changed = true;			
+			operands.set(0, update.getValue());
+		}
+		
+		if( (changed || getUpdatedValue() == null) && operands.get(0) instanceof TACLiteral && kind == Kind.PRIMITIVE_TO_PRIMITIVE ) {
+			try {
+				TACLiteral literal = (TACLiteral)operands.get(0);
+				ShadowValue result = literal.getValue().cast(type);
+				setUpdatedValue(new TACLiteral(this, result));
+				changed = true;
+			}
+			catch(ShadowException e)
+			{} //do nothing, failed to evaluate
+		}
+		
+		currentlyUpdating.remove(this);
+		return changed;	
 	}
 }

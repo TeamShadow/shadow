@@ -1,5 +1,9 @@
 package shadow.tac.nodes;
 
+import java.util.Set;
+
+import shadow.interpreter.ShadowInterpreter;
+import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.MethodSignature;
@@ -15,13 +19,11 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  * @author Barry Wittman
  */
-
-//TODO: Update to be TACUpdate, so that constants can be propagated through
-public class TACBinary extends TACOperand
+public class TACBinary extends TACUpdate
 {	
 	private String operation;
 	private TACOperand first, second;
-	private ModifiedType result;
+	private ModifiedType result;	
 	
 	public enum Boolean { 
 		AND("and"),
@@ -148,5 +150,50 @@ public class TACBinary extends TACOperand
 	@Override
 	public Modifiers getModifiers() {
 		return result.getModifiers();
+	}
+
+	@Override
+	public boolean update(Set<TACUpdate> currentlyUpdating) {
+		if( currentlyUpdating.contains(this) )
+			return false;
+		
+		currentlyUpdating.add(this);
+		boolean changed = false;		
+		
+		if( first instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) first;
+			if( update.update(currentlyUpdating) )
+				changed = true;			
+			first = update.getValue();
+		}		
+
+		if( second instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) second;
+			if( update.update(currentlyUpdating) )
+				changed = true;			
+			second = update.getValue();
+		}
+		
+		if( (changed || getUpdatedValue() == null) && first instanceof TACLiteral && second instanceof TACLiteral ) {
+			try {
+				ShadowValue result = ShadowInterpreter.evaluate(this);
+				setUpdatedValue(new TACLiteral(this, result));
+				changed = true;
+			}
+			catch(ShadowException e)
+			{} //do nothing, failed to evaluate
+		}
+		
+		currentlyUpdating.remove(this);
+		return changed;	
+	}
+	
+	@Override
+	public TACOperand getValue()
+	{
+		if( getUpdatedValue() == null )
+			return this;
+		else
+			return getUpdatedValue();
 	}
 }
