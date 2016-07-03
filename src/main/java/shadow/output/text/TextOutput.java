@@ -39,7 +39,6 @@ import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
-import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACSingletonRef;
@@ -324,19 +323,6 @@ public class TextOutput extends AbstractOutput
 			sb = builder;
 			node.accept(this);
 			return builder;
-		}
-
-		@Override
-		public void visit(TACSame node) throws ShadowException
-		{
-			boolean paren = parentheses;
-			if (paren) sb.append('(');
-			parentheses = true;
-			visit(sb, node.getFirst()).append(" === ");
-			parentheses = true;
-			visit(sb, node.getSecond());
-			if (paren) sb.append(')');
-			parentheses = false;
 		}
 
 		@Override

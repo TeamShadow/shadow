@@ -41,6 +41,11 @@ public class TACBinary extends TACUpdate
 		}		
 	}
 	
+	//the one with no operation is "reference" equality, ===
+	public TACBinary(TACNode node, TACOperand firstOperand, TACOperand secondOperand) {
+		this(node, firstOperand, firstOperand, "===", secondOperand, secondOperand, new SimpleModifiedType(Type.BOOLEAN));
+	}	
+	
 	public TACBinary(TACNode node, TACOperand firstOperand, Boolean op,
 			TACOperand secondOperand) {
 		this(node, firstOperand, new SimpleModifiedType(Type.BOOLEAN), op.getName(), secondOperand, new SimpleModifiedType(Type.BOOLEAN), new SimpleModifiedType(Type.BOOLEAN));
@@ -68,10 +73,27 @@ public class TACBinary extends TACUpdate
 		operation = op;		
 		first = check(firstOperand, firstType);
 		
+		//reference comparison requires exactly the same types
+		if( op.equals("===") ) {
+			second = secondOperand;			
+			if (firstType.getType().isSubtype(secondType.getType()))
+				first = check(first, second);
+			else if(secondType.getType().isSubtype(firstType.getType()) )
+				second = check(second, first);		
+			//primitive exceptions, since they can be equal to each other with no clear subtype relation
+			else if( firstType.getType().isPrimitive() && secondType.getType().isPrimitive() ) {				
+				if( firstType.getType().getWidth() >= secondType.getType().getWidth() )
+					second = TACCast.cast(this, first, second);
+				else
+					first = TACCast.cast(this, second, first);			
+			}
+			else
+				throw new UnsupportedOperationException();		
+		}
 		//shifts and rotates have weird issues
 		//LLVM insists that you rotate a byte with a byte
 		//so we have to throw in explicit casts
-		if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().equals(secondType.getType()))		
+		else if( (op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>")) && !firstType.getType().equals(secondType.getType()))		
 			second = TACCast.cast(this, firstType, secondOperand);
 		else
 			second = check(secondOperand, secondType);
@@ -85,8 +107,8 @@ public class TACBinary extends TACUpdate
 		case 'r': version = ">>";  break;
 		case 'L': version  = "<<<"; break;
 		case 'R': version = ">>>"; break;
-		case '=': version = "=="; break; //probably don't see this one
-		case '!': version = "!="; break; //probably don't see this one		
+		case '=': version = "=="; break;
+		case '!': version = "!="; break;		
 		case '{': version = "<="; break;
 		case '}': version = ">="; break;	
 		case 'o': version = "or"; break;

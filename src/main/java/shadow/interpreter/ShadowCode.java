@@ -3,6 +3,7 @@ package shadow.interpreter;
 import java.math.BigInteger;
 
 import shadow.parser.javacc.ShadowException;
+import shadow.parser.javacc.ShadowTypeMismatchException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
@@ -106,4 +107,91 @@ public class ShadowCode extends ShadowValue
 		
 		return new ShadowCode(value);
 	}
+	@Override
+    public ShadowBoolean equal(ShadowValue other) throws ShadowException
+	{
+		if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowBoolean(value == input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+	}
+
+
+    public ShadowBoolean lessThan(ShadowValue other) throws ShadowException {
+    	if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowBoolean(value < input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+    }
+
+    public ShadowBoolean lessThanOrEqual(ShadowValue other)
+            throws ShadowException {
+    	if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowBoolean(value <= input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+    }
+
+    public ShadowBoolean greaterThan(ShadowValue other) throws ShadowException {
+    	if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowBoolean(value > input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+    }
+
+    public ShadowBoolean greaterThanOrEqual(ShadowValue other)throws ShadowException {
+    	if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowBoolean(value >= input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+    }
+
+    public ShadowCode bitwiseAnd(ShadowValue other) throws ShadowException {
+    	if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowCode(value & input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+    }
+
+    public ShadowCode bitwiseOr(ShadowValue other) throws ShadowException {
+    	if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowCode(value | input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+    }
+
+    public ShadowCode bitwiseXor(ShadowValue other) throws ShadowException {
+    	if( other instanceof ShadowCode )
+		{
+			ShadowCode input = (ShadowCode) other;
+			return new ShadowCode(value ^ input.value);
+		}
+
+		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+    }
+    
+    public ShadowCode bitwiseComplement() throws ShadowException {
+        return new ShadowCode( ~value );
+    }	
 }

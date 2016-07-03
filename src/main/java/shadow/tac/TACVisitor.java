@@ -30,7 +30,6 @@ import shadow.tac.nodes.TACPhiStore;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
-import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACStore;
@@ -68,8 +67,7 @@ public interface TACVisitor
 	public abstract void visit(TACPointerToLong node) throws ShadowException;
 	public abstract void visit(TACSequenceElement node) throws ShadowException;
 	public abstract void visit(TACResume node) throws ShadowException;
-	public abstract void visit(TACReturn node) throws ShadowException;
-	public abstract void visit(TACSame node) throws ShadowException;
+	public abstract void visit(TACReturn node) throws ShadowException;	
 	public abstract void visit(TACSequence node) throws ShadowException;
 	public abstract void visit(TACStore node) throws ShadowException;
 	public abstract void visit(TACThrow node) throws ShadowException;

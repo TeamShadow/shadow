@@ -80,6 +80,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 		case "&":
 		case "^":
 		case "==":			
+		case "===":
 		case "!=":			
 		case "<":			
 		case "<=":			
@@ -110,6 +111,13 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 				data = left.bitwiseXor(right); break;
 			case "==":
 				data = left.equal(right); break;
+			case "===":
+				if( (left.getType().isPrimitive() && right.getType().isPrimitive()) ||
+					( left instanceof ShadowNull && right instanceof ShadowNull ) )
+					data = left.equal(right); 
+				else
+					throw new ShadowException("Interpreter cannot perform reference comparison on non-primitive types");
+				break;				
 			case "!=":
 				data = left.notEqual(right); break;
 			case "<":
@@ -413,11 +421,11 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 	}
 	
 
-	private static ShadowValue value(TACOperand node)
+	private static ShadowValue value(TACOperand node) throws ShadowException
 	{
 		Object value = node.getData();
 		if (value instanceof ShadowValue)
 			return (ShadowValue)value;
-		throw new NullPointerException();
+		throw new ShadowException("Operand does not contain a value");
 	}
 }

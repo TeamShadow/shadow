@@ -69,7 +69,6 @@ import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
-import shadow.tac.nodes.TACSame;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACSingletonRef;
@@ -1297,15 +1296,50 @@ public class LLVMOutput extends AbstractOutput {
 				case ">=":
 					visitRelationalOperation(node, "ge");
 					break;
+				case "===":
+					visitReferenceEquality(node);
+					break;
 				default:
 					throw new UnsupportedOperationException(
 							"Binary operation " + node.getOperation() + " not supported on current types" );
 			}
 		}
 		else
-			node.setData(value.getData());
-			
+			node.setData(value.getData());			
 	}
+	
+	private void visitReferenceEquality(TACBinary node) throws ShadowException {							
+		Type type = node.getOperand(0).getType();
+		
+		if( type instanceof ArrayType ) {
+			ArrayType arrayType = (ArrayType)type;
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(0)) + ", 0");
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(1)) + ", 0");
+			String back1 = temp(0);
+			String back2 = temp(1);
+			writer.write(nextTemp(node) + " = icmp eq" + type(arrayType.getBaseType())
+					+ "* " + back2 + ", " + back1);			
+		}
+		else if( type instanceof InterfaceType ) {			
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(0)) + ", 1");
+			writer.write(nextTemp() + " = extractvalue " +
+					typeSymbol(node.getOperand(0)) + ", 1");
+			String back1 = temp(0);
+			String back2 = temp(1);
+			writer.write(nextTemp(node) + " = icmp eq" + type(Type.OBJECT)
+					+ back2 + ", " + back1);		
+		}
+		else {		
+			String op = type.isFloating() ? "fcmp oeq " : "icmp eq " ;
+			writer.write(nextTemp(node) + " = " + op + typeSymbol(
+					node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
+		}		
+	}
+	
+	
 	private void visitUnsignedOperation(TACBinary node, String instruction)
 			throws ShadowException {
 		visitOperation(node, "", "", "f", instruction);
@@ -1373,45 +1407,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACGlobal node) throws ShadowException {
 		writer.write(nextTemp(node) + " = load " + type(node) + ", " + type(node) + "* " + node.getName());
-	}
-	
-	@Override
-	public void visit(TACSame node) throws ShadowException {
-		TACOperand value = node.getUpdatedValue(); 
-		//no precomputation done
-		if( value == null ) {		
-			Type type = node.getOperand(0).getType();
-			
-			if( type instanceof ArrayType ) {
-				ArrayType arrayType = (ArrayType)type;
-				writer.write(nextTemp() + " = extractvalue " +
-						typeSymbol(node.getOperand(0)) + ", 0");
-				writer.write(nextTemp() + " = extractvalue " +
-						typeSymbol(node.getOperand(1)) + ", 0");
-				String back1 = temp(0);
-				String back2 = temp(1);
-				writer.write(nextTemp(node) + " = icmp eq" + type(arrayType.getBaseType())
-						+ "* " + back2 + ", " + back1);			
-			}
-			else if( type instanceof InterfaceType ) {			
-				writer.write(nextTemp() + " = extractvalue " +
-						typeSymbol(node.getOperand(0)) + ", 1");
-				writer.write(nextTemp() + " = extractvalue " +
-						typeSymbol(node.getOperand(0)) + ", 1");
-				String back1 = temp(0);
-				String back2 = temp(1);
-				writer.write(nextTemp(node) + " = icmp eq" + type(Type.OBJECT)
-						+ back2 + ", " + back1);		
-			}
-			else {		
-				String op = type.isFloating() ? "fcmp oeq " : "icmp eq " ;
-				writer.write(nextTemp(node) + " = " + op + typeSymbol(
-						node.getOperand(0)) + ", " + symbol(node.getOperand(1)));
-			}
-		}
-		else
-			node.setData(value.getData());
-	}
+	}	
 
 	@Override
 	public void visit(TACLoad node) throws ShadowException {
