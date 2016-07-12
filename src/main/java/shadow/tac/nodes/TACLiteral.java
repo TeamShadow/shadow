@@ -83,7 +83,8 @@ public class TACLiteral extends TACOperand
 	}
 	
 	@Override
-	public boolean canPropagate() {
+	public boolean canPropagate()
+	{
 		return true;
 	}
 }

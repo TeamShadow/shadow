@@ -9,6 +9,7 @@ import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowString;
+import shadow.output.llvm.LLVMOutput;
 import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
@@ -73,6 +74,18 @@ public class TACClass extends TACOperand
 		{
 			visitor.visit(this);			
 		}
+		
+		@Override
+		public Object getData()
+		{
+			return LLVMOutput.classOf(type);
+		}
+		
+		@Override
+		public boolean canPropagate()
+		{
+			return true;
+		}
 	}
 	
 	public class TACMethodTable extends TACOperand
@@ -112,6 +125,24 @@ public class TACClass extends TACOperand
 		@Override
 		public void accept(TACVisitor visitor) throws ShadowException {
 			visitor.visit(this);			
+		}
+		
+		@Override
+		public Object getData() {
+			Type withoutArguments = type.getTypeWithoutTypeArguments();
+			if( withoutArguments instanceof ArrayType )
+				withoutArguments = ((ArrayType)withoutArguments).recursivelyGetBaseType();
+				
+			if( withoutArguments instanceof InterfaceType )
+				return "null";
+			else			
+				return LLVMOutput.methodTable(withoutArguments);
+		}
+		
+		@Override
+		public boolean canPropagate()
+		{
+			return true;
 		}
 	}
 	

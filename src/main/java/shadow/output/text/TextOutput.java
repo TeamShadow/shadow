@@ -433,13 +433,13 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACClass node) throws ShadowException
 		{
-			sb.append(node.getType()).append(":class");
+			sb.append(node.getClassType()).append(":class");			
 		}
 		
 		@Override
 		public void visit(TACClass.TACClassData node) throws ShadowException
 		{
-			sb.append(node.getType()).append(":class");
+			sb.append(node.getClassType()).append(":class");
 		}
 		
 

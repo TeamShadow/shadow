@@ -24,13 +24,8 @@ import shadow.typecheck.type.Type;
 public class TACArrayRef implements TACReference
 {
 	private TACOperand array, total;
-	private List<TACOperand> indices;	
-	
-	public TACArrayRef(TACNode node, TACOperand reference, TACOperand... ops)
-	{
-		this(node, reference, Arrays.asList(ops), true);
-	}
-	
+	private List<TACOperand> indices;
+
 	//single op, can specify not to check for optimization
 	public TACArrayRef(TACNode node, TACOperand reference, TACOperand op, boolean check)
 	{
@@ -112,7 +107,8 @@ public class TACArrayRef implements TACReference
 			new TACThrow(node, exception);						
 			
 			done.insertBefore(node);	//done label	
-			new TACNodeRef(node, total);
+			//new TACNodeRef(tree, total);
+			
 		}
 		else {		
 			total = iter.next();

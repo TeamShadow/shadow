@@ -25,7 +25,7 @@ import shadow.test.typecheck.TypeCheckerTests;
 import shadow.test.typecheck.WarningTests;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({DocumentationTests.class, shadow.test.output.NegativeTests.class, OutputTests.class, TACTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
+@Suite.SuiteClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
 public class AllTests extends TestCase {
 
 	@AfterClass

@@ -21,7 +21,7 @@ public class TACStore extends TACNode
 		reference = ref;
 		value = check(op, ref);		
 		op.setMemoryStore(this);
-		new TACNodeRef(node, value);
+		//new TACNodeRef(node, value);
 	}
 
 	public TACReference getReference()

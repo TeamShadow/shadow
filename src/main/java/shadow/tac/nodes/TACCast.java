@@ -8,6 +8,7 @@ import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.parser.javacc.ShadowException;
+import shadow.tac.TACTree;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -55,7 +56,8 @@ public class TACCast extends TACUpdate
 		SEQUENCE
 	}
 	
-	public static TACCast cast(TACNode node, ModifiedType destination, TACOperand op) {
+	public static TACCast cast(TACNode node, ModifiedType destination, TACOperand op)
+	{
 		return cast(node, destination, op, false);
 	}
 

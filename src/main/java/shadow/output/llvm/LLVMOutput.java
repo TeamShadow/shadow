@@ -876,24 +876,6 @@ public class LLVMOutput extends AbstractOutput {
 	public void visit(TACClass node) throws ShadowException {		
 		node.setData(node.getClassData().getData());
 	}
-	
-	@Override
-	public void visit(TACClass.TACClassData node) throws ShadowException {
-		Type type = node.getClassType();		
-		node.setData(classOf(type));
-	}
-	
-	@Override
-	public void visit(TACClass.TACMethodTable node) throws ShadowException {
-		Type type = node.getClassType().getTypeWithoutTypeArguments();
-		if( type instanceof ArrayType )
-			type = ((ArrayType)type).recursivelyGetBaseType();
-			
-		if( type instanceof InterfaceType )
-			node.setData("null");
-		else			
-			node.setData(methodTable(type));
-	}	
 
 	@Override
 	public void visit(TACSequence node) throws ShadowException {
@@ -910,8 +892,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void visit(TACSequenceElement node ) throws ShadowException {	
 		writer.write(nextTemp(node) + " = extractvalue " +
 				typeSymbol(node.getOperand(0)) + ", " + node.getIndex());		
-	}
-	
+	}	
 	
 	private void writeObjectToArray(TACCast node, ArrayType arrayType, TACOperand source) throws ShadowException {
 		String srcName = symbol(source);
@@ -1678,14 +1659,14 @@ public class LLVMOutput extends AbstractOutput {
 		return "@_interfaces" + type.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS);
 	}
 
-	private String classOf(Type type) {
+	public static String classOf(Type type) {
 		if( type.isFullyInstantiated() )
 			return '@' + withGenerics(type, "_class");
 		else
 			return '@' + raw(type, "_class");
 	}
 	
-	private static String methodTable(Type type) {
+	public static String methodTable(Type type) {
 		if( type instanceof InterfaceType && type.isFullyInstantiated())
 			return "@" + withGenerics(type, "_methods");		
 		return "@" + raw(type, "_methods");

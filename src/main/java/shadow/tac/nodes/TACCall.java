@@ -46,7 +46,7 @@ public class TACCall extends TACUpdate
 		if( getBlock().hasLandingpad() ) {
 			noExceptionLabel = new TACLabel(getMethod());
 			noExceptionLabel.insertBefore(node); //before the node but after the call
-			new TACNodeRef(node, this);
+			//new TACNodeRef(node, this);
 		}
 	}
 	public TACMethodRef getMethodRef() {
