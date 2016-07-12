@@ -46,7 +46,6 @@ import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACNodeRef;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACPhiRef.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
@@ -2716,7 +2715,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			initializeArray(alloc, create, params, defaultValue);			
 		}
 		
-		return new TACNodeRef(tree, alloc);		
+		return tree.setOperand(alloc);		
 	}
 	
 	private TACOperand getDefaultValue(ModifiedType type)
