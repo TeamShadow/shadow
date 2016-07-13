@@ -10,7 +10,6 @@ import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACClass.TACClassData;
 import shadow.tac.nodes.TACClass.TACMethodTable;
 import shadow.tac.nodes.TACCopyMemory;
-import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
@@ -68,7 +67,6 @@ public interface TACVisitor
 	public abstract void visit(TACStore node) throws ShadowException;
 	public abstract void visit(TACThrow node) throws ShadowException;
 	public abstract void visit(TACTypeId node) throws ShadowException;
-	public abstract void visit(TACUnary node) throws ShadowException;
-	public abstract void visit(TACGlobal node) throws ShadowException;
+	public abstract void visit(TACUnary node) throws ShadowException;	
 	public abstract void visit(TACParameter node) throws ShadowException;
 }

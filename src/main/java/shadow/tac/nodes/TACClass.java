@@ -257,7 +257,7 @@ public class TACClass extends TACOperand
 		TACMethod method = getMethod();
 		TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.CLASS));		
 		
-		TACGlobal classSet = new TACGlobal(this, Type.CLASS_SET, "@_arraySet");
+		TACLoad classSet = new TACLoad(this, new TACGlobalRef(Type.CLASS_SET, "@_arraySet"));
 		
 		SequenceType arguments = new SequenceType();
 		arguments.add(name);
@@ -390,7 +390,7 @@ public class TACClass extends TACOperand
 		
 		TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.CLASS));		
 		
-		TACGlobal classSet = new TACGlobal(this, Type.CLASS_SET, "@_genericSet");		
+		TACLoad classSet = new TACLoad(this, new TACGlobalRef(Type.CLASS_SET, "@_genericSet"));		
 		
 		SequenceType arguments = new SequenceType();
 		arguments.add(name);		
@@ -467,7 +467,7 @@ public class TACClass extends TACOperand
 		new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(1)), false), methodTable);
 		
 		
-		TACGlobal classSet = new TACGlobal(this, Type.CLASS_SET, "@_genericSet");
+		TACLoad classSet = new TACLoad(this, new TACGlobalRef(Type.CLASS_SET, "@_genericSet"));
 		TACOperand name = makeGenericName(type, parameterArray);
 		
 		TACOperand isNull;

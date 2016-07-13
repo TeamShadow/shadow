@@ -49,7 +49,7 @@ import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
-import shadow.tac.nodes.TACGlobal;
+import shadow.tac.nodes.TACGlobalRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
@@ -1383,11 +1383,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(nextTemp(node) + " = or" + _type_ + back1 + ", " +
 				back2);
 	}
-	
-	@Override
-	public void visit(TACGlobal node) throws ShadowException {
-		writer.write(nextTemp(node) + " = load " + type(node) + ", " + type(node) + "* " + node.getName());
-	}	
 
 	@Override
 	public void visit(TACLoad node) throws ShadowException {
@@ -1437,6 +1432,10 @@ public class LLVMOutput extends AbstractOutput {
 					typeText(constant, name(constant), true));			
 			if( !module.getType().encloses(constant.getPrefixType()) )
 				usedConstants.add(constant);		
+		}
+		else if( reference instanceof TACGlobalRef ) {
+			TACGlobalRef global = (TACGlobalRef) reference;
+			writer.write(nextTemp(node) + " = load " + type(global) + ", " + type(global) + "* " + global.getName());
 		}
 	}
 	
