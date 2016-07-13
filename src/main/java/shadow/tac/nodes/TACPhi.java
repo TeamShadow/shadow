@@ -10,11 +10,11 @@ import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 
-public class TACPhiStore extends TACLocalStorage {		
+public class TACPhi extends TACLocalStorage {		
 	private Map<TACLabel, TACOperand> previousStores = new HashMap<TACLabel, TACOperand>();	
 	boolean undefined = false;
 	
-	public TACPhiStore(TACNode node, TACVariable variable) {
+	public TACPhi(TACNode node, TACVariable variable) {
 		super(node, variable);
 	}
 
@@ -48,8 +48,8 @@ public class TACPhiStore extends TACLocalStorage {
 				if( literal.getValue() instanceof ShadowUndefined )
 					undefined = true;
 			}
-			else if( temp instanceof TACPhiStore ) {
-				TACPhiStore phiStore = (TACPhiStore) temp;
+			else if( temp instanceof TACPhi ) {
+				TACPhi phiStore = (TACPhi) temp;
 				if( phiStore.isUndefined() )
 					undefined = true;
 			}
@@ -108,13 +108,13 @@ public class TACPhiStore extends TACLocalStorage {
 	
 	@Override
 	public boolean equals(Object other) {
-		if( other == null || !(other instanceof TACPhiStore)  )
+		if( other == null || !(other instanceof TACPhi)  )
 			return false;
 		
 		if( other == this )
 			return true;
 		
-		TACPhiStore store = (TACPhiStore) other;
+		TACPhi store = (TACPhi) other;
 		
 		return getNumber() == store.getNumber() && getVariable().equals(store.getVariable());
 	}

@@ -23,6 +23,7 @@ import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
+import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
@@ -33,9 +34,7 @@ import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
-import shadow.tac.nodes.TACPhiRef;
-import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPhiStore;
+import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
@@ -154,15 +153,19 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					block.addBranch(nodeBlocks.get(branch.getLabel()));				
 				else if (branch.isIndirect()) {
 					// Branch to every possible destination
-					TACPhiRef destination = branch.getDestination();
-					if( destination.getSize() == 1 ) {						
-						TACLabel label = destination.getValue(0);
+					TACPhi phi = branch.getPhi();
+					Map<TACLabel, TACOperand> destinations = phi.getPreviousStores();
+					if( destinations.size() == 1 ) {
+						TACLabelAddress address = (TACLabelAddress) destinations.values().iterator().next();
+						TACLabel label = address.getLabel();
 						branch.convertToDirect(label);
 						block.addBranch(nodeBlocks.get(label));
 					}
 					else
-						for (int i = 0; i < destination.getSize(); ++i)
-							block.addBranch(nodeBlocks.get(destination.getValue(i)));					
+						for( TACOperand destination : destinations.values() ) {
+							TACLabelAddress address = (TACLabelAddress) destination;
+							block.addBranch(nodeBlocks.get(address.getLabel()));
+						}
 				}
 			}
 			//handles cases where a method call can cause a catchable exception
@@ -840,13 +843,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		}
 		
 		private boolean operandIsThis(TACOperand op, Type type) {
-			Set<TACPhiStore> visitedPhis = new HashSet<TACPhiStore>();
+			Set<TACPhi> visitedPhis = new HashSet<TACPhi>();
 			return operandIsThis(op, type, visitedPhis);
 		}
 		
 		//as long as the data flow analysis has already happened, it should be hard to sneak
 		//in a variable that stores "this" without us detecting it
-		private boolean operandIsThis(TACOperand op, Type type, Set<TACPhiStore> visitedPhis) {
+		private boolean operandIsThis(TACOperand op, Type type, Set<TACPhi> visitedPhis) {
 			op = getValue(op);
 			
 			//current type
@@ -865,8 +868,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					if( store.getVariable().equals(method.getThis()))
 						return true;
 				}			
-				else if( op instanceof TACPhiStore ) {
-					TACPhiStore phi = (TACPhiStore)op;
+				else if( op instanceof TACPhi ) {
+					TACPhi phi = (TACPhi)op;
 					if( visitedPhis.contains(phi) )
 						return false;
 					
@@ -1011,7 +1014,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				return store;
 
 			//else insert phi node after label
-			TACPhiStore phi = new TACPhiStore(label.getNext(), variable);
+			TACPhi phi = new TACPhi(label.getNext(), variable);
 			stores.put(variable, phi);
 			for( Block block : incoming )
 				phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastStores));
@@ -1037,7 +1040,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACOperand store = predecessors.get(variable); 
 					if( store == null ) {
 						//add phi
-						TACPhiStore phi = new TACPhiStore(label.getNext(), variable);
+						TACPhi phi = new TACPhi(label.getNext(), variable);
 						if( !stores.containsKey(variable) )
 							stores.put(variable, phi);
 						predecessors.put(variable, phi);
@@ -1092,12 +1095,14 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		private boolean removePhiInput(Block block)
 		{	
 			for( TACNode node : this ) {
+				/*
 				if( node instanceof TACPhi ) {
 					TACPhiRef phiRef = ((TACPhi)node).getRef();
 					phiRef.removeLabel(block.getLabel());
 				}
-				else if( node instanceof TACPhiStore ) {
-					TACPhiStore store = (TACPhiStore)node;
+				else*/
+				if( node instanceof TACPhi ) {
+					TACPhi store = (TACPhi)node;
 					store.removePreviousStore(block.getLabel());					
 				}
 			}
@@ -1156,6 +1161,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			}			
 			
 			return node instanceof TACLabel ||
+				node instanceof TACLabelAddress || 
 				node instanceof TACBranch ||
 				node instanceof TACLandingpad ||
 				node instanceof TACResume ||

@@ -31,13 +31,8 @@ public abstract class TACNode implements Iterable<TACOperand> {
      *
      * @param node
      */
-    protected TACNode(TACNode node) {
-        clear();
-        insertBefore(node);
-        if( node != null ) {
-        	ASTNode = node.getASTNode();
-        	block = node.getBlock();        	
-        }
+    protected TACNode(TACNode node) {        
+        insertBefore(node);        
     }
     
     public TACBlock getBlock()
@@ -66,39 +61,6 @@ public abstract class TACNode implements Iterable<TACOperand> {
     }
 
     /**
-     * Puts input node after current node
-     *
-     * @param node
-     */
-
-    public void append(TACNode node) {
-        node.insertAfter(this);
-    }
-
-    /**
-     * Puts input node before current node
-     *
-     * @param node
-     */
-    public void prepend(TACNode node) {
-        node.insertBefore(this);
-    }
-
-    public void replaceWith(TACNode node) {
-        if (node == this)
-            return;
-        node.insertBefore(this);
-        remove();
-    }
-
-    public void replace(TACNode node) {
-        if (node == this)
-            return;
-        insertBefore(node);
-        node.remove();
-    }
-
-    /**
      * Inserts this node after given node: node <-> this
      *
      * @param node the node to insert this node after
@@ -106,6 +68,11 @@ public abstract class TACNode implements Iterable<TACOperand> {
     public void insertAfter(final TACNode node) {
         if (node == this)
             return;
+        
+        if( node != null ) {
+        	ASTNode = node.getASTNode();
+        	block = node.getBlock();        	
+        }
 
         remove();
 
@@ -116,6 +83,12 @@ public abstract class TACNode implements Iterable<TACOperand> {
     public void insertBefore(final TACNode node) {
         if (node == this)
             return;
+        
+        if( node != null ) {
+        	ASTNode = node.getASTNode();
+        	block = node.getBlock();        	
+        }
+        
         remove();
         if (node != null)
             connect(node.getPrevious(), this, node);
@@ -125,17 +98,9 @@ public abstract class TACNode implements Iterable<TACOperand> {
      * Removes this node from the circular linked-list.
      */
     public void remove() {
-        connect(prev, next);
-        
-        this.prev = this.next = null;
-    }
-
-    /**
-     * Clears the circular linked-list by making this node the only node in the list.
-     */
-    protected final void clear() {
-        connect(this, this);
-    }
+        connect(prev, next);        
+        this.prev = this.next = this;
+    }  
 
     protected final void connect(TACNode first, TACNode second, TACNode third) {
         connect(first, second, second, third);
@@ -152,8 +117,10 @@ public abstract class TACNode implements Iterable<TACOperand> {
      * @param second the second node to connect.
      */
     protected final void connect(TACNode first, TACNode second) {
-        first.next = second;
-        second.prev = first;
+    	if( first != null )
+    		first.next = second;
+    	if( second != null )
+    		second.prev = first;
     }
     
     public Node getASTNode()

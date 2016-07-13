@@ -11,7 +11,7 @@ public abstract class TACLocalStorage extends TACUpdate {
 	protected TACLocalStorage(TACNode node, TACVariable variable) {
 		super(node);		
 		this.variable = variable;
-		number = getMethod().incrementVariableCounter();
+		number = variable.getMethod().incrementVariableCounter();
 	}
 	
 	@Override

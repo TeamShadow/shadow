@@ -51,6 +51,7 @@ import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabel;
+import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLoad;
@@ -62,9 +63,7 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
-import shadow.tac.nodes.TACPhiRef;
-import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPhiStore;
+import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
@@ -1488,6 +1487,8 @@ public class LLVMOutput extends AbstractOutput {
 			 node.setData(store.getData());
 	}
 
+	
+	/*
 	@Override
 	public void visit(TACPhi node) throws ShadowException {
 		TACPhiRef phi = node.getRef();
@@ -1499,9 +1500,10 @@ public class LLVMOutput extends AbstractOutput {
 					append(symbol(phi.getLabel(i))).append(" ],");
 		writer.write(sb.deleteCharAt(sb.length() - 1).toString());
 	}
+	*/
 	
 	@Override
-	public void visit(TACPhiStore node) throws ShadowException {
+	public void visit(TACPhi node) throws ShadowException {
 		 Map<TACLabel, TACOperand> values = node.getPreviousStores();
 		 if( values.size() > 1 ) {
 			 StringBuilder sb = new StringBuilder(name(node)).
@@ -1527,12 +1529,14 @@ public class LLVMOutput extends AbstractOutput {
 		else if (node.isDirect())
 			writer.write("br label " + symbol(node.getLabel()));
 		else if (node.isIndirect()) {
-			StringBuilder sb = new StringBuilder("indirectbr i8* ").
-					append(symbol(node.getOperand())).append(", [ ");
-			TACPhiRef dest = node.getDestination();
-			for (int i = 0; i < dest.getSize(); i++)
-				sb.append("label ").append(symbol(dest.getValue(i))).
+			StringBuilder sb = new StringBuilder("indirectbr ").
+					append(typeSymbol(node.getPhi())).append(", [ ");
+			TACPhi phi = node.getPhi();
+			for( TACOperand operand : phi.getPreviousStores().values()) {
+				TACLabelAddress address = (TACLabelAddress) operand;
+				sb.append("label ").append(symbol(address.getLabel())).
 						append(", ");
+			}
 			writer.write(sb.delete(sb.length() - 2, sb.length()).append(" ]").
 					toString());
 		}
@@ -1927,11 +1931,11 @@ public class LLVMOutput extends AbstractOutput {
 		return '@' + method.getMangledName();
 	}
 	
-	private static String name(TACMethod method) {
+	public static String name(TACMethod method) {
 		return name(method.getSignature());
 	}
 
-	private String symbol(TACLabel node) {
+	public static String symbol(TACLabel node) {
 		return '%' + node.toString();
 	}
 

@@ -19,19 +19,17 @@ import shadow.typecheck.type.Type;
  */
 public class TACBranch extends TACNode
 {
-	private TACLabel trueLabel, falseLabel;
-	private TACPhiRef destination;
+	private TACLabel trueLabel, falseLabel;	
 	private TACOperand operand;
 	private Kind kind;
 	
 	public enum Kind { DIRECT, INDIRECT, CONDITIONAL };
 
-	public TACBranch(TACNode node, TACOperand op, TACPhiRef dest)
+	public TACBranch(TACNode node, TACPhi phi)
 	{
 		super(node);
-		kind = Kind.INDIRECT;
-		operand = op;
-		destination = dest;
+		kind = Kind.INDIRECT;		
+		operand = phi;
 	}
 	public TACBranch(TACNode node, TACLabel label)
 	{
@@ -52,7 +50,7 @@ public class TACBranch extends TACNode
 	public void convertToDirect( TACLabel label )
 	{
 		kind = Kind.DIRECT;
-		destination = null;
+		operand = null;
 		trueLabel = falseLabel = label;
 	}
 
@@ -74,17 +72,11 @@ public class TACBranch extends TACNode
 			throw new IllegalStateException();
 		return operand;
 	}
-	public TACOperand getOperand()	
+	public TACPhi getPhi()
 	{
 		if (!isIndirect())
 			throw new IllegalStateException();
-		return operand;
-	}
-	public TACPhiRef getDestination()
-	{
-		if (!isIndirect())
-			throw new IllegalStateException();
-		return destination;
+		return (TACPhi)operand;
 	}
 	public TACLabel getLabel()
 	{
@@ -116,7 +108,7 @@ public class TACBranch extends TACNode
 		if( num == 0 )
 		{
 			if( isIndirect() )
-				return getOperand();
+				return getPhi();
 			else if( isConditional() )
 				return getCondition();
 		}
@@ -136,6 +128,6 @@ public class TACBranch extends TACNode
 				getFalseLabel();
 		if (isDirect())
 			return "goto " + getLabel();
-		return "goto " + getDestination();
+		return "goto " + getPhi();
 	}
 }

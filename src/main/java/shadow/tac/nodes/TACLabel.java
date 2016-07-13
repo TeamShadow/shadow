@@ -15,19 +15,8 @@ public class TACLabel extends TACOperand {
 		super(null);
 		number = method.incrementLabelCounter();
 		name = "_label" + number;
-	}
-	
-	@Override
-	public void insertBefore(TACNode node)
-	{
-		clear();
-        super.insertBefore(node);
-        if( node != null ) {
-        	setASTNode(node.getASTNode());
-        	setBlock(node.getBlock());        	
-        }
-	}
-	
+	}	
+
 	public int getNumber()
 	{
 		return number;

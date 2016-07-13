@@ -7,7 +7,9 @@ import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACPhiRef;
+import shadow.tac.nodes.TACPhi;
+import shadow.typecheck.type.PointerType;
+import shadow.typecheck.type.SimpleModifiedType;
 
 /**
  * Represents blocks of Shadow code, usually surrounded by braces.
@@ -23,7 +25,7 @@ public class TACBlock
 			unwindLabel;
 	private List<TACLabel> catchLabels;
 	private TACLabel recoverLabel, doneLabel, cleanupLabel;
-	private TACPhiRef cleanupPhi;
+	private TACPhi cleanupPhi;
 	private TACMethod method;
 
 	public TACBlock(TACMethod method)
@@ -250,7 +252,7 @@ public class TACBlock
 			return cleanupLabel;
 		return parent == null ? null : parent.getCleanup();
 	}
-	public TACPhiRef getCleanupPhi()
+	public TACPhi getCleanupPhi()
 	{
 		if (cleanupPhi != null)
 			return cleanupPhi;
@@ -263,10 +265,6 @@ public class TACBlock
 	public TACBlock getCleanupBlock(TACBlock last)
 	{
 		return getCleanupBlock(this, last);
-	}
-	public TACBlock getNextCleanupBlock()
-	{
-		return getNextCleanupBlock(null);
 	}
 	public TACBlock getNextCleanupBlock(TACBlock last)
 	{
@@ -282,8 +280,13 @@ public class TACBlock
 	{
 		if (cleanupLabel != null)
 			throw new IllegalStateException("Cleanup label already added.");
-		cleanupLabel = new TACLabel(method);
-		cleanupPhi = new TACPhiRef();
+		cleanupLabel = new TACLabel(method);		
+		cleanupPhi = new TACPhi(null, method.addTempLocal(new SimpleModifiedType(new PointerType())));
+		
+		//inserts the phi after the label
+		//cleanupLabel.clear();
+		//cleanupPhi.clear();
+		//cleanupPhi.insertAfter(cleanupLabel);		
 		return this;
 	}
 }

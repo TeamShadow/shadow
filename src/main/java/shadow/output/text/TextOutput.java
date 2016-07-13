@@ -20,6 +20,7 @@ import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
+import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
@@ -32,9 +33,7 @@ import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
-import shadow.tac.nodes.TACPhiRef;
-import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPhiStore;
+import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
@@ -177,7 +176,7 @@ public class TextOutput extends AbstractOutput
 	}
 	
 	@Override
-	public void visit(TACPhiStore node) throws ShadowException {
+	public void visit(TACPhi node) throws ShadowException {
 		 Map<TACLabel, TACOperand> values = node.getPreviousStores();
 		 if( values.size() > 1 ) {
 			 StringBuilder sb = new StringBuilder(node.getVariable().toString()).
@@ -250,12 +249,13 @@ public class TextOutput extends AbstractOutput
 					append(symbol(node.getTrueLabel())).append(", ").
 					append(symbol(node.getFalseLabel()));
 		else if (node.isIndirect()) {			
-			TACPhi phi = (TACPhi)node.getOperand();
-			TACPhiRef phiRef = phi.getRef();
-			sb.append("phi ");
-			for (int i = 0; i < phiRef.getSize(); i++)
-				sb.append("[").append(symbol(phiRef.getValue(i))).append(", ").
-						append(symbol(phiRef.getLabel(i))).append("],");
+			TACPhi phi = node.getPhi();			
+			sb.append("phi ");			
+			for( TACOperand operand : phi.getPreviousStores().values()) {
+				TACLabelAddress address = (TACLabelAddress) operand;
+				sb.append("label ").append(symbol(address.getLabel())).
+						append(", ");
+			}			
 			sb.deleteCharAt(sb.length() - 1).toString();			
 		}
 		else if (node.isDirect())

@@ -185,7 +185,7 @@ public class TACMethod
 	}
 	public TACVariable addLocal(ModifiedType type, String name)
 	{
-		TACVariable variable = new TACVariable(type, name);
+		TACVariable variable = new TACVariable(type, name, this);
 		while (locals.containsKey(variable.getName()))
 			variable.rename();
 		locals.put(variable.getName(), variable);

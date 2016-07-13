@@ -57,8 +57,8 @@ public class TACLocalLoad extends TACUpdate {
 			if( literal.getValue() instanceof ShadowUndefined )
 				undefined = true;
 		}
-		else if( temp instanceof TACPhiStore ) {
-			TACPhiStore phiStore = (TACPhiStore) temp;
+		else if( temp instanceof TACPhi ) {
+			TACPhi phiStore = (TACPhi) temp;
 			if( phiStore.isUndefined() )
 				undefined = true;
 		}

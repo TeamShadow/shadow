@@ -33,6 +33,7 @@ public class TACTree extends TACNode
 	private TACTree(TACTree parent, int numChildren, TACBlock block)
 	{
 		super(null);
+		clear();
 		
 		if (numChildren < 0)
 			throw new IllegalArgumentException("numChildren < 0");
@@ -42,6 +43,13 @@ public class TACTree extends TACNode
 		children[0] = parent;
 		setBlock(block);
 	}
+	
+	 /**
+     * Clears the circular linked-list by making this node the only node in the list.
+     */
+    private final void clear() {
+        connect(this, this);
+    }
 	
 	public TACOperand getOperand()
 	{
@@ -110,23 +118,6 @@ public class TACTree extends TACNode
 		return last;
 	}
 	
-	/*
-	public TACOperand appendChild(int i)
-	{
-		if (i >= index)
-			return null;
-		TACTree child = children[++i];
-		if (child == null)
-			return null;
-		TACOperand last = null;
-		if (child.getLast() instanceof TACOperand)
-			last = (TACOperand)child.getLast();
-		append(child);
-		children[i] = null;
-		return last;
-	}
-	*/
-	
 	public TACOperand appendChild(int i)
 	{
 		if (i >= index)
@@ -181,6 +172,7 @@ public class TACTree extends TACNode
 		node.insertAfter(getPrevious());
 	}
 
+	@Override
 	public void insertAfter(TACNode node)
 	{
 		if (node == null || node == this || isEmpty())
@@ -188,6 +180,8 @@ public class TACTree extends TACNode
 		connect(getPrevious(), node.getNext(), node, getNext());
 		clear();
 	}
+	
+	@Override
 	public void insertBefore(TACNode node)
 	{
 		if (node == null || node == this || isEmpty())

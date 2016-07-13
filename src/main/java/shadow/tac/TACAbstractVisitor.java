@@ -12,6 +12,7 @@ import shadow.tac.nodes.TACClass.TACMethodTable;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACGlobal;
 import shadow.tac.nodes.TACLabel;
+import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
@@ -24,9 +25,7 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACParameter;
-import shadow.tac.nodes.TACPhiRef;
-import shadow.tac.nodes.TACPhiRef.TACPhi;
-import shadow.tac.nodes.TACPhiStore;
+import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
@@ -76,6 +75,8 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACLabel node) throws ShadowException { }	
 	@Override
+	public void visit(TACLabelAddress node) throws ShadowException { }
+	@Override
 	public void visit(TACLandingpad node) throws ShadowException { }
 	@Override
 	public void visit(TACLength node) throws ShadowException { }
@@ -96,13 +97,9 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACNewArray node) throws ShadowException { }
 	@Override
-	public void visit(TACNewObject node) throws ShadowException { }
+	public void visit(TACNewObject node) throws ShadowException { }	
 	@Override
 	public void visit(TACPhi node) throws ShadowException { }
-	@Override
-	public void visit(TACPhiRef node) throws ShadowException { }
-	@Override
-	public void visit(TACPhiStore node) throws ShadowException { }
 	@Override
 	public void visit(TACPointerToLong node) throws ShadowException { }	
 	@Override

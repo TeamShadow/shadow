@@ -9,12 +9,19 @@ public class TACVariable implements ModifiedType
 	private ModifiedType type;
 	private final String name;
 	private int suffix;
+	private TACMethod method;
 
-	public TACVariable(ModifiedType varType, String varName)
+	public TACVariable(ModifiedType varType, String varName, TACMethod varMethod)
 	{
 		type = varType;
 		name = varName;
 		suffix = 0;
+		method = varMethod;		
+	}
+	
+	public TACMethod getMethod()
+	{
+		return method;
 	}
 
 	public boolean hasType()

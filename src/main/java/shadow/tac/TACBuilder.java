@@ -35,6 +35,7 @@ import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACLabel;
+import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
@@ -47,7 +48,7 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
-import shadow.tac.nodes.TACPhiRef.TACPhi;
+import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
@@ -1823,7 +1824,7 @@ public class TACBuilder implements ShadowParserVisitor {
 			if (node.hasFinally()) {
 				TACPhi phi = (TACPhi)tree.getLast();
 				tree.appendChild(1);
-				new TACBranch(tree, phi, phi.getRef());				
+				new TACBranch(tree, phi);				
 			}
 			block.getDone().insertBefore(tree);
 			block = block.getParent();			
@@ -1855,13 +1856,12 @@ public class TACBuilder implements ShadowParserVisitor {
 				TACLabel continueUnwind = block.getParent().getUnwind();
 				if (continueUnwind != null)
 					visitCleanup(block, block.getUnwind(), continueUnwind);
-				else
-				{
+				else {
 					visitCleanup(block, block.getUnwind());
 					new TACResume(tree, new TACLocalLoad(tree, exception));
 				}
 				block.getCleanup().insertBefore(tree);
-				block.getCleanupPhi().new TACPhi(tree);
+				block.getCleanupPhi().insertBefore(tree);
 				block = block.getParent();				
 			}
 		}
@@ -1956,10 +1956,6 @@ public class TACBuilder implements ShadowParserVisitor {
 		return POST_CHILDREN;
 	}
 
-	@SuppressWarnings("unused")
-	private void visitCleanup(TACBlock lastBlock) {
-		visitCleanup(lastBlock, null);
-	}
 	private void visitCleanup(TACBlock lastBlock, TACLabel currentLabel) {
 		if (lastBlock != null)
 			lastBlock = lastBlock.getParent();
@@ -1993,13 +1989,15 @@ public class TACBuilder implements ShadowParserVisitor {
 				lastBlock) {
 			TACLabel nextLabel = new TACLabel(method);
 			new TACBranch(tree, currentBlock.getCleanup());
-			currentBlock.getCleanupPhi().addEdge(nextLabel, currentLabel);
+			//currentBlock.getCleanupPhi().addEdge(nextLabel, currentLabel);
+			currentBlock.getCleanupPhi().addPreviousStore(currentLabel, new TACLabelAddress(tree, nextLabel, method) );
 			nextLabel.insertBefore(tree);
 			currentBlock = nextBlock;
 			currentLabel = nextLabel;
 		}
 		new TACBranch(tree, currentBlock.getCleanup());
-		currentBlock.getCleanupPhi().addEdge(lastLabel, currentLabel);
+		//currentBlock.getCleanupPhi().addEdge(lastLabel, currentLabel);
+		currentBlock.getCleanupPhi().addPreviousStore(currentLabel, new TACLabelAddress(tree, lastLabel, method) );
 	}
 
 	private void visitConstant(TACConstant constantRef, Node constantNode)
