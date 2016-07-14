@@ -115,6 +115,22 @@
           </dependency>
         </dependencies>
       </plugin>
+      <plugin>
+      	<groupId>org.antlr</groupId>
+      	<artifactId>antlr4-maven-plugin</artifactId>
+      	<version>4.5.3</version>
+      	 <executions>
+          <execution>
+            <goals>
+              <goal>antlr4</goal>
+            </goals>
+            <configuration>            	
+				<outputDirectory>src/main/java/shadow/parse</outputDirectory>
+				<visitor>true</visitor>
+			</configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <!-- The contents of this pluginManagement section are Unfortunate nonsense that m2e requires to work -->
     <!-- Do NOT confuse this with the normal plugin section, it is completely ignored by Maven -->
@@ -142,6 +158,21 @@
                    </execute>
                  </action>
                </pluginExecution>
+               <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.antlr</groupId>
+                    <artifactId>antlr4-maven-plugin</artifactId>
+                    <versionRange>[4.5.3,)</versionRange>
+                    <goals>
+                      <goal>antlr4</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute>
+                      <runOnIncremental>true</runOnIncremental>
+                    </execute>
+                  </action>
+                </pluginExecution>
              </pluginExecutions>
            </lifecycleMappingMetadata>
          </configuration>
@@ -189,6 +220,11 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <version>2.2</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.antlr</groupId>
+    	<artifactId>antlr4</artifactId>
+    	<version>4.5.3</version>
     </dependency>
   </dependencies>
 </project>
