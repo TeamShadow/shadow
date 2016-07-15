@@ -6,14 +6,14 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class ShadowRuleContext extends ParserRuleContext implements ModifiedType {
+public class Context extends ParserRuleContext implements ModifiedType {
 	private Type type;	
 	private Modifiers modifiers = new Modifiers();
 	
-	public ShadowRuleContext()
+	public Context()
 	{}
 	
-	public ShadowRuleContext(ParserRuleContext parent, int invokingStateNumber)
+	public Context(ParserRuleContext parent, int invokingStateNumber)
 	{
 		super(parent, invokingStateNumber);
 	}

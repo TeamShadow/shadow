@@ -287,7 +287,7 @@ TOKEN :
 |
   < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
 |
-  < #OCTAL_LITERAL: "0" ["c","C"] (["0"-"7"])* > //doesn't use 0o or 0O because it's hard to read
+  < #OCTAL_LITERAL: "0" ["c","C"] (["0"-"7"])+ > //doesn't use 0o or 0O because it's hard to read
 |
   < FLOAT_LITERAL:
        (["0"-"9"])+ "." (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
