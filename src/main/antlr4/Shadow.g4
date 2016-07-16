@@ -20,7 +20,7 @@
 grammar Shadow;
 
 @header {
-	package shadow.parse;
+package shadow.parse;
 }
 
 @lexer::members {    
@@ -29,569 +29,619 @@ grammar Shadow;
 
 options {contextSuperClass=shadow.parse.Context;}
 
-// starting point for parsing a shadow file
-compilationUnit
-    :   packageDeclaration? importDeclaration* typeDeclaration* EOF
+compilationUnit	
+    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration) EOF
     ;
-
-packageDeclaration
-    :   annotation* 'package' qualifiedName ';'
-    ;
-
+    
 importDeclaration
-    :   'import' 'static'? qualifiedName ('.' '*')? ';'
+    :   'import' name versionRange? ';'
     ;
+    
+versionRange
+	: VersionLiteral
+	| '[' VersionLiteral ',' ']'
+	| '[' ',' VersionLiteral ']'
+	| '[' VersionLiteral ',' VersionLiteral ']'
+	;
+	
+modifiers
+	: modifier*
+	;
 
-typeDeclaration
-    :   classOrInterfaceModifier* classDeclaration
-    |   classOrInterfaceModifier* enumDeclaration
-    |   classOrInterfaceModifier* interfaceDeclaration
-    |   classOrInterfaceModifier* annotationTypeDeclaration
-    |   ';'
-    ;
+modifier throws ParseException
+	: 'public'
+	| 'protected' 
+	| 'private' 
+	| 'abstract' 
+	| 'readonly' 
+	| 'native' 
+	| 'weak' 
+	| 'immutable'
+	| 'nullable' 
+	| 'get' 
+	| 'set' 
+	| 'constant' 
+	| 'locked' 
+	;
 
-modifier
-    :   classOrInterfaceModifier
-    |   (   'native'
-        |   'synchronized'
-        |   'transient'
-        |   'volatile'
-        )
-    ;
-
-classOrInterfaceModifier
-    :   annotation       // class or interface
-    |   (   'public'     // class or interface
-        |   'protected'  // class or interface
-        |   'private'    // class or interface
-        |   'static'     // class or interface
-        |   'abstract'   // class or interface
-        |   'final'      // class only -- does not apply to interfaces
-        |   'strictfp'   // class or interface
-        )
-    ;
-
-variableModifier
-    :   'final'
-    |   annotation
-    ;
-
-classDeclaration
-    :   'class' Identifier typeParameters?
-        ('extends' type)?
-        ('implements' typeList)?
-        classBody
-    ;
-
+classOrInterfaceDeclaration
+	:
+	('class' | 'singleton' | 'exception'| 'interface' )
+	( unqualifiedName '@' )? Identifier typeParameters? VersionLiteral? isList?
+	classOrInterfaceBody
+	;
+	
+enumDeclaration
+	:
+	'enum' ( unqualifiedName '@' )? Identifier	isList?
+	enumBody
+	;
+	
+enumBody
+	:
+   '{'
+		enumConstant (',' enumConstant)*
+   		( ';' classOrInterfaceBodyDeclaration* )?
+   '}'
+	;
+	
+enumConstant
+	: Identifier  arguments? classOrInterfaceBody?
+	;
+	
 typeParameters
-    :   '<' typeParameter (',' typeParameter)* '>'
-    ;
+	: '<' typeParameter( ',' typeParameter )* '>'
+	;
 
 typeParameter
-    :   Identifier ('extends' typeBound)?
-    ;
+	: Identifier isList?
+	;
 
-typeBound
-    :   type ('&' type)*
-    ;
+isList
+	: 'is' classOrInterfaceType( 'and' classOrInterfaceType )*
+	;
 
-enumDeclaration
-    :   ENUM Identifier ('implements' typeList)?
-        '{' enumConstants? ','? enumBodyDeclarations? '}'
-    ;
+classOrInterfaceBody
+	:
+  	'{'
+  		classOrInterfaceBodyDeclaration*
+  	'}'
+	;	
 
-enumConstants
-    :   enumConstant (',' enumConstant)*
-    ;
-
-enumConstant
-    :   annotation* Identifier arguments? classBody?
-    ;
-
-enumBodyDeclarations
-    :   ';' classBodyDeclaration*
-    ;
-
-interfaceDeclaration
-    :   'interface' Identifier typeParameters? ('extends' typeList)? interfaceBody
-    ;
-
-typeList
-    :   type (',' type)*
-    ;
-
-classBody
-    :   '{' classBodyDeclaration* '}'
-    ;
-
-interfaceBody
-    :   '{' interfaceBodyDeclaration* '}'
-    ;
-
-classBodyDeclaration
-    :   ';'
-    |   'static'? block
-    |   modifier* memberDeclaration
-    ;
-
-memberDeclaration
-    :   methodDeclaration
-    |   genericMethodDeclaration
-    |   fieldDeclaration
-    |   constructorDeclaration
-    |   genericConstructorDeclaration
-    |   interfaceDeclaration
-    |   annotationTypeDeclaration
-    |   classDeclaration
-    |   enumDeclaration
-    ;
-
-/* We use rule this even for void methods which cannot have [] after parameters.
-   This simplifies grammar and we can consider void to be a type, which
-   renders the [] matching as a context-sensitive issue or a semantic check
-   for invalid return type after parsing.
- */
-methodDeclaration
-    :   (type|'void') Identifier formalParameters ('[' ']')*
-        ('throws' qualifiedNameList)?
-        (   methodBody
-        |   ';'
-        )
-    ;
-
-genericMethodDeclaration
-    :   typeParameters methodDeclaration
-    ;
-
-constructorDeclaration
-    :   Identifier formalParameters ('throws' qualifiedNameList)?
-        constructorBody
-    ;
-
-genericConstructorDeclaration
-    :   typeParameters constructorDeclaration
-    ;
-
+classOrInterfaceBodyDeclaration
+	: modifiers 
+	  	( classOrInterfaceDeclaration
+	    | enumDeclaration
+	    | createDeclaration
+	    | destroyDeclaration
+	    | fieldDeclaration 
+	    | methodDeclaration
+	  	)
+	;
+	
 fieldDeclaration
-    :   type variableDeclarators ';'
-    ;
-
-interfaceBodyDeclaration
-    :   modifier* interfaceMemberDeclaration
-    |   ';'
-    ;
-
-interfaceMemberDeclaration
-    :   constDeclaration
-    |   interfaceMethodDeclaration
-    |   genericInterfaceMethodDeclaration
-    |   interfaceDeclaration
-    |   annotationTypeDeclaration
-    |   classDeclaration
-    |   enumDeclaration
-    ;
-
-constDeclaration
-    :   type constantDeclarator (',' constantDeclarator)* ';'
-    ;
-
-constantDeclarator
-    :   Identifier ('[' ']')* '=' variableInitializer
-    ;
-
-// see matching of [] comment in methodDeclaratorRest
-interfaceMethodDeclaration
-    :   (type|'void') Identifier formalParameters ('[' ']')*
-        ('throws' qualifiedNameList)?
-        ';'
-    ;
-
-genericInterfaceMethodDeclaration
-    :   typeParameters interfaceMethodDeclaration
-    ;
-
-variableDeclarators
-    :   variableDeclarator (',' variableDeclarator)*
-    ;
-
+	: type variableDeclarator (',' variableDeclarator )* ';'
+	;
+	
 variableDeclarator
-    :   variableDeclaratorId ('=' variableInitializer)?
-    ;
-
-variableDeclaratorId
-    :   Identifier ('[' ']')*
-    ;
-
-variableInitializer
-    :   arrayInitializer
-    |   expression
-    ;
-
+	: Identifier ( '=' conditionalExpression )
+	;
+	
 arrayInitializer
-    :   '{' (variableInitializer (',' variableInitializer)* (',')? )? '}'
+	: '{' arrayInitializer ( ',' arrayInitializer )*  (',')?  '}'
+  	| '{' conditionalExpression ( ',' conditionalExpression )*  (',')?  '}'
+	;
+
+methodDeclarator
+	: Identifier formalParameters '=>' resultTypes
+	;
+
+inlineResults
+	: '(' ( conditionalExpression ( ',' conditionalExpression() )* )? ')'
+ 	;
+ 	
+formalParameters
+	: '(' ( formalParameter ( ',' formalParameter )* )? ')'
+	;
+	
+formalParameter
+	: modifiers type Identifier
+	;
+
+methodDeclaration
+	: methodDeclarator (block | ';' )
+	;
+	
+createDeclaration
+	: createDeclarator (createBlock | ';' )
+	;
+
+createDeclarator
+	: 'create' formalParameters
+	;
+
+createBlock
+	:
+	'{'
+		explicitCreateInvocation? 
+    	blockStatement*  
+    '}'
     ;
 
-enumConstantName
-    :   Identifier
-    ;
+destroyDeclaration
+	: 'destroy' ( block | ';' )
+	;
+
+explicitCreateInvocation
+	: ( 'this' | 'super' ) 
+	'(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ';'
+	;
 
 type
-    :   classOrInterfaceType ('[' ']')*
-    |   primitiveType ('[' ']')*
-    ;
+	: referenceType 
+    | primitiveType
+    | functionType
+	;
 
+referenceType
+	:
+    | primitiveType ( '[' ( ',' )* ']' )+
+  	| classOrInterfaceType ( '[' ( ',' )* ']' )*
+	;
+
+functionType
+	: resultTypes() '=>' resultTypes
+	;
+	
 classOrInterfaceType
-    :   Identifier typeArguments? ('.' Identifier typeArguments? )*
-    ;
-
-primitiveType
-    :   'boolean'
-    |   'char'
-    |   'byte'
-    |   'short'
-    |   'int'
-    |   'long'
-    |   'float'
-    |   'double'
-    ;
+	: (unqualifiedName '@')? classOrInterfaceTypeSuffix ( ':' classOrInterfaceTypeSuffix )*
+	;
+	
+classOrInterfaceTypeSuffix
+	:  Identifier typeArguments?
+   	;
 
 typeArguments
-    :   '<' typeArgument (',' typeArgument)* '>'
-    ;
+	: '<' type ( ',' type )* '>'
+	;
 
-typeArgument
-    :   type
-    |   '?' (('extends' | 'super') type)?
-    ;
+primitiveType
+	:
+	( 'boolean'
+	| 'byte'
+	| 'code'
+	| 'double'
+	| 'float'
+	| 'int'
+	| 'long'
+	| 'short'
+	| 'ubyte'
+	| 'uint' 
+	| 'ulong' 
+	| 'ushort' 
+	)
+	;
 
-qualifiedNameList
-    :   qualifiedName (',' qualifiedName)*
-    ;
+resultType
+	: modifiers type Identifier? // Optional identifier for documentation only.
+	;
 
-formalParameters
-    :   '(' formalParameterList? ')'
-    ;
+resultTypes
+	: '(' ( resultType ( ',' resultType )* )? ')'
+	;
+	
+name
+	: (unqualifiedName '@')? Identifier ( ':' Identifier )*
+	;
 
-formalParameterList
-    :   formalParameter (',' formalParameter)* (',' lastFormalParameter)?
-    |   lastFormalParameter
-    ;
+unqualifiedName
+	: 'default' 
+	| Identifier ( ':' Identifier )*
+	;
+	
+nameList
+	: classOrInterfaceType (',' classOrInterfaceType )*
+	;
+	
+//Expression syntax
 
-formalParameter
-    :   variableModifier* type variableDeclaratorId
-    ;
+assignmentOperator
+	: '='    
+	| '#='   
+	| '*='   
+	| '/='   
+	| '%='   
+	| '+='   
+	| '-='   
+	| '<<='  
+	| '>>='  
+	| '>>>=' 
+	| '<<<=' 
+	| '&='   
+	| '^='   
+	| '|='
+	;
 
-lastFormalParameter
-    :   variableModifier* type '...' variableDeclaratorId
-    ;
+conditionalExpression
+	: coalesceExpression ( '?' conditionalExpression ',' conditionalExpression )
+	;
 
-methodBody
-    :   block
-    ;
+coalesceExpression
+	:  conditionalOrExpression  ('??' conditionalOrExpression )*
+	;
 
-constructorBody
-    :   block
-    ;
+conditionalOrExpression
+  	: conditionalExclusiveOrExpression ( 'or' conditionalExclusiveOrExpression )*
+	;
 
-qualifiedName
-    :   Identifier ('.' Identifier)*
-    ;
+conditionalExclusiveOrExpression
+	: conditionalAndExpression ( 'xor' conditionalAndExpression )*
+	;
+
+conditionalAndExpression
+	: bitwiseOrExpression ( 'and' bitwiseOrExpression )*
+	;
+
+bitwiseOrExpression
+	: bitwiseExclusiveOrExpression ( '|' bitwiseExclusiveOrExpression )*
+	;
+
+bitwiseExclusiveOrExpression
+	: bitwiseAndExpression ( '^' bitwiseAndExpression )*
+	;
+
+bitwiseAndExpression
+	: equalityExpression ( '&' equalityExpression )*
+	;
+
+equalityExpression
+	: isExpression (( '==' | '===' | '!=' | '!==' ) isExpression )*
+	;
+	
+isExpression
+	: relationalExpression ( 'is' type )?
+	;
+
+relationalExpression
+	: concatenationExpression (( '<' | '>' | '<=' | '>='  ) concatenationExpression )*
+	;
+
+
+concatenationExpression
+	: shiftExpression ( '#' shiftExpression )*
+	;
+
+shiftExpression
+	: rotateExpression (( '<<' | '>>' ) rotateExpression )*
+	;
+
+rotateExpression
+	: additiveExpression ( ( '<<<' | '>>>' ) additiveExpression )*
+	;
+
+additiveExpression
+	: multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )*
+	;
+
+multiplicativeExpression
+	: unaryExpression (( '*' | '/' | '%' ) unaryExpression )*
+	;
+
+//| '++' { throw new ParseException('++ is not a legal Shadow operator', jjtThis);  }
+// Strangely, -- is allowed, because it's the negation of a negation.
+// Unary + is not in Shadow since it's useless.
+unaryExpression
+	:
+	 '#' unaryExpression
+	| '~' unaryExpression
+	| '!' unaryExpression
+	| '-'unaryExpression
+	| inlineMethodDefinition
+	| primaryExpression
+	;
+
+inlineMethodDefinition
+	: formalParameters '=>' inlineResults // Inline method definition
+	;
+	
+castExpression
+	: 'cast' '<' type '>' '(' conditionalExpression ')'
+ 	;
+
+checkExpression
+	: 'check' '(' conditionalExpression ')'
+ 	;
+
+copyExpression
+	: ('copy' | 'freeze' ) '(' conditionalExpression ')'
+  	;
+
+primaryExpression
+	: primaryPrefix primarySuffix* 
+	;
+
+rightSide
+	: sequenceRightSide
+ 	| conditionalExpression
+ 	;
+
+sequenceRightSide
+	: '(' conditionalExpression (','  conditionalExpression )+ ')'
+	;
+
+sequenceLeftSide
+	: '(' ( sequenceVariable | primaryExpression )? (',' (sequenceVariable | primaryExpression)? )* ')'
+	;
+	
+sequenceVariable
+	: modifiers ( 'var' | type )  Identifier
+	;
+	
+primaryPrefix
+	: literal
+	| 'this'
+	| 'super'
+	| checkExpression
+	| copyExpression
+	| castExpression
+	| '(' conditionalExpression ')'
+	| primitiveType
+	| functionType
+	| arrayInitializer
+	| (unqualifiedName '@' )? Identifier //catches class types and identifiers
+	;
+
+primarySuffix
+	: qualifiedKeyword
+	| brackets
+	| subscript
+	| destroy
+	| method
+	| methodCall
+	| property
+	| allocation
+	| scopeSpecifier
+	//| "++" {throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
+	//| "--" {throw new ParseException("-- is not a legal Shadow operator", jjtThis);  }
+	;	
+
+allocation
+	: arrayCreate
+	| create
+	;
+
+qualifiedKeyword
+	: ':' ( 'this' | 'super')	
+	// When you have inner classes, you sometimes need to know Outer:this or Inner:this
+	// same for Outer:super or Inner:super
+	// Prefix must be a type name that you're currently inside of
+	;
+
+brackets
+	: ( '[' (',')* ']')+
+	;
+	
+arrayCreate
+	: typeArguments? ':' ('create' | 'null' ) arrayDimensions
+  	( ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'  |
+    ':' 'default' '(' conditionalExpression ')' )?
+	;
+
+arrayDimensions
+	: ( '[' conditionalExpression (',' conditionalExpression )* ']' )+
+	;
+
+subscript
+	: '[' conditionalExpression (',' conditionalExpression )* ']'
+	;
+
+create
+	: typeArguments? ':' 'create' '(' ( conditionalExpression ( ',' conditionalExpression)* )? ')'
+	;
+
+scopeSpecifier
+	: typeArguments? ':' (Identifier | 'class') //field, constant, or class
+	;
+	
+destroy
+	: '.' 'destroy'
+	;
+
+method
+	: '.' Identifier
+	;
+	
+property
+	: '->' Identifier
+	;
+	
+methodCall
+	: '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'
+	;
 
 literal
-    :   IntegerLiteral
-    |   FloatingPointLiteral    
-    |   StringLiteral
-    |   BooleanLiteral
-    |   'null'
-    ;
-
-// ANNOTATIONS
-
-annotation
-    :   '@' annotationName ( '(' ( elementValuePairs | elementValue )? ')' )?
-    ;
-
-annotationName : qualifiedName ;
-
-elementValuePairs
-    :   elementValuePair (',' elementValuePair)*
-    ;
-
-elementValuePair
-    :   Identifier '=' elementValue
-    ;
-
-elementValue
-    :   expression
-    |   annotation
-    |   elementValueArrayInitializer
-    ;
-
-elementValueArrayInitializer
-    :   '{' (elementValue (',' elementValue)*)? (',')? '}'
-    ;
-
-annotationTypeDeclaration
-    :   '@' 'interface' Identifier annotationTypeBody
-    ;
-
-annotationTypeBody
-    :   '{' (annotationTypeElementDeclaration)* '}'
-    ;
-
-annotationTypeElementDeclaration
-    :   modifier* annotationTypeElementRest
-    |   ';' // this is not allowed by the grammar, but apparently allowed by the actual compiler
-    ;
-
-annotationTypeElementRest
-    :   type annotationMethodOrConstantRest ';'
-    |   classDeclaration ';'?
-    |   interfaceDeclaration ';'?
-    |   enumDeclaration ';'?
-    |   annotationTypeDeclaration ';'?
-    ;
-
-annotationMethodOrConstantRest
-    :   annotationMethodRest
-    |   annotationConstantRest
-    ;
-
-annotationMethodRest
-    :   Identifier '(' ')' defaultValue?
-    ;
-
-annotationConstantRest
-    :   variableDeclarators
-    ;
-
-defaultValue
-    :   'default' elementValue
-    ;
-
-// STATEMENTS / BLOCKS
-
-block
-    :   '{' blockStatement* '}'
-    ;
-
-blockStatement
-    :   localVariableDeclarationStatement
-    |   statement
-    |   typeDeclaration
-    ;
-
-localVariableDeclarationStatement
-    :    localVariableDeclaration ';'
-    ;
-
-localVariableDeclaration
-    :   variableModifier* type variableDeclarators
-    ;
-
-statement
-    :   block
-    |   ASSERT expression (':' expression)? ';'
-    |   'if' parExpression statement ('else' statement)?
-    |   'for' '(' forControl ')' statement
-    |   'while' parExpression statement
-    |   'do' statement 'while' parExpression ';'
-    |   'try' block (catchClause+ finallyBlock? | finallyBlock)
-    |   'try' resourceSpecification block catchClause* finallyBlock?
-    |   'switch' parExpression '{' switchBlockStatementGroup* switchLabel* '}'
-    |   'synchronized' parExpression block
-    |   'return' expression? ';'
-    |   'throw' expression ';'
-    |   'break' Identifier? ';'
-    |   'continue' Identifier? ';'
-    |   ';'
-    |   statementExpression ';'
-    |   Identifier ':' statement
-    ;
-
-catchClause
-    :   'catch' '(' variableModifier* catchType Identifier ')' block
-    ;
-
-catchType
-    :   qualifiedName ('|' qualifiedName)*
-    ;
-
-finallyBlock
-    :   'finally' block
-    ;
-
-resourceSpecification
-    :   '(' resources ';'? ')'
-    ;
-
-resources
-    :   resource (';' resource)*
-    ;
-
-resource
-    :   variableModifier* classOrInterfaceType variableDeclaratorId '=' expression
-    ;
-
-/** Matches cases then statements, both of which are mandatory.
- *  To handle empty cases at the end, we add switchLabel* to statement.
- */
-switchBlockStatementGroup
-    :   switchLabel+ blockStatement+
-    ;
-
-switchLabel
-    :   'case' constantExpression ':'
-    |   'case' enumConstantName ':'
-    |   'default' ':'
-    ;
-
-forControl
-    :   enhancedForControl
-    |   forInit? ';' expression? ';' forUpdate?
-    ;
-
-forInit
-    :   localVariableDeclaration
-    |   expressionList
-    ;
-
-enhancedForControl
-    :   variableModifier* type variableDeclaratorId ':' expression
-    ;
-
-forUpdate
-    :   expressionList
-    ;
-
-// EXPRESSIONS
-
-parExpression
-    :   '(' expression ')'
-    ;
-
-expressionList
-    :   expression (',' expression)*
-    ;
-
-statementExpression
-    :   expression
-    ;
-
-constantExpression
-    :   expression
-    ;
-
-expression
-    :   primary
-    |   expression '.' Identifier
-    |   expression '.' 'this'
-    |   expression '.' 'new' nonWildcardTypeArguments? innerCreator
-    |   expression '.' 'super' superSuffix
-    |   expression '.' explicitGenericInvocation
-    |   expression '[' expression ']'
-    |   expression '(' expressionList? ')'
-    |   'new' creator
-    |   '(' type ')' expression
-    |   expression ('++' | '--')
-    |   ('+'|'-'|'++'|'--') expression
-    |   ('~'|'!') expression
-    |   expression ('*'|'/'|'%') expression
-    |   expression ('+'|'-') expression
-    |   expression ('<' '<' | '>' '>' '>' | '>' '>') expression
-    |   expression ('<=' | '>=' | '>' | '<') expression
-    |   expression 'instanceof' type
-    |   expression ('==' | '!=') expression
-    |   expression '&' expression
-    |   expression '^' expression
-    |   expression '|' expression
-    |   expression '&&' expression
-    |   expression '||' expression
-    |   expression '?' expression ':' expression
-    |   <assoc=right> expression
-        (   '='
-        |   '+='
-        |   '-='
-        |   '*='
-        |   '/='
-        |   '&='
-        |   '|='
-        |   '^='
-        |   '>>='
-        |   '>>>='
-        |   '<<='
-        |   '%='
-        )
-        expression
-    ;
-
-primary
-    :   '(' expression ')'
-    |   'this'
-    |   'super'
-    |   literal
-    |   Identifier
-    |   type '.' 'class'
-    |   'void' '.' 'class'
-    |   nonWildcardTypeArguments (explicitGenericInvocationSuffix | 'this' arguments)
-    ;
-
-creator
-    :   nonWildcardTypeArguments createdName classCreatorRest
-    |   createdName (arrayCreatorRest | classCreatorRest)
-    ;
-
-createdName
-    :   Identifier typeArgumentsOrDiamond? ('.' Identifier typeArgumentsOrDiamond?)*
-    |   primitiveType
-    ;
-
-innerCreator
-    :   Identifier nonWildcardTypeArgumentsOrDiamond? classCreatorRest
-    ;
-
-arrayCreatorRest
-    :   '['
-        (   ']' ('[' ']')* arrayInitializer
-        |   expression ']' ('[' expression ']')* ('[' ']')*
-        )
-    ;
-
-classCreatorRest
-    :   arguments classBody?
-    ;
-
-explicitGenericInvocation
-    :   nonWildcardTypeArguments explicitGenericInvocationSuffix
-    ;
-
-nonWildcardTypeArguments
-    :   '<' typeList '>'
-    ;
-
-typeArgumentsOrDiamond
-    :   '<' '>'
-    |   typeArguments
-    ;
-
-nonWildcardTypeArgumentsOrDiamond
-    :   '<' '>'
-    |   nonWildcardTypeArguments
-    ;
-
-superSuffix
-    :   arguments
-    |   '.' Identifier arguments?
-    ;
-
-explicitGenericInvocationSuffix
-    :   'super' superSuffix
-    |   Identifier arguments
-    ;
+	: ByteLiteral
+	| CodeLiteral
+	| ShortLiteral
+	| IntLiteral
+	| LongLiteral
+	| FloatLiteral
+	| DoubleLiteral
+	| StringLiteral
+	| UByteLiteral
+	| UShortLiteral
+	| UIntLiteral
+	| ULongLiteral
+	| BooleanLiteral
+	| 'null'
+	;
+	//| <BAD_STRING_LITERAL > { throw new ParseException("String literals cannot contain newline characters", jjtThis); }
 
 arguments
-    :   '(' expressionList? ')'
-    ;
+	: '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'
+  	;
+  	
+/*
+ * Statement syntax follows.
+ */
+
+statement
+	: assertStatement
+	| emptyStatement
+	| switchStatement
+	| ifStatement
+	| whileStatement
+	| doStatement
+	| forStatement
+	| foreachStatement
+	| breakOrContinueStatement
+	| returnStatement
+	| throwStatement
+	| finallyStatement // Includes try/catch/recover/finally.
+	| statementExpression ';'
+	| block
+	;
+	
+assertStatement
+	: 'assert' conditionalExpression ( ',' conditionalExpression )? ';'
+	;
+	
+block
+	: '{' blockStatement* '}'
+	;
+
+blockStatement
+	: localDeclaration    
+	| statement
+	// No local classes in Shadow
+	;
+	
+localDeclaration
+	: modifiers ( localMethodDeclaration | localVariableDeclaration ';' )  
+	;
+
+localMethodDeclaration
+	: methodDeclarator block
+	;
+
+localVariableDeclaration
+	: ('var' | type) variableDeclarator (',' variableDeclarator )*
+	;
+	
+emptyStatement
+	: 'skip' ';'
+	;
+	
+statementExpression
+	: sequenceAssignment 	
+	| expression  //method call, assignment, or allocation
+	;
+
+sequenceAssignment
+	: sequenceLeftSide '=' rightSide
+	;
+
+expression
+	: primaryExpression ( assignmentOperator conditionalExpression )?
+	;
+
+switchStatement
+	: 'switch' '(' conditionalExpression ')'
+	'{'
+    ( switchLabel statement )+
+  	'}'
+	;
+
+switchLabel
+	: 'case' '(' primaryExpression (',' primaryExpression)* ')'
+	| 'default'
+	;
+
+ifStatement
+	: 'if' '(' conditionalExpression ')'
+		statement
+	( 'else' statement )?
+	;
+
+whileStatement
+	: 'while' '(' conditionalExpression ')'
+		statement
+	;
+
+doStatement
+	: 'do'
+		statement
+	'while' '(' conditionalExpression ')' ';'
+  	;
+  	
+foreachStatement
+	: 'foreach' '(' foreachInit ')'
+		statement
+	;
+	
+foreachInit
+	: modifiers ( 'var' | type ) Identifier 'in' conditionalExpression
+ 	;
+
+forStatement
+	: 'for' '(' forInit? ';' conditionalExpression ';' forUpdate? ')'
+		statement
+	;
+
+forInit
+	: modifiers localVariableDeclaration
+	| statementExpressionList
+	;
+
+statementExpressionList
+	: statementExpression ( ',' statementExpression )*
+	;
+
+forUpdate
+	: statementExpressionList
+	;
+
+//no labeled break in Shadow
+breakOrContinueStatement
+	: ('break' | 'continue') ';'
+	;
+	
+returnStatement
+	: 'return' ( ';' | rightSide ';')
+	;
+
+throwStatement
+	: 'throw' conditionalExpression ';'
+	;
+	
+/* For a simpler back end, a finally statement holds
+ * the try, the catches, and the recover (even if no finally is used)
+ * Semantic check required here to make sure that at least one
+ * finally/recover/catch is present.
+ */
+finallyStatement
+	: recoverStatement
+  	('finally' block)?
+  	;
+
+recoverStatement
+	: catchStatements
+  	('recover' block )?
+  	;
+
+catchStatements
+	: tryStatement
+	catchStatement*
+	;
+
+catchStatement
+	: 'catch' '(' formalParameter ')'
+		block
+	;
+
+tryStatement
+	: 'try' block
+	;
 
 // LEXER
 
@@ -667,58 +717,58 @@ XOR			: 'xor';
 // Literals
 
 ByteLiteral // Can't end with b or B because of hex digits.
-	  : DecimalLiteral ('y'|'Y')
-      | HexLiteral ('y'|'Y')
-      | BinaryLiteral ('y'|'Y')
-      | OctalLiteral ('y'|'Y')    
+	  : DecimalLiteral [yY]
+      | HexLiteral [yY]
+      | BinaryLiteral [yY]
+      | OctalLiteral [yY]    
 	  ;
 UByteLiteral // Can't end with b or B because of hex digits.
-	  : DecimalLiteral ('u'|'U')('y'|'Y')
-      | HexLiteral ('u'|'U')('y'|'Y')
-      | BinaryLiteral ('u'|'U')('y'|'Y')
-      | OctalLiteral ('u'|'U')('y'|'Y')
+	  : DecimalLiteral [uU][yY]
+      | HexLiteral [uU][yY]
+      | BinaryLiteral [uU][yY]
+      | OctalLiteral [uU][yY]
 	  ;
 
 ShortLiteral
-	  : DecimalLiteral ('s'|'S')
-      | HexLiteral ('s'|'S')
-      | BinaryLiteral ('s'|'S')
-      | OctalLiteral ('s'|'S')    
+	  : DecimalLiteral [sS]
+      | HexLiteral [sS]
+      | BinaryLiteral [sS]
+      | OctalLiteral [sS]    
 	  ;
 	  
 UShortLiteral
-	  : DecimalLiteral ('u'|'U')('s'|'S')
-      | HexLiteral ('u'|'U')('s'|'S')
-      | BinaryLiteral ('u'|'U')('s'|'S')
-      | OctalLiteral ('u'|'U')('s'|'S')
+	  : DecimalLiteral [uU][sS]
+      | HexLiteral [uU][sS]
+      | BinaryLiteral [uU][sS]
+      | OctalLiteral [uU][sS]
       ;
 	  
 IntLiteral
-	  : DecimalLiteral ('i'|'I')?
-      | HexLiteral ('i'|'I')?
-      | BinaryLiteral ('i'|'I')?
-      | OctalLiteral ('i'|'I')?
+	  : DecimalLiteral [iI]?
+      | HexLiteral [iI]?
+      | BinaryLiteral [iI]?
+      | OctalLiteral [iI]?
       ;
 	  	  
 UIntLiteral
-	  : DecimalLiteral ('u'|'U')('i'|'I')?
-      | HexLiteral ('u'|'U')('i'|'I')?
-      | BinaryLiteral ('u'|'U')('i'|'I')?
-      | OctalLiteral ('u'|'U')('i'|'I')?
+	  : DecimalLiteral [uU][iI]?
+      | HexLiteral [uU][iI]?
+      | BinaryLiteral [uU][iI]?
+      | OctalLiteral [uU][iI]?
 	  ;
 	  
 LongLiteral
-	  : DecimalLiteral ('l'|'L')
-      | HexLiteral ('l'|'L')
-      | BinaryLiteral ('l'|'L')
-      | OctalLiteral ('l'|'L')      
+	  : DecimalLiteral [lL]
+      | HexLiteral [lL]
+      | BinaryLiteral [lL]
+      | OctalLiteral [lL]      
 	  ;
 	  
 ULongLiteral
-	  : DecimalLiteral ('u'|'U')('l'|'L')
-      | HexLiteral ('u'|'U')('l'|'L')
-      | BinaryLiteral ('u'|'U')('l'|'L')
-      | OctalLiteral ('u'|'U')('l'|'L')	
+	  : DecimalLiteral [uU][lL]
+      | HexLiteral [uU][lL]
+      | BinaryLiteral [uU][lL]
+      | OctalLiteral [uU][lL]	
 	  ;
 
 fragment
@@ -782,6 +832,16 @@ EscapeSequence
     |   '\\' [0-7] [0-7]?
     |   '\\' [0-3] [0-7] [0-7]
     ;
+
+
+BooleanLiteral
+	: 'true'
+	| 'false'
+	;
+    
+VersionLiteral
+	:  '$' [0-9]+ '.' [0-9]+ '.' [0-9]+
+	;
 
 // Separators
 
