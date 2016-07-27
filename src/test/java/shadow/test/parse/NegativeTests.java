@@ -48,14 +48,14 @@ public class NegativeTests {
 		}
 	}
 	
-/*
+
 	@Test public void testEmptyStatement() throws Exception
 	{
 		args.add("tests-negative/parser/empty-statement/Test.shadow");
-		enforce();
+		enforce(Error.EMPTY_STATMENT);
 	}
 
-	
+	/*	
 	@Test public void testPlusPlus() throws Exception
 	{
 		args.add("tests-negative/parser/plus-plus/Test.shadow");

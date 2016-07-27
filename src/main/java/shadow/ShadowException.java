@@ -116,7 +116,7 @@ public abstract class ShadowException extends Exception {
 			error.append(message);
 			
 			/* If file is available, find problematic text and include it in the message. */	
-			if( context.getPath() != null && context.lineStart() >= 0 && context.lineEnd() >= context.lineStart() &&
+			if( context.getPath() != null && context.lineStart() >= 0 && context.lineEnd() == context.lineStart() &&
 					context.columnStart() >= 0 && context.columnEnd() >= 0 ) {
 				BufferedReader reader = null;
 				try {
@@ -125,15 +125,17 @@ public abstract class ShadowException extends Exception {
 					for( int i = 1; i <= context.lineStart(); ++i )
 						line = reader.readLine();
 					error.append(EOL);
-					error.append(line);
-					if( context.lineStart() == context.lineEnd() ) {
-						error.append(EOL);
-						for( int i = 1; i <= context.columnEnd(); ++i )
-							if( i >= context.columnStart() )
-								error.append('^');
-							else
-								error.append(' ');
-					}
+					
+					line = line.replace('\t', ' ');
+					error.append(line);					
+					error.append(EOL);
+					
+					for( int i = 1; i <= context.columnEnd(); ++i )
+						if( i >= context.columnStart() )
+							error.append('^');
+						else
+							error.append(' ');
+					
 				} 
 				// Do nothing, can't add additional file data
 				catch (FileNotFoundException e) {}

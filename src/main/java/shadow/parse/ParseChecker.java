@@ -96,6 +96,14 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		return null;
 	}
 	
+	@Override public Void visitEmptyStatement(ShadowParser.EmptyStatementContext ctx)
+	{
+		if( ctx.getChild(0).getText().equals(";") )
+			addError(ctx, Error.EMPTY_STATMENT, "An empty statement requires the skip keyword" );
+		
+		return null;		
+	}
+	
 	private void checkClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx, ShadowParser.ModifiersContext mods) {
 		
 		Modifiers modifiers = mods.getModifiers();

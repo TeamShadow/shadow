@@ -556,7 +556,8 @@ localVariableDeclaration
 	;
 	
 emptyStatement
-	: 'skip' ';'
+	: ';' // actually an error in Shadow, caught in the ParseChecker 
+	| 'skip' ';'
 	;
 	
 statementExpression

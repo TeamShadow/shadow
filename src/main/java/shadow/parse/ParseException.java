@@ -31,6 +31,7 @@ public class ParseException extends ShadowException {
 	 *  Listing all supported errors increases consistency.
 	 */
 	public static enum Error implements ShadowExceptionFactory  {		
+		EMPTY_STATMENT("Empty statement", "An empty statement requires the skip keyword"),
 		INCOMPLETE_TRY("Incomplete try", "Given try statement is not followed by catch, recover, or finally statements"),
 		ILLEGAL_MODIFIER("Illegal modifiers", "Cannot apply modifier in given context"),
 		REPEATED_MODIFIERS("Repeated modifier", "Modifier cannot be repeated"),
