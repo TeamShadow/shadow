@@ -1,0 +1,8 @@
+class Test
+{
+	public method() => ()
+	( //parentheses instead of braces
+		int a = 5;
+	
+	)
+}

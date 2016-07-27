@@ -101,59 +101,66 @@ public abstract class ShadowException extends Exception {
 	public static String makeMessage( ShadowExceptionFactory kind, String message, Context context ) {
 		StringBuilder error = new StringBuilder();
 		
-		if( context != null ) {		
+		if( context != null ) {
 			if( context.getPath() != null )
 				error.append("(" + context.getPath().getFileName().toString() + ")");
-			
+	
 			if( context.lineStart() != -1 && context.columnStart() != -1 )
 				error.append("[" + context.lineStart() + ":" + context.columnStart() + "] ");
 			else
 				error.append(" ");
 			
 			if( kind != null )
-				error.append(kind.getName() + ": ");		
-			
+				error.append(kind.getName() + ": ");
 			error.append(message);
 			
-			/* If file is available, find problematic text and include it in the message. */	
-			if( context.getPath() != null && context.lineStart() >= 0 && context.lineEnd() == context.lineStart() &&
-					context.columnStart() >= 0 && context.columnEnd() >= 0 ) {
-				BufferedReader reader = null;
-				try {
-					reader = new BufferedReader(new FileReader(context.getPath().toFile()));
-					String line = "";			
-					for( int i = 1; i <= context.lineStart(); ++i )
-						line = reader.readLine();
-					error.append(EOL);
-					
-					line = line.replace('\t', ' ');
-					error.append(line);					
-					error.append(EOL);
-					
-					for( int i = 1; i <= context.columnEnd(); ++i )
-						if( i >= context.columnStart() )
-							error.append('^');
-						else
-							error.append(' ');
-					
-				} 
-				// Do nothing, can't add additional file data
-				catch (FileNotFoundException e) {}
-				catch (IOException e) {}
-				finally {
-				  if( reader != null )
-					try { reader.close(); }
-				  	catch (IOException e) {}
-			  }
-			}
+			error.append(showCode(context.getPath(), context.lineStart(), context.lineEnd(), context.columnStart(), context.columnEnd() ));
 		}
-		else {			
+		else {
 			if( kind != null )
-				error.append(kind.toString() + ": ");	
+				error.append(kind.getName() + ": ");
 			error.append(message);
 		}
 		
 		return error.toString();
+	}
+	
+	public static String showCode( Path path, int lineStart, int lineEnd, int columnStart, int columnEnd ) {
+		StringBuilder error = new StringBuilder();
+		
+		/* If file is available, find problematic text and include it in the message. */	
+		if( path != null && lineStart >= 0 && lineEnd == lineStart &&
+				columnStart >= 0 && columnEnd >= 0 ) {
+			BufferedReader reader = null;
+			try {
+				reader = new BufferedReader(new FileReader(path.toFile()));
+				String line = "";			
+				for( int i = 1; i <= lineStart; ++i )
+					line = reader.readLine();
+				error.append(EOL);
+				
+				line = line.replace('\t', ' ');
+				error.append(line);					
+				error.append(EOL);
+				
+				for( int i = 0; i <= columnEnd; ++i )
+					if( i >= columnStart )
+						error.append('^');
+					else
+						error.append(' ');
+				
+			} 
+			// Do nothing, can't add additional file data
+			catch (FileNotFoundException e) {}
+			catch (IOException e) {}
+			finally {
+			  if( reader != null )
+				try { reader.close(); }
+			  	catch (IOException e) {}
+		  }
+		}	
+		
+		return error.toString();		
 	}
 	
 	public abstract ShadowExceptionFactory getError();

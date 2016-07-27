@@ -54,6 +54,12 @@ public class NegativeTests {
 		args.add("tests-negative/parser/empty-statement/Test.shadow");
 		enforce(Error.EMPTY_STATMENT);
 	}
+	
+	@Test public void testSyntaxError() throws Exception
+	{
+		args.add("tests-negative/parser/syntax-error/Test.shadow");
+		enforce(Error.SYNTAX_ERROR);
+	}
 
 	/*	
 	@Test public void testPlusPlus() throws Exception
