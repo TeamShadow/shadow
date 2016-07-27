@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.ShadowException;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
-import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.EnumType;

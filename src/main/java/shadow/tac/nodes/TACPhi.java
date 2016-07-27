@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 

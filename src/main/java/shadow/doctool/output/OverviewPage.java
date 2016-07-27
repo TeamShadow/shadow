@@ -9,9 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import shadow.ShadowException;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
-import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 
 /** Displays a list of all known packages and their descripitons */

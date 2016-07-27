@@ -2,7 +2,7 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -191,7 +191,7 @@ public abstract class ShadowValue implements ModifiedType {
             return new ShadowArray(arrayType, new int[arrayType.getDimensions()]);
         }
         
-        throw new ShadowException("Unsupported type " + type.getType());
+        throw new InterpreterException("Unsupported type " + type.getType());
     }
 
     public ShadowInteger hash() throws ShadowException {

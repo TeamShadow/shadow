@@ -41,7 +41,12 @@ public class NegativeTests {
 		{
 			if( !e.getError().equals(type) )
 				throw new Exception("Test failed");
-		}		
+		}
+		catch( Exception e )
+		{	
+			e.printStackTrace();
+			throw new Exception("Test failed");
+		}
 	}
 	
 	@Test public void testPackage() throws Exception

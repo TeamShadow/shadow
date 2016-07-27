@@ -6,10 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
-import shadow.parser.javacc.SimpleNode;
+import shadow.ShadowException;
+import shadow.parse.Context;
+import shadow.parse.Context.AssignmentKind;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.TypeCheckException.Error;
 
@@ -60,11 +61,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	*/
 		
 	//public boolean canAccept( List<ModifiedType> inputTypes, SubstitutionType substitutionType, List<String> reasons )
-	public boolean canAccept( SequenceType inputTypes, SubstitutionKind substitutionType, List<TypeCheckException> errors )
+	public boolean canAccept( SequenceType inputTypes, SubstitutionKind substitutionType, List<ShadowException> errors )
 	{		
 		if( types.size() != inputTypes.size() )
 		{
-			BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Sequence type " + inputTypes + " does not have the same number of elements as sequence type " + this);
+			ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Sequence type " + inputTypes + " does not have the same number of elements as sequence type " + this);
 			return false;
 		}
 		
@@ -103,7 +104,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return canAccept(type, substitutionType, null);		
 	}
 	
-	public boolean canAccept( ModifiedType inputType, SubstitutionKind substitutionType, List<TypeCheckException> errors ) {	
+	public boolean canAccept( ModifiedType inputType, SubstitutionKind substitutionType, List<ShadowException> errors ) {	
 		if( substitutionType.equals( SubstitutionKind.BINDING ) ) {
 			SequenceType input = new SequenceType();
 			input.add(inputType);		
@@ -285,20 +286,20 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		return true;		
 	}
 	
-	public void setNodeType(SimpleNode node)
+	public void setContextType(Context node)
 	{
 		if( types.size() == 1 )
 		{
 			ModifiedType modifiedType = types.get(0); 
 			node.setType(modifiedType.getType());
 			if( modifiedType.getModifiers().isNullable())
-				node.addModifier(Modifiers.NULLABLE);
+				node.getModifiers().addModifier(Modifiers.NULLABLE);
 			
 			if( modifiedType.getModifiers().isReadonly())
-				node.addModifier(Modifiers.READONLY);
+				node.getModifiers().addModifier(Modifiers.READONLY);
 			
 			if( modifiedType.getModifiers().isImmutable())
-				node.addModifier(Modifiers.IMMUTABLE);			
+				node.getModifiers().addModifier(Modifiers.IMMUTABLE);			
 		}
 		else
 			node.setType(this);

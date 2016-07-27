@@ -1,7 +1,6 @@
 package shadow.interpreter;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowTypeMismatchException;
+import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
@@ -35,7 +34,7 @@ public class ShadowNull extends ShadowValue {
 		if( other instanceof ShadowNull )
 			return new ShadowBoolean(true);
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 	
 	@Override

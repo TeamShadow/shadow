@@ -15,7 +15,8 @@ import java.util.TreeSet;
 
 import shadow.Loggers;
 import shadow.interpreter.ShadowBoolean;
-import shadow.parser.javacc.Node;
+import shadow.parse.Context;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
@@ -257,8 +258,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( !usedLocalVariables.contains(variable) ) {
 					ModifiedType type = variable.getModifiedType();					
 					//kind of a hack to get the declaration
-					if( type instanceof Node ) {
-						Node declaration = (Node) type;
+					if( type instanceof Context ) {						
+						Context declaration = (Context) type;
 						addWarning( declaration, Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
 					}
 					else
@@ -684,12 +685,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						if( operandIsThis(field.getPrefix(), type) && needsInitialization(field) )							
 							stores.add(field.getName());
 						else if( operandIsThis(store.getValue(), type) )						
-							for( Entry<String, Node> entry : type.getFields().entrySet()  )
+							for( Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()  )
 								if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
 									addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
 					}					
 					else if( operandIsThis(store.getValue(), type) ) { //store of "this" somewhere
-						for( Entry<String, Node> entry : type.getFields().entrySet()  )
+						for( Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()  )
 							if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
 								addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
 					}
@@ -734,7 +735,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					if( !callGraph.contains(call.getMethod().getSignature()) ) { 
 						for( int i = 0; i < call.getNumParameters(); ++i )
 							if( operandIsThis(call.getParameter(i), type) ) { 
-								for( Entry<String, Node> entry : type.getFields().entrySet()  )
+								for( Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()  )
 									if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
 										data.getLoadsBeforeStores().add(entry.getKey());
 								break;
@@ -799,13 +800,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					}
 					else if( operandIsThis(store.getValue(), type) )
 						//might leak all data						
-						for( Entry<String, Node> entry : type.getFields().entrySet()  )
+						for( Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()  )
 							if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
 								loadsBeforeStores.add(entry.getKey());
 				}					
 				else if( operandIsThis(store.getValue(), type) ) { //store of "this", but not in a field in the current object
 					//might leak all data						
-					for( Entry<String, Node> entry : type.getFields().entrySet()  )
+					for( Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()  )
 						if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
 							loadsBeforeStores.add(entry.getKey());
 				}

@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
+import shadow.ShadowException;
 import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowString;
 import shadow.output.llvm.LLVMOutput;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;

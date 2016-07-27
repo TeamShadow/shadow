@@ -3,7 +3,7 @@ package shadow.typecheck.type;
 import java.util.Collections;
 import java.util.List;
 
-import shadow.typecheck.TypeCheckException;
+import shadow.ShadowException;
 
 public class ArrayType extends ClassType
 {	
@@ -119,7 +119,7 @@ public class ArrayType extends ClassType
 	}
 	
 	@Override
-	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<TypeCheckException> errors ) {		
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<ShadowException> errors ) {		
 		return convertToGeneric().getMatchingMethod(methodName, arguments, typeArguments, errors);		
 	}
 	

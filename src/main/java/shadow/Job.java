@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.typecheck.BaseChecker;
+import shadow.typecheck.TypeCollector;
+
 /** 
  * Represents a specific build/typecheck job. This representation includes
  * information about source files, compiler flags, and output files.
@@ -54,7 +57,7 @@ public class Job {
 			}
 			else {
 				// Determine a path to the default output file
-				String outputName = Main.stripExt(mainFile.getFileName().toString());
+				String outputName = BaseChecker.stripExtension(mainFile.getFileName().toString());
 				outputFile = mainFile.getParent().resolve(properExecutableName(outputName));
 			}
 			

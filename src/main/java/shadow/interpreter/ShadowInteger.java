@@ -2,8 +2,7 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowTypeMismatchException;
+import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
@@ -230,7 +229,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.add(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -242,7 +241,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.subtract(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -254,7 +253,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.multiply(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -266,7 +265,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.divide(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -278,7 +277,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.mod(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -290,7 +289,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.shiftLeft(input.value.mod(new BigInteger("64")).intValue()), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -302,7 +301,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.shiftRight(input.value.mod(new BigInteger("64")).intValue()), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -322,7 +321,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( result, size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 
 	}
 
@@ -343,7 +342,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( result, size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -355,7 +354,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowBoolean(value.equals(input.value));
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -367,7 +366,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowBoolean(value.compareTo(input.value) < 0);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -379,7 +378,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowBoolean(value.compareTo(input.value) <= 0);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -391,7 +390,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowBoolean(value.compareTo(input.value) > 0);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -403,7 +402,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowBoolean(value.compareTo(input.value) >= 0);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -415,7 +414,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.and(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -427,7 +426,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.or(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -439,7 +438,7 @@ public class ShadowInteger extends ShadowNumber {
 			return new ShadowInteger( value.xor(input.value), size, signed);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 

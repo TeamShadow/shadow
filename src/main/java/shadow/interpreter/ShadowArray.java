@@ -1,6 +1,6 @@
 package shadow.interpreter;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -15,7 +15,7 @@ public class ShadowArray extends ShadowValue
 	public ShadowArray(ArrayType type, int... lengths) throws ShadowException
 	{
 		if (type.getDimensions() != lengths.length)
-			throw new ShadowException("Cannot create array with " +
+			throw new InterpreterException("Cannot create array with " +
 					lengths.length + " dimensions from " + lengths.length +
 					" lengths");
 		int length = 1;
@@ -43,14 +43,14 @@ public class ShadowArray extends ShadowValue
 	private ShadowReference index(int... indices) throws ShadowException
 	{
 		if (indices.length != this.lengths.length)
-			throw new ShadowException("Cannot index into array with " +
+			throw new InterpreterException("Cannot index into array with " +
 					lengths.length + " dimensions with " + indices.length +
 					" indices");
 		int index = 0;
 		for (int i = 0; i < indices.length; i++)
 		{
 			if (indices[i] < 0 || indices[i] >= this.lengths[i])
-				throw new ShadowException("Indices out of bounds");
+				throw new InterpreterException("Indices out of bounds");
 			index = index * lengths[i] + indices[i];
 		}
 		return data[index + this.offset];

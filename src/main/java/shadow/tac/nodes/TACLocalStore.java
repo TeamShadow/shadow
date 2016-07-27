@@ -2,7 +2,7 @@ package shadow.tac.nodes;
 
 import java.util.Set;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 

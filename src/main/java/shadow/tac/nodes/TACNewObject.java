@@ -1,8 +1,8 @@
 package shadow.tac.nodes;
 
+import shadow.ShadowException;
 import shadow.interpreter.ShadowInteger;
 import shadow.output.llvm.LLVMOutput;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ClassType;
@@ -39,9 +39,8 @@ public class TACNewObject extends TACOperand
 		if( type instanceof TypeParameter ) {
 			TACOperand flags = new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("flags"), "flags" ));
 			TACLiteral interfaceFlag = new TACLiteral(this, new ShadowInteger(LLVMOutput.INTERFACE) );			
-			TACOperand value = new TACBinary(this, flags, Type.INT.getMatchingMethod("bitAnd", new SequenceType(interfaceFlag)), '&', interfaceFlag);
-			MethodSignature signature = Type.INT.getMatchingMethod("equal", new SequenceType(value));
-			TACOperand test = new TACBinary(this, value, signature, '=', new TACLiteral(this, new ShadowInteger(0)));
+			TACOperand value = new TACBinary(this, flags, Type.INT.getMatchingMethod("bitAnd", new SequenceType(interfaceFlag)), "&", interfaceFlag);			
+			TACOperand test = new TACBinary(this, value, new TACLiteral(this, new ShadowInteger(0))); //no operand is straight compare ===
 			
 			TACMethod method = getMethod();
 			TACLabel throwLabel = new TACLabel(method);
@@ -51,7 +50,7 @@ public class TACNewObject extends TACOperand
 			throwLabel.insertBefore(this);					
 			TACOperand object = new TACNewObject(this, Type.INTERFACE_CREATE_EXCEPTION);
 			TACOperand name = new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("name"), "name"));
-			signature = Type.INTERFACE_CREATE_EXCEPTION.getMatchingMethod("create", new SequenceType(name));
+			MethodSignature signature = Type.INTERFACE_CREATE_EXCEPTION.getMatchingMethod("create", new SequenceType(name));
 			
 			TACCall exception = new TACCall(this, new TACMethodRef(this, signature), object, name);
 			new TACThrow(this, exception);

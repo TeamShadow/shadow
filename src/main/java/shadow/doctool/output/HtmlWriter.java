@@ -5,9 +5,9 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import shadow.ShadowException;
 import shadow.doctool.DocumentationException;
 import shadow.output.TabbedLineWriter;
-import shadow.parser.javacc.ShadowException;
 
 // TODO: Write doc-comments for all methods
 /** 

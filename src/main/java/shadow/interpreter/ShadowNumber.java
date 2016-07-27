@@ -1,6 +1,6 @@
 package shadow.interpreter;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 
 public abstract class ShadowNumber extends ShadowValue {
 	

@@ -19,16 +19,19 @@ package shadow.doctool;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.ConfigurationException;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ParseException;
-import shadow.parser.javacc.ShadowException;
+import shadow.Loggers;
+import shadow.ShadowException;
+import shadow.parse.Context;
+import shadow.parse.ParseException;
 import shadow.typecheck.BaseChecker;
+import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeCollector;
@@ -51,14 +54,16 @@ public class DocumentationTypeChecker {
 	 * @throws IOException
 	 * @throws ConfigurationException
 	 */
-	public static Set<Type> typeCheck( List<File> files )
-			throws ShadowException, TypeCheckException, ParseException, IOException, ConfigurationException {			
+	public static Set<Type> typeCheck( List<Path> files )
+			throws ShadowException, IOException, ConfigurationException {			
 		Package packageTree = new Package();		
 		
+		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+		
 		/* Collector looks over all files and creates types for everything needed. */
-		TypeCollector collector = new TypeCollector( packageTree, true );
+		TypeCollector collector = new TypeCollector( packageTree, reporter, true );
 		/* Its return value maps all the types to their AST nodes. */		
-		Map<Type, Node> typeTable = collector.collectTypes( files );
+		Map<Type, Context> typeTable = collector.collectTypes( files );
 		
 		/* Updates types, adding:
 		 *  Fields and methods
@@ -66,15 +71,15 @@ public class DocumentationTypeChecker {
 		 *  All types with type parameters (except for declarations) are UninitializedTypes
 		 *  Extends and implements lists
 		 */	
-		TypeUpdater updater = new TypeUpdater( packageTree );
+		TypeUpdater updater = new TypeUpdater( packageTree, reporter );
 		typeTable = updater.update( typeTable );
 		
 		/* Filter out only those types associated with the files being documented. */		
 		Set<Type> types = new TreeSet<Type>();
 		// Maps file names to nodes.
-		Map<String, Node> fileTable = collector.getFileTable();
-		for( File file : files ) {
-			Node node = fileTable.get( BaseChecker.stripExtension( file.getCanonicalPath() ) );
+		Map<String, Context> fileTable = collector.getFileTable();
+		for( Path file : files ) {
+			Context node = fileTable.get( BaseChecker.stripExtension( TypeCollector.canonicalize(file) ) );
 			if( node != null )
 				types.add( node.getType() );
 		}

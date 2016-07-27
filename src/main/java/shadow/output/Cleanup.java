@@ -1,6 +1,6 @@
 package shadow.output;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 

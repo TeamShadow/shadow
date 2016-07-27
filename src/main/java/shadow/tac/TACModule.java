@@ -12,12 +12,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import shadow.ShadowException;
 import shadow.output.text.TextOutput;
-import shadow.parser.javacc.ASTCreateBlock;
-import shadow.parser.javacc.ASTCreateDeclaration;
-import shadow.parser.javacc.ASTExplicitCreateInvocation;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
+import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.CreateDeclarationContext;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.analysis.CallGraph;
 import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.analysis.ControlFlowGraph.StorageData;
@@ -187,15 +186,15 @@ public class TACModule {
 	private void addCreateEdges(CallGraph creates)
 	{
 		for(MethodSignature create : creates) {			
-			ASTCreateDeclaration declaration = (ASTCreateDeclaration) create.getNode();
-			if( declaration.hasBlock() ) {
-				ASTCreateBlock block = (ASTCreateBlock) declaration.jjtGetChild(1);
-				if( block.jjtGetNumChildren() > 0 && block.jjtGetChild(0) instanceof ASTExplicitCreateInvocation) {
-					ASTExplicitCreateInvocation explicitCreate = (ASTExplicitCreateInvocation) block.jjtGetChild(0);
-					MethodSignature signature = explicitCreate.getMethodSignature(); 
+			ShadowParser.CreateDeclarationContext declaration = (CreateDeclarationContext) create.getNode();
+			if( declaration.createBlock() != null ) {
+				ShadowParser.CreateBlockContext block = declaration.createBlock();
+				if( block.explicitCreateInvocation() != null ) {
+					ShadowParser.ExplicitCreateInvocationContext explicitCreate = block.explicitCreateInvocation();
+					MethodSignature signature = explicitCreate.getSignature(); 
 					//calling this rather than super
 					//we can't put a dependency on a native method, since it doesn't have a control flow graph
-					if( explicitCreate.getImage().equals("this") && !signature.isNative() )						
+					if( explicitCreate.getChild(0).getText().equals("this") && !signature.isNative() )						
 						creates.addEdge(signature, create); //method depends on other signature
 				}
 			}
@@ -210,8 +209,8 @@ public class TACModule {
 		}
 	}
 		
-	private void checkFieldInitialization(CallGraph createGraph, CallGraph callGraph, ErrorReporter reporter) {
-		
+	private void checkFieldInitialization(CallGraph createGraph, CallGraph callGraph, ErrorReporter reporter)
+	{		
 		try {
 			//sort creates by dependence on which calls others
 			//usually not a very complicated relationship
@@ -219,7 +218,7 @@ public class TACModule {
 			Map<MethodSignature, StorageData> methodData = getFieldsLoadedBeforeStores(callGraph);
 			
 			Set<String> fieldsToCheck = new TreeSet<String>();
-			for(Map.Entry<String, Node> entry : type.getFields().entrySet() )
+			for(Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet() )
 				if( ControlFlowGraph.needsInitialization(entry.getValue()) )
 					fieldsToCheck.add(entry.getKey());
 			

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACOperand;
@@ -229,6 +229,6 @@ public class ShadowString extends ShadowValue
 		catch(Exception e)
 		{}
 		
-		throw new ShadowException("Evaluation of string method " + signature.getSymbol() + signature.getMethodType() + " failed");
+		throw new InterpreterException("Evaluation of string method " + signature.getSymbol() + signature.getMethodType() + " failed");
 	}	
 }

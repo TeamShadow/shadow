@@ -6,16 +6,17 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Main;
-import shadow.parser.javacc.Node;
-import shadow.typecheck.TypeCheckException.Error;
+import shadow.ShadowException;
+import shadow.ShadowExceptionFactory;
+import shadow.parse.Context;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 public class ErrorReporter {
-	protected final ArrayList<TypeCheckException> errorList = new ArrayList<TypeCheckException>();
-	protected final ArrayList<TypeCheckException> warningList = new ArrayList<TypeCheckException>();	
+	protected final ArrayList<ShadowException> errorList = new ArrayList<ShadowException>();
+	protected final ArrayList<ShadowException> warningList = new ArrayList<ShadowException>();	
 	
 	private final Logger LOGGER;
 	
@@ -28,63 +29,79 @@ public class ErrorReporter {
 		warningList.clear();
 	}
 	
-	public List<TypeCheckException> getErrorList() {
+	public List<ShadowException> getErrorList() {
 		return errorList;
 	}
 	
-	public List<TypeCheckException> getWarningList() {
+	public List<ShadowException> getWarningList() {
 		return warningList;
 	}
 	
 	/**
 	 * Adds a temporary list of errors associated with a particular 
-	 * node to the main list of errors.
-	 * @param node				node related to errors
+	 * context to the main list of errors.
+	 * @param ctx				context related to errors
 	 * @param errors			list of errors
 	 */	
-	public final void addErrors(Node node, List<TypeCheckException> errors ) {		
+	public final void addErrors(Context ctx, List<ShadowException> errors ) {		
 		if( errors != null )
-			for( TypeCheckException error : errors )
-				addError( node, error.getError(), error.getMessage() );
-	}
+			for( ShadowException error : errors ) 
+					addError( ctx, error.getError(), error.getMessage() );
+	}	
 	
 	/**
-	 * Adds an error associated with a node to the main list of errors.
-	 * @param node				node related to error	
+	 * Adds an error associated with a context to the main list of errors.
+	 * @param ctx				context related to error	
 	 * @param error				kind of error
 	 * @param message			message explaining error
 	 * @param errorTypes		types associated with error
 	 */
-	public void addError(Node node, Error error, String message, Type... errorTypes) {
+	public void addError(Context ctx, ShadowExceptionFactory error, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
 			return; // Don't add error if it has an unknown type in it.
-		
-		if( node != null ) 
-			errorList.add(new TypeCheckException(error, message, node.getFile(), node.getLineStart(),
-					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));	
+			
+		if( ctx != null ) 
+			errorList.add(error.generateException(message, ctx ));	
 	}
 	
-
+	/**
+	 * Adds an exception to the list of errors.
+	 * @param exception			exception for error	
+	 */
+	public void addError(ShadowException exception) {
+		if( exception != null ) 
+			errorList.add(exception);	
+	}
 	
 	/**
-	 * Adds a warning associated with a node to the main list of warnings.
-	 * @param node				node related to warning	
+	 * Adds an exception to the list of warnings.
+	 * @param exception			exception for error	
+	 */
+	public void addWarning(ShadowException exception) {
+		if( Main.getJob().treatWarningsAsErrors() )
+			addError(exception);
+		else if( exception != null )
+			warningList.add(exception);
+	}
+	
+	/**
+	 * Adds a warning associated with a context to the main list of warnings.
+	 * @param ctx				context related to warning	
 	 * @param warning			kind of warning
 	 * @param message			message explaining warning
 	 */
-	public void addWarning(Node node, Error warning, String message) {
+	public void addWarning(Context ctx, ShadowExceptionFactory warning, String message) {
 		if( Main.getJob().treatWarningsAsErrors() )
-			addError(node, warning, message);
-		else if( node != null )
-			warningList.add(new TypeCheckException(warning, message, node.getFile(), node.getLineStart(),
-					node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));	
+			addError(ctx, warning, message);
+		else if( ctx != null )
+			warningList.add(warning.generateException(message, ctx));
 	}
 	
 	/**
 	 * Prints the list of errors to the appropriate logger.
 	 */
 	public final void printErrors() {
-		for(TypeCheckException exception : errorList)
+		for(ShadowException exception : errorList)
 			LOGGER.error(exception.getMessage());
 	}
 	
@@ -92,7 +109,7 @@ public class ErrorReporter {
 	 * Prints the list of warnings to the appropriate logger.
 	 */
 	public final void printWarnings() {
-		for(TypeCheckException exception : warningList)
+		for(ShadowException exception : warningList)
 			LOGGER.warn(exception.getMessage());
 	}
 	
@@ -142,17 +159,17 @@ public class ErrorReporter {
 	 * unknown types. Unknown type errors are usually symptoms of other errors
 	 * (like undeclared variables), and are thus unnecessary to report.
 	 * @param errors		list of errors
-	 * @param type			kind of error
+	 * @param error			kind of error
 	 * @param reason		message explaining error
 	 * @param errorTypes	types of errors involved, used for suppressing redundant errors
 	 */
-	public static void addError( List<TypeCheckException> errors, Error type,
+	public static void addError( List<ShadowException> errors, ShadowExceptionFactory error,
 			String reason, Type... errorTypes ) {
 		// Don't add an error if it has an Unknown Type in it.
 		if( containsUnknown( errorTypes ) )
 			return; 		
 		if( errors != null )
-			errors.add( new TypeCheckException( type, reason ) );		
+			errors.add( error.generateException(reason, null) );		
 	}
 
 	public void addAll(ErrorReporter other)
@@ -167,13 +184,13 @@ public class ErrorReporter {
 		removeRedundantErrors(warningList);		
 	}	
 	
-	private static void removeRedundantErrors(List<TypeCheckException> list)
+	private static void removeRedundantErrors(List<ShadowException> list)
 	{
 		for( int i = 0; i < list.size();  ) {
 			boolean redundant = false;
-			TypeCheckException item = list.get(i);
+			ShadowException item = list.get(i);
 			for( int j = 0; j < list.size() && !redundant; ++j ) {
-				TypeCheckException other = list.get(j);
+				ShadowException other = list.get(j);
 				if( i != j && item.getError() == other.getError() && item.isInside(other) )
 					redundant = true;
 			}
@@ -185,4 +202,14 @@ public class ErrorReporter {
 		}
 	}
 
+	public void printAndReportErrors() throws ShadowException
+	{
+		printErrors();
+		printWarnings();
+		
+		warningList.clear(); //otherwise the warnings will be printed again
+		
+		if( errorList.size() > 0 )			
+			throw errorList.get(0);		
+	}
 }

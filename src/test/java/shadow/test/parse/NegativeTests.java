@@ -6,7 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import shadow.Main;
-import shadow.parser.javacc.ParseException;
+import shadow.parse.ParseException;
+import shadow.parse.ParseException.Error;
 
 public class NegativeTests {
 
@@ -29,7 +30,7 @@ public class NegativeTests {
 		}
 	}
 	
-	private void enforce() throws Exception
+	private void enforce(Error type) throws Exception
 	{
 		try
 		{
@@ -37,15 +38,23 @@ public class NegativeTests {
 			throw new Exception("Test failed");
 		}
 		catch( ParseException e )
-		{}		
+		{
+			if( !e.getError().equals(type) )
+				throw new Exception("Test failed");			
+		}
+		catch( Exception e )
+		{
+			throw new Exception("Test failed");
+		}
 	}
 	
-
+/*
 	@Test public void testEmptyStatement() throws Exception
 	{
 		args.add("tests-negative/parser/empty-statement/Test.shadow");
 		enforce();
 	}
+
 	
 	@Test public void testPlusPlus() throws Exception
 	{
@@ -53,16 +62,20 @@ public class NegativeTests {
 		enforce();
 	}
 	
+	*/
+	
 	@Test public void testMemberVisibility() throws Exception
 	{
 		args.add("tests-negative/parser/member-visibility/Test.shadow");
-		enforce();
+		enforce(Error.ILLEGAL_MODIFIER);
 	}
 	
+	/*
 	@Test public void testNewlineInString() throws Exception
 	{
 		args.add("tests-negative/parser/newline-in-string/Test.shadow");
 		enforce();
 	}
+	*/
 
 }

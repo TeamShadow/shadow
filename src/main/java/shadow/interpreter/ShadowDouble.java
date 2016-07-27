@@ -2,8 +2,7 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.ShadowTypeMismatchException;
+import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
@@ -69,7 +68,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value + input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -81,7 +80,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value - input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -93,7 +92,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value * input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -105,7 +104,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value / input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -117,7 +116,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value % input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -129,7 +128,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value == input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -141,7 +140,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value <= input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -153,7 +152,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value <= input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -165,7 +164,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value > input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -177,7 +176,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value >= input.value);
 		}
 
-		throw new ShadowTypeMismatchException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override

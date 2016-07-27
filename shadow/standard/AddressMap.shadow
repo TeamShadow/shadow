@@ -16,7 +16,7 @@ import shadow:utility@NoSuchElementException;
 locked class shadow:standard@
 	AddressMap is Map<ulong, ulong>	
 {
-	private constant int DEFAULT_INITIAL_CAPACITY = 16;
+	private constant int DEFAULT_INITIAL_CAPACITY = 16;	
 	private constant int MAXIMUM_CAPACITY = 1 << 30;
 	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	

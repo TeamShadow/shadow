@@ -11,14 +11,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import shadow.ShadowException;
 import shadow.doctool.Documentation;
-import shadow.parser.javacc.ASTAssignmentOperator;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
-import shadow.parser.javacc.Node;
+import shadow.parse.Context;
+import shadow.parse.ShadowParser;
+import shadow.parse.Context.AssignmentKind;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
+import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;
-import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeCheckException.Error;
 
 /**
@@ -38,7 +39,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	//a linked hash maps iterates over the elements in the order they were added
 	//this feature is needed to for walking the fields in order in constructors
-	private LinkedHashMap<String, Node> fieldTable = new LinkedHashMap<String, Node>();
+	private LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> fieldTable = new LinkedHashMap<String, ShadowParser.VariableDeclaratorContext>();
 	
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> usedTypes = new HashSet<Type>();
@@ -572,7 +573,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 
 	
-	public boolean canAccept( Type rightType, ASTAssignmentOperator.AssignmentKind assignmentType, List<TypeCheckException> errors ) 
+	public boolean canAccept( Type rightType, AssignmentKind assignmentType, List<ShadowException> errors ) 
 	{
 		boolean accepts = false;
 		
@@ -584,7 +585,7 @@ public abstract class Type implements Comparable<Type> {
 			accepts = rightType.isSubtype(this);
 			
 			if( !accepts )
-				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
 		
 			return accepts;
 		}
@@ -592,7 +593,7 @@ public abstract class Type implements Comparable<Type> {
 		{
 			accepts = isString();
 			if( !accepts )
-				BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING, this);
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING, this);
 			
 			return accepts;
 		}
@@ -630,7 +631,7 @@ public abstract class Type implements Comparable<Type> {
 				Type result = signature.getReturnTypes().getType(0);
 				accepts = result.isSubtype(this);
 				if( !accepts )
-					BaseChecker.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + result + " is not a subtype of " + this, result, this);				
+					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + result + " is not a subtype of " + this, result, this);				
 				return accepts;
 			}
 			else							
@@ -638,7 +639,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 		else		
 		{
-			BaseChecker.addError(errors, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType, this);			
+			ErrorReporter.addError(errors, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType, this);			
 			return false;						
 		}
 	}
@@ -651,11 +652,11 @@ public abstract class Type implements Comparable<Type> {
 	
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments )
 	{
-		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		List<ShadowException> errors = new ArrayList<ShadowException>();
 		return getMatchingMethod(methodName, arguments, typeArguments, errors );
 	}
 	
-	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<TypeCheckException> errors )
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<ShadowException> errors )
 	{
 		boolean hasTypeArguments = typeArguments != null;
 		MethodSignature candidate = null;		
@@ -693,14 +694,14 @@ public abstract class Type implements Comparable<Type> {
 					candidate = signature;
 				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
 				{					
-					BaseChecker.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments, arguments);
+					ErrorReporter.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments, arguments);
 					return null;
 				}				
 			}			
 		}			
 	
 		if( candidate == null )			
-			BaseChecker.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
+			ErrorReporter.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
 		
 		return candidate;
 	}
@@ -894,16 +895,17 @@ public abstract class Type implements Comparable<Type> {
 		return fieldTable.containsKey(fieldName);
 	}	
 	
-	public void addField(String fieldName, Node node) {
-		fieldTable.put(fieldName, node);		
+	public void addField(String fieldName, ShadowParser.VariableDeclaratorContext node) {
+		fieldTable.put(fieldName, node);
+		node.setEnclosingType(this);
 	}
 	
 	
-	public Node getField(String fieldName) {
+	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
 		return fieldTable.get(fieldName);
 	}
 		
-	public LinkedHashMap<String, Node> getFields() {
+	public LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> getFields() {
 		return fieldTable;
 	}	
 	
@@ -1176,16 +1178,7 @@ public abstract class Type implements Comparable<Type> {
 						if( (parameterType instanceof ArrayType) && (parameterType.isFullyInstantiated() || !parameterType.isParameterizedIncludingOuterClasses() ) )
 							usedTypes.add(typeParameter.getType()); //directly add array type parameter
 					}
-				}
-			
-				//add inner types, since their instantiations must be recorded
-				/*
-				if( type instanceof ClassType ) {
-					ClassType classType = (ClassType) type;
-					for( ClassType inner : classType.getInnerClasses().values() )
-						addReferencedType( inner, addMembers );				
-				}
-				*/
+				}		
 				
 				//add reference to outer types					
 				Type outer = getOuter();
@@ -1217,7 +1210,7 @@ public abstract class Type implements Comparable<Type> {
 				}
 			
 			
-			for(Node node : type.getFields().values() )
+			for(Context node : type.getFields().values() )
 				addMentionedType( node.getType() );
 	}
 

@@ -4,9 +4,9 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
+import shadow.ShadowException;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
@@ -22,6 +22,7 @@ import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
+import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
@@ -447,6 +448,12 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACLandingpad node) throws ShadowException
 		{
 			sb.append("landingpad");		
+		}
+		
+		@Override
+		public void visit(TACLength node) throws ShadowException
+		{
+			sb.append(node.toString());
 		}
 
 		@Override

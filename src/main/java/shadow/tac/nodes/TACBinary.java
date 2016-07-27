@@ -2,9 +2,9 @@ package shadow.tac.nodes;
 
 import java.util.Set;
 
+import shadow.ShadowException;
 import shadow.interpreter.ShadowInterpreter;
 import shadow.interpreter.ShadowValue;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
@@ -51,14 +51,14 @@ public class TACBinary extends TACUpdate
 		this(node, firstOperand, new SimpleModifiedType(Type.BOOLEAN), op.getName(), secondOperand, new SimpleModifiedType(Type.BOOLEAN), new SimpleModifiedType(Type.BOOLEAN));
 	}	
 	
-	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, char op,
+	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, String op,
 			TACOperand secondOperand) {
 		this( node, firstOperand, signature, op, secondOperand, false);
 	}
 	
-	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, char op,
+	public TACBinary(TACNode node, TACOperand firstOperand, MethodSignature signature, String op,
 			TACOperand secondOperand, boolean isCompare) {		
-		this( node, firstOperand, new SimpleModifiedType(signature.getOuter()), stringVersion(op), secondOperand, signature.getParameterTypes().get(0), isCompare ? new SimpleModifiedType(Type.BOOLEAN) : signature.getReturnTypes().get(0));	
+		this( node, firstOperand, new SimpleModifiedType(signature.getOuter()), op, secondOperand, signature.getParameterTypes().get(0), isCompare ? new SimpleModifiedType(Type.BOOLEAN) : signature.getReturnTypes().get(0));	
 	}
 	
 	private TACBinary(TACNode node, TACOperand firstOperand, ModifiedType firstType, String op,
@@ -99,26 +99,6 @@ public class TACBinary extends TACUpdate
 			second = check(secondOperand, secondType);
 		result = resultType;
 	}
-	
-	private static String stringVersion(char op) {
-		String version = String.valueOf(op);
-		switch( op ) {		
-		case 'l': version = "<<"; break;
-		case 'r': version = ">>";  break;
-		case 'L': version  = "<<<"; break;
-		case 'R': version = ">>>"; break;
-		case '=': version = "=="; break;
-		case '!': version = "!="; break;		
-		case '{': version = "<="; break;
-		case '}': version = ">="; break;	
-		case 'o': version = "or"; break;
-		case 'x': version = "xor"; break;
-		case 'a': version = "and"; break;
-		}
-		
-		return version;
-	}
-	
 	
 	public TACOperand getFirst() {
 		return first;

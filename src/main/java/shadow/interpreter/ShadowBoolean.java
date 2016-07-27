@@ -1,6 +1,6 @@
 package shadow.interpreter;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 

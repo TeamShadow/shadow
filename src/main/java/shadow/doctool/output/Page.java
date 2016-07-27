@@ -9,13 +9,13 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 
 import shadow.Loggers;
+import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.doctool.tag.TagManager.InlineTagType;
-import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.Type;
 

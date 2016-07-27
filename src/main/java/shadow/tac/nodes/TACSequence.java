@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;

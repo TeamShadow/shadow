@@ -2,7 +2,7 @@ package shadow.doctool;
 
 import java.util.ArrayDeque;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 
 /**
  * Represents the contents of a Shadow documentation comment. Should be
@@ -22,7 +22,9 @@ public class DocumentationBuilder
 	/** Parses a single line comment, removing leading/trailing whitespace */
 	public void appendLine(String line)
 	{
-		lines.add(clean(line));
+		line = line.trim();
+		if (!line.isEmpty())
+			lines.add(clean(line));		
 	}
 	
 	/** Parses a single line comment, removing leading/trailing whitespace */
@@ -76,7 +78,9 @@ public class DocumentationBuilder
 	 */
 	public Documentation process() throws ShadowException, DocumentationException
 	{
-		return new Documentation(this);
+		Documentation documentation = new Documentation(this); 
+		lines.clear();
+		return documentation;
 	}
 	
 	@Override

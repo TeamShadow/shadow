@@ -21,11 +21,16 @@ grammar Shadow;
 
 @header {
 package shadow.parse;
+
+import shadow.interpreter.ShadowValue;
+import shadow.tac.nodes.TACOperand;
+import java.util.List;
+import java.util.ArrayList;
+import shadow.doctool.DocumentationBuilder;
+import shadow.doctool.Documentation;
 }
 
-@lexer::members {    
-    public static final int DOCUMENTATION = HIDDEN + 1;
-}
+//@lexer::members{ public static DocumentationBuilder docBuilder = null; }
 
 options {contextSuperClass=shadow.parse.Context;}
 
@@ -109,13 +114,14 @@ classOrInterfaceBody
 	;	
 
 classOrInterfaceBodyDeclaration
+//locals [ Documentation documentation = ShadowLexer.docBuilder.process()   ]
 	: modifiers 
-	  	( classOrInterfaceDeclaration
-	    | enumDeclaration
-	    | createDeclaration
-	    | destroyDeclaration
+	  	( classOrInterfaceDeclaration /*{$ctx.classOrInterfaceDeclaration().setDocumentation($documentation);}*/
+	    | enumDeclaration 
+	    | createDeclaration 
+	    | destroyDeclaration 
 	    | fieldDeclaration 
-	    | methodDeclaration
+	    | methodDeclaration 
 	  	)
 	;
 	
@@ -124,7 +130,7 @@ fieldDeclaration
 	;
 	
 variableDeclarator
-	: Identifier ( '=' conditionalExpression )
+	: Identifier ( '=' conditionalExpression )?
 	;
 	
 arrayInitializer
@@ -184,8 +190,7 @@ type
 	;
 
 referenceType
-	:
-    | primitiveType ( '[' ( ',' )* ']' )+
+	: primitiveType ( '[' ( ',' )* ']' )+
   	| classOrInterfaceType ( '[' ( ',' )* ']' )*
 	;
 
@@ -239,10 +244,6 @@ unqualifiedName
 	| Identifier ( ':' Identifier )*
 	;
 	
-nameList
-	: classOrInterfaceType (',' classOrInterfaceType )*
-	;
-	
 //Expression syntax
 
 assignmentOperator
@@ -254,8 +255,8 @@ assignmentOperator
 	| '+='   
 	| '-='   
 	| '<<='  
-	| '>>='  
-	| '>>>=' 
+	| rightShiftAssign  
+	| rightRotateAssign 
 	| '<<<=' 
 	| '&='   
 	| '^='   
@@ -263,7 +264,7 @@ assignmentOperator
 	;
 
 conditionalExpression
-	: coalesceExpression ( '?' conditionalExpression ',' conditionalExpression )
+	: coalesceExpression ( '?' conditionalExpression ',' conditionalExpression )?
 	;
 
 coalesceExpression
@@ -310,13 +311,30 @@ relationalExpression
 concatenationExpression
 	: shiftExpression ( '#' shiftExpression )*
 	;
+	
+rightShift
+	: first='>' second='>' {$first.index + 1 == $second.index}?
+	;
+	
+rightRotate
+	: first='>' second='>' third='>' {$first.index + 1 == $second.index && $second.index + 1 == $third.index}?
+	;
+	
+rightShiftAssign
+	: first='>' second='>=' {$first.index + 1 == $second.index}?
+	;
+
+rightRotateAssign
+	: first='>' second='>' third='>=' {$first.index + 1 == $second.index && $second.index + 1 == $third.index}?
+	;
+
 
 shiftExpression
-	: rotateExpression (( '<<' | '>>' ) rotateExpression )*
+	: rotateExpression (( '<<' | rightShift ) rotateExpression )*
 	;
 
 rotateExpression
-	: additiveExpression ( ( '<<<' | '>>>' ) additiveExpression )*
+	: additiveExpression ( ( '<<<' | rightRotate ) additiveExpression )*
 	;
 
 additiveExpression
@@ -357,6 +375,7 @@ copyExpression
   	;
 
 primaryExpression
+locals [boolean action = false]
 	: primaryPrefix primarySuffix* 
 	;
 
@@ -423,8 +442,15 @@ brackets
 	
 arrayCreate
 	: typeArguments? ':' ('create' | 'null' ) arrayDimensions
-  	( ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'  |
-    ':' 'default' '(' conditionalExpression ')' )?
+  	( arrayCreateCall | arrayDefault )?
+	;
+	
+arrayCreateCall
+	: ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'
+	;
+
+arrayDefault
+	: ':' 'default' '(' conditionalExpression ')'
 	;
 
 arrayDimensions
@@ -460,6 +486,7 @@ methodCall
 	;
 
 literal
+locals [ShadowValue value]
 	: ByteLiteral
 	| CodeLiteral
 	| ShortLiteral
@@ -473,7 +500,7 @@ literal
 	| UIntLiteral
 	| ULongLiteral
 	| BooleanLiteral
-	| 'null'
+	| NullLiteral
 	;
 	//| <BAD_STRING_LITERAL > { throw new ParseException("String literals cannot contain newline characters", jjtThis); }
 
@@ -546,6 +573,7 @@ expression
 	;
 
 switchStatement
+locals [boolean hasDefault = false]
 	: 'switch' '(' conditionalExpression ')'
 	'{'
     ( switchLabel statement )+
@@ -645,6 +673,32 @@ tryStatement
 
 // LEXER
 
+//
+// Whitespace and comments
+//
+
+DOCUMENTATION_COMMENT
+	:  '/**' .*? '*/' -> skip //may need to send to another channel
+	;
+	
+	
+LINE_DOCUMENTATION_COMMENT
+	:  '///' ~[\r\n]* -> skip
+	;
+
+WS  :  [ \t\r\n\u000C]+ -> skip
+    ;
+    
+
+COMMENT
+    :   '/*' .*? '*/' -> skip
+    ;
+
+LINE_COMMENT
+    :   '//' ~[\r\n]* -> skip
+    ;
+
+
 // Keywords
 ABSTRACT	: 'abstract';
 AND			: 'and';
@@ -669,7 +723,6 @@ DOUBLE		: 'double';
 ELSE		: 'else';
 ENUM		: 'enum';
 EXCEPTION	: 'exception';
-FALSE		: 'false';
 FINALLY		: 'finally';
 FLOAT		: 'float';
 FOR			: 'for';
@@ -686,7 +739,6 @@ INTERFACE	: 'interface';
 LOCKED		: 'locked';
 LONG		: 'long';
 NATIVE		: 'native';
-NULL		: 'null';
 NULLABLE	: 'nullable';
 OR			: 'or';
 PRIVATE		: 'private';
@@ -703,7 +755,6 @@ SUPER		: 'super';
 SWITCH		: 'switch';
 THIS		: 'this';
 THROW		: 'throw';
-TRUE		: 'true';
 TRY			: 'try';
 UBYTE		: 'ubyte';
 UINT		: 'uint';
@@ -833,10 +884,13 @@ EscapeSequence
     |   '\\' [0-3] [0-7] [0-7]
     ;
 
-
 BooleanLiteral
 	: 'true'
 	| 'false'
+	;
+	
+NullLiteral
+	: 'null'
 	;
     
 VersionLiteral
@@ -883,8 +937,8 @@ BIT_XOR			: '^';
 REM				: '%';
 LEFTROTATE		: '<<<';
 LEFTSHIFT		: '<<';
-RIGHTROTATE		: '>>>';
-RIGHTSHIFT		: '>>';
+//RIGHTROTATE		: '>>>';
+//RIGHTSHIFT		: '>>';
 CAT				: '#';
 VERSION			: '$';
 
@@ -898,8 +952,8 @@ XORASSIGN		: '^=';
 REMASSIGN		: '%=';
 CATASSIGN		: '#=';
 LEFTSHIFTASSIGN	: '<<=';
-RIGHTSHIFTASSIGN	: '>>=';
-RIGHTROTATEASSIGN	: '>>>=';
+//RIGHTSHIFTASSIGN	: '>>=';
+//RIGHTROTATEASSIGN	: '>>>=';
 LEFTROTATEASSIGN	: '<<<=';
 
 // Identifiers (must appear after all keywords in the grammar)
@@ -916,27 +970,4 @@ Letter
 fragment
 Nonletter
     :   [\u0030-\u0039\u005f\u0660-\u0669\u06f0-\u06f9\u0966-\u096f\u09e6-\u09ef\u0a66-\u0a6f\u0ae6-\u0aef\u0b66-\u0b6f\u0be7-\u0bef\u0c66-\u0c6f\u0ce6-\u0cef\u0d66-\u0d6f\u0e50-\u0e59\u0ed0-\u0ed9\u1040-\u1049]
-    ;
-
-//
-// Whitespace and comments
-//
-
-WS  :  [ \t\r\n\u000C]+ -> skip
-    ;
-    
-DOCUMENTATION_COMMENT
-	:  '/**' .*? '*/' -> channel(DOCUMENTATION)
-	;
-	
-LINE_DOCUMENTATION_COMMENT
-	:  '///' ~[\r\n]* -> channel(DOCUMENTATION)
-	;
-
-COMMENT
-    :   '/*' .*? '*/' -> skip
-    ;
-
-LINE_COMMENT
-    :   '//' ~[\r\n]* -> skip
     ;

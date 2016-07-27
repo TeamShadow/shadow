@@ -3,8 +3,8 @@ package shadow.tac.nodes;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
+import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
@@ -23,7 +23,7 @@ import shadow.typecheck.type.TypeParameter;
  */
 public abstract class TACNode implements Iterable<TACOperand> {
     private TACNode prev, next; // the next and prev nodes in our circular linked list
-    private Node ASTNode; // associated AST node, used for error messages
+    private Context ASTNode; // associated AST node, used for error messages
     private TACBlock block; //which block the node is in
 
     /**
@@ -31,7 +31,9 @@ public abstract class TACNode implements Iterable<TACOperand> {
      *
      * @param node
      */
-    protected TACNode(TACNode node) {        
+    protected TACNode(TACNode node) { 
+    	prev = this;
+    	next = this;
         insertBefore(node);        
     }
     
@@ -95,20 +97,30 @@ public abstract class TACNode implements Iterable<TACOperand> {
     }
 
     /**
-     * Removes this node from the circular linked-list.
+     * Removes this node from the circular linked-list and returns the previous node.
      */
-    public void remove() {
+    public TACNode remove() {
+    	TACNode previous = prev;
+    	if( previous == this )
+    		previous = null;    	
         connect(prev, next);        
         this.prev = this.next = this;
-    }  
-
-    protected final void connect(TACNode first, TACNode second, TACNode third) {
-        connect(first, second, second, third);
+        return previous;
+    }
+    /**
+     * Appends the list ending with this right before node.
+     * @param node at the end of the other list 
+     */
+    
+    public void appendBefore(TACNode node) {    	    
+		//should work with only one node in the list
+		connect(node.prev, this.next); //this.next is actually the beginning of the list
+		connect(this, node);
     }
 
-    protected final void connect(TACNode first, TACNode second, TACNode third, TACNode fourth) {
-        connect(first, second);
-        connect(third, fourth);
+    protected final void connect(TACNode first, TACNode second, TACNode third) {
+    	connect(first, second);
+        connect(second, third);
     }
     
     /**
@@ -123,12 +135,12 @@ public abstract class TACNode implements Iterable<TACOperand> {
     		second.prev = first;
     }
     
-    public Node getASTNode()
+    public Context getASTNode()
     {
     	return ASTNode;
     }
     
-    public void setASTNode(Node node)
+    public void setASTNode(Context node)
     {
     	ASTNode = node;
     }

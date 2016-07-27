@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBinary;
@@ -116,7 +116,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 					( left instanceof ShadowNull && right instanceof ShadowNull ) )
 					data = left.equal(right); 
 				else
-					throw new ShadowException("Interpreter cannot perform reference comparison on non-primitive types");
+					throw new InterpreterException("Interpreter cannot perform reference comparison on non-primitive types");
 				break;				
 			case "!=":
 				data = left.notEqual(right); break;
@@ -191,7 +191,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 			String name = constant.getPrefixType().toString() + ":" + constant.getName();
 			ShadowValue data = constants.get(name);
 			if( data == null )
-				throw new ShadowException("Initialization dependencies prevent the value of constant " + name + " from being used here");
+				throw new InterpreterException("Initialization dependencies prevent the value of constant " + name + " from being used here");
 			node.setData(data);
 		}
 		//should never happen
@@ -222,7 +222,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 				
 				//must be String
 				if( !signature.getOuter().equals(Type.STRING) )
-					throw new ShadowException("Cannot call method " + signature);
+					throw new InterpreterException("Cannot call method " + signature);
 				else {
 					if( parameters.size() == 1 )
 						node.setData(new ShadowString(""));
@@ -231,10 +231,10 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 						if( value instanceof ShadowString ) 
 							node.setData(value);
 						else
-							throw new ShadowException("Cannot call method " + signature);
+							throw new InterpreterException("Cannot call method " + signature);
 					}
 					else
-						throw new ShadowException("Cannot call method " + signature);
+						throw new InterpreterException("Cannot call method " + signature);
 				}
 			}
 			else {
@@ -248,7 +248,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 				
 				//don't know how to deal with any ShadowObject methods yet
 				if( prefix instanceof ShadowObject )
-					throw new ShadowException("Cannot call method " + method.getName());
+					throw new InterpreterException("Cannot call method " + method.getName());
 				
 				switch( method.getName() )
 				{
@@ -417,7 +417,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 	@Override
 	public void visit(TACNewObject node) throws ShadowException { 
 		if( !node.getClassType().equals(Type.STRING)  )
-			throw new ShadowException("Cannot create non-String type " + node.getClassType());
+			throw new InterpreterException("Cannot create non-String type " + node.getClassType());
 	}
 	
 
@@ -426,6 +426,6 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 		Object value = node.getData();
 		if (value instanceof ShadowValue)
 			return (ShadowValue)value;
-		throw new ShadowException("Operand does not contain a value");
+		throw new InterpreterException("Operand does not contain a value");
 	}
 }

@@ -5,8 +5,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
+import shadow.ShadowException;
 import shadow.doctool.DocumentationException;
-import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.Type;
 

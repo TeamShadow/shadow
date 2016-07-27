@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Team Shadow
+ * Copyright 2016 Team Shadow
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,41 +19,20 @@ package shadow.typecheck;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
-import shadow.AST.ASTWalker;
-import shadow.AST.ASTWalker.WalkType;
-import shadow.parser.javacc.ASTBlock;
-import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
-import shadow.parser.javacc.ASTClassOrInterfaceType;
-import shadow.parser.javacc.ASTCompilationUnit;
-import shadow.parser.javacc.ASTConditionalExpression;
-import shadow.parser.javacc.ASTCreateBlock;
-import shadow.parser.javacc.ASTCreateDeclaration;
-import shadow.parser.javacc.ASTCreateDeclarator;
-import shadow.parser.javacc.ASTDestroyDeclaration;
-import shadow.parser.javacc.ASTEnumDeclaration;
-import shadow.parser.javacc.ASTFieldDeclaration;
-import shadow.parser.javacc.ASTFormalParameter;
-import shadow.parser.javacc.ASTFormalParameters;
-import shadow.parser.javacc.ASTFunctionType;
-import shadow.parser.javacc.ASTIsList;
-import shadow.parser.javacc.ASTLiteral;
-import shadow.parser.javacc.ASTMethodDeclaration;
-import shadow.parser.javacc.ASTMethodDeclarator;
-import shadow.parser.javacc.ASTPrimitiveType;
-import shadow.parser.javacc.ASTReferenceType;
-import shadow.parser.javacc.ASTResultType;
-import shadow.parser.javacc.ASTResultTypes;
-import shadow.parser.javacc.ASTType;
-import shadow.parser.javacc.ASTTypeArguments;
-import shadow.parser.javacc.ASTTypeParameter;
-import shadow.parser.javacc.ASTTypeParameters;
-import shadow.parser.javacc.ASTUnqualifiedName;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.SignatureNode;
+import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.Token;
+
+import shadow.ShadowException;
+import shadow.parse.Context;
+import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.MethodDeclaratorContext;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
@@ -92,8 +71,9 @@ public class TypeUpdater extends BaseChecker {
 	 * Creates a new <code>TypeUpdater</code> with the given tree of packages.
 	 * @param packageTree	root of all packages
 	 */
-	public TypeUpdater( Package packageTree ) {
-		super( packageTree );		
+	public TypeUpdater( Package packageTree, ErrorReporter reporter )
+	{
+		super( packageTree, reporter );	
 	}
 	
 	
@@ -105,64 +85,61 @@ public class TypeUpdater extends BaseChecker {
 	 * @throws ShadowException
 	 * @throws TypeCheckException
 	 */
-	public Map<Type,Node> update( Map<Type,Node> typeTable )
-			throws ShadowException, TypeCheckException {
+	public Map<Type,Context> update( Map<Type,Context> typeTable )
+			throws ShadowException {
 		
-		/* Add fields and methods. */
-		ASTWalker walker = new ASTWalker( this );
-		for(Node declarationNode : typeTable.values() ) {
-			isMeta = declarationNode.getFile().getPath().endsWith(".meta");
+		/* Add fields and methods. */		
+		for(Context declarationNode : typeTable.values() ) {
+			isMeta = declarationNode.getPath().endsWith(".meta");
 			// Only walk outer types since inner ones will be walked automatically.
 			if( !declarationNode.getType().hasOuter() )
-				walker.walk(declarationNode);
+				visit(declarationNode);
 		}
 		
-		/* Add default creates and make methods for properties. */
-		if( errorList.isEmpty() )
-			addCreatesAndProperties();
+		/* Add default creates and make methods for properties 
+		 * Must happen after all fields and methods are added.
+		 * Otherwise, an inner type might get a default create added
+		 * when it didn't need one.  
+		 */		
+		for(Context declarationNode : typeTable.values() )
+			addCreatesAndProperties(declarationNode);
 
 		/* Instantiate type parameters where necessary, returning a new type table
 		 * The old type table can be invalidated when type names change as a result
 		 * of instantiating type parameters. */
-		if( errorList.isEmpty() )
+		if( getErrorReporter().getErrorList().isEmpty() )
 			typeTable = instantiateTypeParameters( typeTable );
 		
 		/* Topologically sort classes by their is lists: parent types and interfaces.
 		 * This sorting will also check for circular inheritance or interfaces.
 		 */
-		List<Node> nodeList = sortOnIsLists( typeTable );		
+		List<Context> nodeList = sortOnIsLists( typeTable );		
 		
 		/* Update is lists based on updated type parameters. */		
-		if( errorList.isEmpty() )
+		if( getErrorReporter().getErrorList().isEmpty() )
 			updateIsLists( nodeList );
 		
 		/* Update fields and methods. Must happen after is lists are updated, since
 		 * generic parameters in the methods could depend on correct parents and interfaces. */
-		if( errorList.isEmpty() )
+		if( getErrorReporter().getErrorList().isEmpty() )
 			updateFieldsAndMethods( nodeList );		
 		
 		/* After updating all the types, make sure that method overrides are all legal. */
-		if( errorList.isEmpty() )
+		if( getErrorReporter().getErrorList().isEmpty() )
 			checkOverrides( nodeList );
 		
 		/* Finally, update which types are referenced by other types. */
-		if( errorList.isEmpty() )
+		if( getErrorReporter().getErrorList().isEmpty() )
 			updateTypeReferences( nodeList );
-
-		if( errorList.size() > 0 ) {
-			printErrors();
-			printWarnings();
-			throw errorList.get(0);
-		}
 		
-		printWarnings();
+		printAndReportErrors();
 		
 		return typeTable;
 	}	
 		
-	private void updateFieldsAndMethods( List<Node> nodeList ) {
+	private void updateFieldsAndMethods( List<Context> nodeList ) {
 		//update fields and methods			
-		for(Node declarationNode : nodeList ) {	
+		for(Context declarationNode : nodeList ) {	
 			try {			
 				Type type = declarationNode.getType();				
 				type.updateFieldsAndMethods();				
@@ -176,8 +153,8 @@ public class TypeUpdater extends BaseChecker {
 	/* 
 	 * Add necessary referenced types to all types. 
 	 */
-	private void updateTypeReferences( List<Node> nodeList ) {
-		for(Node declarationNode : nodeList ) {
+	private void updateTypeReferences( List<Context> nodeList ) {
+		for(Context declarationNode : nodeList ) {
 			Type type = declarationNode.getType();
 			
 			/* The following types must be added because they can appear in generated code
@@ -215,7 +192,7 @@ public class TypeUpdater extends BaseChecker {
 			/* Update imports for meta files, since they won't have statement checking.
 			 * Note that imports in meta files have been optimized to include only the
 			 * originally imported classes that are referenced. */
-			if( declarationNode.getFile().getPath().endsWith(".meta") ) {
+			if( declarationNode.getPath().endsWith(".meta") ) {
 				for(Object item : type.getImportedItems())
 					if( item instanceof Type ) {
 						Type importType = (Type) item;
@@ -225,132 +202,145 @@ public class TypeUpdater extends BaseChecker {
 		}
 	}
 	
-	private void addCreatesAndProperties() {		
-		for( Type type : packageTree ) { // Iterate over all the types in the package tree.
-			if( type instanceof ClassType ) {
-				ClassType classType = (ClassType)type;
-				/* If no creates are present, add the default one. */
-				if (classType.getMethods("create").isEmpty()) {
-					ASTCreateDeclaration createNode = new ASTCreateDeclaration(-1);
-					createNode.setModifiers(Modifiers.PUBLIC);
-					MethodSignature createSignature = new MethodSignature(classType, "create",
-							createNode.getModifiers(), createNode.getDocumentation(), createNode);
-					createNode.setMethodSignature(createSignature);
-					classType.addMethod(createSignature);
-					// Note: the node is null for the default create, since nothing was made.
-				}
-				
-				/* Add copy method with a set to hold addresses. */
-				ASTMethodDeclaration copyNode = new ASTMethodDeclaration(-1);
-				copyNode.setModifiers(Modifiers.PUBLIC | Modifiers.READONLY);
-				MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode.getDocumentation(), copyNode);
-				copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
-				copySignature.addReturn(new SimpleModifiedType(classType));					
-				copyNode.setMethodSignature(copySignature);
-				classType.addMethod(copySignature);
-				
-				/* Add default getters and setters. */
-				for( Map.Entry<String, Node> field : classType.getFields().entrySet() ) {
-					Node node = field.getValue();
-					Modifiers fieldModifiers = node.getModifiers();
-					
-					if( fieldModifiers.isGet() || fieldModifiers.isSet() )	{	
-						List<MethodSignature> methods = classType.getMethods(field.getKey());
-						int getterCount = 0;
-						int setterCount = 0;
-						int getterCollision = 0;
-						int setterCollision = 0;
-						
-						for( MethodSignature signature : methods) {
-							if( signature.getModifiers().isGet() )
-								getterCount++;
-							else if( signature.getModifiers().isSet() )
-								setterCount++;
-							else if( signature.getParameterTypes().isEmpty() )
-								getterCollision++;
-							else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
-								setterCollision++;
-						}
-						
-						if( fieldModifiers.isGet() && getterCount == 0 ) {
-							if( getterCollision > 0 )								
-								addError(node, Error.INVALID_MODIFIER,
-										"Default get property " + field.getKey() +
-										" cannot replace a non-get method with an indistinguishable signature" );
-							else {
-								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-								// Default get is readonly.
-								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);
-								if( classType.getModifiers().isLocked() )
-									methodNode.addModifier(Modifiers.LOCKED);								
-								methodNode.setImage(field.getKey());								
-								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
-								methodNode.setType(methodType);
-								Modifiers modifiers = new Modifiers(fieldModifiers);
-								modifiers.removeModifier(Modifiers.GET);
-								modifiers.removeModifier(Modifiers.FIELD);
-								if( modifiers.isSet() )
-									modifiers.removeModifier(Modifiers.SET);
-																
-								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
-								methodType.addReturn(modifiedType);
-								MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);								
-								checkParameterAndReturnVisibility(signature, classType); // Make sure field type is visible
-								classType.addMethod(signature);
-							}								
-						}
-						
-						if( fieldModifiers.isSet() && setterCount == 0 ) {
-							if( setterCollision > 0 )								
-								addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot replace a non-set method with an indistinguishable signature" );
-							else {
-								ASTMethodDeclaration methodNode = new ASTMethodDeclaration(-1);
-								methodNode.setModifiers(Modifiers.PUBLIC | Modifiers.SET );
-								if( classType.getModifiers().isLocked() )
-									methodNode.addModifier(Modifiers.LOCKED);
-								methodNode.setImage(field.getKey());								
-								MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
-								methodNode.setType(methodType);
-								Modifiers modifiers = new Modifiers(fieldModifiers);
-								//is it even possible to have an immutable or readonly set?
-								if( modifiers.isImmutable() )
-									addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for an immutable field" );										
-								if( modifiers.isReadonly() )
-									addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for a readonly field" );
-								modifiers.removeModifier(Modifiers.SET);
-								modifiers.removeModifier(Modifiers.FIELD);									
-								modifiers.addModifier(Modifiers.ASSIGNABLE);
-								if( modifiers.isGet() )
-									modifiers.removeModifier(Modifiers.GET);
-								if( modifiers.isWeak() )
-									modifiers.removeModifier(Modifiers.WEAK);								
-								SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
-								methodType.addParameter("value", modifiedType );									
-								MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);
-								checkParameterAndReturnVisibility(signature, classType); // Make sure field type is visible
-								classType.addMethod(signature);
-							}								
-						}
-					}						
-				}
+	//We want a token from the same file, for error reporting purposes
+	private static Token makeDummyToken(Context node)
+	{		
+		CommonToken token = new CommonToken(node.getStart());
+		//since the token is for a made-up create or property, it has no location in the file
+		token.setLine(-1);
+		token.setCharPositionInLine(-1);
+		
+		return token;		
+	}
+	
+	private void addCreatesAndProperties( Context declaration ) {
+		Type type = declaration.getType();		
+		if( type instanceof ClassType ) {
+			ClassType classType = (ClassType)type;
+			/* If no creates are present, add the default one. */
+			if (classType.getMethods("create").isEmpty()) {
+				//might be a terrible idea to create a dummy node
+				ShadowParser.CreateDeclarationContext createNode = new ShadowParser.CreateDeclarationContext(null, -1);
+				createNode.start = createNode.stop = makeDummyToken(declaration);
+				createNode.addModifiers(Modifiers.PUBLIC);
+				MethodSignature createSignature = new MethodSignature(classType, "create",
+						createNode.getModifiers(), createNode.getDocumentation(), createNode);
+				createNode.setSignature(createSignature);
+				classType.addMethod(createSignature);
 			}
-		}		
+			
+			/* Add copy method with a set to hold addresses. */
+			ShadowParser.MethodDeclarationContext copyNode = new ShadowParser.MethodDeclarationContext(null, -1);
+			copyNode.start = copyNode.stop = makeDummyToken(declaration);
+			copyNode.addModifiers(Modifiers.PUBLIC | Modifiers.READONLY);				
+			MethodSignature copySignature = new MethodSignature(classType, "copy", copyNode.getModifiers(), copyNode.getDocumentation(), copyNode);
+			copySignature.addParameter("addresses", new SimpleModifiedType(Type.ADDRESS_MAP));
+			copySignature.addReturn(new SimpleModifiedType(classType));					
+			copyNode.setSignature(copySignature);
+			classType.addMethod(copySignature);
+			
+			/* Add default getters and setters. */
+			for( Entry<String, VariableDeclaratorContext> field : classType.getFields().entrySet() ) {
+				Context node = field.getValue();
+				Modifiers fieldModifiers = node.getModifiers();
+				
+				if( fieldModifiers.isGet() || fieldModifiers.isSet() )	{	
+					List<MethodSignature> methods = classType.getMethods(field.getKey());
+					int getterCount = 0;
+					int setterCount = 0;
+					int getterCollision = 0;
+					int setterCollision = 0;
+					
+					for( MethodSignature signature : methods) {
+						if( signature.getModifiers().isGet() )
+							getterCount++;
+						else if( signature.getModifiers().isSet() )
+							setterCount++;
+						else if( signature.getParameterTypes().isEmpty() )
+							getterCollision++;
+						else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
+							setterCollision++;
+					}
+					
+					if( fieldModifiers.isGet() && getterCount == 0 ) {
+						if( getterCollision > 0 )								
+							addError(node, Error.INVALID_MODIFIER,
+									"Default get property " + field.getKey() +
+									" cannot replace a non-get method with an indistinguishable signature" );
+						else {
+							ShadowParser.MethodDeclarationContext methodNode = new ShadowParser.MethodDeclarationContext(null, -1);
+							methodNode.start = methodNode.stop = makeDummyToken(declaration);
+							// Default get is readonly.
+							methodNode.addModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);
+							if( classType.getModifiers().isLocked() )
+								methodNode.getModifiers().addModifier(Modifiers.LOCKED);
+							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+							methodNode.setType(methodType);
+							Modifiers modifiers = new Modifiers(fieldModifiers);
+							modifiers.removeModifier(Modifiers.GET);
+							modifiers.removeModifier(Modifiers.FIELD);
+							if( modifiers.isSet() )
+								modifiers.removeModifier(Modifiers.SET);
+															
+							SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
+							methodType.addReturn(modifiedType);
+							MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);								
+							checkParameterAndReturnVisibility(signature, classType); // Make sure field type is visible
+							classType.addMethod(signature);
+						}								
+					}
+					
+					if( fieldModifiers.isSet() && setterCount == 0 ) {
+						if( setterCollision > 0 )								
+							addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot replace a non-set method with an indistinguishable signature" );
+						else {
+							ShadowParser.MethodDeclarationContext methodNode = new ShadowParser.MethodDeclarationContext(null, -1);
+							methodNode.start = methodNode.stop = makeDummyToken(declaration);
+							methodNode.addModifiers(Modifiers.PUBLIC | Modifiers.SET);
+							if( classType.getModifiers().isLocked() )
+								methodNode.getModifiers().addModifier(Modifiers.LOCKED);
+							//methodNode.setImage(field.getKey());								
+							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+							methodNode.setType(methodType);
+							Modifiers modifiers = new Modifiers(fieldModifiers);
+							//is it even possible to have an immutable or readonly set?
+							if( modifiers.isImmutable() )
+								addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for an immutable field" );										
+							if( modifiers.isReadonly() )
+								addError(node, Error.INVALID_MODIFIER, "Default set property " +  field.getKey() + " cannot be created for a readonly field" );
+							modifiers.removeModifier(Modifiers.SET);
+							modifiers.removeModifier(Modifiers.FIELD);									
+							modifiers.addModifier(Modifiers.ASSIGNABLE);
+							if( modifiers.isGet() )
+								modifiers.removeModifier(Modifiers.GET);
+							if( modifiers.isWeak() )
+								modifiers.removeModifier(Modifiers.WEAK);								
+							SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
+							methodType.addParameter("value", modifiedType );									
+							MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);
+							checkParameterAndReturnVisibility(signature, classType); // Make sure field type is visible
+							classType.addMethod(signature);
+						}								
+					}
+				}						
+			}
+		}				
 	}	
 	
-	private Map<Type,Node> instantiateTypeParameters( Map<Type,Node> nodeTable ) {		
+	private Map<Type,Context> instantiateTypeParameters( Map<Type,Context> nodeTable ) {		
 		/* Build graph of type parameter dependencies. */
-		DirectedGraph<Node> graph = new DirectedGraph<Node>();		
-		Map<Type, Node> uninstantiatedNodes = new HashMap<Type,Node>();
+		DirectedGraph<Context> graph = new DirectedGraph<Context>();		
+		Map<Type, Context> uninstantiatedNodes = new HashMap<Type,Context>();
 		
-		for(Node declarationNode : nodeTable.values() ) {
+		for(Context declarationNode : nodeTable.values() ) {
 			graph.addNode( declarationNode );
 			Type typeWithoutArguments = declarationNode.getType().getTypeWithoutTypeArguments(); 
 			uninstantiatedNodes.put(typeWithoutArguments, declarationNode);
 		}
 		
-		for(Node declarationNode : nodeTable.values() )
+		for(Context declarationNode : nodeTable.values() )
 			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  ) {
-				Node dependencyNode = uninstantiatedNodes.get( dependency.getTypeWithoutTypeArguments() );
+				Context dependencyNode = uninstantiatedNodes.get( dependency.getTypeWithoutTypeArguments() );
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " +
 							declarationNode.getType() + " is dependent on unavailable type " +
@@ -361,11 +351,11 @@ public class TypeUpdater extends BaseChecker {
 		
 		/* Update parameters based on topological sort of type parameter dependencies. */
 		// Need a new table because types have changed and will hash to different locations.		
-		Map<Type, Node> updatedNodeTable = new HashMap<Type,Node>();
+		Map<Type, Context> updatedNodeTable = new HashMap<Type,Context>();
 		try {					
-			List<Node> nodeList = graph.topologicalSort();
+			List<Context> nodeList = graph.topologicalSort();
 			/* Update type parameters. */
-			for(Node declarationNode : nodeList ) {	
+			for(Context declarationNode : nodeList ) {	
 				Type type = declarationNode.getType();				
 				updateTypeParameters( type, declarationNode );
 				
@@ -383,21 +373,21 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	
-	private List<Node> sortOnIsLists(Map<Type,Node> nodeTable) {
+	private List<Context> sortOnIsLists(Map<Type,Context> nodeTable) {
 		//now make dependency graph based on extends and implements
-		DirectedGraph<Node> graph = new DirectedGraph<Node>();
+		DirectedGraph<Context> graph = new DirectedGraph<Context>();
 		
-		for(Node declarationNode : nodeTable.values() )
+		for(Context declarationNode : nodeTable.values() )
 			graph.addNode( declarationNode );
 		
-		for(Node declarationNode : nodeTable.values() ) {
+		for(Context declarationNode : nodeTable.values() ) {
 			Type type = declarationNode.getType();
 			
 			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType) type;
 				
 				if( classType.getExtendType() != null ) {
-					Node dependencyNode = nodeTable.get(classType.getExtendType().getTypeWithoutTypeArguments());
+					Context dependencyNode = nodeTable.get(classType.getExtendType().getTypeWithoutTypeArguments());
 					if( dependencyNode == null )
 						addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 					else
@@ -407,7 +397,7 @@ public class TypeUpdater extends BaseChecker {
 				
 			for( Type dependency : type.getInterfaces() ) {				
 				dependency = dependency.getTypeWithoutTypeArguments();
-				Node dependencyNode = nodeTable.get(dependency);
+				Context dependencyNode = nodeTable.get(dependency);
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 				else
@@ -415,13 +405,13 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 		
-		List<Node> nodeList = null;
+		List<Context> nodeList = null;
 		
 		try {	
 			 nodeList = graph.topologicalSort();
 		}	
 		catch( CycleFoundException e ) {
-			Node node = (Node) e.getCycleCause();			
+			Context node = (Context) e.getCycleCause();			
 			addError(node, Error.INVALID_HIERARCHY, "Type " + node.getType() + " contains a circular is definition", node.getType());
 		}
 		
@@ -429,8 +419,8 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	
-	private void updateIsLists(List<Node> nodeList) {	
-		for(Node declarationNode : nodeList ) {	
+	private void updateIsLists(List<Context> nodeList) {	
+		for(Context declarationNode : nodeList ) {	
 			Type type = declarationNode.getType();
 			if( type instanceof ClassType ) {
 				ClassType classType = (ClassType) type;					
@@ -469,9 +459,8 @@ public class TypeUpdater extends BaseChecker {
 		}
 	}
 		
-	private void checkOverrides(List<Node> nodeList) {	
-		for( Node declarationNode : nodeList ) {	
-			setFile( declarationNode.getFile() ); // Used for error messages.
+	private void checkOverrides(List<Context> nodeList) {	
+		for( Context declarationNode : nodeList ) {
 			if( declarationNode.getType() instanceof ClassType ) {					
 				ClassType classType = (ClassType)declarationNode.getType();
 				ClassType parent = classType.getExtendType();			
@@ -494,7 +483,7 @@ public class TypeUpdater extends BaseChecker {
 						for( MethodSignature signature : signatures ) {
 							if( parent.recursivelyContainsIndistinguishableMethod(signature) && !signature.isCreate() ) {
 								MethodSignature parentSignature = parent.recursivelyGetIndistinguishableMethod(signature);
-								Node node = signature.getNode();
+								Context node = signature.getNode();
 								Modifiers parentModifiers = parentSignature.getModifiers();
 								Modifiers modifiers = signature.getModifiers();
 								
@@ -520,11 +509,11 @@ public class TypeUpdater extends BaseChecker {
 						String message = "Type " + classType + " does not implement interface " + interfaceType;
 						for( String reason : reasons )
 							message += "\n\t" + reason;
-						addError(Error.MISSING_INTERFACE, message );
+						addError(declarationNode, Error.MISSING_INTERFACE, message );
 					}
 					
 					if( classType.hasOuter() && interfaceType.recursivelyContainsMethod("create") )
-						addError(Error.INVALID_INTERFACE, "Inner class " + classType + " cannot implement interface " + interfaceType + " because it contains a create method");
+						addError(declarationNode, Error.INVALID_INTERFACE, "Inner class " + classType + " cannot implement interface " + interfaceType + " because it contains a create method");
 				}
 			}
 		}				
@@ -585,7 +574,7 @@ public class TypeUpdater extends BaseChecker {
 		}
 	}
 	
-	private void updateTypeParameters( Type type, Node declarationNode ) {
+	private void updateTypeParameters( Type type, Context declarationNode ) {
 		if( type.isParameterized() ) {	
 			for( ModifiedType modifiedType : type.getTypeParameters() ) {						
 				TypeParameter typeParameter = (TypeParameter) modifiedType.getType();
@@ -611,7 +600,7 @@ public class TypeUpdater extends BaseChecker {
 	 * @return			type found or <code>null</code> if not found
 	 */
 	@Override
-	public Type lookupType( String name ) {		
+	public Type lookupType( Context ctx, String name ) {		
 		// In declaration header, check type parameters of current class declaration.
 		if( declarationType != null &&  currentType != declarationType ) {
 			if( declarationType.isParameterized() ) {
@@ -625,13 +614,13 @@ public class TypeUpdater extends BaseChecker {
 				}				
 			}
 		}
-		return super.lookupType(name);
+		return super.lookupType(ctx, name);
 	}
 		
 	/* Checks method and field modifiers to see if they are legal. 
 	 * The kind is "constant" or "method", for error reporting purposes.
 	 */
-	private boolean checkModifiers( Node node, String kind ) {
+	private boolean checkModifiers( Context node, String kind ) {
 		int visibilityModifiers = 0;
 		Modifiers modifiers = node.getModifiers();
 		boolean success = true;
@@ -645,21 +634,21 @@ public class TypeUpdater extends BaseChecker {
 			visibilityModifiers++;
 		
 		if( visibilityModifiers > 1 ) {
-			addError(Error.INVALID_MODIFIER, "Only one public, private, or protected modifier can be used at once" );
+			addError(node, Error.INVALID_MODIFIER, "Only one public, private, or protected modifier can be used at once" );
 			success = false;
 		}
 		
 		if( currentType instanceof InterfaceType ) {
 			if( visibilityModifiers > 0 ) {			
-				addError(Error.INVALID_MODIFIER, "Interface " + kind + "s cannot be marked public, private, or protected since they are all public by definition" );
+				addError(node, Error.INVALID_MODIFIER, "Interface " + kind + "s cannot be marked public, private, or protected since they are all public by definition" );
 				success = false;
 			}			
 			
-			node.addModifier(Modifiers.PUBLIC);
+			node.getModifiers().addModifier(Modifiers.PUBLIC);
 			node.getType().addModifier(Modifiers.PUBLIC);
 		}
 		else if( visibilityModifiers == 0 ) {			
-			addError(Error.INVALID_MODIFIER, "Every class " + kind + " must be specified as public, private, or protected" );
+			addError(node, Error.INVALID_MODIFIER, "Every class " + kind + " must be specified as public, private, or protected" );
 			success = false;
 		}
 		
@@ -670,410 +659,412 @@ public class TypeUpdater extends BaseChecker {
 	
 	
 	/* Helper method called by several different visitor methods. */
-	private Object visitMethod( String name, SignatureNode node, Boolean secondVisit ) {	
-		MethodSignature signature;
+	private void visitMethodPre( String name, Context node) {
+		/* Create the method signature and add this method to the method stack. */
+		MethodSignature signature = new MethodSignature( currentType, name, node.getModifiers(),
+				node.getDocumentation(), node );
+		node.setSignature(signature);
+		MethodType methodType = signature.getMethodType();
+		node.setType( methodType );		
+		checkModifiers( node, "method" );
+		currentMethod.addFirst(node);
+	}
+	
+	private void visitMethodPost( Context node) {
+		MethodSignature signature = node.getSignature();			
 		
-		if( secondVisit ) {
-			signature = node.getMethodSignature();			
+		/* Make sure we don't already have an indistinguishable method. */
+		if( currentType.containsIndistinguishableMethod(signature) ) {				
+			// Get the first indistinguishable signature for error reporting. 
+			MethodSignature method = currentType.getIndistinguishableMethod(signature);
+			String message = "Indistinguishable method " + method + " already declared";
+			if( method.getNode().getStart() != null )
+				message += " on line " + method.getNode().getStart().getLine();
+			addError(node, Error.MULTIPLY_DEFINED_SYMBOL, message);
+			return;
+		}
+		
+		boolean hasBlock = false;
+		
+		if( node instanceof ShadowParser.CreateDeclarationContext )
+			hasBlock = ((ShadowParser.CreateDeclarationContext)node).createBlock() != null;
+		else if( node instanceof ShadowParser.DestroyDeclarationContext )
+			hasBlock = ((ShadowParser.DestroyDeclarationContext)node).block() != null;
+		else if( node instanceof ShadowParser.MethodDeclarationContext )
+			hasBlock = ((ShadowParser.MethodDeclarationContext)node).block() != null;
+		
+		/* Check to see if the method has a body or not (and if it should). */
+		if( currentType instanceof ClassType ) {			
+			if( isMeta && hasBlock )
+				addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 			
-			/* Make sure we don't already have an indistinguishable method. */
-			if( currentType.containsIndistinguishableMethod(signature) ) {				
-				// Get the first indistinguishable signature for error reporting. 
-				MethodSignature method = currentType.getIndistinguishableMethod(signature);				
-				addError(Error.MULTIPLY_DEFINED_SYMBOL,
-						"Indistinguishable method already declared on line " +
-						method.getNode().getLineStart());
-				return WalkType.NO_CHILDREN;
-			}
-			
-			/* Check to see if the method has a body or not (and if it should). */
-			if( currentType instanceof ClassType ) {			
-				if( isMeta && node.hasBlock() )
-					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
+			if( !isMeta ) {					
+				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() )
+					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
-				if( !isMeta ) {					
-					if( !node.hasBlock() && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() )
-						addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
-					
-					if( node.hasBlock() && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
-						addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
-					
-					/* Check to see if the method's parameters and return types are the
-					 * correct level of visibility, e.g., a public method shouldn't
-					 * return a private inner class.
-					 */
-					checkParameterAndReturnVisibility(signature, (ClassType)currentType);
-				}
+				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
+					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
+				
+				/* Check to see if the method's parameters and return types are the
+				 * correct level of visibility, e.g., a public method shouldn't
+				 * return a private inner class.
+				 */
+				checkParameterAndReturnVisibility(signature, (ClassType)currentType);
 			}
-			else if( currentType instanceof InterfaceType ) {
-				if( node.hasBlock() )
-					addError(node, Error.INVALID_STRUCTURE, "Interface method " + signature + " must not define a body");
-			}
-			
-			// Add the method to the current type.
-			currentType.addMethod(signature);
-			// Since we're leaving the method, take it off the method stack.
-			currentMethod.removeFirst();
 		}
-		else {
-			/* Create the method signature and add this method to the method stack. */
-			signature = new MethodSignature( currentType, name, node.getModifiers(),
-					node.getDocumentation(), node );
-			node.setMethodSignature(signature);
-			MethodType methodType = signature.getMethodType();
-			node.setType( methodType );
-			node.setEnclosingType(currentType);
-			checkModifiers( node, "method" );
-			currentMethod.addFirst(node);
-		}		
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	public Object visit(ASTResultTypes node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {	
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				node.addType(node.jjtGetChild(i));
+		else if( currentType instanceof InterfaceType ) {
+			if( hasBlock )
+				addError(node, Error.INVALID_STRUCTURE, "Interface method " + signature + " must not define a body");
 		}
 		
-		return WalkType.POST_CHILDREN;			
+		// Add the method to the current type.
+		currentType.addMethod(signature);
+		// Since we're leaving the method, take it off the method stack.
+		currentMethod.removeFirst();
 	}
 	
-	public Object visit(ASTCreateDeclarator node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {
-			ASTCreateDeclaration parent = (ASTCreateDeclaration) node.jjtGetParent();
-			MethodSignature signature = parent.getMethodSignature();
-			visitDeclarator( node, signature  );			
-			
-			if( (currentType instanceof SingletonType) && signature.getParameterTypes().size() > 0 )
-					addError(Error.INVALID_SINGLETON_CREATE, "Singleton type " + currentType + " can only specify a default create");
-		}		
+	
+	@Override public Void visitResultTypes(ShadowParser.ResultTypesContext ctx)
+	{
+		visitChildren(ctx);
 		
-		return WalkType.POST_CHILDREN;	
+		SequenceType type = new SequenceType();		
+		for( ShadowParser.ResultTypeContext child : ctx.resultType() )
+			type.add(child);		
+		ctx.setType(type);	
+		
+		return null;
 	}
 	
-	public Object visit(ASTMethodDeclarator node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {
-			ASTMethodDeclaration parent = (ASTMethodDeclaration) node.jjtGetParent();
-			visitDeclarator( node, parent.getMethodSignature() );			
-		}		
+	@Override public Void visitCreateDeclarator(ShadowParser.CreateDeclaratorContext ctx)
+	{ 
+		visitChildren(ctx); 
 		
-		return WalkType.POST_CHILDREN;
-	}
+		ShadowParser.CreateDeclarationContext parent = (ShadowParser.CreateDeclarationContext) ctx.getParent();
+		MethodSignature signature = parent.getSignature();
+		visitDeclarator( ctx, ctx.formalParameters(), signature );			
+		
+		if( (currentType instanceof SingletonType) && signature.getParameterTypes().size() > 0 )
+				addError(ctx, Error.INVALID_SINGLETON_CREATE, "Singleton type " + currentType + " can only specify a default create");
+		
+		return null;
+	}	
 	
-	private void visitDeclarator( Node node, MethodSignature signature ) {	
-		// ASTCreateDeclarator will never have type parameters. 
-		int index = 0;		
-		if( node.jjtGetChild(index) instanceof ASTTypeParameters ) {
-			Type methodType = signature.getMethodType();
-			methodType.setParameterized(true);
-			index++;
-		}
+	@Override public Void visitMethodDeclarator(ShadowParser.MethodDeclaratorContext ctx)
+	{
+		visitChildren(ctx);
 		
-		/* Add parameters to the signature */
-		ASTFormalParameters parameters = (ASTFormalParameters) node.jjtGetChild(index);
-		List<String> parameterNames = parameters.getParameterNames();
-		SequenceType parameterTypes = parameters.getType();		
+		ShadowParser.MethodDeclarationContext parent = (ShadowParser.MethodDeclarationContext) ctx.getParent();
+		visitDeclarator( ctx, ctx.formalParameters(), parent.getSignature() );
 		
-		for( int i = 0; i < parameterNames.size(); ++i )				
-			signature.addParameter(parameterNames.get(i), parameterTypes.get(i));
+		return null;		
+	}	
+	
+	private void visitDeclarator( Context node, ShadowParser.FormalParametersContext parameters, MethodSignature signature ) {
+		// Add parameters to the signature		
+		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )				
+			signature.addParameter(parameter.Identifier().getText(), parameter);
 		
 		if( signature.getModifiers().isSet() ) {				
-			if( parameterTypes.size() != 1 )
-				addError(Error.INVALID_MODIFIER,
+			if( parameters.formalParameter().size() != 1 )
+				addError(node, Error.INVALID_MODIFIER,
 						"Methods marked with set must have exactly one parameter");
 			else
 				signature.getParameterTypes().get(0).getModifiers().addModifier(Modifiers.ASSIGNABLE);
 		}			
 		else if( signature.getModifiers().isGet() ) {
-			if( parameterTypes.size() != 0 )
-				addError(Error.INVALID_MODIFIER,
+			if( parameters.formalParameter().size() != 0 )
+				addError(node, Error.INVALID_MODIFIER,
 						"Methods marked with get cannot have any parameters");
 		}		
 
-		/* Add return types */
-		index++;
-		if( node.jjtGetNumChildren() > index ) { // Creates have no results.		
-			ASTResultTypes results = (ASTResultTypes) node.jjtGetChild(index);
-					
-			for( ModifiedType modifiedType : results.getType() ) 
-				signature.addReturn(modifiedType);
-		
+		// Add return types
+		if( node instanceof ShadowParser.MethodDeclaratorContext ) {
+			ShadowParser.MethodDeclaratorContext declarator = (MethodDeclaratorContext) node;
+			for( ShadowParser.ResultTypeContext result : declarator.resultTypes().resultType() )
+				signature.addReturn(result);
+			
 			if( signature.getModifiers().isSet() ) {				
 				if( signature.getReturnTypes().size() != 0 )
-					addError(Error.INVALID_MODIFIER,
+					addError(node, Error.INVALID_MODIFIER,
 							"Methods marked with set cannot have return values");				
 			}			
 			else if( signature.getModifiers().isGet() ) {
 				if( signature.getReturnTypes().size() != 1 )
-					addError(Error.INVALID_MODIFIER,
+					addError(node, Error.INVALID_MODIFIER,
 							"Methods marked with get must have exactly one return value");
-			}
-		}		
+			}			
+		}	
 	}
 	
-	public Object visit(ASTFormalParameter node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {
-			Type type = node.jjtGetChild(1).getType(); // Child 0 is modifiers.			
-			node.setType( type );
+	@Override public Void visitFormalParameter(ShadowParser.FormalParameterContext ctx)
+	{ 
+		visitChildren(ctx);
 		
-			if( type instanceof SingletonType )
-				addError(Error.INVALID_TYPE, "Parameter cannot be defined with singleton type "
-						+ type);			
-		}		
+		Type type = ctx.type().getType();
+		ctx.setType(type);
+		if( type instanceof SingletonType )
+			addError(ctx, Error.INVALID_TYPE, "Parameter cannot be defined with singleton type "
+					+ type);
+		
+		return null;
+	}
 	
-		return WalkType.POST_CHILDREN;
-	}	
-	
-	public Object visit(ASTFormalParameters node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {		
-			/* Iterate through formal parameters. */
-			for( int i = 0; i < node.jjtGetNumChildren(); ++i ) {
-				Node parameter = node.jjtGetChild(i);
-				String parameterName = parameter.getImage();
-				if( node.getParameterNames().contains( parameterName ) )
-					addError( Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + parameterName +
-							" already defined as a parameter name" );
-				if( parameter.getType() instanceof SingletonType )
-					addError( parameter, Error.INVALID_PARAMETERS,
-							"Cannot define method with singleton parameter" );				
-				node.addParameter(parameterName, parameter);
-			}	
+	@Override public Void visitFormalParameters(ShadowParser.FormalParametersContext ctx)
+	{ 
+		visitChildren(ctx);
+		
+		SequenceType type = new SequenceType();
+		Set<String> names = new HashSet<String>();
+		for( ShadowParser.FormalParameterContext parameter : ctx.formalParameter() ) {
+			String name = parameter.Identifier().getText();
+			if( names.contains( name ) )
+				addError( parameter, Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + name +
+						" already defined as a parameter name" );
+			else
+				names.add(name);
+			
+			if( parameter.getType() instanceof SingletonType )
+				addError( parameter, Error.INVALID_PARAMETERS,
+						"Cannot define method with singleton parameter" );				
+			type.add(parameter);			
 		}
 		
-		return WalkType.POST_CHILDREN;			
+		ctx.setType(type);
+		return null;	
 	}	
-	
-
-	@Override
-	public Object visit(ASTCompilationUnit node, Boolean secondVisit) throws ShadowException {
-		if( !secondVisit )		
-			currentPackage = packageTree;		
-				
-		return WalkType.POST_CHILDREN;			
+		
+	@Override public Void visitCompilationUnit(ShadowParser.CompilationUnitContext ctx) 
+	{ 
+		currentPackage = packageTree;		
+		return visitChildren(ctx); 
 	}
 	
-	private void updateImports( Node node ) {
+	private void updateImports( Context node ) {
 		/* Changing these items updates the imports inside the type. */
 		List<Object> importedItems = node.getType().getImportedItems();
 		for( int i = 0; i < importedItems.size(); i++ ) {
 			Object thing = importedItems.get(i);
 			String item = (String) thing;
 			if( item.contains("@") ) { // Single class.			
-				Type type = lookupType(item);				
+				Type type = lookupType(node, item);				
 				//shouldn't fail
 				if( type == null )
-					addError(Error.INVALID_IMPORT, "Undefined type " + item + " cannot be imported");
+					addError(node, Error.INVALID_IMPORT, "Undefined type " + item + " cannot be imported");
 				else 
 					importedItems.set(i, type);
 			}
 			else {	// Whole package.			
 				Package p = packageTree.getChild(item);
 				if( p == null )
-					addError(Error.INVALID_IMPORT, "Undefined package " + item + " cannot be imported");
+					addError(node, Error.INVALID_IMPORT, "Undefined package " + item + " cannot be imported");
 				else
 					importedItems.set(i, p);					
 			}			
 		}
 	}
 	
-	@Override
-	public Object visit(ASTLiteral node, Boolean secondVisit) throws ShadowException {							
-		node.setType( literalToType( node.getLiteral() ) );
-		return WalkType.NO_CHILDREN;			
+	@Override public Void visitLiteral(ShadowParser.LiteralContext ctx) 
+	{ 		
+		ctx.setType(literalToType(ctx));
+		return null; //no children
 	}
 	
-	@Override
-	public Object visit(ASTResultType node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {
-			Node child = node.jjtGetChild(1); // Child 0 is modifiers. 
-			node.setType(child.getType());			
-		}
-		
-		return WalkType.POST_CHILDREN;	
+	@Override public Void visitResultType(ShadowParser.ResultTypeContext ctx)
+	{
+		visitChildren(ctx);		
+		ctx.setType(ctx.type().getType());
+		ctx.addModifiers(ctx.modifiers().getModifiers());
+		return null;
 	}
 		
-	private Object visitDeclaration( Node node, Boolean secondVisit ) throws ShadowException {
-		if( secondVisit ){
-			ASTIsList list = null;			
-			for( int i = 0; i < node.jjtGetNumChildren() && list == null; ++i )
-				if( node.jjtGetChild(i) instanceof ASTIsList )
-					list = (ASTIsList)(node.jjtGetChild(i));
-						
-			if( declarationType instanceof InterfaceType || declarationType instanceof EnumType ) {
-				String kind;
-				if( declarationType instanceof EnumType ) {							
-					kind = "Enum type ";
-					EnumType enumType = (EnumType) declarationType;
-					enumType.setExtendType(Type.ENUM);
-				}
-				else
-					kind = "Interface type ";
-				
-				if( list != null )					
-					for( int i = 0; i < list.jjtGetNumChildren(); i++ ) {					
-						Type type = list.jjtGetChild(i).getType();
-						if( type instanceof InterfaceType )
-							declarationType.addInterface((InterfaceType)type);
-						else				
-							addError(Error.INVALID_INTERFACE, kind + declarationType +
-									" cannot implement non-interface type " + type, type);
-					}
-			}	
-			// Should only be classes, singletons, and exceptions.
-			else if( declarationType instanceof ClassType ) { 					
-				ClassType classType = (ClassType)declarationType;
-				String kind;
-				if( classType.getClass() == ExceptionType.class )
-					kind = "Exception type ";
-				else if( classType.getClass() == SingletonType.class )
-					kind = "Singleton type ";
-				else
-					kind = "Class type ";
-				
-				if( list != null )				
-					for( int i = 0; i < list.jjtGetNumChildren(); ++i ) {
-						Type type = list.jjtGetChild(i).getType();
-						String otherKind;
-						if( type.getClass() == ExceptionType.class )
-							otherKind = "exception type ";
-						else if( type.getClass() == SingletonType.class )
-							otherKind = "singleton type ";
-						else
-							otherKind = "class type ";
-						
-						if( type instanceof ClassType ) {
-							// Exceptions are the only things that can extend exceptions.
-							if(((declarationType.getClass() == ExceptionType.class) !=
-									(type.getClass() == ExceptionType.class)) ||
-									type.getClass() == SingletonType.class )
-								 // Nothing can extend a singleton.
-								addError(Error.INVALID_PARENT, kind + declarationType +
-										" cannot be child of " + otherKind + type);														
-							else if( type.getModifiers().isLocked() )
-								addError(Error.INVALID_PARENT, kind + declarationType +
-										" cannot be child of locked " + otherKind + type);
-							else if( i != 0 )
-								addError(Error.INVALID_PARENT, kind + declarationType +
-										" can only be child of " + otherKind + type + " if " + type + " is listed first in the is list");
-							else
-								classType.setExtendType((ClassType)type);
-						}
-						else if( type instanceof InterfaceType )
-							classType.addInterface((InterfaceType)type);
-						else				
-							addError(Error.INVALID_TYPE, kind + classType +
-									" cannot extend or implement type " + type, classType, type);
-					}
-				
-				/* Use defaults if no extend type set. */
-				if( classType.getExtendType() == null ) {
-					if( classType instanceof ExceptionType ) {
-						// Special case only for the root of all exceptions.
-						if( classType == Type.EXCEPTION ) 
-							classType.setExtendType( Type.OBJECT );
-						else
-							classType.setExtendType( Type.EXCEPTION );
-					}
-					// The Object class is the only class with a null parent.
-					else if( classType != Type.OBJECT ) 
-						classType.setExtendType( Type.OBJECT );
-				}
-			}		
+	private void visitDeclaration( Context node, ShadowParser.IsListContext list) 
+	{		
+		declarationType = node.getType();
+		currentPackage = declarationType.getPackage();
+		updateImports( node );
+		
+		visitChildren(node);
+		
+		//after visiting children					
+		if( declarationType instanceof InterfaceType || declarationType instanceof EnumType ) {
+			String kind;
+			if( declarationType instanceof EnumType ) {							
+				kind = "Enum type ";
+				EnumType enumType = (EnumType) declarationType;
+				enumType.setExtendType(Type.ENUM);
+			}
+			else
+				kind = "Interface type ";
 			
-			if( declarationType.getOuter() != null )			
-				declarationType.addTypeParameterDependency( declarationType.getOuter() );
-			// Outermost type
-			else { 			
-				// Set compilation unit type.
-				Node parent = node.jjtGetParent();
-				parent.setType(declarationType);								
+			if( list != null )					
+				for( ShadowParser.ClassOrInterfaceTypeContext child : list.classOrInterfaceType() ) {					
+					Type type = child.getType();
+					if( type instanceof InterfaceType )
+						declarationType.addInterface((InterfaceType)type);
+					else				
+						addError(child, Error.INVALID_INTERFACE, kind + declarationType +
+								" cannot implement non-interface type " + type, type);
+				}
+		}	
+		// Should only be classes, singletons, and exceptions.
+		else if( declarationType instanceof ClassType ) { 					
+			ClassType classType = (ClassType)declarationType;
+			String kind;
+			if( classType.getClass() == ExceptionType.class )
+				kind = "Exception type ";
+			else if( classType.getClass() == SingletonType.class )
+				kind = "Singleton type ";
+			else
+				kind = "Class type ";
+			
+			if( list != null ) {
+				boolean first = true;
+				for( ShadowParser.ClassOrInterfaceTypeContext child : list.classOrInterfaceType()  ) {
+					Type type = child.getType();
+					String otherKind;
+					if( type.getClass() == ExceptionType.class )
+						otherKind = "exception type ";
+					else if( type.getClass() == SingletonType.class )
+						otherKind = "singleton type ";
+					else
+						otherKind = "class type ";
+					
+					if( type instanceof ClassType ) {
+						// Exceptions are the only things that can extend exceptions.
+						if(((declarationType.getClass() == ExceptionType.class) !=
+								(type.getClass() == ExceptionType.class)) ||
+								type.getClass() == SingletonType.class )
+							 // Nothing can extend a singleton.
+							addError(child, Error.INVALID_PARENT, kind + declarationType +
+									" cannot be child of " + otherKind + type);														
+						else if( type.getModifiers().isLocked() )
+							addError(child, Error.INVALID_PARENT, kind + declarationType +
+									" cannot be child of locked " + otherKind + type);
+						else if( !first )
+							addError(child, Error.INVALID_PARENT, kind + declarationType +
+									" can only be child of " + otherKind + type + " if " + type + " is listed first in the is list");
+						else
+							classType.setExtendType((ClassType)type);
+					}
+					else if( type instanceof InterfaceType )
+						classType.addInterface((InterfaceType)type);
+					else				
+						addError(child, Error.INVALID_TYPE, kind + classType +
+								" cannot extend or implement type " + type, classType, type);
+					
+					first = false;
+				}
 			}
 			
-			declarationType = declarationType.getOuter();
-		}
-		else {
-			declarationType = node.getType();
-			currentPackage = declarationType.getPackage();
-			updateImports( node );
-		}
-			
-		return WalkType.POST_CHILDREN;
-	}
-	
-	@Override
-	public Object visit( ASTClassOrInterfaceDeclaration node, Boolean secondVisit )
-			throws ShadowException {				
-		return visitDeclaration( node, secondVisit );
-	}
-	
-	@Override
-	public Object visit( ASTEnumDeclaration node, Boolean secondVisit ) throws ShadowException {				
-		return visitDeclaration( node, secondVisit );
-	}
-	
-	@Override
-	public Object visit( ASTCreateDeclaration node, Boolean secondVisit ) throws ShadowException {
-		Node methodDeclarator = node.jjtGetChild(0);
-		return visitMethod( methodDeclarator.getImage(), node, secondVisit );
-	}
-	
-	@Override
-	public Object visit( ASTDestroyDeclaration node, Boolean secondVisit ) throws ShadowException {			
-		return visitMethod( node.getImage(), node, secondVisit );		
-	}
-
-	@Override
-	public Object visit( ASTMethodDeclaration node, Boolean secondVisit ) throws ShadowException {		
-		Node methodDeclarator = node.jjtGetChild(0);
+			/* Use defaults if no extend type set. */
+			if( classType.getExtendType() == null ) {
+				if( classType instanceof ExceptionType ) {
+					// Special case only for the root of all exceptions.
+					if( classType == Type.EXCEPTION ) 
+						classType.setExtendType( Type.OBJECT );
+					else
+						classType.setExtendType( Type.EXCEPTION );
+				}
+				// The Object class is the only class with a null parent.
+				else if( classType != Type.OBJECT ) 
+					classType.setExtendType( Type.OBJECT );
+			}
+		}		
 		
-		// Creates are not marked immutable or readonly since they change fields
-		// They are also not marked locked, since that would cause problems
-		if( !secondVisit && currentType != null && !node.getImage().equals("create") ) {
+		if( declarationType.getOuter() != null )			
+			declarationType.addTypeParameterDependency( declarationType.getOuter() );
+		// Outermost type
+		else { 			
+			// Set compilation unit type.
+			Context parent = (Context) node.getParent();
+			parent.setType(declarationType);								
+		}
+		
+		declarationType = declarationType.getOuter();
+		
+	}
+	
+	@Override public Void visitClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx) 
+	{ 	
+		visitDeclaration(ctx, ctx.isList());	
+		return null; 
+	}
+	
+	@Override public Void visitEnumDeclaration(ShadowParser.EnumDeclarationContext ctx)
+	{
+		visitDeclaration(ctx, ctx.isList());	
+		return null; 
+	}
+	
+	@Override public Void visitCreateDeclaration(ShadowParser.CreateDeclarationContext ctx)
+	{
+		visitMethodPre( "create", ctx);		
+		visitChildren(ctx);
+		visitMethodPost(ctx);
+		
+		return null;
+	}
+	
+	@Override public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx)
+	{
+		visitMethodPre( "destroy", ctx);		
+		visitChildren(ctx);
+		visitMethodPost(ctx);
+		
+		return null;
+	}
+	
+	@Override public Void visitMethodDeclaration(ShadowParser.MethodDeclarationContext ctx)
+	{	
+		if( currentType != null  ) {
 			if( currentType.getModifiers().isImmutable() ) {
-				node.addModifier(Modifiers.READONLY);
-				methodDeclarator.addModifier(Modifiers.READONLY);
+				ctx.getModifiers().addModifier(Modifiers.READONLY);
+				ctx.methodDeclarator().getModifiers().addModifier(Modifiers.READONLY);
 			}
 			
 			if( currentType.getModifiers().isLocked() || (currentType instanceof SingletonType) ) {
-				node.addModifier(Modifiers.LOCKED);
-				methodDeclarator.addModifier(Modifiers.LOCKED);
+				ctx.getModifiers().addModifier(Modifiers.LOCKED);
+				ctx.methodDeclarator().getModifiers().addModifier(Modifiers.LOCKED);
 			}
 		}
-		return visitMethod( methodDeclarator.getImage(), node, secondVisit );
+		
+		visitMethodPre( ctx.methodDeclarator().Identifier().getText(), ctx);
+		visitChildren(ctx); 
+		visitMethodPost(ctx);
+		
+		return null;
 	}
 	
-	@Override
-	public Object visit(ASTFieldDeclaration node, Boolean secondVisit) throws ShadowException {
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;
+	@Override public Void visitFieldDeclaration(ShadowParser.FieldDeclarationContext ctx)
+	{ 
+		visitChildren(ctx);
 		
 		// A field declaration has a type followed by an identifier (or a sequence of them).	
-		Type type = node.jjtGetChild(0).getType();
+		Type type = ctx.type().getType();	
 						
-		node.setType(type);
-		node.setEnclosingType(currentType);
-		node.addModifier(Modifiers.FIELD);
+		ctx.setType(type);		
+		ctx.getModifiers().addModifier(Modifiers.FIELD);
 		
 		// Constants must be public, private, or protected,
 		// unlike regular fields which are implicitly private.
-		if( node.getModifiers().isConstant() )
-			checkModifiers( node, "constant" );
+		if( ctx.getModifiers().isConstant() )
+			checkModifiers( ctx, "constant" );
 		
 		if( currentType.getModifiers().isImmutable() )
-			node.addModifier( Modifiers.IMMUTABLE );
+			ctx.getModifiers().addModifier( Modifiers.IMMUTABLE );
 		
 		// All interface fields are implicitly public and constant.
 		if( currentType instanceof InterfaceType ) {
-			node.addModifier( Modifiers.CONSTANT ); 
-			node.addModifier( Modifiers.PUBLIC );
+			ctx.getModifiers().addModifier( Modifiers.CONSTANT ); 
+			ctx.getModifiers().addModifier( Modifiers.PUBLIC );
 		}
 		
-		if( type instanceof UninstantiatedType && node.getModifiers().isConstant() ) {
+		if( type instanceof UninstantiatedType && ctx.getModifiers().isConstant() ) {
 			UninstantiatedType uninstantiatedType = (UninstantiatedType) type;
 			for( ModifiedType argument : uninstantiatedType.getTypeArguments() ) {
 				if( argument.getType() instanceof TypeParameter ) {					
-					addError( Error.INVALID_TYPE_PARAMETERS,
+					addError( ctx, Error.INVALID_TYPE_PARAMETERS,
 							"Field marked constant cannot have a type with a type parameter" );
 					break;
 				}				
@@ -1081,132 +1072,120 @@ public class TypeUpdater extends BaseChecker {
 		}	
 						
 		/* Add all the identifiers. */
-		for( int i = 1; i < node.jjtGetNumChildren(); ++i ) {
-			Node declarator = node.jjtGetChild(i);
+		for( ShadowParser.VariableDeclaratorContext declarator : ctx.variableDeclarator() ) {			
 			declarator.setType(type);
-			declarator.setModifiers(node.getModifiers());
-			declarator.setDocumentation(node.getDocumentation());
-			declarator.setEnclosingType(currentType);
+			declarator.addModifiers(ctx.getModifiers());
+			declarator.setDocumentation(ctx.getDocumentation());			
 			
-			String symbol = declarator.getImage();
+			String symbol = declarator.Identifier().getText();
 			
 			/* Make sure we don't already have this symbol.
 			 * Methods and fields can have the same name since they can be
 			 * disambiguated by colon or dot. */			
 			if( currentType.containsField( symbol ) )						
-				addError( Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol +
+				addError( declarator, Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol +
 						" already declared on line " +
-						currentType.getField(symbol).getLineStart() );
+						currentType.getField(symbol).getStart().getLine() );
 			else if( currentType instanceof ClassType &&
 					((ClassType)currentType).containsInnerClass( symbol ))
-				addError(Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol +
+				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol +
 						" already declared as inner class");
 			else
 				currentType.addField(symbol, declarator);
 			
 			if( type instanceof SingletonType ) {
-				if( node.getModifiers().isGet() )
-					addError(node, Error.INVALID_MODIFIER,
+				if( ctx.getModifiers().isGet() )
+					addError(declarator, Error.INVALID_MODIFIER,
 							"Modifier get cannot be applied to field " + symbol +
 							" with singleton type");
-				if( node.getModifiers().isImmutable() )
-					addError(node, Error.INVALID_MODIFIER,
+				if( ctx.getModifiers().isImmutable() )
+					addError(declarator, Error.INVALID_MODIFIER,
 							"Modifier immutable cannot be applied to field " + symbol +
 							" with singleton type");
-				if( node.getModifiers().isNullable() )
-					addError(node, Error.INVALID_MODIFIER,
+				if( ctx.getModifiers().isNullable() )
+					addError(declarator, Error.INVALID_MODIFIER,
 							"Modifier nullable cannot be applied to field " + symbol +
 							" with singleton type");
-				if( node.getModifiers().isReadonly() )
-					addError(node, Error.INVALID_MODIFIER,
+				if( ctx.getModifiers().isReadonly() )
+					addError(declarator, Error.INVALID_MODIFIER,
 							"Modifier readonly cannot be applied to field " + symbol +
 							" with singleton type");
-				if( node.getModifiers().isSet() )
-					addError(node, Error.INVALID_MODIFIER,
+				if( ctx.getModifiers().isSet() )
+					addError(declarator, Error.INVALID_MODIFIER,
 							"Modifier set cannot be applied to field " + symbol +
 							" with singleton type");
-				if( node.getModifiers().isWeak() )
-					addError(node, Error.INVALID_MODIFIER,
+				if( ctx.getModifiers().isWeak() )
+					addError(declarator, Error.INVALID_MODIFIER,
 							"Modifier weak cannot be applied to field " + symbol +
 							" with singleton type");				
 			}			
-		}		
-			
-		return WalkType.POST_CHILDREN;
-	}
+		}
 		
-	/* Type parameters will only be visited here on type declarations and class methods. */ 
-	@Override
-	public Object visit(ASTTypeParameters node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit ) {			
-			SequenceType typeParameters = node.getType();			
-			for( int i = 0; i < node.jjtGetNumChildren(); ++i ) {
-				Node typeParameter = node.jjtGetChild(i); 
-				typeParameters.add(typeParameter);
-				TypeParameter newParameter = (TypeParameter) typeParameter.getType();
+		return null;
+	}
+	
+	@Override public Void visitTypeParameters(ShadowParser.TypeParametersContext ctx)
+	{ 
+		visitChildren(ctx);
+		SequenceType sequence = new SequenceType();
+		Set<String> parameterNames = new HashSet<String>();
+		for( ShadowParser.TypeParameterContext typeParameter : ctx.typeParameter() ) {			
+			sequence.add(typeParameter);			
+			String name = typeParameter.Identifier().getText();
+			if( parameterNames.contains(name) )
+				addError(typeParameter, Error.MULTIPLY_DEFINED_SYMBOL, "Type parameter " +
+						name + " has already been defined" );
+			parameterNames.add(name);
+		}
+		ctx.setType(sequence);		
+		
+		return null;		
+	}
+	
+	@Override public Void visitTypeParameter(ShadowParser.TypeParameterContext ctx)
+	{ 
+		/* Type parameters are created before visiting children so that bounds dependent
+		 * on them can look up the right type. */
+		String symbol = ctx.Identifier().getText();
+		TypeParameter typeParameter = new TypeParameter(symbol, declarationType);
+		Type type = declarationType; //add parameters to current class
 				
-				for( int j = 0; j < i; ++j ) {
-					TypeParameter existingParameter =
-							(TypeParameter) typeParameters.get(j).getType();
-					if( newParameter.getTypeName().equals(existingParameter.getTypeName()) )
-						addError(Error.MULTIPLY_DEFINED_SYMBOL, "Type parameter " +
-								newParameter.getTypeName() + " has already been defined" );
-				}
-			}
+		if( type instanceof SingletonType )			
+			addError(ctx, Error.INVALID_TYPE_PARAMETERS, "Singleton type " + declarationType.getTypeName() + " cannot be parameterized");
+		else if( type instanceof ExceptionType )			
+			addError(ctx, Error.INVALID_TYPE_PARAMETERS, "Exception type " + declarationType.getTypeName() + " cannot be parameterized");
+		
+		ctx.setType(typeParameter);
+		type.addTypeParameter(ctx);	
+		
+		visitChildren(ctx);
+		
+		if( ctx.isList() != null ) {							
+			for( ShadowParser.ClassOrInterfaceTypeContext bound : ctx.isList().classOrInterfaceType() )								
+				typeParameter.addBound(bound.getType());				
 		}	
 		
-		return WalkType.POST_CHILDREN;
+		return null;
 	}
 	
-	@Override
-	public Object visit(ASTTypeParameter node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit ) {	
-			TypeParameter typeParameter = (TypeParameter) node.getType();
-			
-			if( node.jjtGetNumChildren() > 0 ) {
-				ASTIsList bounds = (ASTIsList)(node.jjtGetChild(0));				
-				for( int i = 0; i < bounds.jjtGetNumChildren(); i++ )								
-					typeParameter.addBound(bounds.jjtGetChild(i).getType());				
-			}
-		}
-		else {	
-			/* Type parameters are created on the first visit so that bounds dependent
-			 * on them can look up the right type. */
-			String symbol = node.getImage();
-			TypeParameter typeParameter = new TypeParameter(symbol, declarationType);
-			Type type = declarationType; //add parameters to current class
-					
-			if( type instanceof SingletonType )			
-				addError(Error.INVALID_TYPE_PARAMETERS, "Singleton type " + declarationType.getTypeName() + " cannot be parameterized");
-			else if( type instanceof ExceptionType )			
-				addError(Error.INVALID_TYPE_PARAMETERS, "Exception type " + declarationType.getTypeName() + " cannot be parameterized");
-			
-			node.setType(typeParameter);
-			type.addTypeParameter(node);			
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-	
-	
-	@Override
-	public Object visit(ASTClassOrInterfaceType node, Boolean secondVisit) throws ShadowException {	
-		if(!secondVisit)
-			return WalkType.POST_CHILDREN;		
+	@Override public Void visitClassOrInterfaceType(ShadowParser.ClassOrInterfaceTypeContext ctx)
+	{ 
+		visitChildren(ctx);
 		
 		Type type = null;
-			
+		boolean first = true;		
+		
 		// Type can be complex: package@Container<T, List<String>, String, Thing<K>>:Stuff<U>
-		for( int i = 0; i < node.jjtGetNumChildren() && type != Type.UNKNOWN; i++ ) {	
-			Node child = node.jjtGetChild(i);
-			String typeName = child.getImage();
-			if( i == 0 ) { // Special case for first pass, might include package.				
-				if( child instanceof ASTUnqualifiedName ) {
-					i++;
-					child = node.jjtGetChild(i);
-					typeName += "@" + child.getImage();											
-				}					
-				type = lookupType(typeName);
+		for( ShadowParser.ClassOrInterfaceTypeSuffixContext child : ctx.classOrInterfaceTypeSuffix() ) {
+			if( type == Type.UNKNOWN )
+				break;
+			
+			String typeName = child.Identifier().getText();
+			if( first ) {
+				if( ctx.unqualifiedName() != null )
+					typeName = ctx.unqualifiedName().getText() + "@" + typeName;
+				type = lookupType(ctx, typeName);
+				first = false;
 			}
 			else { // On later passes, get inner class from previous.
 				if( type instanceof UninstantiatedType )
@@ -1219,17 +1198,17 @@ public class TypeUpdater extends BaseChecker {
 			}			
 		
 			if(type == null) {
-				addError(Error.UNDEFINED_TYPE, "Type " + typeName +
+				addError(ctx, Error.UNDEFINED_TYPE, "Type " + typeName +
 						" not defined in current context");			
 				type = Type.UNKNOWN;					
 			}
 			else {
 				if( !isMeta && !classIsAccessible( type, declarationType  ) )		
-					addError(Error.ILLEGAL_ACCESS, "Type " + type +
+					addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
 							" not accessible from current context");
 				
-				if( child.jjtGetNumChildren() == 1 ) { // Contains type arguments.				
-					SequenceType arguments = (SequenceType) child.jjtGetChild(0).getType();						
+				if( child.typeArguments() != null ) { // Contains type arguments.				
+					SequenceType arguments = (SequenceType) child.typeArguments().getType();						
 					if( type.isParameterized() ) {
 						if( type instanceof ClassType )						
 							type = new UninstantiatedClassType( (ClassType)type, arguments );
@@ -1237,110 +1216,100 @@ public class TypeUpdater extends BaseChecker {
 							type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments );
 					}
 					else {
-						addError(Error.UNNECESSARY_TYPE_ARGUMENTS,
+						addError(ctx, Error.UNNECESSARY_TYPE_ARGUMENTS,
 								"Type arguments supplied for non-parameterized type " + type);
 						type = Type.UNKNOWN;
 					}										
 				}
 				else if( type.isParameterized() ) { // Parameterized but no type arguments.
-					addError(Error.MISSING_TYPE_ARGUMENTS,
+					addError(ctx, Error.MISSING_TYPE_ARGUMENTS,
 							"Type arguments not supplied for parameterized type " + typeName);
 					type = Type.UNKNOWN;
 				}
 			}
 		}
 		// Set the type now that it has type parameters. 
-		node.setType(type);
+		ctx.setType(type);
 		
-		return WalkType.POST_CHILDREN;
-	}	
+		return null;
+	}
+	
+	@Override public Void visitTypeArguments(ShadowParser.TypeArgumentsContext ctx)
+	{
+		visitChildren(ctx);
 		
-	public Object visit(ASTTypeArguments node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {			
-			for( int i = 0; i < node.jjtGetNumChildren(); i++ )
-				node.addType(node.jjtGetChild(i));
+		SequenceType sequence = new SequenceType();
+		for( ShadowParser.TypeContext type : ctx.type() )
+			sequence.add(type);		
+		ctx.setType(sequence);
+		
+		return null;		
+	}
+	
+	@Override public Void visitReferenceType(ShadowParser.ReferenceTypeContext ctx)
+	{
+		visitChildren(ctx);
+		
+		Context child = (Context)ctx.getChild(0);  //either primitive type or class type
+		Type type = child.getType();		
+		
+		List<Integer> dimensions = getDimensions( ctx );		
+		if( dimensions.size() != 0 )
+			type = new ArrayType(type, dimensions, false);		
+		ctx.setType(type);
+		
+		ctx.addModifiers(Modifiers.TYPE_NAME);		
+		return null;
+	}
+	
+	
+	@Override public Void visitPrimitiveType(ShadowParser.PrimitiveTypeContext ctx)
+	{ 
+		ctx.setType(nameToPrimitiveType(ctx.getText()));
+		return null; //no children 
+	}
+	
+	@Override public Void visitFunctionType(ShadowParser.FunctionTypeContext ctx)
+	{
+		visitChildren(ctx);
+		
+		MethodType methodType = new MethodType();
+		SequenceType parameterTypes = (SequenceType) ctx.resultTypes(0).getType();
+		SequenceType returnTypes = (SequenceType) ctx.resultTypes(1).getType();
+						
+		for( ModifiedType parameter : parameterTypes  )
+			methodType.addParameter(parameter);			
+			
+		for( ModifiedType type : returnTypes )
+			methodType.addReturn(type);
+		
+		ctx.setType(methodType);
+		
+		return null;
+	}
+	
+	@Override public Void visitType(ShadowParser.TypeContext ctx)
+	{
+		visitChildren(ctx);
+		boolean isNullable = ctx.getModifiers().isNullable();
+		
+		Context child = (Context) ctx.getChild(0);
+		Type type = child.getType();
+		
+		if( isNullable && type instanceof ArrayType ) {
+			ArrayType arrayType = (ArrayType) type;
+			type = arrayType.convertToNullable();
 		}
 		
-		return WalkType.POST_CHILDREN;
-	}
-
-	
-	public Object visit(ASTReferenceType node, Boolean secondVisit) throws ShadowException {		
-		if( secondVisit ) {
-			Node child = node.jjtGetChild(0);
-			Type type = child.getType();
-			node.setModifiers(new Modifiers(child.getModifiers()));
-			
-			List<Integer> dimensions = node.getArrayDimensions();			
-			if( dimensions.size() == 0 )
-				node.setType(type);
-			else {				
-				ArrayType arrayType = new ArrayType(type, dimensions, node.getModifiers().isNullable());
-				node.setType(arrayType);
-			}
-		}
-	
-		return WalkType.POST_CHILDREN;
-	}
-	
-
-	@Override
-	public Object visit(ASTPrimitiveType node, Boolean secondVisit) throws ShadowException {
-		node.setType(nameToPrimitiveType(node.getImage()));		
-		return WalkType.NO_CHILDREN;			
-	}	
-	
-	@Override
-	public Object visit(ASTFunctionType node, Boolean secondVisit) throws ShadowException {
-		if( secondVisit ) {		
-			MethodType methodType = new MethodType();		
-			ASTResultTypes parameters = (ASTResultTypes) node.jjtGetChild(0);
-			SequenceType parameterTypes = parameters.getType();
-			
-			ASTResultTypes returns = (ASTResultTypes) node.jjtGetChild(1);
-			SequenceType returnTypes = returns.getType();
-							
-			for( ModifiedType parameter : parameterTypes  )
-				methodType.addParameter(parameter);			
-				
-			for( ModifiedType type : returnTypes )
-				methodType.addReturn(type);
-			
-			node.setType(methodType);
-		}
+		ctx.setType(type);
 		
-		return WalkType.POST_CHILDREN;		
+		return null;
 	}
 	
-	public Object visit(ASTType node, Boolean secondVisit) throws ShadowException { 
-		if( secondVisit ) {
-			boolean isNullable = node.getModifiers().isNullable();
-			
-			Node child = node.jjtGetChild(0);			
-			node.setModifiers(child.getModifiers());
-			
-			Type type = child.getType();
-			
-			if( isNullable && type instanceof ArrayType ) {
-				ArrayType arrayType = (ArrayType) type;
-				type = arrayType.convertToNullable();
-			}
-			
-			node.setType(type);
-		}		
-		
-		return WalkType.POST_CHILDREN;
-	}	
+	@Override public Void visitBlock(ShadowParser.BlockContext ctx) { /* no children */ return null; }
 	
-	public Object visit(ASTBlock node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN; // Skip all blocks.
-	}
+	@Override public Void visitCreateBlock(ShadowParser.CreateBlockContext ctx) { /* no children */ return null; }
 	
-	public Object visit(ASTCreateBlock node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN; // Skip all blocks.
-	}
-	
-	public Object visit(ASTConditionalExpression node, Boolean secondVisit) throws ShadowException {
-		return WalkType.NO_CHILDREN; // Skip all field initializations.
-	}
+	// Skip all field initializations.
+	@Override public Void visitConditionalExpression(ShadowParser.ConditionalExpressionContext ctx) { /* no children */ return null; }	
 }

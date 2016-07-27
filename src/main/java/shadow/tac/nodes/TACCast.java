@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import shadow.ShadowException;
 import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -353,7 +353,8 @@ public class TACCast extends TACUpdate
 		
 		TACOperand dimensions = new TACCall(this, methodRef, methodRef.getPrefix());
 		
-		TACOperand condition = new TACBinary(this, dimensions, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), '=', new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())), true);
+		//no operand is straight === comparison
+		TACOperand condition = new TACBinary(this, dimensions, new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())));
 		
 		TACLabel throwLabel = new TACLabel(getMethod());
 		TACLabel doneLabel = new TACLabel(getMethod());

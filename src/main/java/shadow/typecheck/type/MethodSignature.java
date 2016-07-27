@@ -1,20 +1,23 @@
 package shadow.typecheck.type;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import shadow.doctool.Documentation;
-import shadow.parser.javacc.SignatureNode;
+import shadow.parse.Context;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
 	protected final String symbol;
-	private final SignatureNode node;	/** The AST node that corresponds to the branch of the tree for this method */
+	private final Context node;	/** The AST context that corresponds to the branch of the tree for this method */
 	private final MethodSignature wrapped;
 	private MethodSignature signatureWithoutTypeArguments;
 	private Type outer;
+	private Set<SingletonType> singletons = new HashSet<SingletonType>();
 
-	private MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node, MethodSignature wrapped) 
+	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
 	{
 		this.type = type;
 		this.symbol = symbol;
@@ -22,14 +25,16 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		this.wrapped = wrapped;
 		this.outer = outer;
 		signatureWithoutTypeArguments = this;
+		if( node != null )
+			node.setEnclosingType(outer);
 	}
-	public MethodSignature(MethodType type, String symbol, Type outer, SignatureNode node) 
+	public MethodSignature(MethodType type, String symbol, Type outer, Context node) 
 	{
 		this(type, symbol, outer, node, null);
 	}
 	
 	public MethodSignature(Type enclosingType, String symbol, 
-			Modifiers modifiers, Documentation documentation, SignatureNode node) 
+			Modifiers modifiers, Documentation documentation, Context node) 
 	{		
 		this(new MethodType(enclosingType, modifiers, documentation), symbol, enclosingType, node);
 	}
@@ -60,7 +65,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return symbol;
 	}
 
-	public SignatureNode getNode() {
+	public Context getNode() {
 		return node;
 	}		
 
@@ -335,5 +340,12 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	{
 		return type.getDocumentation();
 	}
-
+	
+	public void addSingleton(SingletonType type) {
+		singletons.add(type);
+	}
+	
+	public Set<SingletonType> getSingletons() {
+		return singletons;
+	}
 }

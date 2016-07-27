@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Team Shadow
+ * Copyright 2016 Team Shadow
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,24 @@
 
 package shadow.typecheck;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import shadow.ShadowException;
+import shadow.ShadowExceptionFactory;
+import shadow.parse.Context;
 
 /**
  * Exception to capture various standard errors than can occur during type-checking.
  * 
  * @author Barry Wittman 
  */
-public class TypeCheckException extends Exception implements Comparable<TypeCheckException> {
+public class TypeCheckException extends ShadowException implements Comparable<TypeCheckException> {
 	
-	private static final long serialVersionUID = 5033658866742389524L;	
-	private static final String EOL = System.getProperty("line.separator", "\n");
+	private static final long serialVersionUID = 5033658866742389524L;
 
 	/**
 	 *  Constants for each kind of supported error, with default error messages.
 	 *  Listing all supported errors increases consistency.
 	 */
-	public static enum Error {		
+	public static enum Error implements ShadowExceptionFactory {		
 		CIRCULAR_CREATE("Circular create", "Create calls are circular"),
 		ILLEGAL_ACCESS("Illegal access", "Class, member, method, or property not accessible from this context"),
 		INVALID_ARGUMENTS("Invalid arguments", "Supplied method arguments do not match parameters"),
@@ -108,14 +105,14 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 		public String getMessage() {
 			return message;			
 		}
+		
+		@Override
+		public TypeCheckException generateException(String message, Context context) {
+			return new TypeCheckException(this, message, context);
+		}
 	}
 	
 	private final Error error;
-	private final File file;
-	private final int lineStart;
-	private final int lineEnd;
-	private final int columnStart;
-	private final int columnEnd;
 	
 	/**
 	 * Creates a <code>TypeCheckException</code> with a specified kind of error and a message.
@@ -124,165 +121,36 @@ public class TypeCheckException extends Exception implements Comparable<TypeChec
 	 */
 	public TypeCheckException( Error kind, String message ) {
 		super( message);
-		error = kind;
-		this.file = null;
-		this.lineStart = -1;
-		this.lineEnd = -1;
-		this.columnStart = -1;
-		this.columnEnd = -1;
+		error = kind;		
 	}
 	
 	/**
 	 * Creates a <code>TypeCheckException</code> with a specified kind of error and a message
-	 * at a particular location in a file.
+	 * in a particular context.
 	 * @param kind			kind of error
 	 * @param message		explanatory error message
-	 * @param file			which file
-	 * @param lineStart		line error starts on
-	 * @param lineEnd		line error ends on
-	 * @param columnStart	column error starts on
-	 * @param columnEnd		column error ends on
+	 * @param ctx			context of error
 	 */
-	public TypeCheckException( Error kind, String message, File file, int lineStart,
-			int lineEnd, int columnStart, int columnEnd ) {
-		super( makeMessage( kind, message, file, lineStart, lineEnd, columnStart, columnEnd ) );
-		error = kind;
-		this.file = file;
-		this.lineStart = lineStart;
-		this.lineEnd = lineEnd;
-		this.columnStart = columnStart;
-		this.columnEnd = columnEnd;
-	}
-	
+	public TypeCheckException( Error kind, String message, Context ctx ) {
+		super( makeMessage( kind, message, ctx ) );
+		error = kind;		
+	}	
 	
 	/**
 	 * Gets kind of error.
 	 * @return			kind of error
 	 */
+	@Override
 	public Error getError() {	
 		return error;
 	}
 	
-	/**
-	 * Gets file where error happened.
-	 * @return			file
-	 */
-	public File getFile() {
-		return file;
-	}
 	
-	/**
-	 * Gets starting line where error happened.
-	 * @return			line
-	 */
-	public int lineStart() {
-		return lineStart;
-	}
-	
-	/**
-	 * Gets ending line where error happened.
-	 * @return			line
-	 */
-	public int lineEnd() {
-		return lineEnd;
-	}
-	
-	/**
-	 * Gets starting column where error happened.
-	 * @return			column
-	 */
-	public int columnStart() {
-		return columnStart;
-	}
-	
-	/**
-	 * Gets ending column where error happened.
-	 * @return			column
-	 */
-	public int columnEnd() {
-		return columnEnd;
-	}
-
 	@Override
 	public int compareTo(TypeCheckException other) {		
 		int difference = error.ordinal() - other.error.ordinal();
 		if( difference == 0 )
 			difference = getMessage().compareTo(other.getMessage());
 		return difference;
-	}
-	
-	public boolean isInside(TypeCheckException other)
-	{
-		if( file != null && other.file != null )
-			return file.equals(other.file) &&
-					lineStart >= other.lineStart &&
-					lineEnd <= other.lineEnd &&
-					(lineStart > other.lineStart || columnStart >= other.columnStart ) &&
-					(lineEnd < other.lineEnd || columnEnd <= other.columnEnd );
-		return false;			
-	}
-	
-	/**
-	 * Creates a formatted message for an error or warning, including file name and
-	 * line and column numbers and possibly text from the file itself where the error is.
-	 * File, line, and column values may be special defaults which will cause
-	 * them to be ignored in the return message.
-	 * @param kind				kind or error or warning		
-	 * @param message			message explaining the error or warning
-	 * @param file				file where problem is occurring
-	 * @param lineStart			starting line of problem
-	 * @param lineEnd			ending line of problem
-	 * @param columnStart		starting column of problem
-	 * @param columnEnd			ending column of problem
-	 * @return					formatted message
-	 */
-	public static String makeMessage( Error kind, String message, File file, int lineStart,
-			int lineEnd, int columnStart, int columnEnd ) {
-		StringBuilder error = new StringBuilder();
-		
-		if( file != null )
-			error.append("(" + file.getName() + ")");
-		
-		if( lineStart != -1 && columnStart != -1 )
-			error.append("[" + lineStart + ":" + columnStart + "] ");
-		else
-			error.append(" ");
-		
-		if( kind != null )
-			error.append(kind.getName() + ": ");		
-		
-		error.append(message);
-		
-		/* If file is available, find problematic text and include it in the message. */	
-		if( file != null && lineStart >= 0 && lineEnd >= lineStart &&
-				columnStart >= 0 && columnEnd >= 0 ) {
-			BufferedReader reader = null;
-			try {
-				reader = new BufferedReader(new FileReader(file));
-				String line = "";			
-				for( int i = 1; i <= lineStart; ++i )
-					line = reader.readLine();
-				error.append(EOL);
-				error.append(line);
-				if( lineStart == lineEnd ) {
-					error.append(EOL);
-					for( int i = 1; i <= columnEnd; ++i )
-						if( i >= columnStart )
-							error.append('^');
-						else
-							error.append(' ');
-				}
-			} 
-			// Do nothing, can't add additional file data
-			catch (FileNotFoundException e) {}
-			catch (IOException e) {}
-			finally {
-			  if( reader != null )
-				try { reader.close(); }
-			  	catch (IOException e) {}
-		  }
-		}
-		
-		return error.toString();
 	}
 }

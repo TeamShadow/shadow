@@ -82,39 +82,7 @@
                 </configuration>
             </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>javacc-maven-plugin</artifactId>
-        <version>2.6</version>
-        <executions>
-        <execution>        
-         <id>jjtree-javacc</id>
-          <goals>
-            <goal>jjtree-javacc</goal>
-          </goals>
-          <configuration>
-            <buildNodeFiles>false</buildNodeFiles>
-               <sourceDirectory>${basedir}/src/main/java/shadow/grammar</sourceDirectory>
-               <interimDirectory>${basedir}/src/main/java</interimDirectory>
-               <outputDirectory>${basedir}/src/main/java</outputDirectory>
-               <jdkVersion>1.7</jdkVersion>
-               <isStatic>false</isStatic>      
-               <nodeUsesParser>true</nodeUsesParser>
-               <visitor>true</visitor>
-               <multi>true</multi>
-               <visitorException>ShadowException</visitorException>         
-            </configuration>
-        </execution>
-      </executions>
-        <dependencies>
-          <dependency>
-            <groupId>net.java.dev.javacc</groupId>
-            <artifactId>javacc</artifactId>
-            <version>5.0</version>
-          </dependency>
-        </dependencies>
-      </plugin>
+      </plugin>     
       <plugin>
       	<groupId>org.antlr</groupId>
       	<artifactId>antlr4-maven-plugin</artifactId>
@@ -127,6 +95,7 @@
             <configuration>            	
 				<outputDirectory>src/main/java/shadow/parse</outputDirectory>
 				<visitor>true</visitor>
+				<listener>false</listener>
 			</configuration>
           </execution>
         </executions>
@@ -142,22 +111,7 @@
          <version>1.0.0</version>
          <configuration>
            <lifecycleMappingMetadata>
-             <pluginExecutions>
-               <pluginExecution>
-                 <pluginExecutionFilter>
-                   <groupId>org.codehaus.mojo</groupId>
-                   <artifactId>javacc-maven-plugin</artifactId>
-                   <versionRange>[1.0.0,)</versionRange>
-                   <goals>
-                     <goal>jjtree-javacc</goal>
-                   </goals>
-                 </pluginExecutionFilter>
-                 <action>
-                   <execute>
-                     <runOnIncremental>true</runOnIncremental>
-                   </execute>
-                 </action>
-               </pluginExecution>
+             <pluginExecutions>               
                <pluginExecution>
                   <pluginExecutionFilter>
                     <groupId>org.antlr</groupId>

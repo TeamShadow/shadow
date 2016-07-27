@@ -13,13 +13,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
+import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.doctool.tag.TagManager.InlineTag;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
+import shadow.parse.Context;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -49,7 +49,7 @@ public class ClassOrInterfacePage extends Page
 	private List<MethodSignature> properties = new ArrayList<MethodSignature>();
 	
 	// Public and protected constants
-	private List<Node> visibleConstants = new ArrayList<Node>();
+	private List<Context> visibleConstants = new ArrayList<Context>();
 	
 	public ClassOrInterfacePage(StandardTemplate master, Type type, 
 			Collection<Type> linkableTypes) throws DocumentationException
@@ -122,13 +122,13 @@ public class ClassOrInterfacePage extends Page
 	
 	private void getVisibleConstants()
 	{
-		for (Node field : type.getFields().values())
+		for (Context field : type.getFields().values())
 			if (field.getModifiers().isConstant() && !field.getModifiers().isPrivate())
 				visibleConstants.add(field);
 		
-		Collections.sort(visibleConstants, new Comparator<Node>() {
+		Collections.sort(visibleConstants, new Comparator<Context>() {
 			@Override
-			public int compare(Node node1, Node node2) {				
+			public int compare(Context node1, Context node2) {				
 				return node1.toString().compareTo(node2.toString());
 			}} );
 	}
@@ -333,7 +333,7 @@ public class ClassOrInterfacePage extends Page
 			writeTableRow(out, true, "Modifiers", "Type", 
 					"Name and Description");
 			boolean shaded = false;
-			for (Node constant : visibleConstants) {
+			for (Context constant : visibleConstants) {
 				if( shaded )
 					out.openTab("tr", new Attribute("class", "shaded"));
 				else
@@ -422,14 +422,14 @@ public class ClassOrInterfacePage extends Page
 			out.openTab("div", new Attribute("class", "block"));		
 			out.fullLine("h3", "Constant Detail");
 			
-			for (Node constant : visibleConstants)
+			for (Context constant : visibleConstants)
 				writeConstantDetail(constant, out);
 			
 			out.closeUntab();
 		}
 	}
 	
-	private void writeConstantDetail(Node constant, HtmlWriter out)
+	private void writeConstantDetail(Context constant, HtmlWriter out)
 			throws ShadowException, DocumentationException
 	{
 		out.openTab("div", new Attribute("class", "detail"));
@@ -503,7 +503,7 @@ public class ClassOrInterfacePage extends Page
 		out.closeUntab();
 	}
 	
-	private void writeNodeName(Node node, boolean linkToDetail,
+	private void writeNodeName(Context node, boolean linkToDetail,
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (linkToDetail)

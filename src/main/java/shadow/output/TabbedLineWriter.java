@@ -1,14 +1,14 @@
 package shadow.output;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Path;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 
 public class TabbedLineWriter
 {
@@ -36,18 +36,18 @@ public class TabbedLineWriter
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
-	public TabbedLineWriter(File file) throws ShadowException
+	public TabbedLineWriter(Path file) throws ShadowException
 	{
 		try
 		{
-			out = new FileWriter(file);
+			out = new FileWriter(file.toFile());
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
 
@@ -128,7 +128,7 @@ public class TabbedLineWriter
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
 	public void write(String string) throws ShadowException
@@ -142,7 +142,7 @@ public class TabbedLineWriter
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
 	public void writeLeft(String string) throws ShadowException
@@ -155,7 +155,7 @@ public class TabbedLineWriter
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
 	public void write(char c) throws ShadowException
@@ -169,7 +169,7 @@ public class TabbedLineWriter
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
 	public void writeNoLine(String string) throws ShadowException
@@ -186,7 +186,7 @@ public class TabbedLineWriter
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
 	public void writeNoLine(char c) throws ShadowException
@@ -203,7 +203,7 @@ public class TabbedLineWriter
 		}
 		catch (IOException ex)
 		{
-			throw new ShadowException(ex.getLocalizedMessage());
+			throw new OutputException(ex.getLocalizedMessage());
 		}
 	}
 	

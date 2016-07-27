@@ -15,9 +15,9 @@ import java.util.Set;
 
 import org.apache.commons.cli.ParseException;
 
+import shadow.ShadowException;
 import shadow.doctool.DocumentationException;
 import shadow.doctool.DocumentationTool;
-import shadow.parser.javacc.ShadowException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.Type;
 

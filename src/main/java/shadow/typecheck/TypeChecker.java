@@ -20,6 +20,7 @@ package shadow.typecheck;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,9 +30,8 @@ import java.util.TreeSet;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ParseException;
-import shadow.parser.javacc.ShadowException;
+import shadow.parse.Context;
+import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
@@ -51,16 +51,17 @@ public class TypeChecker {
 	 * @throws IOException 
 	 * @throws ConfigurationException 
 	 */
-	public static List<Node> typeCheck(File file, boolean useSourceFiles)
-			throws ShadowException, ParseException, TypeCheckException, IOException, ConfigurationException {	
+	public static List<Context> typeCheck(Path file, boolean useSourceFiles)
+			throws ShadowException, IOException, ConfigurationException {	
 		
-		Package packageTree = new Package(); // Root of all packages, storing all types		
+		Package packageTree = new Package(); // Root of all packages, storing all types
+		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 		
 		/* Collector looks over all files and creates types for everything needed. */
-		TypeCollector collector = new TypeCollector( packageTree, useSourceFiles );
+		TypeCollector collector = new TypeCollector( packageTree, reporter, useSourceFiles );
 		
 		/* Its return value maps all the types to the nodes that need compiling. */		
-		Map<Type, Node> nodeTable = collector.collectTypes( file );
+		Map<Type, Context> nodeTable = collector.collectTypes( file );
 		Type mainType = collector.getMainType();
 		
 		/* Updates types, adding:
@@ -69,24 +70,24 @@ public class TypeChecker {
 		 *  All types with type parameters (except for declarations) are UninitializedTypes
 		 *  Extends and implements lists
 		 */				
-		TypeUpdater updater = new TypeUpdater(packageTree);
+		TypeUpdater updater = new TypeUpdater(packageTree, reporter);
 		nodeTable = updater.update( nodeTable );
 		
 		/* Select only nodes corresponding to outer types. */				
-		List<Node> allNodes = new ArrayList<Node>();
-		for( Node node : nodeTable.values())
+		List<Context> allNodes = new ArrayList<Context>();
+		for( Context node : nodeTable.values())
 			if( !node.getType().hasOuter() )
 				allNodes.add(node);
 		
 		/* Do type-checking of statements, i.e., actual code. */
-		StatementChecker checker = new StatementChecker( packageTree );
-		for( Node node: allNodes ) {	
-			File nodeFile = node.getFile();
-			if( !nodeFile.getPath().endsWith(".meta")) {
+		StatementChecker checker = new StatementChecker( packageTree, reporter );
+		for( Context node: allNodes ) {	
+			Path nodeFile = node.getPath();
+			if( !nodeFile.endsWith(".meta")) {
 				/* Check all statements for type safety and other features */
 				checker.check(node);				
 				/* As an optimization, print .meta file for the .shadow file being checked. */
-				printMetaFile( node, BaseChecker.stripExtension( nodeFile.getCanonicalPath() ) );
+				printMetaFile( node, BaseChecker.stripExtension( TypeCollector.canonicalize(nodeFile) ) );
 			}
 		}
 		
@@ -108,8 +109,8 @@ public class TypeChecker {
 		}
 		
 		/* Return only those nodes corresponding to needed types. */
-		List<Node> neededNodes = new ArrayList<Node>();		
-		for( Node node : allNodes )
+		List<Context> neededNodes = new ArrayList<Context>();		
+		for( Context node : allNodes )
 			if( neededTypes.contains( node.getType() ) )
 				neededNodes.add(node);
 		
@@ -121,7 +122,7 @@ public class TypeChecker {
 	 * These .meta files are used for type-checking as a speed optimization, to avoid 
 	 * type-checking the full code.
 	 */
-	private static void printMetaFile( Node node, String file ) {
+	private static void printMetaFile( Context node, String file ) {
 		try {
 			File shadowVersion = new File( file + ".shadow");
 			File metaVersion = new File( file + ".meta");

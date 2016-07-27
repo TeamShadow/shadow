@@ -12,10 +12,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import shadow.doctool.Documentation;
-import shadow.parser.javacc.ASTVariableDeclarator;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.SignatureNode;
-import shadow.parser.javacc.SimpleNode;
+import shadow.parse.Context;
+import shadow.parse.ShadowParser;
 
 public class ClassType extends Type {
 	private ClassType extendType;	
@@ -170,7 +168,7 @@ public class ClassType extends Type {
 		return getExtendType().recursivelyGetInnerClass(className);
 	}
 
-	public Node recursivelyGetField(String fieldName) {
+	public Context recursivelyGetField(String fieldName) {
 		if( containsField(fieldName) )
 			return getField(fieldName);
 		
@@ -316,10 +314,10 @@ public class ClassType extends Type {
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.replace(values, replacements));
 			
-			Map<String, Node> fields = getFields();
+			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields();
 			for( String name : fields.keySet() ) {
-				SimpleNode field = (SimpleNode)(fields.get(name));
-				field = field.clone();
+				ShadowParser.VariableDeclaratorContext field = fields.get(name);
+				field = Context.copy(field);	
 				field.setType(field.getType().replace(values, replacements));			
 				replaced.addField(name, field );
 			}
@@ -365,12 +363,12 @@ public class ClassType extends Type {
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.partiallyReplace(values, replacements));
 			
-			Map<String, Node> fields = getFields(); 
+			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
 			
 			for( String name : fields.keySet() ) {
-				SimpleNode field = (SimpleNode)(fields.get(name));
+				ShadowParser.VariableDeclaratorContext field = fields.get(name);
 				if( field.getType().isParameterized() ) {
-					field = field.clone();					
+					field = Context.copy(field);					
 					SequenceType typeArguments = new SequenceType();
 					for( ModifiedType typeParameter : field.getType().getTypeParameters() ) {
 						Type type = typeParameter.getType();
@@ -393,7 +391,7 @@ public class ClassType extends Type {
 				for( MethodSignature signature : signatures ) {	
 					MethodSignature replacedSignature = signature.partiallyReplace(values, replacements);
 					replaced.addMethod(replacedSignature);
-					signature.getNode().setMethodSignature(replacedSignature);
+					signature.getNode().setSignature(replacedSignature);
 				}			
 			
 			Map<String, ClassType> inners = getInnerClasses();
@@ -423,10 +421,10 @@ public class ClassType extends Type {
 		for( InterfaceType _interface : getInterfaces() )
 			_interface.updateFieldsAndMethods();
 		
-		Map<String, Node> fields = getFields(); 
+		Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
 		
 		for( String name : fields.keySet() ) {
-			ASTVariableDeclarator field = (ASTVariableDeclarator)(fields.get(name));
+			ShadowParser.VariableDeclaratorContext field = fields.get(name);
 			if( field.getType() instanceof UninstantiatedType )
 				field.setType( ((UninstantiatedType)field.getType()).instantiate() );
 		}	
@@ -434,7 +432,7 @@ public class ClassType extends Type {
 		for( List<MethodSignature> signatures : getMethodMap().values() )
 			for( MethodSignature signature : signatures ) {			
 				signature.updateFieldsAndMethods();
-				SignatureNode node = signature.getNode(); 
+				Context node = signature.getNode(); 
 				if( node != null )
 					node.setType(signature.getMethodType());
 			}
@@ -556,6 +554,16 @@ public class ClassType extends Type {
 	}
 	
 	public ClassType getInnerClass(String className) {
+		if( className.contains(":")) {
+			int colon = className.indexOf(':');
+			String prefix = className.substring(0, colon);
+			ClassType inner = innerClasses.get(prefix);
+			if( inner != null )
+				return inner.getInnerClass(className.substring(colon + 1));
+			else
+				return null;
+		}			
+		
 		return innerClasses.get(className);
 	}
 	

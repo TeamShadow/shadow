@@ -1,6 +1,6 @@
 package shadow.tac.nodes;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.TACVisitor;
 
 public class TACResume extends TACNode

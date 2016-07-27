@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
@@ -16,7 +16,7 @@ public class ShadowObject extends ShadowValue
 	public ShadowObject(ClassType type) throws ShadowException
 	{
 		if (type.isPrimitive())
-			throw new ShadowException("Cannot create an object with a " +
+			throw new InterpreterException("Cannot create an object with a " +
 					"primitive type");
 		Map<String, ShadowReference> fields =
 				new HashMap<String, ShadowReference>(type.getFields().size());
@@ -37,7 +37,7 @@ public class ShadowObject extends ShadowValue
 		ShadowReference field = fields.get(name);
 		if (field != null)
 			return field;
-		throw new ShadowException("type " + getType() + " does not contain " +
+		throw new InterpreterException("type " + getType() + " does not contain " +
 				"field " + name);
 	}
 

@@ -21,17 +21,14 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import shadow.AST.ASTWalker.WalkType;
-import shadow.AST.AbstractASTVisitor;
-import shadow.parser.javacc.ASTAssignmentOperator.AssignmentKind;
-import shadow.parser.javacc.ASTClassOrInterfaceBody;
-import shadow.parser.javacc.ASTClassOrInterfaceDeclaration;
-import shadow.parser.javacc.ASTCompilationUnit;
-import shadow.parser.javacc.Literal;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
-import shadow.parser.javacc.SignatureNode;
-import shadow.parser.javacc.SimpleNode;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
+import shadow.ShadowException;
+import shadow.parse.Context;
+import shadow.parse.Context.AssignmentKind;
+import shadow.parse.ShadowParser;
+import shadow.parse.ShadowVisitorErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -55,7 +52,7 @@ import shadow.typecheck.type.TypeParameter;
  * @author Barry Wittman
  * @author William R. Speirs
  */
-public abstract class BaseChecker extends AbstractASTVisitor {
+public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 	
 	/** 
 	 * Kinds of substitution possible.
@@ -76,7 +73,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	
 	protected final Package packageTree;
 	// Current method is a stack since Shadow allows methods to be defined inside of methods.
-	protected final LinkedList<SignatureNode> currentMethod = new LinkedList<SignatureNode>();
+	protected final LinkedList<Context> currentMethod = new LinkedList<Context>();
 
 	protected Package currentPackage;
 	protected Type currentType = null;	
@@ -87,7 +84,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * Creates a new <code>BaseChecker</code> with the given tree of packages.
 	 * @param packageTree root of all packages
 	 */
-	public BaseChecker( Package packageTree ) {		
+	public BaseChecker( Package packageTree, ErrorReporter reporter ) {		
+		super( reporter );
 		this.packageTree = packageTree;
 	}
 	
@@ -98,45 +96,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * when overriding. 
 	 */
 	public void clear() {		
-		clearErrors();
+		getErrorReporter().clearErrors();
 		currentPackage = null;
 		currentMethod.clear();
 		currentType = null;
 		declarationType = null;
 		packageTree.clear();
-	}	
-
-	/**
-	 * Causes a node to mirror the type and modifiers of its first child node.
-	 * @param node the node being visited 
-	 * @param secondVisit if it is the second visit to the node
-	 * @return walk type for visitor
-	 */
-	protected Object pushUpType( SimpleNode node, Boolean secondVisit ) {
-		if( secondVisit )	{
-			if( node.jjtGetNumChildren() > 0 ) {			
-				// Push the type up the tree
-				Node childNode = node.jjtGetChild(0); 
-				node.setType(childNode.getType());
-				// Copies current and return modifiers
-				node.setModifiers(childNode.getModifiers()); 
-			}
-		}
-		
-		return WalkType.POST_CHILDREN;
-	}
-
-	/**
-	 * Causes a node to mirror the modifiers of its child. Only occurs if
-	 * the node has a single child.
-	 * @param node the node being visited
-	 */
-	protected void pushUpModifiers( SimpleNode node ) {
-		if( node.jjtGetNumChildren() == 1 ) {
-			Node child = node.jjtGetChild(0);
-			// Copies current and return modifiers
-			node.setModifiers(child.getModifiers()); 
-		}
 	}	
 	
 	/**
@@ -149,7 +114,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param errors			list of errors to add to if assignment is not legal
 	 * @return					if assignment is legal
 	 */
-	public static boolean checkSubstitution( ModifiedType left, ModifiedType right, AssignmentKind assignmentKind, SubstitutionKind substitutionKind, List<TypeCheckException> errors ) {
+	public static boolean checkSubstitution( ModifiedType left, ModifiedType right, AssignmentKind assignmentKind, SubstitutionKind substitutionKind, List<ShadowException> errors ) {
 		Type leftType = left.getType();		 
 		Type rightType = right.getType();		
 		
@@ -163,7 +128,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			}
 			else { // Fail otherwise			
 				String kind = (rightType instanceof SubscriptType) ? "Subscript " : "Property ";				
-				addError( errors, Error.INVALID_ASSIGNMENT, kind + getSetType +
+				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT, kind + getSetType +
 						" cannot be loaded", rightType );
 				return false;				
 			}
@@ -172,7 +137,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		// If the left type is a property or subscript, try to apply the right into it.			
 		if( leftType instanceof PropertyType )  {			
 			PropertyType propertyType = (PropertyType)leftType;
-			List<TypeCheckException> errorList = propertyType.applyInput( right );
+			List<ShadowException> errorList = propertyType.applyInput( right );
 						
 			if( errorList.isEmpty() )
 				return checkSubstitution( propertyType.getSetType(), right, assignmentKind, substitutionKind, errors );
@@ -187,7 +152,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			SequenceType sequenceLeft = (SequenceType)leftType;	
 			// Compound assignments not allowed for sequences
 			if( !assignmentKind.equals( AssignmentKind.EQUAL ) ) { 
-				addError( errors, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft +
+				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT, "Sequence type " + sequenceLeft +
 						" cannot be assigned with any operator other than =" );
 				return false;
 			}			
@@ -197,7 +162,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		
 		// Do not allow assignment to singleton references
 		if( leftType instanceof SingletonType ) {
-			addError( errors, Error.INVALID_ASSIGNMENT,
+			ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
 					"Singleton reference cannot be assigned to" );
 			return false;
 		}		
@@ -207,7 +172,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			if( leftType instanceof TypeParameter ) {
 				TypeParameter typeParameter = (TypeParameter) leftType;
 				if( !typeParameter.acceptsSubstitution(rightType) ) {
-					addError(errors, Error.INVALID_TYPE_ARGUMENTS,
+					ErrorReporter.addError(errors, Error.INVALID_TYPE_ARGUMENTS,
 							"Cannot substitute type argument " + rightType +
 							" for type argument " + leftType, rightType);
 					return false;					
@@ -215,7 +180,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			}
 			else {
 				// Should never happen
-				addError( errors, Error.INVALID_TYPE_ARGUMENTS,
+				ErrorReporter.addError( errors, Error.INVALID_TYPE_ARGUMENTS,
 						"Cannot substitute type argument " + rightType +	" for type " +
 						leftType + " which is not a type parameter", rightType, leftType );
 				return false;				
@@ -234,7 +199,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			if( !rightModifiers.isImmutable() && !rightType.getModifiers().isImmutable() &&
 					!leftType.getModifiers().isImmutable() ) {
 				// Never a problem if either type is immutable
-				addError( errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with non-immutable value cannot be assigned to immutable left hand side",
 						rightType, leftType);
 				return false;
@@ -245,7 +210,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 					!leftType.getModifiers().isImmutable() &&
 					!rightType.getModifiers().isImmutable() ) {
 				// Never a problem if either type is immutable			
-				addError( errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with immutable value cannot be assigned to non-immutable and non-readonly left hand side",
 						rightType, leftType);
 				return false;
@@ -259,7 +224,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 						!leftType.getModifiers().isImmutable() &&
 						!rightType.getModifiers().isImmutable() ) {
 				// Never a problem if either type is immutable or readonly				
-					addError(errors, Error.INVALID_ASSIGNMENT,
+					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 							"Right hand side with readonly value cannot be assigned to non-readonly left hand side",
 							rightType, leftType);
 					return false;
@@ -277,23 +242,23 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		 */
 		if( leftArray && rightArray ) {
 			if( leftModifiers.isNullable() && !rightModifiers.isNullable() )
-				addError(errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with non-nullable array type cannot be assigned to nullable left hand side",
 						rightType, leftType);
 			else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
-				addError(errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
 						rightType, leftType);
 		}
 		else if( leftArray ) {
 			if( leftModifiers.isNullable() &&
 					!rightType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) )
-				addError(errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with non-nullable array type cannot be assigned to nullable left hand side",
 						rightType, leftType);
 			else if( !leftModifiers.isNullable() &&
 					rightType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) )
-				addError(errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
 						rightType, leftType);
 			else if( !leftModifiers.isNullable() && rightModifiers.isNullable() )
@@ -301,25 +266,25 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				 * nullable NullableArray<int> x = method();
 				 * nullable int[] array = x;
 				 */  
-				addError(errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with nullable object value cannot be assigned to nullable array left hand side without a check",
 						rightType, leftType);
 		}
 		else if( rightArray ) {
 			if( leftType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) &&
 					!rightModifiers.isNullable() )
-				addError( errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with non-nullable array type cannot be assigned to nullable left hand side",
 						rightType, leftType);
 			else if( !leftType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) &&
 					rightModifiers.isNullable() )
-				addError( errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
 						rightType, leftType );
 		}
 		else { // No arrays (easy case)			
 			if( !leftModifiers.isNullable() && rightModifiers.isNullable() ) {
-				addError(errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
 						rightType, leftType);			
 				return false;
@@ -329,7 +294,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		// These cases are the only differences between initializations and assignments.
 		if( substitutionKind.equals( SubstitutionKind.ASSIGNMENT ) ) {			
 			if( leftModifiers.isConstant() ) {
-				addError(errors, Error.INVALID_ASSIGNMENT,
+				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side cannot be assigned to variable marked constant",
 						rightType, leftType);
 				return false;			
@@ -337,15 +302,15 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			else if( !leftModifiers.isAssignable() ) {
 				// Might be non-assignable due to immutable or readonly references
 				if( leftModifiers.isImmutable() )
-					addError(errors, Error.INVALID_ASSIGNMENT,
+					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 							"Right hand side cannot be assigned in immutable context of expression "
 							+ left, rightType, leftType);
 				else if( leftModifiers.isReadonly() )
-					addError(errors, Error.INVALID_ASSIGNMENT,
+					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 							"Right hand side cannot be assigned in readonly context of expression "
 							+ left, rightType, leftType);
 				else				
-					addError(errors, Error.INVALID_ASSIGNMENT,
+					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 							"Right hand side cannot be assigned to non-assignable expression " +
 							left, rightType, leftType);
 				return false;
@@ -361,9 +326,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param right				type of right-hand side, including modifiers
 	 * @return					list of errors (empty if valid)
 	 */
-	protected final static List<TypeCheckException> isValidInitialization( ModifiedType left,
+	protected final static List<ShadowException> isValidInitialization( ModifiedType left,
 			ModifiedType right ) {		
-		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		List<ShadowException> errors = new ArrayList<ShadowException>();
 		checkSubstitution( left, right, AssignmentKind.EQUAL,
 				SubstitutionKind.INITIALIZATION, errors );
 		return errors;
@@ -375,9 +340,9 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param right				type of right-hand side, including modifiers
 	 * @return					list of errors (empty if valid)
 	 */	
-	protected final static List<TypeCheckException> isValidAssignment( ModifiedType left,
+	protected final static List<ShadowException> isValidAssignment( ModifiedType left,
 			ModifiedType right, AssignmentKind assignmentType ) {
-		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		List<ShadowException> errors = new ArrayList<ShadowException>();
 		checkSubstitution( left, right, assignmentType, SubstitutionKind.ASSIGNMENT, errors );
 		return errors;		
 	}
@@ -389,8 +354,8 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param name		name of the type
 	 * @return			type found or <code>null</code> if not found
 	 */
-	protected final Type lookupTypeFromCurrentMethod( String name ) {		
-		for( Node method : currentMethod ) {
+	protected final Type lookupTypeFromCurrentMethod( Context ctx, String name ) {		
+		for( Context method : currentMethod ) {
 			MethodType methodType = (MethodType)(method.getType());
 			if( methodType.isParameterized() ) {
 				for( ModifiedType modifiedType : methodType.getTypeParameters() ) {
@@ -403,7 +368,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 				}
 			}			
 		}
-		return lookupTypeStartingAt( name, declarationType );
+		return lookupTypeStartingAt( ctx, name, declarationType );
 	}
 	
 	/**
@@ -414,12 +379,12 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param outer		outer type
 	 * @return			type found or <code>null</code> if not found
 	 */	
-	protected final Type lookupTypeStartingAt( String name, Type outer ) {	
+	protected final Type lookupTypeStartingAt( Context ctx, String name, Type outer ) {	
 		Type type = null;		
 		
 		if( name.contains("@")) { // Fully qualified type name
 			int atSign = name.indexOf('@');
-			return lookupType( name.substring(atSign + 1 ), name.substring(0, atSign) );
+			return lookupType(ctx, name.substring(atSign + 1 ), name.substring(0, atSign) );
 		}
 		else if( outer != null ) { // Start with outer type			
 			Type current = outer;			
@@ -484,14 +449,22 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param name		name of the type
 	 * @return			type found or <code>null</code> if not found
 	 */
-	protected Type lookupType( String name )
+	protected Type lookupType( Context ctx, String name )
 	{
 		if( name.contains("@")) {
 			int atSign = name.indexOf('@');
-			return lookupType( name.substring(atSign + 1 ), name.substring(0, atSign) );
+			return lookupType( ctx, name.substring(atSign + 1 ), name.substring(0, atSign) );
+		}
+		else if( name.contains(":")) {  //this case handles partially qualified names (perhaps leaving off outermost classes)
+			int colon = name.indexOf(':');
+			Type outer = lookupType(ctx, name.substring(0, colon));
+			if( outer != null && outer instanceof ClassType )
+				return ((ClassType)outer).getInnerClass(name.substring(colon + 1));
+			else
+				return null;
 		}
 		else
-			return lookupTypeFromCurrentMethod( name );
+			return lookupTypeFromCurrentMethod( ctx, name );
 	}
 	
 	/**
@@ -500,7 +473,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param packageName	name of the package
 	 * @return				type found or <code>null</code> if not found
 	 */
-	private final Type lookupType( String name, String packageName ) {			
+	private final Type lookupType( Context ctx, String name, String packageName ) {			
 		Package p;
 		
 		if( packageName.equals("default") )
@@ -509,7 +482,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 			p = packageTree.getChild(packageName);
 		
 		if( p == null ) {
-			addError(Error.INVALID_IMPORT, "Package " + packageName + " not defined");
+			addError(ctx, Error.INVALID_IMPORT, "Package " + packageName + " not defined");
 			return null;
 		}		
 		 
@@ -522,24 +495,37 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param literal	kind of literal
 	 * @return			its type
 	 */
-	public static ClassType literalToType( Literal literal ) {
-		switch( literal ) {
-		case BYTE: 		return Type.BYTE;
-		case CODE: 		return Type.CODE;
-		case SHORT: 	return Type.SHORT;
-		case INT: 		return Type.INT;
-		case LONG:		return Type.LONG;
-		case FLOAT: 	return Type.FLOAT;
-		case DOUBLE: 	return Type.DOUBLE;
-		case STRING:	return Type.STRING;
-		case UBYTE: 	return Type.UBYTE;
-		case USHORT: 	return Type.USHORT;
-		case UINT: 		return Type.UINT;
-		case ULONG: 	return Type.ULONG;
-		case BOOLEAN: 	return Type.BOOLEAN;
-		case NULL: 		return Type.NULL;
-		default:		return null;
-		}
+	public static ClassType literalToType( ShadowParser.LiteralContext literal ) {
+		if( literal.ByteLiteral() != null )
+			return Type.BYTE;
+		else if( literal.CodeLiteral() != null )
+			return Type.CODE;
+		else if( literal.ShortLiteral() != null )
+			return Type.SHORT;
+		else if( literal.IntLiteral() != null )
+			return Type.INT;
+		else if( literal.LongLiteral() != null )
+			return Type.LONG;
+		else if( literal.FloatLiteral() != null )
+			return Type.FLOAT;
+		else if( literal.DoubleLiteral() != null )
+			return Type.DOUBLE;			
+		else if( literal.StringLiteral() != null )
+			return Type.STRING;
+		else if( literal.UByteLiteral() != null )
+			return Type.UBYTE;
+		else if( literal.UShortLiteral() != null )
+			return Type.USHORT;
+		else if( literal.UIntLiteral() != null )
+			return Type.UINT;
+		else if( literal.ULongLiteral() != null )
+			return Type.ULONG;
+		else if( literal.BooleanLiteral() != null )
+			return Type.BOOLEAN;
+		else if( literal.NullLiteral() != null )
+			return Type.NULL;
+		
+		return null;	
 	}
 	
 	/**
@@ -570,10 +556,11 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 * @param file		file name
 	 * @return			name without extension
 	 */
-	public static String stripExtension(String file) {
+	public static String stripExtension(String file)
+	{
 		return file.substring(0, file.lastIndexOf("."));
 	}	
-	
+
 	/**
 	 * Tests to see if one type is accessible from another.
 	 * @param type			type whose accessibility is in question 
@@ -629,7 +616,7 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 		if( signature.getMethodType().getModifiers().isPublic() ) 
 			return true;
 		
-		Node node = signature.getNode();
+		Context node = signature.getNode();
 		if( node == null )
 			return false;		
 		
@@ -662,39 +649,63 @@ public abstract class BaseChecker extends AbstractASTVisitor {
 	 */
 	
 	@Override
-	public Object visit( ASTClassOrInterfaceBody node, Boolean secondVisit )
-			throws ShadowException {		
-		if( secondVisit ) 	// Leaving a type
-			currentType = currentType.getOuter();
-		else {				// Entering a type							
-			currentType = declarationType;
-			currentPackage = currentType.getPackage();				
-		}			
-		return WalkType.POST_CHILDREN;
+	public Void visitClassOrInterfaceBody( ShadowParser.ClassOrInterfaceBodyContext ctx )
+	{		
+		// Entering a type							
+		currentType = declarationType;
+		currentPackage = currentType.getPackage();
+		
+		visitChildren(ctx);
+				
+		// Leaving a type
+		currentType = currentType.getOuter();
+					
+		return null;
 	}
 
 	// Entering declaration, but type has not yet been entered.
 	@Override
-	public Object visit( ASTClassOrInterfaceDeclaration node, Boolean secondVisit )
-			throws ShadowException {			
-		if( secondVisit )			
-			declarationType = declarationType.getOuter();		
-		else {
-			declarationType = node.getType();
-			currentPackage = declarationType.getPackage();
-		}			
-		return WalkType.POST_CHILDREN;
+	public Void visitClassOrInterfaceDeclaration( ShadowParser.ClassOrInterfaceDeclarationContext ctx )
+	{
+		declarationType = ctx.getType();
+		currentPackage = declarationType.getPackage();
+		
+		visitChildren(ctx);
+				
+		declarationType = declarationType.getOuter();
+		
+		return null;
 	}	
 	
 	/*
-	 * TypeCollector overrides this method, because it does something different.(non-Javadoc)
+	 * TypeCollector overrides this method, because it does something different.
 	 * All other checkers use this method.
 	 */ 
 	@Override
-	public Object visit( ASTCompilationUnit node, Boolean secondVisit ) throws ShadowException {	
-		if( !secondVisit )		
-			currentPackage = packageTree;
+	public Void visitCompilationUnit( ShadowParser.CompilationUnitContext ctx)
+	{			
+		currentPackage = packageTree;		
+		return visitChildren(ctx);
+	}
+	
+	public List<Integer> getDimensions(Context context)
+	{		
+		List<Integer> dimensions = new ArrayList<Integer>();
+		int value = 1;		
 		
-		return WalkType.POST_CHILDREN;
+		for( ParseTree tree : context.children ) {
+			if( tree instanceof TerminalNode ) {
+				String token = ((TerminalNode)tree).getText();
+			
+				if( token.equals(",")  )
+					value++;
+				else if( token.equals("]")) {
+					dimensions.add(value);
+					value = 1;
+				}
+			}
+		}
+		
+		return dimensions;
 	}
 }

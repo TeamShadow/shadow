@@ -33,7 +33,7 @@ public class TACBlock
 		this(method, null);	
 	}
 	
-	public TACBlock(TACTree node, TACBlock parentBlock)
+	public TACBlock(TACNode node, TACBlock parentBlock)
 	{
 		this(node.getMethod(), parentBlock);
 		node.setBlock(this);
@@ -205,8 +205,7 @@ public class TACBlock
 	{
 		if (catchLabels != null)
 			throw new IllegalStateException("Catch labels already added.");
-		if (num != 0)
-		{
+		if (num > 0) {
 			catchLabels = new ArrayList<TACLabel>(num);
 			for (int i = 0; i < num; i++)
 				catchLabels.add(new TACLabel(method));
@@ -220,6 +219,12 @@ public class TACBlock
 			return recoverLabel;
 		return parent == null ? null : parent.getRecover();
 	}
+	
+	public boolean hasRecover()
+	{
+		return getRecover() != null;
+	}
+	
 	public TACBlock addRecover()
 	{
 		if (recoverLabel != null)

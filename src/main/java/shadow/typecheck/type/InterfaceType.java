@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import shadow.doctool.Documentation;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.SignatureNode;
-import shadow.parser.javacc.SimpleNode;
+import shadow.parse.Context;
+import shadow.parse.ShadowParser;
 
 public class InterfaceType extends Type 
 {
@@ -156,11 +155,11 @@ public class InterfaceType extends Type
 				replaced.addInterface(_interface.replace(values, replacements));		
 			
 			//only constant non-parameterized fields in an interface
-			Map<String, Node> fields = getFields(); 
+			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
 			
 			for( String name : fields.keySet() ) {
-				SimpleNode field = (SimpleNode)(fields.get(name));
-				field = field.clone();
+				ShadowParser.VariableDeclaratorContext field = fields.get(name);
+				field = Context.copy(field);	
 				field.setType(field.getType());			
 				replaced.addField(name, field );
 			}
@@ -199,11 +198,11 @@ public class InterfaceType extends Type
 				replaced.addInterface(_interface.partiallyReplace(values, replacements));		
 						
 			//only constant non-parameterized fields in an interface
-			Map<String, Node> fields = getFields(); 
+			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
 			
 			for( String name : fields.keySet() ) {
-				SimpleNode field = (SimpleNode)(fields.get(name));
-				field = field.clone();
+				ShadowParser.VariableDeclaratorContext field = fields.get(name);
+				field = Context.copy(field);	
 				field.setType(field.getType());			
 				replaced.addField(name, field );
 			}
@@ -234,7 +233,7 @@ public class InterfaceType extends Type
 		for( List<MethodSignature> signatures : getMethodMap().values() )			
 			for( MethodSignature signature : signatures )	{		
 				signature.updateFieldsAndMethods();
-				SignatureNode node = signature.getNode(); 
+				Context node = signature.getNode(); 
 				if( node != null )
 					node.setType(signature.getMethodType());				
 			}
@@ -314,7 +313,7 @@ public class InterfaceType extends Type
 				
 		//constants are the only fields in interfaces
 		newLine = false;
-		for( Map.Entry<String, Node> field : getFields().entrySet() )
+		for( Map.Entry<String, ShadowParser.VariableDeclaratorContext> field : getFields().entrySet() )
 			if( field.getValue().getModifiers().isConstant() ) {
 				out.println(indent + field.getValue().getType() + " " + field.getKey() + ";");
 				newLine = true;

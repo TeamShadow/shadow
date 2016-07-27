@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Modifiers;
@@ -52,7 +52,7 @@ public class TACNewArray extends TACOperand
 			TACOperand next = check(iter.next(),
 					new SimpleModifiedType(Type.INT));
 			dimensions.add(next);
-			current = new TACBinary(this, current, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), '*', next);
+			current = new TACBinary(this, current, Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), "*", next);
 		}
 		total = check(current, new SimpleModifiedType(Type.INT));
 	}

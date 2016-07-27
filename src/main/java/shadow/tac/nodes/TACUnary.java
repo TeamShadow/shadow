@@ -2,9 +2,9 @@ package shadow.tac.nodes;
 
 import java.util.Set;
 
+import shadow.ShadowException;
 import shadow.interpreter.ShadowInterpreter;
 import shadow.interpreter.ShadowValue;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;

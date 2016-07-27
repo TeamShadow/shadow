@@ -2,8 +2,9 @@ package shadow.output;
 
 import java.io.File;
 import java.io.Writer;
+import java.nio.file.Path;
 
-import shadow.parser.javacc.ShadowException;
+import shadow.ShadowException;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
@@ -12,7 +13,7 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 		implements Output
 {
 	protected TabbedLineWriter writer;
-	protected File file;
+	protected Path file;
 	public AbstractOutput(TabbedLineWriter out)
 	{
 		writer = out;
@@ -25,13 +26,13 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	{
 		this(new TabbedLineWriter(out));
 	}
-	public AbstractOutput(File out) throws ShadowException
+	public AbstractOutput(Path out) throws ShadowException
 	{
 		this(new TabbedLineWriter(out));
 		file = out;
 	}
 	
-	public File getFile()
+	public Path getFile()
 	{
 		return file;
 	}

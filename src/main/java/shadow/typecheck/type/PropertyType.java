@@ -3,8 +3,9 @@ package shadow.typecheck.type;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.ShadowException;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.TypeCheckException;
+import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 
 public class PropertyType extends Type
@@ -15,15 +16,15 @@ public class PropertyType extends Type
 	private ModifiedType prefix;
 	private Type context;
 		
-	public List<TypeCheckException> applyInput(ModifiedType input) {
+	public List<ShadowException> applyInput(ModifiedType input) {
 		
-		List<TypeCheckException> errors = new ArrayList<TypeCheckException>();
+		List<ShadowException> errors = new ArrayList<ShadowException>();
 		
 		if( method == null ) {
 			if( isGettable() )
-				BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Cannot assign to non-set property " + getter.getSymbol());
+				ErrorReporter.addError(errors, Error.INVALID_PROPERTY, "Cannot assign to non-set property " + getter.getSymbol());
 			else
-				BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Cannot assign to non-set property"); //should never happen, but...
+				ErrorReporter.addError(errors, Error.INVALID_PROPERTY, "Cannot assign to non-set property"); //should never happen, but...
 			return errors;
 		}
 		
@@ -35,14 +36,14 @@ public class PropertyType extends Type
 		MethodSignature signature = outer.getMatchingMethod(name, arguments);
 		
 		if( signature == null )
-			BaseChecker.addError(errors, Error.INVALID_PROPERTY, "Property " + name + " cannot accept input of type " + input.getType());
+			ErrorReporter.addError(errors, Error.INVALID_PROPERTY, "Property " + name + " cannot accept input of type " + input.getType());
 		else {			
 			setSetter(signature);			
 			if( !BaseChecker.methodIsAccessible(signature, context) )
-				BaseChecker.addError(errors, Error.ILLEGAL_ACCESS, "Property " + name + " is not accessible from this context");
+				ErrorReporter.addError(errors, Error.ILLEGAL_ACCESS, "Property " + name + " is not accessible from this context");
 			
 			if( !prefix.getModifiers().isMutable() && signature.getModifiers().isMutable()  )			
-				BaseChecker.addError(errors, Error.ILLEGAL_ACCESS, "Mutable property " + name + " cannot be called from " + (prefix.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
+				ErrorReporter.addError(errors, Error.ILLEGAL_ACCESS, "Mutable property " + name + " cannot be called from " + (prefix.getModifiers().isImmutable() ? "immutable" : "readonly") + " context");
 		}		
 		
 		return errors;

@@ -25,10 +25,10 @@ import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
+import shadow.ShadowException;
 import shadow.doctool.output.DocumentationTemplate;
 import shadow.doctool.output.StandardTemplate;
-import shadow.parser.javacc.ParseException;
-import shadow.parser.javacc.ShadowException;
+import shadow.parse.ParseException;
 import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.type.ClassType;
@@ -55,10 +55,6 @@ public class DocumentationTool
 		} catch(ParseException e) {
 			System.err.println("PARSE ERROR: " + e.getLocalizedMessage());
 			System.exit(Main.PARSE_ERROR);
-		} catch (ShadowException e) {
-			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
-			e.printStackTrace();
-			System.exit(Main.TYPE_CHECK_ERROR);
 		} catch (IOException e) {
 			System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
@@ -74,6 +70,10 @@ public class DocumentationTool
 		} catch (TypeCheckException e) {
 			System.err.println("TYPE CHECK ERROR: " + e.getLocalizedMessage());
 			System.exit(Main.TYPE_CHECK_ERROR);
+		} catch (ShadowException e) {
+			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
+			e.printStackTrace();
+			System.exit(Main.TYPE_CHECK_ERROR);
 		} catch (HelpRequestedException e) {
 			return;
 		}
@@ -82,7 +82,7 @@ public class DocumentationTool
 	// TODO: Subdivide this into more manageable pieces
 	public static void document(String[] args) 
 			throws org.apache.commons.cli.ParseException, ConfigurationException,
-			IOException, ShadowException, TypeCheckException, ParseException, 
+			IOException, shadow.ShadowException, TypeCheckException, ParseException, 
 			DocumentationException, HelpRequestedException
 	{
 		// Detect and establish the current settings and arguments
@@ -103,7 +103,7 @@ public class DocumentationTool
 		// If packages/directories are specified, they will be searched for
 		// source files
 		Map<String, Documentation> pkgDocs = new HashMap<String, Documentation>();
-		List<File> sourceFiles 
+		List<Path> sourceFiles 
 				= getRequestedFiles(arguments.getMainArguments(), pkgDocs);
 		
 		// Perform basic type-checking on each source file
@@ -161,11 +161,11 @@ public class DocumentationTool
 	 * Locates all requested source files, either specified directly or within
 	 * specified packages/directories. Verifies that the files actually exist
 	 */
-	public static List<File> getRequestedFiles(String[] givenPaths,
+	public static List<Path> getRequestedFiles(String[] givenPaths,
 			Map<String, Documentation> pkgDocs) throws IOException, 
 			DocumentationException, ShadowException
 	{
-		List<File> sourceFiles = new ArrayList<File>();
+		List<Path> sourceFiles = new ArrayList<Path>();
 		for (String path : givenPaths) {
 			Path current = Paths.get(path).toAbsolutePath();
 			
@@ -178,7 +178,7 @@ public class DocumentationTool
 			if (Files.isDirectory(current))
 				sourceFiles.addAll(getPackageFiles(current, true, pkgDocs));
 			else if (current.toString().endsWith(SRC_EXTENSION))
-				sourceFiles.add(current.toFile());
+				sourceFiles.add(current);
 			else if (current.getFileName().toString().equals(PKG_INFO_FILE))
 				processPackageInfo(current, pkgDocs);
 			else
@@ -197,17 +197,17 @@ public class DocumentationTool
 	 * @param recursive Determines whether or not subdirectories/subpackages
 	 * 					are also searched
 	 */
-	public static List<File> getPackageFiles(Path directory, boolean recursive,
+	public static List<Path> getPackageFiles(Path directory, boolean recursive,
 			Map<String, Documentation> pkgDocs) throws IOException,
 			DocumentationException, ShadowException
 	{
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
-			List<File> files = new ArrayList<File>();
+			List<Path> files = new ArrayList<Path>();
 			
 			for (Path filePath : stream) {
 				// Capture all source files
 				if (filePath.toString().endsWith(SRC_EXTENSION)) 
-					files.add(filePath.toFile());
+					files.add(filePath);
 				// Capture any package-info files
 				else if (filePath.getFileName().toString().equals(PKG_INFO_FILE))
 					processPackageInfo(filePath, pkgDocs);

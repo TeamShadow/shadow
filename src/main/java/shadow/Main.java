@@ -22,16 +22,17 @@ import java.util.Set;
 import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ParseException;
-import shadow.parser.javacc.ShadowException;
+import shadow.parse.Context;
+import shadow.parse.ParseException;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.tac.analysis.ControlFlowGraph;
+import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
-import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.TypeChecker;
+import shadow.typecheck.TypeCollector;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -86,11 +87,6 @@ public class Main {
 			System.err.println("PARSE ERROR: " + e.getLocalizedMessage());
 			System.exit(PARSE_ERROR);
 		}
-		catch (ShadowException e) {
-			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
-			e.printStackTrace();
-			System.exit(TYPE_CHECK_ERROR);
-		}
 		catch (IOException e) {
 			System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
 			e.printStackTrace();
@@ -113,6 +109,11 @@ public class Main {
 		catch (CompileException e) {
 			System.err.println("COMPILATION ERROR: " + e.getLocalizedMessage());
 			System.exit(COMPILE_ERROR);
+		}
+		catch (ShadowException e) {
+			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
+			e.printStackTrace();
+			System.exit(TYPE_CHECK_ERROR);
 		}
 	}
 
@@ -275,24 +276,24 @@ public class Main {
 		Type.clearTypes();		
 
 		Path mainFile = currentJob.getMainFile();
-		String mainFileName = stripExt(mainFile.toString()); 
+		String mainFileName = BaseChecker.stripExtension(TypeCollector.canonicalize(mainFile)); 
 
+		//just type check until ANTLR migration is finished
 		try {
 			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation
-			for( Node node : TypeChecker.typeCheck(mainFile.toFile(), currentJob.isForceRecompile()) ) {				
-				File file = node.getFile();
+			for( Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile()) ) {				
+				Path file = node.getPath();
 				
 				if( currentJob.isCheckOnly() ) {				
 					//performs checks to make sure all paths return, there is no dead code, etc.
 					//no need to check interfaces or .meta files (no code in either case)
-					if( !file.getPath().endsWith(".meta")  )
+					if( !file.endsWith(".meta")  )
 						optimizeTAC( new TACBuilder().build(node), true );
 				}
-				else {
-					
-					String name = stripExt(file.getName());
-					String path = stripExt(file.getCanonicalPath());
-					File llvmFile = new File(path + ".ll");
+				else {				
+					String name = BaseChecker.stripExtension(file.getFileName().toString());
+					String path = BaseChecker.stripExtension(TypeCollector.canonicalize(file));
+					Path llvmFile = Paths.get(path + ".ll");
 					
 					Type type = node.getType();
 					
@@ -305,11 +306,11 @@ public class Main {
 						else if( type.getMatchingMethod("main", new SequenceType()) != null )
 							mainArguments = false;
 						else
-							throw new ShadowException("File " + file.getPath() + " does not contain an appropriate main() method");							
+							throw new CompileException("File " + file + " does not contain an appropriate main() method");							
 					}
 				
 					//if the LLVM didn't exist, the full .shadow file would have been used				
-					if( file.getPath().endsWith(".meta") ) {
+					if( file.endsWith(".meta") ) {
 						logger.info("Using pre-existing LLVM code for " + name);
 						addToLink(node.getType(), file, linkCommand);
 						LLVMOutput.readGenericAndArrayClasses( llvmFile, generics, arrays );
@@ -320,35 +321,33 @@ public class Main {
 						TACModule module = optimizeTAC( new TACBuilder().build(node), false );
 	
 						// Write to file
-						String className = typeToFileName(type);
-						llvmFile = new File(file.getParentFile(), className + ".ll");
-						File nativeFile = new File(file.getParentFile(), className + ".native.ll");
+						String className = typeToFileName(type);						
+						llvmFile = file.getParent().resolve(className + ".ll");						
+						Path nativeFile = file.getParent().resolve(className + ".native.ll");
 						LLVMOutput output = new LLVMOutput(llvmFile);
 						try {					
 							output.build(module);
 						}
 						catch(ShadowException e) {
 							logger.error(file + " FAILED TO COMPILE");
-							output.close();
-							if( llvmFile.exists() )
-								llvmFile.delete();
+							output.close();							
+							Files.deleteIfExists(llvmFile);
 							throw new CompileException(e.getMessage());
 						}				
 	
-						if( llvmFile.exists() )
-							linkCommand.add(llvmFile.getCanonicalPath());
+						if( Files.exists(llvmFile) )
+							linkCommand.add(TypeCollector.canonicalize(llvmFile));
 						else
-							throw new ShadowException("Failed to generate " + llvmFile.getPath());
+							throw new CompileException("Failed to generate " + llvmFile);
 	
-						if( nativeFile.exists() )
-							linkCommand.add(nativeFile.getCanonicalPath());
-						
+						if( Files.exists(nativeFile) )
+							linkCommand.add(TypeCollector.canonicalize(nativeFile));						
 						
 						//it's important to add generics after generating the LLVM, since more are found
 						generics.addAll(output.getGenericClasses());						
 						arrays.addAll(output.getArrayClasses());
 					}
-				}
+				}				
 			}
 		}
 		catch( TypeCheckException e ) {
@@ -400,46 +399,41 @@ public class Main {
 				//give warnings if fields are never used
 				Type type = class_.getType();
 				Set<String> usedFields = allUsedFields.get(type);
-				for( Entry<String, Node> entry  : type.getFields().entrySet() ) {
+				for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
 					if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
-						reporter.addWarning(entry.getValue(), Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
+						reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
 				}
 				
 				//give warnings if private methods are never used
 				for( List<MethodSignature> signatures : type.getMethodMap().values() )
 					for( MethodSignature signature : signatures )
 						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) )
-							reporter.addWarning(signature.getNode(), Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
+							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
+				
 			}					
 			
-			reporter.printWarnings();
-			reporter.printErrors();		
-			if( reporter.getErrorList().size() > 0 )
-				throw reporter.getErrorList().get(0);
+			//reporter.printAndReportErrors();
 		}
 		
 		return module;
 	}	
 
-	private static void addToLink( Type type, File file, List<String> linkCommand ) throws IOException, ShadowException {
+	private static void addToLink( Type type, Path file, List<String> linkCommand ) throws IOException, ShadowException {
 		
 		String name = typeToFileName(type);
-		File llvmFile = new File(file.getParentFile(), name + ".ll");
-		File nativeFile = new File(file.getParentFile(), name + ".native.ll");
+		
+		
+		Path llvmFile = file.getParent().resolve(name + ".ll");
+		Path nativeFile = file.getParent().resolve(name + ".native.ll");
 
-		if( llvmFile.exists() )
-			linkCommand.add(llvmFile.getCanonicalPath());
+		if( Files.exists(llvmFile) )
+			linkCommand.add(TypeCollector.canonicalize(llvmFile));
 		else
-			throw new ShadowException("File not found: " + llvmFile.getPath());
+			throw new CompileException("File not found: " + llvmFile);
 
 
-		if( nativeFile.exists() )
-			linkCommand.add(nativeFile.getCanonicalPath());
-	}
-
-
-	public static String stripExt(String filepath) {
-		return filepath.substring(0, filepath.lastIndexOf("."));
+		if( Files.exists(nativeFile) )
+			linkCommand.add(TypeCollector.canonicalize(nativeFile));
 	}
 
 	/** A simple class used to redirect an InputStream into a specified OutputStream */

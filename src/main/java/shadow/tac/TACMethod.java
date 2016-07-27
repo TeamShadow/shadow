@@ -11,9 +11,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
-import shadow.parser.javacc.ShadowException;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;

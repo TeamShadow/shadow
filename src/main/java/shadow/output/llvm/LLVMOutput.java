@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,6 +20,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import shadow.CompileException;
+import shadow.ShadowException;
+import shadow.interpreter.InterpreterException;
 import shadow.interpreter.ShadowBoolean;
 import shadow.interpreter.ShadowCode;
 import shadow.interpreter.ShadowDouble;
@@ -32,8 +36,7 @@ import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
 import shadow.output.TabbedLineWriter;
-import shadow.parser.javacc.Node;
-import shadow.parser.javacc.ShadowException;
+import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
@@ -109,7 +112,7 @@ public class LLVMOutput extends AbstractOutput {
 	
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 	
-	public LLVMOutput(File file) throws ShadowException {
+	public LLVMOutput(Path file) throws ShadowException {
 		super(file);
 	}
 	
@@ -120,7 +123,7 @@ public class LLVMOutput extends AbstractOutput {
 				process = new ProcessBuilder("opt", "-S", "-O3").start();
 			}
 			catch (IOException ex) {
-				throw new ShadowException(ex.getLocalizedMessage());
+				throw new CompileException(ex.getLocalizedMessage());
 			}
 			writer = new TabbedLineWriter(process.getOutputStream());
 		}
@@ -337,18 +340,18 @@ public class LLVMOutput extends AbstractOutput {
 		for (TACConstant constant : module.getConstants()) {
 			ShadowInterpreter interpreter = new ShadowInterpreter(constants);
 			String name = constant.getName();
-			Node node = module.getType().getField(name);
+			Context node = module.getType().getField(name);
 			try {
 				interpreter.walk(constant.getNode());
 				TACNode constantNode = constant.getNode().getPrevious(); //gets last node (value node)
 				if( !(constantNode instanceof TACOperand ))
-					throw new ShadowException(
-							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
+					throw new CompileException(
+							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node ));
 
 				Object result = ((TACOperand)constantNode).getData();
 				if (!(result instanceof ShadowValue))
-					throw new ShadowException(
-							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() ));
+					throw new CompileException(
+							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node ));
 				
 				String fullName = constant.getPrefixType().toString() + ":" + name; 
 				constants.put(fullName, (ShadowValue)result);				
@@ -356,9 +359,9 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write(name(constant) + " = constant " +
 					typeLiteral((ShadowValue)result));
 			}
-			catch(ShadowException e) {
-				String message = TypeCheckException.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node.getFile(), node.getLineStart(), node.getLineEnd(), node.getColumnStart(), node.getColumnEnd() );
-				throw new ShadowException(message);
+			catch(InterpreterException e) {
+				String message = TypeCheckException.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node );
+				throw new CompileException(message);
 			}
 			
 			Cleanup.getInstance().walk(constant.getNode());
@@ -538,8 +541,8 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write();		
 	}
 	
-	public static void readGenericAndArrayClasses(File llvmFile, Set<String> generics, Set<String> arrays ) throws IOException {
-		BufferedReader llvm = Files.newBufferedReader(llvmFile.toPath(), UTF8);
+	public static void readGenericAndArrayClasses(Path llvmFile, Set<String> generics, Set<String> arrays ) throws IOException {
+		BufferedReader llvm = Files.newBufferedReader(llvmFile, UTF8);
 		String line;
 		
 		//first skip all of the type declarations
@@ -741,7 +744,7 @@ public class LLVMOutput extends AbstractOutput {
 					System.exit(exit);
 			}
 			catch (IOException ex) {
-				throw new ShadowException( ex.getLocalizedMessage() );
+				throw new CompileException( ex.getLocalizedMessage() );
 			}
 	}
 
