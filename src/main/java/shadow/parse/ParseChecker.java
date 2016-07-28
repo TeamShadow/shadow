@@ -211,6 +211,11 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			ctx.addModifiers(Modifiers.NULLABLE | Modifiers.CONSTANT);
 		else
 			ctx.addModifiers(Modifiers.IMMUTABLE | Modifiers.CONSTANT);
+		
+		//check to see if string contains newlines
+		if( ctx.StringLiteral() != null )
+			if( ctx.getText().indexOf('\n') >= 0 || ctx.getText().indexOf('\r') >= 0 )
+				addError(ctx, Error.NEWLINE_IN_STRING, "String literal contains newline");
 		return null;
 	}
 	
@@ -228,6 +233,29 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			if( ctx.localVariableDeclaration().type() != null )
 				ctx.localVariableDeclaration().type().addModifiers(modifiers);
 		}
+		
+		return null;
+	}
+	
+	@Override public Void visitPrimaryExpression(ShadowParser.PrimaryExpressionContext ctx)
+	{	
+		if(ctx.getChild(0).getText().equals("++"))
+			addError(ctx, Error.ILLEGAL_OPERATOR, "++ is not a legal operator");		
+		
+		visitChildren(ctx);
+		
+		return null;
+	}
+	
+	@Override public Void visitPrimarySuffix(ShadowParser.PrimarySuffixContext ctx)
+	{	
+		if(!(ctx.getChild(0) instanceof Context) ) {
+			String text = ctx.getChild(0).getText();
+			if( text.equals("++") || text.equals("--"))			
+				addError(ctx, Error.ILLEGAL_OPERATOR, text + " is not a legal operator");
+		}
+		
+		visitChildren(ctx);
 		
 		return null;
 	}

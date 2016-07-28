@@ -34,7 +34,9 @@ public class ParseException extends ShadowException {
 		EMPTY_STATMENT("Empty statement", "An empty statement requires the skip keyword"),
 		INCOMPLETE_TRY("Incomplete try", "Given try statement is not followed by catch, recover, or finally statements"),
 		ILLEGAL_MODIFIER("Illegal modifiers", "Cannot apply modifier in given context"),
-		REPEATED_MODIFIERS("Repeated modifier", "Modifier cannot be repeated"),
+		ILLEGAL_OPERATOR("Illegal operator", "Illegal operator used"),
+		NEWLINE_IN_STRING("Newline in string", "String literal contains newline"),
+		REPEATED_MODIFIERS("Repeated modifier", "Modifier cannot be repeated"),		
 		SYNTAX_ERROR("Syntax error", "Parsing failed because of syntax error");
 					
 		private final String name;

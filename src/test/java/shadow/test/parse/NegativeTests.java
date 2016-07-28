@@ -61,14 +61,20 @@ public class NegativeTests {
 		enforce(Error.SYNTAX_ERROR);
 	}
 
-	/*	
-	@Test public void testPlusPlus() throws Exception
+	
+	@Test public void testPrefixPlusPlus() throws Exception
 	{
-		args.add("tests-negative/parser/plus-plus/Test.shadow");
-		enforce();
+		args.add("tests-negative/parser/prefix-plus-plus/Test.shadow");
+		enforce(Error.ILLEGAL_OPERATOR);
 	}
 	
-	*/
+	@Test public void testPostfixPlusPlus() throws Exception
+	{
+		args.add("tests-negative/parser/postfix-plus-plus/Test.shadow");
+		enforce(Error.ILLEGAL_OPERATOR);
+	}
+	
+	
 	
 	@Test public void testMemberVisibility() throws Exception
 	{
@@ -76,12 +82,10 @@ public class NegativeTests {
 		enforce(Error.ILLEGAL_MODIFIER);
 	}
 	
-	/*
+	
 	@Test public void testNewlineInString() throws Exception
 	{
 		args.add("tests-negative/parser/newline-in-string/Test.shadow");
-		enforce();
+		enforce(Error.NEWLINE_IN_STRING);
 	}
-	*/
-
 }

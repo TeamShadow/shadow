@@ -157,7 +157,7 @@ public class Context extends ParserRuleContext implements ModifiedType {
 	public int columnEnd()
 	{
 		if( getStop() != null )
-			return getStop().getCharPositionInLine();
+			return getStop().getCharPositionInLine() + getStop().getText().length() - 1;
 		return -1;		
 	}
 	

@@ -345,17 +345,15 @@ multiplicativeExpression
 	: unaryExpression (( '*' | '/' | '%' ) unaryExpression )*
 	;
 
-//| '++' { throw new ParseException('++ is not a legal Shadow operator', jjtThis);  }
-// Strangely, -- is allowed, because it's the negation of a negation.
 // Unary + is not in Shadow since it's useless.
+//-- is legal since it's two negations
 unaryExpression
-	:
-	 '#' unaryExpression
+	: '#' unaryExpression
 	| '~' unaryExpression
 	| '!' unaryExpression
 	| '-'unaryExpression
 	| inlineMethodDefinition
-	| primaryExpression
+	| primaryExpression	
 	;
 
 inlineMethodDefinition
@@ -376,7 +374,7 @@ copyExpression
 
 primaryExpression
 locals [boolean action = false]
-	: primaryPrefix primarySuffix* 
+	: '++'? primaryPrefix primarySuffix* //The ++ is actually an error, but caught in the ParseChecker 
 	;
 
 rightSide
@@ -420,8 +418,8 @@ primarySuffix
 	| property
 	| allocation
 	| scopeSpecifier
-	//| "++" {throw new ParseException("++ is not a legal Shadow operator", jjtThis);  }
-	//| "--" {throw new ParseException("-- is not a legal Shadow operator", jjtThis);  }
+	| '++'
+	| '--'
 	;	
 
 allocation
@@ -501,8 +499,7 @@ locals [ShadowValue value]
 	| ULongLiteral
 	| BooleanLiteral
 	| NullLiteral
-	;
-	//| <BAD_STRING_LITERAL > { throw new ParseException("String literals cannot contain newline characters", jjtThis); }
+	;	
 
 arguments
 	: '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'
