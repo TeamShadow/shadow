@@ -9,7 +9,7 @@ public class TACDummyNode extends TACNode {
 
 	public TACDummyNode(Context node, TACBlock block) {
 		super(null);		
-		setASTNode(node);
+		setContext(node);
 		setBlock(block);
 	}
 

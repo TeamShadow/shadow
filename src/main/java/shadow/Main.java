@@ -265,7 +265,6 @@ public class Main {
 		}
 	}
 
-
 	/**
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file. This involves either finding an existing .ll file
@@ -287,7 +286,7 @@ public class Main {
 				if( currentJob.isCheckOnly() ) {				
 					//performs checks to make sure all paths return, there is no dead code, etc.
 					//no need to check interfaces or .meta files (no code in either case)
-					if( !file.endsWith(".meta")  )
+					if( !file.toString().endsWith(".meta")  )
 						optimizeTAC( new TACBuilder().build(node), true );
 				}
 				else {				
@@ -310,7 +309,7 @@ public class Main {
 					}
 				
 					//if the LLVM didn't exist, the full .shadow file would have been used				
-					if( file.endsWith(".meta") ) {
+					if( file.toString().endsWith(".meta") ) {
 						logger.info("Using pre-existing LLVM code for " + name);
 						addToLink(node.getType(), file, linkCommand);
 						LLVMOutput.readGenericAndArrayClasses( llvmFile, generics, arrays );
@@ -398,10 +397,13 @@ public class Main {
 				
 				//give warnings if fields are never used
 				Type type = class_.getType();
-				Set<String> usedFields = allUsedFields.get(type);
-				for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
-					if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
-						reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
+				//feels ugly, but Array and ArrayNullable have a data field used only by native methods
+				if( !type.equals(Type.ARRAY) && !type.equals(Type.ARRAY_NULLABLE)) {
+					Set<String> usedFields = allUsedFields.get(type);
+					for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
+						if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
+							reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
+					}
 				}
 				
 				//give warnings if private methods are never used
@@ -412,7 +414,7 @@ public class Main {
 				
 			}					
 			
-			//reporter.printAndReportErrors();
+			reporter.printAndReportErrors();
 		}
 		
 		return module;

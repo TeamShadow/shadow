@@ -23,7 +23,7 @@ import shadow.typecheck.type.TypeParameter;
  */
 public abstract class TACNode implements Iterable<TACOperand> {
     private TACNode prev, next; // the next and prev nodes in our circular linked list
-    private Context ASTNode; // associated AST node, used for error messages
+    private Context context; // associated AST context, used for error messages
     private TACBlock block; //which block the node is in
 
     /**
@@ -72,7 +72,7 @@ public abstract class TACNode implements Iterable<TACOperand> {
             return;
         
         if( node != null ) {
-        	ASTNode = node.getASTNode();
+        	context = node.getContext();
         	block = node.getBlock();        	
         }
 
@@ -87,7 +87,7 @@ public abstract class TACNode implements Iterable<TACOperand> {
             return;
         
         if( node != null ) {
-        	ASTNode = node.getASTNode();
+        	context = node.getContext();
         	block = node.getBlock();        	
         }
         
@@ -135,14 +135,14 @@ public abstract class TACNode implements Iterable<TACOperand> {
     		second.prev = first;
     }
     
-    public Context getASTNode()
+    public Context getContext()
     {
-    	return ASTNode;
+    	return context;
     }
     
-    public void setASTNode(Context node)
+    public void setContext(Context node)
     {
-    	ASTNode = node;
+    	context = node;
     }
     
     @Override

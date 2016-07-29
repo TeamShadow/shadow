@@ -149,7 +149,7 @@ locked class shadow:standard@
 		uint temp = key->hash;
 		temp ^= (temp >> 20) ^ (temp >> 12);
 		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
-		return ( hash & (table->size - 1), hash );	
+		return ( hash & (length - 1), hash );	
 	}
 	
 	/**

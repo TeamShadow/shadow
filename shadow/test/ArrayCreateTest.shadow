@@ -30,7 +30,7 @@ class shadow:test@ArrayCreateTest
 	public main() => ()
 	{
 		Console out;
-	
+	 
 		String[] a = String:create[10];
 		String[] b = String:create[10]:("Test");
 		
@@ -42,15 +42,15 @@ class shadow:test@ArrayCreateTest
 		updater = Update:create();				
 		Inner[][] e = Inner:create[3][5]:(updater);
 		
-		updater = Update:create();
+		updater = Update:create();		
 		Inner[,] f = Inner:create[3,5]:(updater);
 		
 		for( int i = 0; i < a->size; i += 1 )
-			out.printLine("a[" # i # "]: " # a[i]);
-			
+			out.printLine("a[" # i # "]: " # a[i]);			
+		
 		for( int i = 0; i < b->size; i += 1 )
 			out.printLine("b[" # i # "]: " # b[i]);
-		
+			
 		for( int i = 0; i < c->size; i += 1 )
 			out.printLine("c[" # i # "]: " # c[i]->value);
 			

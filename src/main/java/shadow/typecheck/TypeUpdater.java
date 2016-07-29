@@ -17,6 +17,7 @@
 
 package shadow.typecheck;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -89,8 +90,8 @@ public class TypeUpdater extends BaseChecker {
 			throws ShadowException {
 		
 		/* Add fields and methods. */		
-		for(Context declarationNode : typeTable.values() ) {
-			isMeta = declarationNode.getPath().endsWith(".meta");
+		for(Context declarationNode : typeTable.values() ) {			
+			isMeta = declarationNode.getPath().toString().endsWith(".meta");
 			// Only walk outer types since inner ones will be walked automatically.
 			if( !declarationNode.getType().hasOuter() )
 				visit(declarationNode);
@@ -192,7 +193,7 @@ public class TypeUpdater extends BaseChecker {
 			/* Update imports for meta files, since they won't have statement checking.
 			 * Note that imports in meta files have been optimized to include only the
 			 * originally imported classes that are referenced. */
-			if( declarationNode.getPath().endsWith(".meta") ) {
+			if( declarationNode.getPath().toString().endsWith(".meta") ) {
 				for(Object item : type.getImportedItems())
 					if( item instanceof Type ) {
 						Type importType = (Type) item;

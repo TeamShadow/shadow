@@ -83,7 +83,7 @@ public class TypeChecker {
 		StatementChecker checker = new StatementChecker( packageTree, reporter );
 		for( Context node: allNodes ) {	
 			Path nodeFile = node.getPath();
-			if( !nodeFile.endsWith(".meta")) {
+			if( !nodeFile.toString().endsWith(".meta")) {
 				/* Check all statements for type safety and other features */
 				checker.check(node);				
 				/* As an optimization, print .meta file for the .shadow file being checked. */

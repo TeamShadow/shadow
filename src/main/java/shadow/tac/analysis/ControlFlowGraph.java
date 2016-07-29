@@ -16,6 +16,7 @@ import java.util.TreeSet;
 import shadow.Loggers;
 import shadow.interpreter.ShadowBoolean;
 import shadow.parse.Context;
+import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
@@ -250,23 +251,28 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		}
 		
 		//give warnings for unused local variables
-		for( TACVariable variable : method.getLocals() ) {
-			String name = variable.getName(); 
-			//special compiler-created variables (_temp, _exception, etc.) start with _
-			//no need to check on "this"
-			if( !name.startsWith("_") && !name.equals("this") ) { 
-				if( !usedLocalVariables.contains(variable) ) {
-					ModifiedType type = variable.getModifiedType();					
-					//kind of a hack to get the declaration
-					if( type instanceof Context ) {						
-						Context declaration = (Context) type;
-						addWarning( declaration, Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
+		//skip all copy methods, since they're automatically generated (and often don't use the "addresses" variable)
+		if( !method.getSignature().getSymbol().equals("copy"))
+			for( TACVariable variable : method.getLocals() ) {
+				String name = variable.getName(); 
+				//special compiler-created variables (_temp, _exception, etc.) start with _
+				//no need to check on "this"
+				
+				if( !name.startsWith("_") && !name.equals("this") ) { 
+					if( !usedLocalVariables.contains(variable) ) {
+						ModifiedType type = variable.getModifiedType();					
+						//kind of a hack to get the declaration
+						if( type instanceof Context ) {						
+							Context declaration = (Context) type;
+							//we don't add warnings for formal parameters: method parameters and catch parameters
+							if( !(declaration instanceof ShadowParser.FormalParameterContext) )
+								addWarning( declaration, Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
+						}
+						else
+							addWarning( method.getSignature().getNode(), Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
 					}
-					else
-						addWarning( method.getSignature().getNode(), Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
 				}
 			}
-		}
 		
 	}
 	
@@ -461,7 +467,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			//_exception is a special variable used only for exception handling
 			//indirect breaks for finally make its value tricky, but it's guaranteed to never *really* be undefined
 			if( !undefined.getVariable().getOriginalName().equals("_exception") )
-				addError(undefined.getASTNode(), Error.UNDEFINED_VARIABLE, "Variable " + undefined.getVariable().getOriginalName() + " may not have been defined before use");
+				addError(undefined.getContext(), Error.UNDEFINED_VARIABLE, "Variable " + undefined.getVariable().getOriginalName() + " may not have been defined before use");
 		
 		return changed;
 	}
@@ -687,12 +693,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						else if( operandIsThis(store.getValue(), type) )						
 							for( Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()  )
 								if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
-									addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
+									addError(node.getContext(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
 					}					
 					else if( operandIsThis(store.getValue(), type) ) { //store of "this" somewhere
 						for( Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()  )
 							if( !stores.contains(entry.getKey()) && needsInitialization(entry.getValue()) )
-								addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
+								addError(node.getContext(), Error.UNINITIALIZED_FIELD, "Current object cannot be stored in a field or array before field " + entry.getKey() + " is initialized" );
 					}
 				}									
 				else if( node instanceof TACLoad ) {
@@ -702,7 +708,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						//we don't care about nullables or primitives
 						//class and _outer are special cases, guaranteed to be initialized
 						if( operandIsThis(field.getPrefix(), type) && !stores.contains(field.getName()) && !field.getName().equals("class") && !field.getName().equals("_outer") && needsInitialization(field)  )
-							addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Field " + field.getName() + " may have been used without being initialized" );
+							addError(node.getContext(), Error.UNINITIALIZED_FIELD, "Field " + field.getName() + " may have been used without being initialized" );
 					}
 				}
 				else if( node instanceof TACCall ) {
@@ -715,7 +721,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							Set<String> fields = methodData.get(signature).getLoadsBeforeStores();							
 							for( String field : fields  )
 								if( !stores.contains(field) )
-									addError(node.getASTNode(), Error.UNINITIALIZED_FIELD, "Method call is not permitted before field " + field + " is initialized");
+									addError(node.getContext(), Error.UNINITIALIZED_FIELD, "Method call is not permitted before field " + field + " is initialized");
 						}
 					}
 				}					
@@ -764,7 +770,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							}
 							//otherwise, it's not a legal method to call, probably because it's unlocked
 							else
-								addError(node.getASTNode(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method " + signature.getSymbol() + signature.getMethodType() + " from a create" );
+								addError(node.getContext(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method " + signature.getSymbol() + signature.getMethodType() + " from a create" );
 						}
 					}
 					//an inner class call, perhaps even a create
@@ -777,7 +783,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					else {						
 						for( int i = 1; i < call.getNumParameters(); ++i ) //always an extra parameter for "this"
 							if( operandIsThis(call.getParameter(i), type)  ) {
-								addError(node.getASTNode(), Error.ILLEGAL_ACCESS, "Current object cannot be passed as a parameter inside of its create" );
+								addError(node.getContext(), Error.ILLEGAL_ACCESS, "Current object cannot be passed as a parameter inside of its create" );
 								break;
 							}						
 					}
@@ -1146,7 +1152,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			//Real operations: not just junk leftover from TAC construction
 			//Weakness: a break or continue that isn't reachable won't be flagged
 			if( !isControlFlow(node)  )
-				addError(node.getASTNode(), Error.UNREACHABLE_CODE, "Code cannot be reached");
+				addError(node.getContext(), Error.UNREACHABLE_CODE, "Code cannot be reached");
 			
 			node.remove();
 		}

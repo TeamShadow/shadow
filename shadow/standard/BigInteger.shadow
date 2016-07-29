@@ -224,8 +224,7 @@ and CanHash
 	 */
 	private unsignedDivide(readonly uint[] first, readonly uint[] second) => (readonly uint[] quotient, readonly uint[] remainder)
 	{
-		uint[] quotient = uint:create[first->size - second->size + 1];
-		int comparison;
+		uint[] quotient = uint:create[first->size - second->size + 1];		
 		ulong value;
 		
 		if( isZero( second ) )

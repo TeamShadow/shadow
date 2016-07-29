@@ -1969,8 +1969,14 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	private String literal(ShadowValue value) {
-		if (value instanceof ShadowNull)
-			return "null";
+		if (value instanceof ShadowNull) {			
+			if( value.getType() instanceof InterfaceType )				
+				return "undef";
+			else if( value.getType() instanceof ArrayType )
+				return "zeroinitializer";
+			else
+				return "null";
+		}
 		if (value instanceof ShadowUndefined)
 			return "undef";
 		if (value instanceof ShadowBoolean)
