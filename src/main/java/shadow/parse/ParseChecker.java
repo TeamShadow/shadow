@@ -4,9 +4,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 import shadow.ShadowException;
 import shadow.doctool.Documentation;
@@ -35,18 +39,37 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		
 		ShadowLexer lexer = new ShadowLexer(new PathStream(path));
 		lexer.removeErrorListeners();
-		lexer.addErrorListener(listener);
-		
+				
 		tokens = new CommonTokenStream(lexer);
 		docBuilder = new DocumentationBuilder();
-		
-		ShadowParser parser = new ShadowParser(tokens);
-		parser.removeErrorListeners();
-		parser.addErrorListener(listener);
+		checkedIndex = -1;
 		
 		Context context = null;
-		context = parser.compilationUnit();
-		visit(context);
+		
+		ShadowParser parser = new ShadowParser(tokens);
+		
+		//two-step parsing uses simpler parser unless there's an error
+		parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
+		parser.removeErrorListeners();
+		parser.setErrorHandler(new BailErrorStrategy());
+		
+		try {
+			context = parser.compilationUnit();
+		}
+		catch(ParseCancellationException e) {
+			tokens.reset();
+			parser.reset();
+			lexer.addErrorListener(listener);
+			parser.addErrorListener(listener);	
+			parser.setErrorHandler(new DefaultErrorStrategy());
+			
+			//use more complex prediction mode if failed before
+			parser.getInterpreter().setPredictionMode(PredictionMode.LL);		
+			context = parser.compilationUnit();
+		}
+		
+		if( getErrorReporter().getErrorList().size() == 0)
+			visit(context);
 
 		printAndReportErrors();
 		return context;
