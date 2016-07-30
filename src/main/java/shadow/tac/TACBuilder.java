@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 
@@ -1666,10 +1665,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			for( int i = 0; i < ctx.statement().size(); ++i ) {				
 				labels.get(i).insertBefore(anchor); //mark start of code				
 				ctx.statement(i).appendBefore(anchor); //add block of code (the child after each label)
-				new TACBranch(anchor, doneLabel);	
+				TACBranch branch = new TACBranch(anchor, doneLabel);
+				branch.setContext(null); //prevents dead code removal error
 			}
 			
-			doneLabel.insertBefore(anchor);
+			doneLabel.insertBefore(anchor);			
 		}
 		else
 			throw new UnsupportedOperationException();	
@@ -1698,16 +1698,18 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		new TACBranch(anchor, ctx.conditionalExpression().appendBefore(anchor), trueLabel, falseLabel);
 		trueLabel.insertBefore(anchor);
 		ctx.statement(0).appendBefore(anchor);
-		new TACBranch(anchor, endLabel);				
+		TACBranch branch = new TACBranch(anchor, endLabel);
+		branch.setContext(null); //won't cause a dead code problem if removed
 		
 		if( ctx.statement().size() > 1 ) { //else case
 			falseLabel.insertBefore(anchor);
 			ctx.statement(1).appendBefore(anchor);
 		
-			new TACBranch(anchor, endLabel);
+			branch = new TACBranch(anchor, endLabel);
+			branch.setContext(null); //won't cause a dead code problem if removed
 		}
 		
-		endLabel.insertBefore(anchor);
+		endLabel.insertBefore(anchor);		
 		
 		return null;
 	}
@@ -1725,14 +1727,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//body
 		bodyLabel.insertBefore(anchor);
 		ctx.statement().appendBefore(anchor);
-		new TACBranch(anchor, conditionLabel);
+		new TACBranch(anchor, conditionLabel).setContext(null); //prevents dead code removal error
 		
 		//condition
 		conditionLabel.insertBefore(anchor);
 		TACOperand condition = ctx.conditionalExpression().appendBefore(anchor);		
 		new TACBranch(anchor, condition, bodyLabel, endLabel);
 		
-		endLabel.insertBefore(anchor);
+		endLabel.insertBefore(anchor);		
 		block = block.getParent();	
 		
 		return null;
@@ -1757,7 +1759,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//condition
 		conditionLabel.insertBefore(anchor);
 		TACOperand condition = ctx.conditionalExpression().appendBefore(anchor);		
-		new TACBranch(anchor, condition, bodyLabel, endLabel);
+		TACBranch branch = new TACBranch(anchor, condition, bodyLabel, endLabel);
+		branch.setContext(null); //avoids dead code removal error 
 		
 		endLabel.insertBefore(anchor);
 		block = block.getParent();	
@@ -1805,15 +1808,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			
 			ctx.statement().appendBefore(anchor); //body
 			
-			new TACBranch(anchor, updateLabel);
+			TACBranch branch = new TACBranch(anchor, updateLabel);
+			branch.setContext(null); //avoid dead code removal error
 			updateLabel.insertBefore(anchor);			
 			
 			//increment iterator
-			value = new TACLocalLoad(anchor, iterator);					
-			value = new TACBinary(anchor, value, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+", new TACLiteral(anchor, new ShadowInteger(1)), false );
-			new TACLocalStore(anchor, iterator, value);	
+			value = new TACLocalLoad(anchor, iterator);
+			value.setContext(null); //avoid dead code removal error
+			TACLiteral one = new TACLiteral(anchor, new ShadowInteger(1));
+			one.setContext(null);
+			value = new TACBinary(anchor, value, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+", one, false );
+			value.setContext(null);
+			new TACLocalStore(anchor, iterator, value).setContext(null);			
 			
-			new TACBranch(anchor, conditionLabel);
+			new TACBranch(anchor, conditionLabel).setContext(null);
 			conditionLabel.insertBefore(anchor);
 			
 			//check if iterator < array length
@@ -1886,17 +1894,17 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		
 		//update (if exists)
 		if( ctx.forUpdate() != null ) {
-			new TACBranch(anchor, updateLabel);
+			new TACBranch(anchor, updateLabel).setContext(null); //prevents dead code removal error
 			updateLabel.insertBefore(anchor);
 			ctx.forUpdate().appendBefore(anchor);
 		}
 		
 		//condition
-		new TACBranch(anchor, conditionLabel);
+		new TACBranch(anchor, conditionLabel).setContext(null); //prevents dead code removal error
 		conditionLabel.insertBefore(anchor);
 		new TACBranch(anchor, ctx.conditionalExpression().appendBefore(anchor), bodyLabel, endLabel);
 		
-		endLabel.insertBefore(anchor);
+		endLabel.insertBefore(anchor);		
 		method.exitScope();
 		block = block.getParent();	
 		
@@ -1953,8 +1961,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			visitCleanup(exitBlock, null, exitBlock.getContinue());
 		}
 		
-		unreachableLabel.insertBefore(anchor);
-		unreachableLabel.setContext(null);
+		unreachableLabel.insertBefore(anchor);		
 		
 		return null;	
 	}
@@ -1963,12 +1970,19 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	{ 
 		visitChildren(ctx);
 		TACLabel unreachableLabel = new TACLabel(method);
+		
+		//turn context off to avoid dead code removal errors
+		Context context = anchor.getContext();
+		anchor.setContext(null);
+		
 		visitCleanup(null, null);
+		
+		//turn context back on
+		anchor.setContext(context);
 		
 		if( method.getSignature().isCreate() ) {				
 			new TACReturn(anchor, method.getSignature().getFullReturnTypes(),
-					new TACLocalLoad(anchor, method.getThis()));		
-			
+					new TACLocalLoad(anchor, method.getThis()));
 		}
 		else {			
 			if( ctx.rightSide() != null )
@@ -1977,8 +1991,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				new TACReturn(anchor, new SequenceType());			
 		}
 		
-		unreachableLabel.insertBefore(anchor);
-		unreachableLabel.setContext(null); //turns off error reporting when removed
+		unreachableLabel.insertBefore(anchor);		
 		
 		return null;
 	}
@@ -1988,8 +2001,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		visitChildren(ctx);
 		TACLabel unreachableLabel = new TACLabel(method);
 		new TACThrow(anchor, ctx.conditionalExpression().appendBefore(anchor));
-		unreachableLabel.insertBefore(anchor);
-		unreachableLabel.setContext(null);
+		unreachableLabel.insertBefore(anchor);		
 		
 		return null;
 	}
@@ -2005,7 +2017,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			ctx.block().appendBefore(anchor);
 			new TACBranch(anchor, phi);				
 		}
-		block.getDone().insertBefore(anchor);
+		block.getDone().insertBefore(anchor);		
 		block = block.getParent();	
 		
 		return null;	
@@ -2023,11 +2035,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		ctx.catchStatements().appendBefore(anchor);
 		if( ctx.block() != null ) { //has recover
 			ctx.block().appendBefore(anchor);
-			new TACBranch(anchor, block.getDone());
+			new TACBranch(anchor, block.getDone()).setContext(null); //prevents dead code removal error
 		}
 		if ( parent.block() != null ) { //parent has finally
 			block.getDone().insertBefore(anchor);
 			method.setHasLandingpad();
+			
+			//turn off context to prevent dead code removal errors
+			Context context = anchor.getContext();
+			anchor.setContext(null);			
+			
 			visitCleanup( block.getParent(), block.getDone(),
 					block.getParent().getDone() );
 			block.getLandingpad().insertBefore(anchor);
@@ -2039,9 +2056,12 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			if (continueUnwind != null)
 				visitCleanup(block, block.getUnwind(), continueUnwind);
 			else {
-				visitCleanup(block, block.getUnwind());
+				visitCleanup(block, block.getUnwind());								
 				new TACResume(anchor, new TACLocalLoad(anchor, exception));
 			}
+			//turn context back on
+			anchor.setContext(context);
+			
 			block.getCleanup().insertBefore(anchor);
 			block.getCleanupPhi().insertBefore(anchor);
 			block = block.getParent();				
@@ -2063,21 +2083,28 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		
 		visitChildren(ctx);
 		
-		ctx.tryStatement().appendBefore(anchor); //appends try block			
-		if( ctx.catchStatement().size() > 0 ) {			
+		ctx.tryStatement().appendBefore(anchor); //appends try block
+		
+		if( ctx.catchStatement().size() > 0 ) {
+			//ignores context for a while, preventing dead code removal errors
+			//they'll be caught inside the catch
+			//catching them here creates misleading error messages
+			Context context = anchor.getContext();
+			anchor.setContext(null);
+			
 			TACOperand typeid = new TACSequenceElement(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")), 1 );
 			for( int i = 0; i < ctx.catchStatement().size(); ++i ) {
 				ShadowParser.CatchStatementContext child = ctx.catchStatement(i);
 				Type type = child.formalParameter().getType();
 				TACLabel catchLabel = block.getCatch(i),
 						skip = new TACLabel(method);
-
+				
 				new TACBranch(anchor, new TACBinary(anchor, typeid, new TACTypeId(anchor, new TACClass(anchor, type).getClassData())),
 						catchLabel, skip);
 						
 				catchLabel.insertBefore(anchor);
 				child.appendBefore(anchor); //append catch i
-				new TACBranch(anchor, block.getDone());
+				new TACBranch(anchor, block.getDone()); //prevents dead code removal error
 				skip.insertBefore(anchor);
 			}
 			
@@ -2086,6 +2113,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				new TACBranch(anchor, continueUnwind); //try inside of try					
 			else
 				new TACResume(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")));
+			
+			anchor.setContext(context);
 		}			
 
 		if( parent.block() != null ) //parent has recover			
@@ -2123,7 +2152,12 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		visitChildren(ctx); 
 		
 		ctx.block().appendBefore(anchor);
-		new TACBranch(anchor, block.getDone());
+		
+		//turn context off to avoid dead code removal errors
+		Context context = anchor.getContext();
+		anchor.setContext(null);
+		
+		new TACBranch(anchor, block.getDone());		
 		if( parent.catchStatement().size() > 0 ) {
 			method.setHasLandingpad();
 			block.getLandingpad().insertBefore(anchor);
@@ -2133,6 +2167,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			block.getUnwind().insertBefore(anchor);
 			block = block.getParent();				
 		}
+		
+		//turn context back on
+		anchor.setContext(context);
 		
 		return null;
 	}	
@@ -2169,15 +2206,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		while ((nextBlock = currentBlock.getNextCleanupBlock(lastBlock)) !=
 				lastBlock) {
 			TACLabel nextLabel = new TACLabel(method);
-			new TACBranch(anchor, currentBlock.getCleanup());
-			//currentBlock.getCleanupPhi().addEdge(nextLabel, currentLabel);
+			new TACBranch(anchor, currentBlock.getCleanup());			
 			currentBlock.getCleanupPhi().addPreviousStore(currentLabel, new TACLabelAddress(anchor, nextLabel, method) );
 			nextLabel.insertBefore(anchor);
 			currentBlock = nextBlock;
 			currentLabel = nextLabel;
 		}
 		new TACBranch(anchor, currentBlock.getCleanup());
-		//currentBlock.getCleanupPhi().addEdge(lastLabel, currentLabel);
 		currentBlock.getCleanupPhi().addPreviousStore(currentLabel, new TACLabelAddress(anchor, lastLabel, method) );
 	}
 
@@ -2751,6 +2786,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		return alloc;		
 	}
 	
+	/*
 	private TACOperand getDefaultValue(Context type)
 	{
 		TACOperand op;
@@ -2786,7 +2822,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		
 		return op;
 	}
-	
+	*/
 	
 	@Override public Void visitDestroy(ShadowParser.DestroyContext ctx)
 	{ 

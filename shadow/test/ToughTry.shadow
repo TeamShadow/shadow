@@ -56,7 +56,7 @@ class shadow:test@ToughTry
 		try
 		{		
 			return 3;
-		}
+		}		
 		finally
 		{
 			console.printLine("finally");

@@ -132,7 +132,7 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 	 * @param ctx			context of error
 	 */
 	public TypeCheckException( Error kind, String message, Context ctx ) {
-		super( makeMessage( kind, message, ctx ) );
+		super( makeMessage( kind, message, ctx ), ctx );
 		error = kind;		
 	}	
 	

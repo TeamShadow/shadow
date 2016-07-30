@@ -306,4 +306,9 @@ public class TypeCheckerTests {
 		args.add("tests/compile/View.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	@Test public void testAwkwardBreaks() throws Exception {
+		args.add("tests/compile/AwkwardBreaks.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 }

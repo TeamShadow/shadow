@@ -1149,32 +1149,15 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		 */
 		private void removeNode(TACNode node)
 		{
-			//Real operations: not just junk leftover from TAC construction
-			//Weakness: a break or continue that isn't reachable won't be flagged
-			if( !isControlFlow(node)  )
+			//Labels and label addresses are not counted as errors
+			//Any node without a context is structural stuff added to form legal LLVM
+			if( !(node instanceof TACLabel) && !(node instanceof TACLabelAddress) &&
+				node.getContext() != null ) 
 				addError(node.getContext(), Error.UNREACHABLE_CODE, "Code cannot be reached");
 			
 			node.remove();
 		}
-		
-		/*
-		 * Determines if a node is only control flow and
-		 * not "real" computation.
-		 */		
-		private boolean isControlFlow(TACNode node)
-		{
-			if( node instanceof TACLocalStore ) {
-				return isControlFlow(((TACLocalStore)node).getValue());
-			}			
-			
-			return node instanceof TACLabel ||
-				node instanceof TACLabelAddress || 
-				node instanceof TACBranch ||
-				node instanceof TACLandingpad ||
-				node instanceof TACResume ||
-				//a load doesn't do anything unless the value is used
-				node instanceof TACLocalLoad; 			
-		}
+
 
 		/*
 		 * Adds a branch from the current block to a target block.
