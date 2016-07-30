@@ -14,9 +14,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 
 import shadow.interpreter.ShadowBoolean;
-import shadow.interpreter.ShadowCode;
-import shadow.interpreter.ShadowDouble;
-import shadow.interpreter.ShadowFloat;
 import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowString;

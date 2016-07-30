@@ -676,12 +676,12 @@ tryStatement
 //
 
 DOCUMENTATION_COMMENT
-	:  '/**' .*? '*/' -> skip //may need to send to another channel
+	:  '/**' .*? '*/' -> channel(HIDDEN) //may need to send to another channel
 	;
 	
 	
 LINE_DOCUMENTATION_COMMENT
-	:  '///' ~[\r\n]* -> skip
+	:  '///' ~[\r\n]* -> channel(HIDDEN)
 	;
 
 WS  :  [ \t\r\n\u000C]+ -> skip

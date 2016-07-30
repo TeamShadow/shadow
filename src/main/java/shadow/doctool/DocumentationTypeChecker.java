@@ -17,7 +17,6 @@
 
 package shadow.doctool;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -58,7 +57,7 @@ public class DocumentationTypeChecker {
 			throws ShadowException, IOException, ConfigurationException {			
 		Package packageTree = new Package();		
 		
-		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+		ErrorReporter reporter = new ErrorReporter(Loggers.DOC_TOOL);
 		
 		/* Collector looks over all files and creates types for everything needed. */
 		TypeCollector collector = new TypeCollector( packageTree, reporter, true );

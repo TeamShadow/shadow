@@ -26,7 +26,6 @@ import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
-import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;

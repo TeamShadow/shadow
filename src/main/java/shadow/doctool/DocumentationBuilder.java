@@ -2,8 +2,6 @@ package shadow.doctool;
 
 import java.util.ArrayDeque;
 
-import shadow.ShadowException;
-
 /**
  * Represents the contents of a Shadow documentation comment. Should be
  * associated with a class/interface/exception/singleton declaration or
@@ -42,21 +40,21 @@ public class DocumentationBuilder
 	public void addBlock(String block)
 	{
 		String[] split = block.split("[\r\n]+");
-		
-		// This loop runs backwards so that the block can be added to the
-		// front of the deque, but that the individual lines remain in correct
-		// order
-		for (int i = split.length - 1; i >= 0; --i) {
-			String line = split[i].trim();
+		boolean first = true;
+
+		for(String line : split) {
+			line = line.trim();
 			
 			// Remove the leading asterisk, if it exists. The first line of a
 			// multi-line comment (following /**) should be excluded from this
-			if (i != 0 && line.indexOf('*') == 0)
+			if( first )
+				first = false;
+			else if( line.indexOf('*') == 0)
 				line = line.substring(1).trim();
 			
 			// Only keep non-empty lines
 			if (!line.equals(""))
-				lines.addFirst(clean(line));
+				lines.addLast(clean(line));
 		}
 	}
 	
@@ -76,7 +74,7 @@ public class DocumentationBuilder
 	 * Parses and processes the directives present in the documentation text,
 	 * returning a Documentation object containing the results
 	 */
-	public Documentation process() throws ShadowException, DocumentationException
+	public Documentation process() throws DocumentationException
 	{
 		Documentation documentation = new Documentation(this); 
 		lines.clear();

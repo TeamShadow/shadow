@@ -1,6 +1,5 @@
 package shadow.output;
 
-import java.io.File;
 import java.io.Writer;
 import java.nio.file.Path;
 

@@ -2,15 +2,27 @@ package shadow.parse;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
-import org.antlr.v4.runtime.BufferedTokenStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 
 import shadow.ShadowException;
+import shadow.doctool.Documentation;
+import shadow.doctool.DocumentationBuilder;
+import shadow.doctool.DocumentationException;
 import shadow.parse.ParseException.Error;
+import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
+import shadow.parse.ShadowParser.CompilationUnitContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Modifiers;
 
 public class ParseChecker extends ShadowVisitorErrorReporter {
+	
+	private CommonTokenStream tokens;
+	private int checkedIndex = -1;
+	private DocumentationBuilder docBuilder;
 
 	public ParseChecker(ErrorReporter reporter) 
 	{
@@ -18,34 +30,24 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	}
 	
 	public Context getCompilationUnit(Path path) throws IOException, ShadowException
-	{	
-		//DocumentationBuilder docBuilder = new DocumentationBuilder();		
+	{			
 		ParseErrorListener listener = new ParseErrorListener(getErrorReporter());
 		
 		ShadowLexer lexer = new ShadowLexer(new PathStream(path));
 		lexer.removeErrorListeners();
 		lexer.addErrorListener(listener);
 		
-		ShadowParser parser = new ShadowParser(new BufferedTokenStream(lexer));
+		tokens = new CommonTokenStream(lexer);
+		docBuilder = new DocumentationBuilder();
+		
+		ShadowParser parser = new ShadowParser(tokens);
 		parser.removeErrorListeners();
 		parser.addErrorListener(listener);
-		//parser.docBuilder = docBuilder;
 		
 		Context context = null;
 		context = parser.compilationUnit();
 		visit(context);
-		
-		/*
-		try
-		{		
-			 	
-		}
-		catch(RecognitionException e)
-		{
-			addError(new ParseException(Error.SYNTAX_ERROR, e.getLocalizedMessage()));
-		}
-		*/
-		
+
 		printAndReportErrors();
 		return context;
 	}
@@ -53,7 +55,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	
 	
 	@Override public Void visitModifiers(ShadowParser.ModifiersContext ctx)
-	{ 		
+	{ 
+		addDocumentation(ctx);
+		
 		for( ShadowParser.ModifierContext modifier : ctx.modifier() ) {			
 			boolean newModifier = true;
 			
@@ -96,6 +100,135 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		return null;
 	}
 	
+	private ShadowParser.ModifiersContext getModifiers(Context ctx) {
+		ParserRuleContext parent = ctx.getParent();
+		if( parent instanceof ShadowParser.ClassOrInterfaceBodyDeclarationContext ) {
+			ShadowParser.ClassOrInterfaceBodyDeclarationContext declaration = (ClassOrInterfaceBodyDeclarationContext) parent;
+			return declaration.modifiers();
+		}
+		else if( parent instanceof ShadowParser.CompilationUnitContext ) {
+			ShadowParser.CompilationUnitContext unit = (CompilationUnitContext) parent;
+			return unit.modifiers();
+		}
+		
+		return null;
+	}
+	
+	@Override public Void visitCreateDeclaration(ShadowParser.CreateDeclarationContext ctx)
+	{
+		addDocumentation(ctx);
+		ctx.setDocumentation(getDocumentation());
+		
+		ShadowParser.ModifiersContext mods = getModifiers(ctx);
+		Modifiers modifiers = mods.getModifiers();
+		ctx.addModifiers(modifiers);
+		addErrors(mods, modifiers.checkCreateModifiers());
+		
+		visitChildren(ctx);
+		
+		return null;
+	}
+	
+	
+	private void addDocumentation(Context ctx)
+	{
+		Token start = ctx.getStart();
+		if( checkedIndex < start.getTokenIndex() ) { //only get comments that haven't been gotten
+			checkedIndex = start.getTokenIndex();
+			List<Token> comments = tokens.getHiddenTokensToLeft(start.getTokenIndex());
+			
+			
+			if( comments != null && comments.size() > 0 ) {			
+				for( Token token : comments ) {
+					if( token.getType() == ShadowLexer.DOCUMENTATION_COMMENT ) {
+						String block = token.getText();
+						block = block.substring(3); //clean off /**
+						block = block.substring(0, block.length() - 2); //clean off */
+						docBuilder.addBlock(block);
+					}
+					else if( token.getType() == ShadowLexer.LINE_DOCUMENTATION_COMMENT ) {
+						docBuilder.appendLine(token.getText().substring(3)); //clean off ///
+					}
+				}
+			}
+		}
+	}
+	
+	private Documentation getDocumentation() {
+		try {
+			return docBuilder.process();				
+		}
+		catch (DocumentationException e) {
+			addError(e);
+		}
+		
+		return null;
+	}
+	
+	
+	@Override public Void visitClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx)
+	{
+		addDocumentation(ctx);
+		ctx.setDocumentation(getDocumentation());	
+				
+		checkClassOrInterfaceDeclaration(ctx, getModifiers(ctx));		
+		
+		return visitChildren(ctx);
+	}
+	
+	@Override public Void visitEnumDeclaration(ShadowParser.EnumDeclarationContext ctx)
+	{
+		addDocumentation(ctx);
+		ctx.setDocumentation(getDocumentation());
+		
+		ShadowParser.ModifiersContext mods = getModifiers(ctx);
+		Modifiers modifiers = mods.getModifiers();
+		ctx.addModifiers(modifiers);
+		addErrors(mods, modifiers.checkEnumModifiers());
+		
+		return visitChildren(ctx);
+	}
+	
+	@Override public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx)
+	{
+		addDocumentation(ctx);
+		ctx.setDocumentation(getDocumentation());
+		
+		ShadowParser.ModifiersContext mods = getModifiers(ctx);
+		Modifiers modifiers = mods.getModifiers();
+		ctx.addModifiers(modifiers);
+		addErrors(mods, modifiers.checkDestroyModifiers());
+		
+		return visitChildren(ctx);		
+	}
+	
+	@Override public Void visitFieldDeclaration(ShadowParser.FieldDeclarationContext ctx)
+	{
+		addDocumentation(ctx);
+		ctx.setDocumentation(getDocumentation());
+		
+		ShadowParser.ModifiersContext mods = getModifiers(ctx);
+		Modifiers modifiers = mods.getModifiers();
+		ctx.addModifiers(modifiers);
+		addErrors(mods, modifiers.checkFieldModifiers());
+		ctx.type().addModifiers(modifiers); //also add to type
+		
+		return visitChildren(ctx);		
+	}
+	
+	@Override public Void visitMethodDeclaration(ShadowParser.MethodDeclarationContext ctx)
+	{
+		addDocumentation(ctx);
+		ctx.setDocumentation(getDocumentation());
+		
+		ShadowParser.ModifiersContext mods = getModifiers(ctx);
+		Modifiers modifiers = mods.getModifiers();
+		ctx.addModifiers(modifiers);
+		addErrors(mods, modifiers.checkMethodModifiers());
+		
+		return visitChildren(ctx);		
+	}
+	
 	@Override public Void visitEmptyStatement(ShadowParser.EmptyStatementContext ctx)
 	{
 		if( ctx.getChild(0).getText().equals(";") )
@@ -120,39 +253,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	{		
 		ctx.addModifiers(Modifiers.TYPE_NAME);
 		return visitChildren(ctx); 
-	}
-	
-	@Override public Void visitClassOrInterfaceBodyDeclaration(ShadowParser.ClassOrInterfaceBodyDeclarationContext ctx) { 
-		visitChildren(ctx);
-		
-		Modifiers modifiers = ctx.modifiers().getModifiers();
-		
-		if( ctx.classOrInterfaceDeclaration() != null )
-			checkClassOrInterfaceDeclaration( ctx.classOrInterfaceDeclaration(), ctx.modifiers());
-		else if( ctx.enumDeclaration() != null ) {
-			ctx.enumDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkEnumModifiers());
-		}
-		else if( ctx.createDeclaration() != null ) {
-			ctx.createDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkCreateModifiers());
-		}
-		else if( ctx.destroyDeclaration() != null ) {
-			ctx.destroyDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkDestroyModifiers());
-		}
-		else if( ctx.fieldDeclaration() != null ) {
-			ctx.fieldDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkFieldModifiers());
-			ctx.fieldDeclaration().type().addModifiers(modifiers);
-		}
-		else if( ctx.methodDeclaration() != null ) {
-			ctx.methodDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkMethodModifiers());
-		}
-		
-		return null;
-		
 	}
 	
 	@Override public Void visitFormalParameter(ShadowParser.FormalParameterContext ctx) { 

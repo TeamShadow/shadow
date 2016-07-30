@@ -366,14 +366,14 @@ public class Configuration {
 	}
 	
 	/** Returns the target platform to be used by the LLVM compiler */
-	public static String getDefaultTarget() throws ConfigurationException {
+	public String getDefaultTarget() throws ConfigurationException {
 		// Some reference available here:
 		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
 		
 		// Calling 'llc -version' for current target information
 		// Note: Most of the LLVM tools also have this option
 		try {
-			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			Process process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";

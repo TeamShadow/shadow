@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.TypeCollector;
 
 /** 
  * Represents a specific build/typecheck job. This representation includes
