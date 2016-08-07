@@ -442,17 +442,18 @@ public class TACCast extends TACUpdate
 		
 		currentlyUpdating.add(this);
 		boolean changed = false;
+		TACOperand updated = operands.get(0); 
 			
 		if( operands.get(0) instanceof TACUpdate ) {
 			TACUpdate update = (TACUpdate) operands.get(0);
 			if( update.update(currentlyUpdating) )
 				changed = true;			
-			operands.set(0, update.getValue());
+			updated = update.getValue();
 		}
 		
-		if( (changed || getUpdatedValue() == null) && operands.get(0) instanceof TACLiteral && kind == Kind.PRIMITIVE_TO_PRIMITIVE ) {
+		if( (changed || getUpdatedValue() == null) && updated instanceof TACLiteral && kind == Kind.PRIMITIVE_TO_PRIMITIVE ) {
 			try {
-				TACLiteral literal = (TACLiteral)operands.get(0);
+				TACLiteral literal = (TACLiteral)updated;
 				ShadowValue result = literal.getValue().cast(type);
 				setUpdatedValue(new TACLiteral(this, result));
 				changed = true;

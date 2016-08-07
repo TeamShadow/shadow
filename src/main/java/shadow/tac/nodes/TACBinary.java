@@ -160,23 +160,25 @@ public class TACBinary extends TACUpdate
 			return false;
 		
 		currentlyUpdating.add(this);
-		boolean changed = false;		
+		boolean changed = false;
+		TACOperand firstValue = first;
+		TACOperand secondValue = second;
 		
 		if( first instanceof TACUpdate ) {
 			TACUpdate update = (TACUpdate) first;
 			if( update.update(currentlyUpdating) )
 				changed = true;			
-			first = update.getValue();
+			firstValue = update.getValue();
 		}		
 
 		if( second instanceof TACUpdate ) {
 			TACUpdate update = (TACUpdate) second;
 			if( update.update(currentlyUpdating) )
 				changed = true;			
-			second = update.getValue();
+			secondValue = update.getValue();
 		}
 		
-		if( (changed || getUpdatedValue() == null) && first instanceof TACLiteral && second instanceof TACLiteral ) {
+		if( (changed || getUpdatedValue() == null) && firstValue instanceof TACLiteral && secondValue instanceof TACLiteral ) {
 			try {
 				ShadowValue result = ShadowInterpreter.evaluate(this);
 				setUpdatedValue(new TACLiteral(this, result));

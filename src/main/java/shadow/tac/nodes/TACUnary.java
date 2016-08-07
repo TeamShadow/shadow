@@ -103,16 +103,17 @@ public class TACUnary extends TACUpdate
 			return false;
 		
 		currentlyUpdating.add(this);
-		boolean changed = false;		
+		boolean changed = false;
+		TACOperand value = operand;
 		
 		if( operand instanceof TACUpdate ) {
 			TACUpdate update = (TACUpdate) operand;
 			if( update.update(currentlyUpdating) )
 				changed = true;			
-			operand = update.getValue();
+			value = update.getValue();
 		}
 		
-		if( (changed || getUpdatedValue() == null) && operand instanceof TACLiteral ) {
+		if( (changed || getUpdatedValue() == null) && value instanceof TACLiteral ) {
 			try {
 				ShadowValue result = ShadowInterpreter.evaluate(this);
 				setUpdatedValue(new TACLiteral(this, result));

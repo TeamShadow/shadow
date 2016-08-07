@@ -35,17 +35,19 @@ import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 
-public abstract class TACAbstractVisitor implements TACVisitor {	
+public abstract class TACAbstractVisitor implements TACVisitor {
+	
+	protected TACNode current = null;
 
 	public void walk(TACNode nodes) throws ShadowException
 	{
-		TACNode temp = nodes;
+		current = nodes;
 		do
 		{
-			visit(temp);
-			temp = temp.getNext();
+			visit(current);
+			current = current.getNext();
 		}
-		while (temp != nodes);
+		while (current != nodes);
 	}
 	
 	protected void visit(TACNode node) throws ShadowException

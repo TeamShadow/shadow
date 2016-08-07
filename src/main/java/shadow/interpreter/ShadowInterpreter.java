@@ -48,7 +48,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 	
 	public static ShadowValue evaluate(TACUnary node) throws ShadowException {
 		ShadowValue data = null;
-		ShadowValue op = value(node.getOperand());
+		ShadowValue op = value(TACOperand.value(node.getOperand()));
 
 		switch(node.getOperation()) {
 		case "-": data = op.negate(); break;
@@ -67,8 +67,8 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 	
 	public static ShadowValue evaluate(TACBinary node) throws ShadowException {
 		ShadowValue data = null;
-		ShadowValue left = value(node.getFirst()),
-				right = value(node.getSecond());
+		ShadowValue left = value(TACOperand.value(node.getFirst())),
+				right = value(TACOperand.value(node.getSecond()));
 		
 		switch( node.getOperation() ) {
 		case "+":
@@ -422,7 +422,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 	
 
 	private static ShadowValue value(TACOperand node) throws ShadowException
-	{
+	{		
 		Object value = node.getData();
 		if (value instanceof ShadowValue)
 			return (ShadowValue)value;

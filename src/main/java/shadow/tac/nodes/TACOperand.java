@@ -97,4 +97,16 @@ public abstract class TACOperand extends TACNode implements ModifiedType
 	public boolean canPropagate() {
 		return false;
 	}
+	
+	public static TACOperand value(TACOperand operand)
+	{
+		TACOperand value = operand;
+		
+		if( value instanceof TACUpdate ) {
+			TACUpdate update = (TACUpdate) value;
+			value = update.getValue();
+		}
+		
+		return value;		
+	}
 }

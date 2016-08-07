@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -48,6 +49,7 @@ import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
@@ -62,7 +64,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 {
 	private Block root;	
 	private String cachedString; // Saves toString() from re-walking the graph
-	private Map<TACLabel, Block> nodeBlocks = new HashMap<TACLabel, Block>();
+	private Map<TACLabel, Block> nodeBlocks = new LinkedHashMap<TACLabel, Block>();
 	private TACMethod method;
 	//field names can be repeated in inner classes
 	private Map<Type, Set<String>> usedFields = new HashMap<Type, Set<String>>();
@@ -200,7 +202,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		boolean done = false;
 		Block block = null;
 		
-		Set<TACVariable> usedLocalVariables = new HashSet<TACVariable>();
+		Set<TACVariable> usedLocalVariables = method.getUsedLocals(); //initially empty
 		
 		// Loop through circular linked-list
 		while( !done ) {
@@ -236,10 +238,15 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( signature.getModifiers().isPrivate() && signature.getOuter().encloses(method.getThis().getType()) )
 					usedPrivateMethods.add(signature);
 			}
-			//record local variable usage, for warnings
+			//record local variable usage, for warnings and optimizations
 			else if( node instanceof TACLocalLoad ) {
 				TACLocalLoad load = (TACLocalLoad) node;
 				usedLocalVariables.add(load.getVariable());
+			}
+			//these phi nodes are the ones added for indirect breaks on finally blocks
+			else if( node instanceof TACPhi ) {
+				TACPhi phi = (TACPhi)node;
+				usedLocalVariables.add(phi.getVariable());
 			}
 			
 			block.addNode(node);
@@ -1101,12 +1108,6 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		private boolean removePhiInput(Block block)
 		{	
 			for( TACNode node : this ) {
-				/*
-				if( node instanceof TACPhi ) {
-					TACPhiRef phiRef = ((TACPhi)node).getRef();
-					phiRef.removeLabel(block.getLabel());
-				}
-				else*/
 				if( node instanceof TACPhi ) {
 					TACPhi store = (TACPhi)node;
 					store.removePreviousStore(block.getLabel());					
@@ -1277,6 +1278,50 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}				
 			}		
 		}
+
+		//First, remove all stores to unused locals
+		//Then, update all used local stores and loads to
+		//regular stores and loads, if they are Object types
+		//Remove phi nodes for such variables as well
+		public void addGarbageCollection() {
+			TACNode node = label;
+			
+			//might be wise not to use iterator here since removal is involved
+			while( node != lastNode ) {
+				TACNode next = node.getNext();
+				
+				if( node instanceof TACLocalStore ) {
+					TACLocalStore store = (TACLocalStore) node;
+					TACVariable variable = store.getVariable();
+					if( getMethod().getUsedLocals().contains(variable )) {
+						//type that needs garbage collection will be stored in alloc'ed variable
+						if( needsGarbageCollection(variable) )
+							store.setGarbageCollected(true);							
+					}
+					else
+						node.remove();
+				}
+				else if( node instanceof TACLocalLoad ) {
+					TACLocalLoad load = (TACLocalLoad)node;
+					TACVariable variable = load.getVariable();
+					//type that needs garbage collection will be loaded from alloc'ed variable
+					if( needsGarbageCollection(variable) )
+						load.setGarbageCollected(true);
+				}
+				else if( node instanceof TACPhi ) {
+					TACPhi phi = (TACPhi)node;
+					TACVariable variable = phi.getVariable();					
+					if( getMethod().getUsedLocals().contains(variable )) {
+						if( needsGarbageCollection(variable) )
+							phi.setGarbageCollected(true);
+					}
+					else
+						node.remove();								
+				}
+				
+				node = next;
+			}				
+		}
 	}
 
 	/* Allows strings to be sorted based on given indexes */
@@ -1345,5 +1390,21 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			return changed;
 		}
 		
+	}
+
+	public void addGarbageCollection() {
+		for( Block block : this )
+			block.addGarbageCollection();
+	}
+	
+	public static boolean needsGarbageCollection(TACVariable variable)
+	{
+		Type type = variable.getType();
+		
+		return !variable.getName().equals("_exception") && 
+				!(type instanceof PointerType) &&
+				//!(type instanceof ArrayType) &&
+				//!(type instanceof InterfaceType) &&
+				(!type.isPrimitive() || variable.getModifiers().isNullable());
 	}
 }

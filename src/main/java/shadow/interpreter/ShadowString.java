@@ -186,7 +186,8 @@ public class ShadowString extends ShadowValue
 			List<ShadowValue> parameters = new ArrayList<ShadowValue>(operands.size() - 1);
 			
 			for( int i = 1; i < operands.size(); ++i  ) {
-				TACLiteral literal = (TACLiteral) operands.get(i);
+				TACOperand operand = TACOperand.value(operands.get(i));
+				TACLiteral literal = (TACLiteral)operand;
 				parameters.add(literal.getValue());
 			}									
 			

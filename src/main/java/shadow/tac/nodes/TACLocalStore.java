@@ -7,7 +7,7 @@ import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 
 public class TACLocalStore extends TACLocalStorage {
-	private TACOperand value;
+	private TACOperand value;	
 
 	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op)
 	{
@@ -15,9 +15,11 @@ public class TACLocalStore extends TACLocalStorage {
 		value = check(op, variable);
 		value.setLocalStore(this);
 	}
+	
 
 	@Override
-	public boolean update(Set<TACUpdate> currentlyUpdating) {
+	public boolean update(Set<TACUpdate> currentlyUpdating)
+	{
 		if( currentlyUpdating.contains(this) )
 			return false;
 				
@@ -42,8 +44,8 @@ public class TACLocalStore extends TACLocalStorage {
 	}
 	
 	public TACOperand getValue()
-	{
-		if( getUpdatedValue() == null )
+	{	
+		if( getUpdatedValue() == null || isGarbageCollected() )
 			return value;
 		else
 			return getUpdatedValue();

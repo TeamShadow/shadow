@@ -174,7 +174,9 @@ public class TACModule {
 					changed = graph.removeUnreachableCode();					
 					if( changed )
 						changed = graph.propagateConstants();
-				}				
+				}
+				
+				graph.addGarbageCollection();
 				
 				graphs.add(graph);
 			}

@@ -5,11 +5,13 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
@@ -33,6 +35,7 @@ public class TACMethod
 	private final MethodSignature signature;
 	private final Map<String, TACVariable> locals;
 	private final Deque<Map<String, TACVariable>> scopes;
+	private final Set<TACVariable> usedLocals;
 	private boolean landingpad;
 	private int labelCounter = 0;		//counter to keep label numbering unique
 	private int variableCounter = 0;	//counter to keep variable number unique
@@ -43,6 +46,7 @@ public class TACMethod
 		signature = methodSignature;
 		locals = new LinkedHashMap<String, TACVariable>();
 		scopes = new LinkedList<Map<String, TACVariable>>();
+		usedLocals = new HashSet<TACVariable>();
 		landingpad = false;			
 		enterScope();		
 	}
@@ -243,5 +247,10 @@ public class TACMethod
 	public int incrementVariableCounter()
 	{
 		return variableCounter++;
+	}
+	
+	public Set<TACVariable> getUsedLocals()
+	{
+		return usedLocals;
 	}
 }

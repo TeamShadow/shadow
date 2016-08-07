@@ -122,17 +122,18 @@ public class TACCall extends TACUpdate
 				TACUpdate update = (TACUpdate) parameters.get(i);
 				if( update.update(currentlyUpdating) )
 					changed = true;
-				parameters.set(i, update.getValue());				
+				//parameters.set(i, update.getValue());
+				if( !(update.getValue() instanceof TACLiteral) )
+					allLiterals = false;				
 			}
-			
-			if( !(parameters.get(0) instanceof TACLiteral) )
+			else if( !(parameters.get(i) instanceof TACLiteral) )
 				allLiterals = false;
 		}
 				
 		//right now, the only calls we're doing are on String objects 
 		if( (changed || getUpdatedValue() == null) && allLiterals && methodRef.getSignature().getOuter().equals(Type.STRING) && ShadowString.isSupportedMethod(methodRef.getSignature())  ) {
 			try {
-				TACLiteral string = (TACLiteral)parameters.get(0);				
+				TACLiteral string = (TACLiteral)value(parameters.get(0));				
 				ShadowValue result = ((ShadowString)string.getValue()).callMethod(this);
 				setUpdatedValue(new TACLiteral(this, result));
 				changed = true;
