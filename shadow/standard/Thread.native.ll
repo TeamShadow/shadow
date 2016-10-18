@@ -87,11 +87,11 @@ define %struct.pthread_t @shadow.standard..Thread_MgetCurrentThreadId(%shadow.st
 
 define %void* @thread_func(%void*) {
 	%2 = bitcast %void* %0 to %shadow.standard..Thread*
-	
+
 	; set the TLS of the current thread with the reference to this newly created thread
 	store %shadow.standard..Thread* %2, %shadow.standard..Thread** @shadow.standard..Thread_currentThread
-	
-    call void @shadow.standard..Thread_Mrunner(%shadow.standard..Thread* %2)
+
+	call void @shadow.standard..Thread_Mrunner(%shadow.standard..Thread* %2)
 	ret %void* null
 }
 
