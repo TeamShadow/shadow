@@ -12,4 +12,6 @@ immutable singleton shadow:standard@System
 	 * @return nanoseconds elapsed since midnight on January 1, 1970
 	 */
 	public native nanoTime() => ( long );
+	
+	public native get currentThread() => (Thread);
 }

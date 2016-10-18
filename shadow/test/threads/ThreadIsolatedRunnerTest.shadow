@@ -1,0 +1,17 @@
+import shadow:io@Console;
+
+class shadow:test:threads@ThreadIsolatedRunnerTest
+{
+	public main(String[] args) => ()
+	{
+		var runner = ThreadIsolatedRunner:create();
+		
+		var thread1 = Thread:create(runner);		
+		var thread2 = Thread:create(runner);		
+		var thread3 = Thread:create(runner);
+		
+		thread1.join();
+		thread2.join();
+		thread3.join();
+	}
+}

@@ -1,0 +1,18 @@
+import shadow:io@Console;
+
+class shadow:test:threads@CurrentThreadTest
+{
+	public main(String[] args) => ()
+	{
+		var runner = CurrentThreadRunner:create();
+		
+		var thread1 = Thread:create(runner);
+		thread1.join();
+		
+		var thread2 = Thread:create(runner);
+		thread2.join();
+		
+		var thread3 = Thread:create(runner);
+		thread3.join();
+	}
+}

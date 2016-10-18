@@ -1,0 +1,65 @@
+import shadow:io@Console;
+
+locked class shadow:standard@
+	Thread
+{
+	// the pthread handle, set when createThread() is called.
+	// DO NOT MODIFY!
+	uint threadId;
+	
+	// The runnable class which will contain the run() method
+	// that will be ran by the thread.
+	Runnable runnable;
+
+	// pthread_create()
+	private native createThread() => (int);
+	
+	// pthread_join()
+	private native joinThread() => (int);
+	
+	// pthread_self()
+	private native getCurrentThreadId() => (uint);
+	
+	// this method is only used to create a thread for the main
+	// thread. The main thread needs an instance as well.
+	private create()
+	{
+		this:runnable = Runnable:create();
+		this:threadId = getCurrentThreadId();
+	}
+	
+	// this is a wrapper for the class creation
+	// thus, when called from LLVM, it would have
+	// the full allocation code written in the original document.
+	private createNative() => (Thread)
+	{
+		return Thread:create();
+	}
+	
+	public create(Runnable runnable)
+	{
+		this:runnable = copy(runnable);
+		
+		// TODO: Check for return values, and throw exceptions
+		// accordingly.
+		createThread();
+	}
+	
+	public join() => ()
+	{
+		// TODO: Check for return values, and throw exceptions
+		// accordingly.
+		joinThread();
+	}
+	
+	public id() => (uint)
+	{
+		return threadId;
+	}
+	
+	// ran natively from the newly spawned thread
+	private runner() => ()
+	{
+		runnable.run(this);
+	}
+}

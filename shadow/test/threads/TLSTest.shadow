@@ -1,0 +1,15 @@
+import shadow:io@Console;
+
+class shadow:test:threads@TLSTest
+{
+	public main(String[] args) => ()
+	{
+		var runner = TLSRunner:create();
+		
+		var thread1 = Thread:create(runner);
+		thread1.join();
+		
+		var thread2 = Thread:create(runner);
+		thread2.join();
+	}
+}
