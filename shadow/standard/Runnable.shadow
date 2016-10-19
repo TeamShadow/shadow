@@ -1,4 +1,0 @@
-class shadow:standard@Runnable
-{
-	public run(Thread currentThread) => () {}
-}

@@ -3,13 +3,21 @@ import shadow:io@Console;
 locked class shadow:standard@
 	Thread
 {
+	// A class used as an empty Runnable for a dummy thread.
+	private class NopRunnable
+		is CanRun
+	{
+		public run(Thread currentThread) => () {}
+	}
+
+
 	// the pthread handle, set when createThread() is called.
 	// DO NOT MODIFY!
 	uint threadId;
 	
 	// The runnable class which will contain the run() method
 	// that will be ran by the thread.
-	Runnable runnable;
+	CanRun runnable;
 
 	// pthread_create()
 	private native createThread() => (int);
@@ -24,7 +32,7 @@ locked class shadow:standard@
 	// thread. The main thread needs an instance as well.
 	private create()
 	{
-		this:runnable = Runnable:create();
+		this:runnable = NopRunnable:create();
 		this:threadId = getCurrentThreadId();
 	}
 	
@@ -36,7 +44,7 @@ locked class shadow:standard@
 		return Thread:create();
 	}
 	
-	public create(Runnable runnable)
+	public create(CanRun runnable)
 	{
 		this:runnable = copy(runnable);
 		
@@ -52,7 +60,7 @@ locked class shadow:standard@
 		joinThread();
 	}
 	
-	public id() => (uint)
+	public get id() => (uint)
 	{
 		return threadId;
 	}

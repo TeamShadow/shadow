@@ -115,6 +115,7 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_DIVIDE = null;
 	public static InterfaceType CAN_MODULUS = null;
 	public static InterfaceType CAN_NEGATE = null;	
+	public static InterfaceType CAN_RUN = null;
 	
 	
 	//constants used for options in toString()
@@ -232,6 +233,7 @@ public abstract class Type implements Comparable<Type> {
 		CAN_DIVIDE = null;
 		CAN_MODULUS = null;
 		CAN_NEGATE = null;
+		CAN_RUN = null;
 	}
 	
 	/*

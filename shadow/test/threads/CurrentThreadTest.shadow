@@ -2,6 +2,14 @@ import shadow:io@Console;
 
 class shadow:test:threads@CurrentThreadTest
 {
+	class CurrentThreadRunner is CanRun
+	{
+		public run(Thread currentThread) => ()
+		{
+			Console.printLine(currentThread->id == System->currentThread->id);
+		}
+	}
+
 	public main(String[] args) => ()
 	{
 		var runner = CurrentThreadRunner:create();

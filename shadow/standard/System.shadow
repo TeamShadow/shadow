@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 /**
  * Singleton {@code System} provides access to a few useful system settings
  * and values.

@@ -1,0 +1,49 @@
+import shadow:io@Console;
+
+class shadow:test:threads@ThreadSleepTest
+{
+	class ThreadSleepTestRunner is CanRun
+	{
+		public run(Thread currentThread) => ()
+		{
+			var time = System.nanoTime();
+			System.sleep(5000);
+			time = System.nanoTime() - time;
+			
+			// give +- 1 ms
+			var ms = ((time / 1000000) - 5000);
+			Console.printLine(ms <= 1 and ms >= -1);
+		}
+	}
+	
+	class ThreadTestRunner is CanRun
+	{
+		public run(Thread currentThread) => ()
+		{
+			Console.printLine("I am a thread.");
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		Console.printLine("I am going to wait 3 seconds.");
+		System.sleep(3000);
+		Console.printLine("I waited 3 seconds.");
+		
+		var runner1 = ThreadSleepTestRunner:create();
+		var runner2 = ThreadTestRunner:create();
+		
+		var thread1 = Thread:create(runner1);
+		
+		var thread2 = Thread:create(runner2);
+		thread2.join();
+		
+		var thread3 = Thread:create(runner2);
+		thread3.join();
+		
+		var thread4 = Thread:create(runner2);
+		thread4.join();
+		
+		thread1.join();
+	}
+}

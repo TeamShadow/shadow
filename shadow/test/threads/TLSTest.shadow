@@ -2,6 +2,14 @@ import shadow:io@Console;
 
 class shadow:test:threads@TLSTest
 {
+	class TLSRunner is CanRun
+	{
+		public run(Thread currentThread) => ()
+		{
+			Console.printLine(SingletonCounter.increment());
+		}
+	}
+
 	public main(String[] args) => ()
 	{
 		var runner = TLSRunner:create();

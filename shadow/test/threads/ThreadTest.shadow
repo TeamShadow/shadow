@@ -2,6 +2,14 @@ import shadow:io@Console;
 
 class shadow:test:threads@ThreadTest
 {
+	class ThreadTestRunner is CanRun
+	{
+		public run(Thread currentThread) => ()
+		{
+			Console.printLine("I am a thread.");
+		}
+	}
+
 	public main(String[] args) => ()
 	{
 		var runner = ThreadTestRunner:create();
@@ -11,7 +19,7 @@ class shadow:test:threads@ThreadTest
 
 		var thread2 = Thread:create(runner);
 		thread2.join();
-		
+
 		var thread3 = Thread:create(runner);
 		var thread4 = Thread:create(runner);
 		thread3.join();
