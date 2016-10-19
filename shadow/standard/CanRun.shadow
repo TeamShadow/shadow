@@ -1,0 +1,4 @@
+interface shadow:standard@CanRun
+{
+	run(Thread currentThread) => ();
+}
