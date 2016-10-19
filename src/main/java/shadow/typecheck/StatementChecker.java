@@ -388,7 +388,7 @@ public class StatementChecker extends BaseChecker {
 	@Override public Void visitLocalVariableDeclaration(ShadowParser.LocalVariableDeclarationContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		Type type;
 		boolean isVar = false;
 		
@@ -1635,6 +1635,20 @@ public class StatementChecker extends BaseChecker {
 		ctx.setType(child.getType());
 		
 		return null;
+	}
+	
+	@Override public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx)
+	{ 
+		throw new RuntimeException();
+		
+/*		visitChildren(ctx);
+		
+		ModifiedType child = ctx.conditionalExpression();
+		child = resolveType( child );
+		ctx.addModifiers(child.getModifiers());
+		ctx.setType(child.getType());
+		
+		return null;*/
 	}
  
 	@Override public Void visitCheckExpression(ShadowParser.CheckExpressionContext ctx)

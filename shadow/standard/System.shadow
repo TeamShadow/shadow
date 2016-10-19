@@ -1,9 +1,13 @@
+import shadow:io@Console;
+
 /**
  * Singleton {@code System} provides access to a few useful system settings
  * and values.
  */
 immutable singleton shadow:standard@System
 {
+	private native sleep_ms(int ms) => (int);
+	
 	/**
 	 * Returns the number of nanoseconds elapsed since the Unix Epoch,
 	 * 12:00:00 AM January 1, 1970.  Accuracy will usually be much coarser
@@ -14,4 +18,10 @@ immutable singleton shadow:standard@System
 	public native nanoTime() => ( long );
 	
 	public native get currentThread() => (Thread);
+	
+	public sleep(int ms) => ()
+	{
+		// TODO: Check return value and act accordingly.
+		sleep_ms(ms);
+	}
 }

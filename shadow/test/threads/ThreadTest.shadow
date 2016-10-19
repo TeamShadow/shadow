@@ -8,7 +8,7 @@ class shadow:test:threads@ThreadTest
 		
 		var thread1 = Thread:create(runner);
 		thread1.join();
-				
+
 		var thread2 = Thread:create(runner);
 		thread2.join();
 		

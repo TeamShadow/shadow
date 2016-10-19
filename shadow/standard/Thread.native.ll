@@ -49,12 +49,15 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 ; struct sched_param { int sched_priority; };
 %struct.sched_param = type { %int }
 
+%struct.timespec = type { %int, %int }
+
 ; int pthread_create(pthread_t*, pthread_attr_t*, void* (*start_routine)(void*), void*);
 declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void* (%void*)*, %void*)
 ; int pthread_join(pthread_t, void**);
 declare %int @pthread_join(%struct.pthread_t, %void**)
-
+; 
 declare %struct.pthread_t @pthread_self()
+declare %int @nanosleep(%struct.timespec*, %struct.timespec*)
 
 ; the runner which executes the actual content
 declare void @shadow.standard..Thread_Mrunner(%shadow.standard..Thread*)
@@ -63,6 +66,44 @@ declare %shadow.standard..Thread* @shadow.standard..Thread_McreateNative(%shadow
 ; used to store the current instance of the thread; System->currentThread. Each singleton
 ; refers to its own thread.
 @shadow.standard..Thread_currentThread = thread_local global %shadow.standard..Thread* null
+
+define %int @shadow.standard..System_Msleep__ms_int(%shadow.standard..System* %this, %int %miliseconds) {
+entry:
+  %miliseconds.addr = alloca i32
+  %req = alloca %struct.timespec
+  store i32 %miliseconds, i32* %miliseconds.addr
+  %0 = load i32, i32* %miliseconds.addr
+  %cmp = icmp sgt i32 %0, 999
+  br i1 %cmp, label %if.then, label %if.else
+
+if.then:                                          ; preds = %entry
+  %1 = load i32, i32* %miliseconds.addr
+  %div = sdiv i32 %1, 1000
+  %tv_sec = getelementptr inbounds %struct.timespec, %struct.timespec* %req, i32 0, i32 0
+  store i32 %div, i32* %tv_sec
+  %2 = load i32, i32* %miliseconds.addr
+  %tv_sec1 = getelementptr inbounds %struct.timespec, %struct.timespec* %req, i32 0, i32 0
+  %3 = load i32, i32* %tv_sec
+  %mul = mul nsw i32 %3, 1000
+  %sub = sub nsw i32 %2, %mul
+  %mul2 = mul nsw i32 %sub, 1000000
+  %tv_nsec = getelementptr inbounds %struct.timespec, %struct.timespec* %req, i32 0, i32 1
+  store i32 %mul2, i32* %tv_nsec
+  br label %if.end
+
+if.else:                                          ; preds = %entry
+  %tv_sec3 = getelementptr inbounds %struct.timespec, %struct.timespec* %req, i32 0, i32 0
+  store i32 0, i32* %tv_sec3
+  %4 = load i32, i32* %miliseconds.addr
+  %mul4 = mul nsw i32 %4, 1000000
+  %tv_nsec5 = getelementptr inbounds %struct.timespec, %struct.timespec* %req, i32 0, i32 1
+  store i32 %mul4, i32* %tv_nsec5
+  br label %if.end
+
+if.end:                                           ; preds = %if.else, %if.then
+  %call = call i32 @nanosleep(%struct.timespec* %req, %struct.timespec* null)
+  ret i32 %call
+}
 
 define %shadow.standard..Thread* @shadow.standard..System_McurrentThread(%shadow.standard..System*) {
     br label %_label0

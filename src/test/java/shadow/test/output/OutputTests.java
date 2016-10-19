@@ -49,10 +49,10 @@ public class OutputTests {
 	public void cleanup() throws IOException {
 		
 		// Try to remove the unit test executable
-		try {			
+/*		try {			
 			Files.delete(executable);
 		}
-		catch(Exception e) {}
+		catch(Exception e) {}*/
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
@@ -1048,6 +1048,20 @@ public class OutputTests {
 			    "I am a thread.\n" +
 				"I am a thread.\n" +
 			    "I am a thread.\n");
+	}
+	
+	@Test public void testThreadSleep() throws Exception {
+		executable = Paths.get("shadow", "test", "threads", executableName);
+		
+		args.add("shadow/test/threads/ThreadSleepTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"I am going to wait 3 seconds.\n" +
+				"I waited 3 seconds.\n" +
+				"I am a thread.\n" +
+			    "I am a thread.\n" +
+				"I am a thread.\n" +
+			    "true\n");
 	}
 	
 	@Test public void testTLSThread() throws Exception {

@@ -371,6 +371,10 @@ checkExpression
 copyExpression
 	: ('copy' | 'freeze' ) '(' conditionalExpression ')'
   	;
+  	
+spawnExpression
+	: ('spawn') '(' conditionalExpression ')'
+  	;
 
 primaryExpression
 locals [boolean action = false]
@@ -400,6 +404,7 @@ primaryPrefix
 	| 'super'
 	| checkExpression
 	| copyExpression
+	| spawnExpression
 	| castExpression
 	| '(' conditionalExpression ')'
 	| primitiveType
@@ -711,6 +716,7 @@ CHECK		: 'check';
 CLASS		: 'class';
 CODE		: 'code';
 COPY		: 'copy';
+SPAWN       : 'spawn';
 CREATE		: 'create';
 CONSTANT	: 'constant';
 CONTINUE	: 'continue';
