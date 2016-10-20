@@ -1094,7 +1094,8 @@ public class OutputTests {
 		run(new String[0], 
 				"1 1\n" +
 				"1 1\n" +
-				"1 1\n");
+				"1 1\n" +
+				"0\n");
 	}
 	
 	@Test public void testToughTry() throws Exception {

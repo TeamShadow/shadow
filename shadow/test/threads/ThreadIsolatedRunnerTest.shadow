@@ -27,5 +27,7 @@ class shadow:test:threads@ThreadIsolatedRunnerTest
 		thread1.join();
 		thread2.join();
 		thread3.join();
+		
+		Console.printLine(y);
 	}
 }
