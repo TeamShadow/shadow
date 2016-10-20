@@ -18,6 +18,9 @@ locked class shadow:standard@
 	// The runnable class which will contain the run() method
 	// that will be ran by the thread.
 	CanRun runnable;
+	
+	// The Thread that spawned this thread
+	get nullable Thread parent;
 
 	// pthread_create()
 	private native createThread() => (int);
@@ -34,6 +37,7 @@ locked class shadow:standard@
 	{
 		this:runnable = NopRunnable:create();
 		this:threadId = getCurrentThreadId();
+		this:parent = null;
 	}
 	
 	// this is a wrapper for the class creation
@@ -47,6 +51,7 @@ locked class shadow:standard@
 	public create(CanRun runnable)
 	{
 		this:runnable = copy(runnable);
+		this:parent = System->currentThread;
 		
 		// TODO: Check for return values, and throw exceptions
 		// accordingly.

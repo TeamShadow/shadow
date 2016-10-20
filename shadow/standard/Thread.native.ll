@@ -48,12 +48,15 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 %shadow.standard..CanRun_methods = type { void (%shadow.standard..Object*, %shadow.standard..Thread*)* }
 
 ; Thread
-%shadow.standard..Thread_methods = type { %shadow.standard..Thread* (%shadow.standard..Thread*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)*, %uint (%shadow.standard..Thread*)*, void (%shadow.standard..Thread*)* }
-%shadow.standard..Thread = type { %shadow.standard..Class*, %shadow.standard..Thread_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %uint }
+%shadow.standard..Thread_methods = type opaque
+%shadow.standard..Thread = type { %shadow.standard..Class*, %shadow.standard..Thread_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %shadow.standard..Thread*, %uint }
 
 ;===================================================================================================
-; External Definitions
-; --------------------
+; Externals
+
+;-------------
+; Definitions
+;-------------
 
 ; typedef uintptr_t pthread_t;
 %struct.pthread_t = type %uint
@@ -66,11 +69,10 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 
 ; struct timespec { time_t tv_sec; long tv_nsec; };
 %struct.timespec = type { %int, %int }
-;===================================================================================================
 
-;===================================================================================================
-; External Methods
-; ----------------
+;---------
+; Methods
+;---------
 
 ; int pthread_create(pthread_t*, pthread_attr_t*, void* (*start_routine)(void*), void*);
 declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void* (%void*)*, %void*)
@@ -94,7 +96,11 @@ declare %shadow.standard..Thread* @shadow.standard..Thread_McreateNative(%shadow
 ; refers to its own thread.
 @shadow.standard..Thread_currentThread = thread_local global %shadow.standard..Thread* null
 
-; revised
+;==================================================================================================
+; System Methods
+; --------------
+
+; sleep_ms(int ms) => (int);
 define %int @shadow.standard..System_Msleep__ms_int(%shadow.standard..System* %this, %int %ms) {
 entry:
   %ms.addr = alloca i32
@@ -133,7 +139,7 @@ if.end:                                           ; preds = %if.else, %if.then
   ret i32 %call
 }
 
-; revised
+; get currentThread() => (Thread);
 define %shadow.standard..Thread* @shadow.standard..System_McurrentThread(%shadow.standard..System*) {
 entry:
 	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_currentThread
@@ -148,16 +154,8 @@ if.then:
 if.else:
 	ret %shadow.standard..Thread* %currentThread
 }
+;=====================================================================================================
 
-; revised
-define %struct.pthread_t @shadow.standard..Thread_MgetCurrentThreadId(%shadow.standard..Thread*) {
-entry:
-	%call = call %struct.pthread_t @pthread_self()
-
-	ret %struct.pthread_t %call
-}
-
-; revised
 define %void* @thread_func(%void* %currentThread) {
 entry:
 	%currentThread.addr = bitcast %void* %currentThread to %shadow.standard..Thread*
@@ -172,7 +170,7 @@ entry:
 	ret %void* null
 }
 
-; revised
+; createThread() => (int);
 define %int @shadow.standard..Thread_McreateThread(%shadow.standard..Thread*) {
 entry:
 	; get the reference of the current Thread
@@ -181,7 +179,7 @@ entry:
 	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
 
 	; load handleId
-	%handleId.addr = getelementptr inbounds %shadow.standard..Thread, %shadow.standard..Thread* %this, i32 0, i32 3
+	%handleId.addr = getelementptr inbounds %shadow.standard..Thread, %shadow.standard..Thread* %this, i32 0, i32 4
 	
 	; cast Thread* to void*
 	%this.void = bitcast %shadow.standard..Thread* %this to %void*
@@ -192,7 +190,14 @@ entry:
 	ret %int %call
 }
 
-; revised
+; getCurrentThreadId() => (uint);
+define %struct.pthread_t @shadow.standard..Thread_MgetCurrentThreadId(%shadow.standard..Thread*) {
+entry:
+	%call = call %struct.pthread_t @pthread_self()
+	ret %struct.pthread_t %call
+}
+
+; joinThread() => (int);
 define %int @shadow.standard..Thread_MjoinThread(%shadow.standard..Thread*) {
 entry:
 	; get the reference of the current Thread
@@ -201,7 +206,7 @@ entry:
 	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
 
 	; load handleId
-	%handleId.addr = getelementptr inbounds %shadow.standard..Thread, %shadow.standard..Thread* %this, i32 0, i32 3
+	%handleId.addr = getelementptr inbounds %shadow.standard..Thread, %shadow.standard..Thread* %this, i32 0, i32 4
 	%handleId = load %struct.pthread_t, %struct.pthread_t* %handleId.addr
 
 	; join thread
