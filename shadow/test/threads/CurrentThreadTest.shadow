@@ -17,6 +17,8 @@ class shadow:test:threads@CurrentThreadTest
 		var thread1 = Thread:create(runner);
 		thread1.join();
 		
+		Console.printLine(System->currentThread->id == thread1->parent->id);
+		
 		var thread2 = Thread:create(runner);
 		thread2.join();
 		

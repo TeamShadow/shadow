@@ -1081,6 +1081,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"true\n" +
+				"true\n" +
 			    "true\n" +
 				"true\n");
 	}
@@ -1091,9 +1092,9 @@ public class OutputTests {
 		args.add("shadow/test/threads/ThreadIsolatedRunnerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 
-				"1\n" +
-				"1\n" +
-				"1\n");
+				"1 1\n" +
+				"1 1\n" +
+				"1 1\n");
 	}
 	
 	@Test public void testToughTry() throws Exception {

@@ -2,6 +2,8 @@ import shadow:io@Console;
 
 class shadow:test:threads@ThreadIsolatedRunnerTest
 {
+	int y = 0;
+	
 	class ThreadIsolatedRunner is CanRun
 	{
 		int x = 0;
@@ -9,7 +11,8 @@ class shadow:test:threads@ThreadIsolatedRunnerTest
 		public run(Thread currentThread) => ()
 		{
 			x += 1;
-			Console.printLine(x);
+			y += 1;
+			Console.printLine(x # " " # y);
 		}
 	}
 
