@@ -1044,10 +1044,11 @@ public class OutputTests {
 		args.add("shadow/test/threads/ThreadTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"I am a thread.\n" +
-			    "I am a thread.\n" +
-				"I am a thread.\n" +
-			    "I am a thread.\n");
+				"I am a thread. #0\n" +
+			    "I am a thread. #1\n" +
+				"I am a thread. #2\n" +
+			    "I am a thread. #3\n" +
+			    "I am a thread. #4\n");
 	}
 	
 	@Test public void testThreadSleep() throws Exception {

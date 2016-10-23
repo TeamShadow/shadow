@@ -47,104 +47,57 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 %shadow.standard..System = type { %shadow.standard..Class*, %shadow.standard..System_methods*  }
 
 ; CanRun
-%shadow.standard..CanRun_methods = type { void (%shadow.standard..Object*, %shadow.standard..Thread*)* }
+%shadow.standard..CanRun_methods = type { void (%shadow.standard..Object*, %shadow.standard..ThreadWorker*)* }
+
+; ThreadWorker
+%shadow.standard..ThreadWorker_methods = type opaque
+%shadow.standard..ThreadWorker = type { %shadow.standard..Class*, %shadow.standard..ThreadWorker_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %shadow.standard..ThreadWorker*, %uint, %int }
 
 ; Thread
 %shadow.standard..Thread_methods = type opaque
-%shadow.standard..Thread = type { %shadow.standard..Class*, %shadow.standard..Thread_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %shadow.standard..Thread*, %uint }
+%shadow.standard..Thread = type { %shadow.standard..Class*, %shadow.standard..Thread_methods*  }
 
-;===================================================================================================
-; Externals
+; struct timespec { time_t tv_sec; long tv_nsec; };
+%struct.timespec = type { %int, %int }
 
-;-------------
-; Definitions
-;-------------
+; int nanosleep(const struct timespec *req, struct timespec *rem);
+declare %int @nanosleep(%struct.timespec*, %struct.timespec*)
 
-; typedef uintptr_t pthread_t;
-%struct.pthread_t = type %uint
+; used to allocate a new thread and call the empty constructor
+declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
 
-; struct pthread_attr_t { unsigned p_state; void* stack; size_t s_size; struct sched_param param; };
-%struct.pthread_attr_t = type { %int, %void*, %int, %struct.sched_param }
+@shadow.standard..ThreadWorker_currentThread = external global %shadow.standard..ThreadWorker*
 
-; struct sched_param { int sched_priority; };
-%struct.sched_param = type { %int }
-
-;---------
-; Methods
-;---------
-
-; int pthread_create(pthread_t*, pthread_attr_t*, void* (*start_routine)(void*), void*);
-declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void* (%void*)*, %void*)
-
-; int pthread_join(pthread_t, void**);
-declare %int @pthread_join(%struct.pthread_t, %void**)
-
-; pthread_t pthread_self();
-declare %struct.pthread_t @pthread_self()
-;===================================================================================================
-
-; the runner which is executed from the newly spawned thread
-declare void @shadow.standard..Thread_Mrunner(%shadow.standard..Thread*)
-
-; used to store the current instance of the thread; System->currentThread. Each System singleton
-; refers to its own thread.
-@shadow.standard..Thread_currentThread = thread_local global %shadow.standard..Thread* null
-
-define %void* @thread_func(%void* %currentThread) {
+define void @shadow.standard..Thread_Msleep_int_int(%shadow.standard..Thread* %this, %int %sec, %int %nsec) {
 entry:
-	%currentThread.addr = bitcast %void* %currentThread to %shadow.standard..Thread*
-
-	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
-	; and will cause the TLS to correctly store the reference of this thread.
-	store %shadow.standard..Thread* %currentThread.addr, %shadow.standard..Thread** @shadow.standard..Thread_currentThread
-
-	; we let Shadow take care of running the actual desired operation
-	call void @shadow.standard..Thread_Mrunner(%shadow.standard..Thread* %currentThread.addr)
-
-	ret %void* null
+  %sec.addr = alloca i32, align 4
+  %nsec.addr = alloca i32, align 4
+  %t = alloca %struct.timespec, align 4
+  store i32 %sec, i32* %sec.addr, align 4
+  store i32 %nsec, i32* %nsec.addr, align 4
+  %0 = load i32, i32* %sec.addr, align 4
+  %tv_sec = getelementptr inbounds %struct.timespec, %struct.timespec* %t, i32 0, i32 0
+  store i32 %0, i32* %tv_sec, align 4
+  %1 = load i32, i32* %nsec.addr, align 4
+  %tv_nsec = getelementptr inbounds %struct.timespec, %struct.timespec* %t, i32 0, i32 1
+  store i32 %1, i32* %tv_nsec, align 4
+  %call = call i32 @nanosleep(%struct.timespec* %t, %struct.timespec* null)
+  
+  ret void
 }
 
-; createThread() => (int);
-define %int @shadow.standard..Thread_McreateThread(%shadow.standard..Thread*) {
+; get currentThread() => (Thread);
+define %shadow.standard..ThreadWorker* @shadow.standard..Thread_Mcurrent(%shadow.standard..Thread*) {
 entry:
-	; get the reference of the current Thread
-	%this.addr = alloca %shadow.standard..Thread*
-	store %shadow.standard..Thread* %0, %shadow.standard..Thread** %this.addr
-	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
+	%currentThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	%cmp = icmp eq %shadow.standard..ThreadWorker* %currentThread, null
+	br %boolean %cmp, label %if.then, label %if.else
 
-	; load handleId
-	%handleId.addr = getelementptr inbounds %shadow.standard..Thread, %shadow.standard..Thread* %this, i32 0, i32 4
-	
-	; cast Thread* to void*
-	%this.void = bitcast %shadow.standard..Thread* %this to %void*
+if.then:
+	%newThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
+	store %shadow.standard..ThreadWorker* %newThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	ret %shadow.standard..ThreadWorker* %newThread
 
-	; create the thread using pthread_create()
-	%call = call %int @pthread_create(%struct.pthread_t* %handleId.addr, %struct.pthread_attr_t* null, %void*(%void*)* @thread_func, %void* %this.void)
-
-	ret %int %call
-}
-
-; getCurrentThreadId() => (uint);
-define %struct.pthread_t @shadow.standard..Thread_MgetCurrentThreadId(%shadow.standard..Thread*) {
-entry:
-	%call = call %struct.pthread_t @pthread_self()
-	ret %struct.pthread_t %call
-}
-
-; joinThread() => (int);
-define %int @shadow.standard..Thread_MjoinThread(%shadow.standard..Thread*) {
-entry:
-	; get the reference of the current Thread
-	%this.addr = alloca %shadow.standard..Thread*
-	store %shadow.standard..Thread* %0, %shadow.standard..Thread** %this.addr
-	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
-
-	; load handleId
-	%handleId.addr = getelementptr inbounds %shadow.standard..Thread, %shadow.standard..Thread* %this, i32 0, i32 4
-	%handleId = load %struct.pthread_t, %struct.pthread_t* %handleId.addr
-
-	; join thread
-	%call = call %int @pthread_join(%struct.pthread_t %handleId, %void** null)
-
-	ret %int %call
+if.else:
+	ret %shadow.standard..ThreadWorker* %currentThread
 }

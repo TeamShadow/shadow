@@ -4,9 +4,9 @@ class shadow:test:threads@CurrentThreadTest
 {
 	class CurrentThreadRunner is CanRun
 	{
-		public run(Thread currentThread) => ()
+		public run() => ()
 		{
-			Console.printLine(currentThread->id == System->currentThread->id);
+			//Console.printLine(currentThread->id == System->currentThread->id);
 		}
 	}
 
@@ -14,15 +14,16 @@ class shadow:test:threads@CurrentThreadTest
 	{
 		var runner = CurrentThreadRunner:create();
 		
-		var thread1 = Thread:create(runner);
+		var thread1 = ThreadWorker:create(runner);
 		thread1.join();
 		
-		Console.printLine(System->currentThread->id == thread1->parent->id);
+		//Console.printLine(System->currentThread->parent->id);		
+		//Console.printLine(System->currentThread->id == thread1->parent->id);
 		
-		var thread2 = Thread:create(runner);
+		var thread2 = ThreadWorker:create(runner);
 		thread2.join();
 		
-		var thread3 = Thread:create(runner);
+		var thread3 = ThreadWorker:create(runner);
 		thread3.join();
 	}
 }

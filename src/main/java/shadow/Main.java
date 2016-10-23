@@ -204,9 +204,9 @@ public class Main {
 			
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), /*"-O3",*/ dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget()/*, "-O3"*/)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {

@@ -1,0 +1,80 @@
+import shadow:io@Console;
+
+locked class shadow:standard@
+	ThreadWorker
+{
+	// native methods
+	private native createThread() => (int);
+	private native joinThread() => (int);
+	private native getCurrentThreadHandle() => (uint);
+	private native getNextId() => (int);
+	private createNative() => (ThreadWorker) { return ThreadWorker:create(); }
+	
+	//nullable Object handle1 = null;
+	uint handle; // the native id of the thread. DO NOT MODIFY!
+	CanRun runnable; // the runnable instance
+	
+	/**
+	* Gets the Shadow-specific thread id.
+	*/
+	get int id;
+	
+	/**
+	* Gets the {@code ThreadWorker} which spawned this thread.
+	*/
+	get nullable ThreadWorker parent;
+	
+	/**
+	* !Used natively!
+	*
+	* This method is only used to create a thread for the main
+	* thread. The main thread needs an instance as well.
+	*/
+	private create()
+	{
+		this:runnable = NopRunnable:create();
+		this:id = getNextId();
+		this:parent = null;
+		
+		this:handle = getCurrentThreadHandle();
+	}
+	
+	/**
+	* Creates a new {@code ThreadWorker} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread.
+	* 
+	* param runnable The instance that contains a run function
+	*/
+	public create(CanRun runnable)
+	{
+		this:runnable = copy(runnable);
+		this:id = getNextId();
+		this:parent = Thread->current;
+		
+		createThread();
+	}
+	
+	public join() => ()
+	{
+		joinThread();
+	}
+	
+	/**
+	* !Used natively!
+	*
+	* This method is natively executed from the newly spawned thread.
+	* DO NOT MANUALLY EXECUTE.
+	*/
+	private runner() => ()
+	{
+		runnable.run();
+	}
+	
+	// A class used as an empty Runnable for a dummy thread.
+	private class NopRunnable
+		is CanRun
+	{
+		public run() => () {}
+	}
+}

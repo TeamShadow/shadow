@@ -4,7 +4,7 @@ class shadow:test:threads@TLSTest
 {
 	class TLSRunner is CanRun
 	{
-		public run(Thread currentThread) => ()
+		public run() => ()
 		{
 			Console.printLine(SingletonCounter.increment());
 		}
@@ -14,10 +14,10 @@ class shadow:test:threads@TLSTest
 	{
 		var runner = TLSRunner:create();
 		
-		var thread1 = Thread:create(runner);
+		var thread1 = ThreadWorker:create(runner);
 		thread1.join();
 		
-		var thread2 = Thread:create(runner);
+		var thread2 = ThreadWorker:create(runner);
 		thread2.join();
 	}
 }

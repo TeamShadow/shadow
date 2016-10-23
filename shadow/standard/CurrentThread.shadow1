@@ -1,6 +1,6 @@
-immutable singleton shadow:standard@Thread
+immutable singleton shadow:standard@CurrentThread
 {
-	public native get current() => (ThreadWorker);
+	public native get current() => (Thread);
 	
 	public native sleep(int sec, int nsec) => ();
 	
