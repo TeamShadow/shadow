@@ -79,10 +79,21 @@ declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 @_genericSet = global %shadow.standard..ClassSet* null;
 @_arraySet = global %shadow.standard..ClassSet* null;
 
+; used to allocate a new thread and call the empty constructor
+%shadow.standard..ThreadWorker_methods = type opaque
+%shadow.standard..ThreadWorker = type opaque
+declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
+@shadow.standard..ThreadWorker_currentThread = external global %shadow.standard..ThreadWorker*
+
 define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {	
 	%uninitializedConsole = call noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
     %console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
+	
+	; create a dummy ThreadWorker as main also has a thread
+	%mainThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
+	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	
 	%object = call %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.test..Test_class, %shadow.standard..Object_methods* bitcast(%shadow.test..Test_methods* @shadow.test..Test_methods to %shadow.standard..Object_methods*))		
 	%initialized = call %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object* %object)	
 	%uninitializedGenericSet = call %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		

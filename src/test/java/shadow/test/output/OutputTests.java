@@ -1044,11 +1044,11 @@ public class OutputTests {
 		args.add("shadow/test/threads/ThreadTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"I am a thread. #0\n" +
-			    "I am a thread. #1\n" +
-				"I am a thread. #2\n" +
-			    "I am a thread. #3\n" +
-			    "I am a thread. #4\n");
+				"main\n" +
+			    "Thread#1\n" +
+				"Thread#2\n" +
+			    "Thread#3\n" +
+			    "Thread#4\n");
 	}
 	
 	@Test public void testThreadSleep() throws Exception {
@@ -1073,18 +1073,6 @@ public class OutputTests {
 		run(new String[0], 
 				"1\n" +
 				"1\n");
-	}
-	
-	@Test public void testCurrentThread() throws Exception {
-		executable = Paths.get("shadow", "test", "threads", executableName);
-		
-		args.add("shadow/test/threads/CurrentThreadTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"true\n" +
-				"true\n" +
-			    "true\n" +
-				"true\n");
 	}
 	
 	@Test public void testThreadIsolatedRunner() throws Exception {

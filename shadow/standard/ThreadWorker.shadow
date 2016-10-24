@@ -3,19 +3,48 @@ import shadow:io@Console;
 locked class shadow:standard@
 	ThreadWorker
 {
-	// native methods
-	private native createThread() => (int);
-	private native joinThread() => (int);
-	private native getCurrentThreadHandle() => (uint);
-	private native getNextId() => (int);
+	// START: Native methods
 	private createNative() => (ThreadWorker) { return ThreadWorker:create(); }
 	
-	//nullable Object handle1 = null;
-	uint handle; // the native id of the thread. DO NOT MODIFY!
-	CanRun runnable; // the runnable instance
+	/**
+	* Spawns a new thread, and sets the handle to the os-specific handle.
+	*
+	* @return {@code int} The native specific error
+	*/
+	private native spawnThread() => (int);
 	
 	/**
-	* Gets the Shadow-specific thread id.
+	* Frees the handle that was created when the thread was spawned.
+	*/
+	private native destroyHandle() => ();
+	
+	/**
+	* Suspends the calling thread until this thread terminates.
+	*
+	* @return {@code int} The native specific error
+	*/
+	private native joinThread() => (int);
+	
+	/**
+	* Gets the Shadow-specific id of the thread. Threads are numbered
+	* incrementally. This method is Thread-Safe.
+	*
+	* @return {@code int} The sequential ID of the thread.
+	*/
+	private native getNextId() => (int);
+	// END: Native methods
+	
+	/**
+	* This is the os-specific handle, and cannot be dereferenced in Shadow.
+	* However, it is not null when the thread is running, and is null when
+	* the thread is dead. So, it can be evaluated to see whether a thread is running.
+	*/
+	nullable Object handle = null;
+	
+	CanRun runner; // the runner instance
+	
+	/**
+	* Gets the Shadow-specific thread ID.
 	*/
 	get int id;
 	
@@ -25,6 +54,20 @@ locked class shadow:standard@
 	get nullable ThreadWorker parent;
 	
 	/**
+	* Gets the name of the thread set at spawn time. If no name is set
+	* at spawn time, the name takes the format "Thread#{id}".
+	*/
+	get String name;
+	
+	/**
+	* Gets whether this thread is running.
+	*/
+	public get isRunning() => (boolean)
+	{
+		return (name == "main" or handle !== null);
+	}
+	
+	/**
 	* !Used natively!
 	*
 	* This method is only used to create a thread for the main
@@ -32,11 +75,10 @@ locked class shadow:standard@
 	*/
 	private create()
 	{
-		this:runnable = NopRunnable:create();
+		this:runner = NopRunner:create();
 		this:id = getNextId();
 		this:parent = null;
-		
-		this:handle = getCurrentThreadHandle();
+		this:name = "main";
 	}
 	
 	/**
@@ -44,20 +86,52 @@ locked class shadow:standard@
 	* instance, containing a run function that is going to be ran
 	* on a different thread.
 	* 
-	* param runnable The instance that contains a run function
+	* @param runner The instance that contains a run function.
 	*/
-	public create(CanRun runnable)
+	public create(CanRun runner)
 	{
-		this:runnable = copy(runnable);
+		this(runner, null);
+	}
+	
+	/**
+	* Creates a new {@code ThreadWorker} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread, and takes a {@code String} which is the name
+	* of the thread for reference purposes.
+	* 
+	* @param runner The instance that contains a run function.
+	* @param name The name of the thread.
+	*/
+	public create(CanRun runner, nullable String name)
+	{
+		this:runner = copy(runner);
 		this:id = getNextId();
 		this:parent = Thread->current;
 		
-		createThread();
+		try {
+			this:name = check(name);
+		}
+		recover {
+			this:name = "Thread#" # id;
+		}
+		
+		// spawnThread natively sets the handle
+		spawnThread();		
 	}
 	
+	/**
+	* Suspends the execution of the calling thread until this thread terminates. 
+	* Joining on a dead thread has no side effects.
+	* 
+	* @throws InvalidOperationException if the calling thread is the same as this thread.
+	*/
 	public join() => ()
 	{
-		joinThread();
+		if(this === Thread->current)
+			throw InvalidOperationException:create("A thread cannot call join on itself.");
+		
+		if(handle !== null)
+			joinThread();
 	}
 	
 	/**
@@ -66,13 +140,16 @@ locked class shadow:standard@
 	* This method is natively executed from the newly spawned thread.
 	* DO NOT MANUALLY EXECUTE.
 	*/
-	private runner() => ()
+	private runnerNative() => ()
 	{
-		runnable.run();
+		runner.run();
+		
+		// natively dispose of the handle
+		destroyHandle();
 	}
 	
-	// A class used as an empty Runnable for a dummy thread.
-	private class NopRunnable
+	// A Runner which performs no operations.
+	private class NopRunner
 		is CanRun
 	{
 		public run() => () {}

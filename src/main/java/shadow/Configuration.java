@@ -207,16 +207,19 @@ public class Configuration {
 				linkCommand.add("-");
 				linkCommand.add("-lm");
 				linkCommand.add("-lSystem");
-			}			
+			}
 			else {
 				linkCommand.add("gcc");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
-				linkCommand.add("-");					
+				linkCommand.add("-");
 				
 				if( getOs().equals("Linux") ) {
 					linkCommand.add("-lm");
 					linkCommand.add("-lrt");
+				} else {
+					// we need this for MinGW pthreads
+					linkCommand.add("-static");
 				}
 			}
 		}

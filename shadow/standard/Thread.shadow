@@ -1,18 +1,48 @@
-immutable singleton shadow:standard@Thread
+immutable singleton shadow:standard@
+	Thread
 {
+	private native sleepNative(int sec, int nsec) => ();
+	
+	/**
+	* Gets the {@code ThreadWorker} instance of the current executing thread.
+	*/
 	public native get current() => (ThreadWorker);
 	
-	public native sleep(int sec, int nsec) => ();
+	/**
+	* Suspends the current running thread for {@code sec} seconds plus
+	* {@code nsec} nanoseconds.
+	* 
+	* @param sec The seconds portion.
+	* @param nsec The nanseconds portion [0 - 999,999].
+	* 
+	* @throws IllegalArgumentException If {@code sec} is negative or {@code nsec} is not in the range [0, 999,999].
+	*/
+	public sleep(int sec, int nsec) => ()
+	{
+		if(sec < 0)
+			throw IllegalArgumentException:create("The argument {sec} should be bigger than or equal to zero");
+		
+		if(nsec < 0 or nsec > 999999)
+			throw IllegalArgumentException:create("The argument {nsec} should lie between zero and 999,999 inclusive.");
+		
+		sleepNative(sec, nsec);
+	}
 	
+	/**
+	* Suspends the current running thread for {@code ms} milliseconds.
+	* 
+	* @param ms The milliseconds to pause the thread for.
+	*/
 	public sleep(int ms) => ()
 	{
+	
 		if(ms >= 1000)
 		{
 			int sec = ms / 1000;
 			int nsec = (ms - sec * 1000) * 1000000;
 			
-			sleep(sec, nsec);
+			sleepNative(sec, nsec);
 		}
-		else sleep(0, ms * 1000000);
+		else sleepNative(0, ms * 1000000);
 	}
 }

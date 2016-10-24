@@ -1,0 +1,5 @@
+locked immutable class shadow:standard@
+	TimeSpan
+{
+	private create() {}
+}

@@ -21,18 +21,18 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 
 ; Object
 %shadow.standard..Object_methods = type opaque
-%shadow.standard..Object = type { %shadow.standard..Class*, %shadow.standard..Object_methods*  }
+%shadow.standard..Object = type opaque
 
 ; Class
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int }
+%shadow.standard..Class = type opaque
 
 ; Iterator
-%shadow.standard..Iterator_methods = type { %boolean (%shadow.standard..Object*)*, %shadow.standard..Object* (%shadow.standard..Object*)* }
+%shadow.standard..Iterator_methods = type opaque
 
 ; String
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %shadow.standard..Class*, %shadow.standard..String_methods* , { %byte*, [1 x %int] }, %boolean }
+%shadow.standard..String = type opaque
 
 ; AddressMap
 %shadow.standard..AddressMap_methods = type opaque
@@ -40,22 +40,22 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 
 ; Exception
 %shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type { %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.standard..Exception = type opaque
 
 ; System
 %shadow.standard..System_methods = type opaque
-%shadow.standard..System = type { %shadow.standard..Class*, %shadow.standard..System_methods*  }
+%shadow.standard..System = type opaque
 
 ; CanRun
-%shadow.standard..CanRun_methods = type { void (%shadow.standard..Object*, %shadow.standard..ThreadWorker*)* }
+%shadow.standard..CanRun_methods = type opaque
 
 ; ThreadWorker
 %shadow.standard..ThreadWorker_methods = type opaque
-%shadow.standard..ThreadWorker = type { %shadow.standard..Class*, %shadow.standard..ThreadWorker_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %shadow.standard..ThreadWorker*, %uint, %int }
+%shadow.standard..ThreadWorker = type opaque
 
 ; Thread
 %shadow.standard..Thread_methods = type opaque
-%shadow.standard..Thread = type { %shadow.standard..Class*, %shadow.standard..Thread_methods*  }
+%shadow.standard..Thread = type opaque
 
 ; struct timespec { time_t tv_sec; long tv_nsec; };
 %struct.timespec = type { %int, %int }
@@ -63,12 +63,9 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 ; int nanosleep(const struct timespec *req, struct timespec *rem);
 declare %int @nanosleep(%struct.timespec*, %struct.timespec*)
 
-; used to allocate a new thread and call the empty constructor
-declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
-
 @shadow.standard..ThreadWorker_currentThread = external global %shadow.standard..ThreadWorker*
 
-define void @shadow.standard..Thread_Msleep_int_int(%shadow.standard..Thread* %this, %int %sec, %int %nsec) {
+define void @shadow.standard..Thread_MsleepNative_int_int(%shadow.standard..Thread* %this, %int %sec, %int %nsec) {
 entry:
   %sec.addr = alloca i32, align 4
   %nsec.addr = alloca i32, align 4
@@ -90,14 +87,5 @@ entry:
 define %shadow.standard..ThreadWorker* @shadow.standard..Thread_Mcurrent(%shadow.standard..Thread*) {
 entry:
 	%currentThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
-	%cmp = icmp eq %shadow.standard..ThreadWorker* %currentThread, null
-	br %boolean %cmp, label %if.then, label %if.else
-
-if.then:
-	%newThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
-	store %shadow.standard..ThreadWorker* %newThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
-	ret %shadow.standard..ThreadWorker* %newThread
-
-if.else:
 	ret %shadow.standard..ThreadWorker* %currentThread
 }

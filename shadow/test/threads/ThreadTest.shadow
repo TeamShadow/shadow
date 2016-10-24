@@ -4,28 +4,22 @@ class shadow:test:threads@ThreadTest
 {
 	class ThreadTestRunner is CanRun
 	{
-		int x = 0;
-		
 		public run() => ()
 		{
-			int id = Thread->current->id;
+			var currentThread = Thread->current;
 			
-			Thread.sleep(id * 40);
-			Console.printLine("I am a thread. #" # id);
-			
-			if(x == 0) {
-				x = 1;
-				ThreadWorker:create(this).join();
-			}
+			var id = currentThread->id;
+			Thread.sleep(id * 50);
+			Console.printLine(currentThread->name);
 		}
 	}
 
 	public main(String[] args) => ()
 	{
 		var runner = ThreadTestRunner:create();
-		copy(runner).run();
+		runner.run(); // print main
 
-		nullable var array = ThreadWorker:null[5];
+		nullable var array = ThreadWorker:null[4];
 		for (int i = 0; i < array->size; i += 1)
 			array[i] = ThreadWorker:create(runner);
 
