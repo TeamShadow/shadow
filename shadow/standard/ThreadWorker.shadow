@@ -121,7 +121,7 @@ locked class shadow:standard@
 	
 	/**
 	* Suspends the execution of the calling thread until this thread terminates. 
-	* Joining on a dead thread has no side effects.
+	* Joining on a dead thread, or on the main thread has no side effects.
 	* 
 	* @throws InvalidOperationException if the calling thread is the same as this thread.
 	*/

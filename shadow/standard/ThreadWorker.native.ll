@@ -25,14 +25,14 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 
 ; Class
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int }
+%shadow.standard..Class = type opaque
 
 ; Iterator
-%shadow.standard..Iterator_methods = type { %boolean (%shadow.standard..Object*)*, %shadow.standard..Object* (%shadow.standard..Object*)* }
+%shadow.standard..Iterator_methods = type opaque
 
 ; String
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %shadow.standard..Class*, %shadow.standard..String_methods* , { %byte*, [1 x %int] }, %boolean }
+%shadow.standard..String = type opaque
 
 ; AddressMap
 %shadow.standard..AddressMap_methods = type opaque
@@ -40,14 +40,14 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 
 ; Exception
 %shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type { %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.standard..Exception = type opaque
 
 ; System
 %shadow.standard..System_methods = type opaque
-%shadow.standard..System = type { %shadow.standard..Class*, %shadow.standard..System_methods*  }
+%shadow.standard..System = type opaque
 
 ; CanRun
-%shadow.standard..CanRun_methods = type { void (%shadow.standard..Object*, %shadow.standard..ThreadWorker*)* }
+%shadow.standard..CanRun_methods = type opaque
 
 ;===================================================================================================
 ; Externals
@@ -75,20 +75,11 @@ declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void*
 ; int pthread_join(pthread_t, void**);
 declare %int @pthread_join(%struct.pthread_t, %void**)
 
-; pthread_t pthread_self();
-declare %struct.pthread_t @pthread_self()
-
 declare noalias i8* @calloc(i32, i32) nounwind
 declare void @free(i8*) nounwind
 ;===================================================================================================
 
-; ThreadWorker
-%shadow.standard..ThreadWorker_methods = type opaque
-%shadow.standard..ThreadWorker = type { %shadow.standard..Class*, %shadow.standard..ThreadWorker_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %struct.pthread_t*, %shadow.standard..String*, %shadow.standard..ThreadWorker*, %int }
-
-; the runner which is executed from the newly spawned thread
-declare void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker*)
-
+; Current definition
 ; 0: class (Class)
 ; 1: _methods
 ; 2: runner (shadow:standard@CanRun)
@@ -97,17 +88,23 @@ declare void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..Thre
 ; 5: parent (shadow:standard@ThreadWorker)
 ; 6: id (int)
 
-; used to store the current instance of the thread; System->currentThread. Each System singleton
-; refers to its own thread.
-@shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
+; ThreadWorker
+%shadow.standard..ThreadWorker_methods = type opaque
+%shadow.standard..ThreadWorker = type { %shadow.standard..Class*, %shadow.standard..ThreadWorker_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %struct.pthread_t*, %shadow.standard..String*, %shadow.standard..ThreadWorker*, %int }
+
+; the runner which is executed from the newly spawned thread
+declare void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker*)
 
 @nextThreadId = global %int 0
-
+; getNextId() => (int); (ThreadSafe)
 define %int @shadow.standard..ThreadWorker_MgetNextId(%shadow.standard..ThreadWorker*) {
 entry:
 	%currentId = atomicrmw add i32* @nextThreadId, i32 1 acquire
 	ret %int %currentId
 }
+
+; used to store the current instance of the thread; Thread->current.
+@shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
 
 define %void* @thread_func(%void* %currentThread) {
 entry:
@@ -131,7 +128,7 @@ entry:
 	store %shadow.standard..ThreadWorker* %0, %shadow.standard..ThreadWorker** %this.addr
 	%this = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** %this.addr
 
-	; load handle
+	; allocate space for the new handle
 	%sizeOfPthread = ptrtoint %struct.pthread_t* getelementptr (%struct.pthread_t, %struct.pthread_t* null, i32 1) to i32
 	%handle.addr.0 = getelementptr inbounds %shadow.standard..ThreadWorker, %shadow.standard..ThreadWorker* %this, i32 0, i32 3
 	%handle.addr.1 = call noalias i8* @calloc(i32 1, i32 %sizeOfPthread) nounwind
@@ -147,6 +144,7 @@ entry:
 	ret %int %call
 }
 
+; destroyHandle() => ();
 define void @shadow.standard..ThreadWorker_MdestroyHandle(%shadow.standard..ThreadWorker*) {
 entry:
 	; get the reference of the current Thread
