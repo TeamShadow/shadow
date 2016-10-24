@@ -202,11 +202,12 @@ public class Main {
 			String nativeIntegers = "n8:16:32:64";
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
 			
+			String optimisationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), /*"-O3",*/ dataLayout).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget()/*, "-O3"*/)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimisationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
