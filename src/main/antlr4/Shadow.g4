@@ -716,7 +716,7 @@ CHECK		: 'check';
 CLASS		: 'class';
 CODE		: 'code';
 COPY		: 'copy';
-SPAWN       : 'spawn';
+SPAWN		: 'spawn';
 CREATE		: 'create';
 CONSTANT	: 'constant';
 CONTINUE	: 'continue';

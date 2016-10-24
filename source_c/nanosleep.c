@@ -1,29 +1,14 @@
 /*
-* Shadow implementation of System.sleep().
+* Shadow implementation of Thread.sleep().
 * 
 * Claude Abounegm
 */
 
 #include <time.h>
 
-#define S_TO_MS 1000
-#define MS_TO_NS 1000000
-
 int sleep(int sec, int nsec)
 {
 	struct timespec t = { sec, nsec };
-	
-/*	if(ms < 1000)
-	{
-		t.tv_sec = 0;
-		t.tv_nsec = ms * MS_TO_NS;
-	}
-	else
-	{
-		t.tv_sec = ms / S_TO_MS;
-		t.tv_nsec = (ms - t.tv_sec * S_TO_MS) * MS_TO_NS;
-	}*/
-
 	return nanosleep(&t, NULL);
 }
 

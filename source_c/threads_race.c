@@ -1,5 +1,5 @@
 /*
-* Shadow implementation of threads
+* A proof to check for race conditions in LLVM and Shadow.
 * 
 * Claude Abounegm
 */
@@ -14,12 +14,14 @@ void* thread_func(void* arg) {
 	int i;
 	for (i = 0; i < 10000000; ++i)
 		x += 1;
+	
 	return NULL;
 }
 
 int main()
 {
 	pthread_t* threads = calloc(5, sizeof(pthread_t));
+	
 	int i;
 	for(i = 0; i < 5; ++i) {
 		pthread_create(&threads[i], NULL, thread_func, NULL);
