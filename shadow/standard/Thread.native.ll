@@ -65,25 +65,26 @@ declare %int @nanosleep(%struct.timespec*, %struct.timespec*)
 
 @shadow.standard..ThreadWorker_currentThread = external global %shadow.standard..ThreadWorker*
 
+; sleepNative(int sec, int nsec) => ();
 define void @shadow.standard..Thread_MsleepNative_int_int(%shadow.standard..Thread* %this, %int %sec, %int %nsec) {
 entry:
-  %sec.addr = alloca i32, align 4
-  %nsec.addr = alloca i32, align 4
-  %t = alloca %struct.timespec, align 4
-  store i32 %sec, i32* %sec.addr, align 4
-  store i32 %nsec, i32* %nsec.addr, align 4
-  %0 = load i32, i32* %sec.addr, align 4
-  %tv_sec = getelementptr inbounds %struct.timespec, %struct.timespec* %t, i32 0, i32 0
-  store i32 %0, i32* %tv_sec, align 4
-  %1 = load i32, i32* %nsec.addr, align 4
-  %tv_nsec = getelementptr inbounds %struct.timespec, %struct.timespec* %t, i32 0, i32 1
-  store i32 %1, i32* %tv_nsec, align 4
-  %call = call i32 @nanosleep(%struct.timespec* %t, %struct.timespec* null)
-  
-  ret void
+	%sec.addr = alloca i32, align 4
+	%nsec.addr = alloca i32, align 4
+	%t = alloca %struct.timespec, align 4
+	store i32 %sec, i32* %sec.addr, align 4
+	store i32 %nsec, i32* %nsec.addr, align 4
+	%0 = load i32, i32* %sec.addr, align 4
+	%tv_sec = getelementptr inbounds %struct.timespec, %struct.timespec* %t, i32 0, i32 0
+	store i32 %0, i32* %tv_sec, align 4
+	%1 = load i32, i32* %nsec.addr, align 4
+	%tv_nsec = getelementptr inbounds %struct.timespec, %struct.timespec* %t, i32 0, i32 1
+	store i32 %1, i32* %tv_nsec, align 4
+	%call = call i32 @nanosleep(%struct.timespec* %t, %struct.timespec* null)
+
+	ret void
 }
 
-; get currentThread() => (Thread);
+; get current() => (ThreadWorker);
 define %shadow.standard..ThreadWorker* @shadow.standard..Thread_Mcurrent(%shadow.standard..Thread*) {
 entry:
 	%currentThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread

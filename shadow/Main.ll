@@ -76,27 +76,18 @@ declare void @shadow.test..Test_Mmain_shadow.standard..String_A1(%shadow.test..T
 
 declare i32 @__shadow_personality_v0(...)
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
+declare void @shadow.standard..ThreadWorker_MinitMainThread()
 
 @_genericSet = global %shadow.standard..ClassSet* null
 @_arraySet = global %shadow.standard..ClassSet* null
-
-; used to allocate a new thread and call the empty constructor
-%shadow.standard..ThreadWorker_methods = type opaque
-%shadow.standard..ThreadWorker = type opaque
-declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
-@shadow.standard..ThreadWorker_currentThread = external global %shadow.standard..ThreadWorker*
 
 define i32 @main(i32 %argc, i8** %argv) personality i32 (...)* @__shadow_personality_v0 {
 _start:	
 	%uninitializedConsole = call noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
     %console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
-	
-	; create a dummy ThreadWorker as main also has a thread
-	%mainThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
-	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
-	
-	%count = sub i32 %argc, 1	
+	call void @shadow.standard..ThreadWorker_MinitMainThread()
+	%count = sub i32 %argc, 1
 	%array = call %shadow.standard..Object* @shadow.standard..Class_Mallocate_int(%shadow.standard..Class* @shadow.standard..String_class, i32 %count)
 	%stringArray = bitcast %shadow.standard..Object* %array to %shadow.standard..String**
 	br label %_loopTest

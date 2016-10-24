@@ -94,6 +94,7 @@ declare void @free(i8*) nounwind
 
 ; the runner which is executed from the newly spawned thread
 declare void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker*)
+declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
 
 @nextThreadId = global %int 0
 ; getNextId() => (int); (ThreadSafe)
@@ -105,6 +106,14 @@ entry:
 
 ; used to store the current instance of the thread; Thread->current.
 @shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
+
+define void @shadow.standard..ThreadWorker_MinitMainThread() {
+entry:
+	%mainThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
+	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	
+	ret void
+}
 
 define %void* @thread_func(%void* %currentThread) {
 entry:
