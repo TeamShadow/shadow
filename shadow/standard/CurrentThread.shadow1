@@ -1,0 +1,18 @@
+immutable singleton shadow:standard@CurrentThread
+{
+	public native get current() => (Thread);
+	
+	public native sleep(int sec, int nsec) => ();
+	
+	public sleep(int ms) => ()
+	{
+		if(ms >= 1000)
+		{
+			int sec = ms / 1000;
+			int nsec = (ms - sec * 1000) * 1000000;
+			
+			sleep(sec, nsec);
+		}
+		else sleep(0, ms * 1000000);
+	}
+}

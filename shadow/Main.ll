@@ -12,6 +12,7 @@
 %ulong = type i64
 %float = type float
 %double = type double
+%void = type i8
 
 ; standard definitions
 %shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
@@ -79,11 +80,15 @@ declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 @_genericSet = global %shadow.standard..ClassSet* null
 @_arraySet = global %shadow.standard..ClassSet* null
 
+;@shadow.standard..Thread_counterLock = external global %void*
+;declare void @LockInit(%void** %lock)
+
 define i32 @main(i32 %argc, i8** %argv) personality i32 (...)* @__shadow_personality_v0 {
 _start:	
 	%uninitializedConsole = call noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
     %console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
+;	call void @LockInit(%void** @shadow.standard..Thread_counterLock)
 	%count = sub i32 %argc, 1	
 	%array = call %shadow.standard..Object* @shadow.standard..Class_Mallocate_int(%shadow.standard..Class* @shadow.standard..String_class, i32 %count)
 	%stringArray = bitcast %shadow.standard..Object* %array to %shadow.standard..String**

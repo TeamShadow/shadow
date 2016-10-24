@@ -1,0 +1,35 @@
+import shadow:io@Console;
+
+class shadow:test:threads@ThreadTest
+{
+	class ThreadTestRunner is CanRun
+	{
+		int x = 0;
+		
+		public run() => ()
+		{
+			int id = Thread->current->id;
+			
+			Thread.sleep(id * 40);
+			Console.printLine("I am a thread. #" # id);
+			
+			if(x == 0) {
+				x = 1;
+				ThreadWorker:create(this).join();
+			}
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		var runner = ThreadTestRunner:create();
+		copy(runner).run();
+
+		nullable var array = ThreadWorker:null[5];
+		for (int i = 0; i < array->size; i += 1)
+			array[i] = ThreadWorker:create(runner);
+
+		for (int i = 0; i < array->size; i += 1)
+			check(array[i]).join();
+	}
+}

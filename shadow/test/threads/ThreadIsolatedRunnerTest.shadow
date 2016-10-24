@@ -1,0 +1,33 @@
+import shadow:io@Console;
+
+class shadow:test:threads@ThreadIsolatedRunnerTest
+{
+	int y = 0;
+	
+	class ThreadIsolatedRunner is CanRun
+	{
+		int x = 0;
+		
+		public run() => ()
+		{
+			x += 1;
+			y += 1;
+			Console.printLine(x # " " # y);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		var runner = ThreadIsolatedRunner:create();
+		
+		var thread1 = ThreadWorker:create(runner);		
+		var thread2 = ThreadWorker:create(runner);		
+		var thread3 = ThreadWorker:create(runner);
+		
+		thread1.join();
+		thread2.join();
+		thread3.join();
+		
+		Console.printLine(y);
+	}
+}

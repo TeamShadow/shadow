@@ -489,6 +489,7 @@ public class TypeCollector extends BaseChecker {
 				case "CanModulus":		Type.CAN_MODULUS = (InterfaceType)type; break;
 				case "CanMultiply":		Type.CAN_MULTIPLY = (InterfaceType)type; break;
 				case "CanNegate":		Type.CAN_NEGATE = (InterfaceType)type; break;
+				case "CanRun": 			Type.CAN_RUN = (InterfaceType)type; break;
 				case "CanSubtract":		Type.CAN_SUBTRACT = (InterfaceType)type; break;
 				case "CanIndex":		Type.CAN_INDEX = (InterfaceType) type; break;
 				case "CanIndexNullable":	Type.CAN_INDEX_NULLABLE = (InterfaceType) type; break;				

@@ -23,7 +23,7 @@ import shadow.Main;
 public class OutputTests {
 	// To simplify removal, every unit test executable will have the same name
 	private static final String executableName = Job.properExecutableName("OutputTest");
-	private static final Path executable = Paths.get("shadow", "test", executableName);
+	private static Path executable = Paths.get("shadow", "test", executableName);
 
 	private ArrayList<String> args = new ArrayList<String>();
 	
@@ -49,10 +49,10 @@ public class OutputTests {
 	public void cleanup() throws IOException {
 		
 		// Try to remove the unit test executable
-		try {			
+/*		try {			
 			Files.delete(executable);
 		}
-		catch(Exception e) {}
+		catch(Exception e) {}*/
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
@@ -1036,6 +1036,67 @@ public class OutputTests {
 				"false\n" + 
 				"false\n" + 
 				"true\n");
+	}
+	
+	@Test public void testThread() throws Exception {
+		executable = Paths.get("shadow", "test", "threads", executableName);
+		
+		args.add("shadow/test/threads/ThreadTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"I am a thread. #0\n" +
+			    "I am a thread. #1\n" +
+				"I am a thread. #2\n" +
+			    "I am a thread. #3\n" +
+			    "I am a thread. #4\n");
+	}
+	
+	@Test public void testThreadSleep() throws Exception {
+		executable = Paths.get("shadow", "test", "threads", executableName);
+		
+		args.add("shadow/test/threads/ThreadSleepTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"I am going to wait 3 seconds.\n" +
+				"I waited 3 seconds.\n" +
+				"I am a thread.\n" +
+			    "I am a thread.\n" +
+				"I am a thread.\n" +
+			    "true\n");
+	}
+	
+	@Test public void testTLSThread() throws Exception {
+		executable = Paths.get("shadow", "test", "threads", executableName);
+		
+		args.add("shadow/test/threads/TLSTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"1\n" +
+				"1\n");
+	}
+	
+	@Test public void testCurrentThread() throws Exception {
+		executable = Paths.get("shadow", "test", "threads", executableName);
+		
+		args.add("shadow/test/threads/CurrentThreadTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"true\n" +
+				"true\n" +
+			    "true\n" +
+				"true\n");
+	}
+	
+	@Test public void testThreadIsolatedRunner() throws Exception {
+		executable = Paths.get("shadow", "test", "threads", executableName);
+		
+		args.add("shadow/test/threads/ThreadIsolatedRunnerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"1 1\n" +
+				"1 1\n" +
+				"1 1\n" +
+				"0\n");
 	}
 	
 	@Test public void testToughTry() throws Exception {

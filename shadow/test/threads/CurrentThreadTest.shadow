@@ -1,0 +1,29 @@
+import shadow:io@Console;
+
+class shadow:test:threads@CurrentThreadTest
+{
+	class CurrentThreadRunner is CanRun
+	{
+		public run() => ()
+		{
+			//Console.printLine(currentThread->id == System->currentThread->id);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		var runner = CurrentThreadRunner:create();
+		
+		var thread1 = ThreadWorker:create(runner);
+		thread1.join();
+		
+		//Console.printLine(System->currentThread->parent->id);		
+		//Console.printLine(System->currentThread->id == thread1->parent->id);
+		
+		var thread2 = ThreadWorker:create(runner);
+		thread2.join();
+		
+		var thread3 = ThreadWorker:create(runner);
+		thread3.join();
+	}
+}

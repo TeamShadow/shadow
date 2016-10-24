@@ -1,0 +1,4 @@
+private locked class shadow:standard@Mutex
+{
+	private create() {}
+}
