@@ -12,7 +12,6 @@
 %ulong = type i64
 %float = type float
 %double = type double
-%void = type i8
 
 ; standard definitions
 %shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }

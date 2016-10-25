@@ -1,38 +1,31 @@
 import shadow:io@Console;
+import shadow:utility@LinkedList;
 
 locked class shadow:standard@
 	ThreadWorker
 {
+	locked class ThreadData is CanEqual<ThreadData> {
+		get Object data;
+		get ThreadWorker sender;
+		
+		public create(Object data, ThreadWorker sender) {
+			this:data = data;
+			this:sender = sender;
+		}
+		
+		public readonly equal(ThreadData other) => (boolean) {
+			return (data === other:data and sender === other:sender);
+		}
+	}
+	
 	// START: Native methods
 	private createNative() => (ThreadWorker) { return ThreadWorker:create(); }
-	
-	/**
-	* Spawns a new thread, and sets the handle to the os-specific handle.
-	*
-	* @return {@code int} The native specific error
-	*/
-	private native spawnThread() => (int);
-	
-	/**
-	* Frees the handle that was created when the thread was spawned.
-	*/
-	private native destroyHandle() => ();
-	
-	/**
-	* Suspends the calling thread until this thread terminates.
-	*
-	* @return {@code int} The native specific error
-	*/
-	private native joinThread() => (int);
-	
-	/**
-	* Gets the Shadow-specific id of the thread. Threads are numbered
-	* incrementally. This method is Thread-Safe.
-	*
-	* @return {@code int} The sequential ID of the thread.
-	*/
+	private native createHandle() => (nullable Object);
+	private native freeHandle(nullable Object handle) => ();
+	private native spawnThread(nullable Object handle) => (int);
+	private native joinThread(nullable Object handle) => (int);
 	private native getNextId() => (int);
-	// END: Native methods
+	// END: Native methods	
 	
 	/**
 	* This is the os-specific handle, and cannot be dereferenced in Shadow.
@@ -41,7 +34,10 @@ locked class shadow:standard@
 	*/
 	nullable Object handle = null;
 	
-	CanRun runner; // the runner instance
+	nullable Exception ex = null;
+	
+	/// The runner instance which will be used by the newly spawned thread.
+	CanRun runner;
 	
 	/**
 	* Gets the Shadow-specific thread ID.
@@ -78,7 +74,7 @@ locked class shadow:standard@
 		this:runner = NopRunner:create();
 		this:id = getNextId();
 		this:parent = null;
-		this:name = "main";
+		this:name = "Thread#main";
 	}
 	
 	/**
@@ -116,7 +112,8 @@ locked class shadow:standard@
 		}
 		
 		// spawnThread natively sets the handle
-		spawnThread();		
+		this:handle = createHandle();
+		spawnThread(handle);
 	}
 	
 	/**
@@ -130,8 +127,13 @@ locked class shadow:standard@
 		if(this === Thread->current)
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		
-		if(handle !== null)
-			joinThread();
+		if(handle !== null) {
+			joinThread(handle);
+		}
+		
+		try {
+			throw check(ex);
+		} recover {}
 	}
 	
 	/**
@@ -142,10 +144,15 @@ locked class shadow:standard@
 	*/
 	private runnerNative() => ()
 	{
-		runner.run();
-		
-		// natively dispose of the handle
-		destroyHandle();
+		try {
+			runner.run();
+		} catch(Exception e) {
+			ex = e;
+		} finally {
+			// natively free of the handle
+			freeHandle(handle);
+			handle = null;
+		}
 	}
 	
 	// A Runner which performs no operations.

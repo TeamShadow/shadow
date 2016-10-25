@@ -1,4 +1,45 @@
-private locked class shadow:standard@Mutex
+import shadow:io@Console;
+
+locked class shadow:standard@
+	Mutex
 {
-	private create() {}
+	nullable Object mutex = null;
+
+	private native init() => (Object);
+	private native lock(Object mutex) => (int);
+	private native unlock(Object mutex) => (int);
+	private native destroyNative(nullable Object mutex) => (int);
+	
+	public create()
+	{
+		mutex = init();
+	}
+	
+	public lock() => ()
+	{
+		try {
+			lock(check(mutex));
+		}
+		recover {
+			throw InvalidOperationException:create("The Mutex has been destroyed and cannot be used.");
+		}
+	}
+	
+	public unlock() => ()
+	{
+		try {
+			unlock(check(mutex));
+		}
+		recover {
+			throw InvalidOperationException:create("The Mutex has been destroyed and cannot be used.");
+		}
+	}
+	
+	public free() => ()
+	{
+		if(mutex !== null) {
+			destroyNative(mutex);
+			mutex = null;
+		}
+	}
 }

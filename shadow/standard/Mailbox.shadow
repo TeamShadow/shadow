@@ -1,0 +1,28 @@
+import shadow:utility@LinkedList;
+
+class shadow:standard@
+	Mailbox<T is CanEqual<T>>
+{
+	Mutex mutex;
+	//LinkedList<T> queue;
+	
+	public create() {
+		mutex = Mutex:create();
+		//queue = LinkedList<T>:create();
+	}
+	
+	public enqueue(T data) => () {
+		mutex.lock();
+		//queue.addLast(data);
+		mutex.unlock();
+	}
+	
+	public dequeue() => (nullable T) {
+		mutex.lock();
+		//var retVal = queue.removeFirst();
+		mutex.unlock();
+		
+		//return retVal;
+		return null;
+	}
+}

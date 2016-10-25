@@ -12,11 +12,6 @@
 %double = type double
 %void = type i8
 
-declare i32 @__shadow_personality_v0(...)
-declare void @__shadow_throw(%shadow.standard..Object*) noreturn
-declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
-declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
-
 ; standard definitions
 
 ; Object
@@ -49,6 +44,10 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 ; CanRun
 %shadow.standard..CanRun_methods = type opaque
 
+; ThreadWorker
+%shadow.standard..ThreadWorker_methods = type opaque
+%shadow.standard..ThreadWorker = type opaque
+
 ;===================================================================================================
 ; Externals
 
@@ -79,28 +78,16 @@ declare noalias i8* @calloc(i32, i32) nounwind
 declare void @free(i8*) nounwind
 ;===================================================================================================
 
-; Current definition
-; 0: class (Class)
-; 1: _methods
-; 2: runner (shadow:standard@CanRun)
-; 3: handle (shadow:standard@Object)
-; 4: name (shadow:standard@String)
-; 5: parent (shadow:standard@ThreadWorker)
-; 6: id (int)
-
-; ThreadWorker
-%shadow.standard..ThreadWorker_methods = type opaque
-%shadow.standard..ThreadWorker = type { %shadow.standard..Class*, %shadow.standard..ThreadWorker_methods* , { %shadow.standard..CanRun_methods*, %shadow.standard..Object* }, %struct.pthread_t*, %shadow.standard..String*, %shadow.standard..ThreadWorker*, %int }
-
 ; the runner which is executed from the newly spawned thread
 declare void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker*)
 declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
 
 @nextThreadId = global %int 0
+
 ; getNextId() => (int); (ThreadSafe)
 define %int @shadow.standard..ThreadWorker_MgetNextId(%shadow.standard..ThreadWorker*) {
 entry:
-	%currentId = atomicrmw add i32* @nextThreadId, i32 1 acquire
+	%currentId = atomicrmw add %int* @nextThreadId, %int 1 seq_cst
 	ret %int %currentId
 }
 
@@ -129,20 +116,16 @@ entry:
 	ret %void* null
 }
 
-; spawnThread() => (int);
-define %int @shadow.standard..ThreadWorker_MspawnThread(%shadow.standard..ThreadWorker*) {
+; spawnThread(nullable Object handle) => (int);
+define %int @shadow.standard..ThreadWorker_MspawnThread_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
 entry:
 	; get the reference of the current Thread
 	%this.addr = alloca %shadow.standard..ThreadWorker*
 	store %shadow.standard..ThreadWorker* %0, %shadow.standard..ThreadWorker** %this.addr
 	%this = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** %this.addr
 
-	; allocate space for the new handle
-	%sizeOfPthread = ptrtoint %struct.pthread_t* getelementptr (%struct.pthread_t, %struct.pthread_t* null, i32 1) to i32
-	%handle.addr.0 = getelementptr inbounds %shadow.standard..ThreadWorker, %shadow.standard..ThreadWorker* %this, i32 0, i32 3
-	%handle.addr.1 = call noalias i8* @calloc(i32 1, i32 %sizeOfPthread) nounwind
-	%handle.addr = bitcast i8* %handle.addr.1 to %struct.pthread_t*
-	store %struct.pthread_t* %handle.addr, %struct.pthread_t** %handle.addr.0
+	; get the handle
+	%handle.addr = bitcast %shadow.standard..Object* %1 to %struct.pthread_t*
 	
 	; cast Thread* to void*
 	%this.void = bitcast %shadow.standard..ThreadWorker* %this to %void*
@@ -153,28 +136,28 @@ entry:
 	ret %int %call
 }
 
-; destroyHandle() => ();
-define void @shadow.standard..ThreadWorker_MdestroyHandle(%shadow.standard..ThreadWorker*) {
+; createHandle() => (nullable Object);
+define %shadow.standard..Object* @shadow.standard..ThreadWorker_McreateHandle(%shadow.standard..ThreadWorker*) {
 entry:
-	; get the reference of the current Thread
-	%this.addr = alloca %shadow.standard..ThreadWorker*
-	store %shadow.standard..ThreadWorker* %0, %shadow.standard..ThreadWorker** %this.addr
-	%this = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** %this.addr
+	%sizeOfPthread = ptrtoint %struct.pthread_t* getelementptr (%struct.pthread_t, %struct.pthread_t* null, i32 1) to i32
+	%handle.addr.1 = call noalias i8* @calloc(i32 1, i32 %sizeOfPthread) nounwind
+	%handle.addr =  bitcast i8* %handle.addr.1 to %shadow.standard..Object*
 	
-	; free the handle
-	%handle.addr.0 = getelementptr inbounds %shadow.standard..ThreadWorker, %shadow.standard..ThreadWorker* %this, i32 0, i32 3
-	%handle.addr.1 = load %struct.pthread_t*, %struct.pthread_t** %handle.addr.0
-	%handle.addr = bitcast %struct.pthread_t* %handle.addr.1 to i8*
-	call void @free(i8* %handle.addr)
+	ret %shadow.standard..Object* %handle.addr
+}
 
-	; set the pointer to null so we can test for it in shadow
-	store %struct.pthread_t* null, %struct.pthread_t** %handle.addr.0
+; freeHandle(nullable Object handle) => ();
+define void @shadow.standard..ThreadWorker_MfreeHandle_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
+entry:
+	; free the handle
+	%handle.addr = bitcast %shadow.standard..Object* %1 to i8*
+	call void @free(i8* %handle.addr)
 	
 	ret void
 }
 
-; joinThread() => (int);
-define %int @shadow.standard..ThreadWorker_MjoinThread(%shadow.standard..ThreadWorker*) {
+; joinThread(nullable Object handle) => (int);
+define %int @shadow.standard..ThreadWorker_MjoinThread_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
 entry:
 	; get the reference of the current Thread
 	%this.addr = alloca %shadow.standard..ThreadWorker*
@@ -182,8 +165,7 @@ entry:
 	%this = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** %this.addr
 
 	; load handle
-	%handle.addr.0 = getelementptr inbounds %shadow.standard..ThreadWorker, %shadow.standard..ThreadWorker* %this, i32 0, i32 3
-	%handle.addr = load %struct.pthread_t*, %struct.pthread_t** %handle.addr.0
+	%handle.addr = bitcast %shadow.standard..Object* %1 to %struct.pthread_t*
 	%handle = load %struct.pthread_t, %struct.pthread_t* %handle.addr
 
 	; join thread

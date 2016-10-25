@@ -50,7 +50,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -1044,11 +1044,11 @@ public class OutputTests {
 		args.add("shadow/test/threads/ThreadTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"main\n" +
-			    "Thread#1\n" +
+				"Thread#main\n" +
+				"Thread#1\n" +
 				"Thread#2\n" +
-			    "Thread#3\n" +
-			    "Thread#4\n");
+				"Thread#3\n" +
+				"Thread#4\n");
 	}
 	
 	@Test public void testThreadSleep() throws Exception {

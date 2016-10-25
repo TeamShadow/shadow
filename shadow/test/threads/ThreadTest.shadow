@@ -1,16 +1,20 @@
 import shadow:io@Console;
+import shadow:standard@InvalidOperationException;
 
 class shadow:test:threads@ThreadTest
 {
 	class ThreadTestRunner is CanRun
 	{
 		public run() => ()
-		{
+		{			
 			var currentThread = Thread->current;
 			
 			var id = currentThread->id;
 			Thread.sleep(id * 50);
 			Console.printLine(currentThread->name);
+			
+			if(id > 2)
+				throw InvalidOperationException:create("This is an exception from thread#" # id);
 		}
 	}
 
@@ -23,7 +27,18 @@ class shadow:test:threads@ThreadTest
 		for (int i = 0; i < array->size; i += 1)
 			array[i] = ThreadWorker:create(runner);
 
-		for (int i = 0; i < array->size; i += 1)
-			check(array[i]).join();
+		for (int i = 0; i < array->size; i += 1) {
+			try {
+				check(array[i]).join();
+			} catch(Exception e) {
+				Console.printLine(e->message);
+			}
+			
+			try {
+				check(array[i]).join();
+			} catch(Exception e) {
+				Console.printLine(e->message);
+			}
+		}
 	}
 }
