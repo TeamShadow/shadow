@@ -23,7 +23,7 @@ import shadow.Main;
 public class OutputTests {
 	// To simplify removal, every unit test executable will have the same name
 	private static final String executableName = Job.properExecutableName("OutputTest");
-	private static Path executable = Paths.get("shadow", "test", executableName);
+	private static final Path executable = Paths.get("shadow", "test", executableName);
 
 	private ArrayList<String> args = new ArrayList<String>();
 	
