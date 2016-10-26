@@ -86,7 +86,7 @@ declare void @shadow.standard..ThreadWorker_MunlockMutexNative(%shadow.standard.
 ; used to store the current instance of the thread; Thread->current.
 @shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
 @shadow.standard..ThreadWorker_mainThread = global %shadow.standard..ThreadWorker* null
-@nextThreadId = global %int 0
+@nextThreadId = private global %int 0
 
 ; get staticNextId() => (int); (ThreadSafe)
 define %int @shadow.standard..ThreadWorker_MstaticNextId(%shadow.standard..ThreadWorker*) {
@@ -95,9 +95,9 @@ entry:
 	ret %int %currentId
 }
 
-define %void* @thread_func(%void* %currentThread) {
+define %void* @thread_func(%void*) {
 entry:
-	%currentThread.addr = bitcast %void* %currentThread to %shadow.standard..ThreadWorker*
+	%currentThread.addr = bitcast %void* %0 to %shadow.standard..ThreadWorker*
 
 	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
 	; and will cause the TLS to correctly store the reference of this thread.

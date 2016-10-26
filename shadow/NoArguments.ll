@@ -84,7 +84,6 @@ define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {
 	%uninitializedConsole = call noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
     %console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
-	call void @shadow.standard..ThreadWorker_MinitMainThread()
 	%object = call %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.test..Test_class, %shadow.standard..Object_methods* bitcast(%shadow.test..Test_methods* @shadow.test..Test_methods to %shadow.standard..Object_methods*))		
 	%initialized = call %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object* %object)	
 	%uninitializedGenericSet = call %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
@@ -92,7 +91,8 @@ define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {
 	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	
 	%uninitializedArraySet = call %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
 	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_int(%shadow.standard..Object* %uninitializedArraySet, %int %arraySize) ; compiler replaces %arraySize 
-	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet	
+	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet
+	call void @shadow.standard..ThreadWorker_MinitMainThread()	
 	invoke void @shadow.test..Test_Mmain(%shadow.test..Test* %initialized)
 			to label %_success unwind label %_exception
 _success:

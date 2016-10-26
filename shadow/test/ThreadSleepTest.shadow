@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class shadow:test:threads@ThreadSleepTest
+class shadow:test@ThreadSleepTest
 {
 	class ThreadSleepTestRunner is CanRun
 	{

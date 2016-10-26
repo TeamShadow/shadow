@@ -16,7 +16,7 @@ is  List<V>
 	 * Checks whether or not the list is empty.
 	 * @return {@code true} if the list is empty
 	 */
-	public isEmpty() => ( boolean )
+	public readonly isEmpty() => ( boolean )
 	{
 		return size == 0;
 	}	

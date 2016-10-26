@@ -1,0 +1,109 @@
+import shadow:utility@List;
+import shadow:utility@ArrayList;
+
+locked class shadow:standard@
+	ThreadSafeList<T is CanEqual<T>>
+is List<T>
+{
+	ArrayList<T> list;
+	Mutex mutex;
+	
+	public create()
+	{
+		this:list = ArrayList<T>:create();
+		this:mutex = Mutex:create();
+	}
+	
+	public readonly get size() => (int)
+	{
+		mutex.lock();
+		var size = list->size;
+		mutex.unlock();
+		
+		return size;
+	}
+	
+	public readonly indexOf(T element) => (int)
+	{
+		mutex.lock();
+		var index = list.indexOf(element);
+		mutex.unlock();
+		
+		return index;
+	}
+	
+	public readonly contains(T element) => (boolean)
+	{
+		mutex.lock();
+		var flag = list.contains(element);
+		mutex.unlock();
+		
+		return flag;
+	}
+	
+	public readonly isEmpty() => (boolean)
+	{
+		mutex.lock();
+		var flag = list.isEmpty();
+		mutex.unlock();
+		
+		return flag;
+	}
+	
+	public readonly iterator() => (Iterator<T>)
+	{
+		return list.iterator();
+	}
+	
+	public readonly index(int key) => (T)
+	{
+		mutex.lock();
+		var index = list.index(key);
+		mutex.unlock();
+		
+		return index;
+	}
+	
+	public add(T element) => (ThreadSafeList<T>)
+	{
+		mutex.lock();
+		list.add(element);
+		mutex.unlock();
+		
+		return this;
+	}
+	
+	public delete(int index) => (T)
+	{
+		mutex.lock();
+		var element = list.delete(index);
+		mutex.unlock();
+		
+		return element;
+	}
+	
+	public remove(T element) => (boolean)
+	{
+		mutex.lock();
+		var flag = list.remove(element);
+		mutex.unlock();
+		
+		return flag;
+	}
+	
+	public clear() => (ThreadSafeList<T>)
+	{
+		mutex.lock();
+		list.clear();
+		mutex.unlock();
+		
+		return this;
+	}
+	
+	public index(int key, T value) => ()
+	{
+		mutex.lock();
+		list.index(key, value);
+		mutex.unlock();
+	}
+}

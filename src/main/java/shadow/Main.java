@@ -202,7 +202,7 @@ public class Main {
 			String nativeIntegers = "n8:16:32:64";
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
 			
-			String optimisationLevel = "";//"-O3"; // set to empty string to check for race conditions in Threads.
+			String optimisationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
 			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();

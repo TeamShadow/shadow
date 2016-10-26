@@ -85,7 +85,6 @@ _start:
 	%uninitializedConsole = call noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
     %console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
-	call void @shadow.standard..ThreadWorker_MinitMainThread()
 	%count = sub i32 %argc, 1
 	%array = call %shadow.standard..Object* @shadow.standard..Class_Mallocate_int(%shadow.standard..Class* @shadow.standard..String_class, i32 %count)
 	%stringArray = bitcast %shadow.standard..Object* %array to %shadow.standard..String**
@@ -116,7 +115,8 @@ _loopEnd:
 	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	
 	%uninitializedArraySet = call %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
 	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_int(%shadow.standard..Object* %uninitializedArraySet, %int %arraySize) ; %arraySize is replaced by compiler
-	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet	
+	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet
+	call void @shadow.standard..ThreadWorker_MinitMainThread()
 	invoke void @shadow.test..Test_Mmain_shadow.standard..String_A1(%shadow.test..Test* %initialized, { %shadow.standard..String**, [1 x i32] } %args)
 			to label %_success unwind label %_exception
 _success:

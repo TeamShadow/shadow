@@ -1,7 +1,4 @@
-import shadow:io@Console;
-
-singleton shadow:test:threads@
-	SingletonCounter
+singleton shadow:test@ThreadSingletonCounter
 {
 	int x = 0;
 	

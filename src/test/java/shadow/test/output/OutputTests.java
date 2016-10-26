@@ -1039,9 +1039,7 @@ public class OutputTests {
 	}
 	
 	@Test public void testThread() throws Exception {
-		executable = Paths.get("shadow", "test", "threads", executableName);
-		
-		args.add("shadow/test/threads/ThreadTest.shadow");
+		args.add("shadow/test/ThreadTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"Thread#main\n" +
@@ -1055,14 +1053,17 @@ public class OutputTests {
 				"true\n" +
 				"true\n" +
 				"This is an exception from thread#5\n" +
-				"This is an exception from thread#5\n"
+				"This is an exception from thread#5\n" +
+				"\n" +
+				"Thread#1\n" +
+				"Thread#2\n" +
+				"Thread#3\n" +
+				"Thread#4\n"
 				);
 	}
 	
 	@Test public void testThreadSleep() throws Exception {
-		executable = Paths.get("shadow", "test", "threads", executableName);
-		
-		args.add("shadow/test/threads/ThreadSleepTest.shadow");
+		args.add("shadow/test/ThreadSleepTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"I am going to wait 3 seconds.\n" +
@@ -1074,9 +1075,7 @@ public class OutputTests {
 	}
 	
 	@Test public void testTLSThread() throws Exception {
-		executable = Paths.get("shadow", "test", "threads", executableName);
-		
-		args.add("shadow/test/threads/TLSTest.shadow");
+		args.add("shadow/test/TLSTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 
 				"1\n" +
@@ -1084,9 +1083,7 @@ public class OutputTests {
 	}
 	
 	@Test public void testThreadIsolatedRunner() throws Exception {
-		executable = Paths.get("shadow", "test", "threads", executableName);
-		
-		args.add("shadow/test/threads/ThreadIsolatedRunnerTest.shadow");
+		args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 
 				"1 1\n" +

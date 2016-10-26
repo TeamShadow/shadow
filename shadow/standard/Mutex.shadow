@@ -1,43 +1,38 @@
 locked class shadow:standard@
 	Mutex
 {
-	nullable Object mutex = null;
+	immutable Object mutex;
+	boolean isValid;
 
-	private native init() => (Object);
-	private native lock(Object mutex) => (int);
-	private native unlock(Object mutex) => (int);
-	private native destroyNative(nullable Object mutex) => (int);
+	private native init() => (immutable Object);
+	private readonly native lock(immutable Object mutex) => (int);
+	private readonly native unlock(immutable Object mutex) => (int);
+	private native destroyNative(immutable Object mutex) => (int);
 	
 	public create()
 	{
 		mutex = init();
+		isValid = true;
 	}
 	
-	public lock() => ()
+	public readonly lock() => ()
 	{
-		try {
-			lock(check(mutex));
-		}
-		recover {
-			throw InvalidOperationException:create("The Mutex has been destroyed and cannot be used.");
-		}
+		if(isValid)
+			lock(mutex);
 	}
 	
-	public unlock() => ()
+	public readonly unlock() => ()
 	{
-		try {
-			unlock(check(mutex));
-		}
-		recover {
-			throw InvalidOperationException:create("The Mutex has been destroyed and cannot be used.");
-		}
+		if(isValid)
+			unlock(mutex);
 	}
 	
 	public free() => ()
 	{
-		if(mutex !== null) {
+		if(isValid)
+		{
 			destroyNative(mutex);
-			mutex = null;
+			isValid = false;
 		}
 	}
 }

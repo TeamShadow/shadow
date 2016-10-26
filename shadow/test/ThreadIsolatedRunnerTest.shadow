@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class shadow:test:threads@ThreadIsolatedRunnerTest
+class shadow:test@ThreadIsolatedRunnerTest
 {
 	int y = 0;
 	

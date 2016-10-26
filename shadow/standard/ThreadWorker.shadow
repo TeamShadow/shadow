@@ -1,8 +1,10 @@
 import shadow:io@Console;
-import shadow:utility@LinkedList;
+import shadow:utility@ReadOnlyList;
+import shadow:utility@List;
 
 locked class shadow:standard@
 	ThreadWorker
+is CanEqual<ThreadWorker>
 {	
 	// START: Native methods
 	private createNative() => (ThreadWorker) { return ThreadWorker:create(); }
@@ -17,6 +19,7 @@ locked class shadow:standard@
 	private native get staticNextId() => (int);
 	// END: Native methods
 	
+	// START: Private variables
 	/**
 	* This is the os-specific handle, and cannot be dereferenced in Shadow.
 	* However, it is not null when the thread is running, and is null when
@@ -25,7 +28,10 @@ locked class shadow:standard@
 	nullable Object handle = null;
 	nullable Exception ex = null;
 	nullable Mutex mutex = null;
+	
 	CanRun runner;
+	get ThreadSafeList<ThreadWorker> childrenList;
+	// END: Private variables
 	
 	/**
 	* Gets the Shadow-specific thread ID.
@@ -35,13 +41,18 @@ locked class shadow:standard@
 	/**
 	* Gets the {@code ThreadWorker} which spawned this thread.
 	*/
-	get nullable ThreadWorker parent;
+	get nullable ThreadWorker parent = null;
 	
 	/**
 	* Gets the name of the thread set at spawn time. If no name is set
 	* at spawn time, the name takes the format "Thread#{id}".
 	*/
 	get String name;
+	
+	/**
+	* Gets the list of threads spawned by this thread.
+	*/
+	//get ReadOnlyList<ThreadWorker> children;
 	
 	/**
 	* Gets whether this thread is running.
@@ -57,10 +68,7 @@ locked class shadow:standard@
 	*/
 	private create()
 	{
-		this:runner = NopRunner:create();
-		this:id = this->staticNextId;
-		this:parent = null;
-		this:name = "Thread#main";
+		this(NopRunner:create(), "Thread#main");
 	}
 	
 	/**
@@ -86,9 +94,9 @@ locked class shadow:standard@
 	*/
 	public create(CanRun runner, nullable String name)
 	{
-		this:runner = copy(runner);
 		this:id = this->staticNextId;
-		this:parent = Thread->current;
+		this:childrenList = ThreadSafeList<ThreadWorker>:create();
+		//this:children = ReadOnlyList<ThreadWorker>:create(childrenList);
 		
 		try {
 			this:name = check(name);
@@ -98,6 +106,14 @@ locked class shadow:standard@
 		}
 		
 		this:mutex = Mutex:create();
+		
+		if(this:id == 0)
+			this:runner = runner;
+		else
+		{
+			this:runner = copy(runner);
+			this:parent = Thread->current;
+		}
 		
 		// we allocate the handle first
 		this:handle = createHandle();
@@ -119,7 +135,7 @@ locked class shadow:standard@
 		if(this === Thread->current)
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		
-		Mutex mutex = check(mutex);
+		var mutex = check(mutex);
 		mutex.lock();
 		try {
 			Object handle = check(handle);
@@ -140,11 +156,12 @@ locked class shadow:standard@
 	private runnerNative() => ()
 	{
 		try {
+			check(parent):childrenList.add(this);
 			runner.run();
 		} catch(Exception e) {
 			ex = e;
 		} finally {
-			Mutex mutex = check(mutex);
+			var mutex = check(mutex);
 			mutex.lock(); {
 				// natively free of the handle
 				freeHandle(handle);
@@ -153,6 +170,10 @@ locked class shadow:standard@
 				handle = null;
 			} mutex.unlock();
 		}
+	}
+	
+	public readonly equal(ThreadWorker other) => (boolean) {
+		return (this === other);
 	}
 	
 	locked class ThreadData is CanEqual<ThreadData> {

@@ -1,7 +1,7 @@
 import shadow:io@Console;
 import shadow:standard@InvalidOperationException;
 
-class shadow:test:threads@ThreadTest
+class shadow:test@ThreadTest
 {
 	class ThreadTestRunner is CanRun
 	{
@@ -49,6 +49,13 @@ class shadow:test:threads@ThreadTest
 			} catch(Exception e) {
 				Console.printLine(e->message);
 			}
+		}
+		
+		Console.printLine();
+		
+		var children = Thread->current->childrenList;
+		foreach(var thread in children) {
+			Console.printLine(thread->name);
 		}
 	}
 }
