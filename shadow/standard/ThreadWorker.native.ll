@@ -81,25 +81,18 @@ declare void @free(i8*) nounwind
 ; the runner which is executed from the newly spawned thread
 declare void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker*)
 declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
-
-@nextThreadId = global %int 0
-
-; getNextId() => (int); (ThreadSafe)
-define %int @shadow.standard..ThreadWorker_MgetNextId(%shadow.standard..ThreadWorker*) {
-entry:
-	%currentId = atomicrmw add %int* @nextThreadId, %int 1 seq_cst
-	ret %int %currentId
-}
+declare void @shadow.standard..ThreadWorker_MunlockMutexNative(%shadow.standard..ThreadWorker*)
 
 ; used to store the current instance of the thread; Thread->current.
 @shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
+@shadow.standard..ThreadWorker_mainThread = global %shadow.standard..ThreadWorker* null
+@nextThreadId = global %int 0
 
-define void @shadow.standard..ThreadWorker_MinitMainThread() {
+; get staticNextId() => (int); (ThreadSafe)
+define %int @shadow.standard..ThreadWorker_MstaticNextId(%shadow.standard..ThreadWorker*) {
 entry:
-	%mainThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
-	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
-	
-	ret void
+	%currentId = atomicrmw add %int* @nextThreadId, %int 1 seq_cst
+	ret %int %currentId
 }
 
 define %void* @thread_func(%void* %currentThread) {
@@ -156,7 +149,7 @@ entry:
 	ret void
 }
 
-; joinThread(nullable Object handle) => (int);
+; joinThread(Object handle) => (int);
 define %int @shadow.standard..ThreadWorker_MjoinThread_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
 entry:
 	; get the reference of the current Thread
@@ -167,9 +160,27 @@ entry:
 	; load handle
 	%handle.addr = bitcast %shadow.standard..Object* %1 to %struct.pthread_t*
 	%handle = load %struct.pthread_t, %struct.pthread_t* %handle.addr
-
+	
+	; we unlock the mutex before joining
+	call void @shadow.standard..ThreadWorker_MunlockMutexNative(%shadow.standard..ThreadWorker* %this)
+	
 	; join thread
 	%call = call %int @pthread_join(%struct.pthread_t %handle, %void** null)
 
 	ret %int %call
+}
+
+; initializes the main thread and set the currentThread and mainThread to that instance
+define void @shadow.standard..ThreadWorker_MinitMainThread() {
+entry:
+	; we initialize the dummy ThreadWorker for the main thread
+	%mainThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
+	
+	; each thread needs to be able to get a reference to its own ThreadWorker, so we set its instance to the currentThread TLS.
+	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	
+	; each thread should also be able to reference the main thread from anywhere, as it is the root of all threads.
+	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_mainThread
+	
+	ret void
 }

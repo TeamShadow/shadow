@@ -1,12 +1,13 @@
 immutable singleton shadow:standard@
 	Thread
 {
-	private native sleepNative(int sec, int nsec) => ();
+	private native sleepNanos(int sec, int nsec) => ();
 	
-	/**
-	* Gets the {@code ThreadWorker} instance of the current executing thread.
-	*/
+	/// Gets the {@code ThreadWorker} instance of the current executing thread.
 	public native get current() => (ThreadWorker);
+	
+	/// Gets the {@code ThreadWorker} instance of the main thread.
+	public native get main() => (ThreadWorker);
 	
 	/**
 	* Suspends the current running thread for {@code sec} seconds plus
@@ -25,7 +26,7 @@ immutable singleton shadow:standard@
 		if(nsec < 0 or nsec > 999999)
 			throw IllegalArgumentException:create("The argument {nsec} should lie between zero and 999,999 inclusive.");
 		
-		sleepNative(sec, nsec);
+		sleepNanos(sec, nsec);
 	}
 	
 	/**
@@ -35,14 +36,13 @@ immutable singleton shadow:standard@
 	*/
 	public sleep(int ms) => ()
 	{
-	
 		if(ms >= 1000)
 		{
 			int sec = ms / 1000;
 			int nsec = (ms - sec * 1000) * 1000000;
 			
-			sleepNative(sec, nsec);
+			sleepNanos(sec, nsec);
 		}
-		else sleepNative(0, ms * 1000000);
+		else sleepNanos(0, ms * 1000000);
 	}
 }

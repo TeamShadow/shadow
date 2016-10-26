@@ -3,29 +3,19 @@ import shadow:utility@LinkedList;
 
 locked class shadow:standard@
 	ThreadWorker
-{
-	locked class ThreadData is CanEqual<ThreadData> {
-		get Object data;
-		get ThreadWorker sender;
-		
-		public create(Object data, ThreadWorker sender) {
-			this:data = data;
-			this:sender = sender;
-		}
-		
-		public readonly equal(ThreadData other) => (boolean) {
-			return (data === other:data and sender === other:sender);
-		}
-	}
-	
+{	
 	// START: Native methods
 	private createNative() => (ThreadWorker) { return ThreadWorker:create(); }
+	private unlockMutexNative() => () { check(mutex).unlock(); }
+
 	private native createHandle() => (nullable Object);
 	private native freeHandle(nullable Object handle) => ();
+
 	private native spawnThread(nullable Object handle) => (int);
-	private native joinThread(nullable Object handle) => (int);
-	private native getNextId() => (int);
-	// END: Native methods	
+	private native joinThread(Object handle) => (int);
+	
+	private native get staticNextId() => (int);
+	// END: Native methods
 	
 	/**
 	* This is the os-specific handle, and cannot be dereferenced in Shadow.
@@ -33,10 +23,8 @@ locked class shadow:standard@
 	* the thread is dead. So, it can be evaluated to see whether a thread is running.
 	*/
 	nullable Object handle = null;
-	
 	nullable Exception ex = null;
-	
-	/// The runner instance which will be used by the newly spawned thread.
+	nullable Mutex mutex = null;
 	CanRun runner;
 	
 	/**
@@ -64,15 +52,13 @@ locked class shadow:standard@
 	}
 	
 	/**
-	* !Used natively!
-	*
 	* This method is only used to create a thread for the main
 	* thread. The main thread needs an instance as well.
 	*/
 	private create()
 	{
 		this:runner = NopRunner:create();
-		this:id = getNextId();
+		this:id = this->staticNextId;
 		this:parent = null;
 		this:name = "Thread#main";
 	}
@@ -101,7 +87,7 @@ locked class shadow:standard@
 	public create(CanRun runner, nullable String name)
 	{
 		this:runner = copy(runner);
-		this:id = getNextId();
+		this:id = this->staticNextId;
 		this:parent = Thread->current;
 		
 		try {
@@ -111,8 +97,11 @@ locked class shadow:standard@
 			this:name = "Thread#" # id;
 		}
 		
-		// spawnThread natively sets the handle
+		this:mutex = Mutex:create();
+		
+		// we allocate the handle first
 		this:handle = createHandle();
+		// spawn the thread and give it the handle
 		spawnThread(handle);
 	}
 	
@@ -120,25 +109,31 @@ locked class shadow:standard@
 	* Suspends the execution of the calling thread until this thread terminates. 
 	* Joining on a dead thread, or on the main thread has no side effects.
 	* 
-	* @throws InvalidOperationException if the calling thread is the same as this thread.
+	* @throws {@code InvalidOperationException} if this is the main thread or is the same as the calling thread.
+	* @throws {@code Exception} the exception that caused this thread to terminate.
 	*/
 	public join() => ()
 	{
+		if(this === Thread->main)
+			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
 		if(this === Thread->current)
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		
-		if(handle !== null) {
+		Mutex mutex = check(mutex);
+		mutex.lock();
+		try {
+			Object handle = check(handle);
+			
+			// joinThread() unlocks the mutex before waiting for the thread to terminate.
 			joinThread(handle);
-		}
-		
+		} recover { mutex.unlock(); }
+
 		try {
 			throw check(ex);
 		} recover {}
 	}
 	
 	/**
-	* !Used natively!
-	*
 	* This method is natively executed from the newly spawned thread.
 	* DO NOT MANUALLY EXECUTE.
 	*/
@@ -149,9 +144,28 @@ locked class shadow:standard@
 		} catch(Exception e) {
 			ex = e;
 		} finally {
-			// natively free of the handle
-			freeHandle(handle);
-			handle = null;
+			Mutex mutex = check(mutex);
+			mutex.lock(); {
+				// natively free of the handle
+				freeHandle(handle);
+				
+				// the native is invalid now, set it to null
+				handle = null;
+			} mutex.unlock();
+		}
+	}
+	
+	locked class ThreadData is CanEqual<ThreadData> {
+		get Object data;
+		get ThreadWorker sender;
+		
+		public create(Object data, ThreadWorker sender) {
+			this:data = data;
+			this:sender = sender;
+		}
+		
+		public readonly equal(ThreadData other) => (boolean) {
+			return (data === other:data and sender === other:sender);
 		}
 	}
 	

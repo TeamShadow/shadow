@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 locked class shadow:standard@
 	Mutex
 {

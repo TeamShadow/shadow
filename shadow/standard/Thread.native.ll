@@ -64,9 +64,10 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 declare %int @nanosleep(%struct.timespec*, %struct.timespec*)
 
 @shadow.standard..ThreadWorker_currentThread = external global %shadow.standard..ThreadWorker*
+@shadow.standard..ThreadWorker_mainThread = external global %shadow.standard..ThreadWorker*
 
-; sleepNative(int sec, int nsec) => ();
-define void @shadow.standard..Thread_MsleepNative_int_int(%shadow.standard..Thread* %this, %int %sec, %int %nsec) {
+; sleepNanos(int sec, int nsec) => ();
+define void @shadow.standard..Thread_MsleepNanos_int_int(%shadow.standard..Thread* %this, %int %sec, %int %nsec) {
 entry:
 	%sec.addr = alloca i32, align 4
 	%nsec.addr = alloca i32, align 4
@@ -89,4 +90,11 @@ define %shadow.standard..ThreadWorker* @shadow.standard..Thread_Mcurrent(%shadow
 entry:
 	%currentThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
 	ret %shadow.standard..ThreadWorker* %currentThread
+}
+
+; get main() => (ThreadWorker);
+define %shadow.standard..ThreadWorker* @shadow.standard..Thread_Mmain(%shadow.standard..Thread*) {
+entry:
+	%mainThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_mainThread
+	ret %shadow.standard..ThreadWorker* %mainThread
 }

@@ -1048,7 +1048,15 @@ public class OutputTests {
 				"Thread#1\n" +
 				"Thread#2\n" +
 				"Thread#3\n" +
-				"Thread#4\n");
+				"This is an exception from thread#3\n" +
+				"This is an exception from thread#3\n" +
+				"Thread#4\n" + 
+				"Thread#5\n" + 
+				"true\n" +
+				"true\n" +
+				"This is an exception from thread#5\n" +
+				"This is an exception from thread#5\n"
+				);
 	}
 	
 	@Test public void testThreadSleep() throws Exception {

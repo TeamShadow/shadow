@@ -6,12 +6,19 @@ class shadow:test:threads@ThreadTest
 	class ThreadTestRunner is CanRun
 	{
 		public run() => ()
-		{			
+		{
 			var currentThread = Thread->current;
 			
 			var id = currentThread->id;
 			Thread.sleep(id * 50);
 			Console.printLine(currentThread->name);
+			
+			if(id == 4) {
+				ThreadWorker:create(this).join(); // throws from Thread#5
+			} else if(id == 5) {
+				Console.printLine(currentThread->parent->id == 4);
+				Console.printLine(Thread->main->id == currentThread->parent->parent->id);
+			}
 			
 			if(id > 2)
 				throw InvalidOperationException:create("This is an exception from thread#" # id);
@@ -28,12 +35,15 @@ class shadow:test:threads@ThreadTest
 			array[i] = ThreadWorker:create(runner);
 
 		for (int i = 0; i < array->size; i += 1) {
+			// join first time
 			try {
 				check(array[i]).join();
 			} catch(Exception e) {
 				Console.printLine(e->message);
 			}
 			
+			// second time joining should either return immediately,
+			// or throw the exception again if an exception was thrown.
 			try {
 				check(array[i]).join();
 			} catch(Exception e) {
