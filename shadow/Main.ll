@@ -75,6 +75,7 @@ declare void @shadow.test..Test_Mmain_shadow.standard..String_A1(%shadow.test..T
 
 declare i32 @__shadow_personality_v0(...)
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
+
 declare void @shadow.standard..ThreadWorker_MinitMainThread()
 
 @_genericSet = global %shadow.standard..ClassSet* null
@@ -117,7 +118,7 @@ _loopEnd:
 	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_int(%shadow.standard..Object* %uninitializedArraySet, %int %arraySize) ; %arraySize is replaced by compiler
 	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet
 	call void @shadow.standard..ThreadWorker_MinitMainThread()
-	invoke void @shadow.test..Test_Mmain_shadow.standard..String_A1(%shadow.test..Test* %initialized, { %shadow.standard..String**, [1 x i32] } %args)
+	invoke void @callMain(%shadow.test..Test* %initialized, { %shadow.standard..String**, [1 x i32] } %args)
 			to label %_success unwind label %_exception
 _success:
 	ret i32 0
@@ -126,8 +127,18 @@ _exception:
             catch %shadow.standard..Class* @shadow.standard..Exception_class
 	%data = extractvalue { i8*, i32 } %caught, 0
 	%exception = call %shadow.standard..Exception* @__shadow_catch(i8* nocapture %data) nounwind
-	; Console already initialized		
+	; Console already initialized
 	%exceptionAsObject = bitcast %shadow.standard..Exception* %exception to %shadow.standard..Object*	
 	call %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console* %console, %shadow.standard..Object* %exceptionAsObject )
 	ret i32 1
+}
+
+%shadow.standard..ThreadWorker = type opaque
+declare void @shadow.standard..ThreadWorker_MwaitForThreadsNative(%shadow.standard..ThreadWorker*)
+define void @callMain(%shadow.test..Test* %initialized, { %shadow.standard..String**, [1 x i32] } %args) {
+entry:
+	call void @shadow.test..Test_Mmain_shadow.standard..String_A1(%shadow.test..Test* %initialized, { %shadow.standard..String**, [1 x i32] } %args)
+	call void @shadow.standard..ThreadWorker_MwaitForThreadsNative(%shadow.standard..ThreadWorker* null)
+	
+	ret void
 }

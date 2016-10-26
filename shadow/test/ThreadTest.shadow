@@ -1,5 +1,4 @@
 import shadow:io@Console;
-import shadow:standard@InvalidOperationException;
 
 class shadow:test@ThreadTest
 {
@@ -14,14 +13,19 @@ class shadow:test@ThreadTest
 			Console.printLine(currentThread->name);
 			
 			if(id == 4) {
-				ThreadWorker:create(this).join(); // throws from Thread#5
+				ThreadWorker:create(this).join(); // Thread#5; throws from Thread#6
 			} else if(id == 5) {
 				Console.printLine(currentThread->parent->id == 4);
 				Console.printLine(Thread->main->id == currentThread->parent->parent->id);
+				
+				ThreadWorker:create(this).join(); // Thread#6; throws from Thread#8
+			} else if(id == 6) {
+				ThreadWorker:create(this); // Thread#7; does not throw until joined
+				ThreadWorker:create(this).join(); // Thread#8; throws and propagates
 			}
 			
 			if(id > 2)
-				throw InvalidOperationException:create("This is an exception from thread#" # id);
+				throw Exception:create("from " # currentThread->name);
 		}
 	}
 
@@ -30,32 +34,8 @@ class shadow:test@ThreadTest
 		var runner = ThreadTestRunner:create();
 		runner.run(); // print main
 
-		nullable var array = ThreadWorker:null[4];
-		for (int i = 0; i < array->size; i += 1)
-			array[i] = ThreadWorker:create(runner);
-
-		for (int i = 0; i < array->size; i += 1) {
-			// join first time
-			try {
-				check(array[i]).join();
-			} catch(Exception e) {
-				Console.printLine(e->message);
-			}
-			
-			// second time joining should either return immediately,
-			// or throw the exception again if an exception was thrown.
-			try {
-				check(array[i]).join();
-			} catch(Exception e) {
-				Console.printLine(e->message);
-			}
-		}
-		
-		Console.printLine();
-		
-		var children = Thread->current->childrenList;
-		foreach(var thread in children) {
-			Console.printLine(thread->name);
-		}
+		nullable var threads = ThreadWorker:null[4];
+		for (int i = 0; i < threads->size; i += 1)
+			threads[i] = ThreadWorker:create(runner);
 	}
 }

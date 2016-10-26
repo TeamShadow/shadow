@@ -1,14 +1,15 @@
 import shadow:io@Console;
 import shadow:utility@ReadOnlyList;
 import shadow:utility@List;
+import shadow:utility@ArrayDeque;
 
 locked class shadow:standard@
 	ThreadWorker
 is CanEqual<ThreadWorker>
-{	
+{
 	// START: Native methods
-	private createNative() => (ThreadWorker) { return ThreadWorker:create(); }
-	private unlockMutexNative() => () { check(mutex).unlock(); }
+	private createNative() => (ThreadWorker) { return ThreadWorker:create(NopRunner:create(), "Thread#main"); }
+	private unlockMutexNative() => () { mutex.unlock(); }
 
 	private native createHandle() => (nullable Object);
 	private native freeHandle(nullable Object handle) => ();
@@ -27,10 +28,11 @@ is CanEqual<ThreadWorker>
 	*/
 	nullable Object handle = null;
 	nullable Exception ex = null;
-	nullable Mutex mutex = null;
 	
+	boolean joined = false;
+	Mutex mutex;
 	CanRun runner;
-	get ThreadSafeList<ThreadWorker> childrenList;
+	ThreadSafeList<ThreadWorker> childrenList;
 	// END: Private variables
 	
 	/**
@@ -52,6 +54,7 @@ is CanEqual<ThreadWorker>
 	/**
 	* Gets the list of threads spawned by this thread.
 	*/
+	//get ThreadSafeList<ThreadWorker> children;
 	//get ReadOnlyList<ThreadWorker> children;
 	
 	/**
@@ -59,18 +62,15 @@ is CanEqual<ThreadWorker>
 	*/
 	public get isRunning() => (boolean)
 	{
-		return (name == "main" or handle !== null);
+		boolean running;
+		
+		mutex.lock(); {
+			running = (handle !== null or id == 0);
+		} mutex.unlock();
+		
+		return running;
 	}
-	
-	/**
-	* This method is only used to create a thread for the main
-	* thread. The main thread needs an instance as well.
-	*/
-	private create()
-	{
-		this(NopRunner:create(), "Thread#main");
-	}
-	
+
 	/**
 	* Creates a new {@code ThreadWorker} object which takes on a {@code CanRun}
 	* instance, containing a run function that is going to be ran
@@ -113,6 +113,7 @@ is CanEqual<ThreadWorker>
 		{
 			this:runner = copy(runner);
 			this:parent = Thread->current;
+			addToParent();
 		}
 		
 		// we allocate the handle first
@@ -121,32 +122,52 @@ is CanEqual<ThreadWorker>
 		spawnThread(handle);
 	}
 	
-	/**
-	* Suspends the execution of the calling thread until this thread terminates. 
-	* Joining on a dead thread, or on the main thread has no side effects.
-	* 
-	* @throws {@code InvalidOperationException} if this is the main thread or is the same as the calling thread.
-	* @throws {@code Exception} the exception that caused this thread to terminate.
-	*/
-	public join() => ()
+	private addToParent() => () {
+		check(parent):childrenList.add(this);
+	}
+	
+	private join(boolean finalizing) => ()
 	{
 		if(this === Thread->main)
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
+			
 		if(this === Thread->current)
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		
-		var mutex = check(mutex);
+		// this process looks complex but is rather simple, first we acquire the lock,
+		// so we have an up-to-date version of handle.
 		mutex.lock();
-		try {
+		// we check if we're not finalizing, then the user called this method, otherwise,
+		// if this thread was not joined on before, we got to join and wait for it to terminate.
+		boolean flag = !finalizing or (finalizing and !joined);
+		if(flag and handle !== null) {
+			joined = true; // at this point, we consider that the thread has been joined.
 			Object handle = check(handle);
 			
 			// joinThread() unlocks the mutex before waiting for the thread to terminate.
 			joinThread(handle);
-		} recover { mutex.unlock(); }
+		}
+		// we need not to forget to unlock the mutex if we did not actually join thread.
+		else { mutex.unlock(); }
 
-		try {
+		// we then check here if we have an exception. If we do, we throw it, and
+		// it is the job of runnerNative() to take care of the handling.
+		if(flag and ex !== null) {
 			throw check(ex);
-		} recover {}
+		}
+	}
+	
+	/**
+	* Suspends the execution of the calling thread until this thread terminates. 
+	* Joining on a dead thread, or on the main thread has no side effects.
+	* If the thread is terminated because of an exception, the exception is thrown
+	* when this {@code join()} method is called.
+	* 
+	* @throws {@code InvalidOperationException} if this is the main thread or is the same as the calling thread.
+	* @throws {@code ThreadException} wraps the exception which caused this thread to terminate, if any.
+	*/
+	public join() => () {
+		join(false);
 	}
 	
 	/**
@@ -156,12 +177,10 @@ is CanEqual<ThreadWorker>
 	private runnerNative() => ()
 	{
 		try {
-			check(parent):childrenList.add(this);
 			runner.run();
 		} catch(Exception e) {
-			ex = e;
+			ex = ThreadException:create(this, e);
 		} finally {
-			var mutex = check(mutex);
 			mutex.lock(); {
 				// natively free of the handle
 				freeHandle(handle);
@@ -169,6 +188,44 @@ is CanEqual<ThreadWorker>
 				// the native is invalid now, set it to null
 				handle = null;
 			} mutex.unlock();
+		}
+	}
+	
+	private waitForThreadsNative() => ()
+	{
+		// we keep two queues, since we would like to throw the exceptions
+		// at the very end. First we traverse the children of all the threads,
+		// and when there is an exception, we add it to the exceptionQueue.
+		var exceptionQueue = ArrayDeque<Exception>:create();
+		
+		// queue used for traversal of the children
+		var threadsQueue = ArrayDeque<ThreadWorker>:create();
+		threadsQueue.addLast(Thread->main);
+		
+		while(!threadsQueue.isEmpty()) {
+			var thread = threadsQueue.removeFirst();
+			
+			// we do not wanna perform any operations on the main thread
+			// so we skip if id is zero.
+			if(thread->id > 0) {
+				try {
+					// here, we perform a join, and tell the join that
+					// we're finalizing the application.
+					thread.join(true);
+				} catch (Exception e) {
+					exceptionQueue.addLast(e);
+				}
+			}
+			
+			// traverse the children and add them to queue.
+			foreach(var child in thread:childrenList) {
+				threadsQueue.addLast(child);
+			}
+		}
+		
+		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
+		while(!exceptionQueue.isEmpty()) {
+			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
 		}
 	}
 	

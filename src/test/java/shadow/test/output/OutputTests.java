@@ -1042,24 +1042,32 @@ public class OutputTests {
 		args.add("shadow/test/ThreadTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
+				// stdin
 				"Thread#main\n" +
 				"Thread#1\n" +
 				"Thread#2\n" +
 				"Thread#3\n" +
-				"This is an exception from thread#3\n" +
-				"This is an exception from thread#3\n" +
 				"Thread#4\n" + 
 				"Thread#5\n" + 
 				"true\n" +
 				"true\n" +
-				"This is an exception from thread#5\n" +
-				"This is an exception from thread#5\n" +
-				"\n" +
-				"Thread#1\n" +
-				"Thread#2\n" +
-				"Thread#3\n" +
-				"Thread#4\n"
-				);
+				"Thread#6\n" +
+				"Thread#7\n" +
+				"Thread#8\n",
+				
+				// stderr
+				"Uncaught Thread Exception @Thread#3:\n" +
+				"   Propagated from: (Thread#3)\n" +
+				"   Throwing: (shadow:standard@Exception: from Thread#3)\n" +
+				
+				"Uncaught Thread Exception @Thread#4:\n" +
+				"   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)\n" +
+				"   Throwing: (shadow:standard@Exception: from Thread#8)\n" +
+				
+				"Uncaught Thread Exception @Thread#7:\n" +
+				"   Propagated from: (Thread#7)\n" +
+				"   Throwing: (shadow:standard@Exception: from Thread#7)\n"
+			);
 	}
 	
 	@Test public void testThreadSleep() throws Exception {

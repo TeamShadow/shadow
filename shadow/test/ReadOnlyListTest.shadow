@@ -1,0 +1,27 @@
+import shadow:utility@List;
+import shadow:utility@ArrayList;
+import shadow:io@Console;
+import shadow:utility@ReadOnlyList;
+import shadow:standard@ThreadSafeList;
+
+class shadow:test@ReadOnlyListTest
+{	
+	public main( String[] args ) => ()
+	{	
+		//ThreadSafeList<String> list1 = ThreadSafeList<String>:create();
+		/*
+		Console.printLine("asasasd");
+		for (int i = 0; i < args->size; i += 1)
+			list1.add(args[i]);
+		
+
+		var list2 = ArrayList<int>:create();
+		for(int i = 1; i <= 15; i += 1)
+			list2.add(i*i);
+
+		var roList1 = ReadOnlyList<String>:create(cast<List<String>>(list1));
+		
+		foreach(var item in roList1)
+			Console.printLine(item);*/
+	}
+}
