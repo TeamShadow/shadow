@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -369,6 +369,7 @@ public class Main {
 			modules.add(module);
 			modules.addAll(innerClasses);
 			
+			//ToDo; not sure what libray is needed
 			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 			
 			
