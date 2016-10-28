@@ -8,7 +8,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+
+//import org.apache.logging.log4j.Logger;
+
 
 import shadow.Loggers;
 import shadow.doctool.tag.TagManager.BlockTagType;
