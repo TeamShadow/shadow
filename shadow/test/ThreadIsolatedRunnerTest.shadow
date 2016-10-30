@@ -20,9 +20,9 @@ class shadow:test@ThreadIsolatedRunnerTest
 	{
 		var runner = ThreadIsolatedRunner:create();
 		
-		var thread1 = ThreadWorker:create(runner);		
-		var thread2 = ThreadWorker:create(runner);		
-		var thread3 = ThreadWorker:create(runner);
+		var thread1 = Thread:create(runner);		
+		var thread2 = Thread:create(runner);		
+		var thread3 = Thread:create(runner);
 		
 		thread1.join();
 		thread2.join();

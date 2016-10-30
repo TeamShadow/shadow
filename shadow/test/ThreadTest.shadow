@@ -6,22 +6,22 @@ class shadow:test@ThreadTest
 	{
 		public run() => ()
 		{
-			var currentThread = Thread->current;
+			var currentThread = System->currentThread;
 			
 			var id = currentThread->id;
-			Thread.sleep(id * 50);
+			System.sleep(id * 50);
 			Console.printLine(currentThread->name);
 			
 			if(id == 4) {
-				ThreadWorker:create(this).join(); // Thread#5; throws from Thread#6
+				Thread:create(this).join(); // Thread#5; throws from Thread#6
 			} else if(id == 5) {
 				Console.printLine(currentThread->parent->id == 4);
-				Console.printLine(Thread->main->id == currentThread->parent->parent->id);
+				Console.printLine(System->mainThread->id == currentThread->parent->parent->id);
 				
-				ThreadWorker:create(this).join(); // Thread#6; throws from Thread#8
+				Thread:create(this).join(); // Thread#6; throws from Thread#8
 			} else if(id == 6) {
-				ThreadWorker:create(this); // Thread#7; does not throw until joined
-				ThreadWorker:create(this).join(); // Thread#8; throws and propagates
+				Thread:create(this); // Thread#7; does not throw until joined
+				Thread:create(this).join(); // Thread#8; throws and propagates
 			}
 			
 			if(id > 2)
@@ -34,8 +34,8 @@ class shadow:test@ThreadTest
 		var runner = ThreadTestRunner:create();
 		runner.run(); // print main
 
-		nullable var threads = ThreadWorker:null[4];
+		nullable var threads = Thread:null[4];
 		for (int i = 0; i < threads->size; i += 1)
-			threads[i] = ThreadWorker:create(runner);
+			threads[i] = Thread:create(runner);
 	}
 }

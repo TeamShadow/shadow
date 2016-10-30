@@ -8,6 +8,7 @@ locked class shadow:standard@
 	private readonly native unlock(Pointer ptr) => (int);
 	private readonly native initMutex(Pointer ptr) => (int);
 	private readonly native destroyMutex(Pointer ptr) => (int);
+	
 	private readonly native get handleSize() => (int);
 
 	Handle handle;

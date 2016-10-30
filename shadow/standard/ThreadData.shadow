@@ -4,10 +4,10 @@
 locked class shadow:standard@
 	ThreadData
 is CanEqual<ThreadData> {
-	get ThreadWorker sender;
+	get Thread sender;
 	get Object data;
 	
-	public create(ThreadWorker sender, Object data) {
+	public create(Thread sender, Object data) {
 		this:sender = sender;
 		this:data = data;
 	}

@@ -4,6 +4,8 @@
  */
 immutable singleton shadow:standard@System
 {
+	private native sleepNanos(int sec, int nsec) => ();
+	
 	/**
 	 * Returns the number of nanoseconds elapsed since the Unix Epoch,
 	 * 12:00:00 AM January 1, 1970.  Accuracy will usually be much coarser
@@ -12,4 +14,47 @@ immutable singleton shadow:standard@System
 	 * @return nanoseconds elapsed since midnight on January 1, 1970
 	 */
 	public native nanoTime() => ( long );
+	
+	/// Gets the {@code Thread} instance of the current executing thread.
+	public native get currentThread() => (Thread);
+	
+	/// Gets the {@code Thread} instance of the main thread.
+	public native get mainThread() => (Thread);
+	
+	/**
+	* Suspends the current running thread for {@code sec} seconds plus
+	* {@code nsec} nanoseconds.
+	* 
+	* @param sec The seconds portion.
+	* @param nsec The nanseconds portion [0 - 999,999].
+	* 
+	* @throws IllegalArgumentException If {@code sec} is negative or {@code nsec} is not in the range [0, 999,999].
+	*/
+	public sleep(int sec, int nsec) => ()
+	{
+		if(sec < 0)
+			throw IllegalArgumentException:create("The argument {sec} should be bigger than or equal to zero");
+		
+		if(nsec < 0 or nsec > 999999)
+			throw IllegalArgumentException:create("The argument {nsec} should lie between zero and 999,999 inclusive.");
+		
+		sleepNanos(sec, nsec);
+	}
+	
+	/**
+	* Suspends the current running thread for {@code ms} milliseconds.
+	* 
+	* @param ms The milliseconds to pause the thread for.
+	*/
+	public sleep(int ms) => ()
+	{
+		if(ms >= 1000)
+		{
+			int sec = ms / 1000;
+			int nsec = (ms - sec * 1000) * 1000000;
+			
+			sleepNanos(sec, nsec);
+		}
+		else sleepNanos(0, ms * 1000000);
+	}
 }

@@ -75,7 +75,6 @@ declare void @shadow.test..Test_Mmain(%shadow.test..Test*)
 
 declare i32 @__shadow_personality_v0(...)
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
-declare void @shadow.standard..ThreadWorker_MinitMainThread()
 
 @_genericSet = global %shadow.standard..ClassSet* null;
 @_arraySet = global %shadow.standard..ClassSet* null;
@@ -92,7 +91,6 @@ define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {
 	%uninitializedArraySet = call %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
 	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_int(%shadow.standard..Object* %uninitializedArraySet, %int %arraySize) ; compiler replaces %arraySize 
 	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet
-	call void @shadow.standard..ThreadWorker_MinitMainThread()	
 	invoke void @callMain(%shadow.test..Test* %initialized)
 			to label %_success unwind label %_exception
 _success:
@@ -108,10 +106,12 @@ _exception:
 	ret i32 1
 }
 
-%shadow.standard..ThreadWorker = type opaque
-declare void @shadow.standard..ThreadWorker_MwaitForThreadsNative(%shadow.standard..ThreadWorker*)
+%shadow.standard..Thread = type opaque
+declare void @shadow.standard..Thread_MinitMainThread()
+declare void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread*)
 define void @callMain(%shadow.test..Test* %initialized) {
 entry:
+	call void @shadow.standard..Thread_MinitMainThread()
 	call void @shadow.test..Test_Mmain(%shadow.test..Test* %initialized)
 	call void @shadow.standard..ThreadWorker_MwaitForThreadsNative(%shadow.standard..ThreadWorker* null)
 	

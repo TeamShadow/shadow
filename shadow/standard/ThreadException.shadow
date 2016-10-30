@@ -5,11 +5,11 @@ exception shadow:standard@
 	ThreadException
 {
 	immutable get String message;
-	get ThreadWorker thread;
+	get Thread thread;
 	get Exception parent;
 	get Exception actual;
 	
-	public create(ThreadWorker thread, Exception parent) 
+	public create(Thread thread, Exception parent) 
 	{
 		this:thread = thread;
 		this:parent = parent;

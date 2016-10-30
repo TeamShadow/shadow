@@ -1,51 +1,234 @@
+import shadow:io@Console;
+import shadow:utility;
+
 /**
  * @author Claude Abounegm
  */
-immutable singleton shadow:standard@
+locked class shadow:standard@
 	Thread
+is CanEqual<Thread>
 {
-	private native sleepNanos(int sec, int nsec) => ();
+	// START: Native methods
+	private readonly createNative() => (Thread) { return Thread:create(NopRunner:create(), "Thread#main"); }
+	private readonly unlockMutexNative() => () { mutex.unlock(); }
+
+	private readonly native spawnThread(Pointer ptr) => (int);
+	private readonly native joinThread(Pointer ptr) => (int);
 	
-	/// Gets the {@code ThreadWorker} instance of the current executing thread.
-	public native get current() => (ThreadWorker);
+	private readonly native get handleSize() => (int);
+	private native get staticNextId() => (int);
+	// END: Native methods
 	
-	/// Gets the {@code ThreadWorker} instance of the main thread.
-	public native get main() => (ThreadWorker);
+	// START: Private variables
+	nullable Exception ex = null;
+	Handle handle;
+	Mutex mutex;
+	boolean joined;
+	CanRun runner;
+	ThreadSafeList<Thread> childrenList;
+	// END: Private variables
 	
 	/**
-	* Suspends the current running thread for {@code sec} seconds plus
-	* {@code nsec} nanoseconds.
-	* 
-	* @param sec The seconds portion.
-	* @param nsec The nanseconds portion [0 - 999,999].
-	* 
-	* @throws IllegalArgumentException If {@code sec} is negative or {@code nsec} is not in the range [0, 999,999].
+	* Gets the Shadow-specific thread ID.
 	*/
-	public sleep(int sec, int nsec) => ()
+	get int id;
+	
+	/**
+	* Gets the {@code Thread} which spawned this thread. The Main thread does not
+	* have a parent, and is null.
+	*/
+	get nullable Thread parent = null;
+	
+	/**
+	* Gets the name of the thread set at spawn time. If no name is set
+	* at spawn time, the name takes the format "Thread#{id}".
+	*/
+	get String name;
+	
+	/**
+	* Gets the list of threads spawned by this thread.
+	*/
+	//get ThreadSafeList<Thread> children;
+	//get ReadOnlyList<Thread> children;
+
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread.
+	* 
+	* @param runner The instance that contains a run function.
+	*/
+	public create(CanRun runner)
 	{
-		if(sec < 0)
-			throw IllegalArgumentException:create("The argument {sec} should be bigger than or equal to zero");
-		
-		if(nsec < 0 or nsec > 999999)
-			throw IllegalArgumentException:create("The argument {nsec} should lie between zero and 999,999 inclusive.");
-		
-		sleepNanos(sec, nsec);
+		this(runner, null);
 	}
 	
 	/**
-	* Suspends the current running thread for {@code ms} milliseconds.
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread, and takes a {@code String} which is the name
+	* of the thread for reference purposes.
 	* 
-	* @param ms The milliseconds to pause the thread for.
+	* @param runner The instance that contains a run function.
+	* @param name The name of the thread.
 	*/
-	public sleep(int ms) => ()
+	public create(CanRun runner, nullable String name)
 	{
-		if(ms >= 1000)
-		{
-			int sec = ms / 1000;
-			int nsec = (ms - sec * 1000) * 1000000;
-			
-			sleepNanos(sec, nsec);
+		this:id = this->staticNextId;
+		this:childrenList = ThreadSafeList<Thread>:create();
+		//this:children = ReadOnlyList<Thread>:create(childrenList);
+		
+		try {
+			this:name = check(name);
 		}
-		else sleepNanos(0, ms * 1000000);
+		recover {
+			this:name = "Thread#" # id;
+		}
+		
+		this:joined = false;
+		this:mutex = Mutex:create();
+		
+		if(this:id == 0) {
+			this:runner = runner;
+			this:handle = Handle:create();
+		} else {
+			this:handle = Handle:create(this->handleSize);
+			this:runner = copy(runner);
+			this:parent = System->currentThread;
+			addToParent();
+			
+			// spawn the thread and give it the handle
+			spawnThread(handle->ptr);
+		}
+	}
+	
+	/**
+	* Suspends the execution of the calling thread until this thread terminates. 
+	* Joining on a dead thread, or on the main thread has no side effects.
+	* If the thread is terminated because of an exception, the exception is thrown
+	* when this {@code join()} method is called.
+	* 
+	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated 
+	*/
+	public join() => () 
+	{
+		join(false);
+	}
+	
+	/**
+	* Gets whether this thread is running.
+	*
+	* @return {@code true} if the thread is alive; otherwise, {@code false}.
+	*/
+	public get isRunning() => (boolean)
+	{
+		mutex.lock();
+			var running = (handle->isValid or id == 0);
+		mutex.unlock();
+		
+		return running;
+	}
+	
+	public readonly equal(Thread other) => (boolean) 
+	{
+		return (this === other);
+	}
+
+	private addToParent() => () 
+	{
+		check(parent):childrenList.add(this);
+	}
+	
+	private join(boolean finalizing) => ()
+	{
+		if(this === System->mainThread)
+			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
+		
+		if(this === System->currentThread)
+			throw InvalidOperationException:create("A thread cannot call join on itself.");
+		
+		// first we acquire the lock to make sure we have an up-to-date version of the handle
+		mutex.lock();		
+		// finalizing is true when Shadow calls this method. It is false when
+		// the user calls it. So, if Shadow called the method, we would only like to join
+		// or throw the exception if this thread didn't have join called on it before.
+		boolean flag = !finalizing or (finalizing and !joined);
+		joined = true;
+		
+		if(flag and handle->isValid) {
+			// joinThread() unlocks the mutex natively before joining the thread
+			joinThread(handle->ptr);
+		}
+		// we need not to forget to unlock the mutex if we did not actually join thread.
+		else { mutex.unlock(); }
+
+		// we then check here if we have an exception. If we do, we throw it, and
+		// it is the job of runnerNative() to take care of the handling.
+		if(flag and ex !== null) {
+			throw check(ex);
+		}
+	}
+	
+	/**
+	* This method is natively executed from the newly spawned thread.
+	* DO NOT MANUALLY EXECUTE.
+	*/
+	private runnerNative() => ()
+	{
+		try {
+			runner.run();
+		} catch(Exception e) {
+			ex = ThreadException:create(this, e);
+		} finally {
+			mutex.lock(); {
+				handle.free();
+			} mutex.unlock();
+		}
+	}
+	
+	private waitForThreadsNative() => ()
+	{
+		// we keep two queues, since we would like to throw the exceptions
+		// at the very end. First we traverse the children of all the threads,
+		// and when there is an exception, we add it to the exceptionQueue.
+		var exceptionQueue = ArrayDeque<ThreadException>:create();
+		
+		// queue used for traversal of the children
+		var threadsQueue = ArrayDeque<Thread>:create();
+		threadsQueue.addLast(System->mainThread);
+		
+		while(!threadsQueue.isEmpty()) {
+			var thread = threadsQueue.removeFirst();
+			
+			// we do not wanna perform any operations on the main thread
+			// so we skip if id is zero.
+			if(thread->id > 0) {
+				try {
+					// this join does not do anything if the thread had
+					// been joined on before.
+					thread.join(true);
+				} catch (ThreadException e) {
+					exceptionQueue.addLast(e);
+				}
+			}
+			
+			// traverse the children and add them to queue.
+			foreach(var child in thread:childrenList) {
+				threadsQueue.addLast(child);
+			}
+		}
+		
+		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
+		while(!exceptionQueue.isEmpty()) {
+			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
+		}
+	}
+	
+	// A Runner which performs no operations.
+	private class NopRunner
+		is CanRun
+	{
+		public run() => () {}
 	}
 }
