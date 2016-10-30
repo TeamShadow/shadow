@@ -9,9 +9,6 @@ locked class shadow:standard@
 is CanEqual<Thread>
 {
 	// START: Native methods
-	private readonly createNative() => (Thread) { return Thread:create(NopRunner:create(), "Thread#main"); }
-	private readonly unlockMutexNative() => () { mutex.unlock(); }
-
 	private readonly native spawnThread(Pointer ptr) => (int);
 	private readonly native joinThread(Pointer ptr) => (int);
 	
@@ -91,7 +88,8 @@ is CanEqual<Thread>
 		if(this:id == 0) {
 			this:runner = runner;
 			this:handle = Handle:create();
-		} else {
+		}
+		else {
 			this:handle = Handle:create(this->handleSize);
 			this:runner = copy(runner);
 			this:parent = System->currentThread;
@@ -142,11 +140,13 @@ is CanEqual<Thread>
 	
 	private join(boolean finalizing) => ()
 	{
-		if(this === System->mainThread)
+		if(this === System->mainThread) {
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
+		}
 		
-		if(this === System->currentThread)
+		if(this === System->currentThread) {
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
+		}
 		
 		// first we acquire the lock to make sure we have an up-to-date version of the handle
 		mutex.lock();		
@@ -161,7 +161,9 @@ is CanEqual<Thread>
 			joinThread(handle->ptr);
 		}
 		// we need not to forget to unlock the mutex if we did not actually join thread.
-		else { mutex.unlock(); }
+		else { 
+			mutex.unlock(); 
+		}
 
 		// we then check here if we have an exception. If we do, we throw it, and
 		// it is the job of runnerNative() to take care of the handling.
@@ -172,15 +174,17 @@ is CanEqual<Thread>
 	
 	/**
 	* This method is natively executed from the newly spawned thread.
-	* DO NOT MANUALLY EXECUTE.
+	* !!DO NOT MANUALLY EXECUTE!!
 	*/
 	private runnerNative() => ()
 	{
 		try {
 			runner.run();
-		} catch(Exception e) {
+		}
+		catch(Exception e) {
 			ex = ThreadException:create(this, e);
-		} finally {
+		}
+		finally {
 			mutex.lock(); {
 				handle.free();
 			} mutex.unlock();
@@ -208,7 +212,8 @@ is CanEqual<Thread>
 					// this join does not do anything if the thread had
 					// been joined on before.
 					thread.join(true);
-				} catch (ThreadException e) {
+				}
+				catch (ThreadException e) {
 					exceptionQueue.addLast(e);
 				}
 			}
@@ -223,6 +228,16 @@ is CanEqual<Thread>
 		while(!exceptionQueue.isEmpty()) {
 			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
 		}
+	}
+	
+	private readonly createNative() => (Thread) 
+	{ 
+		return Thread:create(NopRunner:create(), "Thread#main"); 
+	}
+	
+	private readonly unlockMutexNative() => () 
+	{
+		mutex.unlock();
 	}
 	
 	// A Runner which performs no operations.

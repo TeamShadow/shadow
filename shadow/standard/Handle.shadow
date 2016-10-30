@@ -17,7 +17,8 @@ locked class shadow:standard@
 	/**
 	* Creates an invalid handle. This does not allocate any extra memory.
 	*/
-	public create() {
+	public create()
+	{
 		this:handle = 0;
 	}
 	
@@ -27,9 +28,11 @@ locked class shadow:standard@
 	*
 	* @param {@code size} The size, in bytes, that needs to be allocated on the heap.
 	*/
-	public create(int size) {
-		if(size <= 0)
+	public create(int size)
+	{
+		if(size <= 0) {
 			throw IllegalArgumentException:create("The {size} of the memory that will be allocated should be bigger than zero.");
+		}
 		
 		this:handle = createHandle(size);
 	}
@@ -44,12 +47,13 @@ locked class shadow:standard@
 	*
 	* @throws {@code InvalidOperationException} if the handle has been freed or is not valid.
 	*/
-	public readonly get ptr() => (Pointer ptr) {
-		if(this->isValid) {
-			return getPtrFromLong(handle);
-		} else {
+	public readonly get ptr() => (Pointer ptr)
+	{
+		if(!this->isValid) {
 			throw InvalidOperationException:create("This handle is no longer valid.");
 		}
+		
+		return getPtrFromLong(handle);
 	}
 	
 	/**
@@ -57,7 +61,8 @@ locked class shadow:standard@
 	*
 	* @return {@code true} if the handle is valid; otherwise, {@code false}.
 	*/
-	public get readonly isValid() => (boolean) {
+	public get readonly isValid() => (boolean)
+	{
 		return (handle != 0);
 	}
 	
@@ -65,7 +70,8 @@ locked class shadow:standard@
 	* Frees the memory allocated by this handle. Calling this method more than once does
 	* not have any side effects.
 	*/
-	public free() => () {
+	public free() => () 
+	{
 		if(this->isValid) {
 			freeHandle(this->ptr);
 			handle = 0;

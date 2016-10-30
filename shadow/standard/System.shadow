@@ -32,11 +32,13 @@ immutable singleton shadow:standard@System
 	*/
 	public sleep(int sec, int nsec) => ()
 	{
-		if(sec < 0)
+		if(sec < 0) {
 			throw IllegalArgumentException:create("The argument {sec} should be bigger than or equal to zero");
+		}
 		
-		if(nsec < 0 or nsec > 999999)
+		if(nsec < 0 or nsec > 999999) {
 			throw IllegalArgumentException:create("The argument {nsec} should lie between zero and 999,999 inclusive.");
+		}
 		
 		sleepNanos(sec, nsec);
 	}
@@ -48,13 +50,14 @@ immutable singleton shadow:standard@System
 	*/
 	public sleep(int ms) => ()
 	{
-		if(ms >= 1000)
-		{
+		if(ms >= 1000) {
 			int sec = ms / 1000;
 			int nsec = (ms - sec * 1000) * 1000000;
 			
 			sleepNanos(sec, nsec);
 		}
-		else sleepNanos(0, ms * 1000000);
+		else {
+			sleepNanos(0, ms * 1000000);
+		}
 	}
 }

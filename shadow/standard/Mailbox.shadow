@@ -9,18 +9,21 @@ class shadow:standard@
 	Mutex mutex;
 	LinkedList<T> queue;
 	
-	public create() {
+	public create()
+	{
 		mutex = Mutex:create();
 		queue = LinkedList<T>:create();
 	}
 	
-	public enqueue(T data) => () {
+	public enqueue(T data) => ()
+	{
 		mutex.lock();
 		queue.addLast(copy(data));
 		mutex.unlock();
 	}
 	
-	public dequeue() => (T) {
+	public dequeue() => (T)
+	{
 		mutex.lock();
 		var retVal = queue.removeFirst();
 		mutex.unlock();

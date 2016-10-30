@@ -21,20 +21,21 @@ locked class shadow:standard@
 	
 	public readonly lock() => ()
 	{
-		if(handle->isValid)
+		if(handle->isValid) {
 			lock(handle->ptr);
+		}
 	}
 	
 	public readonly unlock() => ()
 	{
-		if(handle->isValid)
+		if(handle->isValid) {
 			unlock(handle->ptr);
+		}
 	}
 	
 	public free() => ()
 	{
-		if(handle->isValid)
-		{
+		if(handle->isValid) {
 			destroyMutex(handle->ptr);
 			handle.free();
 		}

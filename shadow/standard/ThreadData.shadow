@@ -7,12 +7,14 @@ is CanEqual<ThreadData> {
 	get Thread sender;
 	get Object data;
 	
-	public create(Thread sender, Object data) {
+	public create(Thread sender, Object data)
+	{
 		this:sender = sender;
 		this:data = data;
 	}
 	
-	public readonly equal(ThreadData other) => (boolean) {
+	public readonly equal(ThreadData other) => (boolean)
+	{
 		return (data === other:data and sender === other:sender);
 	}
 }
