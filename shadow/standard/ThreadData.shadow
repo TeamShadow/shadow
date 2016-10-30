@@ -1,0 +1,15 @@
+locked class shadow:standard@
+	ThreadData
+is CanEqual<ThreadData> {
+	get ThreadWorker sender;
+	get Object data;
+	
+	public create(ThreadWorker sender, Object data) {
+		this:sender = sender;
+		this:data = data;
+	}
+	
+	public readonly equal(ThreadData other) => (boolean) {
+		return (data === other:data and sender === other:sender);
+	}
+}

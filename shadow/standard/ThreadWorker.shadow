@@ -2,35 +2,30 @@ import shadow:io@Console;
 import shadow:utility@ReadOnlyList;
 import shadow:utility@List;
 import shadow:utility@ArrayDeque;
+import shadow:utility@ArrayList;
 
 locked class shadow:standard@
 	ThreadWorker
 is CanEqual<ThreadWorker>
 {
 	// START: Native methods
-	private createNative() => (ThreadWorker) { return ThreadWorker:create(NopRunner:create(), "Thread#main"); }
+	private readonly createNative() => (ThreadWorker) { return ThreadWorker:create(NopRunner:create(), "Thread#main"); }
 	private unlockMutexNative() => () { mutex.unlock(); }
 
-	private native createHandle() => (nullable Object);
-	private native freeHandle(nullable Object handle) => ();
+	private readonly native spawnThread(immutable Object ptr) => (int);
+	private readonly native joinThread(immutable Object ptr) => (int);
 
-	private native spawnThread(nullable Object handle) => (int);
-	private native joinThread(Object handle) => (int);
-	
+	private readonly native get handleSize() => (int);
 	private native get staticNextId() => (int);
 	// END: Native methods
 	
 	// START: Private variables
-	/**
-	* This is the os-specific handle, and cannot be dereferenced in Shadow.
-	* However, it is not null when the thread is running, and is null when
-	* the thread is dead. So, it can be evaluated to see whether a thread is running.
-	*/
-	nullable Object handle = null;
 	nullable Exception ex = null;
 	
-	boolean joined = false;
+	Handle handle;
 	Mutex mutex;
+	
+	boolean joined;
 	CanRun runner;
 	ThreadSafeList<ThreadWorker> childrenList;
 	// END: Private variables
@@ -41,7 +36,8 @@ is CanEqual<ThreadWorker>
 	get int id;
 	
 	/**
-	* Gets the {@code ThreadWorker} which spawned this thread.
+	* Gets the {@code ThreadWorker} which spawned this thread. The Main thread does not
+	* have a parent, and is null.
 	*/
 	get nullable ThreadWorker parent = null;
 	
@@ -56,20 +52,6 @@ is CanEqual<ThreadWorker>
 	*/
 	//get ThreadSafeList<ThreadWorker> children;
 	//get ReadOnlyList<ThreadWorker> children;
-	
-	/**
-	* Gets whether this thread is running.
-	*/
-	public get isRunning() => (boolean)
-	{
-		boolean running;
-		
-		mutex.lock(); {
-			running = (handle !== null or id == 0);
-		} mutex.unlock();
-		
-		return running;
-	}
 
 	/**
 	* Creates a new {@code ThreadWorker} object which takes on a {@code CanRun}
@@ -105,55 +87,20 @@ is CanEqual<ThreadWorker>
 			this:name = "Thread#" # id;
 		}
 		
+		this:joined = false;
 		this:mutex = Mutex:create();
 		
-		if(this:id == 0)
+		if(this:id == 0) {
 			this:runner = runner;
-		else
-		{
+			this:handle = Handle:create();
+		} else {
+			this:handle = Handle:create(this->handleSize);
 			this:runner = copy(runner);
 			this:parent = Thread->current;
 			addToParent();
-		}
-		
-		// we allocate the handle first
-		this:handle = createHandle();
-		// spawn the thread and give it the handle
-		spawnThread(handle);
-	}
-	
-	private addToParent() => () {
-		check(parent):childrenList.add(this);
-	}
-	
-	private join(boolean finalizing) => ()
-	{
-		if(this === Thread->main)
-			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
 			
-		if(this === Thread->current)
-			throw InvalidOperationException:create("A thread cannot call join on itself.");
-		
-		// this process looks complex but is rather simple, first we acquire the lock,
-		// so we have an up-to-date version of handle.
-		mutex.lock();
-		// we check if we're not finalizing, then the user called this method, otherwise,
-		// if this thread was not joined on before, we got to join and wait for it to terminate.
-		boolean flag = !finalizing or (finalizing and !joined);
-		if(flag and handle !== null) {
-			joined = true; // at this point, we consider that the thread has been joined.
-			Object handle = check(handle);
-			
-			// joinThread() unlocks the mutex before waiting for the thread to terminate.
-			joinThread(handle);
-		}
-		// we need not to forget to unlock the mutex if we did not actually join thread.
-		else { mutex.unlock(); }
-
-		// we then check here if we have an exception. If we do, we throw it, and
-		// it is the job of runnerNative() to take care of the handling.
-		if(flag and ex !== null) {
-			throw check(ex);
+			// spawn the thread and give it the handle
+			spawnThread(handle->ptr);
 		}
 	}
 	
@@ -164,10 +111,60 @@ is CanEqual<ThreadWorker>
 	* when this {@code join()} method is called.
 	* 
 	* @throws {@code InvalidOperationException} if this is the main thread or is the same as the calling thread.
-	* @throws {@code ThreadException} wraps the exception which caused this thread to terminate, if any.
+	* @throws {@code ThreadException} if the thread terminated 
 	*/
 	public join() => () {
 		join(false);
+	}
+	
+	/**
+	* Gets whether this thread is running.
+	*/
+	public get isRunning() => (boolean)
+	{
+		mutex.lock();
+			var running = (handle->isValid or id == 0);
+		mutex.unlock();
+		
+		return running;
+	}
+	
+	public readonly equal(ThreadWorker other) => (boolean) {
+		return (this === other);
+	}
+
+	private addToParent() => () {
+		check(parent):childrenList.add(this);
+	}
+	
+	private join(boolean finalizing) => ()
+	{
+		if(this === Thread->main)
+			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
+		
+		if(this === Thread->current)
+			throw InvalidOperationException:create("A thread cannot call join on itself.");
+		
+		// first we acquire the lock to make sure we have an up-to-date version of the handle
+		mutex.lock();		
+		// finalizing is true when Shadow calls this method. It is false when
+		// the user calls it. So, if Shadow called the method, we would only like to join
+		// or throw the exception if this thread didn't have join called on it before.
+		boolean flag = !finalizing or (finalizing and !joined);
+		joined = true;
+		
+		if(flag and handle->isValid) {
+			// joinThread() unlocks the mutex natively before joining the thread
+			joinThread(handle->ptr);
+		}
+		// we need not to forget to unlock the mutex if we did not actually join thread.
+		else { mutex.unlock(); }
+
+		// we then check here if we have an exception. If we do, we throw it, and
+		// it is the job of runnerNative() to take care of the handling.
+		if(flag and ex !== null) {
+			throw check(ex);
+		}
 	}
 	
 	/**
@@ -182,11 +179,7 @@ is CanEqual<ThreadWorker>
 			ex = ThreadException:create(this, e);
 		} finally {
 			mutex.lock(); {
-				// natively free of the handle
-				freeHandle(handle);
-				
-				// the native is invalid now, set it to null
-				handle = null;
+				handle.free();
 			} mutex.unlock();
 		}
 	}
@@ -196,7 +189,7 @@ is CanEqual<ThreadWorker>
 		// we keep two queues, since we would like to throw the exceptions
 		// at the very end. First we traverse the children of all the threads,
 		// and when there is an exception, we add it to the exceptionQueue.
-		var exceptionQueue = ArrayDeque<Exception>:create();
+		var exceptionQueue = ArrayDeque<ThreadException>:create();
 		
 		// queue used for traversal of the children
 		var threadsQueue = ArrayDeque<ThreadWorker>:create();
@@ -209,10 +202,10 @@ is CanEqual<ThreadWorker>
 			// so we skip if id is zero.
 			if(thread->id > 0) {
 				try {
-					// here, we perform a join, and tell the join that
-					// we're finalizing the application.
+					// this join does not do anything if the thread had
+					// been joined on before.
 					thread.join(true);
-				} catch (Exception e) {
+				} catch (ThreadException e) {
 					exceptionQueue.addLast(e);
 				}
 			}
@@ -226,24 +219,6 @@ is CanEqual<ThreadWorker>
 		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
 		while(!exceptionQueue.isEmpty()) {
 			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
-		}
-	}
-	
-	public readonly equal(ThreadWorker other) => (boolean) {
-		return (this === other);
-	}
-	
-	locked class ThreadData is CanEqual<ThreadData> {
-		get Object data;
-		get ThreadWorker sender;
-		
-		public create(Object data, ThreadWorker sender) {
-			this:data = data;
-			this:sender = sender;
-		}
-		
-		public readonly equal(ThreadData other) => (boolean) {
-			return (data === other:data and sender === other:sender);
 		}
 	}
 	

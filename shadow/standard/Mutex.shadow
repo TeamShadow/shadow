@@ -1,38 +1,38 @@
 locked class shadow:standard@
 	Mutex
 {
-	immutable Object mutex;
-	boolean isValid;
+	private readonly native lock(immutable Object ptr) => (int);
+	private readonly native unlock(immutable Object ptr) => (int);
+	private readonly native initMutex(immutable Object ptr) => (int);
+	private readonly native destroyMutex(immutable Object ptr) => (int);
+	private readonly native get handleSize() => (int);
 
-	private native init() => (immutable Object);
-	private readonly native lock(immutable Object mutex) => (int);
-	private readonly native unlock(immutable Object mutex) => (int);
-	private native destroyNative(immutable Object mutex) => (int);
-	
+	Handle handle;
+
 	public create()
 	{
-		mutex = init();
-		isValid = true;
+		handle = Handle:create(this->handleSize);
+		initMutex(handle->ptr);
 	}
 	
 	public readonly lock() => ()
 	{
-		if(isValid)
-			lock(mutex);
+		if(handle->isValid)
+			lock(handle->ptr);
 	}
 	
 	public readonly unlock() => ()
 	{
-		if(isValid)
-			unlock(mutex);
+		if(handle->isValid)
+			unlock(handle->ptr);
 	}
 	
 	public free() => ()
 	{
-		if(isValid)
+		if(handle->isValid)
 		{
-			destroyNative(mutex);
-			isValid = false;
+			destroyMutex(handle->ptr);
+			handle.free();
 		}
 	}
 }

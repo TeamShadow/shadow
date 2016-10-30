@@ -1,3 +1,12 @@
+; ThreadWorker.native.ll
+; 
+; Author:
+; Claude Abounegm
+
+;-------------
+; Definitions
+;-------------
+; Primitives
 %boolean = type i1
 %byte = type i8
 %ubyte = type i8
@@ -12,48 +21,13 @@
 %double = type double
 %void = type i8
 
-; standard definitions
-
 ; Object
 %shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type opaque
 
-; Class
-%shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type opaque
-
-; Iterator
-%shadow.standard..Iterator_methods = type opaque
-
-; String
-%shadow.standard..String_methods = type opaque
-%shadow.standard..String = type opaque
-
-; AddressMap
-%shadow.standard..AddressMap_methods = type opaque
-%shadow.standard..AddressMap = type opaque
-
-; Exception
-%shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type opaque
-
-; System
-%shadow.standard..System_methods = type opaque
-%shadow.standard..System = type opaque
-
-; CanRun
-%shadow.standard..CanRun_methods = type opaque
-
 ; ThreadWorker
 %shadow.standard..ThreadWorker_methods = type opaque
 %shadow.standard..ThreadWorker = type opaque
-
-;===================================================================================================
-; Externals
-
-;-------------
-; Definitions
-;-------------
 
 ; typedef uintptr_t pthread_t;
 %struct.pthread_t = type %uint
@@ -65,29 +39,40 @@
 %struct.sched_param = type { %int }
 
 ;---------
-; Methods
+; Globals
 ;---------
+; used to store the current instance of the thread; Thread->current.
+@shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
+@shadow.standard..ThreadWorker_mainThread = global %shadow.standard..ThreadWorker* null
+@nextThreadId = private global %int 0
 
+;---------------------
+; Method Declarations
+;---------------------
 ; int pthread_create(pthread_t*, pthread_attr_t*, void* (*start_routine)(void*), void*);
 declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void* (%void*)*, %void*)
 
 ; int pthread_join(pthread_t, void**);
 declare %int @pthread_join(%struct.pthread_t, %void**)
 
-declare noalias i8* @calloc(i32, i32) nounwind
-declare void @free(i8*) nounwind
-;===================================================================================================
+; void* calloc(int num, int size);
+declare noalias %void* @calloc(%int, %int) nounwind
 
-; the runner which is executed from the newly spawned thread
+; void free(void* ptr);
+declare void @free(%void*) nounwind
+
+; runnerNative() => ();
 declare void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker*)
+
+; createNative() => (ThreadWorker);
 declare %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker*)
+
+; unlockMutexNative() => ();
 declare void @shadow.standard..ThreadWorker_MunlockMutexNative(%shadow.standard..ThreadWorker*)
 
-; used to store the current instance of the thread; Thread->current.
-@shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
-@shadow.standard..ThreadWorker_mainThread = global %shadow.standard..ThreadWorker* null
-@nextThreadId = private global %int 0
-
+;---------------------------
+; Shadow Method Definitions
+;---------------------------
 ; get staticNextId() => (int); (ThreadSafe)
 define %int @shadow.standard..ThreadWorker_MstaticNextId(%shadow.standard..ThreadWorker*) {
 entry:
@@ -95,21 +80,7 @@ entry:
 	ret %int %currentId
 }
 
-define %void* @thread_func(%void*) {
-entry:
-	%currentThread.addr = bitcast %void* %0 to %shadow.standard..ThreadWorker*
-
-	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
-	; and will cause the TLS to correctly store the reference of this thread.
-	store %shadow.standard..ThreadWorker* %currentThread.addr, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
-
-	; we let Shadow take care of running the actual desired operation
-	call void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker* %currentThread.addr)
-
-	ret %void* null
-}
-
-; spawnThread(nullable Object handle) => (int);
+; spawnThread(immutable Object handle) => (int);
 define %int @shadow.standard..ThreadWorker_MspawnThread_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
 entry:
 	; get the reference of the current Thread
@@ -124,32 +95,12 @@ entry:
 	%this.void = bitcast %shadow.standard..ThreadWorker* %this to %void*
 
 	; create the thread using pthread_create()
-	%call = call %int @pthread_create(%struct.pthread_t* %handle.addr, %struct.pthread_attr_t* null, %void*(%void*)* @thread_func, %void* %this.void)
+	%call = call %int @pthread_create(%struct.pthread_t* %handle.addr, %struct.pthread_attr_t* null, %void*(%void*)* @thread_start, %void* %this.void)
 
 	ret %int %call
 }
 
-; createHandle() => (nullable Object);
-define %shadow.standard..Object* @shadow.standard..ThreadWorker_McreateHandle(%shadow.standard..ThreadWorker*) {
-entry:
-	%sizeOfPthread = ptrtoint %struct.pthread_t* getelementptr (%struct.pthread_t, %struct.pthread_t* null, i32 1) to i32
-	%handle.addr.1 = call noalias i8* @calloc(i32 1, i32 %sizeOfPthread) nounwind
-	%handle.addr =  bitcast i8* %handle.addr.1 to %shadow.standard..Object*
-	
-	ret %shadow.standard..Object* %handle.addr
-}
-
-; freeHandle(nullable Object handle) => ();
-define void @shadow.standard..ThreadWorker_MfreeHandle_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
-entry:
-	; free the handle
-	%handle.addr = bitcast %shadow.standard..Object* %1 to i8*
-	call void @free(i8* %handle.addr)
-	
-	ret void
-}
-
-; joinThread(Object handle) => (int);
+; joinThread(immutable Object ptr) => (int);
 define %int @shadow.standard..ThreadWorker_MjoinThread_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
 entry:
 	; get the reference of the current Thread
@@ -168,6 +119,32 @@ entry:
 	%call = call %int @pthread_join(%struct.pthread_t %handle, %void** null)
 
 	ret %int %call
+}
+
+; get handleSize() => (int);
+define %int @shadow.standard..ThreadWorker_MhandleSize(%shadow.standard..ThreadWorker*) {
+entry:
+	%sizeOfPthread = ptrtoint %struct.pthread_t* getelementptr (%struct.pthread_t, %struct.pthread_t* null, i32 1) to i32
+	
+	ret %int %sizeOfPthread
+}
+
+;---------------------------
+; Custom Method Definitions
+;---------------------------
+; the function ran from the newly spawned thread
+define %void* @thread_start(%void*) {
+entry:
+	%currentThread.addr = bitcast %void* %0 to %shadow.standard..ThreadWorker*
+
+	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
+	; and will cause the TLS to correctly store the reference of this thread.
+	store %shadow.standard..ThreadWorker* %currentThread.addr, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+
+	; we let Shadow take care of running the actual desired operation
+	call void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker* %currentThread.addr)
+
+	ret %void* null
 }
 
 ; initializes the main thread and set the currentThread and mainThread to that instance
