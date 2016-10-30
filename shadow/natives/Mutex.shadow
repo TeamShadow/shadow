@@ -1,11 +1,11 @@
 /**
  * @author Claude Abounegm
  */
-locked class shadow:standard@
+locked class shadow:natives@
 	Mutex
 {
-	private readonly native lock(Pointer ptr) => (int);
-	private readonly native unlock(Pointer ptr) => (int);
+	private readonly native lockMutex(Pointer ptr) => (int);
+	private readonly native unlockMutex(Pointer ptr) => (int);
 	private readonly native initMutex(Pointer ptr) => (int);
 	private readonly native destroyMutex(Pointer ptr) => (int);
 	
@@ -22,15 +22,19 @@ locked class shadow:standard@
 	public readonly lock() => ()
 	{
 		if(handle->isValid) {
-			lock(handle->ptr);
+			lockMutex(handle->ptr);
 		}
 	}
 	
 	public readonly unlock() => ()
 	{
 		if(handle->isValid) {
-			unlock(handle->ptr);
+			unlockMutex(handle->ptr);
 		}
+	}
+	
+	public readonly get ptr() => (Pointer ptr) {
+		return handle->ptr;
 	}
 	
 	public free() => ()

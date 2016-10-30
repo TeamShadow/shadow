@@ -1,0 +1,104 @@
+import shadow:utility@ArrayDeque;
+
+locked class shadow:natives@
+	Signaler
+{
+	class SignalToken
+	{
+		get set boolean shouldWait = true;
+	}
+
+	private native readonly initSignaler(Pointer cond) => (int);
+	private native readonly destroySignaler(Pointer cond) => (int);
+	
+	private native readonly wait(Pointer cond, Pointer mutex) => (int);
+	private native readonly broadcast(Pointer cond) => (int);
+	
+	//private native readonly signal(Pointer cond) => (int);
+	private readonly native get handleSize() => (int);
+	
+	Mutex mutex;
+	Handle condHandle;
+	ArrayDeque<SignalToken> tokens;
+	
+	public create() {
+		mutex = Mutex:create();
+		condHandle = Handle:create(this->handleSize);
+		tokens = ArrayDeque<SignalToken>:create();
+		
+		initSignaler(condHandle->ptr);
+	}
+	
+	public get waitingCount() => (int) {
+		mutex.lock();
+		var count = tokens->size;
+		mutex.unlock();
+		
+		return count;
+	}
+	
+	public wait() => () {
+		if(!condHandle->isValid) {
+			throw InvalidOperationException:create("This Signaler is no longer valid.");
+		}
+
+		mutex.lock();
+		var token = SignalToken:create();
+		tokens.addLast(token);
+		
+		while(token->shouldWait) {
+			// mutex unlocks when waiting
+			wait(condHandle->ptr, mutex->ptr);
+			// mutex locks back when finished waiting
+		}
+		
+		mutex.unlock();
+	}
+	
+	public notify() => () {
+		if(!condHandle->isValid) {
+			throw InvalidOperationException:create("This Signaler is no longer valid.");
+		}
+		
+		mutex.lock();
+		if(!tokens.isEmpty()) {
+			var token = tokens.removeFirst();
+			token->shouldWait = false;
+			
+			broadcast(condHandle->ptr);
+		}
+		mutex.unlock();
+	}
+	
+	public notifyAll() => () {
+		if(!condHandle->isValid) {
+			throw InvalidOperationException:create("This Signaler is no longer valid.");
+		}
+
+		mutex.lock();
+		if(!tokens.isEmpty()) {
+			while(!tokens.isEmpty()) {
+				var token = tokens.removeFirst();
+				token->shouldWait = false;
+			}
+			
+			broadcast(condHandle->ptr);
+		}
+		mutex.unlock();
+	}
+	
+	public free() => () {
+		mutex.lock();
+		if(!tokens.isEmpty()) {
+			mutex.unlock();
+			throw InvalidOperationException:create("The signaler cannot be freed when there are threads waiting on it.");
+		}
+		mutex.unlock();
+		
+		if(condHandle->isValid) {
+			destroySignaler(condHandle->ptr);
+			condHandle.free();
+			mutex.free();
+		}
+	}
+}

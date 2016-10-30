@@ -1,4 +1,5 @@
 import shadow:utility@LinkedList;
+import shadow:natives;
 
 /**
  * @author Claude Abounegm

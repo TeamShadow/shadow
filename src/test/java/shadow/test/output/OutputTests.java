@@ -1100,6 +1100,23 @@ public class OutputTests {
 				"0\n");
 	}
 	
+	@Test public void testSignaler() throws Exception {
+		args.add("shadow/test/SignalerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"Thread#1: waiting!\n" + 
+				"Thread#2: waiting!\n" + 
+				"Thread#3: waiting!\n" + 
+				"Thread#4: waiting!\n" + 
+				"Thread#5: waiting!\n" + 
+				"Thread#1: finished waiting!\n" + 
+				"Thread#2: finished waiting!\n" + 
+				"Thread#3: finished waiting!\n" + 
+				"Thread#4: finished waiting!\n" + 
+				"Thread#5: finished waiting!\n"
+				);
+	}
+	
 	@Test public void testToughTry() throws Exception {
 		args.add("shadow/test/ToughTry.shadow");
 		Main.run(args.toArray(new String[] { }));

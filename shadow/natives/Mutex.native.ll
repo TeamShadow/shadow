@@ -25,10 +25,10 @@
 %shadow.standard..Object = type opaque
 
 ; Pointer
-%shadow.standard..Pointer = type opaque
+%shadow.natives..Pointer = type opaque
 
 ; Mutex
-%shadow.standard..Mutex = type opaque
+%shadow.natives..Mutex = type opaque
 
 ; 
 %struct.pthread_mutex_t = type i8*
@@ -49,41 +49,41 @@ declare %int @pthread_mutex_unlock(%struct.pthread_mutex_t*)
 ; Shadow Method Definitions
 ;---------------------------
 ; initMutex(Pointer ptr) => (int);
-define %int @shadow.standard..Mutex_MinitMutex_shadow.standard..Pointer(%shadow.standard..Mutex*, %shadow.standard..Pointer*) {
+define %int @shadow.natives..Mutex_MinitMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%handle = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_mutex_t*
+	%handle = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_init(%struct.pthread_mutex_t* %handle, %int* null)
 	
 	ret %int %call
 }
 
 ; destroyMutex(Pointer ptr) => (int);
-define %int @shadow.standard..Mutex_MdestroyMutex_shadow.standard..Pointer(%shadow.standard..Mutex*, %shadow.standard..Pointer*) {
+define %int @shadow.natives..Mutex_MdestroyMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%handle = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_mutex_t*
+	%handle = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_destroy(%struct.pthread_mutex_t* %handle)
 
 	ret %int %call
 }
 
-; unlock(Pointer ptr) => (int);
-define %int @shadow.standard..Mutex_Munlock_shadow.standard..Pointer(%shadow.standard..Mutex*, %shadow.standard..Pointer*) {
+; unlockMutex(Pointer ptr) => (int);
+define %int @shadow.natives..Mutex_MunlockMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%handle = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_mutex_t*
+	%handle = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_unlock(%struct.pthread_mutex_t* %handle)
 	ret %int %call
 }
 
-; lock(Pointer ptr) => (int);
-define %int @shadow.standard..Mutex_Mlock_shadow.standard..Pointer(%shadow.standard..Mutex*, %shadow.standard..Pointer*) {
+; lockMutex(Pointer ptr) => (int);
+define %int @shadow.natives..Mutex_MlockMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%handle = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_mutex_t*
+	%handle = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_lock(%struct.pthread_mutex_t* %handle)
 	ret %int %call
 }
 
 ; get handleSize() => (int);
-define %int @shadow.standard..Mutex_MhandleSize(%shadow.standard..Mutex*) {
+define %int @shadow.natives..Mutex_MhandleSize(%shadow.natives..Mutex*) {
 entry:
 	%sizeOfMutex = ptrtoint %struct.pthread_mutex_t* getelementptr (%struct.pthread_mutex_t, %struct.pthread_mutex_t* null, i32 1) to i32
 	ret %int %sizeOfMutex

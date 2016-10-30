@@ -1,5 +1,6 @@
 import shadow:io@Console;
 import shadow:utility;
+import shadow:natives;
 
 /**
  * @author Claude Abounegm
@@ -10,7 +11,7 @@ is CanEqual<Thread>
 {
 	// START: Native methods
 	private readonly native spawnThread(Pointer ptr) => (int);
-	private readonly native joinThread(Pointer ptr) => (int);
+	//private readonly native joinThread(Pointer ptr) => (int);
 	
 	private readonly native get handleSize() => (int);
 	private native get staticNextId() => (int);
@@ -23,6 +24,7 @@ is CanEqual<Thread>
 	boolean joined;
 	CanRun runner;
 	ThreadSafeList<Thread> childrenList;
+	Signaler signaler;
 	// END: Private variables
 	
 	/**
@@ -84,6 +86,7 @@ is CanEqual<Thread>
 		
 		this:joined = false;
 		this:mutex = Mutex:create();
+		this:signaler = Signaler:create();
 		
 		if(this:id == 0) {
 			this:runner = runner;
@@ -113,6 +116,13 @@ is CanEqual<Thread>
 	{
 		join(false);
 	}
+	
+	/*destroy()
+	{
+		handle.free();
+		mutex.free();
+		signaler.free();
+	}*/
 	
 	/**
 	* Gets whether this thread is running.
@@ -148,21 +158,21 @@ is CanEqual<Thread>
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		}
 		
-		// first we acquire the lock to make sure we have an up-to-date version of the handle
-		mutex.lock();		
-		// finalizing is true when Shadow calls this method. It is false when
-		// the user calls it. So, if Shadow called the method, we would only like to join
-		// or throw the exception if this thread didn't have join called on it before.
-		boolean flag = !finalizing or (finalizing and !joined);
-		joined = true;
-		
-		if(flag and handle->isValid) {
-			// joinThread() unlocks the mutex natively before joining the thread
-			joinThread(handle->ptr);
-		}
-		// we need not to forget to unlock the mutex if we did not actually join thread.
-		else { 
-			mutex.unlock(); 
+		boolean flag;
+		mutex.lock(); {
+			// finalizing is true when Shadow calls this method. It is false when
+			// the user calls it. So, if Shadow called the method, we would only like to join
+			// or throw the exception if this thread didn't have join called on it before.
+			flag = !finalizing or (finalizing and !joined);
+			joined = true;
+			
+			if(flag and handle->isValid) {
+				mutex.unlock();
+				signaler.wait();
+			}
+			else {
+				mutex.unlock(); 
+			}
 		}
 
 		// we then check here if we have an exception. If we do, we throw it, and
@@ -187,6 +197,8 @@ is CanEqual<Thread>
 		finally {
 			mutex.lock(); {
 				handle.free();
+				signaler.notifyAll();
+				signaler.free();
 			} mutex.unlock();
 		}
 	}

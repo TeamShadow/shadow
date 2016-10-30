@@ -17,7 +17,7 @@ class shadow:standard@Object
 	 * implementation returns a representation of class information.
 	 * Most classes should override this method to provide a more useful
 	 * representation.	 
-	 * @return  {@code String} representation
+	 * @return {@code String} representation
 	 */ 
 	public readonly
 	toString() => ( String )

@@ -1,0 +1,31 @@
+import shadow:io@Console;
+import shadow:natives;
+
+class shadow:test@SignalerTest
+{
+	class RunnableTest is CanRun 
+	{
+		public run() => () {
+			/*var signaler = System->mainThread->signaler;
+			var thisThread = System->currentThread;
+			
+			Console.printLine(thisThread->name # ": " # "waiting!");
+			signaler.wait();
+			Console.printLine(thisThread->name # ": " # "finished waiting!");*/
+		}
+	}
+
+	public main(String[] args) => () {
+		/*nullable var threads = Thread:null[5];
+		for(int i = 0; i < threads->size; i += 1) {
+			threads[i] = Thread:create(RunnableTest:create());
+			System.sleep(500);
+		}
+		
+		var signaler = System->mainThread->signaler;
+		for(int i = 0; i < threads->size; i += 1) {
+			signaler.notify();
+			System.sleep(500);
+		}*/
+	}
+}

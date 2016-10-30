@@ -25,7 +25,7 @@
 %shadow.standard..Object = type opaque
 
 ; Pointer
-%shadow.standard..Pointer = type opaque
+%shadow.natives..Pointer = type opaque
 
 ; Thread
 %shadow.standard..Thread = type opaque
@@ -82,7 +82,7 @@ entry:
 }
 
 ; spawnThread(Pointer ptr) => (int);
-define %int @shadow.standard..Thread_MspawnThread_shadow.standard..Pointer(%shadow.standard..Thread*, %shadow.standard..Pointer*) {
+define %int @shadow.standard..Thread_MspawnThread_shadow.natives..Pointer(%shadow.standard..Thread*, %shadow.natives..Pointer*) {
 entry:
 	; get the reference of the current Thread
 	%this.addr = alloca %shadow.standard..Thread*
@@ -90,7 +90,7 @@ entry:
 	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
 
 	; get the handle
-	%handle.addr = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_t*
+	%handle.addr = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_t*
 	
 	; cast Thread* to void*
 	%this.void = bitcast %shadow.standard..Thread* %this to %void*
@@ -102,7 +102,7 @@ entry:
 }
 
 ; joinThread(Pointer ptr) => (int);
-define %int @shadow.standard..Thread_MjoinThread_shadow.standard..Pointer(%shadow.standard..Thread*, %shadow.standard..Pointer*) {
+define %int @shadow.standard..Thread_MjoinThread_shadow.natives..Pointer(%shadow.standard..Thread*, %shadow.natives..Pointer*) {
 entry:
 	; get the reference of the current Thread
 	%this.addr = alloca %shadow.standard..Thread*
@@ -110,7 +110,7 @@ entry:
 	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
 
 	; load handle
-	%handle.addr = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_t*
+	%handle.addr = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_t*
 	%handle = load %struct.pthread_t, %struct.pthread_t* %handle.addr
 	
 	; we unlock the mutex before joining

@@ -1,7 +1,7 @@
 /**
  * @author Claude Abounegm
  */
-locked class shadow:standard@
+locked class shadow:natives@
 	Handle
 {
 	// the raw memory address is stored instead of an object to avoid any problems

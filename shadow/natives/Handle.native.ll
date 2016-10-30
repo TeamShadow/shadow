@@ -25,10 +25,10 @@
 %shadow.standard..Object = type opaque
 
 ; Pointer
-%shadow.standard..Pointer = type opaque
+%shadow.natives..Pointer = type opaque
 
 ; Handle
-%shadow.standard..Handle = type opaque
+%shadow.natives..Handle = type opaque
 
 ;---------------------
 ; Method Declarations
@@ -42,7 +42,7 @@ declare void @free(%void*) nounwind
 ; Shadow Method Definitions
 ;---------------------------
 ; createHandle(int size) => (long handle);
-define %long @shadow.standard..Handle_McreateHandle_int(%shadow.standard..Handle*, %int) {
+define %long @shadow.natives..Handle_McreateHandle_int(%shadow.natives..Handle*, %int) {
 entry:
 	%handle.addr = call noalias %void* @calloc(%int 1, %int %1) nounwind
 	%handle =  ptrtoint %void* %handle.addr to %long
@@ -50,16 +50,16 @@ entry:
 }
 
 ; freeHandle(Pointer ptr) => ();
-define void @shadow.standard..Handle_MfreeHandle_shadow.standard..Pointer(%shadow.standard..Handle*, %shadow.standard..Pointer*) {
+define void @shadow.natives..Handle_MfreeHandle_shadow.natives..Pointer(%shadow.natives..Handle*, %shadow.natives..Pointer*) {
 entry:
-	%handle.addr = bitcast %shadow.standard..Pointer* %1 to i8*
+	%handle.addr = bitcast %shadow.natives..Pointer* %1 to i8*
 	call void @free(i8* %handle.addr)
 	ret void
 }
 
 ; getPtrFromLong(long handle) => (Pointer ptr);
-define %shadow.standard..Pointer* @shadow.standard..Handle_MgetPtrFromLong_long(%shadow.standard..Handle*, %long) {
+define %shadow.natives..Pointer* @shadow.natives..Handle_MgetPtrFromLong_long(%shadow.natives..Handle*, %long) {
 entry:
-	%handle.obj = inttoptr %long %1 to %shadow.standard..Pointer*
-	ret %shadow.standard..Pointer* %handle.obj
+	%handle.obj = inttoptr %long %1 to %shadow.natives..Pointer*
+	ret %shadow.natives..Pointer* %handle.obj
 }

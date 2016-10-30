@@ -1,5 +1,6 @@
 import shadow:utility@List;
 import shadow:utility@ArrayList;
+import shadow:natives;
 
 /**
  * @author Claude Abounegm
