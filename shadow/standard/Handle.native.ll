@@ -22,11 +22,12 @@
 %void = type i8
 
 ; Object
-%shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type opaque
 
+; Pointer
+%shadow.standard..Pointer = type opaque
+
 ; Handle
-%shadow.standard..Handle_methods = type opaque
 %shadow.standard..Handle = type opaque
 
 ;---------------------
@@ -48,17 +49,17 @@ entry:
 	ret %long %handle
 }
 
-; freeHandle(immutable Object handle) => ();
-define void @shadow.standard..Handle_MfreeHandle_shadow.standard..Object(%shadow.standard..Handle*, %shadow.standard..Object*) {
+; freeHandle(Pointer ptr) => ();
+define void @shadow.standard..Handle_MfreeHandle_shadow.standard..Pointer(%shadow.standard..Handle*, %shadow.standard..Pointer*) {
 entry:
-	%handle.addr = bitcast %shadow.standard..Object* %1 to i8*
+	%handle.addr = bitcast %shadow.standard..Pointer* %1 to i8*
 	call void @free(i8* %handle.addr)
 	ret void
 }
 
-; getPtrFromLong(long handle) => (immutable Object handle);
-define %shadow.standard..Object* @shadow.standard..Handle_MgetPtrFromLong_long(%shadow.standard..Handle*, %long) {
+; getPtrFromLong(long handle) => (Pointer ptr);
+define %shadow.standard..Pointer* @shadow.standard..Handle_MgetPtrFromLong_long(%shadow.standard..Handle*, %long) {
 entry:
-	%handle.obj = inttoptr %long %1 to %shadow.standard..Object*
-	ret %shadow.standard..Object* %handle.obj
+	%handle.obj = inttoptr %long %1 to %shadow.standard..Pointer*
+	ret %shadow.standard..Pointer* %handle.obj
 }

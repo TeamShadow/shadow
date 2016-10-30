@@ -1,3 +1,6 @@
+/**
+ * @author Claude Abounegm
+ */
 interface shadow:standard@CanRun
 {
 	run() => ();

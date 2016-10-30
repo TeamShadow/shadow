@@ -4,6 +4,9 @@ import shadow:utility@List;
 import shadow:utility@ArrayDeque;
 import shadow:utility@ArrayList;
 
+/**
+ * @author Claude Abounegm
+ */
 locked class shadow:standard@
 	ThreadWorker
 is CanEqual<ThreadWorker>
@@ -12,19 +15,17 @@ is CanEqual<ThreadWorker>
 	private readonly createNative() => (ThreadWorker) { return ThreadWorker:create(NopRunner:create(), "Thread#main"); }
 	private unlockMutexNative() => () { mutex.unlock(); }
 
-	private readonly native spawnThread(immutable Object ptr) => (int);
-	private readonly native joinThread(immutable Object ptr) => (int);
-
+	private readonly native spawnThread(Pointer ptr) => (int);
+	private readonly native joinThread(Pointer ptr) => (int);
+	
 	private readonly native get handleSize() => (int);
 	private native get staticNextId() => (int);
 	// END: Native methods
 	
 	// START: Private variables
 	nullable Exception ex = null;
-	
 	Handle handle;
 	Mutex mutex;
-	
 	boolean joined;
 	CanRun runner;
 	ThreadSafeList<ThreadWorker> childrenList;
@@ -119,6 +120,8 @@ is CanEqual<ThreadWorker>
 	
 	/**
 	* Gets whether this thread is running.
+	*
+	* @return {@code true} if the thread is alive; otherwise, {@code false}.
 	*/
 	public get isRunning() => (boolean)
 	{

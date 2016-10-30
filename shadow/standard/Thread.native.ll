@@ -1,3 +1,12 @@
+; Thread.native.ll
+; 
+; Author:
+; Claude Abounegm
+
+;-------------
+; Definitions
+;-------------
+; Primitives
 %boolean = type i1
 %byte = type i8
 %ubyte = type i8
@@ -12,37 +21,9 @@
 %double = type double
 %void = type i8
 
-; standard definitions
-
 ; Object
 %shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type opaque
-
-; Class
-%shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type opaque
-
-; Iterator
-%shadow.standard..Iterator_methods = type opaque
-
-; String
-%shadow.standard..String_methods = type opaque
-%shadow.standard..String = type opaque
-
-; AddressMap
-%shadow.standard..AddressMap_methods = type opaque
-%shadow.standard..AddressMap = type opaque
-
-; Exception
-%shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type opaque
-
-; System
-%shadow.standard..System_methods = type opaque
-%shadow.standard..System = type opaque
-
-; CanRun
-%shadow.standard..CanRun_methods = type opaque
 
 ; ThreadWorker
 %shadow.standard..ThreadWorker_methods = type opaque
@@ -55,12 +36,21 @@
 ; struct timespec { time_t tv_sec; long tv_nsec; };
 %struct.timespec = type { %int, %int }
 
+;---------
+; Globals
+;---------
+@shadow.standard..ThreadWorker_TLS_currentThread = external global %shadow.standard..ThreadWorker*
+@shadow.standard..ThreadWorker_STATIC_mainThread = external global %shadow.standard..ThreadWorker*
+
+;---------------------
+; Method Declarations
+;---------------------
 ; int nanosleep(const struct timespec *req, struct timespec *rem);
 declare %int @nanosleep(%struct.timespec*, %struct.timespec*)
 
-@shadow.standard..ThreadWorker_currentThread = external global %shadow.standard..ThreadWorker*
-@shadow.standard..ThreadWorker_mainThread = external global %shadow.standard..ThreadWorker*
-
+;---------------------------
+; Shadow Method Definitions
+;---------------------------
 ; sleepNanos(int sec, int nsec) => ();
 define void @shadow.standard..Thread_MsleepNanos_int_int(%shadow.standard..Thread* %this, %int %sec, %int %nsec) {
 entry:
@@ -83,13 +73,13 @@ entry:
 ; get current() => (ThreadWorker);
 define %shadow.standard..ThreadWorker* @shadow.standard..Thread_Mcurrent(%shadow.standard..Thread*) {
 entry:
-	%currentThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	%currentThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_TLS_currentThread
 	ret %shadow.standard..ThreadWorker* %currentThread
 }
 
 ; get main() => (ThreadWorker);
 define %shadow.standard..ThreadWorker* @shadow.standard..Thread_Mmain(%shadow.standard..Thread*) {
 entry:
-	%mainThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_mainThread
+	%mainThread = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_STATIC_mainThread
 	ret %shadow.standard..ThreadWorker* %mainThread
 }

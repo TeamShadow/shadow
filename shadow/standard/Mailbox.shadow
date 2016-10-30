@@ -1,5 +1,8 @@
 import shadow:utility@LinkedList;
 
+/**
+ * @author Claude Abounegm
+ */
 class shadow:standard@
 	Mailbox<T is CanEqual<T>>
 {

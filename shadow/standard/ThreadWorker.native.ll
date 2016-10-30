@@ -22,11 +22,12 @@
 %void = type i8
 
 ; Object
-%shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type opaque
 
+; Pointer
+%shadow.standard..Pointer = type opaque
+
 ; ThreadWorker
-%shadow.standard..ThreadWorker_methods = type opaque
 %shadow.standard..ThreadWorker = type opaque
 
 ; typedef uintptr_t pthread_t;
@@ -42,9 +43,9 @@
 ; Globals
 ;---------
 ; used to store the current instance of the thread; Thread->current.
-@shadow.standard..ThreadWorker_currentThread = thread_local global %shadow.standard..ThreadWorker* null
-@shadow.standard..ThreadWorker_mainThread = global %shadow.standard..ThreadWorker* null
-@nextThreadId = private global %int 0
+@shadow.standard..ThreadWorker_TLS_currentThread = thread_local global %shadow.standard..ThreadWorker* null
+@shadow.standard..ThreadWorker_STATIC_mainThread = global %shadow.standard..ThreadWorker* null
+@STATIC_nextThreadId = private global %int 0
 
 ;---------------------
 ; Method Declarations
@@ -76,12 +77,12 @@ declare void @shadow.standard..ThreadWorker_MunlockMutexNative(%shadow.standard.
 ; get staticNextId() => (int); (ThreadSafe)
 define %int @shadow.standard..ThreadWorker_MstaticNextId(%shadow.standard..ThreadWorker*) {
 entry:
-	%currentId = atomicrmw add %int* @nextThreadId, %int 1 seq_cst
+	%currentId = atomicrmw add %int* @STATIC_nextThreadId, %int 1 seq_cst
 	ret %int %currentId
 }
 
-; spawnThread(immutable Object handle) => (int);
-define %int @shadow.standard..ThreadWorker_MspawnThread_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
+; spawnThread(Pointer ptr) => (int);
+define %int @shadow.standard..ThreadWorker_MspawnThread_shadow.standard..Pointer(%shadow.standard..ThreadWorker*, %shadow.standard..Pointer*) {
 entry:
 	; get the reference of the current Thread
 	%this.addr = alloca %shadow.standard..ThreadWorker*
@@ -89,7 +90,7 @@ entry:
 	%this = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** %this.addr
 
 	; get the handle
-	%handle.addr = bitcast %shadow.standard..Object* %1 to %struct.pthread_t*
+	%handle.addr = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_t*
 	
 	; cast Thread* to void*
 	%this.void = bitcast %shadow.standard..ThreadWorker* %this to %void*
@@ -100,8 +101,8 @@ entry:
 	ret %int %call
 }
 
-; joinThread(immutable Object ptr) => (int);
-define %int @shadow.standard..ThreadWorker_MjoinThread_shadow.standard..Object(%shadow.standard..ThreadWorker*, %shadow.standard..Object*) {
+; joinThread(Pointer ptr) => (int);
+define %int @shadow.standard..ThreadWorker_MjoinThread_shadow.standard..Pointer(%shadow.standard..ThreadWorker*, %shadow.standard..Pointer*) {
 entry:
 	; get the reference of the current Thread
 	%this.addr = alloca %shadow.standard..ThreadWorker*
@@ -109,7 +110,7 @@ entry:
 	%this = load %shadow.standard..ThreadWorker*, %shadow.standard..ThreadWorker** %this.addr
 
 	; load handle
-	%handle.addr = bitcast %shadow.standard..Object* %1 to %struct.pthread_t*
+	%handle.addr = bitcast %shadow.standard..Pointer* %1 to %struct.pthread_t*
 	%handle = load %struct.pthread_t, %struct.pthread_t* %handle.addr
 	
 	; we unlock the mutex before joining
@@ -139,7 +140,7 @@ entry:
 
 	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
 	; and will cause the TLS to correctly store the reference of this thread.
-	store %shadow.standard..ThreadWorker* %currentThread.addr, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	store %shadow.standard..ThreadWorker* %currentThread.addr, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_TLS_currentThread
 
 	; we let Shadow take care of running the actual desired operation
 	call void @shadow.standard..ThreadWorker_MrunnerNative(%shadow.standard..ThreadWorker* %currentThread.addr)
@@ -154,10 +155,10 @@ entry:
 	%mainThread = call %shadow.standard..ThreadWorker* @shadow.standard..ThreadWorker_McreateNative(%shadow.standard..ThreadWorker* null)
 	
 	; each thread needs to be able to get a reference to its own ThreadWorker, so we set its instance to the currentThread TLS.
-	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_currentThread
+	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_TLS_currentThread
 	
 	; each thread should also be able to reference the main thread from anywhere, as it is the root of all threads.
-	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_mainThread
+	store %shadow.standard..ThreadWorker* %mainThread, %shadow.standard..ThreadWorker** @shadow.standard..ThreadWorker_STATIC_mainThread
 	
 	ret void
 }

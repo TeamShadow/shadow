@@ -1,3 +1,6 @@
+/**
+ * @author Claude Abounegm
+ */
 exception shadow:standard@
 	ThreadException
 {

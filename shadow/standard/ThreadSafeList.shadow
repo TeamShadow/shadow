@@ -1,6 +1,9 @@
 import shadow:utility@List;
 import shadow:utility@ArrayList;
 
+/**
+ * @author Claude Abounegm
+ */
 locked class shadow:standard@
 	ThreadSafeList<T is CanEqual<T>>
 is List<T>

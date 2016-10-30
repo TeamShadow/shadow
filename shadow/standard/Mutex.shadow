@@ -1,10 +1,13 @@
+/**
+ * @author Claude Abounegm
+ */
 locked class shadow:standard@
 	Mutex
 {
-	private readonly native lock(immutable Object ptr) => (int);
-	private readonly native unlock(immutable Object ptr) => (int);
-	private readonly native initMutex(immutable Object ptr) => (int);
-	private readonly native destroyMutex(immutable Object ptr) => (int);
+	private readonly native lock(Pointer ptr) => (int);
+	private readonly native unlock(Pointer ptr) => (int);
+	private readonly native initMutex(Pointer ptr) => (int);
+	private readonly native destroyMutex(Pointer ptr) => (int);
 	private readonly native get handleSize() => (int);
 
 	Handle handle;

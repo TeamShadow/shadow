@@ -1,3 +1,6 @@
+/**
+ * @author Claude Abounegm
+ */
 locked class shadow:standard@
 	Handle
 {
@@ -8,8 +11,8 @@ locked class shadow:standard@
 	long handle;
 	
 	private native readonly createHandle(int size) => (long handle);
-	private native readonly freeHandle(immutable Object handle) => ();
-	private native readonly getPtrFromLong(long handle) => (immutable Object handle);
+	private native readonly freeHandle(Pointer ptr) => ();
+	private native readonly getPtrFromLong(long handle) => (Pointer ptr);
 
 	/**
 	* Creates an invalid handle. This does not allocate any extra memory.
@@ -37,10 +40,11 @@ locked class shadow:standard@
 	* This reference should only be passed to other native methods which will use that handle,
 	* and should not be stored in a variable in Shadow.
 	* 
-	* @return {@code immutable Object} The raw pointer to the handle.
+	* @return {@code Pointer} The raw pointer to the handle.
+	*
 	* @throws {@code InvalidOperationException} if the handle has been freed or is not valid.
 	*/
-	public readonly get ptr() => (immutable Object handle) {
+	public readonly get ptr() => (Pointer ptr) {
 		if(this->isValid) {
 			return getPtrFromLong(handle);
 		} else {
