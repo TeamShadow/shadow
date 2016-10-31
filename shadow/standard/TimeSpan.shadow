@@ -1,0 +1,36 @@
+
+locked immutable class shadow:standard@
+	TimeSpan
+{
+	get int sec = 0;
+	get int nsec = 0;
+	
+	public create(int sec, int nsec)
+	{
+		if(sec < 0) {
+			throw IllegalArgumentException:create("The argument {sec} should be bigger than or equal to zero");
+		}
+		
+		if(nsec < 0 or nsec >= 1000000000) {
+			throw IllegalArgumentException:create("The argument {nsec} should lie between zero and 999,999 inclusive.");
+		}
+		
+		this:sec = sec;
+		this:nsec = nsec;
+	}
+	
+	public create(int ms)
+	{
+		if(ms < 0) {
+			throw IllegalArgumentException:create("The argument {ms`} should be bigger than or equal to zero");
+		}
+		
+		if(ms >= 1000) {
+			this:sec = ms / 1000;
+			this:nsec = (ms - sec * 1000) * 1000000;
+		}
+		else {
+			this:nsec = ms * 1000000;
+		}
+	}
+}

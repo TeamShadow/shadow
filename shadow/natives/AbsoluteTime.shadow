@@ -8,54 +8,22 @@ locked class shadow:natives@
 	
 	Handle handle;
 	
-	public create(int sec, int nsec) 
+	public create(TimeSpan ts)
 	{
 		handle = Handle:create(this->handleSize);
-		
-		try {
-			addTimeToNow(sec, nsec);
-		} catch(Exception e) {
-			handle.free();
-			throw e;
-		}
+		addTimeToNow(ts);
 	}
 	
-	public create(int ms)
-	{
-		handle = Handle:create(this->handleSize);
-		
-		try {
-			if(ms >= 1000) {
-				int sec = ms / 1000;
-				int nsec = (ms - sec * 1000) * 1000000;
-				addTimeToNow(sec, nsec);
-			}
-			else {
-				addTimeToNow(0, ms * 1000000);
-			}
-		} catch(Exception e) {
-			handle.free();
-			throw e;
-		}
-	}
-	
-	public addTimeToNow(int sec, int nsec) => ()
+	public addTimeToNow(TimeSpan ts) => ()
 	{
 		if(!handle->isValid) {
 			throw InvalidOperationException:create("This AbsoluteTime is no longer valid.");
 		}
 		
-		if(sec < 0) {
-			throw IllegalArgumentException:create("The argument {sec} should be bigger than or equal to zero");
-		}
+		(int absSec, int absUSec) = getAbsoluteTime();
 		
-		if(nsec < 0 or nsec >= 1000000000) {
-			throw IllegalArgumentException:create("The argument {nsec} should lie between zero and 999,999 inclusive.");
-		}
-		
-		(int secAbs, int usecAbs) = getAbsoluteTime();
-		sec += secAbs;
-		nsec += usecAbs * 1000;
+		int sec = absSec + ts->sec;
+		int nsec = absUSec * 1000 + ts->nsec;
 		
 		if(nsec >= 1000000000) {
 			nsec -= 1000000000;

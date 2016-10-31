@@ -30,9 +30,6 @@
 ; Thread
 %shadow.standard..Thread = type opaque
 
-; struct timespec { time_t tv_sec; long tv_nsec; };
-%struct.timespec = type { %int, %int }
-
 ;---------
 ; Globals
 ;---------

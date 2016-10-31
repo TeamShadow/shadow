@@ -114,7 +114,22 @@ is CanEqual<Thread>
 	*/
 	public join() => () 
 	{
-		join(false);
+		join(false, null);
+	}
+	
+	public join(int ms) => ()
+	{
+		join(false, TimeSpan:create(ms));
+	}
+	
+	public join(int sec, int nsec) => ()
+	{
+		join(false, TimeSpan:create(sec, nsec));
+	}
+	
+	public join(TimeSpan ts) => ()
+	{
+		join(false, ts);
 	}
 	
 	/**
@@ -129,6 +144,15 @@ is CanEqual<Thread>
 		mutex.unlock();
 		
 		return running;
+	}
+	
+	public sleep(TimeSpan timeout) => ()
+	{
+		if(this !== System->currentThread) {
+			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
+		}
+		
+		signaler.wait(timeout, false);
 	}
 	
 	public sleep(int sec, int nsec) => ()
@@ -159,7 +183,9 @@ is CanEqual<Thread>
 		check(parent):childrenList.add(this);
 	}
 	
-	private join(boolean finalizing) => ()
+	// TODO: WE NEED TO MAKE SURE THAT THE ACTUAL UNMANAGED POINTER HAS BEEN FREED
+	// Do we need to call pthread_exit()? Gotta figure this out.
+	private join(boolean finalizing, nullable TimeSpan ts) => ()
 	{
 		if(this === System->mainThread) {
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
@@ -179,7 +205,13 @@ is CanEqual<Thread>
 			
 			if(flag and handle->isValid) {
 				mutex.unlock();
-				signaler.wait();
+				
+				try {
+					var ts = check(ts);
+					signaler.wait(ts);
+				} recover {
+					signaler.wait();
+				}
 			}
 			else {
 				mutex.unlock(); 
@@ -234,7 +266,7 @@ is CanEqual<Thread>
 				try {
 					// this join does not do anything if the thread had
 					// been joined on before.
-					thread.join(true);
+					thread.join(true, null);
 				}
 				catch (ThreadException e) {
 					exceptionQueue.addLast(e);

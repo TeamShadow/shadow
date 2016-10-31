@@ -40,28 +40,6 @@ locked class shadow:natives@
 		return count;
 	}
 	
-	private wait(AbsoluteTime time, boolean listenToNotify) => ()
-	{		
-		mutex.lock(); {
-			var token = SignalToken:create();
-			if(listenToNotify) {
-				tokens.addLast(token);
-			} else {
-				token->shouldWait = false;
-			}
-			
-			int retVal = 0;
-			while(retVal == 0 or (listenToNotify and token->shouldWait)) {
-				// mutex unlocks when waiting
-				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
-				// mutex locks back when finished waiting
-			}
-			
-			token->shouldWait = false;
-			time.free();
-		} mutex.unlock();
-	}
-	
 	public wait() => () 
 	{
 		if(!condHandle->isValid) {
@@ -81,27 +59,51 @@ locked class shadow:natives@
 		mutex.unlock();
 	}
 	
-	public wait(int ms, boolean listenToNotify) => ()
+	public wait(TimeSpan ts, boolean listenToNotify) => ()
 	{
 		if(!condHandle->isValid) {
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
 		}
 		
-		wait(AbsoluteTime:create(ms), listenToNotify);
+		mutex.lock(); {
+			var time = AbsoluteTime:create(ts);
+			var token = SignalToken:create();
+			if(listenToNotify) {
+				tokens.addLast(token);
+			} else {
+				token->shouldWait = false;
+			}
+			
+			int retVal = 0;
+			while(retVal == 0 or (listenToNotify and token->shouldWait)) {
+				// mutex unlocks when waiting
+				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
+				// mutex locks back when finished waiting
+			}
+			
+			token->shouldWait = false;
+			time.free();
+		} mutex.unlock();
+	}
+	
+	public wait(int ms, boolean listenToNotify) => ()
+	{		
+		wait(TimeSpan:create(ms), listenToNotify);
+	}
+	
+	public wait(int sec, int nsec, boolean listenToNotify) => ()
+	{
+		wait(TimeSpan:create(sec, nsec), listenToNotify);
+	}
+	
+	public wait(TimeSpan time) => ()
+	{
+		wait(time, true);
 	}
 	
 	public wait(int ms) => ()
 	{
 		wait(ms, true);
-	}
-	
-	public wait(int sec, int nsec, boolean listenToNotify) => ()
-	{
-		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
-		}
-		
-		wait(AbsoluteTime:create(sec, nsec), listenToNotify);
 	}
 	
 	public wait(int sec, int nsec) => ()
@@ -115,17 +117,17 @@ locked class shadow:natives@
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
 		}
 		
-		mutex.lock();
-		if(!tokens.isEmpty()) {
-			SignalToken token;
-			do {
-				token = tokens.removeFirst();
-			} while(!tokens.isEmpty() and !token->shouldWait);
-			token->shouldWait = false;
-			
-			broadcast(condHandle->ptr);
-		}
-		mutex.unlock();
+		mutex.lock(); {
+			if(!tokens.isEmpty()) {
+				SignalToken token;
+				do {
+					token = tokens.removeFirst();
+				} while(!tokens.isEmpty() and !token->shouldWait);
+				token->shouldWait = false;
+				
+				broadcast(condHandle->ptr);
+			}
+		} mutex.unlock();
 	}
 	
 	public notifyAll() => ()
@@ -134,16 +136,16 @@ locked class shadow:natives@
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
 		}
 
-		mutex.lock();
-		if(!tokens.isEmpty()) {
-			while(!tokens.isEmpty()) {
-				var token = tokens.removeFirst();
-				token->shouldWait = false;
+		mutex.lock(); {
+			if(!tokens.isEmpty()) {
+				while(!tokens.isEmpty()) {
+					var token = tokens.removeFirst();
+					token->shouldWait = false;
+				}
+				
+				broadcast(condHandle->ptr);
 			}
-			
-			broadcast(condHandle->ptr);
-		}
-		mutex.unlock();
+		} mutex.unlock();
 	}
 	
 	public free() => ()

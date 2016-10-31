@@ -53,15 +53,6 @@
 ; int pthread_create(pthread_t*, pthread_attr_t*, void* (*start_routine)(void*), void*);
 declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void* (%void*)*, %void*)
 
-; int pthread_join(pthread_t, void**);
-declare %int @pthread_join(%struct.pthread_t, %void**)
-
-; void* calloc(int num, int size);
-declare noalias %void* @calloc(%int, %int) nounwind
-
-; void free(void* ptr);
-declare void @free(%void*) nounwind
-
 ; runnerNative() => ();
 declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
 
@@ -97,27 +88,6 @@ entry:
 
 	; create the thread using pthread_create()
 	%call = call %int @pthread_create(%struct.pthread_t* %handle.addr, %struct.pthread_attr_t* null, %void*(%void*)* @thread_start, %void* %this.void)
-
-	ret %int %call
-}
-
-; joinThread(Pointer ptr) => (int);
-define %int @shadow.standard..Thread_MjoinThread_shadow.natives..Pointer(%shadow.standard..Thread*, %shadow.natives..Pointer*) {
-entry:
-	; get the reference of the current Thread
-	%this.addr = alloca %shadow.standard..Thread*
-	store %shadow.standard..Thread* %0, %shadow.standard..Thread** %this.addr
-	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
-
-	; load handle
-	%handle.addr = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_t*
-	%handle = load %struct.pthread_t, %struct.pthread_t* %handle.addr
-	
-	; we unlock the mutex before joining
-	call void @shadow.standard..Thread_MunlockMutexNative(%shadow.standard..Thread* %this)
-	
-	; join thread
-	%call = call %int @pthread_join(%struct.pthread_t %handle, %void** null)
 
 	ret %int %call
 }
