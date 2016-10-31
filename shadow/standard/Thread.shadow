@@ -117,13 +117,6 @@ is CanEqual<Thread>
 		join(false);
 	}
 	
-	/*destroy()
-	{
-		handle.free();
-		mutex.free();
-		signaler.free();
-	}*/
-	
 	/**
 	* Gets whether this thread is running.
 	*
@@ -136,6 +129,24 @@ is CanEqual<Thread>
 		mutex.unlock();
 		
 		return running;
+	}
+	
+	public sleep(int sec, int nsec) => ()
+	{
+		if(this !== System->currentThread) {
+			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
+		}
+		
+		signaler.wait(sec, nsec, false);
+	}
+	
+	public sleep(int ms) => ()
+	{
+		if(this !== System->currentThread) {
+			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
+		}
+		
+		signaler.wait(ms, false);
 	}
 	
 	public readonly equal(Thread other) => (boolean) 

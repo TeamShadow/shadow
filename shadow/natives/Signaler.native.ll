@@ -1,4 +1,4 @@
-; Mutex.native.ll
+; Signaler.native.ll
 ; 
 ; Author:
 ; Claude Abounegm
@@ -39,6 +39,9 @@
 ; pthread_condattr_t
 %struct.pthread_condattr_t = type i32
 
+; timespec
+%struct.timespec = type opaque
+
 ;---------------------
 ; Method Declarations
 ;---------------------
@@ -46,6 +49,7 @@ declare %int @pthread_cond_init(%struct.pthread_cond_t*, %struct.pthread_condatt
 declare %int @pthread_cond_destroy(%struct.pthread_cond_t*)
 
 declare %int @pthread_cond_wait(%struct.pthread_cond_t*, %struct.pthread_mutex_t*)
+declare %int @pthread_cond_timedwait(%struct.pthread_cond_t*, %struct.pthread_mutex_t*, %struct.timespec*)
 declare %int @pthread_cond_signal(%struct.pthread_cond_t*)
 declare %int @pthread_cond_broadcast(%struct.pthread_cond_t*)
 
@@ -77,6 +81,17 @@ entry:
 	%mutex = bitcast %shadow.natives..Pointer* %2 to %struct.pthread_mutex_t*
 	
 	%call = call %int @pthread_cond_wait(%struct.pthread_cond_t* %cond, %struct.pthread_mutex_t* %mutex)
+	ret %int %call
+}
+
+; timedWait(Pointer cond, Pointer mutex, Pointer time) => (int);
+define %int @shadow.natives..Signaler_MtimedWait_shadow.natives..Pointer_shadow.natives..Pointer_shadow.natives..Pointer(%shadow.natives..Signaler*, %shadow.natives..Pointer*, %shadow.natives..Pointer*, %shadow.natives..Pointer*) {
+entry:
+	%cond = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_cond_t*
+	%mutex = bitcast %shadow.natives..Pointer* %2 to %struct.pthread_mutex_t*
+	%time = bitcast %shadow.natives..Pointer* %3 to %struct.timespec*
+	
+	%call = call %int @pthread_cond_timedwait(%struct.pthread_cond_t* %cond, %struct.pthread_mutex_t* %mutex, %struct.timespec* %time)
 	ret %int %call
 }
 

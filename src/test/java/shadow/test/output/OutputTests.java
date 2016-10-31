@@ -1076,6 +1076,7 @@ public class OutputTests {
 		run(new String[0],
 				"I am going to wait 3 seconds.\n" +
 				"I waited 3 seconds.\n" +
+				"error\n" +
 				"I am a thread.\n" +
 			    "I am a thread.\n" +
 				"I am a thread.\n" +
