@@ -110,7 +110,7 @@ is CanEqual<Thread>
 	* when this {@code join()} method is called.
 	* 
 	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
-	* @throws ThreadException if the thread terminated 
+	* @throws ThreadException if the thread terminated due to an exception.
 	*/
 	public join() => () 
 	{

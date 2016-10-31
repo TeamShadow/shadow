@@ -8,7 +8,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 /** 
  * Represents any information given on the command line. Parses, processes,
@@ -51,7 +51,7 @@ public class Arguments {
 		
 		// Increase logging level if VERBOSE is set
 		if( hasOption(VERBOSE) )
-			Loggers.setAllToLevel(Level.ALL);
+			Loggers.setAllToLevel(Level.INFO);
 		
 		// Don't throw argument exceptions if help or information was requested
 		if (commandLine.hasOption(HELP) || commandLine.hasOption(INFORMATION))

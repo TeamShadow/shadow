@@ -12,7 +12,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.logging.log4j.Level;
+//import org.apache.logging.log4j.Level;
+import org.slf4j.event.Level;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
@@ -58,7 +59,7 @@ public class DocumentationArguments
 		
 		// Increase logging level if VERBOSE is set
 		if (hasOption(VERBOSE))
-			Loggers.setAllToLevel(Level.ALL);
+			Loggers.setAllToLevel(Level.INFO); // change from Level.all to Level.Info
 		
 		// Don't throw argument exceptions if help was requested
 		if (commandLine.hasOption(HELP)) {

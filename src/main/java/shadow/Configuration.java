@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import shadow.jaxb.Shadow;
 
