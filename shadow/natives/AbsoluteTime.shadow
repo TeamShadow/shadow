@@ -1,3 +1,6 @@
+/**
+* @author Claude Abounegm
+*/
 locked class shadow:natives@
 	AbsoluteTime
 {

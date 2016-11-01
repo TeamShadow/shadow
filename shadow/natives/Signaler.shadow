@@ -1,5 +1,8 @@
 import shadow:utility@ArrayDeque;
 
+/**
+* @author Claude Abounegm
+*/
 locked class shadow:natives@
 	Signaler
 {
@@ -18,29 +21,36 @@ locked class shadow:natives@
 	private readonly native get handleSize() => (int);
 	//private native readonly signal(Pointer cond) => (int);
 	
+	int waitingThreads = 0;
 	Mutex mutex;
 	Handle condHandle;
-	ArrayDeque<SignalToken> tokens;
+	ArrayDeque<SignalToken> tokensQueue;
 	
 	public create()
 	{
 		mutex = Mutex:create();
 		condHandle = Handle:create(this->handleSize);
-		tokens = ArrayDeque<SignalToken>:create();
+		tokensQueue = ArrayDeque<SignalToken>:create();
 		
 		initSignaler(condHandle->ptr);
 	}
 	
-	public get waitingCount() => (int)
+	public get waitingThreadsCount() => (int)
 	{
 		mutex.lock();
-		var count = tokens->size;
+		var count = waitingThreads;
 		mutex.unlock();
 		
 		return count;
 	}
 	
-	public wait() => () 
+	/**
+	* Suspends the current thread until another thread calls notify() 
+	* or notifyAll().
+	*
+	* @throws InvalidOperationException if this Signaler has been freed.
+	*/
+	public waitForNotify() => () 
 	{
 		if(!condHandle->isValid) {
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
@@ -48,7 +58,8 @@ locked class shadow:natives@
 
 		mutex.lock();
 		var token = SignalToken:create();
-		tokens.addLast(token);
+		tokensQueue.addLast(token);
+		waitingThreads += 1;
 		
 		while(token->shouldWait) {
 			// mutex unlocks when waiting
@@ -56,59 +67,46 @@ locked class shadow:natives@
 			// mutex locks back when finished waiting
 		}
 		
+		waitingThreads -= 1;
 		mutex.unlock();
 	}
 	
-	public wait(TimeSpan ts, boolean listenToNotify) => ()
+	/**
+	* Suspends the current thread until another thread calls notify() 
+	* or notifyAll(), or until the specified amount of time elapsed.
+	*
+	* @param time The amount of time to wait for being timing out.
+	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
+	* @throws InvalidOperationException if this Signaler has been freed.
+	*/
+	public waitForNotify(TimeSpan time) => (boolean)
 	{
-		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
-		}
-		
-		mutex.lock(); {
-			var time = AbsoluteTime:create(ts);
-			var token = SignalToken:create();
-			if(listenToNotify) {
-				tokens.addLast(token);
-			} else {
-				token->shouldWait = false;
-			}
-			
-			int retVal = 0;
-			while(retVal == 0 or (listenToNotify and token->shouldWait)) {
-				// mutex unlocks when waiting
-				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
-				// mutex locks back when finished waiting
-			}
-			
-			token->shouldWait = false;
-			time.free();
-		} mutex.unlock();
+		return waitSleep(time, true);
 	}
 	
-	public wait(int ms, boolean listenToNotify) => ()
+	public waitForNotify(int ms) => (boolean)
 	{		
-		wait(TimeSpan:create(ms), listenToNotify);
+		return waitSleep(TimeSpan:create(ms), true);
 	}
 	
-	public wait(int sec, int nsec, boolean listenToNotify) => ()
+	public waitForNotify(int sec, int nsec) => (boolean)
 	{
-		wait(TimeSpan:create(sec, nsec), listenToNotify);
+		return waitSleep(TimeSpan:create(sec, nsec), true);
 	}
 	
-	public wait(TimeSpan time) => ()
+	public sleep(TimeSpan time) => () 
 	{
-		wait(time, true);
+		waitSleep(time, false);
 	}
 	
-	public wait(int ms) => ()
-	{
-		wait(ms, true);
+	public sleep(int ms) => ()
+	{		
+		waitSleep(TimeSpan:create(ms), false);
 	}
 	
-	public wait(int sec, int nsec) => ()
+	public sleep(int sec, int nsec) => ()
 	{
-		wait(sec, nsec, true);
+		waitSleep(TimeSpan:create(sec, nsec), false);
 	}
 	
 	public notify() => () 
@@ -117,17 +115,28 @@ locked class shadow:natives@
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
 		}
 		
-		mutex.lock(); {
-			if(!tokens.isEmpty()) {
-				SignalToken token;
-				do {
-					token = tokens.removeFirst();
-				} while(!tokens.isEmpty() and !token->shouldWait);
-				token->shouldWait = false;
-				
-				broadcast(condHandle->ptr);
-			}
-		} mutex.unlock();
+		mutex.lock();
+		// we would like to assure having a more or less organised wake up pattern.
+		// Thus, notify should wake the threads up in the order that they went to sleep in.
+		// we dequeue the first token, and broadcast to wake up all threads. However, since
+		// we're in a loop, only one thread wakes up, which is the one we want.
+		if(!tokensQueue.isEmpty()) {
+			// we would like to avoid to notify wait which has already timedout.
+			// when a wait timesout, it sets its own flag to false, so its token
+			// could still be in the queue, but it is invalid and no threads are
+			// listening on it. So we check for that. If the flag is false, we ignore
+			// it and move on to the next one.
+			SignalToken token;
+			do {
+				token = tokensQueue.removeFirst();
+			} while(!tokensQueue.isEmpty() and !token->shouldWait);
+			
+			// found a valid flag, set to false, and notify it.
+			token->shouldWait = false;
+			
+			broadcast(condHandle->ptr);
+		}
+		mutex.unlock();
 	}
 	
 	public notifyAll() => ()
@@ -136,31 +145,65 @@ locked class shadow:natives@
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
 		}
 
-		mutex.lock(); {
-			if(!tokens.isEmpty()) {
-				while(!tokens.isEmpty()) {
-					var token = tokens.removeFirst();
-					token->shouldWait = false;
-				}
-				
-				broadcast(condHandle->ptr);
-			}
-		} mutex.unlock();
+		mutex.lock();
+		if(!tokensQueue.isEmpty()) {
+			// we set all the wait flags to false
+			do {
+				var token = tokensQueue.removeFirst();
+				token->shouldWait = false;
+			} while(!tokensQueue.isEmpty());
+
+			// wake all the threads up
+			broadcast(condHandle->ptr);
+		}
+		mutex.unlock();
 	}
 	
 	public free() => ()
 	{
-		mutex.lock();
-		if(!tokens.isEmpty()) {
+		if(condHandle->isValid) {		
+			mutex.lock();
+			if(!tokensQueue.isEmpty()) {
+				mutex.unlock();
+				throw InvalidOperationException:create("The signaler cannot be freed when there are threads waiting on it.");
+			}
 			mutex.unlock();
-			throw InvalidOperationException:create("The signaler cannot be freed when there are threads waiting on it.");
-		}
-		mutex.unlock();
-		
-		if(condHandle->isValid) {
+			
 			destroySignaler(condHandle->ptr);
 			condHandle.free();
 			mutex.free();
 		}
+	}
+	
+	private waitSleep(TimeSpan timeout, boolean listenToNotify) => (boolean)
+	{
+		if(!condHandle->isValid) {
+			throw InvalidOperationException:create("This Signaler is no longer valid.");
+		}
+		
+		mutex.lock();
+		var time = AbsoluteTime:create(timeout);
+		var token = SignalToken:create();
+		
+		if(listenToNotify) {
+			tokensQueue.addLast(token);
+		} else {
+			token->shouldWait = false;
+		}
+		
+		int retVal = 0; // retVal is not zero when the wait times out		
+		waitingThreads += 1;
+		while(retVal == 0 or (listenToNotify and token->shouldWait)) {
+			// mutex unlocks when waiting
+			retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
+			// mutex locks back when finished waiting
+		}
+		waitingThreads -= 1;
+
+		token->shouldWait = false;
+		time.free();
+		mutex.unlock();
+		
+		return (retVal != 0);
 	}
 }

@@ -104,10 +104,10 @@ is CanEqual<Thread>
 	}
 	
 	/**
-	* Suspends the execution of the calling thread until this thread terminates. 
+	* Suspends the execution of the calling thread until this thread terminates.
 	* Joining on a dead thread, or on the main thread has no side effects.
 	* If the thread is terminated because of an exception, the exception is thrown
-	* when this {@code join()} method is called.
+	* when this method is called.
 	* 
 	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
 	* @throws ThreadException if the thread terminated due to an exception.
@@ -117,19 +117,19 @@ is CanEqual<Thread>
 		join(false, null);
 	}
 	
-	public join(int ms) => ()
+	public join(int ms) => (boolean)
 	{
-		join(false, TimeSpan:create(ms));
+		return join(false, TimeSpan:create(ms));
 	}
 	
-	public join(int sec, int nsec) => ()
+	public join(int sec, int nsec) => (boolean)
 	{
-		join(false, TimeSpan:create(sec, nsec));
+		return join(false, TimeSpan:create(sec, nsec));
 	}
 	
-	public join(TimeSpan ts) => ()
+	public join(TimeSpan ts) => (boolean)
 	{
-		join(false, ts);
+		return join(false, ts);
 	}
 	
 	/**
@@ -152,7 +152,7 @@ is CanEqual<Thread>
 			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
 		}
 		
-		signaler.wait(timeout, false);
+		signaler.sleep(timeout);
 	}
 	
 	public sleep(int sec, int nsec) => ()
@@ -161,7 +161,7 @@ is CanEqual<Thread>
 			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
 		}
 		
-		signaler.wait(sec, nsec, false);
+		signaler.sleep(sec, nsec);
 	}
 	
 	public sleep(int ms) => ()
@@ -170,7 +170,7 @@ is CanEqual<Thread>
 			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
 		}
 		
-		signaler.wait(ms, false);
+		signaler.sleep(ms);
 	}
 	
 	public readonly equal(Thread other) => (boolean) 
@@ -185,7 +185,7 @@ is CanEqual<Thread>
 	
 	// TODO: WE NEED TO MAKE SURE THAT THE ACTUAL UNMANAGED POINTER HAS BEEN FREED
 	// Do we need to call pthread_exit()? Gotta figure this out.
-	private join(boolean finalizing, nullable TimeSpan ts) => ()
+	private join(boolean finalizing, nullable TimeSpan ts) => (boolean)
 	{
 		if(this === System->mainThread) {
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
@@ -195,6 +195,7 @@ is CanEqual<Thread>
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		}
 		
+		boolean timedOut = false;
 		boolean flag;
 		mutex.lock(); {
 			// finalizing is true when Shadow calls this method. It is false when
@@ -208,9 +209,9 @@ is CanEqual<Thread>
 				
 				try {
 					var ts = check(ts);
-					signaler.wait(ts);
+					timedOut = signaler.waitForNotify(ts);
 				} recover {
-					signaler.wait();
+					signaler.waitForNotify();
 				}
 			}
 			else {
@@ -223,6 +224,8 @@ is CanEqual<Thread>
 		if(flag and ex !== null) {
 			throw check(ex);
 		}
+		
+		return timedOut;
 	}
 	
 	/**

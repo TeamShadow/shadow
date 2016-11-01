@@ -2,6 +2,8 @@
 * This is a class which is a placeholder for a raw low-level pointer.
 * This pointer is of no use in Shadow, and should always be passed to
 * a method in LLVM and casted to the desired type.
+*
+* @author Claude Abounegm
 */
 locked immutable class shadow:natives@
 	Pointer

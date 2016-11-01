@@ -8,7 +8,7 @@ locked class shadow:natives@
 	// with cloning any handle using copy() or freeze().  A Handle, however, should
 	// never be cloned since its contents will always point to the same location in memory
 	// and freeing the same block of memory from different handles can cause side effects and crashes.
-	long handle;
+	long handle = -1;
 	
 	private native readonly createHandle(int size) => (long handle);
 	private native readonly freeHandle(Pointer ptr) => ();
@@ -63,7 +63,7 @@ locked class shadow:natives@
 	*/
 	public get readonly isValid() => (boolean)
 	{
-		return (handle != 0);
+		return (handle != -1);
 	}
 	
 	/**
@@ -74,7 +74,7 @@ locked class shadow:natives@
 	{
 		if(this->isValid) {
 			freeHandle(this->ptr);
-			handle = 0;
+			handle = -1;
 		}
 	}
 }
