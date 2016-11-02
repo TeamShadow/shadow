@@ -402,7 +402,7 @@ public class Main {
 				if( !type.equals(Type.ARRAY) && !type.equals(Type.ARRAY_NULLABLE)) {
 					Set<String> usedFields = allUsedFields.get(type);
 					for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
-						if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
+						if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()))
 							reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
 					}
 				}
@@ -410,7 +410,7 @@ public class Main {
 				//give warnings if private methods are never used
 				for( List<MethodSignature> signatures : type.getMethodMap().values() )
 					for( MethodSignature signature : signatures )
-						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) )
+						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) && !signature.getSymbol().endsWith("Native"))
 							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
 				
 			}					

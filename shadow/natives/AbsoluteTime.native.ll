@@ -30,40 +30,12 @@
 ; AbsoluteTime
 %shadow.natives..AbsoluteTime = type opaque
 
-; timeval
-%struct.timeval = type { %int, %int }
-
-; timezone
-%struct.timezone = type { %int, %int }
-
 ; timespec
 %struct.timespec = type { %int, %int }
-
-;---------------------
-; Method Declarations
-;---------------------
-declare %int @gettimeofday(%struct.timeval*, %struct.timezone*)
 
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
-; getAbsoluteTime() => (int sec, int usec);
-define { %int, %int } @shadow.natives..AbsoluteTime_MgetAbsoluteTime(%shadow.natives..AbsoluteTime*) {
-entry:
-	%now = alloca %struct.timeval
-	%call = call %int @gettimeofday(%struct.timeval* %now, %struct.timezone* null)
-	
-	%now.tv_sec.addr = getelementptr inbounds %struct.timeval, %struct.timeval* %now, i32 0, i32 0
-	%now.tv_sec = load %int, %int* %now.tv_sec.addr
-	
-	%now.tv_usec.addr = getelementptr inbounds %struct.timeval, %struct.timeval* %now, i32 0, i32 1
-	%now.tv_usec = load %int, %int* %now.tv_usec.addr
-	
-    %retVal.1 = insertvalue { %int, %int } undef, %int %now.tv_sec, 0
-    %retVal = insertvalue { %int, %int } %retVal.1, %int %now.tv_usec, 1
-	
-    ret { %int, %int } %retVal
-}
 
 ; setAbsoluteTime(Pointer time, int sec, int nsec) => ();
 define void @shadow.natives..AbsoluteTime_MsetAbsoluteTime_shadow.natives..Pointer_int_int(%shadow.natives..AbsoluteTime*, %shadow.natives..Pointer* %waitTime, %int %sec, %int %nsec) {

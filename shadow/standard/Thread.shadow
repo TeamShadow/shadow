@@ -19,9 +19,10 @@ is CanEqual<Thread>
 	
 	// START: Private variables
 	nullable Exception ex = null;
+	
+	boolean joined;
 	Handle handle;
 	Mutex mutex;
-	boolean joined;
 	CanRun runner;
 	ThreadSafeList<Thread> childrenList;
 	Signaler signaler;
@@ -79,8 +80,7 @@ is CanEqual<Thread>
 		
 		try {
 			this:name = check(name);
-		}
-		recover {
+		} recover {
 			this:name = "Thread#" # id;
 		}
 		
@@ -91,8 +91,7 @@ is CanEqual<Thread>
 		if(this:id == 0) {
 			this:runner = runner;
 			this:handle = Handle:create();
-		}
-		else {
+		} else {
 			this:handle = Handle:create(this->handleSize);
 			this:runner = copy(runner);
 			this:parent = System->currentThread;
@@ -114,22 +113,39 @@ is CanEqual<Thread>
 	*/
 	public join() => () 
 	{
-		join(false, null);
+		join(false, Time->InfiniteTimeout);
 	}
 	
-	public join(int ms) => (boolean)
+	/**
+	* Suspends the execution of the calling thread until this thread terminates or until it times out.
+	* Joining on a dead thread, or on the main thread has no side effects.
+	* If the thread is terminated because of an exception, the exception is thrown
+	* when this method is called.
+	*
+	* @param timeout the time to wait for.
+	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated due to an exception.
+	*/
+	public join(TimeSpan timeout) => (boolean)
 	{
-		return join(false, TimeSpan:create(ms));
+		return join(false, timeout);
 	}
 	
-	public join(int sec, int nsec) => (boolean)
+	/**
+	* Suspends the execution of the calling thread until this thread terminates or until it times out.
+	* Joining on a dead thread, or on the main thread has no side effects.
+	* If the thread is terminated because of an exception, the exception is thrown
+	* when this method is called.
+	*
+	* @param millisecondsTimeout the time to wait for in milliseconds.
+	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated due to an exception.
+	*/
+	public join(int millisecondsTimeout) => (boolean)
 	{
-		return join(false, TimeSpan:create(sec, nsec));
-	}
-	
-	public join(TimeSpan ts) => (boolean)
-	{
-		return join(false, ts);
+		return join(false, Time.fromMilliSeconds(millisecondsTimeout));
 	}
 	
 	/**
@@ -137,40 +153,13 @@ is CanEqual<Thread>
 	*
 	* @return {@code true} if the thread is alive; otherwise, {@code false}.
 	*/
-	public get isRunning() => (boolean)
+	public get isAlive() => (boolean)
 	{
 		mutex.lock();
-			var running = (handle->isValid or id == 0);
+		var running = (handle->isValid or id == 0);
 		mutex.unlock();
 		
 		return running;
-	}
-	
-	public sleep(TimeSpan timeout) => ()
-	{
-		if(this !== System->currentThread) {
-			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
-		}
-		
-		signaler.sleep(timeout);
-	}
-	
-	public sleep(int sec, int nsec) => ()
-	{
-		if(this !== System->currentThread) {
-			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
-		}
-		
-		signaler.sleep(sec, nsec);
-	}
-	
-	public sleep(int ms) => ()
-	{
-		if(this !== System->currentThread) {
-			throw InvalidOperationException:create("Sleep can only be called on the current thread.");
-		}
-		
-		signaler.sleep(ms);
 	}
 	
 	public readonly equal(Thread other) => (boolean) 
@@ -185,7 +174,7 @@ is CanEqual<Thread>
 	
 	// TODO: WE NEED TO MAKE SURE THAT THE ACTUAL UNMANAGED POINTER HAS BEEN FREED
 	// Do we need to call pthread_exit()? Gotta figure this out.
-	private join(boolean finalizing, nullable TimeSpan ts) => (boolean)
+	private join(boolean finalizing, TimeSpan timeout) => (boolean)
 	{
 		if(this === System->mainThread) {
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
@@ -197,26 +186,23 @@ is CanEqual<Thread>
 		
 		boolean timedOut = false;
 		boolean flag;
-		mutex.lock(); {
-			// finalizing is true when Shadow calls this method. It is false when
-			// the user calls it. So, if Shadow called the method, we would only like to join
-			// or throw the exception if this thread didn't have join called on it before.
-			flag = !finalizing or (finalizing and !joined);
-			joined = true;
+		mutex.lock();
+		// finalizing is true when Shadow calls this method. It is false when
+		// the user calls it. So, if Shadow called the method, we would only like to join
+		// or throw the exception if this thread didn't have join called on it before.
+		flag = !finalizing or (finalizing and !joined);
+		joined = true;
+		
+		if(flag and handle->isValid) {
+			mutex.unlock();
 			
-			if(flag and handle->isValid) {
-				mutex.unlock();
-				
-				try {
-					var ts = check(ts);
-					timedOut = signaler.waitForNotify(ts);
-				} recover {
-					signaler.waitForNotify();
-				}
+			if(timeout->isPositive) {
+				timedOut = signaler.waitForNotify(timeout);				
+			} else {
+				signaler.waitForNotify();
 			}
-			else {
-				mutex.unlock(); 
-			}
+		} else {
+			mutex.unlock(); 
 		}
 
 		// we then check here if we have an exception. If we do, we throw it, and
@@ -228,6 +214,16 @@ is CanEqual<Thread>
 		return timedOut;
 	}
 	
+	private sleepNative(TimeSpan timeout) => ()
+	{
+		signaler.sleep(timeout);
+	}
+	
+	private sleepNative(int milliseconds) => ()
+	{
+		signaler.sleep(milliseconds);
+	}
+	
 	/**
 	* This method is natively executed from the newly spawned thread.
 	* !!DO NOT MANUALLY EXECUTE!!
@@ -236,16 +232,14 @@ is CanEqual<Thread>
 	{
 		try {
 			runner.run();
-		}
-		catch(Exception e) {
+		} catch(Exception e) {
 			ex = ThreadException:create(this, e);
-		}
-		finally {
-			mutex.lock(); {
-				handle.free();
-				signaler.notifyAll();
-				signaler.free();
-			} mutex.unlock();
+		} finally {
+			mutex.lock();
+			handle.free();
+			signaler.notifyAll();
+			signaler.free();
+			mutex.unlock();
 		}
 	}
 	
@@ -255,33 +249,33 @@ is CanEqual<Thread>
 		// at the very end. First we traverse the children of all the threads,
 		// and when there is an exception, we add it to the exceptionQueue.
 		var exceptionQueue = ArrayDeque<ThreadException>:create();
-		
+
 		// queue used for traversal of the children
 		var threadsQueue = ArrayDeque<Thread>:create();
 		threadsQueue.addLast(System->mainThread);
-		
+
 		while(!threadsQueue.isEmpty()) {
 			var thread = threadsQueue.removeFirst();
-			
+
 			// we do not wanna perform any operations on the main thread
 			// so we skip if id is zero.
 			if(thread->id > 0) {
 				try {
 					// this join does not do anything if the thread had
 					// been joined on before.
-					thread.join(true, null);
+					thread.join(true, Time->InfiniteTimeout);
 				}
 				catch (ThreadException e) {
 					exceptionQueue.addLast(e);
 				}
 			}
-			
+
 			// traverse the children and add them to queue.
 			foreach(var child in thread:childrenList) {
 				threadsQueue.addLast(child);
 			}
 		}
-		
+
 		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
 		while(!exceptionQueue.isEmpty()) {
 			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());

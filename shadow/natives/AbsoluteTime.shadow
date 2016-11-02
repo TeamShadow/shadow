@@ -1,12 +1,12 @@
+import shadow:io@Console;
+
 /**
 * @author Claude Abounegm
 */
 locked class shadow:natives@
 	AbsoluteTime
 {
-	private native readonly getAbsoluteTime() => (int sec, int usec);
 	private native readonly setAbsoluteTime(Pointer time, int sec, int nsec) => ();
-	
 	private native readonly get handleSize() => (int);
 	
 	Handle handle;
@@ -14,26 +14,9 @@ locked class shadow:natives@
 	public create(TimeSpan ts)
 	{
 		handle = Handle:create(this->handleSize);
-		addTimeToNow(ts);
-	}
-	
-	public addTimeToNow(TimeSpan ts) => ()
-	{
-		if(!handle->isValid) {
-			throw InvalidOperationException:create("This AbsoluteTime is no longer valid.");
-		}
-		
-		(int absSec, int absUSec) = getAbsoluteTime();
-		
-		int sec = absSec + ts->sec;
-		int nsec = absUSec * 1000 + ts->nsec;
-		
-		if(nsec >= 1000000000) {
-			nsec -= 1000000000;
-			sec += 1;
-		}
-		
-		setAbsoluteTime(handle->ptr, sec, nsec);
+
+		var absTime = ts + Time->epochNow;
+		setAbsoluteTime(handle->ptr, cast<int>(absTime->totalSeconds), absTime->nanoSeconds);
 	}
 	
 	public readonly get ptr() => (Pointer ptr) {

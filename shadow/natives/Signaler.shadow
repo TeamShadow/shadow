@@ -8,7 +8,12 @@ locked class shadow:natives@
 {
 	class SignalToken
 	{
-		get set boolean shouldWait = true;
+		get boolean shouldWait = true;
+		
+		public invalidate() => ()
+		{
+			shouldWait = false;
+		}
 	}
 
 	private native readonly initSignaler(Pointer cond) => (int);
@@ -56,8 +61,9 @@ locked class shadow:natives@
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
 		}
 
-		mutex.lock();
 		var token = SignalToken:create();
+
+		mutex.lock();
 		tokensQueue.addLast(token);
 		waitingThreads += 1;
 		
@@ -75,23 +81,26 @@ locked class shadow:natives@
 	* Suspends the current thread until another thread calls notify() 
 	* or notifyAll(), or until the specified amount of time elapsed.
 	*
-	* @param time The amount of time to wait for being timing out.
+	* @param timeout The amount of time to wait before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
 	* @throws InvalidOperationException if this Signaler has been freed.
 	*/
-	public waitForNotify(TimeSpan time) => (boolean)
+	public waitForNotify(TimeSpan timeout) => (boolean)
 	{
-		return waitSleep(time, true);
+		return waitSleep(timeout, true);
 	}
 	
-	public waitForNotify(int ms) => (boolean)
+	/**
+	* Suspends the current thread until another thread calls notify() 
+	* or notifyAll(), or until the specified amount of time elapsed.
+	*
+	* @param millisecondsTimeout The amount of time to wait, in milliseconds, before timing out.
+	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
+	* @throws InvalidOperationException if this Signaler has been freed.
+	*/
+	public waitForNotify(int millisecondsTimeout) => (boolean)
 	{		
-		return waitSleep(TimeSpan:create(ms), true);
-	}
-	
-	public waitForNotify(int sec, int nsec) => (boolean)
-	{
-		return waitSleep(TimeSpan:create(sec, nsec), true);
+		return waitSleep(Time.fromMilliSeconds(millisecondsTimeout), true);
 	}
 	
 	public sleep(TimeSpan time) => () 
@@ -101,12 +110,7 @@ locked class shadow:natives@
 	
 	public sleep(int ms) => ()
 	{		
-		waitSleep(TimeSpan:create(ms), false);
-	}
-	
-	public sleep(int sec, int nsec) => ()
-	{
-		waitSleep(TimeSpan:create(sec, nsec), false);
+		waitSleep(Time.fromMilliSeconds(ms), false);
 	}
 	
 	public notify() => () 
@@ -132,7 +136,7 @@ locked class shadow:natives@
 			} while(!tokensQueue.isEmpty() and !token->shouldWait);
 			
 			// found a valid flag, set to false, and notify it.
-			token->shouldWait = false;
+			token.invalidate();
 			
 			broadcast(condHandle->ptr);
 		}
@@ -149,8 +153,9 @@ locked class shadow:natives@
 		if(!tokensQueue.isEmpty()) {
 			// we set all the wait flags to false
 			do {
-				var token = tokensQueue.removeFirst();
-				token->shouldWait = false;
+				tokensQueue
+					.removeFirst()
+					.invalidate();
 			} while(!tokensQueue.isEmpty());
 
 			// wake all the threads up
@@ -180,17 +185,15 @@ locked class shadow:natives@
 		if(!condHandle->isValid) {
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
 		}
-		
-		mutex.lock();
+
 		var time = AbsoluteTime:create(timeout);
 		var token = SignalToken:create();
-		
+
+		mutex.lock();		
 		if(listenToNotify) {
 			tokensQueue.addLast(token);
-		} else {
-			token->shouldWait = false;
 		}
-		
+
 		int retVal = 0; // retVal is not zero when the wait times out		
 		waitingThreads += 1;
 		while(retVal == 0 or (listenToNotify and token->shouldWait)) {
@@ -200,10 +203,11 @@ locked class shadow:natives@
 		}
 		waitingThreads -= 1;
 
-		token->shouldWait = false;
+		// we invalidate the token in-case it was still valid due to a timeout.
+		token.invalidate();
 		time.free();
 		mutex.unlock();
-		
+
 		return (retVal != 0);
 	}
 }

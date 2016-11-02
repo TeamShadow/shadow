@@ -1,0 +1,51 @@
+immutable singleton shadow:standard@
+	Time
+{
+	private native readonly getAbsoluteTime() => (int sec, int usec);
+
+	get TimeSpan InfiniteTimeout = TimeSpan:create(-1);
+	
+	public readonly get epochNow() => (TimeSpan)
+	{
+		(int absSec, int absUSec) = getAbsoluteTime();
+		
+		return Time
+				.fromSeconds(absSec)
+				.addMicroSeconds(absUSec);
+	}
+	
+	public readonly fromNanoSeconds(int nanoSeconds) => (TimeSpan)
+	{
+		return TimeSpan:create(0, 0, 0, nanoSeconds);
+	}
+	
+	public readonly fromMicroSeconds(int microSeconds) => (TimeSpan)
+	{
+		return TimeSpan:create(0, 0, microSeconds, 0);
+	}
+	
+	public readonly fromMilliSeconds(int milliSeconds) => (TimeSpan)
+	{
+		return TimeSpan:create(0, milliSeconds, 0, 0);
+	}
+	
+	public readonly fromSeconds(int seconds) => (TimeSpan)
+	{
+		return TimeSpan:create(seconds, 0, 0, 0);
+	}
+	
+	public readonly fromMinutes(int minutes) => (TimeSpan)
+	{
+		return TimeSpan:create(0, minutes, 0);
+	}
+	
+	public readonly fromHours(int hours) => (TimeSpan)
+	{
+		return TimeSpan:create(hours, 0, 0);
+	}
+	
+	public readonly fromDays(int days) => (TimeSpan)
+	{
+		return TimeSpan:create(days, 0, 0, 0, 0);
+	}
+}

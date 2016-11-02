@@ -30,11 +30,20 @@
 ; Thread
 %shadow.standard..Thread = type opaque
 
+; TimeSpan
+%shadow.standard..TimeSpan = type opaque
+
 ;---------
 ; Globals
 ;---------
 @shadow.standard..Thread_TLS_currentThread = external global %shadow.standard..Thread*
 @shadow.standard..Thread_STATIC_mainThread = external global %shadow.standard..Thread*
+
+;---------------------
+; Method Declarations
+;---------------------
+declare void @shadow.standard..Thread_MsleepNative_shadow.standard..TimeSpan(%shadow.standard..Thread*, %shadow.standard..TimeSpan*)
+declare void @shadow.standard..Thread_MsleepNative_int(%shadow.standard..Thread*, %int)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -51,4 +60,18 @@ define %shadow.standard..Thread* @shadow.standard..System_MmainThread(%shadow.st
 entry:
 	%mainThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_STATIC_mainThread
 	ret %shadow.standard..Thread* %mainThread
+}
+
+; sleep(Thread thread, int milliseconds) => ();
+define void @shadow.standard..System_Msleep_shadow.standard..Thread_int(%shadow.standard..System*, %shadow.standard..Thread* %thread, %int %millis) {
+entry:
+	call void @shadow.standard..Thread_MsleepNative_int(%shadow.standard..Thread* %thread, %int %millis)
+	ret void
+}
+
+; sleep(Thread thread, TimeSpan time) => ();
+define void @shadow.standard..System_Msleep_shadow.standard..Thread_shadow.standard..TimeSpan(%shadow.standard..System*, %shadow.standard..Thread* %thread, %shadow.standard..TimeSpan* %time) {
+entry:
+	call void @shadow.standard..Thread_MsleepNative_shadow.standard..TimeSpan(%shadow.standard..Thread* %thread, %shadow.standard..TimeSpan* %time)
+	ret void
 }

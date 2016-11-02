@@ -1054,7 +1054,7 @@ public class OutputTests {
 				"Thread#6\n" +
 				"Thread#7\n" +
 				"Thread#8\n",
-				
+
 				// stderr
 				"Uncaught Thread Exception @Thread#3:\n" +
 				"   Propagated from: (Thread#3)\n" +
@@ -1076,7 +1076,6 @@ public class OutputTests {
 		run(new String[0],
 				"I am going to wait 3 seconds.\n" +
 				"I waited 3 seconds.\n" +
-				"error\n" +
 				"I am a thread.\n" +
 			    "I am a thread.\n" +
 				"I am a thread.\n" +

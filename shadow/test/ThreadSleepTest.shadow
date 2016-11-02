@@ -35,12 +35,6 @@ class shadow:test@ThreadSleepTest
 		
 		var thread1 = Thread:create(runner1);
 		
-		try {
-			thread1.sleep(1000);
-		} catch(Exception e) {
-			Console.printLine("error");
-		}
-		
 		var thread2 = Thread:create(runner2);
 		thread2.join();
 		
