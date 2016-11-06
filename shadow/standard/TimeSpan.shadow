@@ -1,31 +1,31 @@
-
 locked immutable class shadow:standard@
 	TimeSpan
 is CanAdd<TimeSpan>
+and CanEqual<TimeSpan>
 {
 	immutable long NANOS_PER_MICROSECOND = 1000;
 	immutable double MICROSECONDS_PER_NANO = 1.0 / NANOS_PER_MICROSECOND;
-	
+
 	immutable long NANOS_PER_MILLISECOND = NANOS_PER_MICROSECOND * 1000;
 	immutable double MILLISECONDS_PER_NANO = 1.0 / NANOS_PER_MILLISECOND;
-	
+
 	immutable long NANOS_PER_SECOND = NANOS_PER_MILLISECOND * 1000;
 	immutable double SECONDS_PER_NANO = 1.0 / NANOS_PER_SECOND;
-	
+
 	immutable long NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
 	immutable double MINUTES_PER_NANO = 1.0 / NANOS_PER_MINUTE;
-	
+
 	immutable long NANOS_PER_HOUR = NANOS_PER_MINUTE * 60;
 	immutable double HOURS_PER_NANO = 1.0 / NANOS_PER_HOUR;
-	
+
 	immutable long NANOS_PER_DAY = NANOS_PER_MINUTE * 24;
 	immutable double DAYS_PER_NANO = 1.0 / NANOS_PER_DAY;
-	
+
 	long totalNanos = 0;
-	
+
 	public create(long nanoSeconds)
 	{
-		this(0, 0, 0, nanoSeconds);
+		totalNanos = nanoSeconds;
 	}
 	
 	public create(int hours, int minutes, int seconds)
@@ -63,7 +63,7 @@ is CanAdd<TimeSpan>
 	{
 		return cast<int>((totalNanos / NANOS_PER_DAY) % 24);		
 	}
-	
+
 	public get hours() => (int)
 	{
 		return cast<int>((totalNanos / NANOS_PER_HOUR) % 24);		
@@ -81,17 +81,17 @@ is CanAdd<TimeSpan>
 	
 	public get milliSeconds() => (int)
 	{
-		return cast<int>((totalNanos / NANOS_PER_MILLISECOND) % 1000L);
+		return cast<int>((totalNanos / NANOS_PER_MILLISECOND) % 1000);
 	}
 	
 	public get microSeconds() => (int)
 	{
-		return cast<int>((totalNanos / NANOS_PER_MICROSECOND) % 1000000L);
+		return cast<int>((totalNanos / NANOS_PER_MICROSECOND) % 1000000);
 	}
 	
 	public get nanoSeconds() => (int)
 	{
-		return cast<int>(totalNanos % 1000000000L);
+		return cast<int>(totalNanos % 1000000000);
 	}
 	
 	public get totalDays() => (double)
@@ -163,10 +163,15 @@ is CanAdd<TimeSpan>
 		var nanos = this->totalNanoSeconds + microSeconds * NANOS_PER_MICROSECOND;
 		return TimeSpan:create(nanos);
 	}
-	
+
 	public readonly add(TimeSpan other) => (TimeSpan)
 	{
 		var nanos = this->totalNanoSeconds + other->totalNanoSeconds;
 		return TimeSpan:create(nanos);
+	}
+
+	public readonly equal(TimeSpan other) => (boolean)
+	{
+		return (totalNanos == other:totalNanos);
 	}
 }

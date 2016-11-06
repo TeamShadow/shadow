@@ -21,31 +21,27 @@ locked class shadow:natives@
 	
 	public readonly lock() => ()
 	{
-		if(!handle->isValid) {
-			throw InvalidOperationException:create("This Mutex is no longer valid.");
-		}
-		
-		lockMutex(handle->ptr);
+		lockMutex(this->ptr);
 	}
 	
 	public readonly unlock() => ()
 	{
-		if(!handle->isValid) {
-			throw InvalidOperationException:create("This Mutex is no longer valid.");
-		}
-		
-		unlockMutex(handle->ptr);
+		unlockMutex(this->ptr);
 	}
 	
 	public readonly get ptr() => (Pointer ptr) {
-		return handle->ptr;
+		if(!handle->isValid) {
+			throw InvalidOperationException:create("This Mutex is no longer valid.");
+		}
+	
+		return handle->unsafePtr;
 	}
 	
 	public free() => ()
 	{
-		if(handle->isValid) {
-			destroyMutex(handle->ptr);
+		try {
+			destroyMutex(this->ptr);
 			handle.free();
-		}
+		} catch(Exception e) {}
 	}
 }

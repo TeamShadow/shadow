@@ -1,7 +1,7 @@
 /**
  * @author Claude Abounegm
  */
-locked class shadow:natives@
+class shadow:natives@
 	Handle
 {
 	// the raw memory address is stored instead of an object to avoid any problems
@@ -36,7 +36,7 @@ locked class shadow:natives@
 		
 		this:handle = createHandle(size);
 	}
-
+	
 	/**
 	* This is the actual pointer to the handle. We use an Object to represent the pointer
 	* as it cannot be dereferenced in Shadow, and can be easily cast to anything in LLVM.
@@ -50,9 +50,14 @@ locked class shadow:natives@
 	public readonly get ptr() => (Pointer ptr)
 	{
 		if(!this->isValid) {
-			throw InvalidOperationException:create("This handle is no longer valid.");
+			throw InvalidOperationException:create("The Handle for this resource is no longer valid.");
 		}
 		
+		return getPtrFromLong(handle);
+	}
+	
+	public readonly get unsafePtr() => (Pointer ptr)
+	{
 		return getPtrFromLong(handle);
 	}
 	
@@ -72,9 +77,9 @@ locked class shadow:natives@
 	*/
 	public free() => () 
 	{
-		if(this->isValid) {
+		try {
 			freeHandle(this->ptr);
 			handle = -1;
-		}
+		} catch(Exception e) {}
 	}
 }

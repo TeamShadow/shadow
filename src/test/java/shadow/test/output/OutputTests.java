@@ -1038,85 +1038,6 @@ public class OutputTests {
 				"true\n");
 	}
 	
-	@Test public void testThread() throws Exception {
-		args.add("shadow/test/ThreadTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				// stdin
-				"Thread#main\n" +
-				"Thread#1\n" +
-				"Thread#2\n" +
-				"Thread#3\n" +
-				"Thread#4\n" + 
-				"Thread#5\n" + 
-				"true\n" +
-				"true\n" +
-				"Thread#6\n" +
-				"Thread#7\n" +
-				"Thread#8\n",
-
-				// stderr
-				"Uncaught Thread Exception @Thread#3:\n" +
-				"   Propagated from: (Thread#3)\n" +
-				"   Throwing: (shadow:standard@Exception: from Thread#3)\n" +
-				
-				"Uncaught Thread Exception @Thread#4:\n" +
-				"   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)\n" +
-				"   Throwing: (shadow:standard@Exception: from Thread#8)\n" +
-				
-				"Uncaught Thread Exception @Thread#7:\n" +
-				"   Propagated from: (Thread#7)\n" +
-				"   Throwing: (shadow:standard@Exception: from Thread#7)\n"
-			);
-	}
-	
-	@Test public void testThreadSleep() throws Exception {
-		args.add("shadow/test/ThreadSleepTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"I am going to wait 3 seconds.\n" +
-				"I waited 3 seconds.\n" +
-				"I am a thread.\n" +
-			    "I am a thread.\n" +
-				"I am a thread.\n" +
-			    "true\n");
-	}
-	
-	@Test public void testTLSThread() throws Exception {
-		args.add("shadow/test/TLSTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"1\n" +
-				"1\n");
-	}
-	
-	@Test public void testThreadIsolatedRunner() throws Exception {
-		args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"1 1\n" +
-				"1 1\n" +
-				"1 1\n" +
-				"0\n");
-	}
-	
-	@Test public void testSignaler() throws Exception {
-		args.add("shadow/test/SignalerTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"Thread#1: waiting!\n" + 
-				"Thread#2: waiting!\n" + 
-				"Thread#3: waiting!\n" + 
-				"Thread#4: waiting!\n" + 
-				"Thread#5: waiting!\n" + 
-				"Thread#1: finished waiting!\n" + 
-				"Thread#2: finished waiting!\n" + 
-				"Thread#3: finished waiting!\n" + 
-				"Thread#4: finished waiting!\n" + 
-				"Thread#5: finished waiting!\n"
-				);
-	}
-	
 	@Test public void testToughTry() throws Exception {
 		args.add("shadow/test/ToughTry.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -1211,5 +1132,90 @@ public class OutputTests {
 				"130\n" + 
 				"false\n" + 
 				"countrytime\n");	
+	}
+
+	@Test public void testThread() throws Exception {
+		args.add("shadow/test/ThreadTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				// stdin
+				"Thread#main\n" +
+				"Thread#1\n" +
+				"Thread#2\n" +
+				"Thread#3\n" +
+				"Thread#4\n" + 
+				"Thread#5\n" + 
+				"true\n" +
+				"true\n" +
+				"Thread#6\n" +
+				"Thread#7\n" +
+				"Thread#8\n",
+
+				// stderr
+				"Uncaught Thread Exception @Thread#3:\n" +
+				"   Propagated from: (Thread#3)\n" +
+				"   Throwing: (shadow:standard@Exception: from Thread#3)\n" +
+				
+				"Uncaught Thread Exception @Thread#4:\n" +
+				"   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)\n" +
+				"   Throwing: (shadow:standard@Exception: from Thread#8)\n" +
+				
+				"Uncaught Thread Exception @Thread#7:\n" +
+				"   Propagated from: (Thread#7)\n" +
+				"   Throwing: (shadow:standard@Exception: from Thread#7)\n"
+			);
+	}
+	
+	@Test public void testThreadSleep() throws Exception {
+		args.add("shadow/test/ThreadSleepTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"I am going to wait 3 seconds.\n" +
+				"I waited 3 seconds.\n" +
+				"I am a thread.\n" +
+			    "I am a thread.\n" +
+				"I am a thread.\n" +
+			    "true\n");
+	}
+	
+	@Test public void testTLSThread() throws Exception {
+		args.add("shadow/test/TLSTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"1\n" +
+				"1\n");
+	}
+	
+	@Test public void testThreadIsolatedRunner() throws Exception {
+		args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"1 1\n" +
+				"1 1\n" +
+				"1 1\n" +
+				"0\n");
+	}
+	
+	@Test public void testSignaler() throws Exception {
+		args.add("shadow/test/SignalerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"Thread#1: waiting!\n" + 
+				"Thread#2: waiting!\n" + 
+				"Thread#3: waiting!\n" + 
+				"Thread#4: waiting!\n" + 
+				"Thread#5: waiting!\n" + 
+				"Thread#1: finished waiting!\n" + 
+				"Thread#2: finished waiting!\n" + 
+				"Thread#3: finished waiting!\n" + 
+				"Thread#4: finished waiting!\n" + 
+				"Thread#5: finished waiting!\n"
+				);
+	}
+	
+	@Test public void testMailbox() throws Exception {
+		args.add("shadow/test/MailboxTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		//run(new String[0], "");
 	}
 }

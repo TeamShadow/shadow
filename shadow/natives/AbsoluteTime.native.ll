@@ -51,7 +51,7 @@ entry:
 	ret void
 }
 
-; get hndleSize() => (int);
+; get handleSize() => (int);
 define %int @shadow.natives..AbsoluteTime_MhandleSize(%shadow.natives..AbsoluteTime*) {
 entry:
 	%sizeOf = ptrtoint %struct.timespec* getelementptr (%struct.timespec, %struct.timespec* null, i32 1) to i32

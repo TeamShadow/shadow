@@ -16,17 +16,18 @@ locked class shadow:natives@
 		handle = Handle:create(this->handleSize);
 
 		var absTime = ts + Time->epochNow;
-		setAbsoluteTime(handle->ptr, cast<int>(absTime->totalSeconds), absTime->nanoSeconds);
+		setAbsoluteTime(this->ptr, cast<int>(absTime->totalSeconds), absTime->nanoSeconds);
 	}
 	
-	public readonly get ptr() => (Pointer ptr) {
+	public readonly get ptr() => (Pointer ptr)
+	{
 		return handle->ptr;
 	}
 	
 	public free() => ()
 	{
-		if(handle->isValid) {
+		try {
 			handle.free();
-		}
+		} catch(Exception e) {}
 	}
 }

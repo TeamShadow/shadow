@@ -1,0 +1,66 @@
+import shadow:io@Console;
+
+class shadow:test@MailboxTest
+{
+	private readonly native initMailbox(int count, boolean blocking) => ();
+	private readonly native get staticMailbox() => (Mailbox);
+	
+	class ReceiveRunner is CanRun
+	{
+		public run() => ()
+		{
+			var currentThread = System->currentThread;
+			var mailbox = staticMailbox();
+			
+			var message = "";
+			while(message != "stop") {
+				message = cast<String>(mailbox.receive(String:class));
+				Console.print(message);
+			}
+			Console.printLine();
+			
+			mailbox.receive(int:class);
+		}
+	}
+	
+	class SendRunner is CanRun
+	{
+		public run() => ()
+		{
+			var currentThread = System->currentThread;
+			var mailbox = staticMailbox();
+			System.sleep(currentThread->id * 100);
+			
+			mailbox.send("hello");
+			mailbox.send(" ");
+			mailbox.send("world");
+			mailbox.send("!");
+			mailbox.send("\n");
+		}
+	}
+	
+	public main(String[] args) => ()
+	{
+		// mailbox is blocking, and for testing purposes,
+		// can only take up to 2 elements.
+		initMailbox(2, true);
+		
+		// spawn the receiver runner
+		Thread:create(ReceiveRunner:create());
+		
+		// spawn 4 senders
+		var sendRunner = SendRunner:create();
+		nullable var threads = Thread:null[4];
+		for (int i = 0; i < threads->size; i += 1) {
+			threads[i] = Thread:create(sendRunner);
+		}
+		
+		// wait for the threads to exit
+		for (int i = 0; i < threads->size; i += 1) {
+			check(threads[i]).join();
+		}
+		
+		this->staticMailbox.send("stop");		
+		this->staticMailbox.send("wrong");	
+	}
+}

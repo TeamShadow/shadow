@@ -1,34 +1,135 @@
-import shadow:utility@LinkedList;
+import shadow:utility;
 import shadow:natives;
 
 /**
  * @author Claude Abounegm
  */
 class shadow:standard@
-	Mailbox<T is CanEqual<T>>
+	Mailbox
 {
+	nullable ThreadData[] elements;
+	int start;
+	get int size;
+	boolean blocking;
+	Signaler signaler;
+	ThreadData dummyData = ThreadData:create();
 	Mutex mutex;
-	LinkedList<T> queue;
 	
-	public create()
+	public create(int count)
 	{
+		this(count, true);
+	}
+	
+	public create(int count, boolean blocking)
+	{
+		elements = ThreadData:null[count];
+		signaler = Signaler:create();
 		mutex = Mutex:create();
-		queue = LinkedList<T>:create();
+		this:blocking = blocking;
+		this:start = 0;
+		this:size = 0;
 	}
 	
-	public enqueue(T data) => ()
+	public send(Object data) => ()
 	{
-		mutex.lock();
-		queue.addLast(copy(data));
-		mutex.unlock();
-	}
-	
-	public dequeue() => (T)
-	{
-		mutex.lock();
-		var retVal = queue.removeFirst();
-		mutex.unlock();
+		var threadData = ThreadData:create(System->currentThread, data);
 		
-		return retVal;
+		mutex.lock();
+		try {
+			if(size == elements->size) {
+				if(!blocking) {
+					throw Exception:create("Mailbox is full.");
+				}
+				
+				do {
+					mutex.unlock();
+					signaler.waitForNotify();
+					mutex.lock();
+				} while(size == elements->size);
+			}
+			
+			elements[(start + size) % elements->size] = threadData;
+			size += 1;
+			
+			signaler.notifyAll();
+		} finally {
+			mutex.unlock();
+		}
+	}
+	
+	public receive(Class expectedType) => (Object)
+	{
+		var threadData = dummyData;
+		
+		mutex.lock();
+		try {
+			if(size == 0) {
+				if(!blocking) {
+					throw Exception:create("Mailbox is empty.");
+				}
+				
+				do {
+					mutex.unlock();
+					signaler.waitForNotify();
+					mutex.lock();
+				} while(size == 0);
+			}
+			
+			threadData = check(elements[start]); 
+			start = (start + 1) % elements->size;
+			size -= 1;
+			
+			signaler.notifyAll();
+		} finally {
+			mutex.unlock();
+		}
+
+		if(!threadData.isSameType(expectedType))
+			throw Exception:create("Expected '" # expectedType # "' but got '" # threadData->dataClass # "'");
+		
+		return threadData->data;
+	}
+	
+	public receive(Class expectedType, Thread thread) => (Object)
+	{
+		throw InvalidOperationException:create();
+	}
+	
+	private createNative(int count, boolean blocking) => (Mailbox)
+	{
+		return Mailbox:create(count, blocking);
+	}
+	
+	private class ThreadData is CanEqual<ThreadData>
+	{
+		get Thread sender;
+		get Object data;
+		
+		public create()
+		{
+			this:sender = System->currentThread;
+			this:data = Object:create();
+		}
+		
+		public create(Thread sender, Object data)
+		{
+			this:sender = sender;
+			this:data = copy(data);
+		}
+		
+		public readonly equal(ThreadData other) => (boolean)
+		{
+			return (data === other:data and sender === other:sender);
+		}
+				
+		public readonly isSameType(Class expectedType) => (boolean)
+		{
+			return (data.getClass() === expectedType);
+		}
+		
+		public readonly get dataClass() => (Class)
+		{
+			return (data.getClass());
+		}
 	}
 }

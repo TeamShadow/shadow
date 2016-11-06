@@ -55,7 +55,7 @@ locked class shadow:natives@
 	*
 	* @throws InvalidOperationException if this Signaler has been freed.
 	*/
-	public waitForNotify() => () 
+	public waitForNotify() => ()
 	{
 		if(!condHandle->isValid) {
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
@@ -64,17 +64,19 @@ locked class shadow:natives@
 		var token = SignalToken:create();
 
 		mutex.lock();
-		tokensQueue.addLast(token);
-		waitingThreads += 1;
-		
-		while(token->shouldWait) {
-			// mutex unlocks when waiting
-			wait(condHandle->ptr, mutex->ptr);
-			// mutex locks back when finished waiting
+		try {
+			tokensQueue.addLast(token);
+			waitingThreads += 1;
+			
+			while(token->shouldWait) {
+				// mutex unlocks when waiting
+				wait(condHandle->ptr, mutex->ptr);
+				// mutex locks back when finished waiting
+			}
+		} finally {
+			waitingThreads -= 1;
+			mutex.unlock();
 		}
-		
-		waitingThreads -= 1;
-		mutex.unlock();
 	}
 	
 	/**
@@ -87,7 +89,7 @@ locked class shadow:natives@
 	*/
 	public waitForNotify(TimeSpan timeout) => (boolean)
 	{
-		return waitSleep(timeout, true);
+		return waitSleep(timeout, false);
 	}
 	
 	/**
@@ -100,17 +102,17 @@ locked class shadow:natives@
 	*/
 	public waitForNotify(int millisecondsTimeout) => (boolean)
 	{		
-		return waitSleep(Time.fromMilliSeconds(millisecondsTimeout), true);
+		return waitSleep(Time.fromMilliSeconds(millisecondsTimeout), false);
 	}
 	
-	public sleep(TimeSpan time) => () 
+	public sleep(TimeSpan timeout) => ()
 	{
-		waitSleep(time, false);
+		waitSleep(timeout, true);
 	}
 	
-	public sleep(int ms) => ()
+	public sleep(int millisecondsTimeout) => ()
 	{		
-		waitSleep(Time.fromMilliSeconds(ms), false);
+		waitSleep(Time.fromMilliSeconds(millisecondsTimeout), true);
 	}
 	
 	public notify() => () 
@@ -120,27 +122,30 @@ locked class shadow:natives@
 		}
 		
 		mutex.lock();
-		// we would like to assure having a more or less organised wake up pattern.
-		// Thus, notify should wake the threads up in the order that they went to sleep in.
-		// we dequeue the first token, and broadcast to wake up all threads. However, since
-		// we're in a loop, only one thread wakes up, which is the one we want.
-		if(!tokensQueue.isEmpty()) {
-			// we would like to avoid to notify wait which has already timedout.
-			// when a wait timesout, it sets its own flag to false, so its token
-			// could still be in the queue, but it is invalid and no threads are
-			// listening on it. So we check for that. If the flag is false, we ignore
-			// it and move on to the next one.
-			SignalToken token;
-			do {
-				token = tokensQueue.removeFirst();
-			} while(!tokensQueue.isEmpty() and !token->shouldWait);
-			
-			// found a valid flag, set to false, and notify it.
-			token.invalidate();
-			
-			broadcast(condHandle->ptr);
+		try {
+			// we would like to assure having a more or less organised wake up pattern.
+			// Thus, notify should wake the threads up in the order that they went to sleep in.
+			// we dequeue the first token, and broadcast to wake up all threads. However, since
+			// we're in a loop, only one thread wakes up, which is the one we want.
+			if(!tokensQueue.isEmpty()) {
+				// we would like to avoid to notify wait which has already timedout.
+				// when a wait timesout, it sets its own flag to false, so its token
+				// could still be in the queue, but it is invalid and no threads are
+				// listening on it. So we check for that. If the flag is false, we ignore
+				// it and move on to the next one.
+				SignalToken token;
+				do {
+					token = tokensQueue.removeFirst();
+				} while(!tokensQueue.isEmpty() and !token->shouldWait);
+				
+				// found a valid flag, set to false, and notify it.
+				token.invalidate();
+				
+				broadcast(condHandle->ptr);
+			}
+		} finally {
+			mutex.unlock();
 		}
-		mutex.unlock();
 	}
 	
 	public notifyAll() => ()
@@ -150,37 +155,36 @@ locked class shadow:natives@
 		}
 
 		mutex.lock();
-		if(!tokensQueue.isEmpty()) {
-			// we set all the wait flags to false
-			do {
-				tokensQueue
-					.removeFirst()
-					.invalidate();
-			} while(!tokensQueue.isEmpty());
-
-			// wake all the threads up
-			broadcast(condHandle->ptr);
+		try {
+			if(!tokensQueue.isEmpty()) {
+				// we set all the wait flags to false
+				do {
+					tokensQueue
+						.removeFirst()
+						.invalidate();
+					
+					broadcast(condHandle->ptr);
+				} while(!tokensQueue.isEmpty());
+			}
+		} finally {
+			mutex.unlock();
 		}
-		mutex.unlock();
 	}
 	
 	public free() => ()
 	{
-		if(condHandle->isValid) {		
-			mutex.lock();
-			if(!tokensQueue.isEmpty()) {
-				mutex.unlock();
-				throw InvalidOperationException:create("The signaler cannot be freed when there are threads waiting on it.");
-			}
-			mutex.unlock();
+		if(condHandle->isValid) {
+			// we notify any waiting thread first
+			notifyAll();
 			
+			// destroy errrything muahahahah
 			destroySignaler(condHandle->ptr);
 			condHandle.free();
 			mutex.free();
 		}
 	}
 	
-	private waitSleep(TimeSpan timeout, boolean listenToNotify) => (boolean)
+	private waitSleep(TimeSpan timeout, boolean sleepOnly) => (boolean)
 	{
 		if(!condHandle->isValid) {
 			throw InvalidOperationException:create("This Signaler is no longer valid.");
@@ -188,26 +192,31 @@ locked class shadow:natives@
 
 		var time = AbsoluteTime:create(timeout);
 		var token = SignalToken:create();
+		int retVal = 0;
+		
+		mutex.lock();
+		try {
+			// we only add the token if we want to be able to wake this thread up later.
+			// since we do not want any notify to wake that thread up, we do not add it to
+			// the queue if we only want to sleep.
+			if(!sleepOnly) {
+				tokensQueue.addLast(token);
+			}
 
-		mutex.lock();		
-		if(listenToNotify) {
-			tokensQueue.addLast(token);
+			waitingThreads += 1;
+			 // retVal is not zero when the wait times out
+			while(retVal == 0 or (!sleepOnly and token->shouldWait)) {
+				// mutex unlocks when waiting
+				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
+				// mutex locks back when finished waiting
+			}
+		} finally {
+			waitingThreads -= 1;
+			token.invalidate();
+			mutex.unlock();
+			time.free();
 		}
-
-		int retVal = 0; // retVal is not zero when the wait times out		
-		waitingThreads += 1;
-		while(retVal == 0 or (listenToNotify and token->shouldWait)) {
-			// mutex unlocks when waiting
-			retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
-			// mutex locks back when finished waiting
-		}
-		waitingThreads -= 1;
-
-		// we invalidate the token in-case it was still valid due to a timeout.
-		token.invalidate();
-		time.free();
-		mutex.unlock();
-
+		
 		return (retVal != 0);
 	}
 }
