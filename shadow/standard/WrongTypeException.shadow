@@ -1,0 +1,8 @@
+public exception shadow:standard@
+	WrongTypeException
+{
+	public create(Class expectedType, Class actualType)
+	{
+		super("Expected '" # expectedType # "' but got '" # actualType # "'.");
+	}
+}

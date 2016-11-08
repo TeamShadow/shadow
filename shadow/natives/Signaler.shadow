@@ -141,6 +141,7 @@ locked class shadow:natives@
 				// found a valid flag, set to false, and notify it.
 				token.invalidate();
 				
+				// notify all threads, but only one thread gets unlocked.
 				broadcast(condHandle->ptr);
 			}
 		} finally {
@@ -163,6 +164,7 @@ locked class shadow:natives@
 						.removeFirst()
 						.invalidate();
 					
+					// notify all threads, but only one threads gets unlocked.
 					broadcast(condHandle->ptr);
 				} while(!tokensQueue.isEmpty());
 			}
@@ -205,7 +207,7 @@ locked class shadow:natives@
 
 			waitingThreads += 1;
 			 // retVal is not zero when the wait times out
-			while(retVal == 0 or (!sleepOnly and token->shouldWait)) {
+			while((retVal == 0 or !sleepOnly) and token->shouldWait) {
 				// mutex unlocks when waiting
 				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
 				// mutex locks back when finished waiting

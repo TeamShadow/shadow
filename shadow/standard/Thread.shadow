@@ -178,17 +178,17 @@ and CanIndex<int, Thread>
 	
 	public receive(Class expectedType) => (Object, Thread)
 	{
-		return mailbox.receive(expectedType);
+		return mailbox.dequeue(expectedType);
 	}
 	
 	public receive(Class expectedType, Thread from) => (Object)
 	{
-		return mailbox.receive(expectedType, from);
+		return mailbox.dequeue(expectedType, from);
 	}
 	
 	public send(Object data) => ()
 	{
-		mailbox.send(data);
+		mailbox.enqueue(data);
 	}
 	
 	public destroy

@@ -1239,7 +1239,7 @@ public class OutputTests {
 				"done\n" +
 				"[10, 11, 12, 13, 14]\n",
 				
-				"shadow:standard@Exception: Expected 'int' but got 'shadow:standard@String'.\n"
+				"shadow:standard@WrongTypeException: Expected 'int' but got 'shadow:standard@String'.\n"
 		);
 	}
 	

@@ -11,7 +11,7 @@ class shadow:test@MailboxTest
 		// can only take up to 10 elements.
 		initMailbox(10, true);
 		var mailbox = this->staticMailbox;
-	
+
 		// !!!! TEST #1 !!!!
 		Console.printLine("Test1");
 		var t1 = Thread:create(Test1Runner:create());
@@ -23,10 +23,10 @@ class shadow:test@MailboxTest
 		}
 		
 		// send a stop signal
-		mailbox.send("stop");
+		mailbox.enqueue("stop");
 		// send an invalid signal to make sure that exceptions
 		// work correctly.
-		mailbox.send("wrong");
+		mailbox.enqueue("wrong");
 		
 		try {
 			t1.join();
@@ -37,7 +37,7 @@ class shadow:test@MailboxTest
 		
 		// !!!! TEST #2 !!!!
 		Console.printLine("Test2");
-		Console.printLine(cast<String>(mailbox.receive(String:class, System->mainThread)) == "wrong");
+		Console.printLine(cast<String>(mailbox.dequeue(String:class, System->mainThread)) == "wrong");
 
 		var t2 = Thread:create(Test2Runner:create());
 		// !!!! TEST #2 !!!!
@@ -52,11 +52,11 @@ class shadow:test@MailboxTest
 				var mailbox = staticMailbox();
 				System.sleep(curthread()->id * 100);
 				 
-				mailbox.send("hello");
-				mailbox.send(" ");
-				mailbox.send("world");
-				mailbox.send("!");
-				mailbox.send("\n");
+				mailbox.enqueue("hello");
+				mailbox.enqueue(" ");
+				mailbox.enqueue("world");
+				mailbox.enqueue("!");
+				mailbox.enqueue("\n");
 			}
 		}
 	
@@ -75,7 +75,7 @@ class shadow:test@MailboxTest
 			nullable Thread thread = null;
 			
 			while(message != "stop") {
-				(var tempStr, var tempThread) = mailbox.receive(String:class);
+				(var tempStr, var tempThread) = mailbox.dequeue(String:class);
 				if(thread !== tempThread) {
 					thread = tempThread;
 					Console.print(tempThread->name # ": ");
@@ -86,7 +86,7 @@ class shadow:test@MailboxTest
 			}
 			Console.printLine();
 			
-			mailbox.receive(int:class);
+			mailbox.dequeue(int:class);
 		}
 	}
 	
@@ -111,17 +111,17 @@ class shadow:test@MailboxTest
 					}
 				}
 				
-				mailbox.send("A string from " # curthread()->name);
-				mailbox.send("Secret number: ");
-				mailbox.send(secretNumber);
-				mailbox.send(x);
+				mailbox.enqueue("A string from " # curthread()->name);
+				mailbox.enqueue("Secret number: ");
+				mailbox.enqueue(secretNumber);
+				mailbox.enqueue(x);
 				x[0] = 55;
-				mailbox.send("done");
+				mailbox.enqueue("done");
 			}
 		}
 
 		private receive(Mailbox mailbox, int index, Class c, boolean lf) => (Object) {
-			var o = mailbox.receive(c, curthread(index));
+			var o = mailbox.dequeue(c, curthread(index));
 			Console.print(o);
 			if(lf) {
 				Console.print("\n");

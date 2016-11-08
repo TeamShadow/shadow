@@ -1,5 +1,4 @@
 import shadow:natives;
-import shadow:utility@UnexpandableListException;
 
 /**
  * @author Claude Abounegm
@@ -7,97 +6,104 @@ import shadow:utility@UnexpandableListException;
 class shadow:standard@
 	Mailbox
 {
-	LockedList list;
+	readonly TimeSpan TIMEOUT = Time.fromMinutes(1);
+	
+	/*
+	* Note1: We would like to notify all the waiting threads 
+	*        that something happened whenever we enqueue or dequeue. 
+	*        If the change that happened is not beneficial to those waiting
+	*        threads, they will go right back to sleep until another change 
+	*        happens or until they timeout. This avoids us busy waiting.
+	*/
+	HybridQueueArray list;
 	Signaler signaler;
 	Mutex mutex;
 	
 	public create(int count)
 	{
-		this:list = LockedList:create(count);
+		this:list = HybridQueueArray:create(count);
 		this:signaler = Signaler:create();
 		this:mutex = Mutex:create();
 	}
 	
-	public send(Object data, boolean blocking) => ()
-	{
-		var threadData = ThreadData:create(data);
-		
+	public enqueue(Object data, boolean blocking) => ()
+	{		
 		mutex.lock();
 		try {
 			if(list.isFull()) {
+				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
 					throw Exception:create("Mailbox is full.");
 				}
 				
 				do {
-					mutex.unlock();
-					signaler.waitForNotify();
-					mutex.lock();
+					waitForNotify();
 				} while(list.isFull());
 			}
 			
-			list.addLast(threadData);
+			// enqueue should never throw since we should only
+			// arrive here if the list is not full.
+			list.enqueue(ThreadData:create(data));
+			
+			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
 		} finally {
 			mutex.unlock();
 		}
 	}
 	
-	public send(Object data) => ()
-	{
-		send(data, true);
-	}
-	
-	public receive(Class expectedType, boolean blocking) => (Object, Thread)
+	public dequeue(Class expectedType, boolean blocking) => (Object, Thread)
 	{
 		mutex.lock();
 		try {
 			if(list.isEmpty()) {
+				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
 					throw Exception:create("Mailbox is empty.");
 				}
 
+				// we block as long as the last is empty.
 				do {
-					mutex.unlock();
-					signaler.waitForNotify();
-					mutex.lock();
+					waitForNotify();
 				} while(list.isEmpty());
 			}
 
-			var threadData = list.removeFirst(expectedType);
+			// dequeue should never throw because of an empty list,
+			// but it can and will throw if the expectedType is not
+			// the same as the available type.
+			var threadData = list.dequeue(expectedType);
+
+			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
+			
 			return (threadData->data, threadData->sender);	
 		} finally {
 			mutex.unlock();
 		}
 	}
 	
-	public receive(Class expectedType) => (Object, Thread)
+	public dequeue(Class expectedType, Thread sender, boolean blocking) => (Object)
 	{
-		return receive(expectedType, true);
-	}
-	
-	public receive(Class expectedType, Thread thread, boolean blocking) => (Object)
-	{		
 		mutex.lock();
 		try {
-			int index = list.indexOf(thread);
-					
+			int index = list.indexOf(sender);
+
 			if(index == -1) {
+				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
 					throw Exception:create("Mailbox did not receive a message from that thread.");
 				}
 				
+				// we block as long as we do not find a thread which matches the sender
 				do {
-					mutex.unlock();
-					signaler.waitForNotify();
-					mutex.lock();
-					
-					index = list.indexOf(thread);
+					waitForNotify();
+					index = list.indexOf(sender);
 				} while(index == -1);
 			}
 			
 			var threadData = list.removeAt(index, expectedType);
+			
+			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
 			return (threadData->data);
 		} finally {
@@ -105,9 +111,26 @@ class shadow:standard@
 		}
 	}
 	
-	public receive(Class expectedType, Thread thread) => (Object)
+	public enqueue(Object data) => ()
 	{
-		return receive(expectedType, thread, true);
+		enqueue(data, true);
+	}
+	
+	public dequeue(Class expectedType) => (Object, Thread)
+	{
+		return dequeue(expectedType, true);
+	}
+	
+	public dequeue(Class expectedType, Thread sender) => (Object)
+	{
+		return dequeue(expectedType, sender, true);
+	}
+	
+	private waitForNotify() => ()
+	{
+		mutex.unlock();
+		signaler.waitForNotify(TIMEOUT);
+		mutex.lock();
 	}
 
 	private createNative(int count, boolean unused) => (Mailbox)
@@ -115,8 +138,7 @@ class shadow:standard@
 		return Mailbox:create(count);
 	}
 	
-	private class
-		ThreadData
+	private class ThreadData
 	{
 		get Thread sender;
 		get Object data;
@@ -128,10 +150,9 @@ class shadow:standard@
 		}
 	}
 	
-	private class
-		LockedList
-	is CanIndex<int, ThreadData> 
-	and CanIndexStore<int, ThreadData>
+	private class HybridQueueArray
+		is CanIndex<int, ThreadData> 
+		and CanIndexStore<int, ThreadData>
 	{
 		nullable ThreadData[] elements;
 		int start;
@@ -154,28 +175,27 @@ class shadow:standard@
 			return (size == 0);
 		}
 		
-		public readonly index(int index) => (ThreadData)
-		{
-			return check(elements[rawIndex(index)]);
-		}
-		
-		public index(int index, nullable ThreadData threadData) => ()
-		{
-			elements[rawIndex(index)] = threadData;
-		}
-		
 		public indexOf(Thread thread) => (int index)
 		{
 			for(int i = 0; i < size; i += 1) {
 				if(thread === this[i]->sender) {
-					return (i);
+					return i;
 				}
 			}
 
-			return (-1);
+			return -1;
+		}
+
+		public enqueue(ThreadData threadData) => ()
+		{
+			if(isFull())
+				throw FullArrayException:create();
+
+			this[size] = threadData;
+			size += 1;
 		}
 		
-		public removeFirst(Class expectedType) => (ThreadData)
+		public dequeue(Class expectedType) => (ThreadData)
 		{
 			return removeAt(0, expectedType);
 		}
@@ -183,34 +203,50 @@ class shadow:standard@
 		public removeAt(int index, Class expectedType) => (ThreadData)
 		{
 			// retrieve the data and make sure that it is the same as the expectedType.
+			// the indexer also checks for out of bounds exception, so we do not need
+			// to worry about that.
 			ThreadData threadData = this[index];
 			var dataType = threadData->data.getClass();
 			if(dataType !== expectedType) {
-				throw Exception:create("Expected '" # expectedType # "' but got '" # dataType # "'.");
+				throw WrongTypeException:create(expectedType, dataType);
 			}
 			
 			if(index == 0) {
 				this[index] = null;
 				start = (start + 1) % elements->size;
 			} else {
+				// we shift the array by one to the left.
+				// assuming we are deleting the second item:
+				// [1, 2, 3, 4, 5] -> [1, 3, 4, 5, null]
 				for(int i = index; i < size - 1; i += 1) {
 					this[i] = this[i + 1];
 				}
+				
+				// set the last item to null since it is not used anymore
+				this[size - 1] = null;
 			}
 			
+			// decrease the size, since we deleted the item.
 			size -= 1;
-			if(isEmpty()) start = 0;
+			
+			// if the list is empty, we can start at zero again.
+			if(isEmpty()) {
+				start = 0;
+			}
 			
 			return threadData;
 		}
 		
-		public addLast(ThreadData threadData) => ()
+		// CanIndex<int, ThreadData>
+		public readonly index(int index) => (ThreadData)
 		{
-			if(isFull())
-				throw UnexpandableListException:create();
-
-			this[size] = threadData;
-			size += 1;
+			return check(elements[rawIndex(index)]);
+		}
+		
+		// CanIndexStore<int, ThreadData>
+		public index(int index, nullable ThreadData threadData) => ()
+		{
+			elements[rawIndex(index)] = threadData;
 		}
 		
 		private readonly rawIndex(int index) => (int)
@@ -221,4 +257,6 @@ class shadow:standard@
 			return ((start + index) % elements->size);
 		}
 	}
+	
+	private exception FullArrayException {}
 }

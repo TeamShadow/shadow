@@ -43,11 +43,9 @@ class shadow:test@MessagePassingTest
 			Thread:create(runner);
 		}
 
-		i = 0;
-		foreach(var thread in curthread()) {
-			thread.send(intervals * i);
-			thread.send(intervals * (i + 1));
-			i += 1;
+		for(i = 0; i < threads; i += 1) {
+			curthread(i).send(intervals * i);
+			curthread(i).send(intervals * (i + 1));
 		}
 		
 		int total = 0;
