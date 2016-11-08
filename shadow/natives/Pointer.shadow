@@ -1,7 +1,9 @@
 /**
-* This is a class which is a placeholder for a raw low-level pointer.
-* This pointer is of no use in Shadow, and should always be passed to
-* a method in LLVM and casted to the desired type.
+* This is a placeholder for a raw low-level LLVM pointer.
+* This pointer is of no use in Shadow, and should never be dereferenced.
+* A {@code Pointer} should always be created by the {@code Handle} class.
+* A {@code Pointer} always be passed to native LLVM methods and then
+* should be casted to the desired type IN LLVM.
 *
 * @author Claude Abounegm
 */

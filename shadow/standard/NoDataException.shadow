@@ -1,0 +1,8 @@
+exception shadow:standard@
+	NoDataException
+{
+	public create(String message)
+	{
+		super(message);
+	}
+}

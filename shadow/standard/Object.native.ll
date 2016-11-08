@@ -36,10 +36,34 @@ define %shadow.standard..Class* @shadow.standard..Object_MgetClass(%shadow.stand
 	ret %shadow.standard..Class* %3
 }
 
+; temp
 ; curthread() => (Thread);
 @shadow.standard..Thread_TLS_currentThread = external global %shadow.standard..Thread*
 define %shadow.standard..Thread* @shadow.standard..Object_Mcurthread(%shadow.standard..Object*) {
 entry:
 	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
 	ret %shadow.standard..Thread* %currentThread
+}
+
+declare { %shadow.standard..Object*, %shadow.standard..Thread* } @shadow.standard..Thread_MreceiveNative_shadow.standard..Class(%shadow.standard..Thread*, %shadow.standard..Class*)
+define { %shadow.standard..Object*, %shadow.standard..Thread* } @shadow.standard..Object_Mreceive__1_shadow.standard..Thread_shadow.standard..Class(%shadow.standard..Object*, %shadow.standard..Thread*, %shadow.standard..Class*) {
+entry:
+	%call = call { %shadow.standard..Object*, %shadow.standard..Thread* } @shadow.standard..Thread_MreceiveNative_shadow.standard..Class(%shadow.standard..Thread* %1, %shadow.standard..Class* %2)
+	
+	ret { %shadow.standard..Object*, %shadow.standard..Thread* } %call
+}
+
+declare %shadow.standard..Object* @shadow.standard..Thread_MreceiveNative_shadow.standard..Class_shadow.standard..Thread(%shadow.standard..Thread*, %shadow.standard..Class*, %shadow.standard..Thread*)
+define %shadow.standard..Object* @shadow.standard..Object_Mreceive__2_shadow.standard..Thread_shadow.standard..Class_shadow.standard..Thread(%shadow.standard..Object*, %shadow.standard..Thread*, %shadow.standard..Class*, %shadow.standard..Thread*) {
+entry:
+	%call = call %shadow.standard..Object* @shadow.standard..Thread_MreceiveNative_shadow.standard..Class_shadow.standard..Thread(%shadow.standard..Thread* %1, %shadow.standard..Class* %2, %shadow.standard..Thread* %3)
+	ret %shadow.standard..Object* %call
+}
+
+declare void @shadow.standard..Thread_MsendNative_shadow.standard..Object(%shadow.standard..Thread*, %shadow.standard..Object*)
+define void @shadow.standard..Object_Msend_shadow.standard..Object_shadow.standard..Thread(%shadow.standard..Object*, %shadow.standard..Object*, %shadow.standard..Thread*) {
+entry:
+	call void @shadow.standard..Thread_MsendNative_shadow.standard..Object(%shadow.standard..Thread* %2, %shadow.standard..Object* %1)
+	
+	ret void
 }

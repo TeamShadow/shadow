@@ -14,7 +14,7 @@ immutable singleton shadow:standard@
 				.addMicroSeconds(absUSec);
 	}
 	
-	public readonly fromNanoSeconds(int nanoSeconds) => (TimeSpan)
+	public readonly fromNanoSeconds(long nanoSeconds) => (TimeSpan)
 	{
 		return TimeSpan:create(0, 0, 0, nanoSeconds);
 	}

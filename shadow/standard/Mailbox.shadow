@@ -9,12 +9,15 @@ class shadow:standard@
 	readonly TimeSpan TIMEOUT = Time.fromMinutes(1);
 	
 	/*
+	* NOTES
+	*
 	* Note1: We would like to notify all the waiting threads 
 	*        that something happened whenever we enqueue or dequeue. 
 	*        If the change that happened is not beneficial to those waiting
 	*        threads, they will go right back to sleep until another change 
 	*        happens or until they timeout. This avoids us busy waiting.
 	*/
+	
 	HybridQueueArray list;
 	Signaler signaler;
 	Mutex mutex;
@@ -59,7 +62,7 @@ class shadow:standard@
 			if(list.isEmpty()) {
 				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
-					throw Exception:create("Mailbox is empty.");
+					throw NoDataException:create("Mailbox did not receive any messages, and is empty.");
 				}
 
 				// we block as long as the last is empty.
@@ -91,7 +94,7 @@ class shadow:standard@
 			if(index == -1) {
 				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
-					throw Exception:create("Mailbox did not receive a message from that thread.");
+					throw NoDataException:create("Mailbox did not receive any messages from that thread.");
 				}
 				
 				// we block as long as we do not find a thread which matches the sender

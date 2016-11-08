@@ -120,7 +120,7 @@ class shadow:test@MailboxTest
 			}
 		}
 
-		private receive(Mailbox mailbox, int index, Class c, boolean lf) => (Object) {
+		private receiveAndPrint(Mailbox mailbox, int index, Class c, boolean lf) => (Object) {
 			var o = mailbox.dequeue(c, curthread(index));
 			Console.print(o);
 			if(lf) {
@@ -139,11 +139,11 @@ class shadow:test@MailboxTest
 			var mailbox = staticMailbox();
 			
 			for (int i = 0; i < curthread()->childrenCount; i += 1) {
-				receive(mailbox, i, String:class, true);
-				receive(mailbox, i, String:class, false);
-				receive(mailbox, i, int:class, true);
-				var arr = receive(mailbox, i, Array<int>:class, true);
-				receive(mailbox, i, String:class, true);
+				receiveAndPrint(mailbox, i, String:class, true);
+				receiveAndPrint(mailbox, i, String:class, false);
+				receiveAndPrint(mailbox, i, int:class, true);
+				var arr = receiveAndPrint(mailbox, i, Array<int>:class, true);
+				receiveAndPrint(mailbox, i, String:class, true);
 				Console.printLine(arr);
 			}
 		}

@@ -176,21 +176,6 @@ and CanIndex<int, Thread>
 		return childrenList[index];
 	}
 	
-	public receive(Class expectedType) => (Object, Thread)
-	{
-		return mailbox.dequeue(expectedType);
-	}
-	
-	public receive(Class expectedType, Thread from) => (Object)
-	{
-		return mailbox.dequeue(expectedType, from);
-	}
-	
-	public send(Object data) => ()
-	{
-		mailbox.enqueue(data);
-	}
-	
 	public destroy
 	{
 		mutex.free();
@@ -319,6 +304,33 @@ and CanIndex<int, Thread>
 	private readonly unlockMutexNative() => () 
 	{
 		mutex.unlock();
+	}
+	
+	private receiveNative(Class expectedType) => (Object, Thread)
+	{
+		if(!isAlive()) {
+			return mailbox.dequeue(expectedType, false);
+		}
+		
+		return mailbox.dequeue(expectedType);
+	}
+	
+	private receiveNative(Class expectedType, Thread from) => (Object)
+	{
+		if(!isAlive()) {
+			return mailbox.dequeue(expectedType, from, false);
+		}
+		
+		return mailbox.dequeue(expectedType, from);
+	}
+	
+	private sendNative(Object data) => ()
+	{
+		if(!isAlive()) {
+			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
+		}
+		
+		mailbox.enqueue(data);
 	}
 	
 	// A Runner which performs no operations.
