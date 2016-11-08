@@ -50,7 +50,6 @@ declare %int @pthread_cond_destroy(%struct.pthread_cond_t*)
 
 declare %int @pthread_cond_wait(%struct.pthread_cond_t*, %struct.pthread_mutex_t*)
 declare %int @pthread_cond_timedwait(%struct.pthread_cond_t*, %struct.pthread_mutex_t*, %struct.timespec*)
-declare %int @pthread_cond_signal(%struct.pthread_cond_t*)
 declare %int @pthread_cond_broadcast(%struct.pthread_cond_t*)
 
 ;---------------------------
@@ -92,15 +91,6 @@ entry:
 	%time = bitcast %shadow.natives..Pointer* %3 to %struct.timespec*
 	
 	%call = call %int @pthread_cond_timedwait(%struct.pthread_cond_t* %cond, %struct.pthread_mutex_t* %mutex, %struct.timespec* %time)
-	ret %int %call
-}
-
-; signal(Pointer cond) => (int);
-define %int @shadow.natives..Signaler_Msignal_shadow.natives..Pointer(%shadow.natives..Signaler*, %shadow.natives..Pointer*) {
-entry:
-	%cond = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_cond_t*
-	%call = call %int @pthread_cond_signal(%struct.pthread_cond_t* %cond)
-	
 	ret %int %call
 }
 

@@ -24,7 +24,6 @@ locked class shadow:natives@
 	private native readonly broadcast(Pointer cond) => (int);
 	
 	private readonly native get handleSize() => (int);
-	//private native readonly signal(Pointer cond) => (int);
 	
 	int waitingThreads = 0;
 	Mutex mutex;
@@ -128,11 +127,11 @@ locked class shadow:natives@
 			// we dequeue the first token, and broadcast to wake up all threads. However, since
 			// we're in a loop, only one thread wakes up, which is the one we want.
 			if(!tokensQueue.isEmpty()) {
-				// we would like to avoid to notify wait which has already timedout.
-				// when a wait timesout, it sets its own flag to false, so its token
-				// could still be in the queue, but it is invalid and no threads are
-				// listening on it. So we check for that. If the flag is false, we ignore
-				// it and move on to the next one.
+				// We would like to avoid notifying a thread which has already timedout.
+				// When a wait() timesout, it sets its own `shouldWait` flag to false, but 
+				// does not remove itself from the queue. Thus the token could still be in queue.
+				// This is an invalid token and no threads are listening on it. So we check for that. 
+				// If the flag is false, we ignore it and move on to the next one.
 				SignalToken token;
 				do {
 					token = tokensQueue.removeFirst();

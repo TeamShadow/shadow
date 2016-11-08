@@ -18,7 +18,7 @@ and CanIndex<int, Thread>
 	// END: Native methods
 	
 	// START: Private variables
-	nullable Exception ex = null;	
+	nullable Exception ex = null;
 	boolean joined;
 	Handle handle;
 	CanRun runner;
