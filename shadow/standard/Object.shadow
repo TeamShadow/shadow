@@ -9,9 +9,15 @@ class shadow:standard@Object
 	 * Retrieves the {@code Class} object associated with any given object.
 	 * @return {@code Class} of the current object
 	 */
-	public native readonly locked
-	getClass() => ( Class );
+	public native readonly locked getClass() => ( Class );
 
+	public native readonly locked curthread() => (Thread);
+	
+	public readonly locked curthread(int childIndex) => (Thread)
+	{
+		return curthread()[childIndex];
+	}
+	
 	/** 
 	 * Returns a {@code String} representation of the object. This default
 	 * implementation returns a representation of class information.
@@ -19,8 +25,7 @@ class shadow:standard@Object
 	 * representation.	 
 	 * @return {@code String} representation
 	 */ 
-	public readonly
-	toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		return getClass().toString();
 	}

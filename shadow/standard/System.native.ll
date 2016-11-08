@@ -36,7 +36,6 @@
 ;---------
 ; Globals
 ;---------
-@shadow.standard..Thread_TLS_currentThread = external global %shadow.standard..Thread*
 @shadow.standard..Thread_STATIC_mainThread = external global %shadow.standard..Thread*
 
 ;---------------------
@@ -48,13 +47,6 @@ declare void @shadow.standard..Thread_MsleepNative_int(%shadow.standard..Thread*
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
-; get currentThread() => (Thread);
-define %shadow.standard..Thread* @shadow.standard..System_McurrentThread(%shadow.standard..System*) {
-entry:
-	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
-	ret %shadow.standard..Thread* %currentThread
-}
-
 ; get mainThread() => (Thread);
 define %shadow.standard..Thread* @shadow.standard..System_MmainThread(%shadow.standard..System*) {
 entry:

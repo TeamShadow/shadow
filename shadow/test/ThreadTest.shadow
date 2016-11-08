@@ -6,18 +6,16 @@ class shadow:test@ThreadTest
 	{
 		public run() => ()
 		{
-			var currentThread = System->currentThread;
-			
-			var id = currentThread->id;
+			var id = curthread()->id;
 			System.sleep(id * 50);
-			Console.printLine(currentThread->name);
+			Console.printLine(curthread()->name);
 			
 			if(id == 4) {
 				Thread:create(this).join(); // Thread#5; throws from Thread#6
 			}
 			else if(id == 5) {
-				Console.printLine(currentThread->parent->id == 4);
-				Console.printLine(System->mainThread->id == currentThread->parent->parent->id);
+				Console.printLine(curthread()->parent->id == 4);
+				Console.printLine(System->mainThread->id == curthread()->parent->parent->id);
 				
 				Thread:create(this).join(); // Thread#6; throws from Thread#8
 			}
@@ -27,7 +25,7 @@ class shadow:test@ThreadTest
 			}
 			
 			if(id > 2) {
-				throw Exception:create("from " # currentThread->name);
+				throw Exception:create("from " # curthread()->name);
 			}
 		}
 	}

@@ -23,6 +23,7 @@
 %shadow.standard..String = type { %shadow.standard..Class*, %shadow.standard..String_methods* , { %byte*, [1 x %int] }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
+%shadow.standard..Thread = type opaque
 
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
@@ -33,4 +34,12 @@ define %shadow.standard..Class* @shadow.standard..Object_MgetClass(%shadow.stand
 	%2 = getelementptr %shadow.standard..Object, %shadow.standard..Object* %0, i32 0, i32 0
 	%3 = load %shadow.standard..Class*, %shadow.standard..Class** %2	
 	ret %shadow.standard..Class* %3
+}
+
+; curthread() => (Thread);
+@shadow.standard..Thread_TLS_currentThread = external global %shadow.standard..Thread*
+define %shadow.standard..Thread* @shadow.standard..Object_Mcurthread(%shadow.standard..Object*) {
+entry:
+	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
+	ret %shadow.standard..Thread* %currentThread
 }

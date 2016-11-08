@@ -16,9 +16,6 @@ immutable singleton shadow:standard@System
 	 */
 	public native nanoTime() => ( long );
 	
-	/// Gets the {@code Thread} instance of the current executing thread.
-	public native get currentThread() => (Thread);
-	
 	/// Gets the {@code Thread} instance of the main thread.
 	public native get mainThread() => (Thread);
 	
@@ -29,7 +26,7 @@ immutable singleton shadow:standard@System
 	*/
 	public sleep(int milliseconds) => ()
 	{
-		sleep(this->currentThread, milliseconds);
+		sleep(curthread(), milliseconds);
 	}
 	
 	/**
@@ -39,6 +36,6 @@ immutable singleton shadow:standard@System
 	*/
 	public sleep(TimeSpan time) => ()
 	{
-		sleep(this->currentThread, time);
+		sleep(curthread(), time);
 	}
 }

@@ -1,5 +1,5 @@
-import shadow:utility;
 import shadow:natives;
+import shadow:utility@UnexpandableListException;
 
 /**
  * @author Claude Abounegm
@@ -7,36 +7,24 @@ import shadow:natives;
 class shadow:standard@
 	Mailbox
 {
-	nullable ThreadData[] elements;
-	int start;
-	get int size;
-	boolean blocking;
+	LockedList list;
 	Signaler signaler;
-	ThreadData dummyData = ThreadData:create();
 	Mutex mutex;
 	
 	public create(int count)
 	{
-		this(count, true);
+		this:list = LockedList:create(count);
+		this:signaler = Signaler:create();
+		this:mutex = Mutex:create();
 	}
 	
-	public create(int count, boolean blocking)
+	public send(Object data, boolean blocking) => ()
 	{
-		elements = ThreadData:null[count];
-		signaler = Signaler:create();
-		mutex = Mutex:create();
-		this:blocking = blocking;
-		this:start = 0;
-		this:size = 0;
-	}
-	
-	public send(Object data) => ()
-	{
-		var threadData = ThreadData:create(System->currentThread, data);
+		var threadData = ThreadData:create(curthread(), data);
 		
 		mutex.lock();
 		try {
-			if(size == elements->size) {
+			if(list.isFull()) {
 				if(!blocking) {
 					throw Exception:create("Mailbox is full.");
 				}
@@ -45,91 +33,192 @@ class shadow:standard@
 					mutex.unlock();
 					signaler.waitForNotify();
 					mutex.lock();
-				} while(size == elements->size);
+				} while(list.isFull());
 			}
 			
-			elements[(start + size) % elements->size] = threadData;
-			size += 1;
-			
+			list.addLast(threadData);
 			signaler.notifyAll();
 		} finally {
 			mutex.unlock();
 		}
 	}
 	
-	public receive(Class expectedType) => (Object)
+	public send(Object data) => ()
 	{
-		var threadData = dummyData;
-		
+		send(data, true);
+	}
+	
+	public receive(Class expectedType, boolean blocking) => (Object, Thread)
+	{
 		mutex.lock();
 		try {
-			if(size == 0) {
+			if(list.isEmpty()) {
 				if(!blocking) {
 					throw Exception:create("Mailbox is empty.");
+				}
+
+				do {
+					mutex.unlock();
+					signaler.waitForNotify();
+					mutex.lock();
+				} while(list.isEmpty());
+			}
+
+			var threadData = list.removeFirst(expectedType);
+			signaler.notifyAll();
+			return (threadData->data, threadData->sender);	
+		} finally {
+			mutex.unlock();
+		}
+	}
+	
+	public receive(Class expectedType) => (Object, Thread)
+	{
+		return receive(expectedType, true);
+	}
+	
+	public receive(Class expectedType, Thread thread, boolean blocking) => (Object)
+	{		
+		mutex.lock();
+		try {
+			int index = list.indexOf(thread);
+					
+			if(index == -1) {
+				if(!blocking) {
+					throw Exception:create("Mailbox did not receive a message from that thread.");
 				}
 				
 				do {
 					mutex.unlock();
 					signaler.waitForNotify();
 					mutex.lock();
-				} while(size == 0);
+					
+					index = list.indexOf(thread);
+				} while(index == -1);
 			}
 			
-			threadData = check(elements[start]); 
-			start = (start + 1) % elements->size;
-			size -= 1;
-			
+			var threadData = list.removeAt(index, expectedType);
 			signaler.notifyAll();
+			return (threadData->data);
 		} finally {
 			mutex.unlock();
 		}
-
-		if(!threadData.isSameType(expectedType))
-			throw Exception:create("Expected '" # expectedType # "' but got '" # threadData->dataClass # "'");
-		
-		return threadData->data;
 	}
 	
 	public receive(Class expectedType, Thread thread) => (Object)
 	{
-		throw InvalidOperationException:create();
+		return receive(expectedType, thread, true);
 	}
-	
-	private createNative(int count, boolean blocking) => (Mailbox)
+
+	private createNative(int count, boolean unused) => (Mailbox)
 	{
-		return Mailbox:create(count, blocking);
+		return Mailbox:create(count);
 	}
 	
-	private class ThreadData is CanEqual<ThreadData>
+	private class
+		ThreadData
 	{
 		get Thread sender;
 		get Object data;
-		
-		public create()
-		{
-			this:sender = System->currentThread;
-			this:data = Object:create();
-		}
 		
 		public create(Thread sender, Object data)
 		{
 			this:sender = sender;
 			this:data = copy(data);
 		}
+	}
+	
+	private class
+		LockedList
+	is CanIndex<int, ThreadData> 
+	and CanIndexStore<int, ThreadData>
+	{
+		nullable ThreadData[] elements;
+		int start;
+		get int size;
 		
-		public readonly equal(ThreadData other) => (boolean)
+		public create(int capacity)
 		{
-			return (data === other:data and sender === other:sender);
-		}
-				
-		public readonly isSameType(Class expectedType) => (boolean)
-		{
-			return (data.getClass() === expectedType);
+			this:elements = ThreadData:null[capacity];
+			this:start = 0;
+			this:size = 0;
 		}
 		
-		public readonly get dataClass() => (Class)
+		public readonly get isFull() => (boolean)
 		{
-			return (data.getClass());
+			return (size == elements->size);
+		}
+		
+		public readonly get isEmpty() => (boolean)
+		{
+			return (size == 0);
+		}
+		
+		public readonly index(int index) => (ThreadData)
+		{
+			return check(elements[rawIndex(index)]);
+		}
+		
+		public index(int index, nullable ThreadData threadData) => ()
+		{
+			elements[rawIndex(index)] = threadData;
+		}
+		
+		public indexOf(Thread thread) => (int index)
+		{
+			for(int i = 0; i < size; i += 1) {
+				if(thread === this[i]->sender) {
+					return (i);
+				}
+			}
+
+			return (-1);
+		}
+		
+		public removeFirst(Class expectedType) => (ThreadData)
+		{
+			return removeAt(0, expectedType);
+		}
+		
+		public removeAt(int index, Class expectedType) => (ThreadData)
+		{
+			// retrieve the data and make sure that it is the same as the expectedType.
+			ThreadData threadData = this[index];
+			var dataType = threadData->data.getClass();
+			if(dataType !== expectedType) {
+				throw Exception:create("Expected '" # expectedType # "' but got '" # dataType # "'.");
+			}
+			
+			if(rawIndex(index) == start) {
+				this[index] = null;
+				start = (start + 1) % elements->size;
+			} else {
+				for(int i = index; i < size - 1; i += 1) {
+					this[i] = this[i + 1];
+				}
+			}
+			
+			size -= 1;
+			if(isEmpty()) start = 0;
+			
+			return threadData;
+		}
+		
+		public addLast(ThreadData threadData) => ()
+		{
+			if(isFull())
+				throw UnexpandableListException:create();
+
+			this[size] = threadData;
+			size += 1;
+		}
+		
+		private readonly rawIndex(int index) => (int)
+		{
+			if(index < 0 or index >= elements->size)
+				throw IndexOutOfBoundsException:create();
+		
+			return ((start + index) % elements->size);
 		}
 	}
 }

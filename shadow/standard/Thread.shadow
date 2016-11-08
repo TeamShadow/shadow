@@ -8,6 +8,8 @@ import shadow:natives;
 locked class shadow:standard@
 	Thread
 is CanEqual<Thread>
+and CanIterate<Thread>
+and CanIndex<int, Thread>
 {
 	// START: Native methods
 	private readonly native spawnThread(Pointer ptr) => (int);
@@ -18,8 +20,7 @@ is CanEqual<Thread>
 	// END: Native methods
 	
 	// START: Private variables
-	nullable Exception ex = null;
-	
+	nullable Exception ex = null;	
 	boolean joined;
 	Handle handle;
 	Mutex mutex;
@@ -44,12 +45,6 @@ is CanEqual<Thread>
 	* at spawn time, the name takes the format "Thread#{id}".
 	*/
 	get String name;
-	
-	/**
-	* Gets the list of threads spawned by this thread.
-	*/
-	//get ThreadSafeList<Thread> children;
-	//get ReadOnlyList<Thread> children;
 
 	/**
 	* Creates a new {@code Thread} object which takes on a {@code CanRun}
@@ -76,7 +71,6 @@ is CanEqual<Thread>
 	{
 		this:id = this->staticNextId;
 		this:childrenList = ThreadSafeList<Thread>:create();
-		//this:children = ReadOnlyList<Thread>:create(childrenList);
 		
 		try {
 			this:name = check(name);
@@ -94,7 +88,7 @@ is CanEqual<Thread>
 		} else {
 			this:handle = Handle:create(this->handleSize);
 			this:runner = copy(runner);
-			this:parent = System->currentThread;
+			this:parent = curthread();
 			addToParent();
 			
 			// spawn the thread and give it the handle
@@ -134,9 +128,8 @@ is CanEqual<Thread>
 	
 	/**
 	* Suspends the execution of the calling thread until this thread terminates or until it times out.
-	* Joining on a dead thread, or on the main thread has no side effects.
-	* If the thread is terminated because of an exception, the exception is thrown
-	* when this method is called.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
 	*
 	* @param millisecondsTimeout the time to wait for in milliseconds.
 	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
@@ -153,7 +146,7 @@ is CanEqual<Thread>
 	*
 	* @return {@code true} if the thread is alive; otherwise, {@code false}.
 	*/
-	public get isAlive() => (boolean)
+	public readonly get isAlive() => (boolean)
 	{
 		mutex.lock();
 		var running = (handle->isValid or id == 0);
@@ -162,11 +155,31 @@ is CanEqual<Thread>
 		return running;
 	}
 	
+	public readonly get childrenCount() => (int)
+	{
+		return childrenList->size;
+	}
+	
 	public readonly equal(Thread other) => (boolean) 
 	{
 		return (this === other);
 	}
 
+	public readonly iterator() => (Iterator<Thread>)
+	{
+		return childrenList.iterator();
+	}
+	
+	public readonly index(int index) => (Thread)
+	{
+		return childrenList[index];
+	}
+	
+	public destroy
+	{
+		mutex.free();
+	}
+	
 	private addToParent() => () 
 	{
 		check(parent):childrenList.add(this);
@@ -180,7 +193,7 @@ is CanEqual<Thread>
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
 		}
 		
-		if(this === System->currentThread) {
+		if(this === curthread()) {
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		}
 		

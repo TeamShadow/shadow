@@ -1216,6 +1216,6 @@ public class OutputTests {
 	@Test public void testMailbox() throws Exception {
 		args.add("shadow/test/MailboxTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		//run(new String[0], "");
+		run(new String[0], "");
 	}
 }

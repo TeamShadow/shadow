@@ -7,11 +7,10 @@ class shadow:test@SignalerTest
 	{
 		public run() => () {
 			/*var signaler = System->mainThread->signaler;
-			var thisThread = System->currentThread;
 			
-			Console.printLine(thisThread->name # ": " # "waiting!");
+			Console.printLine(curthread()->name # ": " # "waiting!");
 			signaler.wait();
-			Console.printLine(thisThread->name # ": " # "finished waiting!");*/
+			Console.printLine(curthread()->name # ": " # "finished waiting!");*/
 		}
 	}
 

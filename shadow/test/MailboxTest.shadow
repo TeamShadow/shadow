@@ -5,16 +5,82 @@ class shadow:test@MailboxTest
 	private readonly native initMailbox(int count, boolean blocking) => ();
 	private readonly native get staticMailbox() => (Mailbox);
 	
-	class ReceiveRunner is CanRun
+	public main(String[] args) => ()
+	{	
+		// mailbox is blocking, and for testing purposes,
+		// can only take up to 10 elements.
+		initMailbox(10, true);
+		var mailbox = this->staticMailbox;
+	
+		// !!!! TEST #1 !!!!
+		Console.printLine("Test1");
+		var t1 = Thread:create(Test1Runner:create());
+		
+		// we wait till the children get spawned
+		while(t1->childrenCount != 4) {}
+		foreach(var t in t1) {
+			t.join();
+		}
+		
+		// send a stop signal
+		mailbox.send("stop");
+		// send an invalid signal to make sure that exceptions
+		// work correctly.
+		mailbox.send("wrong");
+		
+		try {
+			t1.join();
+		} catch(ThreadException e) {
+			Console.printErrorLine(e->actual);
+		}
+		// !!!! TEST #1 !!!!
+		
+		// !!!! TEST #2 !!!!
+		Console.printLine("Test2");
+		mailbox.receive(String:class);
+		var t2 = Thread:create(Test2Runner:create());
+		// !!!! TEST #2 !!!!
+	}
+	
+	private class Test1Runner is CanRun
 	{
+		private class SenderRunner is CanRun
+		{
+			public run() => ()
+			{
+				var mailbox = staticMailbox();
+				System.sleep(curthread()->id * 100);
+				
+				mailbox.send("hello");
+				mailbox.send(" ");
+				mailbox.send("world");
+				mailbox.send("!");
+				mailbox.send("\n");
+			}
+		}
+	
 		public run() => ()
 		{
-			var currentThread = System->currentThread;
+			nullable var threads = Thread:null[4];
+			
+			var sendRunner = SenderRunner:create();
+			for (int i = 0; i < threads->size; i += 1) {
+				threads[i] = Thread:create(sendRunner);
+			}
+			
 			var mailbox = staticMailbox();
 			
 			var message = "";
+			nullable Thread thread = null;
+			
 			while(message != "stop") {
-				message = cast<String>(mailbox.receive(String:class));
+				(var tempStr, var tempThread) = mailbox.receive(String:class);
+				if(thread !== tempThread) {
+					thread = tempThread;
+					Console.print(tempThread->name # ": ");
+				}
+				
+				message = cast<String>(tempStr);
 				Console.print(message);
 			}
 			Console.printLine();
@@ -23,44 +89,64 @@ class shadow:test@MailboxTest
 		}
 	}
 	
-	class SendRunner is CanRun
-	{
+	private class Test2Runner is CanRun
+	{		
+		private class SenderRunner2 is CanRun
+		{
+			int secretNumber;
+			public create(int i) {
+				secretNumber = i;
+			}
+ 			
+			public run() => ()
+			{
+				var mailbox = staticMailbox();
+				
+				var x = int:create[5];
+				for(int i = 0; i < x->size; i += 1) {
+					x[i] = i;
+					if(secretNumber == 1) {
+						x[i] += 10;
+					}
+				}
+				
+				mailbox.send("A string from " # curthread()->name);
+				mailbox.send("Secret number: ");
+				mailbox.send(secretNumber);
+				mailbox.send(x);
+				x[0] = 55;
+				mailbox.send("done");
+			}
+		}
+
+		private receive(Mailbox mailbox, int index, Class c, boolean lf) => (Object) {
+			var o = mailbox.receive(c, curthread(index));
+			Console.print(o);
+			if(lf) {
+				Console.print("\n");
+			}
+			
+			return o;
+		}
+		
 		public run() => ()
 		{
-			var currentThread = System->currentThread;
-			var mailbox = staticMailbox();
-			System.sleep(currentThread->id * 100);
+			for (int i = 0; i < 2; i += 1) {
+				Thread:create(SenderRunner2:create(i));
+			}
 			
-			mailbox.send("hello");
-			mailbox.send(" ");
-			mailbox.send("world");
-			mailbox.send("!");
-			mailbox.send("\n");
+			var mailbox = staticMailbox();
+			
+			for (int i = 0; i < curthread()->childrenCount; i += 1) {
+				Console.printLine("Thread" # i # " start");
+				receive(mailbox, i, String:class, true);
+				receive(mailbox, i, String:class, false);
+				receive(mailbox, i, int:class, true);
+				var arr = receive(mailbox, i, Array<int>:class, true);
+				receive(mailbox, i, String:class, true);
+				Console.printLine(arr);
+				Console.printLine("Thread" # i # " end");
+			}
 		}
-	}
-	
-	public main(String[] args) => ()
-	{
-		// mailbox is blocking, and for testing purposes,
-		// can only take up to 2 elements.
-		initMailbox(2, true);
-		
-		// spawn the receiver runner
-		Thread:create(ReceiveRunner:create());
-		
-		// spawn 4 senders
-		var sendRunner = SendRunner:create();
-		nullable var threads = Thread:null[4];
-		for (int i = 0; i < threads->size; i += 1) {
-			threads[i] = Thread:create(sendRunner);
-		}
-		
-		// wait for the threads to exit
-		for (int i = 0; i < threads->size; i += 1) {
-			check(threads[i]).join();
-		}
-		
-		this->staticMailbox.send("stop");		
-		this->staticMailbox.send("wrong");	
 	}
 }
