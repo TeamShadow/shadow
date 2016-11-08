@@ -13,14 +13,6 @@ class shadow:natives@
 	private native readonly createHandle(int size) => (long handle);
 	private native readonly freeHandle(Pointer ptr) => ();
 	private native readonly getPtrFromLong(long handle) => (Pointer ptr);
-
-	/**
-	* Creates an invalid handle. This does not allocate any extra memory.
-	*/
-	public create()
-	{
-		this:handle = 0;
-	}
 	
 	/**
 	* Allocates a block of memory on the heap which is {@code size} bytes long, 

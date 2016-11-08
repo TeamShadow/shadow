@@ -3,28 +3,39 @@ import shadow:natives;
 
 class shadow:test@SignalerTest
 {
+	private readonly native initSignaler() => ();
+	private native readonly get staticSignaler() => (Signaler);
+	
 	class RunnableTest is CanRun 
 	{
 		public run() => () {
-			/*var signaler = System->mainThread->signaler;
+			var signaler = staticSignaler();
 			
 			Console.printLine(curthread()->name # ": " # "waiting!");
-			signaler.wait();
-			Console.printLine(curthread()->name # ": " # "finished waiting!");*/
+			signaler.waitForNotify();
+			Console.printLine(curthread()->name # ": " # "finished waiting!");
 		}
 	}
 
-	public main(String[] args) => () {
-		/*nullable var threads = Thread:null[5];
+	public main(String[] args) => ()
+	{
+		initSignaler();
+	
+		nullable var threads = Thread:null[5];
 		for(int i = 0; i < threads->size; i += 1) {
 			threads[i] = Thread:create(RunnableTest:create());
 			System.sleep(500);
 		}
 		
-		var signaler = System->mainThread->signaler;
+		var signaler = staticSignaler();
 		for(int i = 0; i < threads->size; i += 1) {
 			signaler.notify();
 			System.sleep(500);
-		}*/
+		}
+	}
+	
+	private createSignalerNative() => (Signaler)
+	{
+		return Signaler:create();
 	}
 }

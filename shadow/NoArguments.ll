@@ -113,7 +113,7 @@ define void @callMain(%shadow.test..Test* %initialized) {
 entry:
 	call void @shadow.standard..Thread_MinitMainThread()
 	call void @shadow.test..Test_Mmain(%shadow.test..Test* %initialized)
-	call void @shadow.standard..ThreadWorker_MwaitForThreadsNative(%shadow.standard..ThreadWorker* null)
+	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* null)
 	
 	ret void
 }

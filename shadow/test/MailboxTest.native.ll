@@ -38,15 +38,15 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
-declare %shadow.standard..Mailbox* @shadow.standard..Mailbox_McreateNative_int_boolean(%shadow.standard..Mailbox*, %int, %boolean)
+declare %shadow.standard..Mailbox* @shadow.test..MailboxTest_McreateMailboxNative_int(%shadow.test..MailboxTest*, %int)
 
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
 
-define void @shadow.test..MailboxTest_MinitMailbox_int_boolean(%shadow.test..MailboxTest*, %int %count, %boolean %blocking) {
+define void @shadow.test..MailboxTest_MinitMailbox_int(%shadow.test..MailboxTest*, %int %count) {
 entry:
-	%mailbox = call %shadow.standard..Mailbox* @shadow.standard..Mailbox_McreateNative_int_boolean(%shadow.standard..Mailbox* null, %int %count, %boolean %blocking)
+	%mailbox = call %shadow.standard..Mailbox* @shadow.test..MailboxTest_McreateMailboxNative_int(%shadow.test..MailboxTest* %0, %int %count)
 	store %shadow.standard..Mailbox* %mailbox, %shadow.standard..Mailbox** @STATIC_mailbox
 	
 	ret void

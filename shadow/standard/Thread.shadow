@@ -3,6 +3,7 @@ import shadow:utility;
 import shadow:natives;
 
 /**
+ * 
  * @author Claude Abounegm
  */
 locked class shadow:standard@
@@ -11,6 +12,11 @@ is CanEqual<Thread>
 and CanIterate<Thread>
 and CanIndex<int, Thread>
 {
+	private constant int READY = 0;
+	private constant int RUNNING = 1;
+	private constant int WAITING = 2;
+	private constant int DEAD = 3;
+	
 	// START: Native methods
 	private readonly native spawnThread(Pointer ptr) => (int);
 	private readonly native get handleSize() => (int);
@@ -19,7 +25,11 @@ and CanIndex<int, Thread>
 	
 	// START: Private variables
 	nullable Exception ex = null;
+	nullable Thread joinThread = null;
+	
+	int state;
 	boolean joined;
+	
 	Handle handle;
 	CanRun runner;
 	ThreadSafeList<Thread> childrenList;
@@ -81,13 +91,15 @@ and CanIndex<int, Thread>
 		this:joined = false;
 		this:mutex = Mutex:create();
 		this:signaler = Signaler:create();
-		this:mailbox = Mailbox:create(15);
+		this:mailbox = Mailbox:create(32);
+		this:handle = Handle:create(this->handleSize);
+		this:state = READY;
 		
 		if(this:id == 0) {
 			this:runner = runner;
-			this:handle = Handle:create();
+			this:state = RUNNING;
+			this:handle.free();
 		} else {
-			this:handle = Handle:create(this->handleSize);
 			this:runner = copy(runner);
 			this:parent = curthread();
 			addToParent();
@@ -181,6 +193,19 @@ and CanIndex<int, Thread>
 		mutex.free();
 	}
 	
+	public interrupt() => ()
+	{
+		mutex.lock();
+		if(state == WAITING) {
+			try {
+				check(joinThread):signaler.interrupt(this);
+			} recover {
+				signaler.interrupt(this);	
+			}
+		}
+		mutex.unlock();
+	}
+	
 	private addToParent() => () 
 	{
 		check(parent):childrenList.add(this);
@@ -208,6 +233,8 @@ and CanIndex<int, Thread>
 		joined = true;
 		
 		if(flag and handle->isValid) {
+			curthread():state = WAITING;
+			curthread():joinThread = this;
 			mutex.unlock();
 			
 			if(timeout->isPositive) {
@@ -230,11 +257,13 @@ and CanIndex<int, Thread>
 	
 	private sleepNative(TimeSpan timeout) => ()
 	{
+		state = WAITING;
 		signaler.sleep(timeout);
 	}
 	
 	private sleepNative(int milliseconds) => ()
 	{
+		state = WAITING;
 		signaler.sleep(milliseconds);
 	}
 	
@@ -245,14 +274,16 @@ and CanIndex<int, Thread>
 	private runnerNative() => ()
 	{
 		try {
+			this:state = RUNNING;
 			runner.run();
 		} catch(Exception e) {
 			ex = ThreadException:create(this, e);
 		} finally {
 			mutex.lock();
 			handle.free();
-			signaler.notifyAll();
 			signaler.free();
+			this:joinThread = null;
+			this:state = DEAD;
 			mutex.unlock();
 		}
 	}
@@ -308,18 +339,18 @@ and CanIndex<int, Thread>
 	
 	private receiveNative(Class expectedType) => (Object, Thread)
 	{
-		if(!isAlive()) {
+		/*if(!isAlive()) {
 			return mailbox.dequeue(expectedType, false);
-		}
+		}*/
 		
 		return mailbox.dequeue(expectedType);
 	}
 	
 	private receiveNative(Class expectedType, Thread from) => (Object)
 	{
-		if(!isAlive()) {
+		/*if(!isAlive()) {
 			return mailbox.dequeue(expectedType, from, false);
-		}
+		}*/
 		
 		return mailbox.dequeue(expectedType, from);
 	}

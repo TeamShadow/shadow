@@ -46,7 +46,7 @@ class shadow:standard@
 			
 			// enqueue should never throw since we should only
 			// arrive here if the list is not full.
-			list.enqueue(ThreadData:create(data));
+			list.enqueue(Message:create(data));
 			
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
@@ -74,12 +74,12 @@ class shadow:standard@
 			// dequeue should never throw because of an empty list,
 			// but it can and will throw if the expectedType is not
 			// the same as the available type.
-			var threadData = list.dequeue(expectedType);
+			var message = list.dequeue(expectedType);
 
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
 			
-			return (threadData->data, threadData->sender);	
+			return (message->data, message->sender);	
 		} finally {
 			mutex.unlock();
 		}
@@ -104,11 +104,11 @@ class shadow:standard@
 				} while(index == -1);
 			}
 			
-			var threadData = list.removeAt(index, expectedType);
+			var message = list.removeAt(index, expectedType);
 			
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
-			return (threadData->data);
+			return (message->data);
 		} finally {
 			mutex.unlock();
 		}
@@ -135,13 +135,8 @@ class shadow:standard@
 		signaler.waitForNotify(TIMEOUT);
 		mutex.lock();
 	}
-
-	private createNative(int count, boolean unused) => (Mailbox)
-	{
-		return Mailbox:create(count);
-	}
 	
-	private class ThreadData
+	private class Message
 	{
 		get Thread sender;
 		get Object data;
@@ -154,16 +149,16 @@ class shadow:standard@
 	}
 	
 	private class HybridQueueArray
-		is CanIndex<int, ThreadData> 
-		and CanIndexStore<int, ThreadData>
+		is CanIndex<int, Message> 
+		and CanIndexStore<int, Message>
 	{
-		nullable ThreadData[] elements;
+		nullable Message[] elements;
 		int start;
 		get int size;
 		
 		public create(int capacity)
 		{
-			this:elements = ThreadData:null[capacity];
+			this:elements = Message:null[capacity];
 			this:start = 0;
 			this:size = 0;
 		}
@@ -189,27 +184,27 @@ class shadow:standard@
 			return -1;
 		}
 
-		public enqueue(ThreadData threadData) => ()
+		public enqueue(Message message) => ()
 		{
 			if(isFull())
 				throw FullArrayException:create();
 
-			this[size] = threadData;
+			this[size] = message;
 			size += 1;
 		}
 		
-		public dequeue(Class expectedType) => (ThreadData)
+		public dequeue(Class expectedType) => (Message)
 		{
 			return removeAt(0, expectedType);
 		}
 		
-		public removeAt(int index, Class expectedType) => (ThreadData)
+		public removeAt(int index, Class expectedType) => (Message)
 		{
 			// retrieve the data and make sure that it is the same as the expectedType.
 			// the indexer also checks for out of bounds exception, so we do not need
 			// to worry about that.
-			ThreadData threadData = this[index];
-			var dataType = threadData->data.getClass();
+			Message message = this[index];
+			var dataType = message->data.getClass();
 			if(dataType !== expectedType) {
 				throw WrongTypeException:create(expectedType, dataType);
 			}
@@ -237,19 +232,19 @@ class shadow:standard@
 				start = 0;
 			}
 			
-			return threadData;
+			return message;
 		}
 		
-		// CanIndex<int, ThreadData>
-		public readonly index(int index) => (ThreadData)
+		// CanIndex<int, Message>
+		public readonly index(int index) => (Message)
 		{
 			return check(elements[rawIndex(index)]);
 		}
 		
-		// CanIndexStore<int, ThreadData>
-		public index(int index, nullable ThreadData threadData) => ()
+		// CanIndexStore<int, Message>
+		public index(int index, nullable Message message) => ()
 		{
-			elements[rawIndex(index)] = threadData;
+			elements[rawIndex(index)] = message;
 		}
 		
 		private readonly rawIndex(int index) => (int)

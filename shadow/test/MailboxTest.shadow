@@ -2,14 +2,14 @@ import shadow:io@Console;
 
 class shadow:test@MailboxTest
 {
-	private readonly native initMailbox(int count, boolean blocking) => ();
+	private readonly native initMailbox(int count) => ();
 	private readonly native get staticMailbox() => (Mailbox);
 	
 	public main(String[] args) => ()
 	{	
 		// mailbox is blocking, and for testing purposes,
 		// can only take up to 10 elements.
-		initMailbox(10, true);
+		initMailbox(10);
 		var mailbox = this->staticMailbox;
 
 		// !!!! TEST #1 !!!!
@@ -147,5 +147,10 @@ class shadow:test@MailboxTest
 				Console.printLine(arr);
 			}
 		}
+	}
+	
+	private createMailboxNative(int count) => (Mailbox)
+	{
+		return Mailbox:create(count);
 	}
 }

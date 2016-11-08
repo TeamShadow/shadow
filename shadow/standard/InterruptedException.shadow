@@ -1,0 +1,5 @@
+exception shadow:standard@
+	InterruptedException
+{
+	
+}

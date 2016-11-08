@@ -10,8 +10,8 @@ class shadow:test@MessagePassingTest
 			int end = cast<int>(receive(int:class, System->mainThread));
 			
 			if(start % 2 == 0)
-				start += 1;
-
+				start += 1;	
+			
 			var count = 0;
 			for(int i = start; i < end; i += 2) {
 				boolean isPrime = true;
@@ -29,7 +29,7 @@ class shadow:test@MessagePassingTest
 			send(count, System->mainThread);
 		}
 	}
-
+	
 	public main(String[] args) => ()
 	{
 		int numbers = 10000000;
