@@ -13,8 +13,6 @@ and CanIndex<int, Thread>
 {
 	// START: Native methods
 	private readonly native spawnThread(Pointer ptr) => (int);
-	//private readonly native joinThread(Pointer ptr) => (int);
-	
 	private readonly native get handleSize() => (int);
 	private native get staticNextId() => (int);
 	// END: Native methods
@@ -23,9 +21,10 @@ and CanIndex<int, Thread>
 	nullable Exception ex = null;	
 	boolean joined;
 	Handle handle;
-	Mutex mutex;
 	CanRun runner;
 	ThreadSafeList<Thread> childrenList;
+	
+	Mutex mutex;
 	Signaler signaler;
 	// END: Private variables
 	

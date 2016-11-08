@@ -1216,6 +1216,30 @@ public class OutputTests {
 	@Test public void testMailbox() throws Exception {
 		args.add("shadow/test/MailboxTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "");
+		run(new String[0], 
+				"Test1\n"+
+				"Thread#2: hello world!\n" +
+				"Thread#3: hello world!\n" +
+				"Thread#4: hello world!\n" +
+				"Thread#5: hello world!\n" +
+				"Thread#main: stop\n" +
+				
+				"Test2\n" +
+				"true\n" +
+				
+				"A string from Thread#7\n" +
+				"Secret number: 0\n" +
+				"[0, 1, 2, 3, 4]\n" +
+				"done\n" +
+				"[0, 1, 2, 3, 4]\n" +
+				
+				"A string from Thread#8\n" +
+				"Secret number: 1\n" +
+				"[10, 11, 12, 13, 14]\n" +
+				"done\n" +
+				"[10, 11, 12, 13, 14]\n",
+				
+				"shadow:standard@Exception: Expected 'int' but got 'shadow:standard@String'.\n"
+		);
 	}
 }
