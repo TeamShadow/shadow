@@ -51,7 +51,7 @@ class shadow:test@MailboxTest
 			{
 				var mailbox = staticMailbox();
 				System.sleep(curthread()->id * 100);
-				
+				 
 				mailbox.send("hello");
 				mailbox.send(" ");
 				mailbox.send("world");

@@ -20,7 +20,7 @@ class shadow:standard@
 	
 	public send(Object data, boolean blocking) => ()
 	{
-		var threadData = ThreadData:create(curthread(), data);
+		var threadData = ThreadData:create(data);
 		
 		mutex.lock();
 		try {
@@ -121,9 +121,9 @@ class shadow:standard@
 		get Thread sender;
 		get Object data;
 		
-		public create(Thread sender, Object data)
+		public create(Object data)
 		{
-			this:sender = sender;
+			this:sender = curthread();
 			this:data = copy(data);
 		}
 	}
@@ -189,7 +189,7 @@ class shadow:standard@
 				throw Exception:create("Expected '" # expectedType # "' but got '" # dataType # "'.");
 			}
 			
-			if(rawIndex(index) == start) {
+			if(index == 0) {
 				this[index] = null;
 				start = (start + 1) % elements->size;
 			} else {

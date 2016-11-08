@@ -26,6 +26,7 @@ and CanIndex<int, Thread>
 	
 	Mutex mutex;
 	Signaler signaler;
+	Mailbox mailbox;
 	// END: Private variables
 	
 	/**
@@ -80,6 +81,7 @@ and CanIndex<int, Thread>
 		this:joined = false;
 		this:mutex = Mutex:create();
 		this:signaler = Signaler:create();
+		this:mailbox = Mailbox:create(15);
 		
 		if(this:id == 0) {
 			this:runner = runner;
@@ -172,6 +174,21 @@ and CanIndex<int, Thread>
 	public readonly index(int index) => (Thread)
 	{
 		return childrenList[index];
+	}
+	
+	public receive(Class expectedType) => (Object, Thread)
+	{
+		return mailbox.receive(expectedType);
+	}
+	
+	public receive(Class expectedType, Thread from) => (Object)
+	{
+		return mailbox.receive(expectedType, from);
+	}
+	
+	public send(Object data) => ()
+	{
+		mailbox.send(data);
 	}
 	
 	public destroy

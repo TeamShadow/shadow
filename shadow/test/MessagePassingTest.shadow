@@ -1,0 +1,61 @@
+import shadow:io@Console;
+
+class shadow:test@MessagePassingTest
+{
+	class ThreadTestRunner is CanRun
+	{
+		public run() => ()
+		{
+			int start = cast<int>(curthread().receive(int:class, System->mainThread));
+			int end = cast<int>(curthread().receive(int:class, System->mainThread));
+			
+			if(start % 2 == 0)
+				start += 1;
+
+			var count = 0;
+			for(int i = start; i < end; i += 2) {
+				boolean isPrime = true;
+				for(int j = 3; isPrime and j*j <= i; j += 2) {
+					if(i % j == 0) {
+						isPrime = false;
+					}
+				}
+				
+				if(isPrime) {
+					count += 1;
+				}
+			}
+			
+			System->mainThread.send(count);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		int numbers = 10000000;
+		int threads = 4;
+		int intervals = numbers / threads;
+
+		var runner = ThreadTestRunner:create();
+		
+		int i;
+		for(i = 0; i < threads; i += 1) {
+			Thread:create(runner);
+		}
+
+		i = 0;
+		foreach(var thread in curthread()) {
+			thread.send(intervals * i);
+			thread.send(intervals * (i + 1));
+			i += 1;
+		}
+		
+		int total = 0;
+		foreach(var thread in curthread()) {
+			int count = cast<int>(curthread().receive(int:class, thread));
+			total += count;
+		}
+		
+		Console.printLine(total);
+	}
+}

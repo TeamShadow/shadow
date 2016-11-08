@@ -1242,4 +1242,10 @@ public class OutputTests {
 				"shadow:standard@Exception: Expected 'int' but got 'shadow:standard@String'.\n"
 		);
 	}
+	
+	@Test public void testMessagePassing() throws Exception {
+		args.add("shadow/test/MessagePassingTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "664579\n");
+	}
 }
