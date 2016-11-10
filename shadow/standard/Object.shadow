@@ -30,7 +30,7 @@ class shadow:standard@Object
 	public native readonly locked curthread() => (Thread);
 	public readonly locked curthread(int childIndex) => (Thread)
 	{
-		return curthread()[childIndex];
+		return curthread().children(childIndex);
 	}
 
 	public native readonly locked send(Object data, Thread to) => ();

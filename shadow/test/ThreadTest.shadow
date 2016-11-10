@@ -40,6 +40,21 @@ class shadow:test@ThreadTest
 			threads[i] = Thread:create(runner);
 		}
 		
+		/*foreach(var x in curthread().children()) {
+			try {
+				x.join();
+			} catch(Exception e) {}
+		}
+	
+		Console.printLine("First class children");
+		foreach(var x in curthread().children()) {
+			Console.printLine(x->name);
+		}
+
+		Console.printLine("All children");
+		foreach(var x in curthread().children(true)) {
+			Console.printLine(x->name);
+		}*/
 		// if we do not join here, Shadow should join on all threads
 	}
 }

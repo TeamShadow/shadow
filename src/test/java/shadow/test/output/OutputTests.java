@@ -1256,8 +1256,9 @@ public class OutputTests {
 				"waiting\n" +
 				"I am Thread#2\n" +
 				"I am Thread#3\n" +
-				"end\n"+
-				"Exception thrown\n"+
+				"Thread#3: 1\n" +
+				"end\n" +
+				"InterruptedException thrown\n" +
 				"done\n");
 	}
 }

@@ -1,6 +1,9 @@
 import shadow:natives;
 
 /**
+ * Class {@code Mailbox} is the main component of the Message Passing
+ * between Threads in the Shadow language. 
+ *
  * @author Claude Abounegm
  */
 locked class shadow:standard@
@@ -18,8 +21,9 @@ locked class shadow:standard@
 	*        happens or until they timeout. This avoids us busy waiting.
 	*/
 	
+	get Signaler signaler;
+
 	HybridQueueArray list;
-	Signaler signaler;
 	Mutex mutex;
 	
 	public create(int count)
@@ -150,7 +154,7 @@ locked class shadow:standard@
 	
 	private class HybridQueueArray
 		is CanIndex<int, Message> 
-		and CanIndexStore<int, Message>
+		and CanIndexStoreNullable<int, Message>
 	{
 		nullable Message[] elements;
 		int start;
@@ -241,7 +245,7 @@ locked class shadow:standard@
 			return check(elements[rawIndex(index)]);
 		}
 		
-		// CanIndexStore<int, Message>
+		// CanIndexStoreNullable<int, Message>
 		public index(int index, nullable Message message) => ()
 		{
 			elements[rawIndex(index)] = message;

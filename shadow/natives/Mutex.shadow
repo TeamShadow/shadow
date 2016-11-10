@@ -38,6 +38,7 @@ locked class shadow:natives@
 		if(owner === null) {
 			throw InvalidOperationException:create("This mutex is already unlocked.");
 		}
+		
 		if(owner !== curthread()) {
 			throw InvalidOperationException:create("The mutex is owned by (" # check(owner)->name # ") and cannot be unlocked by ("# curthread()->name #").");
 		}
@@ -46,9 +47,14 @@ locked class shadow:natives@
 		unlockMutex(this->ptr);
 	}
 	
-	public readonly forceOwnMutex() => ()
+	public readonly takeOwnership() => ()
 	{
 		setOwner(curthread());
+	}
+	
+	public readonly giveUpOwnership() =>()
+	{
+		setOwner(null);
 	}
 	
 	public readonly get ptr() => (Pointer ptr)

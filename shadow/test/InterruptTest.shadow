@@ -19,7 +19,8 @@ class shadow:test@InterruptTest
 			Console.printLine("I am " # curthread()->name);
 			
 			var index = cast<int>(receive(int:class, System->mainThread));
-			System->mainThread[index].join();
+			Console.printLine(curthread()->name # ": " # index);
+			System->mainThread.children(index).join();
 			
 			Console.printLine("I should quit before reaching this" # curthread()->name);
 		}
@@ -30,6 +31,7 @@ class shadow:test@InterruptTest
 		Thread:create(ThreadSleepTestRunner:create());
 		
 		Thread:create(ThreadTestRunner:create());
+		curthread(1).interrupt();
 		send(0, curthread(1));
 		
 		Thread:create(ThreadTestRunner:create());
@@ -38,13 +40,11 @@ class shadow:test@InterruptTest
 		System.sleep(Time.fromSeconds(4));
 		Console.printLine("end");
 		
-		curthread(1).interrupt();
-		
 		try {
 			curthread(2).join();
 		} catch(ThreadException e) {
 			if(e->actual is InterruptedException) {
-				Console.printLine("Exception thrown");
+				Console.printLine("InterruptedException thrown");
 			} else {
 				throw e;
 			}

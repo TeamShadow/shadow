@@ -9,8 +9,6 @@ import shadow:natives;
 locked class shadow:standard@
 	Thread
 is CanEqual<Thread>
-and CanIterate<Thread>
-and CanIndex<int, Thread>
 {
 	public constant int READY = 0;
 	public constant int RUNNING = 1;
@@ -25,7 +23,7 @@ and CanIndex<int, Thread>
 	
 	// START: Private variables
 	nullable Exception ex = null;
-	nullable Thread joinThread = null;
+	nullable Signaler interruptSignaler = null;
 	
 	int state;
 	int joined;
@@ -33,7 +31,10 @@ and CanIndex<int, Thread>
 	
 	Handle handle;
 	CanRun runner;
+	
 	ThreadSafeList<Thread> childrenList;
+	CanIterate<Thread> childrenIterate;
+	CanIterate<Thread> childrenIterateRecurse;
 	
 	Mutex mutex;
 	Mutex stateMutex;
@@ -58,7 +59,7 @@ and CanIndex<int, Thread>
 	* at spawn time, the name takes the format "Thread#{id}".
 	*/
 	get String name;
-
+	
 	/**
 	* Gets whether this thread is running.
 	*
@@ -78,16 +79,23 @@ and CanIndex<int, Thread>
 		return state;
 	}
 	
-	public set state(int state) => ()
+	public readonly get stateStr() => (String)
 	{
-		stateMutex.lock();
-		this:state = state;
-		stateMutex.unlock();
-	}
-	
-	public readonly get childrenCount() => (int)
-	{
-		return childrenList->size;
+		switch(this->state) {
+			case (READY)
+				return "READY";
+			
+			case (RUNNING)
+				return "RUNNING";
+				
+			case (WAITING)
+				return "WAITING";
+				
+			case (DEAD)
+				return "DEAD";
+		}
+		
+		throw InvalidOperationException:create("Invalid state");
 	}
 	
 	/**
@@ -129,6 +137,8 @@ and CanIndex<int, Thread>
 		this:mailbox = Mailbox:create(32);
 		this:handle = Handle:create(this->handleSize);
 		this:state = READY;
+		this:childrenIterate = TraverseChildren:create(false);
+		this:childrenIterateRecurse = TraverseChildren:create(true);
 		
 		if(this:id == 0) {
 			this:runner = runner;
@@ -141,17 +151,21 @@ and CanIndex<int, Thread>
 			
 			// spawn the thread and give it the handle
 			spawnThread(handle->ptr);
+			
+			// pthreads clean up their resources after the
+			// spawned thread exits, so we do not need to
+			// call any other functions.
 		}
 	}
 	
 	/**
 	* Suspends the execution of the calling thread until this thread terminates.
-	* Joining on a dead thread, or on the main thread has no side effects.
-	* If the thread is terminated because of an exception, the exception is thrown
-	* when this method is called.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
 	* 
 	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
 	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public join() => () 
 	{
@@ -160,14 +174,15 @@ and CanIndex<int, Thread>
 	
 	/**
 	* Suspends the execution of the calling thread until this thread terminates or until it times out.
-	* Joining on a dead thread, or on the main thread has no side effects.
-	* If the thread is terminated because of an exception, the exception is thrown
-	* when this method is called.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
 	*
 	* @param timeout the time to wait for.
 	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+	*
 	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
 	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public join(TimeSpan timeout) => (boolean)
 	{
@@ -181,76 +196,16 @@ and CanIndex<int, Thread>
 	*
 	* @param millisecondsTimeout the time to wait for in milliseconds.
 	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+	*
 	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
 	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public join(int millisecondsTimeout) => (boolean)
 	{
 		return join(false, Time.fromMilliSeconds(millisecondsTimeout));
 	}
 	
-	public readonly equal(Thread other) => (boolean) 
-	{
-		return (this === other);
-	}
-
-	public readonly iterator() => (Iterator<Thread>)
-	{
-		return childrenList.iterator();
-	}
-	
-	public readonly index(int index) => (Thread)
-	{
-		return childrenList[index];
-	}
-	
-	public interrupt() => ()
-	{
-		shouldInterrupt = true;
-
-		mutex.lock();
-		try {
-			if(this->state != WAITING) {
-				throw InvalidOperationException:create("Cannot interrupt a thread which is not in the WAITING state.");
-			}
-			
-			// the interrupt method will raise an exception inside the running thread.
-			try {
-				// This block is executed if the thread is waiting for another thread
-				// to terminate. The join() method that the thread called will throw
-				// the exception.
-				check(joinThread):signaler.interrupt(this);
-			} recover {
-				// This block is executed if the thread is sleeping using the sleep() method.
-				signaler.interrupt(this);
-			}
-			
-			// When the InterruptedException is raised, the runnerNative() catches that exception. 
-			// Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
-			// up the resources it used. It calls signaler.free(), which in turn causes Signaler to release
-			// all the threads it is holding through a waitForNotify(). Since all threads get woken up after
-			// the exception `ex` has been set, all the joined thread also get an InterruptedException, and
-			// the tree unrwaps correctly.
-		} finally {
-			mutex.unlock();
-		}
-	}
-	
-	private addToParent() => () 
-	{
-		check(parent):childrenList.add(this);
-	}
-	
-	private setState(int state, nullable Thread joinThread) => ()
-	{
-		stateMutex.lock();
-		this:state = state;
-		this:joinThread = joinThread;
-		stateMutex.unlock();
-	}
-	
-	// TODO: WE NEED TO MAKE SURE THAT THE ACTUAL UNMANAGED POINTER HAS BEEN FREED
-	// Do we need to call pthread_exit()? Gotta figure this out.
 	private join(boolean finalizing, TimeSpan timeout) => (boolean)
 	{
 		if(this === System->mainThread) {
@@ -263,16 +218,14 @@ and CanIndex<int, Thread>
 		
 		mutex.lock();
 		boolean throwException = !finalizing or (finalizing and joined == 0);
+		boolean timedOut = false;
+		
 		joined += 1;
 		mutex.unlock();
 		
-		boolean timedOut = false;
 		if(isAlive()) {
-			curthread():joinThread = this;
-			curthread()->state = WAITING;
-
 			try {
-				checkForInterrupt(false);
+				curthread().setState(WAITING, this:signaler);
 
 				if(timeout->isPositive) {
 					timedOut = signaler.waitForNotify(timeout);
@@ -280,14 +233,17 @@ and CanIndex<int, Thread>
 					signaler.waitForNotify();
 				}
 			} catch(InterruptedException e) {
+				curthread().resetInterrupt();
+
+				// An interrupted join is not succesful, so we
+				// decrease its count.
 				mutex.lock();
 				joined -= 1;
 				mutex.unlock();
 
 				throw e;
 			} finally {
-				curthread()->state = RUNNING;
-				curthread():joinThread = null;
+				curthread().setState(RUNNING, null);
 			}
 		}
 
@@ -300,41 +256,79 @@ and CanIndex<int, Thread>
 		return timedOut;
 	}
 	
+	/**
+	* Tries to interrupt this thread. 
+	*/
+	public interrupt() => ()
+	{
+		if(!isAlive()) {
+			return;
+		}
+		
+		shouldInterrupt = true;
+		mutex.lock();
+		try {
+			if(this->state == WAITING) {
+				check(interruptSignaler).interrupt(this);
+			}
+			
+			// When the InterruptedException is raised, the runnerNative() catches that exception. 
+			// Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
+			// up the resources it used. It calls signaler.free(), which in turn causes Signaler to release
+			// all the threads it is holding through a waitForNotify(). Since all threads get woken up after
+			// the exception `ex` has been set, all the joined thread also get an InterruptedException correctly.
+		} finally {
+			mutex.unlock();
+		}
+	}
+	
 	private sleepNative(TimeSpan timeout) => ()
 	{
-		// sleep can only be called from the current thread
-		// so we just set its state to waiting, and sleep
-		this->state = WAITING;
-		
+		setState(WAITING, signaler);
 		signaler.sleep(timeout);
-		
-		// 
-		checkForInterrupt(true);
+		setState(RUNNING, null);
 	}
 	
-	private sleepNative(int milliseconds) => ()
+	private sleepNative(int millisecondsTimeout) => ()
 	{
-		// sleep can only be called from the current thread
-		// so we just set its state to waiting, and sleep
-		this->state = WAITING;
+		sleepNative(Time.fromMilliSeconds(millisecondsTimeout));
+	}
+
+	private receiveNative(Class expectedType) => (Object, Thread)
+	{
+		curthread().setState(WAITING, mailbox->signaler);
+		var retVal = mailbox.dequeue(expectedType);
+		curthread().setState(RUNNING, null);
 		
-		signaler.sleep(milliseconds);
-		
-		// this checks for the 
-		checkForInterrupt(true);
+		return retVal;
 	}
 	
-	private checkForInterrupt(boolean shouldSetState) => ()
+	private receiveNative(Class expectedType, Thread from) => (Object)
+	{
+		curthread().setState(WAITING, mailbox->signaler);
+		var retVal = mailbox.dequeue(expectedType, from);
+		curthread().setState(RUNNING, null);
+		
+		return retVal;
+	}
+	
+	private sendNative(Object data) => ()
+	{
+		if(!isAlive()) {
+			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
+		}
+		
+		curthread().setState(WAITING, mailbox->signaler);
+		mailbox.enqueue(data);
+		curthread().setState(RUNNING, null);
+	}
+	
+	private resetInterrupt() => ()
 	{
 		mutex.lock();
 		try {
-			if(shouldInterrupt) {
-				throw InterruptedException:create();
-			}
+			shouldInterrupt = false;
 		} finally {
-			if(shouldSetState) {
-				this->state = RUNNING;
-			}
 			mutex.unlock();
 		}
 	}
@@ -360,36 +354,24 @@ and CanIndex<int, Thread>
 		}
 	}
 	
+	// THIS METHOD GETS CALLED WITH A NULL `this` POINTER, DO NOT USE
+	// `this` or any instance methods on this thread.
 	private waitForThreadsNative() => ()
 	{
-		// we keep two queues, since we would like to throw the exceptions
-		// at the very end. First we traverse the children of all the threads,
-		// and when there is an exception, we add it to the exceptionQueue.
+		if(curthread() !== System->mainThread) {
+			throw Exception:create("waitForThreadsNative() can only be called on the main thread.");
+		}
+		
 		var exceptionQueue = ArrayDeque<ThreadException>:create();
-
-		// queue used for traversal of the children
-		var threadsQueue = ArrayDeque<Thread>:create();
-		threadsQueue.addLast(System->mainThread);
-
-		while(!threadsQueue.isEmpty()) {
-			var thread = threadsQueue.removeFirst();
-
-			// we do not wanna perform any operations on the main thread
-			// so we skip if id is zero.
-			if(thread->id > 0) {
-				try {
-					// this join does not do anything if the thread had
-					// been joined on before.
-					thread.join(true, Time->InfiniteTimeout);
-				}
-				catch (ThreadException e) {
-					exceptionQueue.addLast(e);
-				}
-			}
-
-			// traverse the children and add them to queue.
-			foreach(var child in thread:childrenList) {
-				threadsQueue.addLast(child);
+		
+		foreach(var thread in curthread().children(true)) {
+			try {
+				thread.join(true, Time->InfiniteTimeout);
+				// the `true` causes this thread to wait for the other thread
+				// to terminate and it will only throw an exception if the target 
+				// thread had not been joined on before.
+			} catch (ThreadException e) {
+				exceptionQueue.addLast(e);
 			}
 		}
 
@@ -399,28 +381,75 @@ and CanIndex<int, Thread>
 		}
 	}
 	
+	public readonly get childrenCount() => (int)
+	{
+		return childrenList->size;
+	}
+	
+	public readonly children(int index) => (Thread)
+	{
+		return childrenList[index];
+	}
+	
+	public readonly children(boolean recurse) => (CanIterate<Thread>)
+	{
+		if(recurse) {
+			return childrenIterateRecurse;
+		}
+		
+		return childrenIterate;
+	}
+	
+	public readonly children() => (CanIterate<Thread>)
+	{
+		return children(false);
+	}
+	
+	public readonly equal(Thread other) => (boolean) 
+	{
+		return (this === other);
+	}
+	
+	public readonly toString() => (String)
+	{
+		return name # ": (" # this->stateStr # ")";
+	}
+	
+	private addToParent() => () 
+	{
+		check(parent):childrenList.add(this);
+	}
+	
+	private set state(int state) => ()
+	{
+		stateMutex.lock();
+		this:state = state;
+		stateMutex.unlock();
+	}
+	
+	private setState(int state, nullable Signaler interruptSignaler) => ()
+	{
+		mutex.lock();
+		try {
+			if(shouldInterrupt) {
+				shouldInterrupt = false;
+				this->state = RUNNING;
+				
+				throw InterruptedException:create();
+			}
+		} finally {
+			mutex.unlock();
+		}
+		
+		stateMutex.lock();
+		this:state = state;
+		this:interruptSignaler = interruptSignaler;
+		stateMutex.unlock();
+	}
+	
 	private readonly createNative() => (Thread) 
 	{ 
 		return Thread:create(NopRunner:create(), "Thread#main"); 
-	}
-	
-	private receiveNative(Class expectedType) => (Object, Thread)
-	{
-		return mailbox.dequeue(expectedType);
-	}
-	
-	private receiveNative(Class expectedType, Thread from) => (Object)
-	{
-		return mailbox.dequeue(expectedType, from);
-	}
-	
-	private sendNative(Object data) => ()
-	{
-		if(!isAlive()) {
-			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
-		}
-		
-		mailbox.enqueue(data);
 	}
 	
 	// A Runner which performs no operations.
@@ -428,5 +457,64 @@ and CanIndex<int, Thread>
 		is CanRun
 	{
 		public run() => () {}
+	}
+	
+	private readonly instance() => (Thread)
+	{
+		return this;
+	}
+	
+	private class TraverseChildren is CanIterate<Thread>
+	{
+		boolean recurse;
+		
+		public create(boolean recurse)
+		{
+			this:recurse = recurse;
+		}
+		
+		public readonly iterator() => (Iterator<Thread>)
+		{
+			if(recurse) {
+				return ChildrenIterator:create();
+			}
+			
+			return instance():childrenList.iterator();
+		}
+		
+		private class ChildrenIterator is Iterator<Thread>
+		{
+			ArrayDeque<Thread> threadsQueue;
+			Thread current = instance();
+			
+			public create()
+			{
+				threadsQueue = ArrayDeque<Thread>:create();
+			}
+			
+			public readonly hasNext() => (boolean)
+			{
+				return (!threadsQueue.isEmpty() or current->childrenCount > 0);
+			}
+			
+			public next() => (Thread)
+			{
+				addChildrenToQueue(current);
+				
+				if(threadsQueue.isEmpty()) {
+					throw NoSuchElementException:create();
+				}
+				
+				current = threadsQueue.removeFirst();
+				return current;
+			}
+			
+			private addChildrenToQueue(Thread parent) => ()
+			{
+				foreach(var child in parent.children()) {
+					threadsQueue.addLast(child);
+				}
+			}
+		}
 	}
 }

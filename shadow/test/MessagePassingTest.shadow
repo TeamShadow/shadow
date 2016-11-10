@@ -49,7 +49,7 @@ class shadow:test@MessagePassingTest
 		}
 		
 		int total = 0;
-		foreach(var from in curthread()) {
+		foreach(var from in curthread().children()) {
 			int count = cast<int>(receive(int:class, from));
 			total += count;
 		}

@@ -18,7 +18,7 @@ class shadow:test@MailboxTest
 		
 		// we wait till the children get spawned
 		while(t1->childrenCount != 4) {}
-		foreach(var t in t1) {
+		foreach(var t in t1.children()) {
 			t.join();
 		}
 		

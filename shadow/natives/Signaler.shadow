@@ -65,10 +65,11 @@ locked class shadow:natives@
 	}
 	
 	/**
-	* Suspends the current thread until another thread calls notify() 
-	* or notifyAll().
+	* Suspends the calling thread until another thread calls notify(),
+	* notifyAll(), or interrupt(). 
 	*
 	* @throws InvalidOperationException if this Signaler has been freed.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public waitForNotify() => ()
 	{
@@ -82,9 +83,11 @@ locked class shadow:natives@
 		try {
 			tokensQueue.addLast(token);
 			waitingThreads += 1;
-			
+
 			while(token->shouldWait) {
+				mutex.giveUpOwnership();
 				wait(condHandle->ptr, mutex->ptr);
+				mutex.takeOwnership();
 			}
 			
 			if(token->interrupted) {
@@ -92,14 +95,13 @@ locked class shadow:natives@
 			}
 		} finally {
 			waitingThreads -= 1;
-			mutex.forceOwnMutex();
 			mutex.unlock();
 		}
 	}
 	
 	/**
-	* Suspends the current thread until another thread calls notify() 
-	* or notifyAll(), or until the specified amount of time elapsed.
+	* Suspends the calling thread until another thread calls notify(),
+	* notifyAll(), interrupt(), or for the specified amount of time elapsed.
 	*
 	* @param timeout The amount of time to wait before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
@@ -111,18 +113,25 @@ locked class shadow:natives@
 	}
 	
 	/**
-	* Suspends the current thread until another thread calls notify() 
-	* or notifyAll(), or until the specified amount of time elapsed.
+	* Suspends the calling thread until another thread calls notify(),
+	* notifyAll(), interrupt(), or for the specified amount of time elapsed.
 	*
 	* @param millisecondsTimeout The amount of time to wait, in milliseconds, before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
+	*
 	* @throws InvalidOperationException if this Signaler has been freed.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public waitForNotify(int millisecondsTimeout) => (boolean)
 	{		
 		return waitSleep(Time.fromMilliSeconds(millisecondsTimeout), false);
 	}
 	
+	/**
+	* Suspends the calling thread for the specified amount of time.
+	*
+	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*/
 	public sleep(TimeSpan timeout) => ()
 	{
 		waitSleep(timeout, true);
@@ -190,10 +199,14 @@ locked class shadow:natives@
 	
 	public interrupt(Thread thread) => ()
 	{
+		if(!condHandle->isValid) {
+			throw InvalidOperationException:create("This Signaler is no longer valid.");
+		}
+		
 		mutex.lock();
 		try {
-			if(!interruptToken(thread, tokensQueue) and !interruptToken(thread, sleepTokensQueue)) {
-				throw InvalidOperationException:create("The thread could not be found.");
+			if(!findThreadAndInterrupt(thread, tokensQueue) and !findThreadAndInterrupt(thread, sleepTokensQueue)) {
+				throw InvalidOperationException:create("The thread could not be found, and thus could not be interrupted.");
 			}
 			
 			broadcast(condHandle->ptr);
@@ -240,17 +253,17 @@ locked class shadow:natives@
 			waitingThreads += 1;
 			 // retVal is not zero when the wait times out
 			while((retVal == 0 or !sleepOnly) and token->shouldWait) {
+				mutex.giveUpOwnership();
 				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
+				mutex.takeOwnership();
 			}
 			
 			if(token->interrupted) {
-				Console.printLine("Interrupted");
 				throw InterruptedException:create();
 			}
 		} finally {
 			waitingThreads -= 1;
 			token.invalidate();
-			mutex.forceOwnMutex();
 			mutex.unlock();
 			time.free();
 		}
@@ -258,7 +271,7 @@ locked class shadow:natives@
 		return (retVal != 0);
 	}
 	
-	private interruptToken(Thread thread, LinkedList<SignalToken> list) => (boolean)
+	private findThreadAndInterrupt(Thread thread, LinkedList<SignalToken> list) => (boolean)
 	{
 		foreach(var t in list) {
 			if(t->thread === thread) {
@@ -269,30 +282,4 @@ locked class shadow:natives@
 		
 		return false;
 	}
-	
-	/*public interruptAll() => ()
-	{
-		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
-		}
-
-		mutex.lock();
-		try {			
-			while(!tokensQueue.isEmpty()) {
-				tokensQueue
-					.removeFirst()
-					.interrupt();
-			}
-			
-			while(!sleepTokensQueue.isEmpty()) {
-				sleepTokensQueue
-					.removeFirst()
-					.interrupt();
-			}
-			
-			broadcast(condHandle->ptr);
-		} finally {
-			mutex.unlock();
-		}
-	}*/
 }
