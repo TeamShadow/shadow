@@ -1,4 +1,5 @@
-import shadow:utility@ArrayDeque;
+import shadow:utility;
+import shadow:io@Console;
 
 /**
 * @author Claude Abounegm
@@ -6,7 +7,7 @@ import shadow:utility@ArrayDeque;
 locked class shadow:natives@
 	Signaler
 {
-	class SignalToken
+	class SignalToken is CanEqual<SignalToken>
 	{
 		get Thread thread = curthread();
 		get boolean shouldWait = true;
@@ -22,6 +23,11 @@ locked class shadow:natives@
 			invalidate();
 			interrupted = true;
 		}
+		
+		public readonly equal(SignalToken other) => (boolean)
+		{
+			return (this === other);
+		}
 	}
 
 	private native readonly initSignaler(Pointer cond) => (int);
@@ -36,20 +42,20 @@ locked class shadow:natives@
 	int waitingThreads = 0;
 	Mutex mutex;
 	Handle condHandle;
-	ArrayDeque<SignalToken> tokensQueue;
-	ArrayDeque<SignalToken> sleepTokensQueue;
+	LinkedList<SignalToken> tokensQueue;
+	LinkedList<SignalToken> sleepTokensQueue;
 	
 	public create()
 	{
 		mutex = Mutex:create();
 		condHandle = Handle:create(this->handleSize);
-		tokensQueue = ArrayDeque<SignalToken>:create();
-		sleepTokensQueue = ArrayDeque<SignalToken>:create();
+		tokensQueue = LinkedList<SignalToken>:create();
+		sleepTokensQueue = LinkedList<SignalToken>:create();
 		
 		initSignaler(condHandle->ptr);
 	}
 	
-	public get waitingThreadsCount() => (int)
+	public readonly get waitingThreadsCount() => (int)
 	{
 		mutex.lock();
 		var count = waitingThreads;
@@ -78,9 +84,7 @@ locked class shadow:natives@
 			waitingThreads += 1;
 			
 			while(token->shouldWait) {
-				// mutex unlocks when waiting
 				wait(condHandle->ptr, mutex->ptr);
-				// mutex locks back when finished waiting
 			}
 			
 			if(token->interrupted) {
@@ -88,6 +92,7 @@ locked class shadow:natives@
 			}
 		} finally {
 			waitingThreads -= 1;
+			mutex.forceOwnMutex();
 			mutex.unlock();
 		}
 	}
@@ -183,57 +188,12 @@ locked class shadow:natives@
 		}
 	}
 	
-	public interruptAll() => ()
-	{
-		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
-		}
-
-		mutex.lock();
-		try {
-			while(!sleepTokensQueue.isEmpty()) {
-				sleepTokensQueue
-					.removeFirst()
-					.interrupt();
-			}
-			
-			while(!tokensQueue.isEmpty()) {
-				tokensQueue
-					.removeFirst()
-					.interrupt();
-			}
-			
-			broadcast(condHandle->ptr);
-		} finally {
-			mutex.unlock();
-		}
-	}
-	
 	public interrupt(Thread thread) => ()
 	{
 		mutex.lock();
 		try {
-			boolean found = false;
-			foreach(var t in tokensQueue) {
-				if(t->thread === thread) {
-					t.interrupt();
-					found = true;
-					break;
-				}
-			}
-			
-			if(!found) {
-				foreach(var t in sleepTokensQueue) {
-					if(t->thread === thread) {
-						t.interrupt();
-						found = true;
-						break;
-					}
-				}
-			}
-			
-			if(!found) {
-				throw Exception:create("Damn");
+			if(!interruptToken(thread, tokensQueue) and !interruptToken(thread, sleepTokensQueue)) {
+				throw InvalidOperationException:create("The thread could not be found.");
 			}
 			
 			broadcast(condHandle->ptr);
@@ -280,21 +240,59 @@ locked class shadow:natives@
 			waitingThreads += 1;
 			 // retVal is not zero when the wait times out
 			while((retVal == 0 or !sleepOnly) and token->shouldWait) {
-				// mutex unlocks when waiting
 				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
-				// mutex locks back when finished waiting
 			}
 			
 			if(token->interrupted) {
+				Console.printLine("Interrupted");
 				throw InterruptedException:create();
 			}
 		} finally {
 			waitingThreads -= 1;
 			token.invalidate();
+			mutex.forceOwnMutex();
 			mutex.unlock();
 			time.free();
 		}
-		
+
 		return (retVal != 0);
 	}
+	
+	private interruptToken(Thread thread, LinkedList<SignalToken> list) => (boolean)
+	{
+		foreach(var t in list) {
+			if(t->thread === thread) {
+				t.interrupt();
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/*public interruptAll() => ()
+	{
+		if(!condHandle->isValid) {
+			throw InvalidOperationException:create("This Signaler is no longer valid.");
+		}
+
+		mutex.lock();
+		try {			
+			while(!tokensQueue.isEmpty()) {
+				tokensQueue
+					.removeFirst()
+					.interrupt();
+			}
+			
+			while(!sleepTokensQueue.isEmpty()) {
+				sleepTokensQueue
+					.removeFirst()
+					.interrupt();
+			}
+			
+			broadcast(condHandle->ptr);
+		} finally {
+			mutex.unlock();
+		}
+	}*/
 }

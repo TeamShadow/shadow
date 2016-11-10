@@ -4,5 +4,5 @@ interface shadow:natives@
 	readonly get ptr() => (Pointer ptr);
 	//readonly get unsafePtr() => (Pointer ptr);
 	readonly get handleSize() => (int);
-	free() => ();
+	readonly free() => ();
 }

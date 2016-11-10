@@ -1,0 +1,53 @@
+import shadow:io@Console;
+
+class shadow:test@InterruptTest
+{
+	class ThreadSleepTestRunner is CanRun
+	{
+		public run() => ()
+		{
+			Console.printLine("waiting");
+			System.sleep(Time.fromSeconds(10));
+			Console.printLine("done");
+		}
+	}
+	
+	class ThreadTestRunner is CanRun
+	{
+		public run() => ()
+		{
+			Console.printLine("I am " # curthread()->name);
+			
+			var index = cast<int>(receive(int:class, System->mainThread));
+			System->mainThread[index].join();
+			
+			Console.printLine("I should quit before reaching this" # curthread()->name);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		Thread:create(ThreadSleepTestRunner:create());
+		
+		Thread:create(ThreadTestRunner:create());
+		send(0, curthread(1));
+		
+		Thread:create(ThreadTestRunner:create());
+		send(1, curthread(2));
+		
+		System.sleep(Time.fromSeconds(4));
+		Console.printLine("end");
+		
+		curthread(1).interrupt();
+		
+		try {
+			curthread(2).join();
+		} catch(ThreadException e) {
+			if(e->actual is InterruptedException) {
+				Console.printLine("Exception thrown");
+			} else {
+				throw e;
+			}
+		}
+	}
+}

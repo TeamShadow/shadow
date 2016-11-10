@@ -37,6 +37,7 @@
 declare noalias %void* @calloc(%int, %int) nounwind
 ; void free(void* ptr);
 declare void @free(%void*) nounwind
+declare void @shadow.natives..Handle_MfreeNative(%shadow.natives..Handle*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -54,6 +55,7 @@ define void @shadow.natives..Handle_MfreeHandle_shadow.natives..Pointer(%shadow.
 entry:
 	%handle.addr = bitcast %shadow.natives..Pointer* %1 to i8*
 	call void @free(i8* %handle.addr)
+	call void @shadow.natives..Handle_MfreeNative(%shadow.natives..Handle* %0)
 	ret void
 }
 

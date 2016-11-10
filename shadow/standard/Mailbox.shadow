@@ -3,7 +3,7 @@ import shadow:natives;
 /**
  * @author Claude Abounegm
  */
-class shadow:standard@
+locked class shadow:standard@
 	Mailbox
 {
 	readonly TimeSpan TIMEOUT = Time.fromMinutes(1);
@@ -187,7 +187,7 @@ class shadow:standard@
 		public enqueue(Message message) => ()
 		{
 			if(isFull())
-				throw FullArrayException:create();
+				throw FullListException:create();
 
 			this[size] = message;
 			size += 1;
@@ -255,6 +255,4 @@ class shadow:standard@
 			return ((start + index) % elements->size);
 		}
 	}
-	
-	private exception FullArrayException {}
 }

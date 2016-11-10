@@ -1246,6 +1246,18 @@ public class OutputTests {
 	@Test public void testMessagePassing() throws Exception {
 		args.add("shadow/test/MessagePassingTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "664579\n");
+		run(new String[0], "9592\n");
+	}
+	
+	@Test public void testInterrupt() throws Exception {
+		args.add("shadow/test/InterruptTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"waiting\n" +
+				"I am Thread#2\n" +
+				"I am Thread#3\n" +
+				"end\n"+
+				"Exception thrown\n"+
+				"done\n");
 	}
 }

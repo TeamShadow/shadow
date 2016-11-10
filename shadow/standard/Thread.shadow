@@ -12,10 +12,10 @@ is CanEqual<Thread>
 and CanIterate<Thread>
 and CanIndex<int, Thread>
 {
-	private constant int READY = 0;
-	private constant int RUNNING = 1;
-	private constant int WAITING = 2;
-	private constant int DEAD = 3;
+	public constant int READY = 0;
+	public constant int RUNNING = 1;
+	public constant int WAITING = 2;
+	public constant int DEAD = 3;
 	
 	// START: Native methods
 	private readonly native spawnThread(Pointer ptr) => (int);
@@ -28,13 +28,16 @@ and CanIndex<int, Thread>
 	nullable Thread joinThread = null;
 	
 	int state;
-	boolean joined;
+	int joined;
+	boolean shouldInterrupt;
 	
 	Handle handle;
 	CanRun runner;
 	ThreadSafeList<Thread> childrenList;
 	
 	Mutex mutex;
+	Mutex stateMutex;
+	
 	Signaler signaler;
 	Mailbox mailbox;
 	// END: Private variables
@@ -56,6 +59,37 @@ and CanIndex<int, Thread>
 	*/
 	get String name;
 
+	/**
+	* Gets whether this thread is running.
+	*
+	* @return {@code true} if the thread is alive; otherwise, {@code false}.
+	*/
+	public readonly get isAlive() => (boolean)
+	{
+		return (this->state != DEAD);
+	}
+	
+	public readonly get state() => (int)
+	{
+		stateMutex.lock();
+		var state = this:state;
+		stateMutex.unlock();
+		
+		return state;
+	}
+	
+	public set state(int state) => ()
+	{
+		stateMutex.lock();
+		this:state = state;
+		stateMutex.unlock();
+	}
+	
+	public readonly get childrenCount() => (int)
+	{
+		return childrenList->size;
+	}
+	
 	/**
 	* Creates a new {@code Thread} object which takes on a {@code CanRun}
 	* instance, containing a run function that is going to be ran
@@ -88,8 +122,9 @@ and CanIndex<int, Thread>
 			this:name = "Thread#" # id;
 		}
 		
-		this:joined = false;
+		this:joined = 0;
 		this:mutex = Mutex:create();
+		this:stateMutex = Mutex:create();
 		this:signaler = Signaler:create();
 		this:mailbox = Mailbox:create(32);
 		this:handle = Handle:create(this->handleSize);
@@ -154,25 +189,6 @@ and CanIndex<int, Thread>
 		return join(false, Time.fromMilliSeconds(millisecondsTimeout));
 	}
 	
-	/**
-	* Gets whether this thread is running.
-	*
-	* @return {@code true} if the thread is alive; otherwise, {@code false}.
-	*/
-	public readonly get isAlive() => (boolean)
-	{
-		mutex.lock();
-		var running = (handle->isValid or id == 0);
-		mutex.unlock();
-		
-		return running;
-	}
-	
-	public readonly get childrenCount() => (int)
-	{
-		return childrenList->size;
-	}
-	
 	public readonly equal(Thread other) => (boolean) 
 	{
 		return (this === other);
@@ -188,27 +204,49 @@ and CanIndex<int, Thread>
 		return childrenList[index];
 	}
 	
-	public destroy
-	{
-		mutex.free();
-	}
-	
 	public interrupt() => ()
 	{
+		shouldInterrupt = true;
+
 		mutex.lock();
-		if(state == WAITING) {
+		try {
+			if(this->state != WAITING) {
+				throw InvalidOperationException:create("Cannot interrupt a thread which is not in the WAITING state.");
+			}
+			
+			// the interrupt method will raise an exception inside the running thread.
 			try {
+				// This block is executed if the thread is waiting for another thread
+				// to terminate. The join() method that the thread called will throw
+				// the exception.
 				check(joinThread):signaler.interrupt(this);
 			} recover {
-				signaler.interrupt(this);	
+				// This block is executed if the thread is sleeping using the sleep() method.
+				signaler.interrupt(this);
 			}
+			
+			// When the InterruptedException is raised, the runnerNative() catches that exception. 
+			// Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
+			// up the resources it used. It calls signaler.free(), which in turn causes Signaler to release
+			// all the threads it is holding through a waitForNotify(). Since all threads get woken up after
+			// the exception `ex` has been set, all the joined thread also get an InterruptedException, and
+			// the tree unrwaps correctly.
+		} finally {
+			mutex.unlock();
 		}
-		mutex.unlock();
 	}
 	
 	private addToParent() => () 
 	{
 		check(parent):childrenList.add(this);
+	}
+	
+	private setState(int state, nullable Thread joinThread) => ()
+	{
+		stateMutex.lock();
+		this:state = state;
+		this:joinThread = joinThread;
+		stateMutex.unlock();
 	}
 	
 	// TODO: WE NEED TO MAKE SURE THAT THE ACTUAL UNMANAGED POINTER HAS BEEN FREED
@@ -223,48 +261,82 @@ and CanIndex<int, Thread>
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		}
 		
-		boolean timedOut = false;
-		boolean flag;
 		mutex.lock();
-		// finalizing is true when Shadow calls this method. It is false when
-		// the user calls it. So, if Shadow called the method, we would only like to join
-		// or throw the exception if this thread didn't have join called on it before.
-		flag = !finalizing or (finalizing and !joined);
-		joined = true;
+		boolean throwException = !finalizing or (finalizing and joined == 0);
+		joined += 1;
+		mutex.unlock();
 		
-		if(flag and handle->isValid) {
-			curthread():state = WAITING;
+		boolean timedOut = false;
+		if(isAlive()) {
 			curthread():joinThread = this;
-			mutex.unlock();
-			
-			if(timeout->isPositive) {
-				timedOut = signaler.waitForNotify(timeout);				
-			} else {
-				signaler.waitForNotify();
+			curthread()->state = WAITING;
+
+			try {
+				checkForInterrupt(false);
+
+				if(timeout->isPositive) {
+					timedOut = signaler.waitForNotify(timeout);
+				} else {
+					signaler.waitForNotify();
+				}
+			} catch(InterruptedException e) {
+				mutex.lock();
+				joined -= 1;
+				mutex.unlock();
+
+				throw e;
+			} finally {
+				curthread()->state = RUNNING;
+				curthread():joinThread = null;
 			}
-		} else {
-			mutex.unlock(); 
 		}
 
 		// we then check here if we have an exception. If we do, we throw it, and
 		// it is the job of runnerNative() to take care of the handling.
-		if(flag and ex !== null) {
+		if(throwException and ex !== null) {
 			throw check(ex);
 		}
-		
+
 		return timedOut;
 	}
 	
 	private sleepNative(TimeSpan timeout) => ()
 	{
-		state = WAITING;
+		// sleep can only be called from the current thread
+		// so we just set its state to waiting, and sleep
+		this->state = WAITING;
+		
 		signaler.sleep(timeout);
+		
+		// 
+		checkForInterrupt(true);
 	}
 	
 	private sleepNative(int milliseconds) => ()
 	{
-		state = WAITING;
+		// sleep can only be called from the current thread
+		// so we just set its state to waiting, and sleep
+		this->state = WAITING;
+		
 		signaler.sleep(milliseconds);
+		
+		// this checks for the 
+		checkForInterrupt(true);
+	}
+	
+	private checkForInterrupt(boolean shouldSetState) => ()
+	{
+		mutex.lock();
+		try {
+			if(shouldInterrupt) {
+				throw InterruptedException:create();
+			}
+		} finally {
+			if(shouldSetState) {
+				this->state = RUNNING;
+			}
+			mutex.unlock();
+		}
 	}
 	
 	/**
@@ -274,16 +346,16 @@ and CanIndex<int, Thread>
 	private runnerNative() => ()
 	{
 		try {
-			this:state = RUNNING;
+			this->state = RUNNING;
 			runner.run();
 		} catch(Exception e) {
 			ex = ThreadException:create(this, e);
 		} finally {
+			this->state = DEAD;
+
 			mutex.lock();
 			handle.free();
 			signaler.free();
-			this:joinThread = null;
-			this:state = DEAD;
 			mutex.unlock();
 		}
 	}
@@ -332,26 +404,13 @@ and CanIndex<int, Thread>
 		return Thread:create(NopRunner:create(), "Thread#main"); 
 	}
 	
-	private readonly unlockMutexNative() => () 
-	{
-		mutex.unlock();
-	}
-	
 	private receiveNative(Class expectedType) => (Object, Thread)
 	{
-		/*if(!isAlive()) {
-			return mailbox.dequeue(expectedType, false);
-		}*/
-		
 		return mailbox.dequeue(expectedType);
 	}
 	
 	private receiveNative(Class expectedType, Thread from) => (Object)
 	{
-		/*if(!isAlive()) {
-			return mailbox.dequeue(expectedType, from, false);
-		}*/
-		
 		return mailbox.dequeue(expectedType, from);
 	}
 	

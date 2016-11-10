@@ -24,13 +24,16 @@
 ; Object
 %shadow.standard..Object = type opaque
 
+; Thread
+%shadow.standard..Thread = type opaque
+
 ; Pointer
 %shadow.natives..Pointer = type opaque
 
 ; Mutex
 %shadow.natives..Mutex = type opaque
 
-; 
+; pthread_mutex_t
 %struct.pthread_mutex_t = type i8*
 
 ;---------------------
@@ -44,6 +47,7 @@ declare %int @pthread_mutex_destroy(%struct.pthread_mutex_t*)
 declare %int @pthread_mutex_lock(%struct.pthread_mutex_t*)
 ; int pthread_mutex_lock(pthread_mutex_t* mutex);
 declare %int @pthread_mutex_unlock(%struct.pthread_mutex_t*)
+declare void @shadow.natives..Mutex_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex*, %shadow.standard..Thread*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -87,4 +91,11 @@ define %int @shadow.natives..Mutex_MhandleSize(%shadow.natives..Mutex*) {
 entry:
 	%sizeOfMutex = ptrtoint %struct.pthread_mutex_t* getelementptr (%struct.pthread_mutex_t, %struct.pthread_mutex_t* null, i32 1) to i32
 	ret %int %sizeOfMutex
+}
+
+; setOwner() => ();
+define void @shadow.natives..Mutex_MsetOwner_shadow.standard..Thread(%shadow.natives..Mutex*, %shadow.standard..Thread*) {
+entry:
+	call void @shadow.natives..Mutex_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex* %0, %shadow.standard..Thread* %1)
+	ret void
 }

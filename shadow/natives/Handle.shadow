@@ -1,7 +1,7 @@
 /**
  * @author Claude Abounegm
  */
-class shadow:natives@
+locked class shadow:natives@
 	Handle
 {
 	// the raw memory address is stored instead of an object to avoid any problems
@@ -67,11 +67,15 @@ class shadow:natives@
 	* Frees the memory allocated by this handle. Calling this method more than once does
 	* not have any side effects.
 	*/
-	public free() => () 
+	public readonly free() => () 
 	{
 		try {
-			freeHandle(this->ptr);
-			handle = -1;
+			freeHandle(this->ptr); // calls freeNative()
 		} catch(Exception e) {}
+	}
+	
+	private freeNative() => ()
+	{
+		handle = -1;
 	}
 }

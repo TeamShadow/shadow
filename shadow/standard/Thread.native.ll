@@ -59,9 +59,6 @@ declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
 ; createNative() => (Thread);
 declare %shadow.standard..Thread* @shadow.standard..Thread_McreateNative(%shadow.standard..Thread*)
 
-; unlockMutexNative() => ();
-declare void @shadow.standard..Thread_MunlockMutexNative(%shadow.standard..Thread*)
-
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------

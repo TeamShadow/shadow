@@ -6,15 +6,13 @@ class shadow:test@ThreadSleepTest
 	{
 		public run() => ()
 		{
-			System.sleep(Time.fromSeconds(60));
-			/*
 			var time = System.nanoTime();
 			System.sleep(5000);
 			time = System.nanoTime() - time;
 			
 			// give +- 1 ms
 			var ms = ((time / 1000000) - 5000);
-			Console.printLine(ms <= 1 and ms >= -1);*/
+			Console.printLine(ms <= 1 and ms >= -1);
 		}
 	}
 	
@@ -22,30 +20,12 @@ class shadow:test@ThreadSleepTest
 	{
 		public run() => ()
 		{
-			Console.printLine("I am a " # curthread()->name);
-			//System.sleep(Time.fromSeconds(60));
-			
-			var index = cast<int>(receive(int:class, System->mainThread));
-			curthread()->parent[index].join();
-			
-			Console.printLine("I should quit before reaching this");
+			Console.printLine("I am a thread.");
 		}
 	}
 
 	public main(String[] args) => ()
 	{
-		Thread:create(ThreadSleepTestRunner:create());
-		
-		Thread:create(ThreadTestRunner:create());
-		send(0, curthread(1));
-		
-		Thread:create(ThreadTestRunner:create());
-		send(1, curthread(2));
-		
-		System.sleep(Time.fromSeconds(4));
-		curthread(1).interrupt();
-		
-		/*
 		Console.printLine("I am going to wait 3 seconds.");
 		System.sleep(3000);
 		Console.printLine("I waited 3 seconds.");
@@ -64,6 +44,6 @@ class shadow:test@ThreadSleepTest
 		var thread4 = Thread:create(runner2);
 		thread4.join();
 		
-		thread1.join();*/
+		thread1.join();
 	}
 }

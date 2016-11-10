@@ -32,7 +32,7 @@ class shadow:test@MessagePassingTest
 	
 	public main(String[] args) => ()
 	{
-		int numbers = 10000000;
+		int numbers = 100000;
 		int threads = 4;
 		int intervals = numbers / threads;
 
