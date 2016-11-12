@@ -1,1 +1,0 @@
-This is a collection of C codes that were used alongside with Clang to generate LLVM IR code and be used with Shadow native methods.
