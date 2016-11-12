@@ -25,7 +25,7 @@ locked class shadow:natives@
 	
 	public readonly lock() => ()
 	{
-		if(owner.isCurrentThread()) {
+		if(CurrentThread.isEqualTo(owner)) {
 			throw MutexException:create("The current thread already owns this mutex.");
 		}
 		
@@ -34,13 +34,9 @@ locked class shadow:natives@
 	}
 	
 	public readonly unlock() => ()
-	{
-		if(owner === null) {
-			throw MutexException:create("This mutex is already unlocked.");
-		}
-		
-		if(!owner.isCurrentThread()) {
-			throw MutexException:create("The mutex is owned by (" # check(owner)->name # ") and cannot be unlocked by ("# CurrentThread->name #").");
+	{		
+		if(!CurrentThread.isEqualTo(owner)) {
+			throw MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
 		}
 		
 		setOwner(null);

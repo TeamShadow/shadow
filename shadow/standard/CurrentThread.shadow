@@ -106,6 +106,11 @@ is CanIndex<int, Thread>
 	{
 		return instance().children();
 	}
+	
+	public readonly isEqualTo(nullable Thread thread) => (boolean)
+	{
+		return (thread !== null and check(thread) === instance());
+	}
 
 	/**
 	* Gets the number of children the thread currently has. This method should be used with caution

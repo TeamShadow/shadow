@@ -43,7 +43,6 @@ class shadow:test@InterruptTest
 		try {
 			CurrentThread[2].join();
 		} catch(ThreadException e) {
-			Console.printLine(e);
 			if(e->actual is InterruptedException) {
 				Console.printLine("InterruptedException thrown");
 			} else {

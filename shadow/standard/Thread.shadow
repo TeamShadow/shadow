@@ -44,14 +44,10 @@ and CanIndex<int, Thread>
 	Mailbox mailbox;
 	// END: Private variables
 	
-	/**
-	* Gets the Shadow-specific thread ID.
-	*/
+	/// Gets the Shadow-specific thread ID.
 	get int id;
 	
-	/**
-	* Gets the main thread, which is the root of all threads.
-	*/
+	/// Gets the main thread, which is the root of all threads.
 	public native get main() => (Thread);
 	
 	/**
@@ -95,9 +91,7 @@ and CanIndex<int, Thread>
 		return state;
 	}
 	
-	/**
-	* Returns the string representation of the state of this thread.
-	*/
+	/// Returns the string representation of the state of this thread.
 	public readonly get stateStr() => (String)
 	{
 		switch(this->state) {
@@ -446,10 +440,8 @@ and CanIndex<int, Thread>
 		}
 	}
 	
-	/**
-	* Gets whether this thread is the current executing thread.
-	*/
-	public readonly get isCurrentThread()
+	/// Gets whether this thread is the current executing thread.
+	public readonly get isCurrentThread() => (boolean)
 	{
 		return (currentThread() === this);
 	}
