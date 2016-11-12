@@ -7,7 +7,7 @@ class shadow:test@InterruptTest
 		public run() => ()
 		{
 			Console.printLine("waiting");
-			System.sleep(Time.fromSeconds(10));
+			CurrentThread.sleep(Time.fromSeconds(10));
 			Console.printLine("done");
 		}
 	}
@@ -16,33 +16,34 @@ class shadow:test@InterruptTest
 	{
 		public run() => ()
 		{
-			Console.printLine("I am " # curthread()->name);
-			
-			var index = cast<int>(receive(int:class, System->mainThread));
-			Console.printLine(curthread()->name # ": " # index);
-			System->mainThread.children(index).join();
-			
-			Console.printLine("I should quit before reaching this" # curthread()->name);
+			Console.printLine("I am " # CurrentThread->name);
+
+			var index = cast<int>(receive(int:class, CurrentThread->main));
+			Console.printLine(CurrentThread->name # ": " # index);
+			CurrentThread->main[index].join();
+
+			Console.printLine("I should quit before reaching this" # CurrentThread->name);
 		}
 	}
 
 	public main(String[] args) => ()
 	{
-		Thread:create(ThreadSleepTestRunner:create());
+		Thread:create(ThreadSleepTestRunner:create()); // 0
 		
-		Thread:create(ThreadTestRunner:create());
-		curthread(1).interrupt();
-		send(0, curthread(1));
+		Thread:create(ThreadTestRunner:create()); // 1
+		CurrentThread[1].interrupt();
+		send(0, CurrentThread[1]);
 		
-		Thread:create(ThreadTestRunner:create());
-		send(1, curthread(2));
+		Thread:create(ThreadTestRunner:create()); // 2
+		send(1, CurrentThread[2]);
 		
-		System.sleep(Time.fromSeconds(4));
+		CurrentThread.sleep(Time.fromSeconds(4));
 		Console.printLine("end");
 		
 		try {
-			curthread(2).join();
+			CurrentThread[2].join();
 		} catch(ThreadException e) {
+			Console.printLine(e);
 			if(e->actual is InterruptedException) {
 				Console.printLine("InterruptedException thrown");
 			} else {

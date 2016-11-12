@@ -25,22 +25,22 @@ locked class shadow:natives@
 	
 	public readonly lock() => ()
 	{
-		if(owner === curthread()) {
-			throw InvalidOperationException:create("The current thread already owns this mutex.");
+		if(owner.isCurrentThread()) {
+			throw MutexException:create("The current thread already owns this mutex.");
 		}
 		
 		lockMutex(this->ptr);
-		setOwner(curthread());
+		setOwner(CurrentThread->instance);
 	}
 	
 	public readonly unlock() => ()
 	{
 		if(owner === null) {
-			throw InvalidOperationException:create("This mutex is already unlocked.");
+			throw MutexException:create("This mutex is already unlocked.");
 		}
 		
-		if(owner !== curthread()) {
-			throw InvalidOperationException:create("The mutex is owned by (" # check(owner)->name # ") and cannot be unlocked by ("# curthread()->name #").");
+		if(!owner.isCurrentThread()) {
+			throw MutexException:create("The mutex is owned by (" # check(owner)->name # ") and cannot be unlocked by ("# CurrentThread->name #").");
 		}
 		
 		setOwner(null);
@@ -49,7 +49,7 @@ locked class shadow:natives@
 	
 	public readonly takeOwnership() => ()
 	{
-		setOwner(curthread());
+		setOwner(CurrentThread->instance);
 	}
 	
 	public readonly giveUpOwnership() =>()
@@ -60,7 +60,7 @@ locked class shadow:natives@
 	public readonly get ptr() => (Pointer ptr)
 	{
 		if(!handle->isValid) {
-			throw InvalidOperationException:create("This Mutex is no longer valid.");
+			throw InvalidStateException:create("Mutex");
 		}
 	
 		return handle->unsafePtr;

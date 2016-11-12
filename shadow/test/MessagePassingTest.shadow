@@ -6,11 +6,12 @@ class shadow:test@MessagePassingTest
 	{
 		public run() => ()
 		{
-			int start = cast<int>(receive(int:class, System->mainThread));
-			int end = cast<int>(receive(int:class, System->mainThread));
+			int start = cast<int>(receive(int:class, CurrentThread->main));
+			int end = cast<int>(receive(int:class, CurrentThread->main));
 			
-			if(start % 2 == 0)
-				start += 1;	
+			if(start % 2 == 0) {
+				start += 1;
+			}
 			
 			var count = 0;
 			for(int i = start; i < end; i += 2) {
@@ -26,7 +27,7 @@ class shadow:test@MessagePassingTest
 				}
 			}
 			
-			send(count, System->mainThread);
+			send(count, CurrentThread->main);
 		}
 	}
 	
@@ -44,12 +45,12 @@ class shadow:test@MessagePassingTest
 		}
 
 		for(i = 0; i < threads; i += 1) {
-			send(intervals * i, curthread(i));
-			send(intervals * (i + 1), curthread(i));
+			send(intervals * i, CurrentThread[i]);
+			send(intervals * (i + 1), CurrentThread[i]);
 		}
 		
 		int total = 0;
-		foreach(var from in curthread().children()) {
+		foreach(var from in CurrentThread.children()) {
 			int count = cast<int>(receive(int:class, from));
 			total += count;
 		}

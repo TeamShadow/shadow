@@ -9,6 +9,7 @@ import shadow:natives;
 locked class shadow:standard@
 	Thread
 is CanEqual<Thread>
+and CanIndex<int, Thread>
 {
 	public constant int READY = 0;
 	public constant int RUNNING = 1;
@@ -24,11 +25,11 @@ is CanEqual<Thread>
 	// START: Private variables
 	nullable Exception ex = null;
 	nullable Signaler interruptSignaler = null;
-	
+
 	int state;
 	int joined;
-	boolean shouldInterrupt;
-	
+	boolean interrupting;
+
 	Handle handle;
 	CanRun runner;
 	
@@ -47,6 +48,11 @@ is CanEqual<Thread>
 	* Gets the Shadow-specific thread ID.
 	*/
 	get int id;
+	
+	/**
+	* Gets the main thread, which is the root of all threads.
+	*/
+	public native get main() => (Thread);
 	
 	/**
 	* Gets the {@code Thread} which spawned this thread. The Main thread does not
@@ -70,6 +76,16 @@ is CanEqual<Thread>
 		return (this->state != DEAD);
 	}
 	
+	private set state(int state) => ()
+	{
+		stateMutex.lock();
+		this:state = state;
+		stateMutex.unlock();
+	}
+	
+	/**
+	* Gets the state of this thread. It can be one of {@code READY}, {@code RUNNING}, {@code WAITING}, or {@code DEAD}.
+	*/
 	public readonly get state() => (int)
 	{
 		stateMutex.lock();
@@ -79,6 +95,9 @@ is CanEqual<Thread>
 		return state;
 	}
 	
+	/**
+	* Returns the string representation of the state of this thread.
+	*/
 	public readonly get stateStr() => (String)
 	{
 		switch(this->state) {
@@ -146,7 +165,7 @@ is CanEqual<Thread>
 			this:handle.free();
 		} else {
 			this:runner = copy(runner);
-			this:parent = curthread();
+			this:parent = currentThread();
 			addToParent();
 			
 			// spawn the thread and give it the handle
@@ -163,11 +182,13 @@ is CanEqual<Thread>
 	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
 	* the exception is thrown when this method is called.
 	* 
-	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
 	* @throws ThreadException if the thread terminated due to an exception.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
 	*/
-	public join() => () 
+	public join() => ()
 	{
 		join(false, Time->InfiniteTimeout);
 	}
@@ -180,9 +201,11 @@ is CanEqual<Thread>
 	* @param timeout the time to wait for.
 	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
 	*
-	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
 	* @throws ThreadException if the thread terminated due to an exception.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
 	*/
 	public join(TimeSpan timeout) => (boolean)
 	{
@@ -197,9 +220,11 @@ is CanEqual<Thread>
 	* @param millisecondsTimeout the time to wait for in milliseconds.
 	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
 	*
-	* @throws InvalidOperationException if this is the main thread or is the same as the calling thread.
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
 	* @throws ThreadException if the thread terminated due to an exception.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
 	*/
 	public join(int millisecondsTimeout) => (boolean)
 	{
@@ -208,11 +233,11 @@ is CanEqual<Thread>
 	
 	private join(boolean finalizing, TimeSpan timeout) => (boolean)
 	{
-		if(this === System->mainThread) {
+		if(this === main()) {
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
 		}
 		
-		if(this === curthread()) {
+		if(isCurrentThread()) {
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		}
 		
@@ -225,7 +250,7 @@ is CanEqual<Thread>
 		
 		if(isAlive()) {
 			try {
-				curthread().setState(WAITING, this:signaler);
+				setCurrentThreadState(WAITING, this:signaler);
 
 				if(timeout->isPositive) {
 					timedOut = signaler.waitForNotify(timeout);
@@ -233,8 +258,6 @@ is CanEqual<Thread>
 					signaler.waitForNotify();
 				}
 			} catch(InterruptedException e) {
-				curthread().resetInterrupt();
-
 				// An interrupted join is not succesful, so we
 				// decrease its count.
 				mutex.lock();
@@ -243,7 +266,7 @@ is CanEqual<Thread>
 
 				throw e;
 			} finally {
-				curthread().setState(RUNNING, null);
+				setCurrentThreadState(RUNNING, null);
 			}
 		}
 
@@ -265,10 +288,11 @@ is CanEqual<Thread>
 			return;
 		}
 		
-		shouldInterrupt = true;
 		mutex.lock();
+		interrupting = true;
 		try {
 			if(this->state == WAITING) {
+				interrupting = false;
 				check(interruptSignaler).interrupt(this);
 			}
 			
@@ -282,55 +306,96 @@ is CanEqual<Thread>
 		}
 	}
 	
+	/**
+	* 
+	*/
+	public get shouldInterrupt() => (boolean)
+	{
+		if(!isCurrentThread()) {
+			throw InvalidOperationException:create("shouldInterrupt() should only be called from the current thread.");
+		}
+		
+		mutex.lock();
+		try {
+			if(interrupting) {
+				interrupting = false;
+				return true;
+			}
+			
+			return false;
+		} finally {
+			mutex.unlock();
+		}
+	}
+
+	/**
+	* @throws InterruptedException
+	* @seeDoc shadow:natives@Signaler
+	*/
 	private sleepNative(TimeSpan timeout) => ()
 	{
-		setState(WAITING, signaler);
+		setCurrentThreadState(WAITING, signaler);
 		signaler.sleep(timeout);
-		setState(RUNNING, null);
+		setCurrentThreadState(RUNNING, null);
 	}
 	
+	/**
+	* @throws InterruptedException
+	* @seeDoc shadow:natives@Signaler
+	*/
 	private sleepNative(int millisecondsTimeout) => ()
 	{
 		sleepNative(Time.fromMilliSeconds(millisecondsTimeout));
 	}
 
+	/**
+	* @throws InterruptedException
+	* @seeDoc shadow:standard@Mailbox
+	*/
 	private receiveNative(Class expectedType) => (Object, Thread)
-	{
-		curthread().setState(WAITING, mailbox->signaler);
+	{	
+		setCurrentThreadState(WAITING, mailbox->signaler);
 		var retVal = mailbox.dequeue(expectedType);
-		curthread().setState(RUNNING, null);
+		setCurrentThreadState(RUNNING, null);
 		
 		return retVal;
 	}
 	
+	/**
+	* @throws InterruptedException
+	* @throws IllegalArgumentException 
+	* @seeDoc shadow:standard@Mailbox
+	*/
 	private receiveNative(Class expectedType, Thread from) => (Object)
 	{
-		curthread().setState(WAITING, mailbox->signaler);
+		if(from === this) {
+			throw IllegalArgumentException:create("The {from} thread cannot be the same as this thread.");
+		}
+		
+		setCurrentThreadState(WAITING, mailbox->signaler);
 		var retVal = mailbox.dequeue(expectedType, from);
-		curthread().setState(RUNNING, null);
+		setCurrentThreadState(RUNNING, null);
 		
 		return retVal;
 	}
 	
+	/**
+	* @throws InterruptedException
+	* @seeDoc shadow:standard@Mailbox
+	*/
 	private sendNative(Object data) => ()
 	{
 		if(!isAlive()) {
 			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
 		}
 		
-		curthread().setState(WAITING, mailbox->signaler);
-		mailbox.enqueue(data);
-		curthread().setState(RUNNING, null);
-	}
-	
-	private resetInterrupt() => ()
-	{
-		mutex.lock();
-		try {
-			shouldInterrupt = false;
-		} finally {
-			mutex.unlock();
+		if(isCurrentThread()) {
+			throw InvalidOperationException:create("Cannot send a message to self.");
 		}
+		
+		setCurrentThreadState(WAITING, mailbox->signaler);
+		mailbox.enqueue(data);
+		setCurrentThreadState(RUNNING, null);
 	}
 	
 	/**
@@ -358,13 +423,13 @@ is CanEqual<Thread>
 	// `this` or any instance methods on this thread.
 	private waitForThreadsNative() => ()
 	{
-		if(curthread() !== System->mainThread) {
+		if(currentThread() !== main()) {
 			throw Exception:create("waitForThreadsNative() can only be called on the main thread.");
 		}
 		
 		var exceptionQueue = ArrayDeque<ThreadException>:create();
 		
-		foreach(var thread in curthread().children(true)) {
+		foreach(var thread in currentThread().children(true)) {
 			try {
 				thread.join(true, Time->InfiniteTimeout);
 				// the `true` causes this thread to wait for the other thread
@@ -381,16 +446,55 @@ is CanEqual<Thread>
 		}
 	}
 	
+	/**
+	* Gets whether this thread is the current executing thread.
+	*/
+	public readonly get isCurrentThread()
+	{
+		return (currentThread() === this);
+	}
+	
+	/**
+	* Gets the number of children the thread currently has. This method should be used with caution
+	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
+	* drastically change between each call.
+	*/
 	public readonly get childrenCount() => (int)
 	{
 		return childrenList->size;
 	}
 	
-	public readonly children(int index) => (Thread)
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
+	* If the thread has four children, this method could be used to retrieve the n-th child, for example
+	* the third child (thus, its index is 2).
+	* @param index the index of the child in the range [0, childrenCount).
+	*/
+	public readonly childAt(int index) => (Thread)
 	{
 		return childrenList[index];
 	}
 	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
+	* If the thread has four children, this method could be used to retrieve the n-th child, for example
+	* the third child (thus, its index is 2).
+	* @param index the index of the child in the range [0, childrenCount).
+	*/
+	public readonly index(int index) => (Thread)
+	{
+		return childAt(index);
+	}
+	
+	/**
+	* Gets the children of this thread. If {@code recurse} is true, this method
+	* will also traverse the children of the children recursively, until all children
+	* have been visited.
+	* Care should be taken using this function, as enumerating can throw an exception
+	* if the children have changed.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
 	public readonly children(boolean recurse) => (CanIterate<Thread>)
 	{
 		if(recurse) {
@@ -400,6 +504,12 @@ is CanEqual<Thread>
 		return childrenIterate;
 	}
 	
+	/**
+	* Gets the children of this thread. This method only enumerates through the first generation
+	* children of this thread. i.e. only the thread that this thread spawned.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
 	public readonly children() => (CanIterate<Thread>)
 	{
 		return children(false);
@@ -420,31 +530,22 @@ is CanEqual<Thread>
 		check(parent):childrenList.add(this);
 	}
 	
-	private set state(int state) => ()
+	private setCurrentThreadState(int state, nullable Signaler interruptSignaler) => ()
 	{
-		stateMutex.lock();
-		this:state = state;
-		stateMutex.unlock();
-	}
-	
-	private setState(int state, nullable Signaler interruptSignaler) => ()
-	{
-		mutex.lock();
-		try {
-			if(shouldInterrupt) {
-				shouldInterrupt = false;
-				this->state = RUNNING;
-				
-				throw InterruptedException:create();
-			}
-		} finally {
-			mutex.unlock();
+		var thread = currentThread();
+		if(thread->shouldInterrupt) {
+			throw InterruptedException:create();
 		}
 		
-		stateMutex.lock();
-		this:state = state;
-		this:interruptSignaler = interruptSignaler;
-		stateMutex.unlock();
+		thread:stateMutex.lock();
+		thread:state = state;
+		thread:interruptSignaler = interruptSignaler;
+		thread:stateMutex.unlock();
+	}
+	
+	private readonly currentThread() => (Thread)
+	{
+		return CurrentThread->instance;
 	}
 	
 	private readonly createNative() => (Thread) 
@@ -452,16 +553,16 @@ is CanEqual<Thread>
 		return Thread:create(NopRunner:create(), "Thread#main"); 
 	}
 	
+	private readonly instance() => (Thread)
+	{
+		return this;
+	}
+	
 	// A Runner which performs no operations.
 	private class NopRunner
 		is CanRun
 	{
 		public run() => () {}
-	}
-	
-	private readonly instance() => (Thread)
-	{
-		return this;
 	}
 	
 	private class TraverseChildren is CanIterate<Thread>
@@ -478,7 +579,7 @@ is CanEqual<Thread>
 			if(recurse) {
 				return ChildrenIterator:create();
 			}
-			
+
 			return instance():childrenList.iterator();
 		}
 		

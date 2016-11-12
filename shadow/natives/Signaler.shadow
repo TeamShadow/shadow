@@ -9,7 +9,7 @@ locked class shadow:natives@
 {
 	class SignalToken is CanEqual<SignalToken>
 	{
-		get Thread thread = curthread();
+		get Thread thread = CurrentThread->instance;
 		get boolean shouldWait = true;
 		get boolean interrupted = false;
 
@@ -68,13 +68,13 @@ locked class shadow:natives@
 	* Suspends the calling thread until another thread calls notify(),
 	* notifyAll(), or interrupt(). 
 	*
-	* @throws InvalidOperationException if this Signaler has been freed.
+	* @throws InvalidStateException if this Signaler has been freed.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public waitForNotify() => ()
 	{
 		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
+			throw InvalidStateException:create("Signaler");
 		}
 
 		var token = SignalToken:create();
@@ -105,7 +105,7 @@ locked class shadow:natives@
 	*
 	* @param timeout The amount of time to wait before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
-	* @throws InvalidOperationException if this Signaler has been freed.
+	* @throws InvalidStateException if this Signaler has been freed.
 	*/
 	public waitForNotify(TimeSpan timeout) => (boolean)
 	{
@@ -119,7 +119,7 @@ locked class shadow:natives@
 	* @param millisecondsTimeout The amount of time to wait, in milliseconds, before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
 	*
-	* @throws InvalidOperationException if this Signaler has been freed.
+	* @throws InvalidStateException if this Signaler has been freed.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public waitForNotify(int millisecondsTimeout) => (boolean)
@@ -145,7 +145,7 @@ locked class shadow:natives@
 	public notify() => () 
 	{
 		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
+			throw InvalidStateException:create("Signaler");
 		}
 		
 		mutex.lock();
@@ -176,10 +176,13 @@ locked class shadow:natives@
 		}
 	}
 	
+	/**
+	* Wakes up all the waiting threads, which were put to sleep using {@code waitForNotify()}. 
+	*/
 	public notifyAll() => ()
 	{
 		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
+			throw InvalidStateException:create("Signaler");
 		}
 
 		mutex.lock();
@@ -200,12 +203,12 @@ locked class shadow:natives@
 	public interrupt(Thread thread) => ()
 	{
 		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
+			throw InvalidStateException:create("Signaler");
 		}
 		
 		mutex.lock();
 		try {
-			if(!findThreadAndInterrupt(thread, tokensQueue) and !findThreadAndInterrupt(thread, sleepTokensQueue)) {
+			if(!findThreadAndInterrupt(thread)) {
 				throw InvalidOperationException:create("The thread could not be found, and thus could not be interrupted.");
 			}
 			
@@ -219,7 +222,6 @@ locked class shadow:natives@
 	{
 		if(condHandle->isValid) {
 			// we notify any waiting thread first
-			//interruptAll();
 			notifyAll();
 			
 			// destroy errrything muahahahah
@@ -232,7 +234,7 @@ locked class shadow:natives@
 	private waitSleep(TimeSpan timeout, boolean sleepOnly) => (boolean)
 	{
 		if(!condHandle->isValid) {
-			throw InvalidOperationException:create("This Signaler is no longer valid.");
+			throw InvalidStateException:create("Signaler");
 		}
 
 		var time = AbsoluteTime:create(timeout);
@@ -271,9 +273,16 @@ locked class shadow:natives@
 		return (retVal != 0);
 	}
 	
-	private findThreadAndInterrupt(Thread thread, LinkedList<SignalToken> list) => (boolean)
+	private findThreadAndInterrupt(Thread thread) => (boolean)
 	{
-		foreach(var t in list) {
+		foreach(var t in tokensQueue) {
+			if(t->thread === thread) {
+				t.interrupt();
+				return true;
+			}
+		}
+		
+		foreach(var t in sleepTokensQueue) {
 			if(t->thread === thread) {
 				t.interrupt();
 				return true;

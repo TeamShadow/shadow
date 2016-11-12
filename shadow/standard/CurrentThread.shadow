@@ -1,0 +1,130 @@
+immutable singleton shadow:standard@
+	CurrentThread
+is CanIndex<int, Thread>
+{
+	private readonly native sleep(Thread thread, int milliseconds) => ();
+	private readonly native sleep(Thread thread, TimeSpan time) => ();
+	
+	public native readonly get instance() => (Thread);
+	
+	/**
+	* Gets the Shadow-specific thread ID.
+	*/
+	public readonly get id() => (int)
+	{
+		return instance()->id;
+	}
+	
+	/**
+	* Gets the main thread, which is the root of all threads.
+	*/
+	public readonly get main() => (Thread)
+	{
+		return instance()->main;
+	}
+	
+	/**
+	* Gets the {@code Thread} which spawned this thread. The Main thread does not
+	* have a parent, and is null.
+	*/
+	public readonly get parent() => (nullable Thread)
+	{
+		return instance()->parent;
+	}
+
+	/**
+	* Gets the name of the thread set at spawn time. If no name is set
+	* at spawn time, the name takes the format "Thread#{id}".
+	*/
+	public readonly get name() => (String)
+	{
+		return instance()->name;
+	}
+	
+	public interrupt() => ()
+	{
+		instance().interrupt();
+	}
+	
+	public get shouldInterrupt() => (boolean)
+	{
+		return instance()->shouldInterrupt;
+	}
+	
+	/**
+	* Suspends the current running thread for the specfied amount of time.
+	* 
+	* @param timeout The amount of time to pause this thread for.
+	*/
+	public readonly sleep(TimeSpan timeout) => ()
+	{
+		sleep(instance(), timeout);
+	}
+	
+	/**
+	* Suspends the current running thread for {@code milliseconds} milliseconds.
+	* 
+	* @param millisecondsTimeout The milliseconds to pause this thread for.
+	*/
+	public readonly sleep(int millisecondsTimeout) => ()
+	{
+		sleep(instance(), millisecondsTimeout);
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
+	* If the thread has four children, this method could be used to retrieve the n-th child, for example
+	* the third child (thus, its index is 2).
+	* @param index the index of the child in the range [0, childrenCount).
+	*/
+	public readonly childAt(int index) => (Thread)
+	{
+		return instance().childAt(index);
+	}
+	
+	/**
+	* Gets the children of this thread, and if {@code recurse} is true, this method
+	* will also traverse the children of the children recursively, until all children
+	* have been visited.
+	* Care should be taken using this function, as enumerating can throw an exception
+	* if the children have changed.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children(boolean recurse) => (CanIterate<Thread>)
+	{
+		return instance().children(recurse);
+	}
+	
+	/**
+	* Gets the children of this thread. This method only enumerates through the first generation
+	* children of this thread. i.e. only the thread that this thread spawned.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children() => (CanIterate<Thread>)
+	{
+		return instance().children();
+	}
+
+	/**
+	* Gets the number of children the thread currently has. This method should be used with caution
+	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
+	* drastically change between each call.
+	*/
+	public readonly get childrenCount() => (int)
+	{
+		return instance()->childrenCount;
+	}
+	
+	// CanIndex<int, Thread>
+	public readonly index(int index) => (Thread)
+	{
+		return instance()[index];
+	}
+	
+	public readonly toString() => (String)
+	{
+		return #instance();
+	}
+}

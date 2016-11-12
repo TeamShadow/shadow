@@ -3,10 +3,7 @@
  * and values.
  */
 immutable singleton shadow:standard@System
-{
-	private native sleep(Thread thread, int milliseconds) => ();
-	private native sleep(Thread thread, TimeSpan time) => ();
-	
+{	
 	/**
 	 * Returns the number of nanoseconds elapsed since the Unix Epoch,
 	 * 12:00:00 AM January 1, 1970.  Accuracy will usually be much coarser
@@ -15,27 +12,4 @@ immutable singleton shadow:standard@System
 	 * @return nanoseconds elapsed since midnight on January 1, 1970
 	 */
 	public native nanoTime() => ( long );
-	
-	/// Gets the {@code Thread} instance of the main thread.
-	public native get mainThread() => (Thread);
-	
-	/**
-	* Suspends the current running thread for {@code milliseconds} milliseconds.
-	* 
-	* @param milliseconds The milliseconds to pause this thread for.
-	*/
-	public sleep(int milliseconds) => ()
-	{
-		sleep(curthread(), milliseconds);
-	}
-	
-	/**
-	* Suspends the current running thread for the specfied amount of time.
-	* 
-	* @param time The amount of time to pause this thread for.
-	*/
-	public sleep(TimeSpan time) => ()
-	{
-		sleep(curthread(), time);
-	}
 }

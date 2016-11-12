@@ -37,7 +37,7 @@ class shadow:test@MailboxTest
 		
 		// !!!! TEST #2 !!!!
 		Console.printLine("Test2");
-		Console.printLine(cast<String>(mailbox.dequeue(String:class, System->mainThread)) == "wrong");
+		Console.printLine(cast<String>(mailbox.dequeue(String:class, CurrentThread->main)) == "wrong");
 
 		var t2 = Thread:create(Test2Runner:create());
 		// !!!! TEST #2 !!!!
@@ -50,8 +50,8 @@ class shadow:test@MailboxTest
 			public run() => ()
 			{
 				var mailbox = staticMailbox();
-				System.sleep(curthread()->id * 100);
-				 
+				CurrentThread.sleep(CurrentThread->id * 100);
+				
 				mailbox.enqueue("hello");
 				mailbox.enqueue(" ");
 				mailbox.enqueue("world");
@@ -111,7 +111,7 @@ class shadow:test@MailboxTest
 					}
 				}
 				
-				mailbox.enqueue("A string from " # curthread()->name);
+				mailbox.enqueue("A string from " # CurrentThread->name);
 				mailbox.enqueue("Secret number: ");
 				mailbox.enqueue(secretNumber);
 				mailbox.enqueue(x);
@@ -121,7 +121,7 @@ class shadow:test@MailboxTest
 		}
 
 		private receiveAndPrint(Mailbox mailbox, int index, Class c, boolean lf) => (Object) {
-			var o = mailbox.dequeue(c, curthread(index));
+			var o = mailbox.dequeue(c, CurrentThread[index]);
 			Console.print(o);
 			if(lf) {
 				Console.print("\n");
@@ -138,7 +138,7 @@ class shadow:test@MailboxTest
 			
 			var mailbox = staticMailbox();
 			
-			for (int i = 0; i < curthread()->childrenCount; i += 1) {
+			for (int i = 0; i < CurrentThread->childrenCount; i += 1) {
 				receiveAndPrint(mailbox, i, String:class, true);
 				receiveAndPrint(mailbox, i, String:class, false);
 				receiveAndPrint(mailbox, i, int:class, true);

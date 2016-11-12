@@ -147,7 +147,7 @@ locked class shadow:standard@
 		
 		public create(Object data)
 		{
-			this:sender = curthread();
+			this:sender = CurrentThread->instance;
 			this:data = copy(data);
 		}
 	}

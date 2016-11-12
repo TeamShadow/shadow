@@ -6,16 +6,16 @@ class shadow:test@ThreadTest
 	{
 		public run() => ()
 		{
-			var id = curthread()->id;
-			System.sleep(id * 50);
-			Console.printLine(curthread()->name);
+			var id = CurrentThread->id;
+			CurrentThread.sleep(id * 50);
+			Console.printLine(CurrentThread->name);
 			
 			if(id == 4) {
 				Thread:create(this).join(); // Thread#5; throws from Thread#6
 			}
 			else if(id == 5) {
-				Console.printLine(curthread()->parent->id == 4);
-				Console.printLine(System->mainThread->id == curthread()->parent->parent->id);
+				Console.printLine(CurrentThread->parent->id == 4);
+				Console.printLine(CurrentThread->main->id == CurrentThread->parent->parent->id);
 				
 				Thread:create(this).join(); // Thread#6; throws from Thread#8
 			}
@@ -25,7 +25,7 @@ class shadow:test@ThreadTest
 			}
 			
 			if(id > 2) {
-				throw Exception:create("from " # curthread()->name);
+				throw Exception:create("from " # CurrentThread->name);
 			}
 		}
 	}
@@ -40,19 +40,19 @@ class shadow:test@ThreadTest
 			threads[i] = Thread:create(runner);
 		}
 		
-		/*foreach(var x in curthread().children()) {
+		/*foreach(var x in CurrentThread.children()) {
 			try {
 				x.join();
 			} catch(Exception e) {}
 		}
 	
 		Console.printLine("First class children");
-		foreach(var x in curthread().children()) {
+		foreach(var x in CurrentThread.children()) {
 			Console.printLine(x->name);
 		}
 
 		Console.printLine("All children");
-		foreach(var x in curthread().children(true)) {
+		foreach(var x in CurrentThread.children(true)) {
 			Console.printLine(x->name);
 		}*/
 		// if we do not join here, Shadow should join on all threads

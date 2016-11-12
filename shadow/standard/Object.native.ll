@@ -37,14 +37,6 @@ define %shadow.standard..Class* @shadow.standard..Object_MgetClass(%shadow.stand
 }
 
 ; temp
-; curthread() => (Thread);
-@shadow.standard..Thread_TLS_currentThread = external global %shadow.standard..Thread*
-define %shadow.standard..Thread* @shadow.standard..Object_Mcurthread(%shadow.standard..Object*) {
-entry:
-	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
-	ret %shadow.standard..Thread* %currentThread
-}
-
 declare { %shadow.standard..Object*, %shadow.standard..Thread* } @shadow.standard..Thread_MreceiveNative_shadow.standard..Class(%shadow.standard..Thread*, %shadow.standard..Class*)
 define { %shadow.standard..Object*, %shadow.standard..Thread* } @shadow.standard..Object_Mreceive__1_shadow.standard..Thread_shadow.standard..Class(%shadow.standard..Object*, %shadow.standard..Thread*, %shadow.standard..Class*) {
 entry:

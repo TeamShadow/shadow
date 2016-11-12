@@ -62,6 +62,13 @@ declare %shadow.standard..Thread* @shadow.standard..Thread_McreateNative(%shadow
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
+; get main() => (Thread);
+define %shadow.standard..Thread* @shadow.standard..Thread_Mmain(%shadow.standard..Thread*) {
+entry:
+	%mainThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_STATIC_mainThread
+	ret %shadow.standard..Thread* %mainThread
+}
+
 ; get staticNextId() => (int); (ThreadSafe)
 define %int @shadow.standard..Thread_MstaticNextId(%shadow.standard..Thread*) {
 entry:
