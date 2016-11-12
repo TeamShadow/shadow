@@ -33,14 +33,20 @@
 ; timespec
 %struct.timespec = type { %int, %int }
 
+;---------------------
+; Method Declarations
+;---------------------
+declare %void* @extractPointer(%shadow.natives..Pointer*)
+
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
 
 ; setAbsoluteTime(Pointer time, int sec, int nsec) => ();
-define void @shadow.natives..AbsoluteTime_MsetAbsoluteTime_shadow.natives..Pointer_int_int(%shadow.natives..AbsoluteTime*, %shadow.natives..Pointer* %waitTime, %int %sec, %int %nsec) {
+define void @shadow.natives..AbsoluteTime_MsetAbsoluteTime_shadow.natives..Pointer_int_int(%shadow.natives..AbsoluteTime*, %shadow.natives..Pointer* %pointer, %int %sec, %int %nsec) {
 entry:
-	%waitTime.addr = bitcast %shadow.natives..Pointer* %waitTime to %struct.timespec*
+	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %pointer)
+	%waitTime.addr = bitcast %void* %ptr.addr to %struct.timespec*
 	
 	%waitTime.tv_sec.addr = getelementptr inbounds %struct.timespec, %struct.timespec* %waitTime.addr, i32 0, i32 0
 	store %int %sec, %int* %waitTime.tv_sec.addr

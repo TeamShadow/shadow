@@ -1,0 +1,8 @@
+exception shadow:natives@
+	FreedResourceException
+{
+	public create(String className)
+	{
+		super("This " # className # " has been freed and is no longer valid.");
+	}
+}

@@ -59,6 +59,8 @@ declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
 ; createNative() => (Thread);
 declare %shadow.standard..Thread* @shadow.standard..Thread_McreateNative(%shadow.standard..Thread*)
 
+declare %void* @extractPointer(%shadow.natives..Pointer*)
+
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
@@ -85,7 +87,8 @@ entry:
 	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
 
 	; get the handle
-	%handle.addr = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_t*
+	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%handle.addr = bitcast %void* %ptr.addr to %struct.pthread_t*
 	
 	; cast Thread* to void*
 	%this.void = bitcast %shadow.standard..Thread* %this to %void*

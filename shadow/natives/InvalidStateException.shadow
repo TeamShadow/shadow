@@ -1,8 +1,0 @@
-exception shadow:natives@
-	InvalidStateException
-{
-	public create(String className)
-	{
-		super("This " # className # " is no longer valid.");
-	}
-}

@@ -51,6 +51,8 @@ declare %int @pthread_cond_destroy(%struct.pthread_cond_t*)
 declare %int @pthread_cond_wait(%struct.pthread_cond_t*, %struct.pthread_mutex_t*)
 declare %int @pthread_cond_timedwait(%struct.pthread_cond_t*, %struct.pthread_mutex_t*, %struct.timespec*)
 declare %int @pthread_cond_broadcast(%struct.pthread_cond_t*)
+ 
+declare %void* @extractPointer(%shadow.natives..Pointer*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -58,7 +60,8 @@ declare %int @pthread_cond_broadcast(%struct.pthread_cond_t*)
 ; initSignaler(Pointer cond) => (int);
 define %int @shadow.natives..Signaler_MinitSignaler_shadow.natives..Pointer(%shadow.natives..Signaler*, %shadow.natives..Pointer*) {
 entry:
-	%cond = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_cond_t*
+	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%cond = bitcast %void* %ptr.addr to %struct.pthread_cond_t*
 	%call = call %int @pthread_cond_init(%struct.pthread_cond_t* %cond, %struct.pthread_condattr_t* null)
 	
 	ret %int %call
@@ -67,7 +70,9 @@ entry:
 ; destroySignaler(Pointer cond) => (int);
 define %int @shadow.natives..Signaler_MdestroySignaler_shadow.natives..Pointer(%shadow.natives..Signaler*, %shadow.natives..Pointer*) {
 entry:
-	%cond = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_cond_t*
+	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%cond = bitcast %void* %ptr.addr to %struct.pthread_cond_t*
+	
 	%call = call %int @pthread_cond_destroy(%struct.pthread_cond_t* %cond)
 	
 	ret %int %call
@@ -76,8 +81,11 @@ entry:
 ; wait(Pointer cond, Pointer mutex) => (int);
 define %int @shadow.natives..Signaler_Mwait_shadow.natives..Pointer_shadow.natives..Pointer(%shadow.natives..Signaler*, %shadow.natives..Pointer*, %shadow.natives..Pointer*) {
 entry:
-	%cond = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_cond_t*
-	%mutex = bitcast %shadow.natives..Pointer* %2 to %struct.pthread_mutex_t*
+	%ptr1.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%cond = bitcast %void* %ptr1.addr to %struct.pthread_cond_t*
+	
+	%ptr2.addr = call %void* @extractPointer(%shadow.natives..Pointer* %2)
+	%mutex = bitcast %void* %ptr2.addr to %struct.pthread_mutex_t*
 	
 	%call = call %int @pthread_cond_wait(%struct.pthread_cond_t* %cond, %struct.pthread_mutex_t* %mutex)
 	ret %int %call
@@ -86,9 +94,14 @@ entry:
 ; timedWait(Pointer cond, Pointer mutex, Pointer time) => (int);
 define %int @shadow.natives..Signaler_MtimedWait_shadow.natives..Pointer_shadow.natives..Pointer_shadow.natives..Pointer(%shadow.natives..Signaler*, %shadow.natives..Pointer*, %shadow.natives..Pointer*, %shadow.natives..Pointer*) {
 entry:
-	%cond = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_cond_t*
-	%mutex = bitcast %shadow.natives..Pointer* %2 to %struct.pthread_mutex_t*
-	%time = bitcast %shadow.natives..Pointer* %3 to %struct.timespec*
+	%ptr1.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%cond = bitcast %void* %ptr1.addr to %struct.pthread_cond_t*
+	
+	%ptr2.addr = call %void* @extractPointer(%shadow.natives..Pointer* %2)
+	%mutex = bitcast %void* %ptr2.addr to %struct.pthread_mutex_t*
+	
+	%ptr3.addr = call %void* @extractPointer(%shadow.natives..Pointer* %3)
+	%time = bitcast %void* %ptr3.addr to %struct.timespec*
 	
 	%call = call %int @pthread_cond_timedwait(%struct.pthread_cond_t* %cond, %struct.pthread_mutex_t* %mutex, %struct.timespec* %time)
 	ret %int %call
@@ -97,7 +110,9 @@ entry:
 ; broadcast(Pointer cond) => (int);
 define %int @shadow.natives..Signaler_Mbroadcast_shadow.natives..Pointer(%shadow.natives..Signaler*, %shadow.natives..Pointer*) {
 entry:
-	%cond = bitcast %shadow.natives..Pointer* %1 to %struct.pthread_cond_t*
+	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%cond = bitcast %void* %ptr.addr to %struct.pthread_cond_t*
+	
 	%call = call %int @pthread_cond_broadcast(%struct.pthread_cond_t* %cond)
 	
 	ret %int %call

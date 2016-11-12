@@ -7,29 +7,6 @@ import shadow:io@Console;
 locked class shadow:natives@
 	Signaler
 {
-	class SignalToken is CanEqual<SignalToken>
-	{
-		get Thread thread = CurrentThread->instance;
-		get boolean shouldWait = true;
-		get boolean interrupted = false;
-
-		public invalidate() => ()
-		{
-			shouldWait = false;
-		}
-		
-		public interrupt() => ()
-		{
-			invalidate();
-			interrupted = true;
-		}
-		
-		public readonly equal(SignalToken other) => (boolean)
-		{
-			return (this === other);
-		}
-	}
-
 	private native readonly initSignaler(Pointer cond) => (int);
 	private native readonly destroySignaler(Pointer cond) => (int);
 	
@@ -41,18 +18,18 @@ locked class shadow:natives@
 	
 	int waitingThreads = 0;
 	Mutex mutex;
-	Handle condHandle;
+	Pointer ptr;
 	LinkedList<SignalToken> tokensQueue;
 	LinkedList<SignalToken> sleepTokensQueue;
 	
 	public create()
 	{
 		mutex = Mutex:create();
-		condHandle = Handle:create(this->handleSize);
+		ptr = Pointer:create(this->handleSize);
 		tokensQueue = LinkedList<SignalToken>:create();
 		sleepTokensQueue = LinkedList<SignalToken>:create();
 		
-		initSignaler(condHandle->ptr);
+		initSignaler(ptr);
 	}
 	
 	public readonly get waitingThreadsCount() => (int)
@@ -68,14 +45,12 @@ locked class shadow:natives@
 	* Suspends the calling thread until another thread calls notify(),
 	* notifyAll(), or interrupt(). 
 	*
-	* @throws InvalidStateException if this Signaler has been freed.
+	* @throws FreedResourceException if this Signaler has been freed.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public waitForNotify() => ()
 	{
-		if(!condHandle->isValid) {
-			throw InvalidStateException:create("Signaler");
-		}
+		ptr.assertValid("Signaler");
 
 		var token = SignalToken:create();
 
@@ -86,7 +61,7 @@ locked class shadow:natives@
 
 			while(token->shouldWait) {
 				mutex.giveUpOwnership();
-				wait(condHandle->ptr, mutex->ptr);
+				wait(ptr, mutex->ptr);
 				mutex.takeOwnership();
 			}
 			
@@ -105,7 +80,7 @@ locked class shadow:natives@
 	*
 	* @param timeout The amount of time to wait before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
-	* @throws InvalidStateException if this Signaler has been freed.
+	* @throws FreedResourceException if this Signaler has been freed.
 	*/
 	public waitForNotify(TimeSpan timeout) => (boolean)
 	{
@@ -119,7 +94,7 @@ locked class shadow:natives@
 	* @param millisecondsTimeout The amount of time to wait, in milliseconds, before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
 	*
-	* @throws InvalidStateException if this Signaler has been freed.
+	* @throws FreedResourceException if this Signaler has been freed.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
 	public waitForNotify(int millisecondsTimeout) => (boolean)
@@ -136,7 +111,12 @@ locked class shadow:natives@
 	{
 		waitSleep(timeout, true);
 	}
-	
+
+	/**
+	* Suspends the calling thread for the specified amount of time.
+	*
+	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*/	
 	public sleep(int millisecondsTimeout) => ()
 	{		
 		waitSleep(Time.fromMilliSeconds(millisecondsTimeout), true);
@@ -144,9 +124,7 @@ locked class shadow:natives@
 	
 	public notify() => () 
 	{
-		if(!condHandle->isValid) {
-			throw InvalidStateException:create("Signaler");
-		}
+		ptr.assertValid("Signaler");
 		
 		mutex.lock();
 		try {
@@ -169,7 +147,7 @@ locked class shadow:natives@
 				token.invalidate();
 				
 				// notify all threads, but only one thread gets unlocked.
-				broadcast(condHandle->ptr);
+				broadcast(ptr);
 			}
 		} finally {
 			mutex.unlock();
@@ -177,13 +155,13 @@ locked class shadow:natives@
 	}
 	
 	/**
-	* Wakes up all the waiting threads, which were put to sleep using {@code waitForNotify()}. 
+	* Wakes up all the waiting threads, which were put to sleep using {@code waitForNotify()}.
+	*
+	* 
 	*/
 	public notifyAll() => ()
 	{
-		if(!condHandle->isValid) {
-			throw InvalidStateException:create("Signaler");
-		}
+		ptr.assertValid("Signaler");
 
 		mutex.lock();
 		try {
@@ -193,7 +171,7 @@ locked class shadow:natives@
 					.invalidate();
 				
 				// notify all threads, but only one threads gets unlocked.
-				broadcast(condHandle->ptr);
+				broadcast(ptr);
 			}
 		} finally {
 			mutex.unlock();
@@ -202,9 +180,7 @@ locked class shadow:natives@
 	
 	public interrupt(Thread thread) => ()
 	{
-		if(!condHandle->isValid) {
-			throw InvalidStateException:create("Signaler");
-		}
+		ptr.assertValid("Signaler");
 		
 		mutex.lock();
 		try {
@@ -212,7 +188,7 @@ locked class shadow:natives@
 				throw InvalidOperationException:create("The thread could not be found, and thus could not be interrupted.");
 			}
 			
-			broadcast(condHandle->ptr);
+			broadcast(ptr);
 		} finally {
 			mutex.unlock();
 		}
@@ -220,22 +196,19 @@ locked class shadow:natives@
 	
 	public free() => ()
 	{
-		if(condHandle->isValid) {
+		if(ptr->isValid) {
 			// we notify any waiting thread first
 			notifyAll();
 			
-			// destroy errrything muahahahah
-			destroySignaler(condHandle->ptr);
-			condHandle.free();
+			destroySignaler(ptr);
+			ptr.free();
 			mutex.free();
 		}
 	}
 	
 	private waitSleep(TimeSpan timeout, boolean sleepOnly) => (boolean)
 	{
-		if(!condHandle->isValid) {
-			throw InvalidStateException:create("Signaler");
-		}
+		ptr.assertValid("Signaler");
 
 		var time = AbsoluteTime:create(timeout);
 		var token = SignalToken:create();
@@ -256,7 +229,7 @@ locked class shadow:natives@
 			 // retVal is not zero when the wait times out
 			while((retVal == 0 or !sleepOnly) and token->shouldWait) {
 				mutex.giveUpOwnership();
-				retVal = timedWait(condHandle->ptr, mutex->ptr, time->ptr);
+				retVal = timedWait(ptr, mutex->ptr, time->ptr);
 				mutex.takeOwnership();
 			}
 			
@@ -290,5 +263,28 @@ locked class shadow:natives@
 		}
 		
 		return false;
+	}
+	
+	class SignalToken is CanEqual<SignalToken>
+	{
+		get Thread thread = CurrentThread->instance;
+		get boolean shouldWait = true;
+		get boolean interrupted = false;
+
+		public invalidate() => ()
+		{
+			shouldWait = false;
+		}
+		
+		public interrupt() => ()
+		{
+			invalidate();
+			interrupted = true;
+		}
+		
+		public readonly equal(SignalToken other) => (boolean)
+		{
+			return (this === other);
+		}
 	}
 }

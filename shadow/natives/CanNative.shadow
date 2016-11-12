@@ -2,7 +2,6 @@ interface shadow:natives@
 	CanNative
 {
 	readonly get ptr() => (Pointer ptr);
-	//readonly get unsafePtr() => (Pointer ptr);
 	readonly get handleSize() => (int);
-	readonly free() => ();
+	free() => ();
 }

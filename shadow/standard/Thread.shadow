@@ -30,7 +30,7 @@ and CanIndex<int, Thread>
 	int joined;
 	boolean interrupting;
 
-	Handle handle;
+	Pointer handle;
 	CanRun runner;
 	
 	ThreadSafeList<Thread> childrenList;
@@ -148,7 +148,7 @@ and CanIndex<int, Thread>
 		this:stateMutex = Mutex:create();
 		this:signaler = Signaler:create();
 		this:mailbox = Mailbox:create(32);
-		this:handle = Handle:create(this->handleSize);
+		this:handle = Pointer:create(this->handleSize);
 		this:state = READY;
 		this:childrenIterate = TraverseChildren:create(false);
 		this:childrenIterateRecurse = TraverseChildren:create(true);
@@ -163,7 +163,7 @@ and CanIndex<int, Thread>
 			addToParent();
 			
 			// spawn the thread and give it the handle
-			spawnThread(handle->ptr);
+			spawnThread(handle);
 			
 			// pthreads clean up their resources after the
 			// spawned thread exits, so we do not need to

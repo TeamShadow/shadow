@@ -1,14 +1,97 @@
 /**
-* This is a placeholder for a raw low-level LLVM pointer.
-* This pointer is of no use in Shadow, and should never be dereferenced.
-* A {@code Pointer} should always be created by the {@code Handle} class.
-* A {@code Pointer} always be passed to native LLVM methods and then
-* should be casted to the desired type IN LLVM.
-*
-* @author Claude Abounegm
-*/
+ * Class {@code Pointer} is used to initialize a block of memory on the heap, and
+ * pass it to native LLVM code. This eases interaction between 
+ * @author Claude Abounegm
+ */
 locked immutable class shadow:natives@
 	Pointer
-{ 
-	private create() {}
+{
+	private native readonly allocMemory(int size) => (long address);
+	private native readonly freeMemory() => ();
+	private native readonly invalidateHandle(immutable LongPointer ptr) => ();
+	
+	immutable LongPointer pointer;
+	
+	/**
+	* Allocates a block of memory on the heap which is {@code size} bytes long, 
+	* and initializes all its bits to zero.
+	*
+	* @param {@code size} The size, in bytes, that needs to be allocated on the heap.
+	*/
+	public create(int size)
+	{		
+		pointer = freeze(LongPointer:create(size));
+	}
+	
+	/**
+	* Gets whether this pointer is valid. i.e. has not been freed.
+	*
+	* @return {@code true} if the handle is valid; otherwise, {@code false}.
+	*/
+	public locked get isValid() => (boolean)
+	{
+		return (pointer.valid());
+	}
+	
+	/**
+	* Throws an exception if this {@code Pointer} has been freed.
+	*
+	* @throws FreedResourceException if this resource has been freed.
+	*/
+	public locked assertValid(String className) => ()
+	{
+		if(!isValid()) {
+			throw FreedResourceException:create(className);
+		}
+	}
+	
+	/**
+	* Frees the memory allocated by this handle. Calling this method more than once does
+	* not have any side effects.
+	*/
+	public locked free() => ()
+	{
+		if(isValid()) {
+			freeMemory();
+			invalidateHandle(pointer);
+		}
+	}
+	
+	private getAddressNative() => (long)
+	{
+		return pointer->address;
+	}
+
+	private class LongPointer
+	{
+		long address = -1;
+		
+		public create(int size)
+		{
+			if(size <= 0) {
+				throw IllegalArgumentException:create("The {size} of the memory that will be allocated should be bigger than zero.");
+			}
+
+			this:address = allocMemory(size);
+		}
+		
+		public readonly get address() => (long)
+		{
+			if(!valid()) {
+				throw FreedResourceException:create("Pointer");
+			}
+			
+			return address;
+		}
+		
+		public readonly valid() => (boolean)
+		{
+			return (address != -1);
+		}
+		
+		private invalidateNative() => ()
+		{
+			this:address = -1;
+		}
+	}
 }

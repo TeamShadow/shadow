@@ -9,25 +9,18 @@ locked class shadow:natives@
 	private native readonly setAbsoluteTime(Pointer time, int sec, int nsec) => ();
 	private native readonly get handleSize() => (int);
 	
-	Handle handle;
+	get Pointer ptr;
 	
 	public create(TimeSpan ts)
 	{
-		handle = Handle:create(this->handleSize);
+		ptr = Pointer:create(this->handleSize);
 
 		var absTime = ts + Time->epochNow;
-		setAbsoluteTime(this->ptr, cast<int>(absTime->totalSeconds), absTime->nanoSeconds);
-	}
-	
-	public readonly get ptr() => (Pointer ptr)
-	{
-		return handle->ptr;
+		setAbsoluteTime(ptr, cast<int>(absTime->totalSeconds), absTime->nanoSeconds);
 	}
 	
 	public free() => ()
 	{
-		try {
-			handle.free();
-		} catch(Exception e) {}
+		ptr.free();
 	}
 }

@@ -12,62 +12,59 @@ locked class shadow:natives@
 	private readonly native setOwner(nullable Thread t) => ();
 	private readonly native get handleSize() => (int);
 
-	Handle handle;
+	get Pointer ptr;
 	nullable Thread owner;
 	
 	public create()
 	{
-		handle = Handle:create(this->handleSize);
+		ptr = Pointer:create(this->handleSize);
 		owner = null;
 		
-		initMutex(handle->ptr);
+		initMutex(ptr);
 	}
 	
 	public readonly lock() => ()
 	{
+		ptr.assertValid("Mutex");
+		
 		if(CurrentThread.isEqualTo(owner)) {
 			throw MutexException:create("The current thread already owns this mutex.");
 		}
 		
-		lockMutex(this->ptr);
+		lockMutex(ptr);
 		setOwner(CurrentThread->instance);
 	}
 	
 	public readonly unlock() => ()
-	{		
+	{
+		ptr.assertValid("Mutex");
+
 		if(!CurrentThread.isEqualTo(owner)) {
 			throw MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
 		}
 		
 		setOwner(null);
-		unlockMutex(this->ptr);
+		unlockMutex(ptr);
 	}
 	
 	public readonly takeOwnership() => ()
 	{
+		ptr.assertValid("Mutex");
 		setOwner(CurrentThread->instance);
 	}
 	
 	public readonly giveUpOwnership() =>()
 	{
+		ptr.assertValid("Mutex");
 		setOwner(null);
-	}
-	
-	public readonly get ptr() => (Pointer ptr)
-	{
-		if(!handle->isValid) {
-			throw InvalidStateException:create("Mutex");
-		}
-	
-		return handle->unsafePtr;
 	}
 	
 	public readonly free() => ()
 	{
-		try {
-			destroyMutex(this->ptr);
-			handle.free();
-		} catch(Exception e) {}
+		if(ptr->isValid) {
+			destroyMutex(ptr);
+			ptr.free();
+		}
 	}
 	
 	private setOwnerNative(nullable Thread o) => ()
