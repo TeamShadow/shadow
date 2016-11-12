@@ -1,11 +1,9 @@
-import shadow:utility@List;
-import shadow:utility@ArrayList;
 import shadow:natives;
 
 /**
  * @author Claude Abounegm
  */
-locked class shadow:standard@
+locked class shadow:utility@
 	ThreadSafeList<T is CanEqual<T>>
 is List<T>
 {
@@ -21,7 +19,7 @@ is List<T>
 	public readonly get size() => (int)
 	{
 		mutex.lock();
-			var size = list->size;
+		var size = list->size;
 		mutex.unlock();
 		
 		return size;
@@ -30,7 +28,7 @@ is List<T>
 	public readonly indexOf(T element) => (int)
 	{
 		mutex.lock();
-			var index = list.indexOf(element);
+		var index = list.indexOf(element);
 		mutex.unlock();
 		
 		return index;
@@ -39,7 +37,7 @@ is List<T>
 	public readonly contains(T element) => (boolean)
 	{
 		mutex.lock();
-			var flag = list.contains(element);
+		var flag = list.contains(element);
 		mutex.unlock();
 		
 		return flag;
@@ -48,7 +46,7 @@ is List<T>
 	public readonly isEmpty() => (boolean)
 	{
 		mutex.lock();
-			var flag = list.isEmpty();
+		var flag = list.isEmpty();
 		mutex.unlock();
 		
 		return flag;
@@ -57,7 +55,7 @@ is List<T>
 	public readonly iterator() => (Iterator<T>)
 	{
 		mutex.lock();
-			var retVal = list.iterator();
+		var retVal = list.iterator();
 		mutex.unlock();
 		
 		return retVal;
@@ -66,7 +64,7 @@ is List<T>
 	public readonly index(int key) => (T)
 	{
 		mutex.lock();
-			var index = list.index(key);
+		var index = list.index(key);
 		mutex.unlock();
 		
 		return index;
@@ -75,7 +73,7 @@ is List<T>
 	public add(T element) => (ThreadSafeList<T>)
 	{
 		mutex.lock();
-			list.add(element);
+		list.add(element);
 		mutex.unlock();
 		
 		return this;
@@ -84,7 +82,7 @@ is List<T>
 	public delete(int index) => (T)
 	{
 		mutex.lock();
-			var element = list.delete(index);
+		var element = list.delete(index);
 		mutex.unlock();
 		
 		return element;
@@ -93,7 +91,7 @@ is List<T>
 	public remove(T element) => (boolean)
 	{
 		mutex.lock();
-			var flag = list.remove(element);
+		var flag = list.remove(element);
 		mutex.unlock();
 		
 		return flag;
@@ -102,7 +100,7 @@ is List<T>
 	public clear() => (ThreadSafeList<T>)
 	{
 		mutex.lock();
-			list.clear();
+		list.clear();
 		mutex.unlock();
 		
 		return this;
@@ -111,7 +109,7 @@ is List<T>
 	public index(int key, T value) => ()
 	{
 		mutex.lock();
-			list.index(key, value);
+		list.index(key, value);
 		mutex.unlock();
 	}
 }

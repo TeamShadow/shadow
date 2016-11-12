@@ -1261,4 +1261,19 @@ public class OutputTests {
 				"InterruptedException thrown\n" +
 				"done\n");
 	}
+	
+	@Test public void testEqualityComparer() throws Exception {
+		args.add("shadow/test/EqualityComparerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], 
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n");
+	}
 }

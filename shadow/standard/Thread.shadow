@@ -1,9 +1,12 @@
-import shadow:io@Console;
 import shadow:utility;
 import shadow:natives;
+import shadow:io@Console;
 
 /**
- * 
+ * Class {@code Thread} provides ways to manipulate threads. 
+ * All threads are required to terminate for the main process to terminate as well.
+ * If the main method returns and there are still running threads, 
+ *
  * @author Claude Abounegm
  */
 locked class shadow:standard@
@@ -79,9 +82,7 @@ and CanIndex<int, Thread>
 		stateMutex.unlock();
 	}
 	
-	/**
-	* Gets the state of this thread. It can be one of {@code READY}, {@code RUNNING}, {@code WAITING}, or {@code DEAD}.
-	*/
+	/// Gets the state of this thread. It can be one of {@code READY}, {@code RUNNING}, {@code WAITING}, or {@code DEAD}.
 	public readonly get state() => (int)
 	{
 		stateMutex.lock();
@@ -343,10 +344,18 @@ and CanIndex<int, Thread>
 	}
 
 	/**
-	* @throws InterruptedException
+	* Receives data with the desired {@code expectedType}. This method will throw an exception 
+	* and will not retrieve the message if the expected type is not the same as the actual one
+	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
+	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
+	*
+	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	private receiveNative(Class expectedType) => (Object, Thread)
+	public receiveFirst(Class expectedType) => (Object, Thread)
 	{	
 		setCurrentThreadState(WAITING, mailbox->signaler);
 		var retVal = mailbox.dequeue(expectedType);
@@ -356,14 +365,22 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
-	* @throws InterruptedException
-	* @throws IllegalArgumentException 
+	* Receives data with the desired {@code expectedType} from the desired thread.
+	* This method will throw an exception and will not retrieve the message if the
+	* expected type is not the same as the actual one sent by the thread. A thread
+	* can send as many messages as it desires, but the receiving thread should always
+	* receive the data in the order it was sent, or otherwise an exception is thrown.
+	*
+	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	private receiveNative(Class expectedType, Thread from) => (Object)
+	public receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
 		if(from === this) {
-			throw IllegalArgumentException:create("The {from} thread cannot be the same as this thread.");
+			throw IllegalArgumentException:create("Cannot receive a message from self.");
 		}
 		
 		setCurrentThreadState(WAITING, mailbox->signaler);
@@ -374,10 +391,20 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
-	* @throws InterruptedException
+	* Sends the desired data to this thread. This method copies all the data before
+	* sending it to the Thread. Thus no data is shared between two threads.
+	* This is a blocking method, and it will block if the mailbox of this thread is full.
+	* The method will immediately unblock when there is space for the item to be
+	* deposited in the mailbox.
+	*
+	* @param data The data to be cloned and sent to this thread.
+	* 
+	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
+	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
+	*
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	private sendNative(Object data) => ()
+	public sendTo(Object data) => ()
 	{
 		if(!isAlive()) {
 			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
@@ -420,6 +447,7 @@ and CanIndex<int, Thread>
 		if(currentThread() !== main()) {
 			throw Exception:create("waitForThreadsNative() can only be called on the main thread.");
 		}
+		// this->state = DEAD;
 		
 		var exceptionQueue = ArrayDeque<ThreadException>:create();
 		
@@ -512,9 +540,12 @@ and CanIndex<int, Thread>
 		return (this === other);
 	}
 	
+	/**
+	* Returns a string with the format: "Thread ({Thread->name}): {Thread->stateStr}". 
+	*/
 	public readonly toString() => (String)
 	{
-		return name # ": (" # this->stateStr # ")";
+		return "Thread (" # name # "): " # this->stateStr;
 	}
 	
 	private addToParent() => () 

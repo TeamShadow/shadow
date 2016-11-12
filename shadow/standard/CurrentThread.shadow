@@ -1,3 +1,10 @@
+/**
+ * Singleton {@code CurrentThread} provides methods which can be called on the current thread.
+ * It also provides a way to access the actual {@code Thread} instance of this thread. 
+ * 
+ * @author Claude Abounegm
+ * @seeDoc shadow:standard@Thread
+ */
 immutable singleton shadow:standard@
 	CurrentThread
 is CanIndex<int, Thread>
@@ -5,6 +12,11 @@ is CanIndex<int, Thread>
 	private readonly native sleep(Thread thread, int milliseconds) => ();
 	private readonly native sleep(Thread thread, TimeSpan time) => ();
 	
+	/**
+	* Gets the current thread's actual instance.
+	*
+	* @return The instance of the current thread.
+	*/
 	public native readonly get instance() => (Thread);
 	
 	/**
@@ -107,11 +119,73 @@ is CanIndex<int, Thread>
 		return instance().children();
 	}
 	
+	/**
+	* Sends the desired data to this thread. This method copies all the data before
+	* sending it to the Thread. Thus no data is shared between two threads.
+	* This is a blocking method, and it will block if the mailbox of this thread is full.
+	* The method will immediately unblock when there is space for the item to be
+	* deposited in the mailbox.
+	*
+	* @param data The data to be cloned and sent to this thread.
+	* 
+	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
+	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
+	*
+	* @seeDoc shadow:standard@Mailbox
+	*/
+	public readonly sendTo(Object data, Thread to) => ()
+	{
+		to.sendTo(data);
+	}
+	
+	/**
+	* Receives data with the desired {@code expectedType}. This method will throw an exception 
+	* and will not retrieve the message if the expected type is not the same as the actual one
+	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
+	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
+	*
+	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
+	* @seeDoc shadow:standard@Mailbox
+	*/
+	public readonly receiveFirst(Class expectedType) => (Object, Thread)
+	{
+		return instance().receiveFirst(expectedType);
+	}
+	
+	/**
+	* Receives data with the desired {@code expectedType} from the desired thread.
+	* This method will throw an exception and will not retrieve the message if the
+	* expected type is not the same as the actual one sent by the thread. A thread
+	* can send as many messages as it desires, but the receiving thread should always
+	* receive the data in the order it was sent, or otherwise an exception is thrown.
+	*
+	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
+	* @seeDoc shadow:standard@Mailbox
+	*/
+	public readonly receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	{
+		return instance().receiveFirstFrom(expectedType, from);
+	}
+	
+	/**
+	* Checks whether the {@code thread} is the same as the current thread.
+	* This is equivalent to {@code thread->isCurrentThread}, but with null checking as well.
+	*
+	* @param thread 
+	*
+	* @return {@code true} if the current thread is the same as the passed thread; otherwise, {@code false}.
+	*/
 	public readonly isEqualTo(nullable Thread thread) => (boolean)
 	{
 		return (thread !== null and check(thread) === instance());
 	}
-
+	
 	/**
 	* Gets the number of children the thread currently has. This method should be used with caution
 	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
@@ -128,6 +202,9 @@ is CanIndex<int, Thread>
 		return instance()[index];
 	}
 	
+	/**
+	* Returns a string with the format: "Thread ({Thread->name}): {Thread->stateStr}".
+	*/
 	public readonly toString() => (String)
 	{
 		return #instance();

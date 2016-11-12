@@ -1,6 +1,7 @@
 /**
  * Class {@code Pointer} is used to initialize a block of memory on the heap, and
- * pass it to native LLVM code. This eases interaction between 
+ * pass it to native LLVM code. This eases interaction between Shadow an native LLVM methods.
+ *
  * @author Claude Abounegm
  */
 locked immutable class shadow:natives@
@@ -26,7 +27,7 @@ locked immutable class shadow:natives@
 	/**
 	* Gets whether this pointer is valid. i.e. has not been freed.
 	*
-	* @return {@code true} if the handle is valid; otherwise, {@code false}.
+	* @return {@code true} if this pointer points to valid memory; otherwise, {@code false}.
 	*/
 	public locked get isValid() => (boolean)
 	{
@@ -46,7 +47,7 @@ locked immutable class shadow:natives@
 	}
 	
 	/**
-	* Frees the memory allocated by this handle. Calling this method more than once does
+	* Frees the memory allocated by this pointer. Calling this method more than once does
 	* not have any side effects.
 	*/
 	public locked free() => ()
@@ -69,7 +70,7 @@ locked immutable class shadow:natives@
 		public create(int size)
 		{
 			if(size <= 0) {
-				throw IllegalArgumentException:create("The {size} of the memory that will be allocated should be bigger than zero.");
+				throw IllegalArgumentException:create("The {size} of the memory to be allocated should be greater than zero.");
 			}
 
 			this:address = allocMemory(size);

@@ -9,8 +9,20 @@ and Deque<V>
 {
 	/// Gets size of the list.
 	get int size = 0;
+	
 	Node header = Node:create();
 	int modifications = 0;
+	CanEqualityComparer<V> comparer;
+	
+	public create()
+	{
+		this(EqualityComparer<V>:create());
+	}
+	
+	public create(CanEqualityComparer<V> comparer)
+	{
+		this:comparer = comparer;
+	}
 
 	private class Node
 	{
@@ -74,7 +86,7 @@ and Deque<V>
 	
 	
 	// Finds a Node storing the given value and returns it and its index.
-	private readonly findNode( CanEqual<V> value ) => ( int index, nullable Node node )
+	private readonly findNode( V value ) => ( int index, nullable Node node )
 	{
 		int index = 0;
 		Node current = header;		
@@ -85,6 +97,7 @@ and Deque<V>
 			if ( current === header )
 				return ( -1, null );
 			if ( value == check(current->value) )
+			// if(comparer.compare(value, check(current->value))
 				return ( index, current );
 			index += 1;
 		}

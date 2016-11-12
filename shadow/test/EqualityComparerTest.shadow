@@ -1,0 +1,114 @@
+import shadow:io@Console;
+import shadow:utility;
+
+class shadow:test@EqualityComparerTest
+{
+	class Point1
+	{
+		get int x;
+		get int y;
+		
+		public create(int x, int y)
+		{
+			this:x = x;
+			this:y = y;
+		}
+	}
+	
+	class Point2 is CanEqual<Point2>
+	{
+		get int x;
+		get int y;
+		
+		public create(int x, int y)
+		{
+			this:x = x;
+			this:y = y;
+		}
+		
+		public readonly equal(Point2 other) => (boolean)
+		{
+			return (x == other->x and y == other->y);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		var comp1 = EqualityComparer<Point1>:create();
+		var comp2 = EqualityComparer<Point2>:create();
+		
+		var comp3 = LocalEqualityComparer<Point1>:create();
+		var comp4 = LocalEqualityComparer<Point2>:create();
+		
+		var comp5 = EqualityComparer<Point>:create();
+		
+		var p1 = Point1:create(1, 1);
+		var p2 = Point1:create(1, 1);
+		var p3 = Point1:create(2, 2);
+		
+		Console.printLine(comp1.compare(p1, p1) == true);
+		Console.printLine(comp1.compare(p1, p2) == false);
+		Console.printLine(comp1.compare(p1, p3) == false);
+		
+		
+		var p4 = Point2:create(1, 1);
+		var p5 = Point2:create(1, 1);
+		var p6 = Point2:create(2, 2);
+		
+		Console.printLine(comp2.compare(p4, p4) == true);
+		Console.printLine(comp2.compare(p4, p5) == true);
+		Console.printLine(comp2.compare(p4, p6) == false);
+		
+		
+		Console.printLine(comp3.compare(p1, p2) == false);
+		Console.printLine(comp4.compare(p4, p5) == true);
+		
+		Console.printLine(comp5.compare(Point:create(1, 1), Point:create(1, 1)) == true);		
+	}
+	
+	class LocalEqualityComparer<T> is CanEqualityComparer<T>
+	{
+		CanEqualityComparer<T> comparer;
+
+		public create()
+		{
+			if(isCanEqual()) {
+				comparer = canEqualComparer:create();
+			} else {
+				comparer = referenceComparer:create();
+			}
+		}
+		
+		public readonly compare(T a, T b) => (boolean)
+		{
+			return comparer.compare(a, b);
+		}
+		
+		private locked isCanEqual() => (boolean)
+		{
+			foreach(var t in T:class->interfaces) {
+				if(t === CanEqual<T>:class) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		private class canEqualComparer is CanEqualityComparer<T>
+		{
+			public readonly compare(T a, T b) => (boolean)
+			{
+				return cast<CanEqual<T>>(cast<Object>(a)).equal(b);
+			}
+		}
+		
+		private class referenceComparer is CanEqualityComparer<T>
+		{
+			public readonly compare(T a, T b) => (boolean)
+			{
+				return (a === b);
+			}
+		}
+	}
+}

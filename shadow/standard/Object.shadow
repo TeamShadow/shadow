@@ -24,18 +24,18 @@ class shadow:standard@Object
 	}
 	
 	// TEMP METHODS
-	private native readonly locked receive_1(Thread curThread, Class expectedType) => (Object, Thread);
-	private native readonly locked receive_2(Thread curThread, Class expectedType, Thread from) => (Object);
-
-	public native readonly locked send(Object data, Thread to) => ();
+	public readonly locked send(Object data, Thread to) => ()
+	{
+		CurrentThread.sendTo(data, to);
+	}
 	
 	public readonly locked receive(Class expectedType) => (Object, Thread)
 	{
-		return receive_1(CurrentThread->instance, expectedType);
+		return CurrentThread.receiveFirst(expectedType);
 	}
 	
 	public readonly locked receive(Class expectedType, Thread from) => (Object)
 	{
-		return receive_2(CurrentThread->instance, expectedType, from);
+		return CurrentThread.receiveFirstFrom(expectedType, from);
 	}
 }

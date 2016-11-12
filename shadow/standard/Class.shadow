@@ -139,7 +139,7 @@ is  CanHash
 	{		
 		for ( int i = 0; i < interfaces->size; i += 1 )			
 			if ( interfaces[i] === interfaceClass )
-				return data[i];		
+				return data[i];
 		
 		throw CastException:create("Class " # this # " does not implement interface " # interfaceClass);
 	}

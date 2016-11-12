@@ -1,0 +1,49 @@
+import shadow:io;
+
+class shadow:utility@
+	EqualityComparer<T>
+is CanEqualityComparer<T>
+{
+	CanEqualityComparer<T> comparer;
+
+	public create()
+	{
+		if(isCanEqual()) {
+			comparer = canEqualComparer:create();
+		} else {
+			comparer = referenceComparer:create();
+		}
+	}
+	
+	public readonly compare(T a, T b) => (boolean)
+	{
+		return comparer.compare(a, b);
+	}
+	
+	private locked isCanEqual() => (boolean)
+	{
+		foreach(var t in T:class->interfaces) {
+			if(t === CanEqual<T>:class) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private class canEqualComparer is CanEqualityComparer<T>
+	{
+		public readonly compare(T a, T b) => (boolean)
+		{
+			return cast<CanEqual<T>>(cast<Object>(a)).equal(b);
+		}
+	}
+	
+	private class referenceComparer is CanEqualityComparer<T>
+	{
+		public readonly compare(T a, T b) => (boolean)
+		{
+			return (a === b);
+		}
+	}
+}
