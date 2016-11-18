@@ -1,4 +1,0 @@
-exception shadow:standard@
-	FullListException
-{
-}

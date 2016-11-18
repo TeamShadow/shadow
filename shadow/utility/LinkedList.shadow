@@ -12,14 +12,14 @@ and Deque<V>
 	
 	Node header = Node:create();
 	int modifications = 0;
-	CanEqualityComparer<V> comparer;
+	Equate<V> comparer;
 	
 	public create()
 	{
-		this(EqualityComparer<V>:create());
+		this(DefaultEqualizer<V>:create());
 	}
 	
-	public create(CanEqualityComparer<V> comparer)
+	public create(Equate<V> comparer)
 	{
 		this:comparer = comparer;
 	}
@@ -97,7 +97,7 @@ and Deque<V>
 			if ( current === header )
 				return ( -1, null );
 			if ( value == check(current->value) )
-			// if(comparer.compare(value, check(current->value))
+			// if(comparer.isEqual(value, check(current->value))
 				return ( index, current );
 			index += 1;
 		}

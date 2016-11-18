@@ -12,7 +12,7 @@ is  List<V>
 	
 	nullable V[] elements;
 	int modifications = 0;
-	CanEqualityComparer<V> comparer;
+	Equate<V> comparer;
 	
 	public create()
 	{
@@ -21,10 +21,10 @@ is  List<V>
 	
 	public create(int initialCapacity)
 	{
-		this(initialCapacity, EqualityComparer<V>:create());
+		this(initialCapacity, DefaultEqualizer<V>:create());
 	}
 	
-	public create(int initialCapacity, CanEqualityComparer<V> comparer)
+	public create(int initialCapacity, Equate<V> comparer)
 	{
 		this:elements = V:null[initialCapacity];
 		this:comparer = comparer;
@@ -132,8 +132,8 @@ is  List<V>
 	 */
 	public readonly indexOf(V value) => (int index)
 	{	
-		for( int i = 0; i < size; i += 1 ) {
-			/*if(comparer.compare(value, check(elements[i]))) {*/
+		for(int i = 0; i < size; i += 1) {
+			/*if(comparer.isEquate(value, check(elements[i]))) {*/
 			if(value == check(elements[i])) {
 				return i;
 			}

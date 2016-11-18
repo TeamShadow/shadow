@@ -151,6 +151,7 @@ and CanIndex<int, Thread>
 		this:mailbox = Mailbox:create(32);
 		this:handle = Pointer:create(this->handleSize);
 		this:state = READY;
+		
 		this:childrenIterate = TraverseChildren:create(false);
 		this:childrenIterateRecurse = TraverseChildren:create(true);
 		
@@ -392,10 +393,11 @@ and CanIndex<int, Thread>
 	
 	/**
 	* Sends the desired data to this thread. This method copies all the data before
-	* sending it to the Thread. Thus no data is shared between two threads.
+	* sending it to this thread. Thus no data is shared between two threads.
 	* This is a blocking method, and it will block if the mailbox of this thread is full.
 	* The method will immediately unblock when there is space for the item to be
-	* deposited in the mailbox.
+	* deposited in the mailbox. Mailbox is first come first serve, and the threads sending data
+	* will unblock in the order they were blocked in.
 	*
 	* @param data The data to be cloned and sent to this thread.
 	* 
@@ -478,6 +480,8 @@ and CanIndex<int, Thread>
 	* Gets the number of children the thread currently has. This method should be used with caution
 	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
 	* drastically change between each call.
+	*
+	* @return how many children that thread has
 	*/
 	public readonly get childrenCount() => (int)
 	{
@@ -485,10 +489,10 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
-	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
-	* If the thread has four children, this method could be used to retrieve the n-th child, for example
-	* the third child (thus, its index is 2).
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific id.
+	*
 	* @param index the index of the child in the range [0, childrenCount).
+	* @return the n-th child {@code Thread}.
 	*/
 	public readonly childAt(int index) => (Thread)
 	{
@@ -496,10 +500,11 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
-	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
-	* If the thread has four children, this method could be used to retrieve the n-th child, for example
-	* the third child (thus, its index is 2).
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific id.
+	* This is a shortcut to Thread.childAt(), to allow easy indexing of children using Thread[index].
+	*
 	* @param index the index of the child in the range [0, childrenCount).
+	* @return the n-th child {@code Thread}.
 	*/
 	public readonly index(int index) => (Thread)
 	{
@@ -548,7 +553,7 @@ and CanIndex<int, Thread>
 		return "Thread (" # name # "): " # this->stateStr;
 	}
 	
-	private addToParent() => () 
+	private addToParent() => ()
 	{
 		check(parent):childrenList.add(this);
 	}
@@ -571,7 +576,7 @@ and CanIndex<int, Thread>
 		return CurrentThread->instance;
 	}
 	
-	private readonly createNative() => (Thread) 
+	private readonly createMainNative() => (Thread) 
 	{ 
 		return Thread:create(NopRunner:create(), "Thread#main"); 
 	}

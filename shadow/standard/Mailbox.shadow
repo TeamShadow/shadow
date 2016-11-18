@@ -4,11 +4,13 @@ import shadow:natives;
  * Class {@code Mailbox} is the main component of the Message Passing
  * between Threads in the Shadow language. 
  *
+ * @seeDoc shadow:standard@Thread
  * @author Claude Abounegm
  */
 locked class shadow:standard@
 	Mailbox
 {
+	// should that be a minute? 10? An hour? What is the best time for this...
 	readonly TimeSpan TIMEOUT = Time.fromMinutes(1);
 	
 	/*
@@ -23,18 +25,18 @@ locked class shadow:standard@
 	
 	get Signaler signaler;
 
-	HybridQueueArray list;
+	MessageQueue list;
 	Mutex mutex;
 	
 	public create(int count)
 	{
-		this:list = HybridQueueArray:create(count);
+		this:list = MessageQueue:create(count);
 		this:signaler = Signaler:create();
 		this:mutex = Mutex:create();
 	}
 	
 	public enqueue(Object data, boolean blocking) => ()
-	{		
+	{
 		mutex.lock();
 		try {
 			if(list.isFull()) {
@@ -138,125 +140,5 @@ locked class shadow:standard@
 		mutex.unlock();
 		signaler.waitForNotify(TIMEOUT);
 		mutex.lock();
-	}
-	
-	private class Message
-	{
-		get Thread sender;
-		get Object data;
-		
-		public create(Object data)
-		{
-			this:sender = CurrentThread->instance;
-			this:data = copy(data);
-		}
-	}
-	
-	private class HybridQueueArray
-		is CanIndex<int, Message> 
-		and CanIndexStoreNullable<int, Message>
-	{
-		nullable Message[] elements;
-		int start;
-		get int size;
-		
-		public create(int capacity)
-		{
-			this:elements = Message:null[capacity];
-			this:start = 0;
-			this:size = 0;
-		}
-		
-		public readonly get isFull() => (boolean)
-		{
-			return (size == elements->size);
-		}
-		
-		public readonly get isEmpty() => (boolean)
-		{
-			return (size == 0);
-		}
-		
-		public indexOf(Thread thread) => (int index)
-		{
-			for(int i = 0; i < size; i += 1) {
-				if(thread === this[i]->sender) {
-					return i;
-				}
-			}
-
-			return -1;
-		}
-
-		public enqueue(Message message) => ()
-		{
-			if(isFull())
-				throw FullListException:create();
-
-			this[size] = message;
-			size += 1;
-		}
-		
-		public dequeue(Class expectedType) => (Message)
-		{
-			return removeAt(0, expectedType);
-		}
-		
-		public removeAt(int index, Class expectedType) => (Message)
-		{
-			// retrieve the data and make sure that it is the same as the expectedType.
-			// the indexer also checks for out of bounds exception, so we do not need
-			// to worry about that.
-			Message message = this[index];
-			var dataType = message->data.getClass();
-			if(dataType !== expectedType) {
-				throw WrongTypeException:create(expectedType, dataType);
-			}
-			
-			if(index == 0) {
-				this[index] = null;
-				start = (start + 1) % elements->size;
-			} else {
-				// we shift the array by one to the left.
-				// assuming we are deleting the second item:
-				// [1, 2, 3, 4, 5] -> [1, 3, 4, 5, null]
-				for(int i = index; i < size - 1; i += 1) {
-					this[i] = this[i + 1];
-				}
-				
-				// set the last item to null since it is not used anymore
-				this[size - 1] = null;
-			}
-			
-			// decrease the size, since we deleted the item.
-			size -= 1;
-			
-			// if the list is empty, we can start at zero again.
-			if(isEmpty()) {
-				start = 0;
-			}
-			
-			return message;
-		}
-		
-		// CanIndex<int, Message>
-		public readonly index(int index) => (Message)
-		{
-			return check(elements[rawIndex(index)]);
-		}
-		
-		// CanIndexStoreNullable<int, Message>
-		public index(int index, nullable Message message) => ()
-		{
-			elements[rawIndex(index)] = message;
-		}
-		
-		private readonly rawIndex(int index) => (int)
-		{
-			if(index < 0 or index >= elements->size)
-				throw IndexOutOfBoundsException:create();
-		
-			return ((start + index) % elements->size);
-		}
 	}
 }

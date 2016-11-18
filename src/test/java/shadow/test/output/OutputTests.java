@@ -1276,4 +1276,11 @@ public class OutputTests {
 				"true\n" +
 				"true\n");
 	}
+	
+	@Test public void testMessageQueue() throws Exception {
+		args.add("shadow/test/MessageQueueTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "FullListException\n" + 
+							"10\n");
+	}
 }

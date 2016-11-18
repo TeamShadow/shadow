@@ -56,8 +56,8 @@ declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void*
 ; runnerNative() => ();
 declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
 
-; createNative() => (Thread);
-declare %shadow.standard..Thread* @shadow.standard..Thread_McreateNative(%shadow.standard..Thread*)
+; createMainNative() => (Thread);
+declare %shadow.standard..Thread* @shadow.standard..Thread_McreateMainNative(%shadow.standard..Thread*)
 
 declare %void* @extractPointer(%shadow.natives..Pointer*)
 
@@ -129,7 +129,7 @@ entry:
 define void @shadow.standard..Thread_MinitMainThread() {
 entry:
 	; we initialize the dummy Thread for the main thread
-	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_McreateNative(%shadow.standard..Thread* null)
+	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_McreateMainNative(%shadow.standard..Thread* null)
 	
 	; each thread needs to be able to get a reference to its own Thread, so we set its instance to the currentThread TLS.
 	store %shadow.standard..Thread* %mainThread, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread

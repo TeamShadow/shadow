@@ -1,6 +1,10 @@
+/**
+ * @author Claude Abounegm
+ */
 locked immutable class shadow:standard@
 	TimeSpan
 is CanAdd<TimeSpan>
+and CanSubtract<TimeSpan>
 and CanEqual<TimeSpan>
 {
 	immutable long NANOS_PER_MICROSECOND = 1000;
@@ -167,6 +171,12 @@ and CanEqual<TimeSpan>
 	public readonly add(TimeSpan other) => (TimeSpan)
 	{
 		var nanos = this->totalNanoSeconds + other->totalNanoSeconds;
+		return TimeSpan:create(nanos);
+	}
+	
+	public readonly subtract(TimeSpan other) => (TimeSpan)
+	{
+		var nanos = this->totalNanoSeconds - other->totalNanoSeconds;
 		return TimeSpan:create(nanos);
 	}
 

@@ -1,0 +1,12 @@
+class shadow:standard@
+	Message
+{
+	get Thread sender;
+	get Object data;
+	
+	public create(Object data)
+	{
+		this:sender = CurrentThread->instance;
+		this:data = copy(data);
+	}
+}

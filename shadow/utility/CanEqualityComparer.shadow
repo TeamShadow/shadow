@@ -1,5 +1,0 @@
-interface shadow:utility@
-	CanEqualityComparer<T>
-{
-	readonly compare(T a, T b) => (boolean);
-}
