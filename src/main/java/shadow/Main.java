@@ -279,8 +279,9 @@ public class Main {
 
 		//just type check until ANTLR migration is finished
 		try {
-			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation
-			for( Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile()) ) {				
+			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation			
+			for( Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter) ) {				
 				Path file = node.getPath();
 				
 				if( currentJob.isCheckOnly() ) {				

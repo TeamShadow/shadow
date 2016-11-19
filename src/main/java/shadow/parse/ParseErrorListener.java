@@ -54,7 +54,7 @@ public class ParseErrorListener extends BaseErrorListener {
 		else
 			error = String.format("[%d:%d] %s: %s", line, charPositionInLine, Error.SYNTAX_ERROR.getName(), msg);
 
-		reporter.addError(new ParseException(Error.SYNTAX_ERROR, error));
+		reporter.addError(new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine ));
 	}
 
 }

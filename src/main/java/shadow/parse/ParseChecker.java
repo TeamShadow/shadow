@@ -117,7 +117,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			checkClassOrInterfaceDeclaration( ctx.classOrInterfaceDeclaration(), ctx.modifiers());		
 		else if( ctx.enumDeclaration() != null ) {
 			ctx.enumDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkEnumModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkEnumModifiers(ctx));
 		}	
 		
 		return null;
@@ -145,7 +145,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkCreateModifiers());
+		addErrors(mods, modifiers.checkCreateModifiers(ctx));
 		
 		visitChildren(ctx);
 		
@@ -207,7 +207,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkEnumModifiers());
+		addErrors(mods, modifiers.checkEnumModifiers(ctx));
 		
 		return visitChildren(ctx);
 	}
@@ -220,7 +220,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkDestroyModifiers());
+		addErrors(mods, modifiers.checkDestroyModifiers(ctx));
 		
 		return visitChildren(ctx);		
 	}
@@ -233,7 +233,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkFieldModifiers());
+		addErrors(mods, modifiers.checkFieldModifiers(ctx));
 		ctx.type().addModifiers(modifiers); //also add to type
 		
 		return visitChildren(ctx);		
@@ -247,7 +247,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkMethodModifiers());
+		addErrors(mods, modifiers.checkMethodModifiers(ctx));
 		
 		return visitChildren(ctx);		
 	}
@@ -265,10 +265,10 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
 		switch( ctx.getStart().getText() ) {
-			case "class": addErrors(mods, modifiers.checkClassModifiers()); break;
-			case "singleton": addErrors(mods, modifiers.checkSingletonModifiers()); break;
-			case "exception": addErrors(mods, modifiers.checkExceptionModifiers()); break;
-			case "interface": addErrors(mods, modifiers.checkInterfaceModifiers()); break;
+			case "class": addErrors(mods, modifiers.checkClassModifiers(ctx)); break;
+			case "singleton": addErrors(mods, modifiers.checkSingletonModifiers(ctx)); break;
+			case "exception": addErrors(mods, modifiers.checkExceptionModifiers(ctx)); break;
+			case "interface": addErrors(mods, modifiers.checkInterfaceModifiers(ctx)); break;
 		}
 	}
 	
@@ -284,7 +284,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = ctx.modifiers().getModifiers();
 		ctx.type().addModifiers(modifiers);
 		ctx.addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers(ctx));
 		
 		return null;
 	}
@@ -307,7 +307,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = ctx.modifiers().getModifiers();
 		ctx.type().addModifiers(modifiers);
 		ctx.addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers(ctx));
 		
 		return null;
 	}
@@ -324,7 +324,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ctx.addModifiers(modifiers);
 		if( ctx.type() != null )
 			ctx.type().addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 		
 		return null;
 	}
@@ -348,11 +348,11 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = ctx.modifiers().getModifiers();
 		if( ctx.localMethodDeclaration() != null ) {
 			ctx.localMethodDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkLocalMethodModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkLocalMethodModifiers(ctx));
 		}
 		else if( ctx.localVariableDeclaration() != null ) {
 			ctx.localVariableDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 			if( ctx.localVariableDeclaration().type() != null )
 				ctx.localVariableDeclaration().type().addModifiers(modifiers);
 		}
@@ -390,7 +390,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ctx.addModifiers(modifiers);
 		if( ctx.type() != null )
 			ctx.type().addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 		
 		return null;
 	}
@@ -401,7 +401,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		if( ctx.localVariableDeclaration() != null ) {
 			Modifiers modifiers = ctx.modifiers().getModifiers();
 			ctx.localVariableDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 			if( ctx.localVariableDeclaration().type() != null )
 				ctx.localVariableDeclaration().type().addModifiers(modifiers);
 		}
