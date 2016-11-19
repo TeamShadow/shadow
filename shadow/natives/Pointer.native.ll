@@ -56,7 +56,7 @@ entry:
 ; freeMemory() => ();
 define void @shadow.natives..Pointer_MfreeMemory(%shadow.natives..Pointer*) {
 entry:
-	%pointer = call %void* @extractPointer(%shadow.natives..Pointer* %0)
+	%pointer = call %void* @__extractPointer(%shadow.natives..Pointer* %0)
 	call void @free(%void* %pointer)
 	
 	ret void
@@ -71,7 +71,7 @@ entry:
 ;---------------------------
 ; Custom Method Definitions
 ;---------------------------
-define %void* @extractPointer(%shadow.natives..Pointer*) {
+define %void* @__extractPointer(%shadow.natives..Pointer*) {
 entry:
 	%address = call %long @shadow.natives..Pointer_MgetAddressNative(%shadow.natives..Pointer* %0)
 	%pointer = inttoptr %long %address to %void*

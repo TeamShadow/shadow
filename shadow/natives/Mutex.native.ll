@@ -54,7 +54,7 @@ declare %int @pthread_mutex_unlock(%struct.pthread_mutex_t*)
 declare void @shadow.natives..Mutex.Owner_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex.Owner*, %shadow.standard..Thread*)
 
 ; 
-declare %void* @extractPointer(%shadow.natives..Pointer*)
+declare %void* @__extractPointer(%shadow.natives..Pointer*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -62,7 +62,7 @@ declare %void* @extractPointer(%shadow.natives..Pointer*)
 ; initMutex(Pointer ptr) => (int);
 define %int @shadow.natives..Mutex_MinitMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%ptr.addr = call %void* @__extractPointer(%shadow.natives..Pointer* %1)
 	%handle = bitcast %void* %ptr.addr to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_init(%struct.pthread_mutex_t* %handle, %int* null)
 	
@@ -72,7 +72,7 @@ entry:
 ; destroyMutex(Pointer ptr) => (int);
 define %int @shadow.natives..Mutex_MdestroyMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%ptr.addr = call %void* @__extractPointer(%shadow.natives..Pointer* %1)
 	%handle = bitcast %void* %ptr.addr to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_destroy(%struct.pthread_mutex_t* %handle)
 
@@ -82,7 +82,7 @@ entry:
 ; unlockMutex(Pointer ptr) => (int);
 define %int @shadow.natives..Mutex_MunlockMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%ptr.addr = call %void* @__extractPointer(%shadow.natives..Pointer* %1)
 	%handle = bitcast %void* %ptr.addr to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_unlock(%struct.pthread_mutex_t* %handle)
 	ret %int %call
@@ -91,7 +91,7 @@ entry:
 ; lockMutex(Pointer ptr) => (int);
 define %int @shadow.natives..Mutex_MlockMutex_shadow.natives..Pointer(%shadow.natives..Mutex*, %shadow.natives..Pointer*) {
 entry:
-	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %1)
+	%ptr.addr = call %void* @__extractPointer(%shadow.natives..Pointer* %1)
 	%handle = bitcast %void* %ptr.addr to %struct.pthread_mutex_t*
 	%call = call %int @pthread_mutex_lock(%struct.pthread_mutex_t* %handle)
 	ret %int %call

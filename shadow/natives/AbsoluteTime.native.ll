@@ -36,7 +36,7 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
-declare %void* @extractPointer(%shadow.natives..Pointer*)
+declare %void* @__extractPointer(%shadow.natives..Pointer*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -45,7 +45,7 @@ declare %void* @extractPointer(%shadow.natives..Pointer*)
 ; setAbsoluteTime(Pointer time, int sec, int nsec) => ();
 define void @shadow.natives..AbsoluteTime_MsetAbsoluteTime_shadow.natives..Pointer_int_int(%shadow.natives..AbsoluteTime*, %shadow.natives..Pointer* %pointer, %int %sec, %int %nsec) {
 entry:
-	%ptr.addr = call %void* @extractPointer(%shadow.natives..Pointer* %pointer)
+	%ptr.addr = call %void* @__extractPointer(%shadow.natives..Pointer* %pointer)
 	%waitTime.addr = bitcast %void* %ptr.addr to %struct.timespec*
 	
 	%waitTime.tv_sec.addr = getelementptr inbounds %struct.timespec, %struct.timespec* %waitTime.addr, i32 0, i32 0
