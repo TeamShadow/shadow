@@ -2,6 +2,8 @@ import shadow:utility;
 import shadow:io@Console;
 
 /**
+* Class {@code Signaler} contains methods such as sleep(), notify(), and wait().
+*
 * @author Claude Abounegm
 */
 locked class shadow:natives@
@@ -122,6 +124,9 @@ locked class shadow:natives@
 		waitSleep(Time.fromMilliSeconds(millisecondsTimeout), true);
 	}
 	
+	/**
+	* Wakes a thread up, if any. The thread woken up is in the order threads were put to sleep.
+	*/
 	public notify() => () 
 	{
 		ptr.assertValid("Signaler");
@@ -156,8 +161,7 @@ locked class shadow:natives@
 	
 	/**
 	* Wakes up all the waiting threads, which were put to sleep using {@code waitForNotify()}.
-	*
-	* 
+	* Threads are woken up in the order they were put to sleep.
 	*/
 	public notifyAll() => ()
 	{
@@ -178,6 +182,12 @@ locked class shadow:natives@
 		}
 	}
 	
+	/**
+	* Searches for the thread and interrupts it.
+	* 
+	* @param {@code thread} the thread to interrupt.
+	* @throws InvalidOperationException if the thread could not be found.
+	*/
 	public interrupt(Thread thread) => ()
 	{
 		ptr.assertValid("Signaler");
@@ -194,6 +204,10 @@ locked class shadow:natives@
 		}
 	}
 	
+	/**
+	* Frees the allocated resources of the Signaler. All waiting threads are
+	* notifies before freeing the resources.
+	*/
 	public free() => ()
 	{
 		if(ptr->isValid) {

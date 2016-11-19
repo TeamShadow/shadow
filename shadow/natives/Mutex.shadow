@@ -1,7 +1,9 @@
 /**
+ * Class {@code Mutex} is a way to get Mutual-Exclusion in Shadow.
+ *
  * @author Claude Abounegm
  */
-locked class shadow:natives@
+locked immutable class shadow:natives@
 	Mutex
 {
 	private readonly native lockMutex(Pointer ptr) => (int);
@@ -9,57 +11,57 @@ locked class shadow:natives@
 	private readonly native initMutex(Pointer ptr) => (int);
 	private readonly native destroyMutex(Pointer ptr) => (int);
 	
-	private readonly native setOwner(nullable Thread t) => ();
+	private readonly native setOwner(immutable Owner owner, nullable Thread t) => ();
 	private readonly native get handleSize() => (int);
 
 	get Pointer ptr;
-	nullable Thread owner;
+	immutable Owner owner;
 	
 	public create()
 	{
 		ptr = Pointer:create(this->handleSize);
-		owner = null;
+		owner = freeze(Owner:create());
 		
 		initMutex(ptr);
 	}
 	
-	public readonly lock() => ()
+	public lock() => ()
 	{
 		ptr.assertValid("Mutex");
 		
-		if(CurrentThread.isEqualTo(owner)) {
+		if(owner.isCurrentThread()) {
 			throw MutexException:create("The current thread already owns this mutex.");
 		}
 		
 		lockMutex(ptr);
-		setOwner(CurrentThread->instance);
+		setOwner(owner, CurrentThread->instance);
 	}
 	
-	public readonly unlock() => ()
+	public unlock() => ()
 	{
 		ptr.assertValid("Mutex");
 
-		if(!CurrentThread.isEqualTo(owner)) {
+		if(!owner.isCurrentThread()) {
 			throw MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
 		}
 		
-		setOwner(null);
+		setOwner(owner, null);
 		unlockMutex(ptr);
 	}
 	
-	public readonly takeOwnership() => ()
+	public takeOwnership() => ()
 	{
 		ptr.assertValid("Mutex");
-		setOwner(CurrentThread->instance);
+		setOwner(owner, CurrentThread->instance);
 	}
 	
-	public readonly giveUpOwnership() =>()
+	public giveUpOwnership() =>()
 	{
 		ptr.assertValid("Mutex");
-		setOwner(null);
+		setOwner(owner, null);
 	}
 	
-	public readonly free() => ()
+	public free() => ()
 	{
 		if(ptr->isValid) {
 			destroyMutex(ptr);
@@ -67,8 +69,23 @@ locked class shadow:natives@
 		}
 	}
 	
-	private setOwnerNative(nullable Thread o) => ()
+	private class Owner
 	{
-		owner = o;
+		nullable Thread owner;
+		
+		public create()
+		{
+			owner = null;
+		}
+		
+		public readonly isCurrentThread() => (boolean)
+		{
+			return CurrentThread.isEqualTo(owner);
+		}
+		
+		private setOwnerNative(nullable Thread o) => ()
+		{
+			owner = o;
+		}
 	}
 }

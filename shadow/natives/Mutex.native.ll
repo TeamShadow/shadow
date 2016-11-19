@@ -33,6 +33,9 @@
 ; Mutex
 %shadow.natives..Mutex = type opaque
 
+; Mutex.Owner
+%shadow.natives..Mutex.Owner = type opaque
+
 ; pthread_mutex_t
 %struct.pthread_mutex_t = type i8*
 
@@ -48,7 +51,8 @@ declare %int @pthread_mutex_lock(%struct.pthread_mutex_t*)
 ; int pthread_mutex_lock(pthread_mutex_t* mutex);
 declare %int @pthread_mutex_unlock(%struct.pthread_mutex_t*)
 ; setOwnerNative(Thread owner) => ()
-declare void @shadow.natives..Mutex_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex*, %shadow.standard..Thread*)
+declare void @shadow.natives..Mutex.Owner_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex.Owner*, %shadow.standard..Thread*)
+
 ; 
 declare %void* @extractPointer(%shadow.natives..Pointer*)
 
@@ -101,8 +105,8 @@ entry:
 }
 
 ; setOwner() => ();
-define void @shadow.natives..Mutex_MsetOwner_shadow.standard..Thread(%shadow.natives..Mutex*, %shadow.standard..Thread*) {
+define void @shadow.natives..Mutex_MsetOwner_shadow.natives..Mutex.Owner_shadow.standard..Thread(%shadow.natives..Mutex*, %shadow.natives..Mutex.Owner*, %shadow.standard..Thread*) {
 entry:
-	call void @shadow.natives..Mutex_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex* %0, %shadow.standard..Thread* %1)
+	call void @shadow.natives..Mutex.Owner_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex.Owner* %1, %shadow.standard..Thread* %2)
 	ret void
 }

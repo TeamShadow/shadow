@@ -16,21 +16,22 @@ is Equate<T>
 		}
 	}
 	
-	public readonly isEqual(T a, T b) => (boolean)
-	{
-		return comparer.isEqual(a, b);
-	}
-	
 	private locked isCanEqual() => (boolean)
 	{
-		return (T:class).isSubtype(CanEqual<T>:class);
+		// return (T:class).isSubtype(CanEqual<T>:class);
 		
-		/*foreach(var t in T:class->interfaces) {
-			if(t === CanEqual<T>:class) {
+		foreach(var x in T:class->interfaces) {
+			if(x === CanEqual<T>:class) {
 				return true;
 			}
 		}
-		return false;*/
+		
+		return false;
+	}
+	
+	public readonly isEqual(T a, T b) => (boolean)
+	{
+		return comparer.isEqual(a, b);
 	}
 	
 	private class canEqualComparer is Equate<T>

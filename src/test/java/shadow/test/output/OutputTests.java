@@ -1265,9 +1265,7 @@ public class OutputTests {
 	@Test public void testEqualityComparer() throws Exception {
 		args.add("shadow/test/EqualityComparerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"true\n" +
-				"true\n" +
+		run(new String[0],
 				"true\n" +
 				"true\n" +
 				"true\n" +
@@ -1282,5 +1280,15 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "FullListException\n" + 
 							"10\n");
+	}
+	
+	@Test public void testGenericInterface() throws Exception {
+		args.add("shadow/test/GenericInterfaceTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],  "true\n" + 
+							"true" + 
+							"true\n" +
+							"true\n" +
+							"false\n");
 	}
 }

@@ -19,7 +19,7 @@ locked class shadow:natives@
 		setAbsoluteTime(ptr, cast<int>(absTime->totalSeconds), absTime->nanoSeconds);
 	}
 	
-	public free() => ()
+	public readonly free() => ()
 	{
 		ptr.free();
 	}
