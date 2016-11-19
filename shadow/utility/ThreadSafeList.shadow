@@ -4,7 +4,7 @@ import shadow:natives;
  * @author Claude Abounegm
  */
 locked class shadow:utility@
-	ThreadSafeList<T is CanEqual<T>>
+	ThreadSafeList<T>
 is List<T>
 {
 	ArrayList<T> list;

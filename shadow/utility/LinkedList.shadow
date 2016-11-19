@@ -3,7 +3,7 @@
  * implemented with a circular, doubly linked list as internal storage.
  */
 class shadow:utility@
-	LinkedList<V is CanEqual<V>>
+	LinkedList<V>
 is  List<V>
 and Deque<V>
 {
@@ -12,16 +12,16 @@ and Deque<V>
 	
 	Node header = Node:create();
 	int modifications = 0;
-	Equate<V> comparer;
+	Equate<V> equater;
 	
 	public create()
 	{
 		this(DefaultEqualizer<V>:create());
 	}
 	
-	public create(Equate<V> comparer)
+	public create(Equate<V> equater)
 	{
-		this:comparer = comparer;
+		this:equater = equater;
 	}
 
 	private class Node
@@ -94,11 +94,14 @@ and Deque<V>
 		while (true)
 		{
 			current = current->next;
-			if ( current === header )
+			if (current === header) {
 				return ( -1, null );
-			if ( value == check(current->value) )
-			// if(comparer.isEqual(value, check(current->value))
+			}
+			
+			if(equater.isEqual(value, check(current->value))) {
 				return ( index, current );
+			}
+			
 			index += 1;
 		}
 	}

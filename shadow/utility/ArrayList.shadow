@@ -4,7 +4,7 @@
  * storage.
  */
 class shadow:utility@
-	ArrayList<V is CanEqual<V>>
+	ArrayList<V>
 is  List<V>
 {
 	/// Gets size of the list.
@@ -12,7 +12,7 @@ is  List<V>
 	
 	nullable V[] elements;
 	int modifications = 0;
-	Equate<V> comparer;
+	Equate<V> equater;
 	
 	public create()
 	{
@@ -24,10 +24,10 @@ is  List<V>
 		this(initialCapacity, DefaultEqualizer<V>:create());
 	}
 	
-	public create(int initialCapacity, Equate<V> comparer)
+	public create(int initialCapacity, Equate<V> equater)
 	{
 		this:elements = V:null[initialCapacity];
-		this:comparer = comparer;
+		this:equater = equater;
 	}
 	
 	/**
@@ -37,7 +37,7 @@ is  List<V>
 	public readonly isEmpty() => ( boolean )
 	{
 		return size == 0;
-	}	
+	}
 	
 	/**
 	 * Retrieves the element at the given index. Legal indexes are from 0
@@ -133,8 +133,7 @@ is  List<V>
 	public readonly indexOf(V value) => (int index)
 	{	
 		for(int i = 0; i < size; i += 1) {
-			/*if(comparer.isEquate(value, check(elements[i]))) {*/
-			if(value == check(elements[i])) {
+			if(equater.isEqual(value, check(elements[i]))) {
 				return i;
 			}
 		}

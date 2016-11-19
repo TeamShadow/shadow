@@ -1286,7 +1286,7 @@ public class OutputTests {
 		args.add("shadow/test/GenericInterfaceTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],  "true\n" + 
-							"true" + 
+							"true\n" + 
 							"true\n" +
 							"true\n" +
 							"false\n");

@@ -34,10 +34,6 @@ class shadow:test@EqualityComparerTest
 
 	public main(String[] args) => ()
 	{
-		Console.printLine(CanEqual<Point>:class.isInterface());
-		Console.printLine(CanEqual<Point1>:class.isInterface());
-		Console.printLine(CanEqual<Point2>:class.isInterface());
-	
 		var comp1 = DefaultEqualizer<Point1>:create();
 		var comp2 = DefaultEqualizer<Point2>:create();
 		var comp3 = DefaultEqualizer<Point>:create();
