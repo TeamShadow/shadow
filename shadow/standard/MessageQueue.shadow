@@ -113,7 +113,7 @@ and CanIndexStore<int, Message>
 		var message = this[index];
 		var dataType = message->data.getClass();
 		if(dataType !== expectedType) {
-			throw WrongTypeException:create(expectedType, dataType);
+			throw IncompatibleMessageTypeException:create(expectedType, dataType);
 		}
 		
 		if(index == 0) {

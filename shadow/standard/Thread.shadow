@@ -293,10 +293,71 @@ and CanIndex<int, Thread>
 		mutex.lock();
 		interrupting = true;
 		try {
-			if(this->state == WAITING and interruptToken !== null) {
-				check(interruptToken).signal();
+			if(this->state == WAITING) {
+				if(interruptToken !== null) {
+					check(interruptToken).signal();
+				} /*else {
+					// handle unmanaged IO cancellation
+				}*/
 			}
 			
+			/*
+			* Note:
+			* IO interruption is going to be more challenging to implement as it does not follow
+			* the same pattern as above. IO is blocking in nature, and will not use the Signaler to be blocking.
+			* However, pthreads do have a way of cancelling such operations, using `pthread_cancel`. IO operations
+			* are considered "cancellation points", and `pthread_cancel` is used to cancel the thread. The problem
+			* with this however is that the `pthread_cancel` causes the thread to abruptly terminate. This stops the
+			* execution of our "finally" clause in runnerNative(). This means a few things:
+			*	1. When `pthread_cancel` is called, we also need to depend on `pthread_join` and cannot depend on the 
+			*		Signaler in that case.
+			*	2. `pthread_join` will need to be called right after the `pthread_cancel`, and should take place in this
+			*		this interrupt method.
+			*	3. Every time a non-managed IO operation is performed, we need to set the state of the thread to WAITING
+			*		using `this->state = WAITING;`.
+			*	4. Exception `ex` needs to be set manually to a new ThreadException with InterruptedException as the message.
+			*	5. cleanup() needs to be called when the `pthread_join` returns with a CANCELLED error code.
+			*
+			*	An idea of the code I have in mind is as follows:
+			*
+			*	|Thread side:|
+			*	run() => () {
+			*		readIO();
+			*	}
+			*
+			*	|IO Side:|
+			*	readIO() => () {
+			*		setThreadState(WAITING);
+			*		performNativeBlockingReadIO();
+			*		setThreadState(RUNNING); // on cancel this is never reached
+			*	}
+			*
+			*	|Interrupt Side:|
+			*	interrupt() => () {
+			*		...
+			*		} else {
+			*			pthread_cancel(ptr);
+			*			if(pthread_join(ptr) == CANCELLED) {
+			*				interrupting = false;
+			*				ex = ThreadException:create(this, InterruptedException:create());
+			*				cleanup(); // this will wake all joined threads, and will cause the exceptions to propagate correctly.
+			*			}
+			*		}
+			*	}
+			*
+			*	For more info, check:
+			*		http://man7.org/linux/man-pages/man7/pthreads.7.html
+			*		http://man7.org/linux/man-pages/man3/pthread_cancel.3.html
+			*
+			* However, it is important to note that it might be necessary to use POSIX read()/write() in place
+			* of Windows calls such ReadFile() to support such cancellations. More testing needs to be done in
+			* order to ensure correct functionality!
+			*
+			* Good luck!
+			*/
+			
+			// Quick explanation on how exceptions propagate:
+			// 
 			// When the InterruptedException is raised, the runnerNative() catches that exception. 
 			// Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
 			// up the resources it used. It calls signaler.free(), which in turn causes Signaler to release
@@ -351,7 +412,7 @@ and CanIndex<int, Thread>
 	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
 	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
 	*
-	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	* 
@@ -369,7 +430,7 @@ and CanIndex<int, Thread>
 	* can send as many messages as it desires, but the receiving thread should always
 	* receive the data in the order it was sent, or otherwise an exception is thrown.
 	*
-	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	* 
@@ -424,13 +485,17 @@ and CanIndex<int, Thread>
 		} catch(Exception e) {
 			ex = ThreadException:create(this, e);
 		} finally {
-			this->state = DEAD;
-
-			mutex.lock();
-			handle.free();
-			signaler.free();
-			mutex.unlock();
+			cleanup();
 		}
+	}
+	
+	private cleanup() => ()
+	{
+		this->state = DEAD;
+		mutex.lock();
+		handle.free();
+		signaler.free();
+		mutex.unlock();
 	}
 	
 	private waitForThreadsNative() => ()
@@ -576,7 +641,7 @@ and CanIndex<int, Thread>
 		return Thread:create(NopRunner:create(), "Thread#main"); 
 	}
 	
-	/// Thread:this does not work to get the outer reference, so we use this
+	/// {Thread:this} does not work to get the outer reference, so we use this
 	/// workaround instead.
 	private readonly instance() => (Thread)
 	{

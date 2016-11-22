@@ -195,7 +195,7 @@ is CanIndex<int, Thread>
 	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
 	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
 	*
-	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	* 
@@ -213,7 +213,7 @@ is CanIndex<int, Thread>
 	* can send as many messages as it desires, but the receiving thread should always
 	* receive the data in the order it was sent, or otherwise an exception is thrown.
 	*
-	* @throws WrongTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	* 
