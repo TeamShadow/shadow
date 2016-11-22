@@ -1203,11 +1203,11 @@ public class OutputTests {
 				"Thread#1: waiting!\n" + 
 				"Thread#2: waiting!\n" + 
 				"Thread#3: waiting!\n" + 
+				"Thread#3: finished waiting!\n" + 
 				"Thread#4: waiting!\n" + 
 				"Thread#5: waiting!\n" + 
 				"Thread#1: finished waiting!\n" + 
 				"Thread#2: finished waiting!\n" + 
-				"Thread#3: finished waiting!\n" + 
 				"Thread#4: finished waiting!\n" + 
 				"Thread#5: finished waiting!\n"
 				);
@@ -1255,10 +1255,12 @@ public class OutputTests {
 		run(new String[0], 
 				"waiting\n" +
 				"I am Thread#2\n" +
+				"Thread#2: 0\n" +
 				"I am Thread#3\n" +
 				"Thread#3: 1\n" +
 				"end\n" +
 				"InterruptedException thrown\n" +
+				"1\n" +
 				"done\n");
 	}
 	
@@ -1290,5 +1292,14 @@ public class OutputTests {
 							"true\n" +
 							"true\n" +
 							"false\n");
+	}
+	
+	@Test public void testMutex() throws Exception {
+		args.add("shadow/test/MutexTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],  "lock1\n" +
+							"shadow:natives@MutexException: This thread already owns this mutex.\n" +
+							"Nested locks\n" +
+							"Done!\n");
 	}
 }

@@ -42,7 +42,7 @@
 ;---------
 ; Globals
 ;---------
-; used to store the current instance of the thread; Thread->current.
+; used to store the current instance of the thread; CurrentThread->instance.
 @shadow.standard..Thread_TLS_currentThread = thread_local global %shadow.standard..Thread* null
 @shadow.standard..Thread_STATIC_mainThread = global %shadow.standard..Thread* null
 @STATIC_nextThreadId = private global %int 0
@@ -55,10 +55,8 @@ declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void*
 
 ; runnerNative() => ();
 declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
-
 ; createMainNative() => (Thread);
 declare %shadow.standard..Thread* @shadow.standard..Thread_McreateMainNative(%shadow.standard..Thread*)
-
 declare %void* @__extractPointer(%shadow.natives..Pointer*)
 
 ;---------------------------
@@ -103,7 +101,6 @@ entry:
 define %int @shadow.standard..Thread_MhandleSize(%shadow.standard..Thread*) {
 entry:
 	%sizeOfPthread = ptrtoint %struct.pthread_t* getelementptr (%struct.pthread_t, %struct.pthread_t* null, i32 1) to i32
-	
 	ret %int %sizeOfPthread
 }
 
@@ -126,7 +123,7 @@ entry:
 }
 
 ; initializes the main thread and set the currentThread and mainThread to that instance
-define void @shadow.standard..Thread_MinitMainThread() {
+define %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread() {
 entry:
 	; we initialize the dummy Thread for the main thread
 	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_McreateMainNative(%shadow.standard..Thread* null)
@@ -137,5 +134,5 @@ entry:
 	; each thread should also be able to reference the main thread from anywhere, as it is the root of all threads.
 	store %shadow.standard..Thread* %mainThread, %shadow.standard..Thread** @shadow.standard..Thread_STATIC_mainThread
 	
-	ret void
+	ret %shadow.standard..Thread* %mainThread
 }

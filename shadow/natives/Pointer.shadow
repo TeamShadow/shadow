@@ -3,6 +3,11 @@
  * pass it to native LLVM code. This eases interaction between Shadow an native LLVM methods.
  *
  * @author Claude Abounegm
+ *
+ * @seeDoc shadow:natives@AbsoluteTime
+ * @seeDoc shadow:natives@Mutex
+ * @seeDoc shadow:natives@Signaler
+ * @seeDoc shadow:standard@Thread
  */
 locked immutable class shadow:natives@
 	Pointer

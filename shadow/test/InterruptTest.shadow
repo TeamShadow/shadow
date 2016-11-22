@@ -31,13 +31,13 @@ class shadow:test@InterruptTest
 		Thread:create(ThreadSleepTestRunner:create()); // 0
 		
 		Thread:create(ThreadTestRunner:create()); // 1
-		CurrentThread[1].interrupt();
 		send(0, CurrentThread[1]);
 		
 		Thread:create(ThreadTestRunner:create()); // 2
 		send(1, CurrentThread[2]);
 		
 		CurrentThread.sleep(Time.fromSeconds(4));
+		CurrentThread[1].interrupt();
 		Console.printLine("end");
 		
 		try {
@@ -49,5 +49,10 @@ class shadow:test@InterruptTest
 				throw e;
 			}
 		}
+		
+		var now = Time.epochNow();
+		CurrentThread[0].join(Time.fromSeconds(1));
+		now = Time.epochNow() - now;
+		Console.printLine(now->seconds);
 	}
 }

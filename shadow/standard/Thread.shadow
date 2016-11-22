@@ -27,8 +27,8 @@ and CanIndex<int, Thread>
 	
 	// START: Private variables
 	nullable Exception ex = null;
-	nullable Signaler interruptSignaler = null;
-
+	nullable SignalToken interruptToken = null;
+	
 	int state;
 	int joined;
 	boolean interrupting;
@@ -51,7 +51,7 @@ and CanIndex<int, Thread>
 	get int id;
 	
 	/// Gets the main thread, which is the root of all threads.
-	public native get main() => (Thread);
+	public readonly native get main() => (Thread);
 	
 	/**
 	* Gets the {@code Thread} which spawned this thread. The Main thread does not
@@ -238,7 +238,7 @@ and CanIndex<int, Thread>
 		}
 		
 		mutex.lock();
-		boolean throwException = !finalizing or (finalizing and joined == 0);
+		boolean throwException = (!finalizing or joined == 0);
 		boolean timedOut = false;
 		
 		joined += 1;
@@ -246,29 +246,24 @@ and CanIndex<int, Thread>
 		
 		if(isAlive()) {
 			try {
-				setCurrentThreadState(WAITING, this:signaler);
-
 				if(timeout->isPositive) {
 					timedOut = signaler.waitForNotify(timeout);
 				} else {
 					signaler.waitForNotify();
 				}
 			} catch(InterruptedException e) {
-				// An interrupted join is not succesful, so we
-				// decrease its count.
+				// An interrupted join is not succesful, so we decrease its count.
 				mutex.lock();
 				joined -= 1;
 				mutex.unlock();
 
 				throw e;
-			} finally {
-				setCurrentThreadState(RUNNING, null);
 			}
 		}
 
 		// we then check here if we have an exception. If we do, we throw it, and
 		// it is the job of runnerNative() to take care of the handling.
-		if(throwException and ex !== null) {
+		if(ex !== null and throwException) {
 			throw check(ex);
 		}
 
@@ -276,7 +271,13 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
-	* Tries to interrupt this thread. 
+	* Requests this thread to be interrupted. If the thread is currently in the {@code WAITING} state, 
+	* the thread is interrupted and the method that caused the thread to be in the {@code WAITING} state
+	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()}, 
+	* {@code sleep()}, {@code send()}, {@code receive()}, and all their overloads.
+	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
+	* as soon as one of the above interruptible methods above are called, or when the user calls 
+	* {@code CurrentThread.throwIfInterrupting()}, or throws an exception using {@code CurrentThread->interrupting}.
 	*/
 	public interrupt() => ()
 	{
@@ -287,9 +288,8 @@ and CanIndex<int, Thread>
 		mutex.lock();
 		interrupting = true;
 		try {
-			if(this->state == WAITING) {
-				interrupting = false;
-				check(interruptSignaler).interrupt(this);
+			if(this->state == WAITING and interruptToken !== null) {
+				check(interruptToken).signal();
 			}
 			
 			// When the InterruptedException is raised, the runnerNative() catches that exception. 
@@ -302,13 +302,11 @@ and CanIndex<int, Thread>
 		}
 	}
 	
-	/**
-	* 
-	*/
-	public get shouldInterrupt() => (boolean)
+	/// Implemented for CurrentThread->interrupting.
+	private get interruptingNative() => (boolean)
 	{
-		if(!isCurrentThread()) {
-			throw InvalidOperationException:create("shouldInterrupt() should only be called from the current thread.");
+		if(!isCurrentThread()) { // should never reach this
+			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
 		}
 		
 		mutex.lock();
@@ -330,9 +328,7 @@ and CanIndex<int, Thread>
 	*/
 	private sleepNative(TimeSpan timeout) => ()
 	{
-		setCurrentThreadState(WAITING, signaler);
-		signaler.sleep(timeout);
-		setCurrentThreadState(RUNNING, null);
+		signaler.waitForTimeout(timeout);
 	}
 	
 	/**
@@ -357,12 +353,8 @@ and CanIndex<int, Thread>
 	* @seeDoc shadow:standard@Mailbox
 	*/
 	public receiveFirst(Class expectedType) => (Object, Thread)
-	{	
-		setCurrentThreadState(WAITING, mailbox->signaler);
-		var retVal = mailbox.dequeue(expectedType);
-		setCurrentThreadState(RUNNING, null);
-		
-		return retVal;
+	{
+		return mailbox.dequeue(expectedType);
 	}
 	
 	/**
@@ -381,14 +373,10 @@ and CanIndex<int, Thread>
 	public receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
 		if(from === this) {
-			throw IllegalArgumentException:create("Cannot receive a message from self.");
+			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
 		}
 		
-		setCurrentThreadState(WAITING, mailbox->signaler);
-		var retVal = mailbox.dequeue(expectedType, from);
-		setCurrentThreadState(RUNNING, null);
-		
-		return retVal;
+		return mailbox.dequeue(expectedType, from);
 	}
 	
 	/**
@@ -413,12 +401,10 @@ and CanIndex<int, Thread>
 		}
 		
 		if(isCurrentThread()) {
-			throw InvalidOperationException:create("Cannot send a message to self.");
+			throw InvalidOperationException:create("A Thread cannot send a message to itself.");
 		}
 		
-		setCurrentThreadState(WAITING, mailbox->signaler);
 		mailbox.enqueue(data);
-		setCurrentThreadState(RUNNING, null);
 	}
 	
 	/**
@@ -442,18 +428,16 @@ and CanIndex<int, Thread>
 		}
 	}
 	
-	// THIS METHOD GETS CALLED WITH A NULL `this` POINTER, DO NOT USE
-	// `this` or any instance methods on this thread.
 	private waitForThreadsNative() => ()
 	{
-		if(currentThread() !== main()) {
+		if(this !== main()) {
 			throw Exception:create("waitForThreadsNative() can only be called on the main thread.");
 		}
-		// this->state = DEAD;
+		// this->state = DEAD; // necessary, maybe?
 		
 		var exceptionQueue = ArrayDeque<ThreadException>:create();
 		
-		foreach(var thread in currentThread().children(true)) {
+		foreach(var thread in children(true)) {
 			try {
 				thread.join(true, Time->InfiniteTimeout);
 				// the `true` causes this thread to wait for the other thread
@@ -558,17 +542,25 @@ and CanIndex<int, Thread>
 		check(parent):childrenList.add(this);
 	}
 	
-	private setCurrentThreadState(int state, nullable Signaler interruptSignaler) => ()
+	/// called natively by Signaler, `this` is the CurrentThread->instance.
+	private setInterruptTokenNative(nullable SignalToken interruptToken) => ()
 	{
-		var thread = currentThread();
-		if(thread->shouldInterrupt) {
-			throw InterruptedException:create();
+		int state = RUNNING;
+		var interrupting = CurrentThread->interrupting;
+		if(interrupting) {
+			interruptToken = null;
+		} else if(interruptToken !== null) {
+			state = WAITING;
 		}
 		
-		thread:stateMutex.lock();
-		thread:state = state;
-		thread:interruptSignaler = interruptSignaler;
-		thread:stateMutex.unlock();
+		this:stateMutex.lock();
+		this:state = state;
+		this:interruptToken = interruptToken;
+		this:stateMutex.unlock();
+		
+		if(interrupting) {
+			throw InterruptedException:create();
+		}
 	}
 	
 	private readonly currentThread() => (Thread)
@@ -581,12 +573,16 @@ and CanIndex<int, Thread>
 		return Thread:create(NopRunner:create(), "Thread#main"); 
 	}
 	
+	/// Thread:this does not work to get the outer reference, so we use this
+	/// workaround instead.
 	private readonly instance() => (Thread)
 	{
 		return this;
 	}
 	
-	// A Runner which performs no operations.
+	// A Runner which performs no operations. A null runner would had been prefered
+	// but Shadow does not currenly support nullable interfaces, so until then, this is
+	// the most elegant solution.
 	private class NopRunner
 		is CanRun
 	{
@@ -605,20 +601,21 @@ and CanIndex<int, Thread>
 		public readonly iterator() => (Iterator<Thread>)
 		{
 			if(recurse) {
-				return ChildrenIterator:create();
+				return RecursiveChildrenIterator:create();
 			}
 
 			return instance():childrenList.iterator();
 		}
 		
-		private class ChildrenIterator is Iterator<Thread>
+		private class RecursiveChildrenIterator is Iterator<Thread>
 		{
 			ArrayDeque<Thread> threadsQueue;
-			Thread current = instance();
+			Thread current;
 			
 			public create()
 			{
 				threadsQueue = ArrayDeque<Thread>:create();
+				current = instance();
 			}
 			
 			public readonly hasNext() => (boolean)
@@ -628,6 +625,12 @@ and CanIndex<int, Thread>
 			
 			public next() => (Thread)
 			{
+				// this is tricky as we need to avoid race conditions, and since the parent
+				// can spawn threads at any time, we cannot predict when it will happen. We
+				// add the first generation children of the current thread to the queue, retrieve
+				// the first child, set it as the current, and return it. This allows us to perform
+				// operations on the `current` thread outside the iterator, and the children will
+				// then be added to queue on demand. Check waitForThreadsNative() for a better understanding.
 				addChildrenToQueue(current);
 				
 				if(threadsQueue.isEmpty()) {

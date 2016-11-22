@@ -1,3 +1,8 @@
+/**
+ * Singleton {@code Time} contains useful methods to easily create {@code TimeSpan}s.
+ *
+ * @author Claude Abounegm
+ */
 immutable singleton shadow:standard@
 	Time
 {

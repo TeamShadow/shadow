@@ -2,7 +2,7 @@
  * @author Claude Abounegm
  */
 exception shadow:standard@
-	NoDataException
+	FullMailboxException
 {
 	public create(String message)
 	{

@@ -107,13 +107,13 @@ _exception:
 }
 
 %shadow.standard..Thread = type opaque
-declare void @shadow.standard..Thread_MinitMainThread()
+declare %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
 declare void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread*)
 define void @callMain(%shadow.test..Test* %initialized) {
 entry:
-	call void @shadow.standard..Thread_MinitMainThread()
+	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
 	call void @shadow.test..Test_Mmain(%shadow.test..Test* %initialized)
-	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* null)
+	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* %mainThread)
 	
 	ret void
 }

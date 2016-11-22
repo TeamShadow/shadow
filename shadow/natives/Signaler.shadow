@@ -1,11 +1,14 @@
 import shadow:utility;
-import shadow:io@Console;
 
 /**
-* Class {@code Signaler} contains methods such as sleep(), notify(), and wait().
-*
-* @author Claude Abounegm
-*/
+ * Class {@code Signaler} contains signaling methods to communicate between threads
+ * such as: waitForNotify(), waitForTimeout(), notify(), and notifyAll().
+ *
+ * @author Claude Abounegm
+ * @seeDoc shadow:test@SignalerTest
+ *
+ * @seeDoc shadow:standard@Thread
+ */
 locked class shadow:natives@
 	Signaler
 {
@@ -16,24 +19,35 @@ locked class shadow:natives@
 	private native readonly timedWait(Pointer cond, Pointer mutex, Pointer time) => (int);
 	private native readonly broadcast(Pointer cond) => (int);
 	
+	/**
+	* This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
+	*/
+	private native readonly setInterruptToken(Thread currentThread, nullable SignalToken interruptToken) => ();
+	
 	private readonly native get handleSize() => (int);
 	
+	boolean terminate = false;
 	int waitingThreads = 0;
+	
 	Mutex mutex;
 	Pointer ptr;
 	LinkedList<SignalToken> tokensQueue;
-	LinkedList<SignalToken> sleepTokensQueue;
 	
+	/**
+	* Initializes a new {@code Signaler} instance.
+	*/
 	public create()
 	{
 		mutex = Mutex:create();
 		ptr = Pointer:create(this->handleSize);
 		tokensQueue = LinkedList<SignalToken>:create();
-		sleepTokensQueue = LinkedList<SignalToken>:create();
 		
 		initSignaler(ptr);
 	}
 	
+	/**
+	* Gets the number of threads that are currently waiting on this Signaler.
+	*/
 	public readonly get waitingThreadsCount() => (int)
 	{
 		mutex.lock();
@@ -54,34 +68,74 @@ locked class shadow:natives@
 	{
 		ptr.assertValid("Signaler");
 
-		var token = SignalToken:create();
+		var token = SignalToken:create(this);
 
 		mutex.lock();
 		try {
 			tokensQueue.addLast(token);
 			waitingThreads += 1;
-
-			while(token->shouldWait) {
+			
+			setInterruptToken(CurrentThread->instance, token);
+			while(token->shouldWait and !terminate) {
 				mutex.giveUpOwnership();
 				wait(ptr, mutex->ptr);
 				mutex.takeOwnership();
 			}
-			
-			if(token->interrupted) {
-				throw InterruptedException:create();
-			}
+			setInterruptToken(CurrentThread->instance, null);
 		} finally {
 			waitingThreads -= 1;
 			mutex.unlock();
 		}
 	}
 	
+	private waitSleep(TimeSpan timeout, boolean sleepOnly) => (boolean)
+	{
+		ptr.assertValid("Signaler");
+
+		var time = AbsoluteTime:create(timeout);
+		var token = SignalToken:create(this);
+		int retVal = 0;
+		
+		mutex.lock();
+		try {
+			// we only add the token if we want to be able to wake this thread up later.
+			// since we do not want any notify to wake that thread up, we do not add it to
+			// the queue if we only want to sleep.
+			if(!sleepOnly) {
+				tokensQueue.addLast(token);
+			}
+
+			waitingThreads += 1;
+			
+			setInterruptToken(CurrentThread->instance, token);
+			 // retVal is not zero when the wait times out
+			while(retVal == 0 and token->shouldWait and !terminate) {
+				mutex.giveUpOwnership();
+				retVal = timedWait(ptr, mutex->ptr, time->ptr);
+				mutex.takeOwnership();
+			}
+			setInterruptToken(CurrentThread->instance, null);
+		} finally {
+			waitingThreads -= 1;
+			if(token.invalidate() and !sleepOnly) {
+				// waitForNotify timedout, so we still need to remove the 
+				// token from the queue.
+				tokensQueue.remove(token);
+			}
+			mutex.unlock();
+			time.free();
+		}
+
+		return (retVal != 0);
+	}
+	
 	/**
 	* Suspends the calling thread until another thread calls notify(),
-	* notifyAll(), interrupt(), or for the specified amount of time elapsed.
+	* notifyAll(), or for the specified amount of time elapsed.
 	*
 	* @param timeout The amount of time to wait before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
+	*
 	* @throws FreedResourceException if this Signaler has been freed.
 	*/
 	public waitForNotify(TimeSpan timeout) => (boolean)
@@ -91,7 +145,7 @@ locked class shadow:natives@
 	
 	/**
 	* Suspends the calling thread until another thread calls notify(),
-	* notifyAll(), interrupt(), or for the specified amount of time elapsed.
+	* notifyAll(), or for the specified amount of time elapsed.
 	*
 	* @param millisecondsTimeout The amount of time to wait, in milliseconds, before timing out.
 	* @return {@code true} if the operation timed-out; otherwise, {@code false}.
@@ -107,9 +161,10 @@ locked class shadow:natives@
 	/**
 	* Suspends the calling thread for the specified amount of time.
 	*
+	* @throws FreedResourceException if this Signaler has been freed.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/
-	public sleep(TimeSpan timeout) => ()
+	public waitForTimeout(TimeSpan timeout) => ()
 	{
 		waitSleep(timeout, true);
 	}
@@ -117,17 +172,23 @@ locked class shadow:natives@
 	/**
 	* Suspends the calling thread for the specified amount of time.
 	*
+	* @throws FreedResourceException if this Signaler has been freed.
 	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/	
-	public sleep(int millisecondsTimeout) => ()
+	public waitForTimeout(int millisecondsTimeout) => ()
 	{		
 		waitSleep(Time.fromMilliSeconds(millisecondsTimeout), true);
 	}
 	
 	/**
-	* Wakes a thread up, if any. The thread woken up is in the order threads were put to sleep.
+	* Wakes a thread up, if there is any. Signaler is FIFO, meaning the first thread that
+	* went to sleep is the first that gets woken up.
+	*
+	* @return {@code true} if a thread was woken up; otherwise, {@code false}.
+	*
+	* @throws FreedResourceException if this Signaler has been freed.
 	*/
-	public notify() => () 
+	public notify() => (boolean) 
 	{
 		ptr.assertValid("Signaler");
 		
@@ -135,170 +196,92 @@ locked class shadow:natives@
 		try {
 			// we would like to assure having a more or less organised wake up pattern.
 			// Thus, notify should wake the threads up in the order that they went to sleep in.
-			// we dequeue the first token, and broadcast to wake up all threads. However, since
-			// we're in a loop, only one thread wakes up, which is the one we want.
+			// we dequeue the first token, and broadcast to wake up all threads. This wakes up all
+			// the threads owned by this Signaler, but only one thread actually "really" wakes up. That is
+			// due to the SignalToken still being blocking on all threads but the one we unlocked.
 			if(!tokensQueue.isEmpty()) {
-				// We would like to avoid notifying a thread which has already timedout.
-				// When a wait() timesout, it sets its own `shouldWait` flag to false, but 
-				// does not remove itself from the queue. Thus the token could still be in queue.
-				// This is an invalid token and no threads are listening on it. So we check for that. 
-				// If the flag is false, we ignore it and move on to the next one.
-				SignalToken token;
-				do {
-					token = tokensQueue.removeFirst();
-				} while(!tokensQueue.isEmpty() and !token->shouldWait);
-				
-				// found a valid flag, set to false, and notify it.
-				token.invalidate();
-				
-				// notify all threads, but only one thread gets unlocked.
-				broadcast(ptr);
+				return signal(tokensQueue.removeFirst());
 			}
 		} finally {
 			mutex.unlock();
 		}
+		
+		return false;
 	}
 	
 	/**
 	* Wakes up all the waiting threads, which were put to sleep using {@code waitForNotify()}.
-	* Threads are woken up in the order they were put to sleep.
+	* Threads are woken up in the order they were put to sleep. Threads sleeping due to {@code waitForTimeout()}
+	* are not woken up, and the only way to wake them up is either by freeing this Signaler or by waiting for them to timeout.
+	*
+	* @return the number of threads that were woken up.
+	*
+	* @throws FreedResourceException if this Signaler has been freed.
 	*/
-	public notifyAll() => ()
+	public notifyAll() => (int)
 	{
 		ptr.assertValid("Signaler");
 
 		mutex.lock();
+		int count = 0;
 		try {
 			while(!tokensQueue.isEmpty()) {
-				tokensQueue
-					.removeFirst()
-					.invalidate();
-				
-				// notify all threads, but only one threads gets unlocked.
-				broadcast(ptr);
+				if(signal(tokensQueue.removeFirst())) {
+					count += 1;
+				}
 			}
 		} finally {
 			mutex.unlock();
 		}
-	}
-	
-	/**
-	* Searches for the thread and interrupts it.
-	* 
-	* @param {@code thread} the thread to interrupt.
-	* @throws InvalidOperationException if the thread could not be found.
-	*/
-	public interrupt(Thread thread) => ()
-	{
-		ptr.assertValid("Signaler");
 		
-		mutex.lock();
-		try {
-			if(!findThreadAndInterrupt(thread)) {
-				throw InvalidOperationException:create("The thread could not be found, and thus could not be interrupted.");
-			}
-			
-			broadcast(ptr);
-		} finally {
-			mutex.unlock();
-		}
+		return count;
 	}
 	
 	/**
 	* Frees the allocated resources of the Signaler. All waiting threads are
-	* notifies before freeing the resources.
+	* woken up before freeing the resources. This includes threads that were
+	* put to sleep using the waitForTimeout() method. Calling {@code free()} more
+	* than once has no effect.
 	*/
 	public free() => ()
 	{
 		if(ptr->isValid) {
-			// we notify any waiting thread first
+			// empties the queue and notifies the threads in the order
+			// they were put to sleep in.
 			notifyAll();
 			
+			// if there are any sleeping threads, then they aren't in the queue
+			// so we set a global terminate flag, and broadcast to the rest of the threads.
+			terminate = true;
+			broadcast(ptr);
+			
+			// free the allocated memory
 			destroySignaler(ptr);
 			ptr.free();
 			mutex.free();
 		}
 	}
 	
-	private waitSleep(TimeSpan timeout, boolean sleepOnly) => (boolean)
+	private signal(SignalToken token) => (boolean)
 	{
-		ptr.assertValid("Signaler");
-
-		var time = AbsoluteTime:create(timeout);
-		var token = SignalToken:create();
-		int retVal = 0;
-		
-		mutex.lock();
-		try {
-			// we only add the token if we want to be able to wake this thread up later.
-			// since we do not want any notify to wake that thread up, we do not add it to
-			// the queue if we only want to sleep.
-			if(!sleepOnly) {
-				tokensQueue.addLast(token);
-			} else {
-				sleepTokensQueue.addLast(token);
-			}
-
-			waitingThreads += 1;
-			 // retVal is not zero when the wait times out
-			while((retVal == 0 or !sleepOnly) and token->shouldWait) {
-				mutex.giveUpOwnership();
-				retVal = timedWait(ptr, mutex->ptr, time->ptr);
-				mutex.takeOwnership();
-			}
-			
-			if(token->interrupted) {
-				throw InterruptedException:create();
-			}
-		} finally {
-			waitingThreads -= 1;
-			token.invalidate();
-			mutex.unlock();
-			time.free();
-		}
-
-		return (retVal != 0);
-	}
-	
-	private findThreadAndInterrupt(Thread thread) => (boolean)
-	{
-		foreach(var t in tokensQueue) {
-			if(t->thread === thread) {
-				t.interrupt();
-				return true;
-			}
-		}
-		
-		foreach(var t in sleepTokensQueue) {
-			if(t->thread === thread) {
-				t.interrupt();
-				return true;
-			}
+		if(token.invalidate()) {
+			broadcast(ptr);
+			return true;
 		}
 		
 		return false;
 	}
 	
-	class SignalToken is CanEqual<SignalToken>
+	private signalNative(SignalToken token) => ()
 	{
-		get Thread thread = CurrentThread->instance;
-		get boolean shouldWait = true;
-		get boolean interrupted = false;
-
-		public invalidate() => ()
-		{
-			shouldWait = false;
-		}
+		ptr.assertValid("Signaler");
 		
-		public interrupt() => ()
-		{
-			invalidate();
-			interrupted = true;
-		}
-		
-		public readonly equal(SignalToken other) => (boolean)
-		{
-			return (this === other);
+		mutex.lock();
+		try {
+			tokensQueue.remove(token);
+			signal(token);
+		} finally {
+			mutex.unlock();
 		}
 	}
 }

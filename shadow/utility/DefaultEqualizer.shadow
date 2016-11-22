@@ -20,8 +20,8 @@ is Equate<T>
 	{
 		// return (T:class).isSubtype(CanEqual<T>:class);
 		
-		foreach(var x in T:class->interfaces) {
-			if(x === CanEqual<T>:class) {
+		foreach(var c in T:class->interfaces) {
+			if(c === CanEqual<T>:class) {
 				return true;
 			}
 		}

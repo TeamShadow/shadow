@@ -33,7 +33,7 @@
 ; Mutex
 %shadow.natives..Mutex = type opaque
 
-; Mutex.Owner
+; Mutex:Owner
 %shadow.natives..Mutex.Owner = type opaque
 
 ; pthread_mutex_t
@@ -104,7 +104,7 @@ entry:
 	ret %int %sizeOfMutex
 }
 
-; setOwner() => ();
+; setOwner(immutable Owner owner, nullable Thread t) => ();
 define void @shadow.natives..Mutex_MsetOwner_shadow.natives..Mutex.Owner_shadow.standard..Thread(%shadow.natives..Mutex*, %shadow.natives..Mutex.Owner*, %shadow.standard..Thread*) {
 entry:
 	call void @shadow.natives..Mutex.Owner_MsetOwnerNative_shadow.standard..Thread(%shadow.natives..Mutex.Owner* %1, %shadow.standard..Thread* %2)

@@ -1,8 +1,10 @@
-import shadow:io@Console;
-
 /**
-* @author Claude Abounegm
-*/
+ * This is a managed implementation of the `timespec` struct in C. This class is
+ * used by the {@code Signaler} class to specify timeouts.
+ *
+ * @author Claude Abounegm
+ * @seeDoc shadow:natives@Signaler
+ */
 locked class shadow:natives@
 	AbsoluteTime
 {
@@ -15,7 +17,10 @@ locked class shadow:natives@
 	{
 		ptr = Pointer:create(this->handleSize);
 
+		// calculate the absolute time
 		var absTime = ts + Time->epochNow;
+		
+		// set the data of the struct natively
 		setAbsoluteTime(ptr, cast<int>(absTime->totalSeconds), absTime->nanoSeconds);
 	}
 	

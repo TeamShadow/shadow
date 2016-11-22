@@ -1,0 +1,32 @@
+/**
+ * @author Claude Abounegm
+ */
+locked class shadow:natives@
+	SignalToken
+{
+	private readonly native signal(Signaler parent) => ();	
+	
+	get Signaler parent;
+	get boolean shouldWait = true;
+
+	public create(Signaler parent)
+	{
+		this:parent = parent;
+		this:shouldWait = true;
+	}
+	
+	public signal() => ()
+	{
+		signal(parent);
+	}
+	
+	public invalidate() => (boolean)
+	{
+		if(shouldWait) {
+			shouldWait = false;
+			return true;
+		}
+		
+		return false;
+	}
+}

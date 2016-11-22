@@ -11,7 +11,7 @@ locked class shadow:standard@
 	Mailbox
 {
 	// should that be a minute? 10? An hour? What is the best time for this...
-	readonly TimeSpan TIMEOUT = Time.fromMinutes(1);
+	readonly TimeSpan TIMEOUT = Time.fromMinutes(5);
 	
 	/*
 	* NOTES
@@ -23,8 +23,7 @@ locked class shadow:standard@
 	*        happens or until they timeout. This avoids us busy waiting.
 	*/
 	
-	get Signaler signaler;
-
+	Signaler signaler;
 	MessageQueue list;
 	Mutex mutex;
 	
@@ -37,12 +36,14 @@ locked class shadow:standard@
 	
 	public enqueue(Object data, boolean blocking) => ()
 	{
+		CurrentThread.throwIfInterrupting();
+		
 		mutex.lock();
 		try {
 			if(list.isFull()) {
 				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
-					throw Exception:create("Mailbox is full.");
+					throw FullMailboxException:create("Mailbox is full.");
 				}
 				
 				do {
@@ -63,12 +64,14 @@ locked class shadow:standard@
 	
 	public dequeue(Class expectedType, boolean blocking) => (Object, Thread)
 	{
+		CurrentThread.throwIfInterrupting();
+
 		mutex.lock();
 		try {
 			if(list.isEmpty()) {
 				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
-					throw NoDataException:create("Mailbox did not receive any messages, and is empty.");
+					throw EmptyMailboxException:create("Mailbox did not receive any messages, and is empty.");
 				}
 
 				// we block as long as the last is empty.
@@ -76,7 +79,7 @@ locked class shadow:standard@
 					waitForNotify();
 				} while(list.isEmpty());
 			}
-
+			
 			// dequeue should never throw because of an empty list,
 			// but it can and will throw if the expectedType is not
 			// the same as the available type.
@@ -93,6 +96,8 @@ locked class shadow:standard@
 	
 	public dequeue(Class expectedType, Thread sender, boolean blocking) => (Object)
 	{
+		CurrentThread.throwIfInterrupting();
+	
 		mutex.lock();
 		try {
 			int index = list.indexOf(sender);
@@ -100,7 +105,7 @@ locked class shadow:standard@
 			if(index == -1) {
 				// if we don't immediately find the result and we are not blocking, then throw.
 				if(!blocking) {
-					throw NoDataException:create("Mailbox did not receive any messages from that thread.");
+					throw EmptyMailboxException:create("Mailbox did not receive any messages from that thread.");
 				}
 				
 				// we block as long as we do not find a thread which matches the sender
@@ -114,6 +119,7 @@ locked class shadow:standard@
 			
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
+
 			return (message->data);
 		} finally {
 			mutex.unlock();

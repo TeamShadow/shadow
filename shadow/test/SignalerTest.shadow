@@ -4,7 +4,7 @@ import shadow:natives;
 class shadow:test@SignalerTest
 {
 	private readonly native initSignaler() => ();
-	private native readonly get staticSignaler() => (Signaler);
+	private readonly native get staticSignaler() => (Signaler);
 	
 	class RunnableTest is CanRun 
 	{
@@ -12,7 +12,11 @@ class shadow:test@SignalerTest
 			var signaler = staticSignaler();
 			
 			Console.printLine(CurrentThread->name # ": " # "waiting!");
-			signaler.waitForNotify();
+			if(CurrentThread->id != 3) {
+				signaler.waitForNotify();
+			} else {
+				signaler.waitForNotify(100);				
+			}
 			Console.printLine(CurrentThread->name # ": " # "finished waiting!");
 		}
 	}
@@ -20,17 +24,17 @@ class shadow:test@SignalerTest
 	public main(String[] args) => ()
 	{
 		initSignaler();
-	
+		var signaler = staticSignaler();
+
 		nullable var threads = Thread:null[5];
 		for(int i = 0; i < threads->size; i += 1) {
 			threads[i] = Thread:create(RunnableTest:create());
-			CurrentThread.sleep(500);
+			signaler.waitForTimeout(500);
 		}
 		
-		var signaler = staticSignaler();
 		for(int i = 0; i < threads->size; i += 1) {
 			signaler.notify();
-			CurrentThread.sleep(500);
+			signaler.waitForTimeout(500);
 		}
 	}
 	

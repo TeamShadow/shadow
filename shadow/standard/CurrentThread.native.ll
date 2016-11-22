@@ -43,12 +43,13 @@
 ;---------------------
 declare void @shadow.standard..Thread_MsleepNative_shadow.standard..TimeSpan(%shadow.standard..Thread*, %shadow.standard..TimeSpan*)
 declare void @shadow.standard..Thread_MsleepNative_int(%shadow.standard..Thread*, %int)
+declare %boolean @shadow.standard..Thread_MinterruptingNative(%shadow.standard..Thread*)
 
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
-; get instance() => (Thread);
-define %shadow.standard..Thread* @shadow.standard..CurrentThread_Minstance(%shadow.standard..CurrentThread*) {
+; get currentThread() => (Thread);
+define %shadow.standard..Thread* @shadow.standard..CurrentThread_McurrentThread(%shadow.standard..CurrentThread*) {
 entry:
 	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
 	ret %shadow.standard..Thread* %currentThread
@@ -66,4 +67,11 @@ define void @shadow.standard..CurrentThread_Msleep_shadow.standard..Thread_shado
 entry:
 	call void @shadow.standard..Thread_MsleepNative_shadow.standard..TimeSpan(%shadow.standard..Thread* %thread, %shadow.standard..TimeSpan* %time)
 	ret void
+}
+
+; interrupting(Thread currentThread) => (boolean);
+define %boolean @shadow.standard..CurrentThread_Minterrupting_shadow.standard..Thread(%shadow.standard..CurrentThread*, %shadow.standard..Thread*) {
+entry:
+	%call = call %boolean @shadow.standard..Thread_MinterruptingNative(%shadow.standard..Thread* %1)
+	ret %boolean %call
 }

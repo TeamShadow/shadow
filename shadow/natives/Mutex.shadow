@@ -1,7 +1,14 @@
 /**
- * Class {@code Mutex} is a way to get Mutual-Exclusion in Shadow.
+ * Class {@code Mutex} is an implementation of Mutual-Exclusion in Shadow. This implementation
+ * allows nested locks, which can be useful in some scenarios, such as with recursive methods.
  *
  * @author Claude Abounegm
+ *
+ * @seeDoc shadow:test@MutexTest
+ *
+ * @seeDoc shadow:natives@Signaler
+ * @seeDoc shadow:standard@Thread
+ * @seeDoc shadow:standard@Mailbox
  */
 locked immutable class shadow:natives@
 	Mutex
@@ -16,27 +23,60 @@ locked immutable class shadow:natives@
 
 	get Pointer ptr;
 	immutable Owner owner;
+	boolean allowNestedLocks;
 	
+	/**
+	* Initializes a new {@code Mutex} which does not allow nested locks.
+	*/
 	public create()
+	{
+		this(false);
+	}
+	
+	/**
+	* Initializes a new {@code Mutex} which can allow nested locks.
+	* @param allowNestedLocks whether the Mutex should allow mutliple locks.
+	*/
+	public create(boolean allowNestedLocks)
 	{
 		ptr = Pointer:create(this->handleSize);
 		owner = freeze(Owner:create());
+		this:allowNestedLocks = allowNestedLocks;
 		
 		initMutex(ptr);
 	}
 	
+	/**
+	* Attempts to lock this Mutex. If the Mutex is already owned by another thread, this method
+	* blocks until the Mutex becomes available. If the current thread already owns this mutex and
+	* nested locks are allowed, this method will simply increase the counter. The mutex should be unlocked
+	* the same number of times it was locked.
+	*
+	* @throws MutexException if nested locks are not allowed and the mutex is already owned by this thread.
+	* @throws FreedResourceException if the Mutex has been freed.
+	*/
 	public lock() => ()
 	{
 		ptr.assertValid("Mutex");
 		
-		if(owner.isCurrentThread()) {
-			throw MutexException:create("The current thread already owns this mutex.");
+		if(!owner.isCurrentThread()) {
+			lockMutex(ptr);
+		} else if(!allowNestedLocks) {
+			throw MutexException:create("This thread already owns this mutex.");
 		}
-		
-		lockMutex(ptr);
+
 		setOwner(owner, CurrentThread->instance);
 	}
 	
+	/**
+	* Attempts to unlock this Mutex. If the Mutex has been locked mutliple times by this thread,
+	* this method simply decreases the counter. This Mutex is unlocked when an unlock has been called
+	* for each lock. i.e. If {@code lock()} was called twice, {@code unlock()} will unlock the mutex on
+	* its second call.
+	*
+	* @throws MutexException if this Mutex is not owned by this thread.
+	* @throws FreedResourceException if the Mutex has been freed.
+	*/
 	public unlock() => ()
 	{
 		ptr.assertValid("Mutex");
@@ -46,21 +86,40 @@ locked immutable class shadow:natives@
 		}
 		
 		setOwner(owner, null);
-		unlockMutex(ptr);
+		if(!owner.isCurrentThread()) {
+			unlockMutex(ptr);
+		}
 	}
 	
+	/**
+	* Forcefully sets the owner of this mutex to the current thread. Used to accompany
+	* native methods which manipulate the unmanaged mutex without our control over it,
+	* such as {@code pthread_cond_wait} and {@code pthread_cond_timedwait}.
+	*
+	* @seeDoc shadow:natives@Signaler
+	*/
 	public takeOwnership() => ()
 	{
 		ptr.assertValid("Mutex");
 		setOwner(owner, CurrentThread->instance);
 	}
 	
+	/**
+	* Forcefully gives up the owner of this mutex from the current thread. Used to accompany
+	* native methods which manipulate the unmanaged mutex without our control over it,
+	* such as {@code pthread_cond_wait} and {@code pthread_cond_timedwait}.
+	*
+	* @seeDoc shadow:natives@Signaler
+	*/
 	public giveUpOwnership() =>()
 	{
 		ptr.assertValid("Mutex");
 		setOwner(owner, null);
 	}
 	
+	/**
+	* Frees the resources allocated by this {@code Mutex}.
+	*/
 	public free() => ()
 	{
 		if(ptr->isValid) {
@@ -72,10 +131,12 @@ locked immutable class shadow:natives@
 	private class Owner
 	{
 		nullable Thread owner;
+		int counter;
 		
 		public create()
 		{
 			owner = null;
+			counter = 0;
 		}
 		
 		public readonly isCurrentThread() => (boolean)
@@ -85,7 +146,21 @@ locked immutable class shadow:natives@
 		
 		private setOwnerNative(nullable Thread o) => ()
 		{
-			owner = o;
+			if(o !== null) {
+				if(counter == 0) {
+					owner = o;
+				} else if(owner !== o) { // should never reach this, unless (take/giveUp)Ownership were incorrectly used.
+					throw MutexException:create("Cannot change Mutex owners. The owner of this mutex needs to first give up ownership of this mutex.");
+				}
+				
+				counter += 1;
+			} else {
+				if(counter == 1) {
+					owner = null;
+				}
+				
+				counter -= 1;
+			}
 		}
 	}
 }

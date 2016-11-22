@@ -163,7 +163,7 @@ and Deque<V>
 	 * @param value value of element to remove
 	 * @return {@code true} if the element was found and removed	 
 	 */	
-	public remove( V value ) => ( boolean removed )
+	public remove( V value ) => ( boolean success )
 	{
 		try
 		{

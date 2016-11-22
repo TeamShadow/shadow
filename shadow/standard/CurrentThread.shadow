@@ -5,26 +5,38 @@
  * @author Claude Abounegm
  * @seeDoc shadow:standard@Thread
  */
-immutable singleton shadow:standard@
+singleton shadow:standard@
 	CurrentThread
 is CanIndex<int, Thread>
 {
+	private readonly native interrupting(Thread currentThread) => (boolean);
+	private readonly native get currentThread() => (Thread);
 	private readonly native sleep(Thread thread, int milliseconds) => ();
 	private readonly native sleep(Thread thread, TimeSpan time) => ();
+	
+	Thread current;
+	
+	public create()
+	{
+		current = currentThread();
+	}
 	
 	/**
 	* Gets the current thread's actual instance.
 	*
 	* @return The instance of the current thread.
 	*/
-	public native readonly get instance() => (Thread);
+	public readonly get instance() => (Thread)
+	{
+		return current;
+	}
 	
 	/**
 	* Gets the Shadow-specific thread ID.
 	*/
 	public readonly get id() => (int)
 	{
-		return instance()->id;
+		return current->id;
 	}
 	
 	/**
@@ -32,7 +44,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly get main() => (Thread)
 	{
-		return instance()->main;
+		return current->main;
 	}
 	
 	/**
@@ -41,7 +53,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly get parent() => (nullable Thread)
 	{
-		return instance()->parent;
+		return current->parent;
 	}
 
 	/**
@@ -50,17 +62,45 @@ is CanIndex<int, Thread>
 	*/
 	public readonly get name() => (String)
 	{
-		return instance()->name;
+		return current->name;
 	}
 	
+	/**
+	* Requests this thread to be interrupted. If the thread is currently in the {@code WAITING} state, 
+	* the thread is interrupted and the method that caused the thread to be in the {@code WAITING} state
+	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()}, 
+	* {@code sleep()}, {@code send()}, {@code receive()}, and all their overloads.
+	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
+	* as soon as one of the above interruptible methods above are called, or when the user calls 
+	* {@code CurrentThread.throwIfInterrupting()}, or throws an exception using {@code CurrentThread->interrupting}.
+	*/
 	public interrupt() => ()
 	{
-		instance().interrupt();
+		current.interrupt();
 	}
 	
-	public get shouldInterrupt() => (boolean)
+	/**
+	* Gets whether the thread should be interrupted and resets the interrupt flag to false.
+	* The way it should be used it as follows: {@code if(CurrentThread->interrupting) throw InterruptedException:create(); }
+	*/
+	public get interrupting() => (boolean)
 	{
-		return instance()->shouldInterrupt;
+		return interrupting(current);
+	}
+	
+	/**
+	* Throws an {@code InterruptedException} if the current thread has been requested to interrupt.
+	* This can be used as a cancellation point in the program. The {@code throwIfInterrupting()} should
+	* be called at safe points where the thread is safe to get interrupted. This method should only be used
+	* if there is no code that should be executed before throwing the exception; otherwise, use {@code CurrentThread->interrupting}.
+	* This method, as the {@code interrupting()} one, resets the interrupt flag, and sets it to false.
+	* This code executed in this method is simply: {@code if(CurrentThread->interrupting) throw InterruptedException:create(); }
+	*/
+	public throwIfInterrupting() => ()
+	{
+		if(interrupting()) {
+			throw InterruptedException:create();
+		}
 	}
 	
 	/**
@@ -70,7 +110,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(TimeSpan timeout) => ()
 	{
-		sleep(instance(), timeout);
+		sleep(current, timeout);
 	}
 	
 	/**
@@ -80,7 +120,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(int millisecondsTimeout) => ()
 	{
-		sleep(instance(), millisecondsTimeout);
+		sleep(current, millisecondsTimeout);
 	}
 	
 	/**
@@ -91,7 +131,18 @@ is CanIndex<int, Thread>
 	*/
 	public readonly childAt(int index) => (Thread)
 	{
-		return instance().childAt(index);
+		return current.childAt(index);
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
+	* If the thread has four children, this method could be used to retrieve the n-th child, for example
+	* the third child (thus, its index is 2).
+	* @param index the index of the child in the range [0, childrenCount).
+	*/
+	public readonly index(int index) => (Thread)
+	{
+		return current[index];
 	}
 	
 	/**
@@ -105,7 +156,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly children(boolean recurse) => (CanIterate<Thread>)
 	{
-		return instance().children(recurse);
+		return current.children(recurse);
 	}
 	
 	/**
@@ -116,7 +167,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly children() => (CanIterate<Thread>)
 	{
-		return instance().children();
+		return current.children();
 	}
 	
 	/**
@@ -133,7 +184,7 @@ is CanIndex<int, Thread>
 	*
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	public readonly sendTo(Object data, Thread to) => ()
+	public sendTo(Object data, Thread to) => ()
 	{
 		to.sendTo(data);
 	}
@@ -150,9 +201,9 @@ is CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	public readonly receiveFirst(Class expectedType) => (Object, Thread)
+	public receiveFirst(Class expectedType) => (Object, Thread)
 	{
-		return instance().receiveFirst(expectedType);
+		return current.receiveFirst(expectedType);
 	}
 	
 	/**
@@ -168,22 +219,22 @@ is CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	public readonly receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	public receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
-		return instance().receiveFirstFrom(expectedType, from);
+		return current.receiveFirstFrom(expectedType, from);
 	}
 	
 	/**
 	* Checks whether the {@code thread} is the same as the current thread.
 	* This is equivalent to {@code thread->isCurrentThread}, but with null checking as well.
 	*
-	* @param thread 
+	* @param other The thread to equate against the current thread.
 	*
-	* @return {@code true} if the current thread is the same as the passed thread; otherwise, {@code false}.
+	* @return {@code true} if the other thread is not null and is the current thread; otherwise, {@code false}.
 	*/
-	public readonly isEqualTo(nullable Thread thread) => (boolean)
+	public readonly isEqualTo(nullable Thread other) => (boolean)
 	{
-		return (thread !== null and check(thread) === instance());
+		return (other !== null and check(other) === current);
 	}
 	
 	/**
@@ -193,13 +244,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly get childrenCount() => (int)
 	{
-		return instance()->childrenCount;
-	}
-	
-	// CanIndex<int, Thread>
-	public readonly index(int index) => (Thread)
-	{
-		return instance()[index];
+		return current->childrenCount;
 	}
 	
 	/**
@@ -207,6 +252,6 @@ is CanIndex<int, Thread>
 	*/
 	public readonly toString() => (String)
 	{
-		return #instance();
+		return #current;
 	}
 }

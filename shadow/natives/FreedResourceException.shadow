@@ -1,6 +1,21 @@
+/**
+ * Exception {@code FreedResourceException} is thrown when a managed pointer is being accessed
+ * after being freed.
+ *
+ * @author Claude Abounegm
+ * @seeDoc shadow:natives@Pointer
+ * @seeDoc shadow:natives@Mutex
+ * @seeDoc shadow:natives@Signaler
+ */
 exception shadow:natives@
 	FreedResourceException
 {
+	/**
+	* Initializes an exception with a message specifying that the class with the specified
+	* name is no longer valid.
+	*
+	* @param className The name of the class that is no longer valid.
+	*/
 	public create(String className)
 	{
 		super("This " # className # " has been freed and is no longer valid.");

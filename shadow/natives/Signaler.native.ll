@@ -24,8 +24,14 @@
 ; Object
 %shadow.standard..Object = type opaque
 
+; Thread
+%shadow.standard..Thread = type opaque
+
 ; Pointer
 %shadow.natives..Pointer = type opaque
+
+; SignalToken
+%shadow.natives..SignalToken = type opaque
 
 ; Signaler
 %shadow.natives..Signaler = type opaque
@@ -53,6 +59,8 @@ declare %int @pthread_cond_timedwait(%struct.pthread_cond_t*, %struct.pthread_mu
 declare %int @pthread_cond_broadcast(%struct.pthread_cond_t*)
  
 declare %void* @__extractPointer(%shadow.natives..Pointer*)
+
+declare void @shadow.standard..Thread_MsetInterruptTokenNative_shadow.natives..SignalToken(%shadow.standard..Thread*, %shadow.natives..SignalToken*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -123,4 +131,12 @@ define %int @shadow.natives..Signaler_MhandleSize(%shadow.natives..Signaler*) {
 entry:
 	%sizeOf = ptrtoint %struct.pthread_cond_t* getelementptr (%struct.pthread_cond_t, %struct.pthread_cond_t* null, i32 1) to i32
 	ret %int %sizeOf
+}
+
+; setInterruptToken(nullable SignalToken interruptToken) => ();
+define void @shadow.natives..Signaler_MsetInterruptToken_shadow.standard..Thread_shadow.natives..SignalToken(%shadow.natives..Signaler*, %shadow.standard..Thread*, %shadow.natives..SignalToken*) {
+entry:
+	call void @shadow.standard..Thread_MsetInterruptTokenNative_shadow.natives..SignalToken(%shadow.standard..Thread* %1, %shadow.natives..SignalToken* %2)
+
+	ret void
 }
