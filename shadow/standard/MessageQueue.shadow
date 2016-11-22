@@ -4,6 +4,8 @@ import shadow:utility;
  * Class {@code MessageQueue} is a custom queue implemented with a circular array, and allows removal
  * of items from any position of the queue. The backing array has a lower and upper bound, the array starts
  * at the lower bound and grows on demand until it reaches the upper bound.
+ *
+ * @author Claude Abounegm
  */
 class shadow:standard@
 	MessageQueue
