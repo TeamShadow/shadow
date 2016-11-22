@@ -35,7 +35,7 @@ locked immutable class shadow:natives@
 	
 	/**
 	* Initializes a new {@code Mutex} which can allow nested locks.
-	* @param allowNestedLocks whether the Mutex should allow mutliple locks.
+	* @param allowNestedLocks whether the Mutex should allow mutliple nested locks.
 	*/
 	public create(boolean allowNestedLocks)
 	{
@@ -70,7 +70,7 @@ locked immutable class shadow:natives@
 	
 	/**
 	* Attempts to unlock this Mutex. If the Mutex has been locked mutliple times by this thread,
-	* this method simply decreases the counter. This Mutex is unlocked when an unlock has been called
+	* this method simply decreases the counter. This Mutex is unlocked when an corresponding unlock has been called
 	* for each lock. i.e. If {@code lock()} was called twice, {@code unlock()} will unlock the mutex on
 	* its second call.
 	*
@@ -128,6 +128,9 @@ locked immutable class shadow:natives@
 		}
 	}
 	
+	// We would like to have the Mutex as immutable to allow multithreaded
+	// code to be immutable too. This Owner class allows us to freeze it,
+	// then call the actual non-readonly method through native code.
 	private class Owner
 	{
 		nullable Thread owner;

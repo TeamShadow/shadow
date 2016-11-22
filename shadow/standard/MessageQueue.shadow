@@ -1,5 +1,10 @@
 import shadow:utility;
 
+/**
+ * Class {@code MessageQueue} is a custom queue implemented with a circular array, and allows removal
+ * of items from any position of the queue. The backing array has a lower and upper bound, the array starts
+ * at the lower bound and grows on demand until it reaches the upper bound.
+ */
 class shadow:standard@
 	MessageQueue
 is CanIndex<int, Message>
@@ -95,7 +100,8 @@ and CanIndexStore<int, Message>
 	}
 	
 	/**
-	* This does not remove the item if it is not the same as the expectedType.
+	* Attempts to remove the Message at the specified index. This method does not 
+	* remove the item if it is not the same as the expectedType.
 	*/
 	public removeAt(int index, Class expectedType) => (Message)
 	{
@@ -149,6 +155,7 @@ and CanIndexStore<int, Message>
 		elements[rawIndex(index)] = message;
 	}
 	
+	/// sets the item at index to null.
 	private nullify(int index) => ()
 	{
 		elements[rawIndex(index)] = null;

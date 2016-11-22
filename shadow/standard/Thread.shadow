@@ -92,7 +92,7 @@ and CanIndex<int, Thread>
 		return state;
 	}
 	
-	/// Returns the string representation of the state of this thread.
+	/// Gets the string representation of the state of this thread.
 	public readonly get stateStr() => (String)
 	{
 		switch(this->state) {
@@ -148,7 +148,12 @@ and CanIndex<int, Thread>
 		this:mutex = Mutex:create();
 		this:stateMutex = Mutex:create();
 		this:signaler = Signaler:create();
-		this:mailbox = Mailbox:create(32);
+		
+		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
+		// the mailbox doubles as more items are sent to it, until it reaches 32, and blocks
+		// if more items are added, until space becomes available again by receiving messages.
+		this:mailbox = Mailbox:create(8, 32);
+		
 		this:handle = Pointer:create(this->handleSize);
 		this:state = READY;
 		
@@ -162,7 +167,7 @@ and CanIndex<int, Thread>
 		} else {
 			this:runner = copy(runner);
 			this:parent = currentThread();
-			addToParent();
+			check(parent):childrenList.add(instance());
 			
 			// spawn the thread and give it the handle
 			spawnThread(handle);
@@ -537,16 +542,14 @@ and CanIndex<int, Thread>
 		return "Thread (" # name # "): " # this->stateStr;
 	}
 	
-	private addToParent() => ()
-	{
-		check(parent):childrenList.add(this);
-	}
-	
 	/// called natively by Signaler, `this` is the CurrentThread->instance.
+	/// This code is responsible for throwing InterruptedException in all methods.
 	private setInterruptTokenNative(nullable SignalToken interruptToken) => ()
 	{
 		int state = RUNNING;
+		// checks whether we need to interrupt, and if we do, it resets the interrupt flag
 		var interrupting = CurrentThread->interrupting;
+		
 		if(interrupting) {
 			interruptToken = null;
 		} else if(interruptToken !== null) {

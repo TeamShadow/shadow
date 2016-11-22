@@ -1,9 +1,17 @@
-class shadow:standard@
+/**
+ * Class {@code Message} is the wrapper of each message passed between threads.
+ * @author Claude Abounegm
+ */
+locked class shadow:standard@
 	Message
 {
 	get Thread sender;
 	get Object data;
 	
+	/**
+	* Initializes a new {@code Message}, with the current thread as its owner
+	* and clones the data.
+	*/
 	public create(Object data)
 	{
 		this:sender = CurrentThread->instance;

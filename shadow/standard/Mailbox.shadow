@@ -27,13 +27,29 @@ locked class shadow:standard@
 	MessageQueue list;
 	Mutex mutex;
 	
-	public create(int count)
+	/**
+	* Initializes a {@code Mailbox} with a backing array that has {@code min} items space to start with
+	* and can expand up to {@code max}.
+	*/
+	public create(int min, int max)
 	{
-		this:list = MessageQueue:create(count);
+		this:list = MessageQueue:create(min, max);
 		this:signaler = Signaler:create();
-		this:mutex = Mutex:create();
+		this:mutex = Mutex:create();		
 	}
 	
+	/**
+	* Initializes a {@code Mailbox} with a backing array with an initial and maximum capacity of {@code size}.
+	*/
+	public create(int size)
+	{
+		this(size, size);
+	}
+	
+	/**
+	* @throws FullMailboxException
+	* @throws InterruptedException
+	*/
 	public enqueue(Object data, boolean blocking) => ()
 	{
 		CurrentThread.throwIfInterrupting();
@@ -62,6 +78,10 @@ locked class shadow:standard@
 		}
 	}
 	
+	/**
+	* @throws EmptyMailboxException
+	* @throws InterruptedException
+	*/
 	public dequeue(Class expectedType, boolean blocking) => (Object, Thread)
 	{
 		CurrentThread.throwIfInterrupting();
@@ -94,6 +114,10 @@ locked class shadow:standard@
 		}
 	}
 	
+	/**
+	* @throws EmptyMailboxException
+	* @throws InterruptedException
+	*/
 	public dequeue(Class expectedType, Thread sender, boolean blocking) => (Object)
 	{
 		CurrentThread.throwIfInterrupting();

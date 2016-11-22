@@ -5,8 +5,8 @@ import shadow:utility;
  * such as: waitForNotify(), waitForTimeout(), notify(), and notifyAll().
  *
  * @author Claude Abounegm
- * @seeDoc shadow:test@SignalerTest
  *
+ * @seeDoc shadow:test@SignalerTest
  * @seeDoc shadow:standard@Thread
  */
 locked class shadow:natives@
@@ -19,9 +19,7 @@ locked class shadow:natives@
 	private native readonly timedWait(Pointer cond, Pointer mutex, Pointer time) => (int);
 	private native readonly broadcast(Pointer cond) => (int);
 	
-	/**
-	* This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
-	*/
+	/// This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
 	private native readonly setInterruptToken(Thread currentThread, nullable SignalToken interruptToken) => ();
 	
 	private readonly native get handleSize() => (int);
@@ -81,6 +79,8 @@ locked class shadow:natives@
 				wait(ptr, mutex->ptr);
 				mutex.takeOwnership();
 			}
+			// if the wait was interrupted, the setInterruptToken throws
+			// the InterruptedException as the interrupting flag is true.
 			setInterruptToken(CurrentThread->instance, null);
 		} finally {
 			waitingThreads -= 1;
@@ -114,12 +114,15 @@ locked class shadow:natives@
 				retVal = timedWait(ptr, mutex->ptr, time->ptr);
 				mutex.takeOwnership();
 			}
+			// if the wait was interrupted, the setInterruptToken throws
+			// the InterruptedException as the interrupting flag is true.
 			setInterruptToken(CurrentThread->instance, null);
 		} finally {
 			waitingThreads -= 1;
 			if(token.invalidate() and !sleepOnly) {
-				// waitForNotify timedout, so we still need to remove the 
-				// token from the queue.
+				// waitForNotify timed-out, so we still need to remove the 
+				// token from the queue. sleepOnly operations are not added
+				// to queue, so we do not worry about that.
 				tokensQueue.remove(token);
 			}
 			mutex.unlock();
@@ -262,6 +265,7 @@ locked class shadow:natives@
 		}
 	}
 	
+	/// used when the token has already been retrieved and does not need to be deleted.
 	private signal(SignalToken token) => (boolean)
 	{
 		if(token.invalidate()) {
@@ -272,6 +276,8 @@ locked class shadow:natives@
 		return false;
 	}
 	
+	// used by SignalToken.signal() method, which is called from outside, and thus
+	// we should remove the token from the queue.
 	private signalNative(SignalToken token) => ()
 	{
 		ptr.assertValid("Signaler");

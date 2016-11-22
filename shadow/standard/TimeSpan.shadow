@@ -9,22 +9,22 @@ is CanAdd<TimeSpan>
 and CanSubtract<TimeSpan>
 and CanEqual<TimeSpan>
 {
-	immutable int NANOS_PER_MICROSECOND = 1000;
+	immutable long NANOS_PER_MICROSECOND = 1000;
 	immutable double MICROSECONDS_PER_NANO = 1.0 / NANOS_PER_MICROSECOND;
 
-	immutable int NANOS_PER_MILLISECOND = NANOS_PER_MICROSECOND * 1000;
+	immutable long NANOS_PER_MILLISECOND = NANOS_PER_MICROSECOND * 1000;
 	immutable double MILLISECONDS_PER_NANO = 1.0 / NANOS_PER_MILLISECOND;
 
-	immutable int NANOS_PER_SECOND = NANOS_PER_MILLISECOND * 1000;
+	immutable long NANOS_PER_SECOND = NANOS_PER_MILLISECOND * 1000;
 	immutable double SECONDS_PER_NANO = 1.0 / NANOS_PER_SECOND;
 
-	immutable int NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
+	immutable long NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
 	immutable double MINUTES_PER_NANO = 1.0 / NANOS_PER_MINUTE;
 
-	immutable int NANOS_PER_HOUR = NANOS_PER_MINUTE * 60;
+	immutable long NANOS_PER_HOUR = NANOS_PER_MINUTE * 60;
 	immutable double HOURS_PER_NANO = 1.0 / NANOS_PER_HOUR;
 
-	immutable int NANOS_PER_DAY = NANOS_PER_MINUTE * 24;
+	immutable long NANOS_PER_DAY = NANOS_PER_MINUTE * 24;
 	immutable double DAYS_PER_NANO = 1.0 / NANOS_PER_DAY;
 
 	long totalNanos = 0;

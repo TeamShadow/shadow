@@ -79,6 +79,9 @@ locked immutable class shadow:natives@
 			}
 
 			this:address = allocMemory(size);
+			if(this:address == 0) {
+				throw OutOfMemoryException:create();
+			}
 		}
 		
 		public readonly get address() => (long)
