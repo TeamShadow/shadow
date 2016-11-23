@@ -41,6 +41,7 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
+declare %int @sched_yield()
 declare void @shadow.standard..Thread_MsleepNative_shadow.standard..TimeSpan(%shadow.standard..Thread*, %shadow.standard..TimeSpan*)
 declare void @shadow.standard..Thread_MsleepNative_int(%shadow.standard..Thread*, %int)
 declare %boolean @shadow.standard..Thread_MinterruptingNative(%shadow.standard..Thread*)
@@ -74,4 +75,10 @@ define %boolean @shadow.standard..CurrentThread_Minterrupting_shadow.standard..T
 entry:
 	%call = call %boolean @shadow.standard..Thread_MinterruptingNative(%shadow.standard..Thread* %1)
 	ret %boolean %call
+}
+
+define %int @shadow.standard..CurrentThread_Myield__(%shadow.standard..CurrentThread*) {
+entry:
+	%call = call %int @sched_yield()
+	ret %int %call
 }

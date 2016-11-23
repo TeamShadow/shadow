@@ -20,8 +20,7 @@ and CanIndex<int, Thread>
 	public constant int DEAD = 3;
 	
 	// START: Native methods
-	private readonly native spawnThread(Pointer ptr) => (int);
-	private readonly native get handleSize() => (int);
+	private readonly native spawnThread() => (ShadowPointer);
 	private native get staticNextId() => (int);
 	// END: Native methods
 	
@@ -33,7 +32,7 @@ and CanIndex<int, Thread>
 	int joined;
 	boolean interrupting;
 
-	Pointer handle;
+	ShadowPointer handle;
 	CanRun runner;
 	
 	ThreadSafeList<Thread> childrenList;
@@ -154,7 +153,6 @@ and CanIndex<int, Thread>
 		// if more items are added, until space becomes available again by receiving messages.
 		this:mailbox = Mailbox:create(8, 32);
 		
-		this:handle = Pointer:create(this->handleSize);
 		this:state = READY;
 		
 		this:childrenIterate = TraverseChildren:create(false);
@@ -163,18 +161,16 @@ and CanIndex<int, Thread>
 		if(this:id == 0) {
 			this:runner = runner;
 			this:state = RUNNING;
-			this:handle.free();
+			this:handle = ShadowPointer:create();
 		} else {
 			this:runner = copy(runner);
 			this:parent = currentThread();
 			check(parent):childrenList.add(instance());
 			
-			// spawn the thread and give it the handle
-			spawnThread(handle);
-			
-			// pthreads clean up their resources after the
-			// spawned thread exits, so we do not need to
-			// call any other functions.
+			this:handle = spawnThread();
+			if(!this:handle->isValid) {
+				throw ThreadSpawnException:create();
+			}
 		}
 	}
 	
@@ -293,68 +289,9 @@ and CanIndex<int, Thread>
 		mutex.lock();
 		interrupting = true;
 		try {
-			if(this->state == WAITING) {
-				if(interruptToken !== null) {
-					check(interruptToken).signal();
-				} /*else {
-					// handle unmanaged IO cancellation
-				}*/
+			if(this->state == WAITING and interruptToken !== null) {
+				check(interruptToken).signal();
 			}
-			
-			/*
-			* Note:
-			* IO interruption is going to be more challenging to implement as it does not follow
-			* the same pattern as above. IO is blocking in nature, and will not use the Signaler to be blocking.
-			* However, pthreads do have a way of cancelling such operations, using `pthread_cancel`. IO operations
-			* are considered "cancellation points", and `pthread_cancel` is used to cancel the thread. The problem
-			* with this however is that the `pthread_cancel` causes the thread to abruptly terminate. This stops the
-			* execution of our "finally" clause in runnerNative(). This means a few things:
-			*	1. When `pthread_cancel` is called, we also need to depend on `pthread_join` and cannot depend on the 
-			*		Signaler in that case.
-			*	2. `pthread_join` will need to be called right after the `pthread_cancel`, and should take place in this
-			*		this interrupt method.
-			*	3. Every time a non-managed IO operation is performed, we need to set the state of the thread to WAITING
-			*		using `this->state = WAITING;`.
-			*	4. Exception `ex` needs to be set manually to a new ThreadException with InterruptedException as the message.
-			*	5. cleanup() needs to be called when the `pthread_join` returns with a CANCELLED error code.
-			*
-			*	An idea of the code I have in mind is as follows:
-			*
-			*	|Thread side:|
-			*	run() => () {
-			*		readIO();
-			*	}
-			*
-			*	|IO Side:|
-			*	readIO() => () {
-			*		setThreadState(WAITING);
-			*		performNativeBlockingReadIO();
-			*		setThreadState(RUNNING); // on cancel this is never reached
-			*	}
-			*
-			*	|Interrupt Side:|
-			*	interrupt() => () {
-			*		...
-			*		} else {
-			*			pthread_cancel(ptr);
-			*			if(pthread_join(ptr) == CANCELLED) {
-			*				interrupting = false;
-			*				ex = ThreadException:create(this, InterruptedException:create());
-			*				cleanup(); // this will wake all joined threads, and will cause the exceptions to propagate correctly.
-			*			}
-			*		}
-			*	}
-			*
-			*	For more info, check:
-			*		http://man7.org/linux/man-pages/man7/pthreads.7.html
-			*		http://man7.org/linux/man-pages/man3/pthread_cancel.3.html
-			*
-			* However, it is important to note that it might be necessary to use POSIX read()/write() in place
-			* of Windows calls such ReadFile() to support such cancellations. More testing needs to be done in
-			* order to ensure correct functionality!
-			*
-			* Good luck!
-			*/
 			
 			// Quick explanation on how exceptions propagate:
 			// 

@@ -1239,7 +1239,7 @@ public class OutputTests {
 				"done\n" +
 				"[10, 11, 12, 13, 14]\n",
 				
-				"shadow:standard@WrongTypeException: Expected 'int' but got 'shadow:standard@String'.\n"
+				"shadow:standard@IncompatibleMessageTypeException: Expected 'int' but got 'shadow:standard@String'.\n"
 		);
 	}
 	
@@ -1301,5 +1301,11 @@ public class OutputTests {
 							"shadow:natives@MutexException: This thread already owns this mutex.\n" +
 							"Nested locks\n" +
 							"Done!\n");
+	}
+	
+	@Test public void testExternals() throws Exception {
+		args.add("shadow/test/ExternalsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "true\n");
 	}
 }

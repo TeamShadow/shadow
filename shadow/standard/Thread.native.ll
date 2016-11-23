@@ -25,19 +25,10 @@
 %shadow.standard..Object = type opaque
 
 ; Pointer
-%shadow.natives..Pointer = type opaque
+%shadow.natives..ShadowPointer = type opaque
 
 ; Thread
 %shadow.standard..Thread = type opaque
-
-; typedef uintptr_t pthread_t;
-%struct.pthread_t = type %uint
-
-; struct pthread_attr_t { unsigned p_state; void* stack; size_t s_size; struct sched_param param; };
-%struct.pthread_attr_t = type { %int, %void*, %int, %struct.sched_param }
-
-; struct sched_param { int sched_priority; };
-%struct.sched_param = type { %int }
 
 ;---------
 ; Globals
@@ -50,14 +41,12 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
-; int pthread_create(pthread_t*, pthread_attr_t*, void* (*start_routine)(void*), void*);
-declare %int @pthread_create(%struct.pthread_t*, %struct.pthread_attr_t*, %void* (%void*)*, %void*)
+declare %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%void* (%void*)*, %shadow.standard..Thread*)
 
 ; runnerNative() => ();
 declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
 ; createMainNative() => (Thread);
 declare %shadow.standard..Thread* @shadow.standard..Thread_McreateMainNative(%shadow.standard..Thread*)
-declare %void* @__extractPointer(%shadow.natives..Pointer*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -76,32 +65,17 @@ entry:
 	ret %int %currentId
 }
 
-; spawnThread(Pointer ptr) => (int);
-define %int @shadow.standard..Thread_MspawnThread_shadow.natives..Pointer(%shadow.standard..Thread*, %shadow.natives..Pointer*) {
+define %shadow.natives..ShadowPointer* @shadow.standard..Thread_MspawnThread(%shadow.standard..Thread*) {
 entry:
 	; get the reference of the current Thread
 	%this.addr = alloca %shadow.standard..Thread*
 	store %shadow.standard..Thread* %0, %shadow.standard..Thread** %this.addr
 	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
 
-	; get the handle
-	%ptr.addr = call %void* @__extractPointer(%shadow.natives..Pointer* %1)
-	%handle.addr = bitcast %void* %ptr.addr to %struct.pthread_t*
-	
-	; cast Thread* to void*
-	%this.void = bitcast %shadow.standard..Thread* %this to %void*
+	; spawn the thread and get its pointer
+	%call = call %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%void* (%void*)* @thread_start, %shadow.standard..Thread* %this)
 
-	; create the thread using pthread_create()
-	%call = call %int @pthread_create(%struct.pthread_t* %handle.addr, %struct.pthread_attr_t* null, %void*(%void*)* @thread_start, %void* %this.void)
-
-	ret %int %call
-}
-
-; get handleSize() => (int);
-define %int @shadow.standard..Thread_MhandleSize(%shadow.standard..Thread*) {
-entry:
-	%sizeOfPthread = ptrtoint %struct.pthread_t* getelementptr (%struct.pthread_t, %struct.pthread_t* null, i32 1) to i32
-	ret %int %sizeOfPthread
+	ret %shadow.natives..ShadowPointer* %call
 }
 
 ;---------------------------

@@ -133,7 +133,7 @@ and CanEqual<TimeSpan>
 	public get totalNanoSeconds() => (long)
 	{
 		return totalNanos;
-	}	
+	}
 	
 	public get isPositive() => (boolean)
 	{

@@ -12,23 +12,21 @@ import shadow:utility;
 locked class shadow:natives@
 	Signaler
 {
-	private native readonly initSignaler(Pointer cond) => (int);
-	private native readonly destroySignaler(Pointer cond) => (int);
+	private native readonly initSignaler() => (ShadowPointer);
+	private native readonly destroySignaler(ShadowPointer handle) => (boolean);
 	
-	private native readonly wait(Pointer cond, Pointer mutex) => (int);
-	private native readonly timedWait(Pointer cond, Pointer mutex, Pointer time) => (int);
-	private native readonly broadcast(Pointer cond) => (int);
+	private native readonly wait(ShadowPointer handle) => (boolean);
+	private native readonly timedWait(ShadowPointer handle, long timeout) => (boolean);
+	private native readonly broadcast(ShadowPointer handle) => (boolean);
 	
 	/// This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
 	private native readonly setInterruptToken(Thread currentThread, nullable SignalToken interruptToken) => ();
-	
-	private readonly native get handleSize() => (int);
 	
 	boolean terminate = false;
 	int waitingThreads = 0;
 	
 	Mutex mutex;
-	Pointer ptr;
+	ShadowPointer handle;
 	LinkedList<SignalToken> tokensQueue;
 	
 	/**
@@ -36,11 +34,13 @@ locked class shadow:natives@
 	*/
 	public create()
 	{
-		mutex = Mutex:create();
-		ptr = Pointer:create(this->handleSize);
-		tokensQueue = LinkedList<SignalToken>:create();
+		handle = initSignaler();
+		if(!handle->isValid) {
+			throw Exception:create("Failed to create the Signaler.");
+		}
 		
-		initSignaler(ptr);
+		mutex = Mutex:create();
+		tokensQueue = LinkedList<SignalToken>:create();
 	}
 	
 	/**
@@ -64,7 +64,7 @@ locked class shadow:natives@
 	*/
 	public waitForNotify() => ()
 	{
-		ptr.assertValid("Signaler");
+		handle.assertValid("Signaler");
 
 		var token = SignalToken:create(this);
 
@@ -75,9 +75,9 @@ locked class shadow:natives@
 			
 			setInterruptToken(CurrentThread->instance, token);
 			while(token->shouldWait and !terminate) {
-				mutex.giveUpOwnership();
-				wait(ptr, mutex->ptr);
-				mutex.takeOwnership();
+				mutex.unlock();
+				wait(handle);
+				mutex.lock();
 			}
 			// if the wait was interrupted, the setInterruptToken throws
 			// the InterruptedException as the interrupting flag is true.
@@ -90,11 +90,10 @@ locked class shadow:natives@
 	
 	private waitSleep(TimeSpan timeout, boolean sleepOnly) => (boolean)
 	{
-		ptr.assertValid("Signaler");
+		handle.assertValid("Signaler");
 
-		var time = AbsoluteTime:create(timeout);
 		var token = SignalToken:create(this);
-		int retVal = 0;
+		boolean timedout = false;
 		
 		mutex.lock();
 		try {
@@ -108,11 +107,10 @@ locked class shadow:natives@
 			waitingThreads += 1;
 			
 			setInterruptToken(CurrentThread->instance, token);
-			 // retVal is not zero when the wait times out
-			while(retVal == 0 and token->shouldWait and !terminate) {
-				mutex.giveUpOwnership();
-				retVal = timedWait(ptr, mutex->ptr, time->ptr);
-				mutex.takeOwnership();
+			while(!timedout and token->shouldWait and !terminate) {
+				mutex.unlock();
+				timedout = timedWait(handle, timeout->totalNanoSeconds);
+				mutex.lock();
 			}
 			// if the wait was interrupted, the setInterruptToken throws
 			// the InterruptedException as the interrupting flag is true.
@@ -126,10 +124,9 @@ locked class shadow:natives@
 				tokensQueue.remove(token);
 			}
 			mutex.unlock();
-			time.free();
 		}
 
-		return (retVal != 0);
+		return timedout;
 	}
 	
 	/**
@@ -193,7 +190,7 @@ locked class shadow:natives@
 	*/
 	public notify() => (boolean) 
 	{
-		ptr.assertValid("Signaler");
+		handle.assertValid("Signaler");
 		
 		mutex.lock();
 		try {
@@ -223,7 +220,7 @@ locked class shadow:natives@
 	*/
 	public notifyAll() => (int)
 	{
-		ptr.assertValid("Signaler");
+		handle.assertValid("Signaler");
 
 		mutex.lock();
 		int count = 0;
@@ -248,7 +245,7 @@ locked class shadow:natives@
 	*/
 	public free() => ()
 	{
-		if(ptr->isValid) {
+		if(handle->isValid) {
 			// empties the queue and notifies the threads in the order
 			// they were put to sleep in.
 			notifyAll();
@@ -256,11 +253,11 @@ locked class shadow:natives@
 			// if there are any sleeping threads, then they aren't in the queue
 			// so we set a global terminate flag, and broadcast to the rest of the threads.
 			terminate = true;
-			broadcast(ptr);
+			broadcast(handle);
 			
 			// free the allocated memory
-			destroySignaler(ptr);
-			ptr.free();
+			destroySignaler(handle);
+			handle.free();
 			mutex.free();
 		}
 	}
@@ -269,7 +266,7 @@ locked class shadow:natives@
 	private signal(SignalToken token) => (boolean)
 	{
 		if(token.invalidate()) {
-			broadcast(ptr);
+			broadcast(handle);
 			return true;
 		}
 		
@@ -280,7 +277,7 @@ locked class shadow:natives@
 	// we should remove the token from the queue.
 	private signalNative(SignalToken token) => ()
 	{
-		ptr.assertValid("Signaler");
+		handle.assertValid("Signaler");
 		
 		mutex.lock();
 		try {

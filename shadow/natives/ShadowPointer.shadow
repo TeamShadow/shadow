@@ -1,5 +1,5 @@
 /**
- * Class {@code Pointer} is used to initialize a block of memory on the heap, and
+ * Class {@code ShadowPointer} is used to initialize a block of memory on the heap, and
  * pass it to native LLVM code. This eases interaction between Shadow an native LLVM methods.
  *
  * @author Claude Abounegm
@@ -10,7 +10,7 @@
  * @seeDoc shadow:standard@Thread
  */
 locked immutable class shadow:natives@
-	Pointer
+	ShadowPointer
 {
 	private native readonly allocMemory(int size) => (long address);
 	private native readonly freeMemory() => ();
@@ -27,6 +27,11 @@ locked immutable class shadow:natives@
 	public create(int size)
 	{		
 		pointer = freeze(LongPointer:create(size));
+	}
+	
+	public create()
+	{
+		pointer = freeze(LongPointer:create(0L));
 	}
 	
 	/**
@@ -67,6 +72,16 @@ locked immutable class shadow:natives@
 	{
 		return pointer->address;
 	}
+	
+	private create(long address)
+	{
+		pointer = freeze(LongPointer:create(address));
+	}
+	
+	private createNative(long address) => (ShadowPointer)
+	{
+		return ShadowPointer:create(address);
+	}
 
 	private class LongPointer
 	{
@@ -81,6 +96,13 @@ locked immutable class shadow:natives@
 			this:address = allocMemory(size);
 			if(this:address == 0) {
 				throw OutOfMemoryException:create();
+			}
+		}
+		
+		public create(long address)
+		{
+			if(address != 0) {
+				this:address = address;
 			}
 		}
 		

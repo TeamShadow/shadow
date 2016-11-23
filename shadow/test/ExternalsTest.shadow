@@ -1,0 +1,12 @@
+import shadow:io@Console;
+import shadow:natives;
+
+class shadow:test@ExternalsTest
+{
+	private native readonly Test_Allocate() => (ShadowPointer); 
+	
+	public main(String[] args) => ()
+	{
+		Console.printLine(Test_Allocate()->isValid);
+	}
+}

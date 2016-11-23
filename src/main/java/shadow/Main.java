@@ -2,7 +2,9 @@ package shadow;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
@@ -162,7 +165,7 @@ public class Main {
 		Set<String> arrays = new HashSet<String>();
 		
 		generateLLVM(linkCommand, generics, arrays);
-
+		
 		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {			
 			// Check LLVM version using lexical comparison
 			String LLVMVersion = Configuration.getLLVMVersion(); 
@@ -183,8 +186,13 @@ public class Main {
 
 			logger.info("Building for target \"" + config.getTarget() + "\"");
 
-			List<String> assembleCommand = config.getLinkCommand(currentJob);
-
+			List<String> assembleCommand = config.getLinkCommand(currentJob);;
+			
+			List<File> assemblyFiles = new ArrayList<File>();
+			List<String> assembleExternalsCommand = new ArrayList<String>();
+			assembleExternalsCommand.addAll(assembleCommand);
+			compileExternals(assembleExternalsCommand, assemblyFiles, system.resolve(Paths.get("shadow", "externals")));
+			
 			Path mainLL;
 
 			if( mainArguments )
@@ -208,7 +216,7 @@ public class Main {
 			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimisationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
-			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
+			Process assemble = new ProcessBuilder(assembleExternalsCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
 				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
@@ -255,17 +263,73 @@ public class Main {
 				if (assemble.waitFor() != 0)
 					throw new CompileException("FAILED TO ASSEMBLE");
 			} catch (InterruptedException ex) {
-			} finally {
+			} finally {				
 				link.destroy();
 				optimize.destroy();
 				compile.destroy();
 				assemble.destroy();
+				
+				try {
+					for (File file : assemblyFiles) {
+						file.delete();
+					}
+				} catch (Exception ex) {
+				}
 			}
 
 			logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
 		}
 	}
 
+	private static void compileExternals(List<String> assembleCommand, List<File> assemblyFiles, Path externalsPath)
+	{
+		File externalFile = externalsPath.toFile();
+		// no need to compile anything if 
+		if(!externalFile.exists()) {
+			return;
+		}
+		
+		// compile the files to assembly, to be ready for linkage
+		List<String> compileCommand = new ArrayList<String>();
+		compileCommand.add("gcc");
+		compileCommand.add("-S");
+		
+		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
+
+		// we add the general C files
+		for(File f : externalFile.listFiles(filter)) {
+			compileCommand.add(f.getName());
+		}
+		
+		// we check OS specific C files
+		String currentOs = config.getOs();
+		File osSpecificExternals = Paths.get(externalFile.getPath(), currentOs).toFile();
+		if(osSpecificExternals.exists()) {
+			for(File f : osSpecificExternals.listFiles(filter)) {
+				compileCommand.add(currentOs + File.separator + f.getName());
+			}
+		}
+		
+		// we need to have several files in there to compile.
+		if(compileCommand.size() == 2) {
+			return;
+		}
+		
+		try {
+			new ProcessBuilder(compileCommand)
+				.directory(externalFile)
+				.redirectError(Redirect.INHERIT)
+				.start()
+				.waitFor();
+		} catch (InterruptedException | IOException e) {
+		}
+		
+		for(File f : externalsPath.toFile().listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
+			assemblyFiles.add(f);
+			assembleCommand.add(f.getAbsolutePath());
+		}
+	}
+	
 	/**
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file. This involves either finding an existing .ll file

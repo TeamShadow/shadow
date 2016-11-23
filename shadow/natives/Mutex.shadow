@@ -13,15 +13,15 @@
 locked immutable class shadow:natives@
 	Mutex
 {
-	private readonly native lockMutex(Pointer ptr) => (int);
-	private readonly native unlockMutex(Pointer ptr) => (int);
-	private readonly native initMutex(Pointer ptr) => (int);
-	private readonly native destroyMutex(Pointer ptr) => (int);
+	private readonly native initMutex() => (ShadowPointer);
+	private readonly native destroyMutex(ShadowPointer ptr) => (boolean);
+
+	private readonly native lockMutex(ShadowPointer ptr) => (int);
+	private readonly native unlockMutex(ShadowPointer ptr) => (int);
 	
 	private readonly native setOwner(immutable Owner owner, nullable Thread t) => ();
-	private readonly native get handleSize() => (int);
 
-	get Pointer ptr;
+	get ShadowPointer ptr;
 	immutable Owner owner;
 	boolean allowNestedLocks;
 	
@@ -39,11 +39,13 @@ locked immutable class shadow:natives@
 	*/
 	public create(boolean allowNestedLocks)
 	{
-		ptr = Pointer:create(this->handleSize);
+		ptr = initMutex();
+		if(!ptr->isValid) {
+			throw MutexException:create("An error occured while initializing the Mutex.");
+		}
+		
 		owner = freeze(Owner:create());
 		this:allowNestedLocks = allowNestedLocks;
-		
-		initMutex(ptr);
 	}
 	
 	/**
@@ -119,10 +121,18 @@ locked immutable class shadow:natives@
 	
 	/**
 	* Frees the resources allocated by this {@code Mutex}.
+	*
+	* @throws MutexException if the Mutex is locked by another thread.
 	*/
 	public free() => ()
 	{
 		if(ptr->isValid) {
+			if(owner.isCurrentThread()) {
+				unlock();
+			} else if(owner.isLocked()) {
+				throw MutexException:create("Cannot free a locked Mutex.");
+			}
+			
 			destroyMutex(ptr);
 			ptr.free();
 		}
@@ -140,6 +150,11 @@ locked immutable class shadow:natives@
 		{
 			owner = null;
 			counter = 0;
+		}
+		
+		public readonly isLocked() => (boolean)
+		{
+			return (owner !== null);
 		}
 		
 		public readonly isCurrentThread() => (boolean)

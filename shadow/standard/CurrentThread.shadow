@@ -13,6 +13,7 @@ is CanIndex<int, Thread>
 	private readonly native get currentThread() => (Thread);
 	private readonly native sleep(Thread thread, int milliseconds) => ();
 	private readonly native sleep(Thread thread, TimeSpan time) => ();
+	private readonly native yield_() => (int);
 	
 	Thread current;
 	
@@ -245,6 +246,16 @@ is CanIndex<int, Thread>
 	public readonly get childrenCount() => (int)
 	{
 		return current->childrenCount;
+	}
+	
+	/**
+	* Causes the current thread to execution to another thread.
+	*
+	* @return {@code true} if the yield was successful; otherwise, {@code false}.
+	*/
+	public readonly yield() => (boolean)
+	{
+		return (yield_() == 0);
 	}
 	
 	/**
