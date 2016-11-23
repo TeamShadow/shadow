@@ -27,7 +27,7 @@
 ; Pointer
 %shadow.natives..ShadowPointer = type opaque
 
-; Pointer.LongPointer
+; Pointer:LongPointer
 %shadow.natives..ShadowPointer.LongPointer = type opaque
 
 ;---------------------
@@ -63,6 +63,7 @@ entry:
 	ret void
 }
 
+; invalidateHandle(ShadowPointer:LongPointer) => ();
 define void @shadow.natives..ShadowPointer_MinvalidateHandle_shadow.natives..ShadowPointer.LongPointer(%shadow.natives..ShadowPointer*, %shadow.natives..ShadowPointer.LongPointer*) {
 entry:
 	call void @shadow.natives..ShadowPointer.LongPointer_MinvalidateNative(%shadow.natives..ShadowPointer.LongPointer* %1)

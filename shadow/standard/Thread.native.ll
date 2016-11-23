@@ -41,7 +41,8 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
-declare %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%void* (%void*)*, %shadow.standard..Thread*)
+; @ShadowThread.c
+declare %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%void* (%shadow.standard..Thread*)*, %shadow.standard..Thread*)
 
 ; runnerNative() => ();
 declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
@@ -73,7 +74,7 @@ entry:
 	%this = load %shadow.standard..Thread*, %shadow.standard..Thread** %this.addr
 
 	; spawn the thread and get its pointer
-	%call = call %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%void* (%void*)* @thread_start, %shadow.standard..Thread* %this)
+	%call = call %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%void* (%shadow.standard..Thread*)* @thread_start, %shadow.standard..Thread* %this)
 
 	ret %shadow.natives..ShadowPointer* %call
 }
@@ -82,16 +83,14 @@ entry:
 ; Custom Method Definitions
 ;---------------------------
 ; the function ran from the newly spawned thread
-define %void* @thread_start(%void*) {
+define %void* @thread_start(%shadow.standard..Thread* %currentThread) {
 entry:
-	%currentThread.addr = bitcast %void* %0 to %shadow.standard..Thread*
-
 	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
 	; and will cause the TLS to correctly store the reference of this thread.
-	store %shadow.standard..Thread* %currentThread.addr, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
+	store %shadow.standard..Thread* %currentThread, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
 
 	; we let Shadow take care of running the actual desired operation
-	call void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread* %currentThread.addr)
+	call void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread* %currentThread)
 
 	ret %void* null
 }

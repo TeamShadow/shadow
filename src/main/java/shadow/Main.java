@@ -191,7 +191,7 @@ public class Main {
 			List<File> assemblyFiles = new ArrayList<File>();
 			List<String> assembleExternalsCommand = new ArrayList<String>();
 			assembleExternalsCommand.addAll(assembleCommand);
-			compileExternals(assembleExternalsCommand, assemblyFiles, system.resolve(Paths.get("shadow", "externals")));
+			compileExternals(assembleExternalsCommand, assemblyFiles, system.resolve(Paths.get("shadow", "src")));
 			
 			Path mainLL;
 

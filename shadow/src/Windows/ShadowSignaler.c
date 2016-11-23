@@ -16,7 +16,8 @@ static void InvalidatePointer(CondData** ptr)
 	*ptr = NULL;
 }
 
-ShadowPointer __ShadowSignaler_Initialize()
+/// valid pointer returned on success, otherwise, invalid.
+ShadowPointer __ShadowSignaler_Initialize(void)
 {
 	CondData* ptr = malloc(sizeof(CondData));
 	
@@ -30,6 +31,7 @@ ShadowPointer __ShadowSignaler_Initialize()
 	return __createShadowPointer(ptr);
 }
 
+/// true on success, otherwise, false.
 ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowPtr)
 {
 	CondData* ptr = __extractRawPointer(shadowPtr);
@@ -40,6 +42,7 @@ ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowPtr)
 	return result;
 }
 
+/// true on success, otherwise, false.
 ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowPtr)
 {
 	CondData* ptr = __extractRawPointer(shadowPtr);
@@ -51,19 +54,21 @@ ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowPtr)
 	return (result == 0);
 }
 
-ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowLong nanos)
+/// returns true if it timedout, otherwise, false.
+ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowLong absoluteNanos)
 {
 	CondData* ptr = __extractRawPointer(shadowPtr);
 
-	struct timespec time = { nanos / NANOS_IN_SECONDS, nanos % NANOS_IN_SECONDS };
+	struct timespec time = { absoluteNanos / NANOS_IN_SECONDS, absoluteNanos % NANOS_IN_SECONDS };
 	
 	pthread_mutex_lock(&ptr->mutex);
-	int result = pthread_cond_timedwait_relative_np(&ptr->cond, &ptr->mutex, &time);
+	int result = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &time);
 	pthread_mutex_unlock(&ptr->mutex);
 	
 	return (result != 0);
 }
 
+/// true on success, otherwise, false.
 ShadowBoolean __ShadowSignaler_Broadcast(ShadowPointer shadowPtr)
 {
 	CondData* ptr = __extractRawPointer(shadowPtr);

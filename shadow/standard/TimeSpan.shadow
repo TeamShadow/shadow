@@ -7,7 +7,7 @@ locked immutable class shadow:standard@
 	TimeSpan
 is CanAdd<TimeSpan>
 and CanSubtract<TimeSpan>
-and CanEqual<TimeSpan>
+and CanCompare<TimeSpan>
 {
 	immutable long NANOS_PER_MICROSECOND = 1000;
 	immutable double MICROSECONDS_PER_NANO = 1.0 / NANOS_PER_MICROSECOND;
@@ -185,5 +185,18 @@ and CanEqual<TimeSpan>
 	public readonly equal(TimeSpan other) => (boolean)
 	{
 		return (totalNanos == other:totalNanos);
+	}
+	
+	public readonly compare(TimeSpan other) => (int)
+	{
+		if(totalNanos < other:totalNanos) {
+			return -1;
+		}
+		
+		if(totalNanos > other:totalNanos) {
+			return 1;
+		}
+		
+		return 0;
 	}
 }

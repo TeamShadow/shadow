@@ -16,7 +16,7 @@ locked class shadow:natives@
 	private native readonly destroySignaler(ShadowPointer handle) => (boolean);
 	
 	private native readonly wait(ShadowPointer handle) => (boolean);
-	private native readonly timedWait(ShadowPointer handle, long timeout) => (boolean);
+	private native readonly timedWait(ShadowPointer handle, long absoluteNanosTimeout) => (boolean);
 	private native readonly broadcast(ShadowPointer handle) => (boolean);
 	
 	/// This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
@@ -93,8 +93,9 @@ locked class shadow:natives@
 		handle.assertValid("Signaler");
 
 		var token = SignalToken:create(this);
+			
 		boolean timedout = false;
-		
+		var absTime = timeout + Time.epochNow();
 		mutex.lock();
 		try {
 			// we only add the token if we want to be able to wake this thread up later.
@@ -109,7 +110,7 @@ locked class shadow:natives@
 			setInterruptToken(CurrentThread->instance, token);
 			while(!timedout and token->shouldWait and !terminate) {
 				mutex.unlock();
-				timedout = timedWait(handle, timeout->totalNanoSeconds);
+				timedout = timedWait(handle, absTime->totalNanoSeconds);
 				mutex.lock();
 			}
 			// if the wait was interrupted, the setInterruptToken throws

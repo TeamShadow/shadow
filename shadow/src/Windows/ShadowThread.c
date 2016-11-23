@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include "../Shadow.h"
 
-ShadowPointer __ShadowThread_Spawn(void* (*start_routine)(void*), void* arg)
+ShadowPointer __ShadowThread_Spawn(void* (*thread_start)(ShadowThread), ShadowThread currentThread)
 {
 	pthread_t* ptr = malloc(sizeof(pthread_t));
-	if(pthread_create(ptr, NULL, start_routine, arg) != 0) {
+	if(pthread_create(ptr, NULL, thread_start, currentThread) != 0) {
 		free(ptr);
 		ptr = NULL;
 	}

@@ -1,9 +1,12 @@
+/**
+ * Author: Claude Abounegm
+ */
 #include "../Shadow.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <pthread.h>
 
-ShadowPointer __ShadowMutex_Initialize()
+ShadowPointer __ShadowMutex_Initialize(void)
 {
 	pthread_mutex_t* mutex = malloc(sizeof(pthread_mutex_t));
 	if(pthread_mutex_init(mutex, NULL) != 0) {

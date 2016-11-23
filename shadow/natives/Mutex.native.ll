@@ -39,6 +39,7 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
+; @ShadowMutex.c
 declare %shadow.natives..ShadowPointer* @__ShadowMutex_Initialize()
 declare %boolean @__ShadowMutex_Destroy(%shadow.natives..ShadowPointer*)
 declare %boolean @__ShadowMutex_Lock(%shadow.natives..ShadowPointer*)

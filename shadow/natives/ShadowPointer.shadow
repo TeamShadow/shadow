@@ -25,10 +25,13 @@ locked immutable class shadow:natives@
 	* @param {@code size} The size, in bytes, that needs to be allocated on the heap.
 	*/
 	public create(int size)
-	{		
+	{
 		pointer = freeze(LongPointer:create(size));
 	}
 	
+	/**
+	* Initializes a new, invalid, ShadowPointer. This does not allocate any memory.
+	*/
 	public create()
 	{
 		pointer = freeze(LongPointer:create(0L));
