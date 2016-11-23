@@ -10,7 +10,6 @@
 !NoArguments.ll
 !Unwind*.ll
 !Windows.ll
-*.s
 
 # Java files
 *.jar
