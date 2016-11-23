@@ -13,7 +13,7 @@ ShadowPointer __ShadowMutex_Initialize(void)
 		free(mutex);
 		mutex = NULL;
 	}
-	
+
 	return __createShadowPointer(mutex);
 }
 

@@ -95,7 +95,7 @@ locked class shadow:natives@
 		var token = SignalToken:create(this);
 			
 		boolean timedout = false;
-		var absTime = timeout + Time.epochNow();
+		var absTime = Time.epochNow() + timeout;
 		mutex.lock();
 		try {
 			// we only add the token if we want to be able to wake this thread up later.

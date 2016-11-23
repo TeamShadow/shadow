@@ -94,32 +94,6 @@ locked immutable class shadow:natives@
 	}
 	
 	/**
-	* Forcefully sets the owner of this mutex to the current thread. Used to accompany
-	* native methods which manipulate the unmanaged mutex without our control over it,
-	* such as {@code pthread_cond_wait} and {@code pthread_cond_timedwait}.
-	*
-	* @seeDoc shadow:natives@Signaler
-	*/
-	public takeOwnership() => ()
-	{
-		ptr.assertValid("Mutex");
-		setOwner(owner, CurrentThread->instance);
-	}
-	
-	/**
-	* Forcefully gives up the owner of this mutex from the current thread. Used to accompany
-	* native methods which manipulate the unmanaged mutex without our control over it,
-	* such as {@code pthread_cond_wait} and {@code pthread_cond_timedwait}.
-	*
-	* @seeDoc shadow:natives@Signaler
-	*/
-	public giveUpOwnership() =>()
-	{
-		ptr.assertValid("Mutex");
-		setOwner(owner, null);
-	}
-	
-	/**
 	* Frees the resources allocated by this {@code Mutex}.
 	*
 	* @throws MutexException if the Mutex is locked by another thread.

@@ -66,6 +66,7 @@ entry:
 	ret %int %currentId
 }
 
+; spawnThread() => (ShadowPointer);
 define %shadow.natives..ShadowPointer* @shadow.standard..Thread_MspawnThread(%shadow.standard..Thread*) {
 entry:
 	; get the reference of the current Thread
@@ -95,7 +96,7 @@ entry:
 	ret %void* null
 }
 
-; initializes the main thread and set the currentThread and mainThread to that instance
+; initializes the main thread and sets the currentThread and mainThread to that instance
 define %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread() {
 entry:
 	; we initialize the dummy Thread for the main thread

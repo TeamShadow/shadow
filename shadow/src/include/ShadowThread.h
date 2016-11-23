@@ -5,5 +5,6 @@
 #define SHADOW_THREADS_H
 
 ShadowPointer __ShadowThread_Spawn(void* (*thread_start)(ShadowThread), ShadowThread currentThread);
+ShadowBoolean __ShadowThread_Yield();
 
 #endif

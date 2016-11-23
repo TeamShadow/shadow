@@ -13,3 +13,8 @@ ShadowPointer __ShadowThread_Spawn(void* (*thread_start)(ShadowThread), ShadowTh
 	
 	return __createShadowPointer(ptr);
 }
+
+ShadowBoolean __ShadowThread_Yield()
+{
+	return (sched_yield() == 0);
+}

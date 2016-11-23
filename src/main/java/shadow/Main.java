@@ -178,20 +178,18 @@ public class Main {
 				logger.error(error);
 				return;
 			}
+
+			List<String> assembleCommand =  new ArrayList<String>(config.getLinkCommand(currentJob));
+			
+			// compile and add the C source files to the assembler
+			compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "src")).toFile());
 			
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.flush();
 			try { Thread.sleep(500); }
 			catch (InterruptedException ex) { }
-
-			logger.info("Building for target \"" + config.getTarget() + "\"");
-
-			List<String> assembleCommand = config.getLinkCommand(currentJob);;
 			
-			List<File> assemblyFiles = new ArrayList<File>();
-			List<String> assembleExternalsCommand = new ArrayList<String>();
-			assembleExternalsCommand.addAll(assembleCommand);
-			compileExternals(assembleExternalsCommand, assemblyFiles, system.resolve(Paths.get("shadow", "src")));
+			logger.info("Building for target \"" + config.getTarget() + "\"");
 			
 			Path mainLL;
 
@@ -216,7 +214,7 @@ public class Main {
 			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimisationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
-			Process assemble = new ProcessBuilder(assembleExternalsCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
+			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
 				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
@@ -268,24 +266,16 @@ public class Main {
 				optimize.destroy();
 				compile.destroy();
 				assemble.destroy();
-				
-				try {
-					for (File file : assemblyFiles) {
-						file.delete();
-					}
-				} catch (Exception ex) {
-				}
 			}
 
 			logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
 		}
 	}
 
-	private static void compileExternals(List<String> assembleCommand, List<File> assemblyFiles, Path externalsPath)
+	private static void compileCSourceFiles(List<String> assembleCommand, File srcDirectory)
 	{
-		File externalFile = externalsPath.toFile();
 		// no need to compile anything if 
-		if(!externalFile.exists()) {
+		if(!srcDirectory.exists()) {
 			return;
 		}
 		
@@ -293,41 +283,65 @@ public class Main {
 		List<String> compileCommand = new ArrayList<String>();
 		compileCommand.add("gcc");
 		compileCommand.add("-S");
-		
-		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
 
+		// create the target directory
+		File targetPath = Paths.get(srcDirectory.getAbsolutePath(), "target").toFile();
+		targetPath.mkdir();
+		
+		// the filter to only find .c files.
+		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
+		
 		// we add the general C files
-		for(File f : externalFile.listFiles(filter)) {
-			compileCommand.add(f.getName());
+		addCSourceFiles(srcDirectory, targetPath, filter, compileCommand);
+		
+		// we add the OS specific C files
+		File osSpecificExternals = Paths.get(srcDirectory.getPath(), config.getOs()).toFile();
+		if(osSpecificExternals.exists()) {
+			addCSourceFiles(osSpecificExternals, targetPath, filter, compileCommand);
 		}
 		
-		// we check OS specific C files
-		String currentOs = config.getOs();
-		File osSpecificExternals = Paths.get(externalFile.getPath(), currentOs).toFile();
-		if(osSpecificExternals.exists()) {
-			for(File f : osSpecificExternals.listFiles(filter)) {
-				compileCommand.add(currentOs + File.separator + f.getName());
+		// we need to have at least one file to compile
+		if(compileCommand.size() > 2) {
+			try {
+				new ProcessBuilder(compileCommand)
+					.directory(targetPath)
+					.redirectError(Redirect.INHERIT)
+					.start()
+					.waitFor();
+			} catch (InterruptedException | IOException e) {
 			}
 		}
 		
-		// we need to have several files in there to compile.
-		if(compileCommand.size() == 2) {
-			return;
-		}
-		
-		try {
-			new ProcessBuilder(compileCommand)
-				.directory(externalFile)
-				.redirectError(Redirect.INHERIT)
-				.start()
-				.waitFor();
-		} catch (InterruptedException | IOException e) {
-		}
-		
-		for(File f : externalsPath.toFile().listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
-			assemblyFiles.add(f);
+		// still need to find and add the .s files to the linker
+		for(File f : targetPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
 			assembleCommand.add(f.getAbsolutePath());
 		}
+	}
+	
+	private static void addCSourceFiles(File srcDirectory, File targetPath, FileFilter filter, List<String> compileCommand)
+	{
+		for(File f : srcDirectory.listFiles(filter)) {
+			Path assemblyPath = Paths.get(targetPath.getAbsolutePath(), (getBaseName(f.getName()) + ".s"));
+			String parentDirectoryName = srcDirectory.getParentFile().getName();
+			
+			try {
+				if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(f.toPath())) < 0) {
+					logger.info("Compiling C source file: '" + (parentDirectoryName.equals("src") ? (srcDirectory.getName() + File.separator) : "") + f.getName() + "'");
+					compileCommand.add(f.getAbsolutePath());
+				}
+			} catch (IOException e) {
+			}
+		}
+	}
+	
+	private static String getBaseName(String fileName)
+	{
+		int pos = fileName.lastIndexOf(".");
+		if (pos > 0) {
+			return fileName.substring(0, pos);
+		}
+		
+		return fileName;
 	}
 	
 	/**

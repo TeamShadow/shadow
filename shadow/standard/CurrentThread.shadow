@@ -13,7 +13,7 @@ is CanIndex<int, Thread>
 	private readonly native get currentThread() => (Thread);
 	private readonly native sleep(Thread thread, int milliseconds) => ();
 	private readonly native sleep(Thread thread, TimeSpan time) => ();
-	private readonly native yield_() => (int);
+	private readonly native yield_() => (boolean);
 	
 	Thread current;
 	
@@ -249,13 +249,13 @@ is CanIndex<int, Thread>
 	}
 	
 	/**
-	* Causes the current thread to execution to another thread.
+	* Causes the current thread to yield execution to another thread.
 	*
 	* @return {@code true} if the yield was successful; otherwise, {@code false}.
 	*/
 	public readonly yield() => (boolean)
 	{
-		return (yield_() == 0);
+		return yield_();
 	}
 	
 	/**

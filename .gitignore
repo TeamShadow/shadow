@@ -11,6 +11,7 @@
 !Unwind*.ll
 !Windows.ll
 *.s
+/shadow/src/include/target
 
 # Java files
 *.jar

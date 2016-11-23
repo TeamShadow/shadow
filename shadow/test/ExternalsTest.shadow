@@ -7,6 +7,8 @@ class shadow:test@ExternalsTest
 	
 	public main(String[] args) => ()
 	{
-		Console.printLine(Test_Allocate()->isValid);
+		var ptr = Test_Allocate();
+		Console.printLine(ptr->isValid);
+		ptr.free();
 	}
 }
