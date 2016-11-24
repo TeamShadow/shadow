@@ -502,3 +502,19 @@ define %int @shadow.standard..Array_Mdimensions(%shadow.standard..Array*) {
     %4 = extractvalue { %int*, [1 x %int] } %3, 1, 0
     ret %int %4
 }
+
+; 
+%VoidArray = type { i8*, [1 x %int] }
+define void @__getDataFromShadowArray(%VoidArray*, %int*, i8**) {
+entry:
+	%array.addr = getelementptr inbounds %VoidArray, %VoidArray* %0, i32 0, i32 0
+	%size.addr = getelementptr inbounds %VoidArray, %VoidArray* %0, i32 0, i32 1, i32 0
+	
+	%array = load i8*, i8** %array.addr
+	store i8* %array, i8** %2
+	
+	%size = load %int, %int* %size.addr
+	store %int %size, %int* %1
+	
+	ret void
+}

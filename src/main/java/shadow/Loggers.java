@@ -21,7 +21,7 @@ public class Loggers
 	public static final Logger DOC_TOOL = LoggerFactory.getLogger("Shadow Documentation Tool");
 	
 	public static void setAllToLevel(Level level)
-	{		
+	{
 		/*LoggerContext context = (LoggerContext)LogManager.getContext(false);
 		Configuration config = context.getConfiguration();
 		LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);

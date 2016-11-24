@@ -17,7 +17,6 @@ class shadow:test@ExternalsTest
 		Console.printLine(b # "  " # d);
 		Console.printLine(c - a);
 		Console.printLine(d - b);*/
-
 		var ptr = Test_Allocate();
 		Console.printLine(ptr->isValid);
 		ptr.free();

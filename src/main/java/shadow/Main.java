@@ -127,7 +127,7 @@ public class Main {
 		// Detect and establish the current settings based on the arguments
 		config = Configuration.buildConfiguration(compilerArgs.getMainFileArg(),
 				compilerArgs.getConfigFileArg(), false);
-		currentJob = new Job(compilerArgs);		
+		currentJob = new Job(compilerArgs);
 		
 		// Print help and exit
 		if (compilerArgs.hasOption(Arguments.HELP)) {
@@ -182,7 +182,10 @@ public class Main {
 			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
 			
 			// compile and add the C source files to the assembler
-			compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "c-source")).toFile());
+			if(!compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "c-source")).toFile())) {
+				logger.error("Failed to compile C source files.");
+				throw new CompileException("FAILED TO COMPILE");
+			}
 			
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.flush();
@@ -272,11 +275,11 @@ public class Main {
 		}
 	}
 
-	private static void compileCSourceFiles(List<String> assembleCommand, File srcDirectory)
+	private static boolean compileCSourceFiles(List<String> assembleCommand, File srcDirectory)
 	{
 		// no need to compile anything if 
 		if(!srcDirectory.exists()) {
-			return;
+			return true;
 		}
 		
 		// compile the files to assembly, to be ready for linkage
@@ -291,39 +294,45 @@ public class Main {
 		// the filter to only find .c files.
 		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
 		
+		List<File> assemblyFiles = new ArrayList<File>();
+		
 		// we add the general C files
-		addCSourceFiles(srcDirectory, binPath, filter, compileCommand);
+		addCSourceFiles(srcDirectory, binPath, filter, compileCommand, assemblyFiles);
 		
 		// we add the OS specific C files
 		File osSpecificExternals = Paths.get(srcDirectory.getPath(), config.getOs()).toFile();
 		if(osSpecificExternals.exists()) {
-			addCSourceFiles(osSpecificExternals, binPath, filter, compileCommand);
+			addCSourceFiles(osSpecificExternals, binPath, filter, compileCommand, assemblyFiles);
 		}
 		
-		int result = 0;
+		boolean success = true;
 		// we need to have at least one file to compile
 		if(compileCommand.size() > 2) {
 			try {
-				result = new ProcessBuilder(compileCommand)
+				success = new ProcessBuilder(compileCommand)
 							.directory(binPath)
 							.redirectError(Redirect.INHERIT)
 							.start()
-							.waitFor();
+							.waitFor() == 0;
 			} catch (InterruptedException | IOException e) {
 			}
 		}
 		
-		// still need to find and add the .s files to the linker
-		for(File f : binPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
-			if(result != 0) {
-				f.delete();
-			} else {
+		if(success) {
+			// still need to find and add the .s files to the linker
+			for(File f : binPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
 				assembleCommand.add(f.getAbsolutePath());
 			}
+		} else {
+			for(File f : assemblyFiles) {
+				f.delete();
+			}
 		}
+		
+		return success;
 	}
 	
-	private static void addCSourceFiles(File srcDirectory, File targetPath, FileFilter filter, List<String> compileCommand)
+	private static void addCSourceFiles(File srcDirectory, File targetPath, FileFilter filter, List<String> compileCommand, List<File> assemblyFiles)
 	{
 		for(File f : srcDirectory.listFiles(filter)) {
 			Path assemblyPath = Paths.get(targetPath.getAbsolutePath(), (getBaseName(f.getName()) + ".s"));
@@ -332,6 +341,7 @@ public class Main {
 			try {
 				if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(f.toPath())) < 0) {
 					logger.info("Compiling C source file: '" + (parentDirectoryName.equals("src") ? (srcDirectory.getName() + File.separator) : "") + f.getName() + "'");
+					assemblyFiles.add(assemblyPath.toFile());
 					compileCommand.add(f.getAbsolutePath());
 				}
 			} catch (IOException e) {
