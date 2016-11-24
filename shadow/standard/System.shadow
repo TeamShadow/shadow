@@ -11,5 +11,7 @@ immutable singleton shadow:standard@System
 	 * characteristics.
 	 * @return nanoseconds elapsed since midnight on January 1, 1970
 	 */
-	public native nanoTime() => ( long );
+	public native epochNanoTime() => (long);
+	
+	public native nanoTime() => (long);
 }

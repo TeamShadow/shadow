@@ -7,6 +7,17 @@ class shadow:test@ExternalsTest
 	
 	public main(String[] args) => ()
 	{
+		/*var a = System.epochNanoTime();
+		var b = System.nanoTime();
+		CurrentThread.sleep(Time.fromSeconds(5));
+		var c = System.epochNanoTime();
+		var d = System.nanoTime();
+		
+		Console.printLine(a # "  " # c);
+		Console.printLine(b # "  " # d);
+		Console.printLine(c - a);
+		Console.printLine(d - b);*/
+
 		var ptr = Test_Allocate();
 		Console.printLine(ptr->isValid);
 		ptr.free();

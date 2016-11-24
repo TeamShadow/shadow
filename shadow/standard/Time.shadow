@@ -6,22 +6,16 @@
 immutable singleton shadow:standard@
 	Time
 {
-	private native readonly getAbsoluteTime() => (int sec, int usec);
-
 	get TimeSpan InfiniteTimeout = TimeSpan:create(-1);
 	
 	public readonly get epochNow() => (TimeSpan)
 	{
-		(int absSec, int absUSec) = getAbsoluteTime();
-		
-		return Time
-				.fromSeconds(absSec)
-				.addMicroSeconds(absUSec);
+		return TimeSpan:create(System.epochNanoTime());
 	}
 	
 	public readonly fromNanoSeconds(long nanoSeconds) => (TimeSpan)
 	{
-		return TimeSpan:create(0, 0, 0, nanoSeconds);
+		return TimeSpan:create(nanoSeconds);
 	}
 	
 	public readonly fromMicroSeconds(int microSeconds) => (TimeSpan)

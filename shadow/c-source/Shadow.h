@@ -69,8 +69,10 @@ typedef float ShadowFloat;
 // double
 typedef double ShadowDouble;
 
+#include "include/ShadowConsole.h"
 #include "include/ShadowMutex.h"
 #include "include/ShadowSignaler.h"
+#include "include/ShadowSystem.h"
 #include "include/ShadowThread.h"
 
 #endif

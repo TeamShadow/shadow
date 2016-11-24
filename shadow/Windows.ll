@@ -65,8 +65,6 @@ declare x86_stdcallcc i8* @GetStdHandle(i32)
 declare x86_stdcallcc i32 @GetFileType(i8*)
 declare x86_stdcallcc i32 @GetConsoleMode(i8*, i32*)
 declare x86_stdcallcc i32 @SetConsoleMode(i8*, i32)
-declare x86_stdcallcc i32 @SetConsoleCP(i32)
-declare x86_stdcallcc i32 @SetConsoleOutputCP(i32)
 declare x86_stdcallcc i32 @WriteConsoleA(i8*, i8*, i32, i32*, i8*)
 declare x86_stdcallcc i32 @WriteConsoleW(i8*, i8*, i32, i32*, i8*)
 declare x86_stdcallcc i32 @FlushFileBuffers(i8*)
@@ -84,9 +82,6 @@ declare x86_stdcallcc i32 @CloseHandle(i8*)
 
 declare x86_stdcallcc i32 @MultiByteToWideChar(i32, i32, i8*, i32, i16*, i32)
 
-declare x86_stdcallcc i32 @QueryPerformanceFrequency(i64*)
-declare x86_stdcallcc i32 @QueryPerformanceCounter(i64*)
-
 ; one day update this method to use the @FormatMessage() function
 define private void @throwIOException() noreturn {
 	%1 = tail call x86_stdcallcc i32 @GetLastError()
@@ -97,28 +92,6 @@ define private void @throwIOException() noreturn {
     unreachable	
 }
 
-define i64 @shadow.standard..System_MnanoTime(%shadow.standard..System*) {
-	%2 = alloca i64
-	%3 = alloca i64
-	%4 = call x86_stdcallcc i32 @QueryPerformanceFrequency(i64* %2)
-	%5 = icmp ne i32 %4, 0
-	br i1 %5, label %6, label %14
-	%7 = call x86_stdcallcc i32 @QueryPerformanceCounter(i64* %3)
-	%8 = icmp ne i32 %7, 0
-	br i1 %8, label %9, label %14
-	%10 = load i64, i64* %2
-	%11 = load i64, i64* %3
-	%12 = mul nuw i64 %11, 1000000000
-	%13 = udiv i64 %12, %10
-	ret i64 %13
-	ret i64 0
-}
-
-define void @shadow.io..Console_Minit(%shadow.io..Console*) {
-	%2 = call x86_stdcallcc i32 @SetConsoleCP(i32 65001)
-	%3 = call x86_stdcallcc i32 @SetConsoleOutputCP(i32 65001)
-	ret void
-}
 define { i8, i1 } @shadow.io..Console_MreadByte(%shadow.io..Console*) {
 	%2 = alloca i32
 	%3 = alloca i8

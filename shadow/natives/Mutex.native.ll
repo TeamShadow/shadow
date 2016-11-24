@@ -21,9 +21,6 @@
 %double = type double
 %void = type i8
 
-; Object
-%shadow.standard..Object = type opaque
-
 ; Thread
 %shadow.standard..Thread = type opaque
 

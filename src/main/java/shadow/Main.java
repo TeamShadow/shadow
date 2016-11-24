@@ -179,10 +179,10 @@ public class Main {
 				return;
 			}
 
-			List<String> assembleCommand =  new ArrayList<String>(config.getLinkCommand(currentJob));
+			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
 			
 			// compile and add the C source files to the assembler
-			compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "src")).toFile());
+			compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "c-source")).toFile());
 			
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.flush();
@@ -220,7 +220,7 @@ public class Main {
 				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
-				String line = main.readLine();				
+				String line = main.readLine();
 				final OutputStream out = link.getOutputStream();				
 				while (line != null) {
 					
@@ -285,36 +285,41 @@ public class Main {
 		compileCommand.add("-S");
 
 		// create the target directory
-		File targetPath = Paths.get(srcDirectory.getAbsolutePath(), "target").toFile();
-		targetPath.mkdir();
+		File binPath = Paths.get(srcDirectory.getAbsolutePath(), "bin").toFile();
+		binPath.mkdir();
 		
 		// the filter to only find .c files.
 		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
 		
 		// we add the general C files
-		addCSourceFiles(srcDirectory, targetPath, filter, compileCommand);
+		addCSourceFiles(srcDirectory, binPath, filter, compileCommand);
 		
 		// we add the OS specific C files
 		File osSpecificExternals = Paths.get(srcDirectory.getPath(), config.getOs()).toFile();
 		if(osSpecificExternals.exists()) {
-			addCSourceFiles(osSpecificExternals, targetPath, filter, compileCommand);
+			addCSourceFiles(osSpecificExternals, binPath, filter, compileCommand);
 		}
 		
+		int result = 0;
 		// we need to have at least one file to compile
 		if(compileCommand.size() > 2) {
 			try {
-				new ProcessBuilder(compileCommand)
-					.directory(targetPath)
-					.redirectError(Redirect.INHERIT)
-					.start()
-					.waitFor();
+				result = new ProcessBuilder(compileCommand)
+							.directory(binPath)
+							.redirectError(Redirect.INHERIT)
+							.start()
+							.waitFor();
 			} catch (InterruptedException | IOException e) {
 			}
 		}
 		
 		// still need to find and add the .s files to the linker
-		for(File f : targetPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
-			assembleCommand.add(f.getAbsolutePath());
+		for(File f : binPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
+			if(result != 0) {
+				f.delete();
+			} else {
+				assembleCommand.add(f.getAbsolutePath());
+			}
 		}
 	}
 	
