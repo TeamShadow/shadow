@@ -1,20 +1,24 @@
+/**
+ * Author: Claude Abounegm
+ */
+#include "ShadowThread.h"
+
 #include <stddef.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include "../Shadow.h"
 
-ShadowPointer __ShadowThread_Spawn(void* (*thread_start)(ShadowThread), ShadowThread currentThread)
+ShadowPointer __ShadowThread_Spawn(ShadowThread this, void* (*thread_start)(ShadowThread))
 {
 	pthread_t* ptr = malloc(sizeof(pthread_t));
-	if(pthread_create(ptr, NULL, thread_start, currentThread) != 0) {
+	if(pthread_create(ptr, NULL, thread_start, this) != 0) {
 		free(ptr);
 		ptr = NULL;
 	}
 	
-	return __createShadowPointer(ptr);
+	return CreateShadowPointer(ptr);
 }
 
-ShadowBoolean __ShadowThread_Yield()
+ShadowBoolean __ShadowCurrentThread_Yield(ShadowCurrentThread this)
 {
 	return (sched_yield() == 0);
 }

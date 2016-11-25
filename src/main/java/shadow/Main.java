@@ -157,6 +157,7 @@ public class Main {
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
+		linkCommand.add(system.resolve(Paths.get("shadow", "C_Helpers.ll")).toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
@@ -286,6 +287,7 @@ public class Main {
 		List<String> compileCommand = new ArrayList<String>();
 		compileCommand.add("gcc");
 		compileCommand.add("-S");
+		compileCommand.add("-I../include/");
 
 		// create the target directory
 		File binPath = Paths.get(srcDirectory.getAbsolutePath(), "bin").toFile();
@@ -307,7 +309,7 @@ public class Main {
 		
 		boolean success = true;
 		// we need to have at least one file to compile
-		if(compileCommand.size() > 2) {
+		if(compileCommand.size() > 3) {
 			try {
 				success = new ProcessBuilder(compileCommand)
 							.directory(binPath)

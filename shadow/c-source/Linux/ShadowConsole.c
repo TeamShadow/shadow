@@ -1,4 +1,4 @@
-#include "../Shadow.h"
+#include "Shadow.h"
 
-void __ShadowConsole_Initialize() { }
+void __ShadowConsole_Initialize(ShadowConsole) { }
 

@@ -1,23 +1,27 @@
-#include "Shadow.h"
+/**
+ * Author: Claude Abounegm
+ */
+#include "ShadowString.h"
+#include "ShadowArray.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-char* __unpackShadowString(ShadowString stringRef)
+ShadowArray GetShadowArrayFromShadowString(ShadowString);
+
+char* UnpackShadowStringToCStr(ShadowString stringRef)
 {
-	String str;
-	__getDataFromShadowString(stringRef, &str);
+	ByteArray* str = UnpackShadowString(stringRef);
 	
-	char* dest = malloc(str.size + 1);
-	strncpy(dest, str.chars, str.size);
-	dest[str.size] = '\0';
+	char* dest = malloc(str->size + 1);
+	strncpy(dest, str->chars, str->size);
+	dest[str->size] = '\0';
 	
 	return dest;
 }
 
-void __getDataFromShadowString(ShadowString stringRef, String* str)
+ByteArray* UnpackShadowString(ShadowString stringRef)
 {
-	ShadowArray arr;
-	__getShadowArrayFromString(stringRef, &arr);
-	__getDataFromShadowArray(arr, &str->size, &str->chars);
+	return (ByteArray*)UnpackShadowArray(GetShadowArrayFromShadowString(stringRef));
 }

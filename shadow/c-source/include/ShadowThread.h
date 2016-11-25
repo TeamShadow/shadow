@@ -4,7 +4,13 @@
 #ifndef SHADOW_THREADS_H
 #define SHADOW_THREADS_H
 
-ShadowPointer __ShadowThread_Spawn(void* (*thread_start)(ShadowThread), ShadowThread currentThread);
-ShadowBoolean __ShadowThread_Yield();
+#include "ShadowTypes.h"
+#include "ShadowPointer.h"
+
+typedef void* ShadowThread;
+typedef void* ShadowCurrentThread;
+
+ShadowPointer __ShadowThread_Spawn(ShadowThread, void* (*thread_start)(ShadowThread));
+ShadowBoolean __ShadowCurrentThread_Yield(ShadowCurrentThread);
 
 #endif

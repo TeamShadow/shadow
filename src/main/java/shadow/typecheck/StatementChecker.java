@@ -98,7 +98,7 @@ public class StatementChecker extends BaseChecker {
 			if( node instanceof ShadowParser.InlineMethodDefinitionContext )
 				signature = new MethodSignature( currentType, "", node.getModifiers(), node.getDocumentation(), node);
 			else
-				signature = new MethodSignature( currentType, ((ShadowParser.LocalMethodDeclarationContext)node).methodDeclarator().Identifier().getText(), node.getModifiers(), node.getDocumentation(), node);
+				signature = new MethodSignature( currentType, ((ShadowParser.LocalMethodDeclarationContext)node).methodDeclarator().methodIdentifier().getText(), node.getModifiers(), node.getDocumentation(), node);
 			node.setSignature(signature);
 			MethodType methodType = signature.getMethodType();
 
@@ -214,7 +214,7 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitLocalMethodDeclaration(ShadowParser.LocalMethodDeclarationContext ctx)
 	{ 					
-		addSymbol(ctx.methodDeclarator().Identifier().getText(), ctx);
+		addSymbol(ctx.methodDeclarator().methodIdentifier().getText(), ctx);
 		visitMethodPre(ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
@@ -1765,7 +1765,7 @@ public class StatementChecker extends BaseChecker {
 					ctx.getModifiers().upgradeToTemporaryReadonly();					
 			}
 		}	
-		else if( ctx.Identifier() != null ) {							
+		else if( ctx.methodIdentifier() != null ) {							
 			if( !setTypeFromName( ctx, image )) { //automatically sets type if can				
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 				ctx.setType(Type.UNKNOWN);											

@@ -171,6 +171,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	//Is it only the wrapped ones that correspond to interface methods?
 	//If so, those are the ones that need special generic attention
 	public String getMangledName() {
+		if(isNative() && symbol.startsWith("@")) {
+			return symbol.substring(1, symbol.length());
+		}
+		
 		StringBuilder sb = new StringBuilder();
 		
 		if( isWrapper() )		

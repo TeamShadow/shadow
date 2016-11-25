@@ -148,7 +148,7 @@ and CanIterate<T>
 	public readonly iterator() => (Iterator<T>)
 	{
 		return ArrayIterator:create();
-	} 
+	}
 	
 	private class ArrayIterator is Iterator<T>
 	{

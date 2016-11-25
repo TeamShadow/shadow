@@ -1,7 +1,11 @@
+/**
+ * Author: Claude Abounegm
+ */
+#include "ShadowSignaler.h"
+
 #include <stddef.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include "../Shadow.h"
 
 #define NANOS_IN_SECONDS 1000000000LL
 
@@ -17,7 +21,7 @@ static void InvalidatePointer(CondData** ptr)
 }
 
 /// valid pointer returned on success, otherwise, invalid.
-ShadowPointer __ShadowSignaler_Initialize(void)
+ShadowPointer __ShadowSignaler_Initialize(ShadowSignaler this)
 {
 	CondData* ptr = malloc(sizeof(CondData));
 	
@@ -28,13 +32,13 @@ ShadowPointer __ShadowSignaler_Initialize(void)
 		InvalidatePointer(&ptr);
 	}
 	
-	return __createShadowPointer(ptr);
+	return CreateShadowPointer(ptr);
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Destroy(ShadowSignaler this, ShadowPointer shadowPtr)
 {
-	CondData* ptr = __extractRawPointer(shadowPtr);
+	CondData* ptr = ExtractRawPointer(shadowPtr);
 	
 	int result = (pthread_cond_destroy(&ptr->cond) == 0);
 	result &= (pthread_mutex_destroy(&ptr->mutex) == 0);
@@ -43,9 +47,9 @@ ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowPtr)
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Wait(ShadowSignaler this, ShadowPointer shadowPtr)
 {
-	CondData* ptr = __extractRawPointer(shadowPtr);
+	CondData* ptr = ExtractRawPointer(shadowPtr);
 
 	pthread_mutex_lock(&ptr->mutex);
 	int result = pthread_cond_wait(&ptr->cond, &ptr->mutex);
@@ -55,9 +59,9 @@ ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowPtr)
 }
 
 /// returns true if it timedout, otherwise, false.
-ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowLong absoluteNanos)
+ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowSignaler this, ShadowPointer shadowPtr, ShadowLong absoluteNanos)
 {
-	CondData* ptr = __extractRawPointer(shadowPtr);
+	CondData* ptr = ExtractRawPointer(shadowPtr);
 
 	struct timespec time = { absoluteNanos / NANOS_IN_SECONDS, absoluteNanos % NANOS_IN_SECONDS };
 	
@@ -69,9 +73,9 @@ ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowLong a
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Broadcast(ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Broadcast(ShadowSignaler this, ShadowPointer shadowPtr)
 {
-	CondData* ptr = __extractRawPointer(shadowPtr);
+	CondData* ptr = ExtractRawPointer(shadowPtr);
 	
 	return (pthread_cond_broadcast(&ptr->cond) == 0);
 }

@@ -77,10 +77,3 @@ entry:
 	%call = call %boolean @shadow.standard..Thread_MinterruptingNative(%shadow.standard..Thread* %1)
 	ret %boolean %call
 }
-
-; yield_() => (boolean);
-define %boolean @shadow.standard..CurrentThread_Myield__(%shadow.standard..CurrentThread*) {
-entry:
-	%call = call %boolean @__ShadowThread_Yield()
-	ret %boolean %call
-}

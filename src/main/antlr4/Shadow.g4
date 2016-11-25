@@ -129,6 +129,10 @@ fieldDeclaration
 	: type variableDeclarator (',' variableDeclarator )* ';'
 	;
 	
+methodIdentifier
+	: ('@' '_'*)? Identifier
+	;
+	
 variableDeclarator
 	: Identifier ( '=' conditionalExpression )?
 	;
@@ -139,7 +143,7 @@ arrayInitializer
 	;
 
 methodDeclarator
-	: Identifier formalParameters '=>' resultTypes
+	: methodIdentifier formalParameters '=>' resultTypes
 	;
 
 inlineResults
@@ -410,7 +414,7 @@ primaryPrefix
 	| primitiveType
 	| functionType
 	| arrayInitializer
-	| (unqualifiedName '@' )? Identifier //catches class types and identifiers
+	| (unqualifiedName '@' )? methodIdentifier //catches class types and identifiers
 	;
 
 primarySuffix

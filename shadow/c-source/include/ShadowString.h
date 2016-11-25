@@ -4,16 +4,16 @@
 #ifndef SHADOW_STRING_H
 #define SHADOW_STRING_H
 
+#include "ShadowTypes.h"
+
+typedef void* ShadowString;
+
 typedef struct {
 	ShadowInt size;
 	ShadowByte* chars;
-} String;
+} ByteArray;
 
-// String.native.ll
-void __getShadowArrayFromString(ShadowString, ShadowArray*);
-
-// ShadowString.c
-char* __unpackShadowString(ShadowString str);
-void __getDataFromShadowString(ShadowString stringRef, String* str);
+char* UnpackShadowStringToCStr(ShadowString stringRef);
+ByteArray* UnpackShadowString(ShadowString stringRef);
 
 #endif

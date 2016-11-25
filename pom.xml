@@ -38,6 +38,7 @@
 	            <exclude>Unwind32.ll</exclude>
 	            <exclude>Unwind64.ll</exclude>
 	            <exclude>Windows.ll</exclude>
+	            <exclude>C_Helpers.ll</exclude>
 	          </excludes>
 	          <followSymlinks>false</followSymlinks>
 	        </fileset>	        

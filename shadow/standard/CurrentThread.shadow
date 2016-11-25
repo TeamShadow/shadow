@@ -13,7 +13,7 @@ is CanIndex<int, Thread>
 	private readonly native get currentThread() => (Thread);
 	private readonly native sleep(Thread thread, int milliseconds) => ();
 	private readonly native sleep(Thread thread, TimeSpan time) => ();
-	private readonly native yield_() => (boolean);
+	private readonly native @__ShadowCurrentThread_Yield() => (boolean);
 	
 	Thread current;
 	
@@ -255,7 +255,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly yield() => (boolean)
 	{
-		return yield_();
+		return @__ShadowCurrentThread_Yield();
 	}
 	
 	/**

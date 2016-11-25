@@ -88,7 +88,8 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached"),
 		UNUSED_FIELD("Unused field", "Field is never used"),		
 		UNUSED_METHOD("Unused method", "Method is never used"),
-		UNUSED_VARIABLE("Unused variable", "Local variable is never used");
+		UNUSED_VARIABLE("Unused variable", "Local variable is never used"),
+		INVALID_METHODIDENTIFIER("Invalid idendtifier", "Only native methods can start with a '@' sign.");
 		
 		private final String name;
 		private final String message;		

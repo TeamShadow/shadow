@@ -4,6 +4,15 @@
 #ifndef SHADOW_ARRAY_H
 #define SHADOW_ARRAY_H
 
-void __getDataFromShadowArray(ShadowArray, ShadowInt*, void*);
+#include "ShadowTypes.h"
+
+typedef struct {
+	ShadowInt size;
+	void* data;
+} VoidArray;
+
+typedef void* ShadowArray;
+
+VoidArray* UnpackShadowArray(ShadowArray);
 
 #endif

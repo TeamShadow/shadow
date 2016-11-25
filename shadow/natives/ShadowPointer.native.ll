@@ -37,12 +37,11 @@
 declare noalias %void* @calloc(%int, %int) nounwind
 ; void free(void* ptr);
 declare void @free(%void*) nounwind
-; getAddressNative() => (long);
-declare %long @shadow.natives..ShadowPointer_MgetAddressNative(%shadow.natives..ShadowPointer*)
 ; LongPointer:invalidateNative() => ();
 declare void @shadow.natives..ShadowPointer.LongPointer_MinvalidateNative(%shadow.natives..ShadowPointer.LongPointer*)
-; createNative(long address) => (Pointer);
-declare %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long(%shadow.natives..ShadowPointer*, %long)
+
+; ExtractRawPointer()
+declare %void* @ExtractRawPointer(%shadow.natives..ShadowPointer*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -58,7 +57,7 @@ entry:
 ; freeMemory() => ();
 define void @shadow.natives..ShadowPointer_MfreeMemory(%shadow.natives..ShadowPointer*) {
 entry:
-	%pointer = call %void* @__extractRawPointer(%shadow.natives..ShadowPointer* %0)
+	%pointer = call %void* @ExtractRawPointer(%shadow.natives..ShadowPointer* %0)
 	call void @free(%void* %pointer)
 	ret void
 }
@@ -68,21 +67,4 @@ define void @shadow.natives..ShadowPointer_MinvalidateHandle_shadow.natives..Sha
 entry:
 	call void @shadow.natives..ShadowPointer.LongPointer_MinvalidateNative(%shadow.natives..ShadowPointer.LongPointer* %1)
 	ret void
-}
-
-;---------------------------
-; Custom Method Definitions
-;---------------------------
-define %void* @__extractRawPointer(%shadow.natives..ShadowPointer*) {
-entry:
-	%address = call %long @shadow.natives..ShadowPointer_MgetAddressNative(%shadow.natives..ShadowPointer* %0)
-	%pointer = inttoptr %long %address to %void*
-	ret %void* %pointer
-}
-
-define %shadow.natives..ShadowPointer* @__createShadowPointer(%void*) {
-entry:
-	%address = ptrtoint %void* %0 to %long
-	%call = call %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long(%shadow.natives..ShadowPointer* null, %long %address)
-	ret %shadow.natives..ShadowPointer* %call
 }

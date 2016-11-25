@@ -765,6 +765,11 @@ public class TypeUpdater extends BaseChecker {
 		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )				
 			signature.addParameter(parameter.Identifier().getText(), parameter);
 		
+		if(!signature.isNative() && signature.getSymbol().startsWith("@")) {
+			addError(node, Error.INVALID_METHODIDENTIFIER,
+					Error.INVALID_METHODIDENTIFIER.getMessage());
+		}
+		
 		if( signature.getModifiers().isSet() ) {				
 			if( parameters.formalParameter().size() != 1 )
 				addError(node, Error.INVALID_MODIFIER,
@@ -1029,7 +1034,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 		
-		visitMethodPre( ctx.methodDeclarator().Identifier().getText(), ctx);
+		visitMethodPre( ctx.methodDeclarator().methodIdentifier().getText(), ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
 		

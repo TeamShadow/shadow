@@ -8,6 +8,14 @@
  */
 singleton shadow:io@Console
 {
+	private native readonly @__ShadowConsole_Initialize() => ();
+	
+	private native readonly @__ShadowConsole_Print(String str) => ();
+	private native readonly @__ShadowConsole_PrintLine() => ();
+	
+	private native readonly @__ShadowConsole_PrintError(String str) => ();
+	private native readonly @__ShadowConsole_PrintErrorLine() => ();
+	
 	boolean wasLF = false;
 	
 	/**
@@ -15,9 +23,8 @@ singleton shadow:io@Console
 	 */
 	public create()
 	{
-		init();
+		@__ShadowConsole_Initialize();
 	}
-	private native init() => ();
 
 	/**
 	 * Reads the next line of text from {@code stdin}, stopping when a new line
@@ -98,7 +105,7 @@ singleton shadow:io@Console
 	 * @return next byte
 	 * @return {@code true} if the end of the file was reached 
 	 */
-	public native readByte() => ( byte, boolean eof );
+	public native readByte() => (byte, boolean eof);
 
 	/**
 	 * Prints an object's {@code String} representation to {@code stdout}.	 	 
@@ -126,13 +133,21 @@ singleton shadow:io@Console
 	 * @param value {@code String} to print
 	 * @return {@code Console} object 
 	 */
-	public native print( String value ) => ( Console );
+	public print(String value) => (Console)
+	{
+		@__ShadowConsole_Print(value);
+		return this;
+	}
 	
 	/**
 	 * Prints a new line character to {@code stdout}.
 	 * @return {@code Console} object 
 	 */
-	public native printLine() => ( Console );
+	public printLine() => (Console)
+	{
+		@__ShadowConsole_PrintLine();
+		return this;
+	}
 	
 	/**
 	 * Prints an object's {@code String} representation to {@code stderr}.	 	 
@@ -160,11 +175,19 @@ singleton shadow:io@Console
 	 * @param value {@code String} to print
 	 * @return {@code Console} object 
 	 */
-	public native printError( String value ) => ( Console );
+	public printError(String value) => (Console)
+	{
+		@__ShadowConsole_PrintError(value);
+		return this;
+	}
 	
 	/**
 	 * Prints a new line character to {@code stdout}.
 	 * @return {@code Console} object 
 	 */
-	public native printErrorLine() => ( Console );
+	public printErrorLine() => (Console)
+	{
+		@__ShadowConsole_PrintErrorLine();
+		return this;
+	}
 }

@@ -2,13 +2,13 @@
  * Author: Claude Abounegm
  */
 
-#include "../Shadow.h"
+#include "ShadowSystem.h"
+
 #include <Windows.h>
 
-// 
 #define OFFSET_FROM_1601_TO_1970 116444736000000000ULL
 
-ShadowULong __ShadowSystem_GetNanoTime(void)
+ShadowULong __ShadowSystem_GetNanoTime(ShadowSystem this)
 {
 	union {
 		ShadowULong	actual;
@@ -26,7 +26,7 @@ ShadowULong __ShadowSystem_GetNanoTime(void)
 	return (counter.actual * 1000000000ULL / freq.actual);
 }
 
-ShadowULong __ShadowSystem_GetEpochNanoTime(void)
+ShadowULong __ShadowSystem_GetEpochNanoTime(ShadowSystem this)
 {
 	union {
 		ShadowULong actual;

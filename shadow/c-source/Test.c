@@ -6,9 +6,9 @@
  */
 #include <stddef.h>
 #include <stdlib.h>
-#include "Shadow.h"
+#include "ShadowPointer.h"
 
 ShadowPointer __Test_Allocate()
 {	
-	return __createShadowPointer(malloc(sizeof(int)));
+	return CreateShadowPointer(malloc(sizeof(int)));
 }

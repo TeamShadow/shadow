@@ -1,19 +1,18 @@
 /**
  * Author: Claude Abounegm
  */
-
-#include "../Shadow.h"
+#include "ShadowConsole.h"
 #include <Windows.h>
 
 static char newLine[2] = { '\r', '\n' };
 
-void __ShadowConsole_Initialize(void)
+void __ShadowConsole_Initialize(ShadowConsole this)
 {
 	SetConsoleCP(65001);
 	SetConsoleOutputCP(65001);
 }
 
-void __ShadowConsole_ReadByte(ShadowByte* value, ShadowBoolean* eof)
+void __ShadowConsole_ReadByte(ShadowConsole this, ShadowByte* value, ShadowBoolean* eof)
 {
 	DWORD bytesRead = 0;
 	HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -26,25 +25,23 @@ void __ShadowConsole_ReadByte(ShadowByte* value, ShadowBoolean* eof)
 	}
 }
 
-static void printString(int handleId, ShadowString string)
+static void printString(int handleId, ShadowString stringRef)
 {
+	ByteArray* str = UnpackShadowString(stringRef);
 	HANDLE handle = GetStdHandle(handleId);
 	
-	String str;
-	__getDataFromShadowString(string, &str);
-	
 	DWORD bytesWritten = 0;
-	WriteFile(handle, str.chars, str.size, &bytesWritten, NULL);
+	WriteFile(handle, str->chars, str->size, &bytesWritten, NULL);
 }
 
-void __ShadowConsole_Print(ShadowString string)
+void __ShadowConsole_Print(ShadowConsole this, ShadowString stringRef)
 {
-	printString(STD_OUTPUT_HANDLE, string);
+	printString(STD_OUTPUT_HANDLE, stringRef);
 }
 
-void __ShadowConsole_PrintError(ShadowString string)
+void __ShadowConsole_PrintError(ShadowConsole this, ShadowString stringRef)
 {
-	printString(STD_ERROR_HANDLE, string);
+	printString(STD_ERROR_HANDLE, stringRef);
 }
 
 static void printLine(int handleId)
@@ -55,12 +52,12 @@ static void printLine(int handleId)
 	WriteFile(handle, newLine, sizeof(newLine), &bytesWritten, NULL);
 }
 
-void __ShadowConsole_PrintLine(ShadowString string)
+void __ShadowConsole_PrintLine(ShadowConsole this)
 {
 	printLine(STD_OUTPUT_HANDLE);
 }
 
-void __ShadowConsole_PrintErrorLine(ShadowString string)
+void __ShadowConsole_PrintErrorLine(ShadowConsole this)
 {
 	printLine(STD_ERROR_HANDLE);
 }
