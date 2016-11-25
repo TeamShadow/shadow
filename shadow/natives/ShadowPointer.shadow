@@ -12,9 +12,9 @@
 locked immutable class shadow:natives@
 	ShadowPointer
 {
-	private native readonly allocMemory(int size) => (long address);
-	private native readonly freeMemory() => ();
-	private native readonly invalidateHandle(immutable LongPointer ptr) => ();
+	private readonly native allocMemory(int size) => (long address);
+	private readonly native freeMemory() => ();
+	private readonly extern $invalidate(immutable LongPointer ptr) => ();
 	
 	immutable LongPointer pointer;
 	
@@ -67,7 +67,7 @@ locked immutable class shadow:natives@
 	{
 		if(isValid()) {
 			freeMemory();
-			invalidateHandle(pointer);
+			$invalidate(pointer);
 		}
 	}
 	
@@ -123,7 +123,7 @@ locked immutable class shadow:natives@
 			return (address != -1);
 		}
 		
-		private invalidateNative() => ()
+		private invalidate() => ()
 		{
 			this:address = -1;
 		}

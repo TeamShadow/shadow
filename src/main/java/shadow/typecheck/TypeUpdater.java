@@ -765,9 +765,14 @@ public class TypeUpdater extends BaseChecker {
 		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )				
 			signature.addParameter(parameter.Identifier().getText(), parameter);
 		
-		if(!signature.isExtern() && signature.getSymbol().startsWith("_")) {
+		if(!signature.isExtern() && (signature.getSymbol().startsWith("_") || signature.getSymbol().startsWith("$"))) {
 			addError(node, Error.INVALID_METHODIDENTIFIER,
 					Error.INVALID_METHODIDENTIFIER.getMessage());
+		}
+		
+		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
+			addError(node, Error.INVALID_ARGUMENTS, 
+					"The first argument of a 'linking extern' should be the type this method is originally defined in");
 		}
 		
 		if( signature.getModifiers().isSet() ) {				

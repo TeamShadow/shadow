@@ -14,6 +14,7 @@ is CanIndex<int, Thread>
 	private readonly extern $interrupting(Thread instance) => (boolean);	
 	private readonly extern $sleep(Thread instance, TimeSpan time) => ();
 	private readonly extern $sleep(Thread instance, int milliseconds) => ();
+	
 	private readonly extern __ShadowCurrentThread_Yield() => (boolean);
 	
 	Thread current;

@@ -27,9 +27,6 @@
 ; Pointer
 %shadow.natives..ShadowPointer = type opaque
 
-; Pointer:LongPointer
-%shadow.natives..ShadowPointer.LongPointer = type opaque
-
 ;---------------------
 ; Method Declarations
 ;---------------------
@@ -37,8 +34,6 @@
 declare noalias %void* @calloc(%int, %int) nounwind
 ; void free(void* ptr);
 declare void @free(%void*) nounwind
-; LongPointer:invalidateNative() => ();
-declare void @shadow.natives..ShadowPointer.LongPointer_MinvalidateNative(%shadow.natives..ShadowPointer.LongPointer*)
 
 ; ExtractRawPointer()
 declare %void* @ExtractRawPointer(%shadow.natives..ShadowPointer*)
@@ -59,12 +54,5 @@ define void @shadow.natives..ShadowPointer_MfreeMemory(%shadow.natives..ShadowPo
 entry:
 	%pointer = call %void* @ExtractRawPointer(%shadow.natives..ShadowPointer* %0)
 	call void @free(%void* %pointer)
-	ret void
-}
-
-; invalidateHandle(ShadowPointer:LongPointer) => ();
-define void @shadow.natives..ShadowPointer_MinvalidateHandle_shadow.natives..ShadowPointer.LongPointer(%shadow.natives..ShadowPointer*, %shadow.natives..ShadowPointer.LongPointer*) {
-entry:
-	call void @shadow.natives..ShadowPointer.LongPointer_MinvalidateNative(%shadow.natives..ShadowPointer.LongPointer* %1)
 	ret void
 }

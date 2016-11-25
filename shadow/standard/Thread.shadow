@@ -548,7 +548,7 @@ and CanIndex<int, Thread>
 	
 	/// called natively by Signaler, `this` is the CurrentThread->instance.
 	/// This code is responsible for throwing InterruptedException in all methods.
-	private setInterruptTokenNative(nullable SignalToken interruptToken) => ()
+	private setInterruptToken(nullable SignalToken interruptToken) => ()
 	{
 		int state = RUNNING;
 		// checks whether we need to interrupt, and if we do, it resets the interrupt flag

@@ -760,9 +760,18 @@ public class LLVMOutput extends AbstractOutput {
 			skipMethod = true;			
 		}		
 		else if (signature.isNativeOrExtern()) {
-			writer.write("declare " + methodToString(method));
-			writer.write();
-			skipMethod = true;
+			if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
+				ClassType ownerClass = (ClassType)signature.getOuter();
+				if(ownerClass.containsInnerClass(signature.getFullParameterTypes().get(0).getType())) {
+					skipMethod = true;
+				}
+			}
+			
+			if(!skipMethod) {
+				writer.write("declare " + methodToString(method));
+				writer.write();
+				skipMethod = true;
+			}
 		}
 		else {
 			SequenceType parameters = signature.getFullParameterTypes();

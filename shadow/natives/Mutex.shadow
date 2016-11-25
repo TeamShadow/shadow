@@ -13,13 +13,13 @@
 locked immutable class shadow:natives@
 	Mutex
 {
+	private readonly extern $setOwner(immutable Owner owner, nullable Thread o) => ();
+	
 	private readonly extern __ShadowMutex_Initialize() => (ShadowPointer);
 	private readonly extern __ShadowMutex_Destroy(ShadowPointer ptr) => (boolean);
 	private readonly extern __ShadowMutex_Lock(ShadowPointer ptr) => (boolean);
 	private readonly extern __ShadowMutex_Unlock(ShadowPointer ptr) => (boolean);
 	
-	private readonly native setOwner(immutable Owner owner, nullable Thread t) => ();
-
 	get ShadowPointer ptr;
 	immutable Owner owner;
 	boolean allowNestedLocks;
@@ -66,7 +66,7 @@ locked immutable class shadow:natives@
 			throw MutexException:create("This thread already owns this mutex.");
 		}
 
-		setOwner(owner, CurrentThread->instance);
+		$setOwner(owner, CurrentThread->instance);
 	}
 	
 	/**
@@ -86,7 +86,7 @@ locked immutable class shadow:natives@
 			throw MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
 		}
 		
-		setOwner(owner, null);
+		$setOwner(owner, null);
 		if(!owner.isCurrentThread()) {
 			__ShadowMutex_Unlock(ptr);
 		}
@@ -135,7 +135,7 @@ locked immutable class shadow:natives@
 			return CurrentThread.isEqualTo(owner);
 		}
 		
-		private setOwnerNative(nullable Thread o) => ()
+		private setOwner(nullable Thread o) => ()
 		{
 			if(o !== null) {
 				if(counter == 0) {

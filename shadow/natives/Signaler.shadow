@@ -19,7 +19,7 @@ locked class shadow:natives@
 	private readonly extern __ShadowSignaler_Broadcast(ShadowPointer handle) => (boolean);
 	
 	/// This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
-	private readonly native setInterruptToken(Thread currentThread, nullable SignalToken interruptToken) => ();
+	private readonly extern $setInterruptToken(Thread instance, nullable SignalToken interruptToken) => ();
 	
 	boolean terminate = false;
 	int waitingThreads = 0;
@@ -72,7 +72,7 @@ locked class shadow:natives@
 			tokensQueue.addLast(token);
 			waitingThreads += 1;
 			
-			setInterruptToken(CurrentThread->instance, token);
+			$setInterruptToken(CurrentThread->instance, token);
 			while(token->shouldWait and !terminate) {
 				mutex.unlock();
 				__ShadowSignaler_Wait(handle);
@@ -80,7 +80,7 @@ locked class shadow:natives@
 			}
 			// if the wait was interrupted, the setInterruptToken throws
 			// the InterruptedException as the interrupting flag is true.
-			setInterruptToken(CurrentThread->instance, null);
+			$setInterruptToken(CurrentThread->instance, null);
 		} finally {
 			waitingThreads -= 1;
 			mutex.unlock();
@@ -106,7 +106,7 @@ locked class shadow:natives@
 
 			waitingThreads += 1;
 			
-			setInterruptToken(CurrentThread->instance, token);
+			$setInterruptToken(CurrentThread->instance, token);
 			while(!timedout and token->shouldWait and !terminate) {
 				mutex.unlock();
 				timedout = __ShadowSignaler_WaitTimeout(handle, absTime->totalNanoSeconds);
@@ -114,7 +114,7 @@ locked class shadow:natives@
 			}
 			// if the wait was interrupted, the setInterruptToken throws
 			// the InterruptedException as the interrupting flag is true.
-			setInterruptToken(CurrentThread->instance, null);
+			$setInterruptToken(CurrentThread->instance, null);
 		} finally {
 			waitingThreads -= 1;
 			if(token.invalidate() and !sleepOnly) {
@@ -275,7 +275,7 @@ locked class shadow:natives@
 	
 	// used by SignalToken.signal() method, which is called from outside, and thus
 	// we should remove the token from the queue.
-	private signalNative(SignalToken token) => ()
+	private signalFromSignaToken(SignalToken token) => ()
 	{
 		handle.assertValid("Signaler");
 		
