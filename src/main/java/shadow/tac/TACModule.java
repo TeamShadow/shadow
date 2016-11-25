@@ -152,7 +152,7 @@ public class TACModule {
 			MethodSignature signature = method.getSignature();
 
 			//don't bother with unimplemented methods
-			if( !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() ) {			
+			if( !signature.getModifiers().isAbstract() && !signature.isNativeOrExtern() ) {			
 				ControlFlowGraph graph = new ControlFlowGraph(method);
 				
 				//do first pass always
@@ -196,7 +196,7 @@ public class TACModule {
 					MethodSignature signature = explicitCreate.getSignature(); 
 					//calling this rather than super
 					//we can't put a dependency on a native method, since it doesn't have a control flow graph
-					if( explicitCreate.getChild(0).getText().equals("this") && !signature.isNative() )						
+					if( explicitCreate.getChild(0).getText().equals("this") && !signature.isNativeOrExtern() )						
 						creates.addEdge(signature, create); //method depends on other signature
 				}
 			}

@@ -202,9 +202,10 @@ public final class Modifiers
 	public boolean isAbstract() { return (modifiers & ABSTRACT) != 0; }
 	//public boolean isFinal() { return (modifiers & FINAL) != 0; }
 	public boolean isReadonly() { return (modifiers & READONLY) != 0; }
-	public boolean isNative() { return (modifiers & (NATIVE | EXTERN)) != 0; }
+	public boolean isNative() { return (modifiers & NATIVE) != 0; }
 	public boolean isExtern() { return (modifiers & EXTERN) != 0; }	
-
+	public boolean isNativeOrExtern() { return (isNative() || isExtern()); }
+	
 	public boolean isGet() { return (modifiers & GET) != 0; }
 	public boolean isSet() { return (modifiers & SET) != 0; }
 
@@ -264,6 +265,8 @@ public final class Modifiers
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked readonly"));
 		if( isNative() && !legal.isNative()  )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked native"));
+		if( isExtern() && !legal.isExtern()  )
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked extern"));
 		if( isGet() && !legal.isGet()  )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked get"));
 		if( isSet() && !legal.isSet()  )
@@ -342,6 +345,9 @@ public final class Modifiers
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both get and set"));		
 		if( isReadonly() && isImmutable() )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both readonly and immutable"));
+		if(isNative() && isExtern()) {
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both native and extern"));			
+		}
 		return exceptions;
 	}
 

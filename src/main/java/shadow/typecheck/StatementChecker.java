@@ -326,7 +326,7 @@ public class StatementChecker extends BaseChecker {
 			boolean explicitCreate = ctx.createBlock() != null && ctx.createBlock().explicitCreateInvocation() != null;
 			
 			if( parentType != null ) {	
-				if( !explicitCreate && !ctx.getModifiers().isNative() ) { 
+				if( !explicitCreate && !ctx.getModifiers().isNativeOrExtern() ) { 
 					//only worry if there is no explicit invocation
 					//explicit invocations are handled separately
 					//for native creates, we have to trust the author of the native code

@@ -282,6 +282,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.getModifiers().isExtern();
 	}
 	
+	public boolean isNativeOrExtern()
+	{
+		return (isNative() || isExtern());
+	}
+	
 	public boolean isVoid()
 	{
 		return type.getReturnTypes().size() == 0;

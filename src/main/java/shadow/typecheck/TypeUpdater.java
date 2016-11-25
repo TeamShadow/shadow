@@ -699,11 +699,11 @@ public class TypeUpdater extends BaseChecker {
 				addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 			
 			if( !isMeta ) {					
-				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() )
+				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.isNativeOrExtern() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
-				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
-					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
+				if( hasBlock && (signature.getModifiers().isAbstract() || signature.isNativeOrExtern() ) )
+					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : (signature.isNative() ? "Native" : "Extern")) + " method " + signature + " must not define a body");
 				
 				/* Check to see if the method's parameters and return types are the
 				 * correct level of visibility, e.g., a public method shouldn't
