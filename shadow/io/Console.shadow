@@ -8,13 +8,13 @@
  */
 singleton shadow:io@Console
 {
-	private native readonly @__ShadowConsole_Initialize() => ();
+	private readonly extern __ShadowConsole_Initialize() => ();
 	
-	private native readonly @__ShadowConsole_Print(String str) => ();
-	private native readonly @__ShadowConsole_PrintLine() => ();
+	private readonly extern __ShadowConsole_Print(String str) => ();
+	private readonly extern __ShadowConsole_PrintLine() => ();
 	
-	private native readonly @__ShadowConsole_PrintError(String str) => ();
-	private native readonly @__ShadowConsole_PrintErrorLine() => ();
+	private readonly extern __ShadowConsole_PrintError(String str) => ();
+	private readonly extern __ShadowConsole_PrintErrorLine() => ();
 	
 	boolean wasLF = false;
 	
@@ -23,7 +23,7 @@ singleton shadow:io@Console
 	 */
 	public create()
 	{
-		@__ShadowConsole_Initialize();
+		__ShadowConsole_Initialize();
 	}
 
 	/**
@@ -135,7 +135,7 @@ singleton shadow:io@Console
 	 */
 	public print(String value) => (Console)
 	{
-		@__ShadowConsole_Print(value);
+		__ShadowConsole_Print(value);
 		return this;
 	}
 	
@@ -145,7 +145,7 @@ singleton shadow:io@Console
 	 */
 	public printLine() => (Console)
 	{
-		@__ShadowConsole_PrintLine();
+		__ShadowConsole_PrintLine();
 		return this;
 	}
 	
@@ -177,7 +177,7 @@ singleton shadow:io@Console
 	 */
 	public printError(String value) => (Console)
 	{
-		@__ShadowConsole_PrintError(value);
+		__ShadowConsole_PrintError(value);
 		return this;
 	}
 	
@@ -187,7 +187,7 @@ singleton shadow:io@Console
 	 */
 	public printErrorLine() => (Console)
 	{
-		@__ShadowConsole_PrintErrorLine();
+		__ShadowConsole_PrintErrorLine();
 		return this;
 	}
 }

@@ -3,9 +3,9 @@
  * and values.
  */
 immutable singleton shadow:standard@System
-{	
-	private native readonly @__ShadowSystem_GetNanoTime() => (long);
-	private native readonly @__ShadowSystem_GetEpochNanoTime() => (long);
+{
+	private readonly extern __ShadowSystem_GetEpochNanoTime() => (long);
+	private readonly extern __ShadowSystem_GetNanoTime() => (long);
 	
 	/**
 	 * Returns the number of nanoseconds elapsed since the Unix Epoch,
@@ -16,11 +16,11 @@ immutable singleton shadow:standard@System
 	 */
 	public readonly epochNanoTime() => (long)
 	{
-		return @__ShadowSystem_GetEpochNanoTime();
+		return __ShadowSystem_GetEpochNanoTime();
 	}
 	
 	public readonly nanoTime() => (long)
 	{
-		return @__ShadowSystem_GetNanoTime();
+		return __ShadowSystem_GetNanoTime();
 	}
 }

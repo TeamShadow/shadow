@@ -6,9 +6,7 @@
 
 void ExtractDataFromShadowArray(ShadowArray, ShadowInt*, void**);
 
-VoidArray* UnpackShadowArray(ShadowArray arrayRef)
+void UnpackShadowArray(ShadowArray arrayRef, VoidArray* array)
 {
-	VoidArray* array = malloc(sizeof(VoidArray));
 	ExtractDataFromShadowArray(arrayRef, &array->size, &array->data);
-	return array;
 }

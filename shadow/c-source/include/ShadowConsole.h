@@ -9,12 +9,12 @@
 
 typedef void* ShadowConsole;
 
-void __ShadowConsole_Initialize(ShadowConsole);
-void __ShadowConsole_ReadByte(ShadowConsole, ShadowByte* value, ShadowBoolean* eof);
-void __ShadowConsole_Print(ShadowConsole, ShadowString stringRef);
-void __ShadowConsole_PrintError(ShadowConsole, ShadowString stringRef);
+void __ShadowConsole_Initialize(void);
+void __ShadowConsole_ReadByte(ShadowByte* value, ShadowBoolean* eof);
+void __ShadowConsole_Print(ShadowString stringRef);
+void __ShadowConsole_PrintError(ShadowString stringRef);
 
-void __ShadowConsole_PrintLine(ShadowConsole);
-void __ShadowConsole_PrintErrorLine(ShadowConsole);
+void __ShadowConsole_PrintLine(void);
+void __ShadowConsole_PrintErrorLine(void);
 
 #endif

@@ -3,10 +3,12 @@ import shadow:natives;
 
 class shadow:test@ExternalsTest
 {
-	private native readonly Test_Allocate() => (ShadowPointer);
+	private readonly extern __ShadowString_TestPrintf(String str) => ();
 	
 	public main(String[] args) => ()
 	{
+		__ShadowString_TestPrintf("Hello from printf!\n");
+		
 		/*var a = System.epochNanoTime();
 		var b = System.nanoTime();
 		CurrentThread.sleep(Time.fromSeconds(5));
@@ -17,9 +19,5 @@ class shadow:test@ExternalsTest
 		Console.printLine(b # "  " # d);
 		Console.printLine(c - a);
 		Console.printLine(d - b);*/
-		
-		var ptr = Test_Allocate();
-		Console.printLine(ptr->isValid);
-		ptr.free();
 	}
 }

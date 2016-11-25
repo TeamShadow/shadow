@@ -13,10 +13,10 @@
 locked immutable class shadow:natives@
 	Mutex
 {
-	private readonly native @__ShadowMutex_Initialize() => (ShadowPointer);
-	private readonly native @__ShadowMutex_Destroy(ShadowPointer ptr) => (boolean);
-	private readonly native @__ShadowMutex_Lock(ShadowPointer ptr) => (boolean);
-	private readonly native @__ShadowMutex_Unlock(ShadowPointer ptr) => (boolean);
+	private readonly extern __ShadowMutex_Initialize() => (ShadowPointer);
+	private readonly extern __ShadowMutex_Destroy(ShadowPointer ptr) => (boolean);
+	private readonly extern __ShadowMutex_Lock(ShadowPointer ptr) => (boolean);
+	private readonly extern __ShadowMutex_Unlock(ShadowPointer ptr) => (boolean);
 	
 	private readonly native setOwner(immutable Owner owner, nullable Thread t) => ();
 
@@ -38,7 +38,7 @@ locked immutable class shadow:natives@
 	*/
 	public create(boolean allowNestedLocks)
 	{
-		ptr = @__ShadowMutex_Initialize();
+		ptr = __ShadowMutex_Initialize();
 		if(!ptr->isValid) {
 			throw MutexException:create("An error occured while initializing the Mutex.");
 		}
@@ -61,7 +61,7 @@ locked immutable class shadow:natives@
 		ptr.assertValid("Mutex");
 		
 		if(!owner.isCurrentThread()) {
-			@__ShadowMutex_Lock(ptr);
+			__ShadowMutex_Lock(ptr);
 		} else if(!allowNestedLocks) {
 			throw MutexException:create("This thread already owns this mutex.");
 		}
@@ -88,7 +88,7 @@ locked immutable class shadow:natives@
 		
 		setOwner(owner, null);
 		if(!owner.isCurrentThread()) {
-			@__ShadowMutex_Unlock(ptr);
+			__ShadowMutex_Unlock(ptr);
 		}
 	}
 	
@@ -106,7 +106,7 @@ locked immutable class shadow:natives@
 				throw MutexException:create("Cannot free a locked Mutex.");
 			}
 			
-			@__ShadowMutex_Destroy(ptr);
+			__ShadowMutex_Destroy(ptr);
 			ptr.free();
 		}
 	}

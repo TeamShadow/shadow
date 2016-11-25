@@ -87,8 +87,9 @@ public class TACMethod
 				new TACLocalStore(node, addLocal(modifiedType, "_outer"), new TACParameter(node, modifiedType, parameter++));				
 			}
 		}
-		else
+		else if(!signature.isExtern()) {
 			new TACLocalStore(node, addLocal(modifiedType, "this"), new TACParameter(node, modifiedType, parameter++));
+		}
 		
 		MethodType type = signature.getMethodType();		
 		if( isWrapped )

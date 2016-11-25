@@ -8,7 +8,7 @@
 
 #define OFFSET_FROM_1601_TO_1970 116444736000000000ULL
 
-ShadowULong __ShadowSystem_GetNanoTime(ShadowSystem this)
+ShadowULong __ShadowSystem_GetNanoTime(void)
 {
 	union {
 		ShadowULong	actual;
@@ -26,7 +26,7 @@ ShadowULong __ShadowSystem_GetNanoTime(ShadowSystem this)
 	return (counter.actual * 1000000000ULL / freq.actual);
 }
 
-ShadowULong __ShadowSystem_GetEpochNanoTime(ShadowSystem this)
+ShadowULong __ShadowSystem_GetEpochNanoTime(void)
 {
 	union {
 		ShadowULong actual;

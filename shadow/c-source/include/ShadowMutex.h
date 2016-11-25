@@ -9,9 +9,9 @@
 
 typedef void* ShadowMutex;
 
-ShadowPointer __ShadowMutex_Initialize(ShadowMutex);
-ShadowBoolean __ShadowMutex_Destroy(ShadowMutex, ShadowPointer);
-ShadowBoolean __ShadowMutex_Lock(ShadowMutex, ShadowPointer);
-ShadowBoolean __ShadowMutex_Unlock(ShadowMutex, ShadowPointer);
+ShadowPointer __ShadowMutex_Initialize(void);
+ShadowBoolean __ShadowMutex_Destroy(ShadowPointer);
+ShadowBoolean __ShadowMutex_Lock(ShadowPointer);
+ShadowBoolean __ShadowMutex_Unlock(ShadowPointer);
 
 #endif

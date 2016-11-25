@@ -21,7 +21,7 @@ static void InvalidatePointer(CondData** ptr)
 }
 
 /// valid pointer returned on success, otherwise, invalid.
-ShadowPointer __ShadowSignaler_Initialize(ShadowSignaler this)
+ShadowPointer __ShadowSignaler_Initialize(void)
 {
 	CondData* ptr = malloc(sizeof(CondData));
 	
@@ -36,7 +36,7 @@ ShadowPointer __ShadowSignaler_Initialize(ShadowSignaler this)
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Destroy(ShadowSignaler this, ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowPtr)
 {
 	CondData* ptr = ExtractRawPointer(shadowPtr);
 	
@@ -47,7 +47,7 @@ ShadowBoolean __ShadowSignaler_Destroy(ShadowSignaler this, ShadowPointer shadow
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Wait(ShadowSignaler this, ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowPtr)
 {
 	CondData* ptr = ExtractRawPointer(shadowPtr);
 
@@ -59,7 +59,7 @@ ShadowBoolean __ShadowSignaler_Wait(ShadowSignaler this, ShadowPointer shadowPtr
 }
 
 /// returns true if it timedout, otherwise, false.
-ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowSignaler this, ShadowPointer shadowPtr, ShadowLong absoluteNanos)
+ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowLong absoluteNanos)
 {
 	CondData* ptr = ExtractRawPointer(shadowPtr);
 
@@ -73,7 +73,7 @@ ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowSignaler this, ShadowPointer sh
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Broadcast(ShadowSignaler this, ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Broadcast(ShadowPointer shadowPtr)
 {
 	CondData* ptr = ExtractRawPointer(shadowPtr);
 	

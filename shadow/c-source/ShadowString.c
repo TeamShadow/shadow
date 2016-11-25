@@ -12,16 +12,24 @@ ShadowArray GetShadowArrayFromShadowString(ShadowString);
 
 char* UnpackShadowStringToCStr(ShadowString stringRef)
 {
-	ByteArray* str = UnpackShadowString(stringRef);
+	ByteArray str;
+	UnpackShadowString(stringRef, &str);
 	
-	char* dest = malloc(str->size + 1);
-	strncpy(dest, str->chars, str->size);
-	dest[str->size] = '\0';
+	char* dest = malloc(str.size + 1);
+	strncpy(dest, str.chars, str.size);
+	dest[str.size] = '\0';
 	
 	return dest;
 }
 
-ByteArray* UnpackShadowString(ShadowString stringRef)
+void UnpackShadowString(ShadowString stringRef, ByteArray* str)
 {
-	return (ByteArray*)UnpackShadowArray(GetShadowArrayFromShadowString(stringRef));
+	UnpackShadowArray(GetShadowArrayFromShadowString(stringRef), (VoidArray*)str);
+}
+
+void __ShadowString_TestPrintf(ShadowString stringRef)
+{
+	char* cStr = UnpackShadowStringToCStr(stringRef);
+	printf("%s", cStr);
+	free(cStr);
 }

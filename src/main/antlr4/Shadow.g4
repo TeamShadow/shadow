@@ -67,6 +67,7 @@ modifier throws ParseException
 	| 'set' 
 	| 'constant' 
 	| 'locked' 
+	| 'extern'
 	;
 
 classOrInterfaceDeclaration
@@ -130,7 +131,7 @@ fieldDeclaration
 	;
 	
 methodIdentifier
-	: ('@' '_'*)? Identifier
+	: '_'* Identifier
 	;
 	
 variableDeclarator

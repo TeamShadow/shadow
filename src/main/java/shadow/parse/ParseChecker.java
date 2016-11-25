@@ -98,6 +98,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 				case "set":  newModifier = ctx.addModifiers(Modifiers.SET); break;
 				case "constant":  newModifier = ctx.addModifiers(Modifiers.CONSTANT); break;
 				case "locked":  newModifier = ctx.addModifiers(Modifiers.LOCKED); break;
+				case "extern" : newModifier = ctx.addModifiers(Modifiers.EXTERN); break;
 			}
 			
 			if( !newModifier )				

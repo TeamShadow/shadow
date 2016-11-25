@@ -12,14 +12,14 @@ import shadow:utility;
 locked class shadow:natives@
 	Signaler
 {
-	private native readonly @__ShadowSignaler_Initialize() => (ShadowPointer);
-	private native readonly @__ShadowSignaler_Destroy(ShadowPointer handle) => (boolean);
-	private native readonly @__ShadowSignaler_Wait(ShadowPointer handle) => (boolean);
-	private native readonly @__ShadowSignaler_WaitTimeout(ShadowPointer handle, long absoluteNanosTimeout) => (boolean);
-	private native readonly @__ShadowSignaler_Broadcast(ShadowPointer handle) => (boolean);
+	private readonly extern __ShadowSignaler_Initialize() => (ShadowPointer);
+	private readonly extern __ShadowSignaler_Destroy(ShadowPointer handle) => (boolean);
+	private readonly extern __ShadowSignaler_Wait(ShadowPointer handle) => (boolean);
+	private readonly extern __ShadowSignaler_WaitTimeout(ShadowPointer handle, long absoluteNanosTimeout) => (boolean);
+	private readonly extern __ShadowSignaler_Broadcast(ShadowPointer handle) => (boolean);
 	
 	/// This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
-	private native readonly setInterruptToken(Thread currentThread, nullable SignalToken interruptToken) => ();
+	private readonly native setInterruptToken(Thread currentThread, nullable SignalToken interruptToken) => ();
 	
 	boolean terminate = false;
 	int waitingThreads = 0;
@@ -33,7 +33,7 @@ locked class shadow:natives@
 	*/
 	public create()
 	{
-		handle = @__ShadowSignaler_Initialize();
+		handle = __ShadowSignaler_Initialize();
 		if(!handle->isValid) {
 			throw Exception:create("Failed to create the Signaler.");
 		}
@@ -75,7 +75,7 @@ locked class shadow:natives@
 			setInterruptToken(CurrentThread->instance, token);
 			while(token->shouldWait and !terminate) {
 				mutex.unlock();
-				@__ShadowSignaler_Wait(handle);
+				__ShadowSignaler_Wait(handle);
 				mutex.lock();
 			}
 			// if the wait was interrupted, the setInterruptToken throws
@@ -109,7 +109,7 @@ locked class shadow:natives@
 			setInterruptToken(CurrentThread->instance, token);
 			while(!timedout and token->shouldWait and !terminate) {
 				mutex.unlock();
-				timedout = @__ShadowSignaler_WaitTimeout(handle, absTime->totalNanoSeconds);
+				timedout = __ShadowSignaler_WaitTimeout(handle, absTime->totalNanoSeconds);
 				mutex.lock();
 			}
 			// if the wait was interrupted, the setInterruptToken throws
@@ -253,10 +253,10 @@ locked class shadow:natives@
 			// if there are any sleeping threads, then they aren't in the queue
 			// so we set a global terminate flag, and broadcast to the rest of the threads.
 			terminate = true;
-			@__ShadowSignaler_Broadcast(handle);
+			__ShadowSignaler_Broadcast(handle);
 			
 			// free the allocated memory
-			@__ShadowSignaler_Destroy(handle);
+			__ShadowSignaler_Destroy(handle);
 			handle.free();
 			mutex.free();
 		}
@@ -266,7 +266,7 @@ locked class shadow:natives@
 	private signal(SignalToken token) => (boolean)
 	{
 		if(token.invalidate()) {
-			@__ShadowSignaler_Broadcast(handle);
+			__ShadowSignaler_Broadcast(handle);
 			return true;
 		}
 		

@@ -112,9 +112,6 @@ define i64 @shadow.standard..System_MnanoTime(%shadow.standard..System*) {
 }
 
 @newline = private unnamed_addr constant [1 x i8] c"\0A"
-define void @shadow.io..Console_Minit(%shadow.io..Console*) {
-	ret void
-}
 define { i8, i1 } @shadow.io..Console_MreadByte(%shadow.io..Console*) {
 	%2 = alloca i8
 	%3 = call i32 @read(i32 0, i8* nocapture %2, i32 1)

@@ -13,6 +13,6 @@ typedef struct {
 
 typedef void* ShadowArray;
 
-VoidArray* UnpackShadowArray(ShadowArray);
+void UnpackShadowArray(ShadowArray arrayRef, VoidArray* array);
 
 #endif

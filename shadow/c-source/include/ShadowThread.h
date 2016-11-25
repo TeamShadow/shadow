@@ -11,6 +11,6 @@ typedef void* ShadowThread;
 typedef void* ShadowCurrentThread;
 
 ShadowPointer __ShadowThread_Spawn(ShadowThread, void* (*thread_start)(ShadowThread));
-ShadowBoolean __ShadowCurrentThread_Yield(ShadowCurrentThread);
+ShadowBoolean __ShadowCurrentThread_Yield(void);
 
 #endif

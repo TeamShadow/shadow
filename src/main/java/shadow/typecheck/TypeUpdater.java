@@ -765,7 +765,7 @@ public class TypeUpdater extends BaseChecker {
 		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )				
 			signature.addParameter(parameter.Identifier().getText(), parameter);
 		
-		if(!signature.isNative() && signature.getSymbol().startsWith("@")) {
+		if(!signature.isExtern() && signature.getSymbol().startsWith("_")) {
 			addError(node, Error.INVALID_METHODIDENTIFIER,
 					Error.INVALID_METHODIDENTIFIER.getMessage());
 		}

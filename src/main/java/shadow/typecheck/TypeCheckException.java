@@ -89,7 +89,7 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 		UNUSED_FIELD("Unused field", "Field is never used"),		
 		UNUSED_METHOD("Unused method", "Method is never used"),
 		UNUSED_VARIABLE("Unused variable", "Local variable is never used"),
-		INVALID_METHODIDENTIFIER("Invalid idendtifier", "Only native methods can start with a '@' sign.");
+		INVALID_METHODIDENTIFIER("Invalid idendtifier", "Only methods marked with extern can start with an underscore '_' sign.");
 		
 		private final String name;
 		private final String message;		

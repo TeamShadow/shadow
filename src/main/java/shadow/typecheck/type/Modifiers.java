@@ -63,6 +63,7 @@ public final class Modifiers
 	public static final int SET				= 0x0400;
 	public static final int CONSTANT		= 0x0800;
 	public static final int LOCKED			= 0x1000;
+	public static final int EXTERN			= 0x40000;
 
 	public static final int ASSIGNABLE   	= 0x2000;
 	public static final int TYPE_NAME   	= 0x4000;
@@ -153,6 +154,8 @@ public final class Modifiers
 			sb.append("readonly ");
 		if( isNative() )
 			sb.append("native ");
+		if( isExtern() )
+			sb.append("extern ");
 		if( isWeak() )
 			sb.append("weak ");
 		if( isImmutable() )
@@ -199,7 +202,8 @@ public final class Modifiers
 	public boolean isAbstract() { return (modifiers & ABSTRACT) != 0; }
 	//public boolean isFinal() { return (modifiers & FINAL) != 0; }
 	public boolean isReadonly() { return (modifiers & READONLY) != 0; }
-	public boolean isNative() { return (modifiers & NATIVE) != 0; }
+	public boolean isNative() { return (modifiers & (NATIVE | EXTERN)) != 0; }
+	public boolean isExtern() { return (modifiers & EXTERN) != 0; }	
 
 	public boolean isGet() { return (modifiers & GET) != 0; }
 	public boolean isSet() { return (modifiers & SET) != 0; }
@@ -333,7 +337,7 @@ public final class Modifiers
 
 	public List<ShadowException> checkMethodModifiers() 
 	{
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE | LOCKED), "A method");
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE | EXTERN | LOCKED), "A method");
 		if( isGet() &&  isSet() )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both get and set"));		
 		if( isReadonly() && isImmutable() )

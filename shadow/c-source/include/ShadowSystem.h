@@ -8,7 +8,7 @@
 
 typedef void* ShadowSystem;
 
-ShadowULong __ShadowSystem_GetNanoTime(ShadowSystem);
-ShadowULong __ShadowSystem_GetEpochNanoTime(ShadowSystem);
+ShadowULong __ShadowSystem_GetNanoTime(void);
+ShadowULong __ShadowSystem_GetEpochNanoTime(void);
 
 #endif

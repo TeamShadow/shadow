@@ -1091,6 +1091,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}
 
 	private void methodCall(MethodSignature signature, Context node, List<? extends Context> list) {
+		if(signature.isExtern()) {
+			System.out.print("");
+		}
+		
 		if (prefix == null) {			
 			prefix = new TACLocalLoad(anchor, method.getThis());
 			
@@ -1111,7 +1115,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		methodRef.setSuper(explicitSuper);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 
-		params.add(methodRef.getPrefix());
+		if(!methodRef.getSignature().isExtern()) {
+			params.add(methodRef.getPrefix());
+		}
 		for( Context child : list )	//potentially empty list				
 			params.add(child.appendBefore(anchor));
 		

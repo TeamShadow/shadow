@@ -6,13 +6,13 @@
 
 static char newLine[2] = { '\r', '\n' };
 
-void __ShadowConsole_Initialize(ShadowConsole this)
+void __ShadowConsole_Initialize(void)
 {
 	SetConsoleCP(65001);
 	SetConsoleOutputCP(65001);
 }
 
-void __ShadowConsole_ReadByte(ShadowConsole this, ShadowByte* value, ShadowBoolean* eof)
+void __ShadowConsole_ReadByte(ShadowByte* value, ShadowBoolean* eof)
 {
 	DWORD bytesRead = 0;
 	HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -27,19 +27,19 @@ void __ShadowConsole_ReadByte(ShadowConsole this, ShadowByte* value, ShadowBoole
 
 static void printString(int handleId, ShadowString stringRef)
 {
-	ByteArray* str = UnpackShadowString(stringRef);
+	ByteArray str;
+	UnpackShadowString(stringRef, &str);
 	HANDLE handle = GetStdHandle(handleId);
-	
 	DWORD bytesWritten = 0;
-	WriteFile(handle, str->chars, str->size, &bytesWritten, NULL);
+	WriteFile(handle, str.chars, str.size, &bytesWritten, NULL);
 }
 
-void __ShadowConsole_Print(ShadowConsole this, ShadowString stringRef)
+void __ShadowConsole_Print(ShadowString stringRef)
 {
 	printString(STD_OUTPUT_HANDLE, stringRef);
 }
 
-void __ShadowConsole_PrintError(ShadowConsole this, ShadowString stringRef)
+void __ShadowConsole_PrintError(ShadowString stringRef)
 {
 	printString(STD_ERROR_HANDLE, stringRef);
 }
@@ -47,17 +47,16 @@ void __ShadowConsole_PrintError(ShadowConsole this, ShadowString stringRef)
 static void printLine(int handleId)
 {
 	HANDLE handle = GetStdHandle(handleId);
-
 	DWORD bytesWritten = 0;
 	WriteFile(handle, newLine, sizeof(newLine), &bytesWritten, NULL);
 }
 
-void __ShadowConsole_PrintLine(ShadowConsole this)
+void __ShadowConsole_PrintLine(void)
 {
 	printLine(STD_OUTPUT_HANDLE);
 }
 
-void __ShadowConsole_PrintErrorLine(ShadowConsole this)
+void __ShadowConsole_PrintErrorLine(void)
 {
 	printLine(STD_ERROR_HANDLE);
 }
