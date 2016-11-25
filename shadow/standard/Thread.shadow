@@ -171,6 +171,8 @@ and CanIndex<int, Thread>
 			if(!this:handle->isValid) {
 				throw ThreadSpawnException:create();
 			}
+			
+			sleep(1);
 		}
 	}
 	
@@ -306,7 +308,7 @@ and CanIndex<int, Thread>
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
-	private get interruptingNative() => (boolean)
+	private get interrupting() => (boolean)
 	{
 		if(!isCurrentThread()) { // should never reach this
 			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
@@ -329,7 +331,7 @@ and CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private sleepNative(TimeSpan timeout) => ()
+	private sleep(TimeSpan timeout) => ()
 	{
 		signaler.waitForTimeout(timeout);
 	}
@@ -338,9 +340,9 @@ and CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private sleepNative(int millisecondsTimeout) => ()
+	private sleep(int millisecondsTimeout) => ()
 	{
-		sleepNative(Time.fromMilliSeconds(millisecondsTimeout));
+		sleep(Time.fromMilliSeconds(millisecondsTimeout));
 	}
 
 	/**

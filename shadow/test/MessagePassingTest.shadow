@@ -7,7 +7,7 @@ class shadow:test@MessagePassingTest
 		public run() => ()
 		{
 			int start = cast<int>(receive(int:class, CurrentThread->main));
-			int end = cast<int>(receive(int:class, CurrentThread->main));
+			int end = cast<int>(receive(int:class, CurrentThread->main));			
 			
 			if(start % 2 == 0) {
 				start += 1;

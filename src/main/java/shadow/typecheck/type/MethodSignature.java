@@ -144,8 +144,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		}
 		
 		for (ModifiedType parameterType : methodType.getParameterTypes())
-			paramTypes.add(parameterType);	
-			
+			paramTypes.add(parameterType);
+
 		return paramTypes;
 	}
 
@@ -173,18 +173,24 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	//Is it only the wrapped ones that correspond to interface methods?
 	//If so, those are the ones that need special generic attention
 	public String getMangledName() {
+		String currentSymbol = symbol;
 		if(isExtern()) {
-			return symbol;
+			if(!symbol.startsWith("$"))
+				return symbol;
+			
+			currentSymbol = symbol.substring(1, symbol.length());
 		}
 		
 		StringBuilder sb = new StringBuilder();
 		
 		if( isWrapper() )		
 			sb.append(getWrapped().getOuter().toString(Type.MANGLE));			
-		else
+		else if(!isExtern())
 			sb.append(getOuter().toString(Type.MANGLE));
+		else
+			sb.append(getParameterTypes().get(0).getType().toString(Type.MANGLE));
 		
-		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
+		sb.append("_M").append(Type.mangle(currentSymbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS | (symbol.startsWith("$") ? Type.MANGLE_EXTERN : 0) ));
 		
 		if (isWrapper())
 			sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS));

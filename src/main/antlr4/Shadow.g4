@@ -131,7 +131,7 @@ fieldDeclaration
 	;
 	
 methodIdentifier
-	: '_'* Identifier
+	: '$'?'_'* Identifier
 	;
 	
 variableDeclarator

@@ -10,8 +10,8 @@ import shadow:natives;
 locked class shadow:standard@
 	Mailbox
 {
-	// should that be a minute? 10? An hour? What is the best time for this...
-	readonly TimeSpan TIMEOUT = Time.fromMinutes(5);
+	// this shouldn't be for too long; best time for it?
+	readonly TimeSpan TIMEOUT = Time.fromSeconds(30);
 	
 	/*
 	* NOTES
@@ -73,6 +73,7 @@ locked class shadow:standard@
 			
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
+			CurrentThread.sleep(1);
 		} finally {
 			mutex.unlock();
 		}
@@ -107,6 +108,7 @@ locked class shadow:standard@
 
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
+			CurrentThread.sleep(1);
 			
 			return (message->data, message->sender);	
 		} finally {
@@ -143,6 +145,7 @@ locked class shadow:standard@
 			
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
+			CurrentThread.sleep(1);
 
 			return (message->data);
 		} finally {
