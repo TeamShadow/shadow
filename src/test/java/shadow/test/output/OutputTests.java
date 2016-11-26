@@ -1244,6 +1244,7 @@ public class OutputTests {
 	}
 	
 	@Test public void testMessagePassing() throws Exception {
+		args.add("-f");
 		args.add("shadow/test/MessagePassingTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "9592\n");

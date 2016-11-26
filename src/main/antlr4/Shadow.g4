@@ -144,7 +144,7 @@ arrayInitializer
 	;
 
 methodDeclarator
-	: methodIdentifier formalParameters '=>' resultTypes
+	: methodIdentifier formalParameters ('$(' type ( ',' type )* ')')? '=>' resultTypes
 	;
 
 inlineResults

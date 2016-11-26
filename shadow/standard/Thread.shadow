@@ -307,7 +307,7 @@ and CanIndex<int, Thread>
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
-	protected get interrupting() => (boolean)
+	protected get interrupting() $(CurrentThread) => (boolean)
 	{
 		if(!isCurrentThread()) { // should never reach this
 			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
@@ -330,7 +330,7 @@ and CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private sleep(TimeSpan timeout) => ()
+	private sleep(TimeSpan timeout) $(CurrentThread) => ()
 	{
 		signaler.waitForTimeout(timeout);
 	}
@@ -339,7 +339,7 @@ and CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private sleep(int millisecondsTimeout) => ()
+	private sleep(int millisecondsTimeout) $(CurrentThread) => ()
 	{
 		sleep(Time.fromMilliSeconds(millisecondsTimeout));
 	}
@@ -356,7 +356,7 @@ and CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected receiveFirst(Class expectedType) => (Object, Thread)
+	protected receiveFirst(Class expectedType) $(Object) => (Object, Thread)
 	{
 		return mailbox.dequeue(expectedType);
 	}
@@ -374,7 +374,7 @@ and CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	protected receiveFirstFrom(Class expectedType, Thread from) $(Object) => (Object)
 	{
 		if(from === this) {
 			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
@@ -398,7 +398,7 @@ and CanIndex<int, Thread>
 	*
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected sendTo(Object data) => ()
+	protected sendTo(Object data) $(Object) => ()
 	{
 		if(!isAlive()) {
 			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
@@ -521,7 +521,7 @@ and CanIndex<int, Thread>
 	
 	/// Called natively by Signaler, `this` is the CurrentThread->instance.
 	/// This code is responsible for throwing InterruptedException in all methods.
-	private setInterruptToken(nullable SignalToken interruptToken) => ()
+	private setInterruptToken(nullable SignalToken interruptToken) $(Signaler) => ()
 	{
 		int state = RUNNING;
 		// checks whether we need to interrupt, and if we do, it resets the interrupt flag

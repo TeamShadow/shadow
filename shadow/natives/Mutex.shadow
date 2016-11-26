@@ -135,7 +135,7 @@ locked immutable class shadow:natives@
 			return CurrentThread.isEqualTo(owner);
 		}
 		
-		private setOwner(nullable Thread o) => ()
+		private setOwner(nullable Thread o) $(Mutex) => ()
 		{
 			if(o !== null) {
 				if(counter == 0) {

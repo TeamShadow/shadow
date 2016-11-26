@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.Set;
 
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
+import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.TypeContext;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
@@ -74,6 +77,23 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.canAccept(argumentTypes);		
 	}
 
+	public List<Type> getAllowedExternTypes()
+	{
+		List<Type> types = new ArrayList<Type>();
+		
+		if(node instanceof ShadowParser.MethodDeclarationContext) {
+			ShadowParser.MethodDeclarationContext p = (ShadowParser.MethodDeclarationContext)node;
+			
+			List<TypeContext> contexts = p.methodDeclarator().type();
+			for(TypeContext t : contexts) {
+				types.add(t.getType());
+			}
+		}
+		
+		return types;
+	}
+	
+	
 	public boolean equals(Object o)
 	{
 		if( o != null && o instanceof MethodSignature )

@@ -19,7 +19,6 @@ import shadow.interpreter.ShadowString;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
-import shadow.parse.ShadowParser.ConditionalExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.typecheck.TypeCheckException.Error;
@@ -125,7 +124,18 @@ public class StatementChecker extends BaseChecker {
 				parentParams.add(params.get(i));
 			}
 			
-			if(params.get(0).getType().getMatchingMethod(signature.getName(), parentParams) == null) {
+			boolean found = false;
+			MethodSignature method = params.get(0).getType().getMatchingMethod(signature.getName(), parentParams);
+			if(method != null && !method.getModifiers().isPublic()) {
+				for(Type t : method.getAllowedExternTypes()) {
+					if(signature.getOuter().equals(t)) {
+						found = true;
+						break;
+					}
+				}
+			}
+			
+			if(!found) {
 				addError(node, Error.INVALID_EXTERN_METHOD, Error.INVALID_EXTERN_METHOD.getMessage());
 			}
 		}

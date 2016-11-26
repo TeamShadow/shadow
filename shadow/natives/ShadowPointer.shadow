@@ -123,7 +123,7 @@ locked immutable class shadow:natives@
 			return (address != -1);
 		}
 		
-		private invalidate() => ()
+		private invalidate() $(ShadowPointer) => ()
 		{
 			this:address = -1;
 		}
