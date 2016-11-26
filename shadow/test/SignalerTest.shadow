@@ -28,7 +28,7 @@ class shadow:test@SignalerTest
 
 		nullable var threads = Thread:null[5];
 		for(int i = 0; i < threads->size; i += 1) {
-			threads[i] = Thread:create(RunnableTest:create());
+			threads[i] = spawn(RunnableTest);
 			signaler.waitForTimeout(500);
 		}
 		

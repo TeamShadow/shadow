@@ -37,11 +37,9 @@ class shadow:test@MessagePassingTest
 		int threads = 4;
 		int intervals = numbers / threads;
 
-		var runner = ThreadTestRunner:create();
-		
 		int i;
 		for(i = 0; i < threads; i += 1) {
-			Thread:create(runner);
+			spawn(ThreadTestRunner);
 		}
 
 		for(i = 0; i < threads; i += 1) {

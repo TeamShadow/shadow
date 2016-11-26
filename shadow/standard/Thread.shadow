@@ -118,7 +118,7 @@ and CanIndex<int, Thread>
 	* 
 	* @param runner The instance that contains a run function.
 	*/
-	public create(CanRun runner)
+	protected create(CanRun runner)
 	{
 		this(runner, null);
 	}
@@ -132,7 +132,7 @@ and CanIndex<int, Thread>
 	* @param runner The instance that contains a run function.
 	* @param name The name of the thread.
 	*/
-	public create(CanRun runner, nullable String name)
+	protected create(CanRun runner, nullable String name)
 	{
 		this:id = this->staticNextId;
 		this:childrenList = ThreadSafeList<Thread>:create();
@@ -157,13 +157,12 @@ and CanIndex<int, Thread>
 		
 		this:childrenIterate = TraverseChildren:create(false);
 		this:childrenIterateRecurse = TraverseChildren:create(true);
+		this:runner = runner;
 		
 		if(this:id == 0) {
-			this:runner = runner;
 			this:state = RUNNING;
 			this:handle = ShadowPointer:create();
 		} else {
-			this:runner = copy(runner);
 			this:parent = currentThread();
 			check(parent):childrenList.add(instance());
 			
@@ -308,7 +307,7 @@ and CanIndex<int, Thread>
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
-	private get interrupting() => (boolean)
+	protected get interrupting() => (boolean)
 	{
 		if(!isCurrentThread()) { // should never reach this
 			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
@@ -357,7 +356,7 @@ and CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	public receiveFirst(Class expectedType) => (Object, Thread)
+	protected receiveFirst(Class expectedType) => (Object, Thread)
 	{
 		return mailbox.dequeue(expectedType);
 	}
@@ -375,7 +374,7 @@ and CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	public receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	protected receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
 		if(from === this) {
 			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
@@ -399,7 +398,7 @@ and CanIndex<int, Thread>
 	*
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	public sendTo(Object data) => ()
+	protected sendTo(Object data) => ()
 	{
 		if(!isAlive()) {
 			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
@@ -435,32 +434,6 @@ and CanIndex<int, Thread>
 		handle.free();
 		signaler.free();
 		mutex.unlock();
-	}
-	
-	private waitForThreadsNative() => ()
-	{
-		if(this !== main()) {
-			throw Exception:create("waitForThreadsNative() can only be called on the main thread.");
-		}
-		// this->state = DEAD; // necessary, maybe?
-		
-		var exceptionQueue = ArrayDeque<ThreadException>:create();
-		
-		foreach(var thread in children(true)) {
-			try {
-				thread.join(true, Time->InfiniteTimeout);
-				// the `true` causes this thread to wait for the other thread
-				// to terminate and it will only throw an exception if the target 
-				// thread had not been joined on before.
-			} catch (ThreadException e) {
-				exceptionQueue.addLast(e);
-			}
-		}
-
-		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
-		while(!exceptionQueue.isEmpty()) {
-			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
-		}
 	}
 	
 	/// Gets whether this thread is the current executing thread.
@@ -546,9 +519,9 @@ and CanIndex<int, Thread>
 		return "Thread (" # name # "): " # this->stateStr;
 	}
 	
-	/// called natively by Signaler, `this` is the CurrentThread->instance.
+	/// Called natively by Signaler, `this` is the CurrentThread->instance.
 	/// This code is responsible for throwing InterruptedException in all methods.
-	private setInterruptToken(nullable SignalToken interruptToken) => ()
+	protected setInterruptToken(nullable SignalToken interruptToken) => ()
 	{
 		int state = RUNNING;
 		// checks whether we need to interrupt, and if we do, it resets the interrupt flag
@@ -575,8 +548,34 @@ and CanIndex<int, Thread>
 		return CurrentThread->instance;
 	}
 	
+	private waitForThreadsNative() => ()
+	{
+		if(this !== main()) {
+			throw Exception:create("waitForThreadsNative() can only be called on the main thread.");
+		}
+		// this->state = DEAD; // necessary, maybe?
+		
+		var exceptionQueue = ArrayDeque<ThreadException>:create();
+		
+		foreach(var thread in children(true)) {
+			try {
+				thread.join(true, Time->InfiniteTimeout);
+				// the `true` causes this thread to wait for the other thread
+				// to terminate and it will only throw an exception if the target 
+				// thread had not been joined on before.
+			} catch (ThreadException e) {
+				exceptionQueue.addLast(e);
+			}
+		}
+
+		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
+		while(!exceptionQueue.isEmpty()) {
+			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
+		}
+	}
+	
 	private readonly createMainNative() => (Thread) 
-	{ 
+	{
 		return Thread:create(NopRunner:create(), "Thread#main"); 
 	}
 	

@@ -12,12 +12,10 @@ class shadow:test@TLSTest
 
 	public main(String[] args) => ()
 	{
-		var runner = TLSRunner:create();
-		
-		var thread1 = Thread:create(runner);
+		var thread1 = spawn(TLSRunner);
 		thread1.join();
 		
-		var thread2 = Thread:create(runner);
+		var thread2 = spawn(TLSRunner);
 		thread2.join();
 	}
 }

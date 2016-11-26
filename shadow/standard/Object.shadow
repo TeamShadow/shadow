@@ -24,18 +24,22 @@ class shadow:standard@Object
 	}
 	
 	// TEMP METHODS
+	private readonly extern $sendTo(Thread instance, Object data) => ();
+	private readonly extern $receiveFirst(Thread instance, Class expectedType) => (Object, Thread);
+	private readonly extern $receiveFirstFrom(Thread instance, Class expectedType, Thread from) => (Object);
+	
 	public readonly locked send(Object data, Thread to) => ()
 	{
-		CurrentThread.sendTo(data, to);
+		$sendTo(to, data);
 	}
 	
 	public readonly locked receive(Class expectedType) => (Object, Thread)
 	{
-		return CurrentThread.receiveFirst(expectedType);
+		return $receiveFirst(CurrentThread->instance, expectedType);
 	}
 	
 	public readonly locked receive(Class expectedType, Thread from) => (Object)
 	{
-		return CurrentThread.receiveFirstFrom(expectedType, from);
+		return $receiveFirstFrom(CurrentThread->instance, expectedType, from);
 	}
 }

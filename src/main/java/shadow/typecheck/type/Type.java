@@ -58,6 +58,7 @@ public abstract class Type implements Comparable<Type> {
 	 */
 	
 	public static ClassType OBJECT = null;
+	public static ClassType Thread = null;
 	public static ClassType CLASS = null;  // meta class for holding normal :class variables
 	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types

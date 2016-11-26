@@ -11,17 +11,17 @@ class shadow:test@ThreadTest
 			Console.printLine(CurrentThread->name);
 			
 			if(id == 4) {
-				Thread:create(this).join(); // Thread#5; throws from Thread#6
+				spawn(ThreadTestRunner).join(); // Thread#5; throws from Thread#6
 			}
 			else if(id == 5) {
 				Console.printLine(CurrentThread->parent->id == 4);
 				Console.printLine(CurrentThread->main->id == CurrentThread->parent->parent->id);
 				
-				Thread:create(this).join(); // Thread#6; throws from Thread#8
+				spawn(ThreadTestRunner).join(); // Thread#6; throws from Thread#8
 			}
 			else if(id == 6) {
-				Thread:create(this); // Thread#7; does not throw until joined
-				Thread:create(this).join(); // Thread#8; throws and propagates
+				spawn(ThreadTestRunner); // Thread#7; does not throw until joined
+				spawn(ThreadTestRunner).join(); // Thread#8; throws and propagates
 			}
 			
 			if(id > 2) {
@@ -37,7 +37,7 @@ class shadow:test@ThreadTest
 
 		nullable var threads = Thread:null[4];
 		for (int i = 0; i < threads->size; i += 1) {
-			threads[i] = Thread:create(runner);
+			threads[i] = spawn(ThreadTestRunner);
 		}
 		
 		/*foreach(var x in CurrentThread.children()) {

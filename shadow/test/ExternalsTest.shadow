@@ -1,13 +1,14 @@
 import shadow:io@Console;
 import shadow:natives;
+import shadow:standard@Thread;
 
 class shadow:test@ExternalsTest
 {
 	private readonly extern __ShadowString_TestPrintf(String str) => ();
-	
+
 	public main(String[] args) => ()
 	{
-		__ShadowString_TestPrintf("Hello from printf!\n");
+		__ShadowString_TestPrintf("Hello from printf!\n");		
 		
 		/*var a = System.epochNanoTime();
 		var b = System.nanoTime();

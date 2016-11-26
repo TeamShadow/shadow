@@ -956,6 +956,44 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		return null;
 	}
 	
+	@Override public Void visitSpawnExpression(shadow.parse.ShadowParser.SpawnExpressionContext ctx)
+	{
+		visitChildren(ctx);
+		
+		Type runnerType = ctx.type().getType();
+		
+		SequenceType runnerArgsTypes = new SequenceType();
+		List<TACOperand> runnerParams = new ArrayList<TACOperand>(ctx.conditionalExpression().size() + 1);		
+		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {			
+			if(child.getType().isPrimitive()) {
+				runnerArgsTypes.add(child);			
+			} else {
+				// clone
+				runnerArgsTypes.add(child);				
+			}
+			
+			runnerParams.add(child.appendBefore(anchor));
+		}
+		
+		MethodSignature runnerCreate = runnerType.getMatchingMethod("create", runnerArgsTypes);
+		TACOperand c = callCreate(runnerCreate, runnerParams, runnerType);
+		
+		SequenceType threadArgsTypes = new SequenceType(Type.CAN_RUN);
+		ArrayList<TACOperand> params = new ArrayList<TACOperand>();
+		params.add(c);
+		if(ctx.StringLiteral() != null) {
+			threadArgsTypes.add(new SimpleModifiedType(Type.STRING));
+			params.add(new TACLiteral(anchor, ShadowString.parseString(ctx.StringLiteral().getText())));
+		}
+		
+		MethodSignature threadCreate = Type.Thread.getMatchingMethod("create", threadArgsTypes);
+
+		prefix = callCreate(threadCreate, params, Type.Thread);
+		ctx.setOperand(prefix);
+		
+		return null;
+	}
+	
 	@Override public Void visitCheckExpression(ShadowParser.CheckExpressionContext ctx)	
 	{ 
 		visitChildren(ctx);
@@ -1049,6 +1087,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			prefix = ctx.functionType().appendBefore(anchor);
 		else if( ctx.arrayInitializer() != null )
 			prefix = ctx.arrayInitializer().appendBefore(anchor);
+		else if(ctx.spawnExpression() != null)
+			prefix = ctx.spawnExpression().appendBefore(anchor);
 		else if( ctx.getType() instanceof SingletonType )
 			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType)ctx.getType()));
 		else {
@@ -2893,6 +2933,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		
 		return null;
 	}
+	
+	
 	
 	@Override public Void visitCopyExpression(ShadowParser.CopyExpressionContext ctx)
 	{ 

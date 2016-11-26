@@ -6,7 +6,7 @@ class shadow:test@MailboxTest
 	private readonly native get staticMailbox() => (Mailbox);
 	
 	public main(String[] args) => ()
-	{	
+	{
 		// mailbox is blocking, and for testing purposes,
 		// can only take up to 10 elements.
 		initMailbox(10);
@@ -14,7 +14,7 @@ class shadow:test@MailboxTest
 
 		// !!!! TEST #1 !!!!
 		Console.printLine("Test1");
-		var t1 = Thread:create(Test1Runner:create());
+		var t1 = spawn(Test1Runner);
 		
 		// we wait till the children get spawned
 		while(t1->childrenCount != 4) {}
@@ -39,7 +39,7 @@ class shadow:test@MailboxTest
 		Console.printLine("Test2");
 		Console.printLine(cast<String>(mailbox.dequeue(String:class, CurrentThread->main)) == "wrong");
 
-		var t2 = Thread:create(Test2Runner:create());
+		var t2 = spawn(Test2Runner);
 		// !!!! TEST #2 !!!!
 	}
 	
@@ -64,9 +64,8 @@ class shadow:test@MailboxTest
 		{
 			nullable var threads = Thread:null[4];
 			
-			var sendRunner = SenderRunner:create();
 			for (int i = 0; i < threads->size; i += 1) {
-				threads[i] = Thread:create(sendRunner);
+				threads[i] = spawn(SenderRunner);
 			}
 			
 			var mailbox = staticMailbox();
@@ -133,7 +132,7 @@ class shadow:test@MailboxTest
 		public run() => ()
 		{
 			for (int i = 0; i < 2; i += 1) {
-				Thread:create(SenderRunner2:create(i));
+				spawn(SenderRunner2, i);
 			}
 			
 			var mailbox = staticMailbox();

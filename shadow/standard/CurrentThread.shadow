@@ -174,60 +174,6 @@ is CanIndex<int, Thread>
 	}
 	
 	/**
-	* Sends the desired data to this thread. This method copies all the data before
-	* sending it to the Thread. Thus no data is shared between two threads.
-	* This is a blocking method, and it will block if the mailbox of this thread is full.
-	* The method will immediately unblock when there is space for the item to be
-	* deposited in the mailbox.
-	*
-	* @param data The data to be cloned and sent to this thread.
-	* 
-	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
-	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
-	*
-	* @seeDoc shadow:standard@Mailbox
-	*/
-	public sendTo(Object data, Thread to) => ()
-	{
-		to.sendTo(data);
-	}
-	
-	/**
-	* Receives data with the desired {@code expectedType}. This method will throw an exception 
-	* and will not retrieve the message if the expected type is not the same as the actual one
-	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
-	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
-	*
-	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
-	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
-	* @throws IllegalArgumentException If this thread is the same as the from thread.
-	* 
-	* @seeDoc shadow:standard@Mailbox
-	*/
-	public receiveFirst(Class expectedType) => (Object, Thread)
-	{
-		return current.receiveFirst(expectedType);
-	}
-	
-	/**
-	* Receives data with the desired {@code expectedType} from the desired thread.
-	* This method will throw an exception and will not retrieve the message if the
-	* expected type is not the same as the actual one sent by the thread. A thread
-	* can send as many messages as it desires, but the receiving thread should always
-	* receive the data in the order it was sent, or otherwise an exception is thrown.
-	*
-	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
-	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
-	* @throws IllegalArgumentException If this thread is the same as the from thread.
-	* 
-	* @seeDoc shadow:standard@Mailbox
-	*/
-	public receiveFirstFrom(Class expectedType, Thread from) => (Object)
-	{
-		return current.receiveFirstFrom(expectedType, from);
-	}
-	
-	/**
 	* Checks whether the {@code thread} is the same as the current thread.
 	* This is equivalent to {@code thread->isCurrentThread}, but with null checking as well.
 	*

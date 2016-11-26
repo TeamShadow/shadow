@@ -19,6 +19,7 @@ import shadow.interpreter.ShadowString;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.ConditionalExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.typecheck.TypeCheckException.Error;
@@ -1638,17 +1639,26 @@ public class StatementChecker extends BaseChecker {
 	}
 	
 	@Override public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx)
-	{ 
-		throw new RuntimeException();
+	{
+		visitChildren(ctx);
 		
-/*		visitChildren(ctx);
+		Type type = ctx.type().getType();
+		if(type.equals(Type.CAN_RUN) || !type.isSubtype(Type.CAN_RUN)) {
+			addError(ctx, Error.INVALID_TYPE, "Spawn needs to CanRun");
+		}
 		
-		ModifiedType child = ctx.conditionalExpression();
-		child = resolveType( child );
-		ctx.addModifiers(child.getModifiers());
-		ctx.setType(child.getType());
+		SequenceType paramsType = new SequenceType();
+		for(ModifiedType t : ctx.conditionalExpression() ) {
+			paramsType.add(resolveType(t));
+		}
 		
-		return null;*/
+		if(type.getMatchingMethod("create", paramsType) == null) {
+			addError(ctx, Error.INVALID_TYPE, "Arguments in spawn() should match the arguments of the constructor");
+		}
+		
+		ctx.setType(Type.Thread);
+		
+		return null;
 	}
  
 	@Override public Void visitCheckExpression(ShadowParser.CheckExpressionContext ctx)
@@ -1696,6 +1706,11 @@ public class StatementChecker extends BaseChecker {
 			ShadowParser.PrimaryPrefixContext child = ctx.primaryPrefix();			
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());
+			
+			if(child.spawnExpression() != null) {
+				ctx.action = true;
+				currentType.addUsedType(Type.Thread);
+			}
 		}		
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
