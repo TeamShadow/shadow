@@ -705,7 +705,7 @@ public abstract class Type implements Comparable<Type> {
 		}			
 	
 		if( candidate == null )			
-			ErrorReporter.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
+			ErrorReporter.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in class '" + getTypeName() + "'", arguments);
 		
 		return candidate;
 	}

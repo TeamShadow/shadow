@@ -978,13 +978,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		MethodSignature runnerCreate = runnerType.getMatchingMethod("create", runnerArgsTypes);
 		TACOperand c = callCreate(runnerCreate, runnerParams, runnerType);
 		
-		SequenceType threadArgsTypes = new SequenceType(Type.CAN_RUN);
+		SequenceType threadArgsTypes = new SequenceType();
 		ArrayList<TACOperand> params = new ArrayList<TACOperand>();
-		params.add(c);
 		if(ctx.StringLiteral() != null) {
 			threadArgsTypes.add(new SimpleModifiedType(Type.STRING));
 			params.add(new TACLiteral(anchor, ShadowString.parseString(ctx.StringLiteral().getText())));
 		}
+		threadArgsTypes.add(new SimpleModifiedType(Type.CAN_RUN));
+		params.add(c);
 		
 		MethodSignature threadCreate = Type.Thread.getMatchingMethod("create", threadArgsTypes);
 

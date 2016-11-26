@@ -378,7 +378,7 @@ copyExpression
   	;
   	
 spawnExpression
-	: 'spawn' '(' (StringLiteral ',')? type ( ',' conditionalExpression )* ')'
+	: 'spawn' '(' (StringLiteral ',')? type '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
   	;
 
 primaryExpression

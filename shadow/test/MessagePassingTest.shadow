@@ -39,7 +39,7 @@ class shadow:test@MessagePassingTest
 
 		int i;
 		for(i = 0; i < threads; i += 1) {
-			spawn(ThreadTestRunner);
+			spawn(ThreadTestRunner());
 		}
 
 		for(i = 0; i < threads; i += 1) {

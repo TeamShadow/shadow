@@ -14,7 +14,7 @@ class shadow:test@MailboxTest
 
 		// !!!! TEST #1 !!!!
 		Console.printLine("Test1");
-		var t1 = spawn(Test1Runner);
+		var t1 = spawn(Test1Runner());
 		
 		// we wait till the children get spawned
 		while(t1->childrenCount != 4) {}
@@ -39,7 +39,7 @@ class shadow:test@MailboxTest
 		Console.printLine("Test2");
 		Console.printLine(cast<String>(mailbox.dequeue(String:class, CurrentThread->main)) == "wrong");
 
-		var t2 = spawn(Test2Runner);
+		var t2 = spawn(Test2Runner());
 		// !!!! TEST #2 !!!!
 	}
 	
@@ -65,7 +65,7 @@ class shadow:test@MailboxTest
 			nullable var threads = Thread:null[4];
 			
 			for (int i = 0; i < threads->size; i += 1) {
-				threads[i] = spawn(SenderRunner);
+				threads[i] = spawn(SenderRunner());
 			}
 			
 			var mailbox = staticMailbox();
@@ -91,11 +91,11 @@ class shadow:test@MailboxTest
 	
 	private class Test2Runner is CanRun
 	{		
-		private class SenderRunner2 is CanRun
+		private class SenderRunner2<T> is CanRun
 		{
 			int secretNumber;
-			public create(int i) {
-				secretNumber = i;
+			public create(T i) {
+				secretNumber = cast<int>(i);
 			}
  			
 			public run() => ()
@@ -132,7 +132,7 @@ class shadow:test@MailboxTest
 		public run() => ()
 		{
 			for (int i = 0; i < 2; i += 1) {
-				spawn(SenderRunner2, i);
+				spawn(SenderRunner2<int>(i));
 			}
 			
 			var mailbox = staticMailbox();

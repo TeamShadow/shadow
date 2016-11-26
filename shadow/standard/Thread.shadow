@@ -120,7 +120,7 @@ and CanIndex<int, Thread>
 	*/
 	protected create(CanRun runner)
 	{
-		this(runner, null);
+		this(null, runner);
 	}
 	
 	/**
@@ -129,10 +129,10 @@ and CanIndex<int, Thread>
 	* on a different thread, and takes a {@code String} which is the name
 	* of the thread for reference purposes.
 	* 
-	* @param runner The instance that contains a run function.
 	* @param name The name of the thread.
+	* @param runner The instance that contains a run function.
 	*/
-	protected create(CanRun runner, nullable String name)
+	protected create(nullable String name, CanRun runner)
 	{
 		this:id = this->staticNextId;
 		this:childrenList = ThreadSafeList<Thread>:create();
@@ -521,7 +521,7 @@ and CanIndex<int, Thread>
 	
 	/// Called natively by Signaler, `this` is the CurrentThread->instance.
 	/// This code is responsible for throwing InterruptedException in all methods.
-	protected setInterruptToken(nullable SignalToken interruptToken) => ()
+	private setInterruptToken(nullable SignalToken interruptToken) => ()
 	{
 		int state = RUNNING;
 		// checks whether we need to interrupt, and if we do, it resets the interrupt flag
@@ -576,10 +576,10 @@ and CanIndex<int, Thread>
 	
 	private readonly createMainNative() => (Thread) 
 	{
-		return Thread:create(NopRunner:create(), "Thread#main"); 
+		return Thread:create("Thread#main", NopRunner:create()); 
 	}
 	
-	/// {Thread:this} does not work to get the outer reference, so we use this
+	/// {Thread:this} does not work right now to get the outer reference, so we use this
 	/// workaround instead.
 	private readonly instance() => (Thread)
 	{

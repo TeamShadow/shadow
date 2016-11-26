@@ -30,15 +30,15 @@ class shadow:test@ThreadSleepTest
 		CurrentThread.sleep(3000);
 		Console.printLine("I waited 3 seconds.");
 		
-		var thread1 = spawn(ThreadSleepTestRunner);
+		var thread1 = spawn(ThreadSleepTestRunner());
 		
-		var thread2 = spawn(ThreadTestRunner);
+		var thread2 = spawn(ThreadTestRunner());
 		thread2.join();
 		
-		var thread3 = spawn(ThreadTestRunner);
+		var thread3 = spawn(ThreadTestRunner());
 		thread3.join();
 		
-		var thread4 = spawn(ThreadTestRunner);
+		var thread4 = spawn(ThreadTestRunner());
 		thread4.join();
 		
 		thread1.join();

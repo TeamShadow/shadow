@@ -1652,8 +1652,9 @@ public class StatementChecker extends BaseChecker {
 			paramsType.add(resolveType(t));
 		}
 		
-		if(type.getMatchingMethod("create", paramsType) == null) {
-			addError(ctx, Error.INVALID_TYPE, "Arguments in spawn() should match the arguments of the constructor");
+		List<ShadowException> errors = new ArrayList<ShadowException>();
+		if(type.getMatchingMethod("create", paramsType, new SequenceType(), errors) == null) {
+			addErrors(ctx, errors);
 		}
 		
 		ctx.setType(Type.Thread);
