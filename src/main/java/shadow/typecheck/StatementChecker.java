@@ -116,7 +116,19 @@ public class StatementChecker extends BaseChecker {
 			currentType.addUsedType(modifiedType.getType());
 		
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
-			currentType.addUsedType(modifiedType.getType());			
+			currentType.addUsedType(modifiedType.getType());		
+		
+		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
+			SequenceType params = signature.getParameterTypes();
+			SequenceType parentParams = new SequenceType();
+			for(int i = 1; i < params.size(); ++i) {
+				parentParams.add(params.get(i));
+			}
+			
+			if(params.get(0).getType().getMatchingMethod(signature.getName(), parentParams) == null) {
+				addError(node, Error.INVALID_EXTERN_METHOD, Error.INVALID_EXTERN_METHOD.getMessage());
+			}
+		}
 		
 		currentMethod.addFirst(node);
 		openScope();
@@ -327,7 +339,7 @@ public class StatementChecker extends BaseChecker {
 			boolean explicitCreate = ctx.createBlock() != null && ctx.createBlock().explicitCreateInvocation() != null;
 			
 			if( parentType != null ) {	
-				if( !explicitCreate && !ctx.getModifiers().isNativeOrExtern() ) { 
+				if( !explicitCreate && !ctx.getModifiers().isNative() ) { 
 					//only worry if there is no explicit invocation
 					//explicit invocations are handled separately
 					//for native creates, we have to trust the author of the native code

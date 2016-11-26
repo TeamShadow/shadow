@@ -770,9 +770,11 @@ public class TypeUpdater extends BaseChecker {
 					Error.INVALID_METHODIDENTIFIER.getMessage());
 		}
 		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
-			addError(node, Error.INVALID_ARGUMENTS, 
-					"The first argument of a 'linking extern' should be the type this method is originally defined in");
+		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
+			if(signature.getParameterTypes().size() == 0) {
+				addError(node, Error.INVALID_ARGUMENTS, 
+						"The first argument of a 'linking extern' should be the type this method is originally defined in");
+			}
 		}
 		
 		if( signature.getModifiers().isSet() ) {				
