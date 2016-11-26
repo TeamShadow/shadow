@@ -505,7 +505,7 @@ public class Main {
 				//give warnings if private methods are never used
 				for( List<MethodSignature> signatures : type.getMethodMap().values() )
 					for( MethodSignature signature : signatures )
-						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) && !signature.getSymbol().endsWith("Native"))
+						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) && !signature.getSymbol().endsWith("Native") && signature.getAllowedExternTypes().isEmpty())
 							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
 				
 			}					

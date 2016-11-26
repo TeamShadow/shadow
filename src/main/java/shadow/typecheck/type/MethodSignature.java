@@ -77,20 +77,32 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.canAccept(argumentTypes);		
 	}
 
-	public List<Type> getAllowedExternTypes()
+	List<Type> allowedExternTypes = null;
+	
+	private void addAllowedExternTypes()
 	{
+		if(allowedExternTypes != null) {
+			return;
+		}
+		
 		List<Type> types = new ArrayList<Type>();
 		
-		if(node instanceof ShadowParser.MethodDeclarationContext) {
-			ShadowParser.MethodDeclarationContext p = (ShadowParser.MethodDeclarationContext)node;
+		if(node.parent instanceof ShadowParser.ClassOrInterfaceBodyDeclarationContext) {
+			ShadowParser.ClassOrInterfaceBodyDeclarationContext p = (ShadowParser.ClassOrInterfaceBodyDeclarationContext)node.parent;
 			
-			List<TypeContext> contexts = p.methodDeclarator().type();
+			List<TypeContext> contexts = p.type();
 			for(TypeContext t : contexts) {
 				types.add(t.getType());
 			}
 		}
 		
-		return types;
+		allowedExternTypes = types;
+	}
+	
+	public List<Type> getAllowedExternTypes()
+	{
+		addAllowedExternTypes();
+		return allowedExternTypes;
 	}
 	
 	

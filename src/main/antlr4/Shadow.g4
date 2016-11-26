@@ -122,8 +122,8 @@ classOrInterfaceBodyDeclaration
 	    | createDeclaration 
 	    | destroyDeclaration 
 	    | fieldDeclaration 
-	    | methodDeclaration 
-	  	)
+	  	| ('extern' '$[' type ( ',' type )* ']')? methodDeclaration
+	  )
 	;
 	
 fieldDeclaration
@@ -144,7 +144,7 @@ arrayInitializer
 	;
 
 methodDeclarator
-	: methodIdentifier formalParameters ('$(' type ( ',' type )* ')')? '=>' resultTypes
+	: methodIdentifier formalParameters '=>' resultTypes
 	;
 
 inlineResults

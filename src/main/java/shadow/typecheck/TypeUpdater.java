@@ -772,8 +772,7 @@ public class TypeUpdater extends BaseChecker {
 		
 		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
 			if(signature.getParameterTypes().size() == 0) {
-				addError(node, Error.INVALID_ARGUMENTS, 
-						"The first argument of a 'linking extern' should be the type this method is originally defined in");
+				addError(node, Error.INVALID_ARGUMENTS, "Linking Extern methods must have at least one parameter; the first parameter being the class which contains the definition of the desired method");
 			}
 		}
 		

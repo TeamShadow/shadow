@@ -275,7 +275,7 @@ locked class shadow:natives@
 	
 	// used by SignalToken.signal() method, which is called from outside, and thus
 	// we should remove the token from the queue.
-	private signalFromSignaToken(SignalToken token) $(SignalToken) => ()
+	private extern $[SignalToken] signalFromSignalToken(SignalToken token) => ()
 	{
 		handle.assertValid("Signaler");
 		

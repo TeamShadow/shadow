@@ -4,7 +4,7 @@
 locked class shadow:natives@
 	SignalToken
 {
-	private readonly extern $signalFromSignaToken(Signaler instance, SignalToken token) => ();	
+	private readonly extern $signalFromSignalToken(Signaler instance, SignalToken token) => ();	
 	
 	get Signaler parent;
 	get boolean shouldWait = true;
@@ -17,7 +17,7 @@ locked class shadow:natives@
 	
 	public signal() => ()
 	{
-		$signalFromSignaToken(parent, this);
+		$signalFromSignalToken(parent, this);
 	}
 	
 	public invalidate() => (boolean)

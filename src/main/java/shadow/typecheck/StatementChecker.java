@@ -119,25 +119,33 @@ public class StatementChecker extends BaseChecker {
 		
 		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
 			SequenceType params = signature.getParameterTypes();
+			Type parent = params.get(0).getType();
+			
 			SequenceType parentParams = new SequenceType();
 			for(int i = 1; i < params.size(); ++i) {
 				parentParams.add(params.get(i));
 			}
 			
-			boolean found = false;
-			MethodSignature method = params.get(0).getType().getMatchingMethod(signature.getName(), parentParams);
-			if(method != null && !method.getModifiers().isPublic()) {
+			MethodSignature method = parent.getMatchingMethod(signature.getName(), parentParams);
+			if(method == null) {
+				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getName() + "' in class '" + parent.getTypeName() + "'");
+			} else if(!method.getModifiers().isPublic()) {
+				boolean found = false;
 				for(Type t : method.getAllowedExternTypes()) {
 					if(signature.getOuter().equals(t)) {
 						found = true;
 						break;
 					}
 				}
+				
+				if(!found) {
+					addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getName() + "' method in '" + parent.getTypeName() +"' does not allow externing");
+				}
+			} else {
+				addError(node, Error.INVALID_MODIFIER, "A linking extern method cannot be public");
 			}
-			
-			if(!found) {
-				addError(node, Error.INVALID_EXTERN_METHOD, Error.INVALID_EXTERN_METHOD.getMessage());
-			}
+		} if(!signature.getAllowedExternTypes().isEmpty() && signature.getModifiers().isPublic()) {
+			addError(node, Error.INVALID_MODIFIER, "A linking extern method cannot be public");			
 		}
 		
 		currentMethod.addFirst(node);
