@@ -13,6 +13,8 @@ locked class shadow:standard@
 	// this shouldn't be for too long; best time for it?
 	readonly TimeSpan TIMEOUT = Time.fromSeconds(30);
 	
+	private extern $interrupt(Thread instance, boolean shouldThrow) => (boolean);
+	
 	/*
 	* NOTES
 	*
@@ -26,31 +28,35 @@ locked class shadow:standard@
 	Signaler signaler;
 	MessageQueue list;
 	Mutex mutex;
+	Thread owner;
+	nullable Thread waitingFrom;
 	
 	/**
 	* Initializes a {@code Mailbox} with a backing array that has {@code min} items space to start with
 	* and can expand up to {@code max}.
 	*/
-	public create(int min, int max)
+	public create(Thread owner, int min, int max)
 	{
+		this:owner = owner;
 		this:list = MessageQueue:create(min, max);
 		this:signaler = Signaler:create();
-		this:mutex = Mutex:create();		
+		this:mutex = Mutex:create();
+		this:waitingFrom = null;
 	}
 	
 	/**
 	* Initializes a {@code Mailbox} with a backing array with an initial and maximum capacity of {@code size}.
 	*/
-	public create(int size)
+	public create(Thread owner, int size)
 	{
-		this(size, size);
+		this(owner, size, size);
 	}
 	
 	/**
 	* @throws FullMailboxException
 	* @throws InterruptedException
 	*/
-	public enqueue(Object data, boolean blocking) => ()
+	public sendTo(Object data, boolean blocking) => ()
 	{
 		CurrentThread.throwIfInterrupting();
 		
@@ -71,9 +77,9 @@ locked class shadow:standard@
 			// arrive here if the list is not full.
 			list.enqueue(Message:create(data));
 			
-			// We notify all sleeping threads here. Check Note1.
-			signaler.notifyAll();
-			CurrentThread.sleep(1);
+			if(waitingFrom !== CurrentThread->instance or !$interrupt(owner, false)) {
+				signaler.notifyAll();
+			}
 		} finally {
 			mutex.unlock();
 		}
@@ -83,7 +89,7 @@ locked class shadow:standard@
 	* @throws EmptyMailboxException
 	* @throws InterruptedException
 	*/
-	public dequeue(Class expectedType, boolean blocking) => (Object, Thread)
+	public receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
 	{
 		CurrentThread.throwIfInterrupting();
 
@@ -108,7 +114,6 @@ locked class shadow:standard@
 
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
-			CurrentThread.sleep(1);
 			
 			return (message->data, message->sender);	
 		} finally {
@@ -120,7 +125,7 @@ locked class shadow:standard@
 	* @throws EmptyMailboxException
 	* @throws InterruptedException
 	*/
-	public dequeue(Class expectedType, Thread sender, boolean blocking) => (Object)
+	public receiveFirstFrom(Class expectedType, Thread sender, boolean blocking) => (Object)
 	{
 		CurrentThread.throwIfInterrupting();
 	
@@ -135,17 +140,18 @@ locked class shadow:standard@
 				}
 				
 				// we block as long as we do not find a thread which matches the sender
+				waitingFrom = sender;
 				do {
 					waitForNotify();
 					index = list.indexOf(sender);
 				} while(index == -1);
+				waitingFrom = null;
 			}
 			
 			var message = list.removeAt(index, expectedType);
 			
 			// We notify all sleeping threads here. Check Note1.
 			signaler.notifyAll();
-			CurrentThread.sleep(1);
 
 			return (message->data);
 		} finally {
@@ -153,19 +159,19 @@ locked class shadow:standard@
 		}
 	}
 	
-	public enqueue(Object data) => ()
+	public sendTo(Object data) => ()
 	{
-		enqueue(data, true);
+		sendTo(data, true);
 	}
 	
-	public dequeue(Class expectedType) => (Object, Thread)
+	public receiveFirst(Class expectedType) => (Object, Thread)
 	{
-		return dequeue(expectedType, true);
+		return receiveFirst(expectedType, true);
 	}
 	
-	public dequeue(Class expectedType, Thread sender) => (Object)
+	public receiveFirstFrom(Class expectedType, Thread sender) => (Object)
 	{
-		return dequeue(expectedType, sender, true);
+		return receiveFirstFrom(expectedType, sender, true);
 	}
 	
 	private waitForNotify() => ()

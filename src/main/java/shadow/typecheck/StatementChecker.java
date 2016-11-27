@@ -19,8 +19,11 @@ import shadow.interpreter.ShadowString;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.ArrayCreateCallContext;
+import shadow.parse.ShadowParser.ArrayCreateContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
+import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -117,35 +120,44 @@ public class StatementChecker extends BaseChecker {
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
 			currentType.addUsedType(modifiedType.getType());		
 		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
-			SequenceType params = signature.getParameterTypes();
-			Type parent = params.get(0).getType();
-			
-			SequenceType parentParams = new SequenceType();
-			for(int i = 1; i < params.size(); ++i) {
-				parentParams.add(params.get(i));
-			}
-			
-			MethodSignature method = parent.getMatchingMethod(signature.getName(), parentParams);
-			if(method == null) {
-				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getName() + "' in class '" + parent.getTypeName() + "'");
-			} else if(!method.getModifiers().isPublic()) {
-				boolean found = false;
-				for(Type t : method.getAllowedExternTypes()) {
-					if(signature.getOuter().equals(t)) {
-						found = true;
-						break;
-					}
+		if(signature.isExtern()) {
+			if(signature.getSymbol().startsWith("$")) {
+				SequenceType params = signature.getParameterTypes();
+				Type parent = params.get(0).getType();
+				
+				SequenceType parentParams = new SequenceType();
+				for(int i = 1; i < params.size(); ++i) {
+					parentParams.add(params.get(i));
 				}
 				
-				if(!found) {
-					addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getName() + "' method in '" + parent.getTypeName() +"' does not allow externing");
+				MethodSignature method = parent.getMatchingMethod(signature.getName(), parentParams);
+				if(method == null) {
+					addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getName() + "' in class '" + parent.getTypeName() + "'");
+				} else if(signature.getModifiers().isPrivate()) {
+					boolean found = false;
+					for(Type t : method.getAllowedExternTypes()) {
+						if(signature.getOuter().equals(t)) {
+							found = true;
+							break;
+						}
+					}
+					
+					if(!found) {
+						addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getName() + "' method in '" + parent.getTypeName() +"' does not allow externing");
+					}
+					// TODO: Add return checking
+				} else {
+					addError(node, Error.INVALID_MODIFIER, "A class extern method can only be private");
 				}
-			} else {
-				addError(node, Error.INVALID_MODIFIER, "A linking extern method cannot be public");
 			}
-		} if(!signature.getAllowedExternTypes().isEmpty() && signature.getModifiers().isPublic()) {
-			addError(node, Error.INVALID_MODIFIER, "A linking extern method cannot be public");			
+		} else {		
+			if(signature.getModifiers().isExtern() && signature.getAllowedExternTypes().isEmpty()) {
+				addError(node, Error.INVALID_MODIFIER, "The implementation of a method which class externing should specify at least one class which it will be shared with");
+			}
+			
+			if(signature.allowsExtern() && signature.getModifiers().isPublic()) {
+				addError(node, Error.INVALID_MODIFIER, "A method which allows externing cannot be public");
+			}
 		}
 		
 		currentMethod.addFirst(node);
@@ -435,9 +447,14 @@ public class StatementChecker extends BaseChecker {
 		//add variables
 		for( ShadowParser.VariableDeclaratorContext declarator : ctx.variableDeclarator() ) {
 			if( isVar ) {
-				if( declarator.conditionalExpression() != null ) //has initializer						
-					type = declarator.conditionalExpression().getType();					
-				else {
+				if( declarator.conditionalExpression() != null ) { //has initializer
+					if(resolveType(declarator.conditionalExpression()).equals(new SequenceType())) {
+						type = Type.UNKNOWN;
+						addError(declarator, Error.UNDEFINED_TYPE, "Cannot initialize var with type ()");
+					} else {
+						type = declarator.conditionalExpression().getType();
+					}
+				} else {
 					type = Type.UNKNOWN;
 					addError(declarator, Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
 				}
@@ -1667,30 +1684,6 @@ public class StatementChecker extends BaseChecker {
 		
 		return null;
 	}
-	
-	@Override public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx)
-	{
-		visitChildren(ctx);
-		
-		Type type = ctx.type().getType();
-		if(type.equals(Type.CAN_RUN) || !type.isSubtype(Type.CAN_RUN)) {
-			addError(ctx, Error.INVALID_TYPE, "Spawn needs to CanRun");
-		}
-		
-		SequenceType paramsType = new SequenceType();
-		for(ModifiedType t : ctx.conditionalExpression() ) {
-			paramsType.add(resolveType(t));
-		}
-		
-		List<ShadowException> errors = new ArrayList<ShadowException>();
-		if(type.getMatchingMethod("create", paramsType, new SequenceType(), errors) == null) {
-			addErrors(ctx, errors);
-		}
-		
-		ctx.setType(Type.Thread);
-		
-		return null;
-	}
  
 	@Override public Void visitCheckExpression(ShadowParser.CheckExpressionContext ctx)
 	{ 
@@ -1738,7 +1731,7 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());
 			
-			if(child.spawnExpression() != null) {
+			if(child.spawnExpression() != null /*|| child.sendExpression() != null*/) {
 				ctx.action = true;
 				currentType.addUsedType(Type.Thread);
 			}
@@ -2964,5 +2957,80 @@ public class StatementChecker extends BaseChecker {
 		}
 		
 		return null;
-	}	
+	}
+	
+	@Override public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx)
+	{
+		visitChildren(ctx);
+		
+		Type runnerType = ctx.type().getType();
+		if(runnerType.equals(Type.CAN_RUN) || !runnerType.isSubtype(Type.CAN_RUN)) {
+			addError(ctx, Error.INVALID_TYPE, runnerType.getTypeName() + " does not implement the CanRun interface");
+		}
+		
+		List<ShadowException> errors = new ArrayList<ShadowException>();
+		MethodSignature runnerCreateSignature = runnerType.getMatchingMethod("create", (SequenceType)ctx.spawnRunnerCreateCall().getType(), new SequenceType(), errors);
+		if(runnerCreateSignature == null) {
+			addErrors(ctx, errors);
+		} else {
+			ctx.spawnRunnerCreateCall().setSignature(runnerCreateSignature);
+		}
+		
+		// we should find the thread create since we're the ones who defined it.
+		// Two overloads: Thread(CanRun) and Thread(String, CanRun)
+		SequenceType sequence = new SequenceType();
+		if(ctx.StringLiteral() != null) {
+			sequence.add(new SimpleModifiedType(Type.STRING));
+		}
+		sequence.add(new SimpleModifiedType(Type.CAN_RUN));
+		
+		ctx.setSignature(Type.Thread.getMatchingMethod("create", sequence));
+		ctx.setType(Type.Thread);
+		
+		return null;
+	}
+	
+	@Override public Void visitSpawnRunnerCreateCall(shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx)
+	{
+		visitChildren(ctx);
+		
+		SequenceType sequence = new SequenceType();
+		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {
+			sequence.add(child);
+		}
+		ctx.setType(sequence);
+		
+		return null;
+	}
+	
+	/*@Override public Void visitSendExpression(shadow.parse.ShadowParser.SendExpressionContext ctx) 
+	{
+		visitChildren(ctx);
+
+		if(ctx.conditionalExpression().size() != 2 || !resolveType(ctx.conditionalExpression().get(1)).getType().equals(Type.Thread)) {
+			addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
+		} else {
+			List<ShadowException> errors = new ArrayList<ShadowException>();
+			SequenceType sequence = new SequenceType();
+			sequence.add(resolveType(ctx.conditionalExpression().get(0)));
+			
+			MethodSignature sendSignature = Type.Thread.getMatchingMethod("sendTo", sequence, new SequenceType(), errors);
+			if(sendSignature == null) {
+				addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
+			} else {
+				ctx.setSignature(sendSignature);
+				ctx.setType(sendSignature.getReturnTypes());
+			}
+		}
+		
+		return null;
+	}*/
+	
+	/*@Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) 
+	{
+		visitChildren(ctx);
+		
+		
+		return null;
+	}*/
 }

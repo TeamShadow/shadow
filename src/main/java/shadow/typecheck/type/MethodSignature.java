@@ -9,6 +9,7 @@ import java.util.Set;
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.MethodDeclaratorContext;
 import shadow.parse.ShadowParser.TypeContext;
 
 public class MethodSignature implements Comparable<MethodSignature> {
@@ -87,12 +88,13 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		
 		List<Type> types = new ArrayList<Type>();
 		
-		if(node.parent instanceof ShadowParser.ClassOrInterfaceBodyDeclarationContext) {
-			ShadowParser.ClassOrInterfaceBodyDeclarationContext p = (ShadowParser.ClassOrInterfaceBodyDeclarationContext)node.parent;
-			
-			List<TypeContext> contexts = p.type();
-			for(TypeContext t : contexts) {
-				types.add(t.getType());
+		if(node instanceof ShadowParser.MethodDeclarationContext) {
+			MethodDeclaratorContext p = ((ShadowParser.MethodDeclarationContext)node).methodDeclarator();
+			if(p != null) {
+				List<TypeContext> contexts = p.type();
+				for(TypeContext t : contexts) {
+					types.add(t.getType());
+				}
 			}
 		}
 		
@@ -183,7 +185,18 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		sb.append(symbol);		
+		if(getAllowedExternTypes().size() > 0) {
+			sb.append("$[");
+			for(int i = 0; i < getAllowedExternTypes().size(); ++i) {
+				if(i > 0) {
+					sb.append(",");
+				}
+				sb.append(getAllowedExternTypes().get(i));
+			}
+			sb.append("] ");
+		}
+		
+		sb.append(symbol);
 		
 		//nothing more for destroy
 		if( !symbol.equals("destroy") ) {			
@@ -325,7 +338,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public boolean isExtern() {
-		return type.getModifiers().isExtern();
+		return type.getModifiers().isExtern() && getAllowedExternTypes().isEmpty();
+	}
+	
+	public boolean allowsExtern() {
+		return type.getModifiers().isExtern() && !getAllowedExternTypes().isEmpty();
 	}
 	
 	public boolean isNativeOrExtern()

@@ -18,9 +18,9 @@ class shadow:test@ThreadIsolatedRunnerTest
 
 	public main(String[] args) => ()
 	{
-		var thread1 = spawn(ThreadIsolatedRunner());
-		var thread2 = spawn(ThreadIsolatedRunner());
-		var thread3 = spawn(ThreadIsolatedRunner());
+		var thread1 = spawn(ThreadIsolatedRunner:());
+		var thread2 = spawn(ThreadIsolatedRunner:());
+		var thread3 = spawn(ThreadIsolatedRunner:());
 		
 		thread1.join();
 		thread2.join();

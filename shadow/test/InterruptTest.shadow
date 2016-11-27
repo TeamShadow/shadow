@@ -28,12 +28,12 @@ class shadow:test@InterruptTest
 
 	public main(String[] args) => ()
 	{
-		spawn(ThreadSleepTestRunner()); // 0
+		spawn(ThreadSleepTestRunner:()); // 0
 		
-		spawn(ThreadTestRunner()); // 1
+		spawn(ThreadTestRunner:()); // 1
 		send(0, CurrentThread[1]);
 		
-		spawn(ThreadTestRunner()); // 2
+		spawn(ThreadTestRunner:()); // 2
 		send(1, CurrentThread[2]);
 		
 		CurrentThread.sleep(Time.fromSeconds(4));

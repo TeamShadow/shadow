@@ -765,15 +765,17 @@ public class TypeUpdater extends BaseChecker {
 		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )				
 			signature.addParameter(parameter.Identifier().getText(), parameter);
 		
+		if(signature.allowsExtern() && ((ShadowParser.MethodDeclarationContext)node.getParent()).block() == null && signature.getSymbol().startsWith("$")) {
+			addError(node, Error.INVALID_STRUCTURE, "Externed methods cannot define an externable classes block: '$[class1, ...]'");
+		}
+		
 		if(!signature.isExtern() && (signature.getSymbol().startsWith("_") || signature.getSymbol().startsWith("$"))) {
 			addError(node, Error.INVALID_METHODIDENTIFIER,
 					Error.INVALID_METHODIDENTIFIER.getMessage());
 		}
 		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
-			if(signature.getParameterTypes().size() == 0) {
-				addError(node, Error.INVALID_ARGUMENTS, "Linking Extern methods must have at least one parameter; the first parameter being the class which contains the definition of the desired method");
-			}
+		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
+				addError(node, Error.INVALID_ARGUMENTS, "The first parameter of an extern method should be the class where the original method lives in");
 		}
 		
 		if( signature.getModifiers().isSet() ) {				

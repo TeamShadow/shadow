@@ -24,11 +24,13 @@ import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ArrayCreateCallContext;
 import shadow.parse.ShadowParser.ArrayDefaultContext;
 import shadow.parse.ShadowParser.CatchStatementsContext;
+import shadow.parse.ShadowParser.ConditionalExpressionContext;
 import shadow.parse.ShadowParser.ExpressionContext;
 import shadow.parse.ShadowParser.FinallyStatementContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
+//import shadow.parse.ShadowParser.SendExpressionContext;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
@@ -956,45 +958,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		return null;
 	}
 	
-	@Override public Void visitSpawnExpression(shadow.parse.ShadowParser.SpawnExpressionContext ctx)
-	{
-		visitChildren(ctx);
-		
-		Type runnerType = ctx.type().getType();
-		
-		SequenceType runnerArgsTypes = new SequenceType();
-		List<TACOperand> runnerParams = new ArrayList<TACOperand>(ctx.conditionalExpression().size() + 1);		
-		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {			
-			if(child.getType().isPrimitive()) {
-				runnerArgsTypes.add(child);			
-			} else {
-				// clone
-				runnerArgsTypes.add(child);				
-			}
-			
-			runnerParams.add(child.appendBefore(anchor));
-		}
-		
-		MethodSignature runnerCreate = runnerType.getMatchingMethod("create", runnerArgsTypes);
-		TACOperand c = callCreate(runnerCreate, runnerParams, runnerType);
-		
-		SequenceType threadArgsTypes = new SequenceType();
-		ArrayList<TACOperand> params = new ArrayList<TACOperand>();
-		if(ctx.StringLiteral() != null) {
-			threadArgsTypes.add(new SimpleModifiedType(Type.STRING));
-			params.add(new TACLiteral(anchor, ShadowString.parseString(ctx.StringLiteral().getText())));
-		}
-		threadArgsTypes.add(new SimpleModifiedType(Type.CAN_RUN));
-		params.add(c);
-		
-		MethodSignature threadCreate = Type.Thread.getMatchingMethod("create", threadArgsTypes);
-
-		prefix = callCreate(threadCreate, params, Type.Thread);
-		ctx.setOperand(prefix);
-		
-		return null;
-	}
-	
 	@Override public Void visitCheckExpression(ShadowParser.CheckExpressionContext ctx)	
 	{ 
 		visitChildren(ctx);
@@ -1090,6 +1053,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			prefix = ctx.arrayInitializer().appendBefore(anchor);
 		else if(ctx.spawnExpression() != null)
 			prefix = ctx.spawnExpression().appendBefore(anchor);
+		/*else if(ctx.sendExpression() != null)
+			prefix = ctx.sendExpression().appendBefore(anchor);*/
 		else if( ctx.getType() instanceof SingletonType )
 			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType)ctx.getType()));
 		else {
@@ -1408,8 +1373,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}
 	
 	private TACOperand callCreate(MethodSignature signature, List<TACOperand> params, Type prefixType) {
-		TACOperand object = new TACNewObject(anchor, prefixType);					
-				
+ 		TACOperand object = new TACNewObject(anchor, prefixType);					
+ 		
 		params.add(0, object); //put object in front of other things
 		
 		//have to pass a reference to outer classes into constructor
@@ -2935,10 +2900,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		return null;
 	}
 	
-	
-	
 	@Override public Void visitCopyExpression(ShadowParser.CopyExpressionContext ctx)
-	{ 
+	{
 		visitChildren(ctx);
 		
 		TACOperand value = ctx.conditionalExpression().appendBefore(anchor);
@@ -3016,7 +2979,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	{		
 		visitChildren(ctx);		
 		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() )
-			child.appendBefore(anchor);		
+			child.appendBefore(anchor);
 		
 		return null;
 	}
@@ -3029,4 +2992,63 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		
 		return null;
 	}
+	
+	@Override public Void visitSpawnExpression(shadow.parse.ShadowParser.SpawnExpressionContext ctx)
+	{
+		visitChildren(ctx);
+		
+		Type runnerType = ctx.type().getType();
+		
+		MethodSignature runnerCreateSignature = ctx.spawnRunnerCreateCall().getSignature();
+		List<TACOperand> runnerParams = new ArrayList<TACOperand>(((SequenceType)ctx.spawnRunnerCreateCall().getType()).size() + 1);	
+
+		ctx.spawnRunnerCreateCall().appendBefore(anchor);
+		for(ShadowParser.ConditionalExpressionContext child : ctx.spawnRunnerCreateCall().conditionalExpression()) {						
+			runnerParams.add(child.getOperand());
+		}
+		
+		TACOperand runnerRef = callCreate(runnerCreateSignature, runnerParams, runnerType);
+		
+		MethodSignature threadCreateSignature = ctx.getSignature();
+		ArrayList<TACOperand> params = new ArrayList<TACOperand>();
+		if(ctx.StringLiteral() != null) {
+			params.add(new TACLiteral(anchor, ShadowString.parseString(ctx.StringLiteral().getText())));
+		}
+		params.add(runnerRef);
+		
+		prefix = callCreate(threadCreateSignature, params, Type.Thread);
+		ctx.setOperand(prefix);
+		
+		return null;
+	}
+	
+	@Override public Void visitSpawnRunnerCreateCall(shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx) 
+	{
+		visitChildren(ctx);
+		
+		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {
+			child.appendBefore(anchor);
+		}
+		
+		return null;
+	}
+	
+	/*@Override public Void visitSendExpression(SendExpressionContext ctx)
+	{
+		visitChildren(ctx);
+		
+		throw new UnsupportedOperationException();
+		
+		/*prefix = ctx.conditionalExpression(1).getOperand();
+		
+		List<ConditionalExpressionContext> list = new ArrayList<ConditionalExpressionContext>();
+		list.add(ctx.conditionalExpression(0));
+		
+		methodCall(ctx.getSignature(), ctx, list);
+		
+		prefix.appendBefore(anchor);
+		
+		
+		return null;
+	}*/
 }

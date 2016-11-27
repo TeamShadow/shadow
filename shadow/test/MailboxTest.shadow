@@ -14,19 +14,19 @@ class shadow:test@MailboxTest
 
 		// !!!! TEST #1 !!!!
 		Console.printLine("Test1");
-		var t1 = spawn(Test1Runner());
+		var t1 = spawn(Test1Runner:());
 		
-		// we wait till the children get spawned
+		// we wait till the children get spawned:()
 		while(t1->childrenCount != 4) {}
 		foreach(var t in t1.children()) {
 			t.join();
 		}
 		
 		// send a stop signal
-		mailbox.enqueue("stop");
+		mailbox.sendTo("stop");
 		// send an invalid signal to make sure that exceptions
 		// work correctly.
-		mailbox.enqueue("wrong");
+		mailbox.sendTo("wrong");
 		
 		try {
 			t1.join();
@@ -37,9 +37,9 @@ class shadow:test@MailboxTest
 		
 		// !!!! TEST #2 !!!!
 		Console.printLine("Test2");
-		Console.printLine(cast<String>(mailbox.dequeue(String:class, CurrentThread->main)) == "wrong");
+		Console.printLine(cast<String>(mailbox.receiveFirstFrom(String:class, CurrentThread->main)) == "wrong");
 
-		var t2 = spawn(Test2Runner());
+		var t2 = spawn(Test2Runner:());
 		// !!!! TEST #2 !!!!
 	}
 	
@@ -52,11 +52,11 @@ class shadow:test@MailboxTest
 				var mailbox = staticMailbox();
 				CurrentThread.sleep(CurrentThread->id * 100);
 				
-				mailbox.enqueue("hello");
-				mailbox.enqueue(" ");
-				mailbox.enqueue("world");
-				mailbox.enqueue("!");
-				mailbox.enqueue("\n");
+				mailbox.sendTo("hello");
+				mailbox.sendTo(" ");
+				mailbox.sendTo("world");
+				mailbox.sendTo("!");
+				mailbox.sendTo("\n");
 			}
 		}
 	
@@ -65,7 +65,7 @@ class shadow:test@MailboxTest
 			nullable var threads = Thread:null[4];
 			
 			for (int i = 0; i < threads->size; i += 1) {
-				threads[i] = spawn(SenderRunner());
+				threads[i] = spawn(SenderRunner:());
 			}
 			
 			var mailbox = staticMailbox();
@@ -74,7 +74,7 @@ class shadow:test@MailboxTest
 			nullable Thread thread = null;
 			
 			while(message != "stop") {
-				(var tempStr, var tempThread) = mailbox.dequeue(String:class);
+				(var tempStr, var tempThread) = mailbox.receiveFirst(String:class);
 				if(thread !== tempThread) {
 					thread = tempThread;
 					Console.print(tempThread->name # ": ");
@@ -85,7 +85,8 @@ class shadow:test@MailboxTest
 			}
 			Console.printLine();
 			
-			mailbox.dequeue(int:class);
+			(var a, var b) = mailbox.receiveFirst(int:class);
+			Console.printLine(a # " " # b);
 		}
 	}
 	
@@ -110,17 +111,17 @@ class shadow:test@MailboxTest
 					}
 				}
 				
-				mailbox.enqueue("A string from " # CurrentThread->name);
-				mailbox.enqueue("Secret number: ");
-				mailbox.enqueue(secretNumber);
-				mailbox.enqueue(x);
+				mailbox.sendTo("A string from " # CurrentThread->name);
+				mailbox.sendTo("Secret number: ");
+				mailbox.sendTo(secretNumber);
+				mailbox.sendTo(x);
 				x[0] = 55;
-				mailbox.enqueue("done");
+				mailbox.sendTo("done");
 			}
 		}
 
 		private receiveAndPrint(Mailbox mailbox, int index, Class c, boolean lf) => (Object) {
-			var o = mailbox.dequeue(c, CurrentThread[index]);
+			var o = mailbox.receiveFirstFrom(c, CurrentThread[index]);
 			Console.print(o);
 			if(lf) {
 				Console.print("\n");
@@ -132,7 +133,7 @@ class shadow:test@MailboxTest
 		public run() => ()
 		{
 			for (int i = 0; i < 2; i += 1) {
-				spawn(SenderRunner2<int>(i));
+				Console.printLine(spawn(SenderRunner2<int>:(i))->name);
 			}
 			
 			var mailbox = staticMailbox();
@@ -150,6 +151,6 @@ class shadow:test@MailboxTest
 	
 	private createMailboxNative(int count) => (Mailbox)
 	{
-		return Mailbox:create(count);
+		return Mailbox:create(CurrentThread->instance, count);
 	}
 }

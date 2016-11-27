@@ -5,10 +5,13 @@ import shadow:standard@Thread;
 class shadow:test@ExternalsTest
 {
 	private readonly extern __ShadowString_TestPrintf(String str) => ();
-
+	//private readonly extern $sendTo(Thread instance, Object data) => ();
+	
 	public main(String[] args) => ()
 	{
-		__ShadowString_TestPrintf("Hello from printf!\n");		
+		__ShadowString_TestPrintf("Hello from printf!\n");
+		//$sendTo(CurrentThread->instance, 1);
+		//send(1, CurrentThread->instance);
 		
 		/*var a = System.epochNanoTime();
 		var b = System.nanoTime();

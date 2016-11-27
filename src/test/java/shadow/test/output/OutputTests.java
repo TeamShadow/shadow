@@ -1213,55 +1213,70 @@ public class OutputTests {
 				);
 	}
 	
+	private String formatOutputString(CharSequence... elements)
+	{
+		return String.join("\n", elements) + "\n";
+	}
+	
 	@Test public void testMailbox() throws Exception {
 		args.add("shadow/test/MailboxTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"Test1\n"+
-				"Thread#2: hello world!\n" +
-				"Thread#3: hello world!\n" +
-				"Thread#4: hello world!\n" +
-				"Thread#5: hello world!\n" +
-				"Thread#main: stop\n" +
-				
-				"Test2\n" +
-				"true\n" +
-				
-				"A string from Thread#7\n" +
-				"Secret number: 0\n" +
-				"[0, 1, 2, 3, 4]\n" +
-				"done\n" +
-				"[0, 1, 2, 3, 4]\n" +
-				
-				"A string from Thread#8\n" +
-				"Secret number: 1\n" +
-				"[10, 11, 12, 13, 14]\n" +
-				"done\n" +
-				"[10, 11, 12, 13, 14]\n",
-				
-				"shadow:standard@IncompatibleMessageTypeException: Expected 'int' but got 'shadow:standard@String'.\n"
+		run(new String[0], formatOutputString(
+							"Test1",
+							"Thread#2: hello world!",
+							"Thread#3: hello world!",
+							"Thread#4: hello world!",
+							"Thread#5: hello world!",
+							"Thread#main: stop",
+							
+							"Test2",
+							"true",
+							"Thread#7",
+							"Thread#8",
+							
+							"A string from Thread#7",
+							"Secret number: 0",
+							"[0, 1, 2, 3, 4]",
+							"done",
+							"[0, 1, 2, 3, 4]",
+							
+							"A string from Thread#8",
+							"Secret number: 1",
+							"[10, 11, 12, 13, 14]",
+							"done",
+							"[10, 11, 12, 13, 14]"
+						),
+				"shadow:standard@IncompatibleMessageTypeException: Expected 'int' but got 'shadow:standard@String'.\n"			
 		);
 	}
 	
 	@Test public void testMessagePassing() throws Exception {
 		args.add("shadow/test/MessagePassingTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "9592\n");
+		run(new String[0], formatOutputString(
+										"Sending data to 0",
+										"Sending data to 1",
+										"Sending data to 2",
+										"Sending data to 3",
+										"9592"
+							)
+			);
 	}
 	
 	@Test public void testInterrupt() throws Exception {
 		args.add("shadow/test/InterruptTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"waiting\n" +
-				"I am Thread#2\n" +
-				"Thread#2: 0\n" +
-				"I am Thread#3\n" +
-				"Thread#3: 1\n" +
-				"end\n" +
-				"InterruptedException thrown\n" +
-				"1\n" +
-				"done\n");
+		run(new String[0], formatOutputString(
+				"waiting",
+				"I am Thread#2",
+				"I am Thread#3",
+				"Thread#2: 0",
+				"Thread#3: 1",
+				"end",
+				"InterruptedException thrown",
+				"1",
+				"done")
+			);
 	}
 	
 	@Test public void testEqualityComparer() throws Exception {

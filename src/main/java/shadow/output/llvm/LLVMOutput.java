@@ -758,11 +758,13 @@ public class LLVMOutput extends AbstractOutput {
 		MethodSignature signature = method.getSignature();
 		if (module.getType() instanceof InterfaceType ) {
 			skipMethod = true;			
-		}		
+		}
 		else if (signature.isNativeOrExtern()) {
 			if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
 				ClassType ownerClass = (ClassType)signature.getOuter();
-				if(ownerClass.containsInnerClass(signature.getFullParameterTypes().get(0).getType())) {
+				ClassType sourceClass = (ClassType)signature.getFullParameterTypes().get(0).getType();
+				
+				if(ownerClass.containsInnerClass(sourceClass)) {
 					skipMethod = true;
 				}
 			}

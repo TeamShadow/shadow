@@ -122,7 +122,7 @@ classOrInterfaceBodyDeclaration
 	    | createDeclaration 
 	    | destroyDeclaration 
 	    | fieldDeclaration 
-	  	| ('extern' '$[' type ( ',' type )* ']')? methodDeclaration
+	  	| methodDeclaration
 	  )
 	;
 	
@@ -144,7 +144,7 @@ arrayInitializer
 	;
 
 methodDeclarator
-	: methodIdentifier formalParameters '=>' resultTypes
+	: ('$[' type ( ',' type )* ']')? methodIdentifier formalParameters '=>' resultTypes
 	;
 
 inlineResults
@@ -378,8 +378,20 @@ copyExpression
   	;
   	
 spawnExpression
-	: 'spawn' '(' (StringLiteral ',')? type '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
+	: 'spawn' '(' (StringLiteral ',')? type spawnRunnerCreateCall
   	;
+
+spawnRunnerCreateCall
+	: ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
+	;
+	
+/*sendExpression
+	: 'send' '(' conditionalExpression ',' conditionalExpression ')'
+	;*/
+
+/*receiveExpression
+	: 'receive' '<' type '>' '(' conditionalExpression? ')'
+	;*/
 
 primaryExpression
 locals [boolean action = false]
@@ -410,6 +422,8 @@ primaryPrefix
 	| checkExpression
 	| copyExpression
 	| spawnExpression
+//	| sendExpression
+//	| receiveExpression
 	| castExpression
 	| '(' conditionalExpression ')'
 	| primitiveType

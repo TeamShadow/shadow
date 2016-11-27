@@ -151,7 +151,7 @@ and CanIndex<int, Thread>
 		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
 		// the mailbox doubles as more items are sent to it, until it reaches 32, and blocks
 		// if more items are added, until space becomes available again by receiving messages.
-		this:mailbox = Mailbox:create(8, 32);
+		this:mailbox = Mailbox:create(instance(), 8, 32);
 		
 		this:state = READY;
 		
@@ -171,12 +171,12 @@ and CanIndex<int, Thread>
 				throw ThreadSpawnException:create();
 			}
 			
-			sleep(1);
+			// sleep(1); // necessary?
 		}
 	}
 	
 	/**
-	* Suspends the execution of the calling thread until this thread terminates.
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates.
 	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
 	* the exception is thrown when this method is called.
 	* 
@@ -192,7 +192,7 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
-	* Suspends the execution of the calling thread until this thread terminates or until it times out.
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
 	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
 	* the exception is thrown when this method is called.
 	*
@@ -211,7 +211,7 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
-	* Suspends the execution of the calling thread until this thread terminates or until it times out.
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
 	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
 	* the exception is thrown when this method is called.
 	*
@@ -280,18 +280,28 @@ and CanIndex<int, Thread>
 	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
 	* as soon as one of the above interruptible methods above are called, or when the user calls 
 	* {@code CurrentThread.throwIfInterrupting()}, or throws an exception using {@code CurrentThread->interrupting}.
+	*
+	* @return {@code true} if the thread was interrupted; otherwise, {@code false} the interrupt flag has been set.
 	*/
-	public interrupt() => ()
+	public interrupt() => (boolean)
+	{
+		return interrupt(true);
+	}
+	
+	private extern $[Mailbox] interrupt(boolean shouldThrow) => (boolean)
 	{
 		if(!isAlive()) {
-			return;
+			return true;
 		}
 		
 		mutex.lock();
-		interrupting = true;
+		if(shouldThrow) {
+			interrupting = true;
+		}
 		try {
-			if(this->state == WAITING and interruptToken !== null) {
+			if(this->state == WAITING and interruptToken !== null) {				
 				check(interruptToken).signal();
+				return true;
 			}
 			
 			// Quick explanation on how exceptions propagate:
@@ -301,13 +311,14 @@ and CanIndex<int, Thread>
 			// up the resources it used. It calls signaler.free(), which in turn causes Signaler to release
 			// all the threads it is holding through a waitForNotify(). Since all threads get woken up after
 			// the exception `ex` has been set, all the joined thread also get an InterruptedException correctly.
+			return false;
 		} finally {
 			mutex.unlock();
 		}
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
-	private get extern $[CurrentThread] interrupting() => (boolean)
+	private extern $[CurrentThread] interrupting() => (boolean)
 	{
 		if(!isCurrentThread()) { // should never reach this
 			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
@@ -327,6 +338,7 @@ and CanIndex<int, Thread>
 	}
 
 	/**
+	* {@code Interruptible}
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
@@ -336,6 +348,7 @@ and CanIndex<int, Thread>
 	}
 	
 	/**
+	* {@code Interruptible}
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
@@ -345,7 +358,7 @@ and CanIndex<int, Thread>
 	}
 
 	/**
-	* Receives data with the desired {@code expectedType}. This method will throw an exception 
+	* {@code Interruptible}. Receives data with the desired {@code expectedType}. This method will throw an exception 
 	* and will not retrieve the message if the expected type is not the same as the actual one
 	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
 	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
@@ -358,11 +371,11 @@ and CanIndex<int, Thread>
 	*/
 	protected extern $[Object] receiveFirst(Class expectedType) => (Object, Thread)
 	{
-		return mailbox.dequeue(expectedType);
+		return mailbox.receiveFirst(expectedType);
 	}
 	
 	/**
-	* Receives data with the desired {@code expectedType} from the desired thread.
+	* {@code Interruptible}. Receives data with the desired {@code expectedType} from the desired thread.
 	* This method will throw an exception and will not retrieve the message if the
 	* expected type is not the same as the actual one sent by the thread. A thread
 	* can send as many messages as it desires, but the receiving thread should always
@@ -380,11 +393,11 @@ and CanIndex<int, Thread>
 			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
 		}
 		
-		return mailbox.dequeue(expectedType, from);
+		return mailbox.receiveFirstFrom(expectedType, from);
 	}
 	
 	/**
-	* Sends the desired data to this thread. This method copies all the data before
+	* {@code Interruptible}. Sends the desired data to this thread. This method copies all the data before
 	* sending it to this thread. Thus no data is shared between two threads.
 	* This is a blocking method, and it will block if the mailbox of this thread is full.
 	* The method will immediately unblock when there is space for the item to be
@@ -408,7 +421,7 @@ and CanIndex<int, Thread>
 			throw InvalidOperationException:create("A Thread cannot send a message to itself.");
 		}
 		
-		mailbox.enqueue(data);
+		mailbox.sendTo(data);
 	}
 	
 	/**
@@ -626,12 +639,8 @@ and CanIndex<int, Thread>
 			
 			public next() => (Thread)
 			{
-				// this is tricky as we need to avoid race conditions, and since the parent
-				// can spawn threads at any time, we cannot predict when it will happen. We
-				// add the first generation children of the current thread to the queue, retrieve
-				// the first child, set it as the current, and return it. This allows us to perform
-				// operations on the `current` thread outside the iterator, and the children will
-				// then be added to queue on demand. Check waitForThreadsNative() for a better understanding.
+				// this is tricky as we need to avoid race conditions, so we add the children
+				// at the time we retrieve the next thread instead of adding them in the hasNext()
 				addChildrenToQueue(current);
 				
 				if(threadsQueue.isEmpty()) {

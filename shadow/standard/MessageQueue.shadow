@@ -12,6 +12,11 @@ class shadow:standard@
 is CanIndex<int, Message>
 and CanIndexStore<int, Message>
 {
+	/*
+	* TODO: Write a smarter, more efficient removeAt() which can efficiently remove
+	* 		from the beginning or from the end of the list, like the LinkedList implementation.
+	*/
+	
 	nullable Message[] elements;
 	int start;
 	int version;

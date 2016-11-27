@@ -7,7 +7,7 @@ class shadow:test@MessagePassingTest
 		public run() => ()
 		{
 			int start = cast<int>(receive(int:class, CurrentThread->main));
-			int end = cast<int>(receive(int:class, CurrentThread->main));			
+			int end = cast<int>(receive(int:class, CurrentThread->main));
 			
 			if(start % 2 == 0) {
 				start += 1;
@@ -39,10 +39,11 @@ class shadow:test@MessagePassingTest
 
 		int i;
 		for(i = 0; i < threads; i += 1) {
-			spawn(ThreadTestRunner());
+			spawn(ThreadTestRunner:());
 		}
 
 		for(i = 0; i < threads; i += 1) {
+			Console.printLine("Sending data to " # i);
 			send(intervals * i, CurrentThread[i]);
 			send(intervals * (i + 1), CurrentThread[i]);
 		}
