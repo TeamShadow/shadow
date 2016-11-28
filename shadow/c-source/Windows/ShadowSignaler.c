@@ -32,7 +32,7 @@ ShadowPointer __ShadowSignaler_Initialize(void)
 		InvalidatePointer(&ptr);
 	}
 	
-	return CreateShadowPointer(ptr);
+	return CreateShadowPointer(ptr, 0);
 }
 
 /// true on success, otherwise, false.
@@ -42,6 +42,8 @@ ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowPtr)
 	
 	int result = (pthread_cond_destroy(&ptr->cond) == 0);
 	result &= (pthread_mutex_destroy(&ptr->mutex) == 0);
+	
+	free(ptr);
 	
 	return result;
 }
@@ -59,10 +61,11 @@ ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowPtr)
 }
 
 /// returns true if it timedout, otherwise, false.
-ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowLong absoluteNanos)
+ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowULong currentEpochTime, ShadowULong timeout)
 {
 	CondData* ptr = ExtractRawPointer(shadowPtr);
 
+	ShadowULong absoluteNanos = currentEpochTime + timeout;
 	struct timespec time = { absoluteNanos / NANOS_IN_SECONDS, absoluteNanos % NANOS_IN_SECONDS };
 	
 	pthread_mutex_lock(&ptr->mutex);

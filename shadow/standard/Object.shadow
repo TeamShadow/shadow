@@ -28,10 +28,10 @@ class shadow:standard@Object
 	private readonly extern $receiveFirst(Thread instance, Class expectedType) => (Object, Thread);
 	private readonly extern $receiveFirstFrom(Thread instance, Class expectedType, Thread from) => (Object);
 	
-	public readonly locked send(Object data, Thread to) => ()
+	/*public readonly locked send(Object data, Thread to) => ()
 	{
 		$sendTo(to, data);
-	}
+	}*/
 	
 	public readonly locked receive(Class expectedType) => (Object, Thread)
 	{

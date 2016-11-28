@@ -11,9 +11,9 @@ locked class shadow:standard@
 	Mailbox
 {
 	// this shouldn't be for too long; best time for it?
-	readonly TimeSpan TIMEOUT = Time.fromSeconds(30);
+	readonly TimeSpan TIMEOUT = Time.fromMilliSeconds(5000);
 	
-	private extern $interrupt(Thread instance, boolean shouldThrow) => (boolean);
+	//private extern $interrupt(Thread instance, boolean shouldThrow) => (boolean);
 	
 	/*
 	* NOTES
@@ -28,28 +28,26 @@ locked class shadow:standard@
 	Signaler signaler;
 	MessageQueue list;
 	Mutex mutex;
-	Thread owner;
-	nullable Thread waitingFrom;
+	//Thread owner;
 	
 	/**
 	* Initializes a {@code Mailbox} with a backing array that has {@code min} items space to start with
 	* and can expand up to {@code max}.
 	*/
-	public create(Thread owner, int min, int max)
+	public create(/*Thread owner,*/ int min, int max)
 	{
-		this:owner = owner;
+//		this:owner = owner;
 		this:list = MessageQueue:create(min, max);
 		this:signaler = Signaler:create();
 		this:mutex = Mutex:create();
-		this:waitingFrom = null;
-	}
+	}	
 	
 	/**
 	* Initializes a {@code Mailbox} with a backing array with an initial and maximum capacity of {@code size}.
 	*/
-	public create(Thread owner, int size)
+	public create(/*Thread owner,*/ int size)
 	{
-		this(owner, size, size);
+		this(/*owner,*/ size, size);
 	}
 	
 	/**
@@ -60,29 +58,23 @@ locked class shadow:standard@
 	{
 		CurrentThread.throwIfInterrupting();
 		
-		mutex.lock();
-		try {
-			if(list.isFull()) {
-				// if we don't immediately find the result and we are not blocking, then throw.
-				if(!blocking) {
-					throw FullMailboxException:create("Mailbox is full.");
-				}
+		var message = Message:create(data);
+		if(!blocking) {
+			if(!list.enqueue(message)) {
+				throw FullMailboxException:create("Mailbox is full");
+			}
+		} else {
+			var stop = false;
+			while(!stop) {
+				stop = list.enqueue(message);
 				
-				do {
-					waitForNotify();
-				} while(list.isFull());
+				if(!stop) {
+					signaler.waitForNotify(TIMEOUT);
+				}
 			}
-			
-			// enqueue should never throw since we should only
-			// arrive here if the list is not full.
-			list.enqueue(Message:create(data));
-			
-			if(waitingFrom !== CurrentThread->instance or !$interrupt(owner, false)) {
-				signaler.notifyAll();
-			}
-		} finally {
-			mutex.unlock();
 		}
+		
+		signaler.notifyAll();
 	}
 	
 	/**
@@ -91,34 +83,29 @@ locked class shadow:standard@
 	*/
 	public receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
 	{
-		CurrentThread.throwIfInterrupting();
+		throw UnsupportedOperationException:create();
+		/*CurrentThread.throwIfInterrupting();
 
-		mutex.lock();
-		try {
-			if(list.isEmpty()) {
-				// if we don't immediately find the result and we are not blocking, then throw.
-				if(!blocking) {
-					throw EmptyMailboxException:create("Mailbox did not receive any messages, and is empty.");
-				}
-
-				// we block as long as the last is empty.
-				do {
-					waitForNotify();
-				} while(list.isEmpty());
+		if(list.isEmpty()) {
+			// if we don't immediately find the result and we are not blocking, then throw.
+			if(!blocking) {
+				throw EmptyMailboxException:create("Mailbox did not receive any messages, and is empty.");
 			}
-			
-			// dequeue should never throw because of an empty list,
-			// but it can and will throw if the expectedType is not
-			// the same as the available type.
-			var message = list.dequeue(expectedType);
 
-			// We notify all sleeping threads here. Check Note1.
-			signaler.notifyAll();
-			
-			return (message->data, message->sender);	
-		} finally {
-			mutex.unlock();
+			// we block as long as the last is empty.
+			while(list.isEmpty()) {
+				signaler.waitForNotify(TIMEOUT);
+			}
 		}
+		
+		// dequeue should never throw because of an empty list,
+		// but it can and will throw if the expectedType is not
+		// the same as the available type.
+		var message = list.dequeue(expectedType);
+		
+		signaler.notifyAll();
+		
+		return (message->data, message->sender);*/
 	}
 	
 	/**
@@ -128,35 +115,25 @@ locked class shadow:standard@
 	public receiveFirstFrom(Class expectedType, Thread sender, boolean blocking) => (Object)
 	{
 		CurrentThread.throwIfInterrupting();
-	
-		mutex.lock();
-		try {
-			int index = list.indexOf(sender);
 
-			if(index == -1) {
-				// if we don't immediately find the result and we are not blocking, then throw.
-				if(!blocking) {
-					throw EmptyMailboxException:create("Mailbox did not receive any messages from that thread.");
-				}
-				
-				// we block as long as we do not find a thread which matches the sender
-				waitingFrom = sender;
-				do {
-					waitForNotify();
-					index = list.indexOf(sender);
-				} while(index == -1);
-				waitingFrom = null;
+		nullable var message = list.dequeue(sender, expectedType);
+		if(!blocking) {
+			if(message === null) {
+				throw EmptyMailboxException:create("Mailbox is empty");
 			}
-			
-			var message = list.removeAt(index, expectedType);
-			
-			// We notify all sleeping threads here. Check Note1.
-			signaler.notifyAll();
-
-			return (message->data);
-		} finally {
-			mutex.unlock();
+		} else {
+			while(message === null) {
+				message = list.dequeue(sender, expectedType);
+				
+				if(message === null) {
+					signaler.waitForNotify(TIMEOUT);
+				}
+			}
 		}
+		
+		signaler.notifyAll();
+
+		return (check(message)->data);
 	}
 	
 	public sendTo(Object data) => ()
@@ -172,12 +149,5 @@ locked class shadow:standard@
 	public receiveFirstFrom(Class expectedType, Thread sender) => (Object)
 	{
 		return receiveFirstFrom(expectedType, sender, true);
-	}
-	
-	private waitForNotify() => ()
-	{
-		mutex.unlock();
-		signaler.waitForNotify(TIMEOUT);
-		mutex.lock();
 	}
 }

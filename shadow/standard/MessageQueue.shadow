@@ -1,4 +1,5 @@
 import shadow:utility;
+import shadow:natives;
 
 /**
  * Class {@code MessageQueue} is a custom queue implemented with a circular array, and allows removal
@@ -17,9 +18,9 @@ and CanIndexStore<int, Message>
 	* 		from the beginning or from the end of the list, like the LinkedList implementation.
 	*/
 	
+	Mutex mutex;
 	nullable Message[] elements;
 	int start;
-	int version;
 	int maxCapacity;
 	
 	get int size;
@@ -38,9 +39,9 @@ and CanIndexStore<int, Message>
 		this:elements = Message:null[initialCapacity];
 		
 		this:start = 0;
-		this:version = 0;
 		this:maxCapacity = maxCapacity;
 		this:size = 0;
+		this:mutex = Mutex:create(true);
 	}
 	
 	/**
@@ -51,66 +52,100 @@ and CanIndexStore<int, Message>
 	*/
 	public get isFull() => (boolean)
 	{
-		if (size == elements->size) {
-			if(size == maxCapacity) {
-				return true;
-			}
+		mutex.lock();
+		try {
+			if (size == elements->size) {
+				if(size == maxCapacity) {
+					return true;
+				}
 
-			int newSize = elements->size * 2;
-			if(newSize > maxCapacity) {
-				newSize = maxCapacity;
-			}
+				int newSize = elements->size * 2;
+				if(newSize > maxCapacity) {
+					newSize = maxCapacity;
+				}
 
-			nullable Message[] temp = Message:null[newSize];
-			for(int i = 0; i < size; i += 1) {
-				temp[i] = this[i];
-			}
+				nullable Message[] temp = Message:null[newSize];
+				for(int i = 0; i < size; i += 1) {
+					temp[i] = this[i];
+				}
 
-			elements = temp;
-			start = 0;
+				elements = temp;
+				start = 0;
+			}
+			
+			return false;
+		} finally {
+			mutex.unlock();
 		}
-		
-		return false;
 	}
 	
 	public readonly get isEmpty() => (boolean)
 	{
-		return (size == 0);
+		mutex.lock();
+		try {
+			return (size == 0);
+		} finally {
+			mutex.unlock();
+		}
 	}
-	
-	public indexOf(Thread thread) => (int index)
+
+	public enqueue(Message message) => (boolean)
 	{
-		for(int i = 0; i < size; i += 1) {
-			if(thread === this[i]->sender) {
-				return i;
+		mutex.lock();
+		try {
+			if(isFull()) {
+				return false;
 			}
+
+			size += 1;
+			this[size - 1] = message;
+			return true;
+		} finally {
+			mutex.unlock();
 		}
-
-		return -1;
-	}
-
-	public enqueue(Message message) => ()
-	{
-		if(isFull()) {
-			throw FullListException:create();
-		}
-
-		size += 1;
-		this[size - 1] = message;
-		
-		version += 1;
 	}
 	
-	public dequeue(Class expectedType) => (Message)
+	public dequeue(Class expectedType) => (nullable Message)
 	{
-		return removeAt(0, expectedType);
+		mutex.lock();
+		try {
+			if(isEmpty()) {
+				return null;
+			}
+			
+			return removeAt(0, expectedType);
+		} finally {
+			mutex.unlock();
+		}
+	}
+	
+	public dequeue(Thread sender, Class expectedType) => (nullable Message)
+	{
+		int index = -1;
+		
+		mutex.lock();
+		try {
+			for(int i = 0; index == -1 and i < size; i += 1) {
+				if(sender === this[i]->sender) {
+					index = i;
+				}
+			}
+			
+			if(index == -1) {	
+				return null;
+			}
+			
+			return removeAt(index, expectedType);
+		} finally {
+			mutex.unlock();
+		}
 	}
 	
 	/**
 	* Attempts to remove the Message at the specified index. This method does not 
 	* remove the item if it is not the same as the expectedType.
 	*/
-	public removeAt(int index, Class expectedType) => (Message)
+	private removeAt(int index, Class expectedType) => (Message)
 	{
 		// retrieve the data and make sure that it is the same as the expectedType.
 		// the indexer also checks for out of bounds exception, so we do not need
@@ -145,21 +180,29 @@ and CanIndexStore<int, Message>
 			start = 0;
 		}
 		
-		version += 1;
-		
 		return message;
 	}
 	
 	// CanIndex<int, Message>
 	public readonly index(int index) => (Message)
 	{
-		return check(elements[rawIndex(index)]);
+		mutex.lock();
+		try {
+			return check(elements[rawIndex(index)]);
+		} finally {
+			mutex.unlock();
+		}
 	}
 	
 	// CanIndexStore<int, Message>
 	public index(int index, Message message) => ()
 	{
-		elements[rawIndex(index)] = message;
+		mutex.lock();
+		try {
+			elements[rawIndex(index)] = message;
+		} finally {
+			mutex.unlock();
+		}
 	}
 	
 	/// sets the item at index to null.

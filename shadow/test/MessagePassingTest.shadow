@@ -41,9 +41,8 @@ class shadow:test@MessagePassingTest
 		for(i = 0; i < threads; i += 1) {
 			spawn(ThreadTestRunner:());
 		}
-
+		
 		for(i = 0; i < threads; i += 1) {
-			Console.printLine("Sending data to " # i);
 			send(intervals * i, CurrentThread[i]);
 			send(intervals * (i + 1), CurrentThread[i]);
 		}

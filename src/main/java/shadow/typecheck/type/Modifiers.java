@@ -64,6 +64,7 @@ public final class Modifiers
 	public static final int CONSTANT		= 0x0800;
 	public static final int LOCKED			= 0x1000;
 	public static final int EXTERN			= 0x40000;
+	public static final int EXTERN_SHARABLE = 0x80000;
 
 	public static final int ASSIGNABLE   	= 0x2000;
 	public static final int TYPE_NAME   	= 0x4000;
@@ -202,8 +203,10 @@ public final class Modifiers
 	public boolean isAbstract() { return (modifiers & ABSTRACT) != 0; }
 	//public boolean isFinal() { return (modifiers & FINAL) != 0; }
 	public boolean isReadonly() { return (modifiers & READONLY) != 0; }
+	
 	public boolean isNative() { return (modifiers & NATIVE) != 0; }
 	public boolean isExtern() { return (modifiers & EXTERN) != 0; }	
+	public boolean isExternSharable() { return (modifiers & EXTERN_SHARABLE) != 0; }	
 	public boolean isNativeOrExtern() { return (isNative() || isExtern()); }
 	
 	public boolean isGet() { return (modifiers & GET) != 0; }
@@ -348,6 +351,17 @@ public final class Modifiers
 		if(isNative() && isExtern()) {
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both native and extern"));			
 		}
+		
+		if(isExtern() && !isPrivate()) {
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "An extern method can only be private"));	
+		}	
+		if(isExtern() && isExternSharable()) {
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A strictly sharable method cannot be marked extern"));
+		}
+		if(isExternSharable() && isPublic()) {
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A strictly sharable method cannot be public"));
+		}
+		
 		return exceptions;
 	}
 

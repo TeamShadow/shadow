@@ -14,10 +14,10 @@ typedef void* ShadowPointer;
  *
  * usage:
  *	ShadowPointer __ShadowTest_DoSomething() {
- *		return __createShadowPointer(malloc(sizeof(somethingUseful)));
+ *		return CreateShadowPointer(malloc(sizeof(somethingUseful)), 1);
  *	}
  */
-ShadowPointer CreateShadowPointer(void*);
+ShadowPointer CreateShadowPointer(void* ptr, ShadowBoolean shouldFree);
 
 /**
  * Gets the actual pointer from the managed ShadowPointer. This is the raw pointer which was

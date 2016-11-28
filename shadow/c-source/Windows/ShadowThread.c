@@ -15,7 +15,7 @@ ShadowPointer __ShadowThread_Spawn(ShadowThread this, void* (*thread_start)(Shad
 		ptr = NULL;
 	}
 	
-	return CreateShadowPointer(ptr);
+	return CreateShadowPointer(ptr, 1);
 }
 
 ShadowBoolean __ShadowCurrentThread_Yield(void)

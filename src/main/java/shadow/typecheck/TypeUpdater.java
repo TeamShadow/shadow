@@ -32,6 +32,7 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
+import shadow.parse.ShadowParser.TypeContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
 import shadow.typecheck.TypeCheckException.Error;
@@ -668,6 +669,10 @@ public class TypeUpdater extends BaseChecker {
 		node.setType( methodType );		
 		checkModifiers( node, "method" );
 		currentMethod.addFirst(node);
+		
+		if(node instanceof ShadowParser.MethodDeclarationContext && !((ShadowParser.MethodDeclarationContext)node).methodDeclarator().type().isEmpty()) {
+				node.getModifiers().addModifier(Modifiers.EXTERN_SHARABLE);
+		}
 	}
 	
 	private void visitMethodPost( Context node) {
@@ -755,28 +760,26 @@ public class TypeUpdater extends BaseChecker {
 		visitChildren(ctx);
 		
 		ShadowParser.MethodDeclarationContext parent = (ShadowParser.MethodDeclarationContext) ctx.getParent();
-		visitDeclarator( ctx, ctx.formalParameters(), parent.getSignature() );
+		MethodSignature signature = parent.getSignature();
+		
+		visitDeclarator( ctx, ctx.formalParameters(), signature );
+		
+		if(!signature.isExtern() && (signature.getSymbol().startsWith("_") || signature.getSymbol().startsWith("$"))) {
+			addError(ctx, Error.INVALID_METHODIDENTIFIER,
+					Error.INVALID_METHODIDENTIFIER.getMessage());
+		}
+		
+		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
+			addError(ctx, Error.INVALID_ARGUMENTS, "The first parameter of a class extern method should be the class where the original method is defined in");
+		}
 		
 		return null;		
 	}	
 	
 	private void visitDeclarator( Context node, ShadowParser.FormalParametersContext parameters, MethodSignature signature ) {
 		// Add parameters to the signature		
-		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )				
+		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )
 			signature.addParameter(parameter.Identifier().getText(), parameter);
-		
-		if(signature.allowsExtern() && ((ShadowParser.MethodDeclarationContext)node.getParent()).block() == null && signature.getSymbol().startsWith("$")) {
-			addError(node, Error.INVALID_STRUCTURE, "Externed methods cannot define an externable classes block: '$[class1, ...]'");
-		}
-		
-		if(!signature.isExtern() && (signature.getSymbol().startsWith("_") || signature.getSymbol().startsWith("$"))) {
-			addError(node, Error.INVALID_METHODIDENTIFIER,
-					Error.INVALID_METHODIDENTIFIER.getMessage());
-		}
-		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
-				addError(node, Error.INVALID_ARGUMENTS, "The first parameter of an extern method should be the class where the original method lives in");
-		}
 		
 		if( signature.getModifiers().isSet() ) {				
 			if( parameters.formalParameter().size() != 1 )
@@ -1042,7 +1045,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 		
-		visitMethodPre( ctx.methodDeclarator().methodIdentifier().getText(), ctx);
+		visitMethodPre( ctx.methodDeclarator().Identifier().getText(), ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
 		

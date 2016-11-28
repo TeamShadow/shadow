@@ -151,18 +151,22 @@ and CanIndex<int, Thread>
 		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
 		// the mailbox doubles as more items are sent to it, until it reaches 32, and blocks
 		// if more items are added, until space becomes available again by receiving messages.
-		this:mailbox = Mailbox:create(instance(), 8, 32);
+		this:mailbox = Mailbox:create(/*instance(),*/ 8, 32);
 		
 		this:state = READY;
 		
 		this:childrenIterate = TraverseChildren:create(false);
 		this:childrenIterateRecurse = TraverseChildren:create(true);
-		this:runner = runner;
 		
 		if(this:id == 0) {
+			this:runner = runner;
 			this:state = RUNNING;
 			this:handle = ShadowPointer:create();
 		} else {
+			// better way to clone the runner with TAC? We need to clone even the parent
+			// so there would be no variable sharing at all.
+			this:runner = copy(runner);
+			
 			this:parent = currentThread();
 			check(parent):childrenList.add(instance());
 			
@@ -288,7 +292,7 @@ and CanIndex<int, Thread>
 		return interrupt(true);
 	}
 	
-	private extern $[Mailbox] interrupt(boolean shouldThrow) => (boolean)
+	private $[Mailbox] interrupt(boolean shouldThrow) => (boolean)
 	{
 		if(!isAlive()) {
 			return true;
@@ -318,7 +322,7 @@ and CanIndex<int, Thread>
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
-	private extern $[CurrentThread] interrupting() => (boolean)
+	private $[CurrentThread] interrupting() => (boolean)
 	{
 		if(!isCurrentThread()) { // should never reach this
 			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
@@ -342,7 +346,7 @@ and CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private extern $[CurrentThread] sleep(TimeSpan timeout) => ()
+	private $[CurrentThread] sleep(TimeSpan timeout) => ()
 	{
 		signaler.waitForTimeout(timeout);
 	}
@@ -352,7 +356,7 @@ and CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private extern $[CurrentThread] sleep(int millisecondsTimeout) => ()
+	private $[CurrentThread] sleep(int millisecondsTimeout) => ()
 	{
 		sleep(Time.fromMilliSeconds(millisecondsTimeout));
 	}
@@ -369,7 +373,7 @@ and CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected extern $[Object] receiveFirst(Class expectedType) => (Object, Thread)
+	protected $[Object] receiveFirst(Class expectedType) => (Object, Thread)
 	{
 		return mailbox.receiveFirst(expectedType);
 	}
@@ -387,7 +391,7 @@ and CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected extern $[Object] receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	protected $[Object] receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
 		if(from === this) {
 			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
@@ -411,7 +415,7 @@ and CanIndex<int, Thread>
 	*
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected extern $[Object] sendTo(Object data) => ()
+	protected $[Object] sendTo(Object data) => ()
 	{
 		if(!isAlive()) {
 			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
@@ -529,7 +533,7 @@ and CanIndex<int, Thread>
 	
 	/// Called natively by Signaler, `this` is the CurrentThread->instance.
 	/// This code is responsible for throwing InterruptedException in all methods.
-	private extern $[Signaler] setInterruptToken(nullable SignalToken interruptToken) => ()
+	private $[Signaler] setInterruptToken(nullable SignalToken interruptToken) => ()
 	{
 		int state = RUNNING;
 		// checks whether we need to interrupt, and if we do, it resets the interrupt flag

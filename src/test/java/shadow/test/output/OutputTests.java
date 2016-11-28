@@ -1251,16 +1251,10 @@ public class OutputTests {
 	}
 	
 	@Test public void testMessagePassing() throws Exception {
+		args.add("-f");
 		args.add("shadow/test/MessagePassingTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], formatOutputString(
-										"Sending data to 0",
-										"Sending data to 1",
-										"Sending data to 2",
-										"Sending data to 3",
-										"9592"
-							)
-			);
+		run(new String[0], formatOutputString("9592"));
 	}
 	
 	@Test public void testInterrupt() throws Exception {
@@ -1269,8 +1263,8 @@ public class OutputTests {
 		run(new String[0], formatOutputString(
 				"waiting",
 				"I am Thread#2",
-				"I am Thread#3",
 				"Thread#2: 0",
+				"I am Thread#3",
 				"Thread#3: 1",
 				"end",
 				"InterruptedException thrown",

@@ -130,10 +130,6 @@ fieldDeclaration
 	: type variableDeclarator (',' variableDeclarator )* ';'
 	;
 	
-methodIdentifier
-	: '$'?'_'* Identifier
-	;
-	
 variableDeclarator
 	: Identifier ( '=' conditionalExpression )?
 	;
@@ -144,7 +140,7 @@ arrayInitializer
 	;
 
 methodDeclarator
-	: ('$[' type ( ',' type )* ']')? methodIdentifier formalParameters '=>' resultTypes
+	: ('$[' type ( ',' type )* ']')? Identifier formalParameters '=>' resultTypes
 	;
 
 inlineResults
@@ -384,10 +380,6 @@ spawnExpression
 spawnRunnerCreateCall
 	: ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
 	;
-	
-/*sendExpression
-	: 'send' '(' conditionalExpression ',' conditionalExpression ')'
-	;*/
 
 /*receiveExpression
 	: 'receive' '<' type '>' '(' conditionalExpression? ')'
@@ -422,14 +414,13 @@ primaryPrefix
 	| checkExpression
 	| copyExpression
 	| spawnExpression
-//	| sendExpression
 //	| receiveExpression
 	| castExpression
 	| '(' conditionalExpression ')'
 	| primitiveType
 	| functionType
 	| arrayInitializer
-	| (unqualifiedName '@' )? methodIdentifier //catches class types and identifiers
+	| (unqualifiedName '@' )? Identifier //catches class types and identifiers
 	;
 
 primarySuffix
@@ -545,6 +536,7 @@ statement
 	| breakOrContinueStatement
 	| returnStatement
 	| throwStatement
+	| sendStatement
 	| finallyStatement // Includes try/catch/recover/finally.
 	| statementExpression ';'
 	| block
@@ -662,6 +654,10 @@ returnStatement
 
 throwStatement
 	: 'throw' conditionalExpression ';'
+	;
+	
+sendStatement
+	: 'send' '(' conditionalExpression ',' conditionalExpression ')' ';'
 	;
 	
 /* For a simpler back end, a finally statement holds
@@ -982,12 +978,12 @@ LEFTROTATEASSIGN	: '<<<=';
 // Identifiers (must appear after all keywords in the grammar)
 
 Identifier
-    :   Letter (Letter|Nonletter)*
+    : '$'? Letter (Letter|Nonletter)*
     ;
 
 fragment
 Letter
-    :   [\u0041-\u005a\u0061-\u007a\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u00ff\u0100-\u1fff\u3040-\u318f\u3300-\u337f\u3400-\u3d2d\u4e00-\u9fff\uf900-\ufaff]
+    :   [\u005f\u0041-\u005a\u0061-\u007a\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u00ff\u0100-\u1fff\u3040-\u318f\u3300-\u337f\u3400-\u3d2d\u4e00-\u9fff\uf900-\ufaff]
     ;
 
 fragment

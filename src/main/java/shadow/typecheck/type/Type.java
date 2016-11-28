@@ -190,6 +190,7 @@ public abstract class Type implements Comparable<Type> {
 	//used to clear out types between runs of the JUnit tests
 	//otherwise, types can become mixed between two different runs of the type checker
 	public static void clearTypes()	{
+		Thread = null;
 		OBJECT = null;
 		CAST_EXCEPTION = null;
 		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;

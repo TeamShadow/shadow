@@ -15,7 +15,7 @@ locked class shadow:natives@
 	private readonly extern __ShadowSignaler_Initialize() => (ShadowPointer);
 	private readonly extern __ShadowSignaler_Destroy(ShadowPointer handle) => (boolean);
 	private readonly extern __ShadowSignaler_Wait(ShadowPointer handle) => (boolean);
-	private readonly extern __ShadowSignaler_WaitTimeout(ShadowPointer handle, long absoluteNanosTimeout) => (boolean);
+	private readonly extern __ShadowSignaler_WaitTimeout(ShadowPointer handle, long timeEpochNow, long timeout) => (boolean);
 	private readonly extern __ShadowSignaler_Broadcast(ShadowPointer handle) => (boolean);
 	
 	/// This method sets the interruptToken of the current thread to accompany the {@code Thread.interrupt()} method.
@@ -92,9 +92,9 @@ locked class shadow:natives@
 		handle.assertValid("Signaler");
 
 		var token = SignalToken:create(this);
-			
+
 		boolean timedout = false;
-		var absTime = Time.epochNow() + timeout;
+		var now = Time.epochNow();
 		mutex.lock();
 		try {
 			// we only add the token if we want to be able to wake this thread up later.
@@ -107,11 +107,11 @@ locked class shadow:natives@
 			waitingThreads += 1;
 			
 			$setInterruptToken(CurrentThread->instance, token);
+			mutex.unlock();
 			while(!timedout and token->shouldWait and !terminate) {
-				mutex.unlock();
-				timedout = __ShadowSignaler_WaitTimeout(handle, absTime->totalNanoSeconds);
-				mutex.lock();
+				timedout = __ShadowSignaler_WaitTimeout(handle, now->totalNanoSeconds, timeout->totalNanoSeconds);
 			}
+			mutex.lock();
 			// if the wait was interrupted, the setInterruptToken throws
 			// the InterruptedException as the interrupting flag is true.
 			$setInterruptToken(CurrentThread->instance, null);
@@ -176,7 +176,7 @@ locked class shadow:natives@
 	* @throws InterruptedException if another thread requested to interrupt this thread.
 	*/	
 	public waitForTimeout(int millisecondsTimeout) => ()
-	{		
+	{
 		waitSleep(Time.fromMilliSeconds(millisecondsTimeout), true);
 	}
 	
@@ -258,6 +258,7 @@ locked class shadow:natives@
 			// free the allocated memory
 			__ShadowSignaler_Destroy(handle);
 			handle.free();
+			
 			mutex.free();
 		}
 	}
@@ -275,7 +276,7 @@ locked class shadow:natives@
 	
 	// used by SignalToken.signal() method, which is called from outside, and thus
 	// we should remove the token from the queue.
-	private extern $[SignalToken] signalFromSignalToken(SignalToken token) => ()
+	private $[SignalToken] signalFromSignalToken(SignalToken token) => ()
 	{
 		handle.assertValid("Signaler");
 		

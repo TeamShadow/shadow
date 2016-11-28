@@ -20,7 +20,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private MethodSignature signatureWithoutTypeArguments;
 	private Type outer;
 	private Set<SingletonType> singletons = new HashSet<SingletonType>();
-
+	List<Type> allowedExternTypes = null;
+	
 	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
 	{
 		this.type = type;
@@ -77,33 +78,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	{
 		return type.canAccept(argumentTypes);		
 	}
-
-	List<Type> allowedExternTypes = null;
 	
-	private void addAllowedExternTypes()
-	{
-		if(allowedExternTypes != null) {
-			return;
-		}
-		
-		List<Type> types = new ArrayList<Type>();
-		
-		if(node instanceof ShadowParser.MethodDeclarationContext) {
-			MethodDeclaratorContext p = ((ShadowParser.MethodDeclarationContext)node).methodDeclarator();
-			if(p != null) {
-				List<TypeContext> contexts = p.type();
-				for(TypeContext t : contexts) {
-					types.add(t.getType());
-				}
-			}
-		}
-		
-		allowedExternTypes = types;
-	}
 	
 	public List<Type> getAllowedExternTypes()
 	{
-		addAllowedExternTypes();
 		return allowedExternTypes;
 	}
 	
@@ -185,7 +163,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		if(getAllowedExternTypes().size() > 0) {
+		if(getAllowedExternTypes() != null) {
 			sb.append("$[");
 			for(int i = 0; i < getAllowedExternTypes().size(); ++i) {
 				if(i > 0) {
@@ -228,8 +206,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	public String getMangledName() {
 		String currentSymbol = symbol;
 		if(isExtern()) {
-			if(!symbol.startsWith("$"))
+			if(!symbol.startsWith("$")) {
 				return symbol;
+			}
 			
 			currentSymbol = symbol.substring(1, symbol.length());
 		}
@@ -291,6 +270,17 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public void updateFieldsAndMethods() throws InstantiationException {
 		type.updateFieldsAndMethods();
+		
+		if(isExternSharable()) {
+			allowedExternTypes = new ArrayList<Type>();
+			
+			if(node instanceof ShadowParser.MethodDeclarationContext) {
+				MethodDeclaratorContext methodContext = ((ShadowParser.MethodDeclarationContext)node).methodDeclarator();
+				for(TypeContext context : methodContext.type()) {
+					allowedExternTypes.add(context.getType());
+				}
+			}
+		}
 	}
 	
 	public MethodSignature getSignatureWithoutTypeArguments()
@@ -338,11 +328,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public boolean isExtern() {
-		return type.getModifiers().isExtern() && getAllowedExternTypes().isEmpty();
+		return type.getModifiers().isExtern();
 	}
 	
-	public boolean allowsExtern() {
-		return type.getModifiers().isExtern() && !getAllowedExternTypes().isEmpty();
+	public boolean isExternSharable() {
+		return type.getModifiers().isExternSharable();
 	}
 	
 	public boolean isNativeOrExtern()

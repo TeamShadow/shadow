@@ -11,17 +11,17 @@ class shadow:test@ThreadTest
 			Console.printLine(CurrentThread->name);
 			
 			if(id == 4) {
-				spawn(ThreadTestRunner:()); // Thread#5; throws from Thread#6
+				spawn(ThreadTestRunner:()).join(); // Thread#5; throws from Thread#6
 			}
 			else if(id == 5) {
 				Console.printLine(CurrentThread->parent->id == 4);
 				Console.printLine(CurrentThread->main->id == CurrentThread->parent->parent->id);
 				
-				spawn(ThreadTestRunner:()); // Thread#6; throws from Thread#8
+				spawn(ThreadTestRunner:()).join(); // Thread#6; throws from Thread#8
 			}
 			else if(id == 6) {
 				spawn(ThreadTestRunner:()); // Thread#7; does not throw until joined
-				spawn(ThreadTestRunner:()); // Thread#8; throws and propagates
+				spawn(ThreadTestRunner:()).join(); // Thread#8; throws and propagates
 			}
 			
 			if(id > 2) {

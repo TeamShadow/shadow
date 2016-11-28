@@ -57,11 +57,11 @@ entry:
 }
 
 ; ShadowPointer.h
-declare %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long(%shadow.natives..ShadowPointer*, %long)
-define %shadow.natives..ShadowPointer* @CreateShadowPointer(%void*) {
+declare %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long_boolean(%shadow.natives..ShadowPointer*, %long, %boolean)
+define %shadow.natives..ShadowPointer* @CreateShadowPointer(%void*, %boolean) {
 entry:
 	%address = ptrtoint %void* %0 to %long
-	%call = call %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long(%shadow.natives..ShadowPointer* null, %long %address)
+	%call = call %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long_boolean(%shadow.natives..ShadowPointer* null, %long %address, %boolean %1)
 	ret %shadow.natives..ShadowPointer* %call
 }
 

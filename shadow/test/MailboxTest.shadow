@@ -151,6 +151,6 @@ class shadow:test@MailboxTest
 	
 	private createMailboxNative(int count) => (Mailbox)
 	{
-		return Mailbox:create(CurrentThread->instance, count);
+		return Mailbox:create(/*CurrentThread->instance,*/ count);
 	}
 }

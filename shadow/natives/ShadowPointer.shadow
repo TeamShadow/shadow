@@ -17,6 +17,7 @@ locked immutable class shadow:natives@
 	private readonly extern $invalidate(immutable LongPointer ptr) => ();
 	
 	immutable LongPointer pointer;
+	boolean shouldFree = true;
 	
 	/**
 	* Allocates a block of memory on the heap which is {@code size} bytes long, 
@@ -65,7 +66,7 @@ locked immutable class shadow:natives@
 	*/
 	public locked free() => ()
 	{
-		if(isValid()) {
+		if(shouldFree and isValid()) {
 			freeMemory();
 			$invalidate(pointer);
 		}
@@ -76,14 +77,15 @@ locked immutable class shadow:natives@
 		return pointer->address;
 	}
 	
-	private create(long address)
+	private create(long address, boolean shouldFree)
 	{
 		pointer = freeze(LongPointer:create(address));
+		this:shouldFree = shouldFree;
 	}
 	
-	private createNative(long address) => (ShadowPointer)
+	private createNative(long address, boolean shouldFree) => (ShadowPointer)
 	{
-		return ShadowPointer:create(address);
+		return ShadowPointer:create(address, shouldFree);
 	}
 
 	private class LongPointer
@@ -123,7 +125,7 @@ locked immutable class shadow:natives@
 			return (address != -1);
 		}
 		
-		private extern $[ShadowPointer] invalidate() => ()
+		private $[ShadowPointer] invalidate() => ()
 		{
 			this:address = -1;
 		}

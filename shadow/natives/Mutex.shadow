@@ -22,7 +22,7 @@ locked immutable class shadow:natives@
 	
 	get ShadowPointer ptr;
 	immutable Owner owner;
-	boolean allowNestedLocks;
+	boolean allowRecursiveLocks;
 	
 	/**
 	* Initializes a new {@code Mutex} which does not allow nested locks.
@@ -34,9 +34,9 @@ locked immutable class shadow:natives@
 	
 	/**
 	* Initializes a new {@code Mutex} which can allow nested locks.
-	* @param allowNestedLocks whether the Mutex should allow mutliple nested locks.
+	* @param allowRecursiveLocks whether the Mutex should allow mutliple nested locks.
 	*/
-	public create(boolean allowNestedLocks)
+	public create(boolean allowRecursiveLocks)
 	{
 		ptr = __ShadowMutex_Initialize();
 		if(!ptr->isValid) {
@@ -44,16 +44,16 @@ locked immutable class shadow:natives@
 		}
 		
 		owner = freeze(Owner:create());
-		this:allowNestedLocks = allowNestedLocks;
+		this:allowRecursiveLocks = allowRecursiveLocks;
 	}
 	
 	/**
 	* Attempts to lock this Mutex. If the Mutex is already owned by another thread, this method
 	* blocks until the Mutex becomes available. If the current thread already owns this mutex and
-	* nested locks are allowed, this method will simply increase the counter. The mutex should be unlocked
+	* recursive locks are allowed, this method will simply increase the counter. The mutex should be unlocked
 	* the same number of times it was locked.
 	*
-	* @throws MutexException if nested locks are not allowed and the mutex is already owned by this thread.
+	* @throws MutexException if recursive locks are not allowed and the mutex is already owned by this thread.
 	* @throws FreedResourceException if the Mutex has been freed.
 	*/
 	public lock() => ()
@@ -62,7 +62,7 @@ locked immutable class shadow:natives@
 		
 		if(!owner.isCurrentThread()) {
 			__ShadowMutex_Lock(ptr);
-		} else if(!allowNestedLocks) {
+		} else if(!allowRecursiveLocks) {
 			throw MutexException:create("This thread already owns this mutex.");
 		}
 
@@ -135,7 +135,7 @@ locked immutable class shadow:natives@
 			return CurrentThread.isEqualTo(owner);
 		}
 		
-		private extern $[Mutex] setOwner(nullable Thread o) => ()
+		private $[Mutex] setOwner(nullable Thread o) => ()
 		{
 			if(o !== null) {
 				if(counter == 0) {

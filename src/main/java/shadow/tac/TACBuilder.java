@@ -24,13 +24,12 @@ import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ArrayCreateCallContext;
 import shadow.parse.ShadowParser.ArrayDefaultContext;
 import shadow.parse.ShadowParser.CatchStatementsContext;
-import shadow.parse.ShadowParser.ConditionalExpressionContext;
 import shadow.parse.ShadowParser.ExpressionContext;
 import shadow.parse.ShadowParser.FinallyStatementContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
-//import shadow.parse.ShadowParser.SendExpressionContext;
+import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
@@ -1053,8 +1052,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			prefix = ctx.arrayInitializer().appendBefore(anchor);
 		else if(ctx.spawnExpression() != null)
 			prefix = ctx.spawnExpression().appendBefore(anchor);
-		/*else if(ctx.sendExpression() != null)
-			prefix = ctx.sendExpression().appendBefore(anchor);*/
 		else if( ctx.getType() instanceof SingletonType )
 			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType)ctx.getType()));
 		else {
@@ -3033,22 +3030,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		return null;
 	}
 	
-	/*@Override public Void visitSendExpression(SendExpressionContext ctx)
-	{
+	@Override
+	public Void visitSendStatement(SendStatementContext ctx) {
 		visitChildren(ctx);
 		
-		throw new UnsupportedOperationException();
+		TACOperand object = ctx.conditionalExpression(0).appendBefore(anchor);
+		TACOperand thread = ctx.conditionalExpression(1).appendBefore(anchor);
 		
-		/*prefix = ctx.conditionalExpression(1).getOperand();
-		
-		List<ConditionalExpressionContext> list = new ArrayList<ConditionalExpressionContext>();
-		list.add(ctx.conditionalExpression(0));
-		
-		methodCall(ctx.getSignature(), ctx, list);
-		
-		prefix.appendBefore(anchor);
-		
+		TACMethodRef methodRef = new TACMethodRef(anchor, thread, ctx.getSignature());
+		List<TACOperand> params = new ArrayList<TACOperand>();
+		params.add(methodRef.getPrefix());
+		params.add(object);
+
+		new TACCall(anchor, methodRef, params);
 		
 		return null;
-	}*/
+	}
 }
