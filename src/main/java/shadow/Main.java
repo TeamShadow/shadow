@@ -157,7 +157,7 @@ public class Main {
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
-		linkCommand.add(system.resolve(Paths.get("shadow", "C_Helpers.ll")).toString());
+		linkCommand.add(system.resolve(Paths.get("shadow", "Shared.ll")).toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();

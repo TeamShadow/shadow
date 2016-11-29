@@ -19,6 +19,8 @@ import shadow.doctool.DocumentationException;
 import shadow.parse.ParseException.Error;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
 import shadow.parse.ShadowParser.CompilationUnitContext;
+import shadow.parse.ShadowParser.GeneralIdentifierContext;
+import shadow.parse.ShadowParser.MethodDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Modifiers;
 
@@ -74,8 +76,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		printAndReportErrors();
 		return context;
 	}
-	
-	
 	
 	@Override public Void visitModifiers(ShadowParser.ModifiersContext ctx)
 	{ 
@@ -250,7 +250,21 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ctx.addModifiers(modifiers);
 		addErrors(mods, modifiers.checkMethodModifiers());
 		
-		return visitChildren(ctx);		
+		MethodDeclaratorContext declarator = ctx.methodDeclarator();
+		String symbol = declarator.generalIdentifier().getText();
+		if(!modifiers.isExtern() && (symbol.startsWith("_") || symbol.startsWith("$"))) {
+			addError(ctx, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
+		}
+		
+		if(modifiers.isExtern() && symbol.startsWith("$") && declarator.formalParameters().formalParameter().isEmpty()) {
+			addError(ctx, Error.SYNTAX_ERROR, "A class-externed method should accept at least one parameter");
+		}
+		
+		if(!declarator.type().isEmpty()) {
+			ctx.addModifiers(Modifiers.EXTERN_SHARABLE);
+		}
+		
+		return visitChildren(ctx);
 	}
 	
 	@Override public Void visitEmptyStatement(ShadowParser.EmptyStatementContext ctx)
@@ -360,9 +374,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		
 		return null;
 	}
-	
+
 	@Override public Void visitPrimaryExpression(ShadowParser.PrimaryExpressionContext ctx)
-	{	
+	{
 		if(ctx.getChild(0).getText().equals("++"))
 			addError(ctx, Error.ILLEGAL_OPERATOR, "++ is not a legal operator");		
 		
@@ -424,9 +438,20 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		if( ctx.recoverStatement().block() != null )
 			recover = true;		
 		
-		if( !recover && !catch_ && !finally_ )			
+		if( !recover && !catch_ && !finally_ )
 			addError(ctx.recoverStatement().catchStatements().tryStatement(), Error.INCOMPLETE_TRY, "Given try statement is not followed by catch, recover, or finally statements" );
 		
 		return visitChildren(ctx);
+	}
+	
+	@Override
+	public Void visitGeneralIdentifier(GeneralIdentifierContext ctx) {
+		visitChildren(ctx);
+		
+		if(ctx.IllegalIdentifier() != null) {
+			addError(ctx, Error.SYNTAX_ERROR, "a valid identifier can only start with a letter");
+		}
+		
+		return null;
 	}
 }

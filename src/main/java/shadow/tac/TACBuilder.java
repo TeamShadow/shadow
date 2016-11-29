@@ -197,7 +197,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		for (ShadowParser.VariableDeclaratorContext constant : type.getFields().values())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
-						constant.Identifier().getText()), constant);
+						constant.generalIdentifier().getText()), constant);
 		block = oldBlock;
 		
 		for (List<MethodSignature> methods : type.getMethodMap().values())
@@ -231,7 +231,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		visitChildren(ctx);
 	
 		if( !(ctx.getType() instanceof SingletonType) ) { 
-			String name = ctx.Identifier().getText();			
+			String name = ctx.generalIdentifier().getText();			
 			if( ctx.getModifiers().isField() ) {
 				TACReference ref = new TACFieldRef(new TACLocalLoad(anchor, method.getThis()), name);
 				

@@ -19,14 +19,9 @@ import shadow.interpreter.ShadowString;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
-import shadow.parse.ShadowParser.ArrayCreateCallContext;
-import shadow.parse.ShadowParser.ArrayCreateContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
-import shadow.parse.ShadowParser.MethodDeclaratorContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
-import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.SendStatementContext;
-import shadow.parse.ShadowParser.TypeContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -104,7 +99,7 @@ public class StatementChecker extends BaseChecker {
 			if( node instanceof ShadowParser.InlineMethodDefinitionContext )
 				signature = new MethodSignature( currentType, "", node.getModifiers(), node.getDocumentation(), node);
 			else {
-				signature = new MethodSignature( currentType, ((ShadowParser.LocalMethodDeclarationContext)node).methodDeclarator().Identifier().getText(), node.getModifiers(), node.getDocumentation(), node);
+				signature = new MethodSignature( currentType, ((ShadowParser.LocalMethodDeclarationContext)node).methodDeclarator().generalIdentifier().getText(), node.getModifiers(), node.getDocumentation(), node);
 			}
 			
 			node.setSignature(signature);
@@ -135,19 +130,21 @@ public class StatementChecker extends BaseChecker {
 			}
 			
 			MethodSignature method = parentClass.getMatchingMethod(signature.getName(), parentParams);
-			if(method == null) {
+			if(method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
 				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getName() + "' in class '" + parentClass.getTypeName() + "'");
 			} else {
 				boolean found = false;
-				for(Type type : method.getAllowedExternTypes()) {
-					if(signature.getOuter().equals(type)) {
-						found = true;
-						break;
+				if(method.getAllowedExternTypes() != null) {
+					for(Type type : method.getAllowedExternTypes()) {
+						if(signature.getOuter().equals(type)) {
+							found = true;
+							break;
+						}
 					}
 				}
 				
-				if(!found || !method.getReturnTypes().equals(signature.getReturnTypes())) {
-					addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getName() + "' method in '" + parentClass.getTypeName() +"' is not strictly sharable");
+				if(!found) {
+					addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getName() + "' method in '" + parentClass +"' is not allowed to be shared with '" + signature.getOuter() + "'");
 				}
 			}
 		}
@@ -249,7 +246,7 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitLocalMethodDeclaration(ShadowParser.LocalMethodDeclarationContext ctx)
 	{ 					
-		addSymbol(ctx.methodDeclarator().Identifier().getText(), ctx);
+		addSymbol(ctx.methodDeclarator().generalIdentifier().getText(), ctx);
 		visitMethodPre(ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
@@ -459,7 +456,7 @@ public class StatementChecker extends BaseChecker {
 
 			declarator.setType(type);										
 			declarator.addModifiers(ctx.getModifiers());					
-			addSymbol( declarator.Identifier().getText(), declarator ); //add to local scope
+			addSymbol(declarator.generalIdentifier().getText(), declarator ); //add to local scope
 		}
 					
 		checkInitializers( ctx.variableDeclarator() );
@@ -1796,7 +1793,7 @@ public class StatementChecker extends BaseChecker {
 					ctx.getModifiers().upgradeToTemporaryReadonly();					
 			}
 		}	
-		else if( ctx.Identifier() != null ) {							
+		else if( ctx.generalIdentifier() != null ) {							
 			if( !setTypeFromName( ctx, image )) { //automatically sets type if can				
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 				ctx.setType(Type.UNKNOWN);											

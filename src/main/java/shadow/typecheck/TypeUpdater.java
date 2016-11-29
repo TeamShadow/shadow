@@ -32,7 +32,6 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
-import shadow.parse.ShadowParser.TypeContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
 import shadow.typecheck.TypeCheckException.Error;
@@ -136,7 +135,7 @@ public class TypeUpdater extends BaseChecker {
 		printAndReportErrors();
 		
 		return typeTable;
-	}	
+	}
 		
 	private void updateFieldsAndMethods( List<Context> nodeList ) {
 		//update fields and methods			
@@ -669,10 +668,6 @@ public class TypeUpdater extends BaseChecker {
 		node.setType( methodType );		
 		checkModifiers( node, "method" );
 		currentMethod.addFirst(node);
-		
-		if(node instanceof ShadowParser.MethodDeclarationContext && !((ShadowParser.MethodDeclarationContext)node).methodDeclarator().type().isEmpty()) {
-				node.getModifiers().addModifier(Modifiers.EXTERN_SHARABLE);
-		}
 	}
 	
 	private void visitMethodPost( Context node) {
@@ -763,15 +758,6 @@ public class TypeUpdater extends BaseChecker {
 		MethodSignature signature = parent.getSignature();
 		
 		visitDeclarator( ctx, ctx.formalParameters(), signature );
-		
-		if(!signature.isExtern() && (signature.getSymbol().startsWith("_") || signature.getSymbol().startsWith("$"))) {
-			addError(ctx, Error.INVALID_METHODIDENTIFIER,
-					Error.INVALID_METHODIDENTIFIER.getMessage());
-		}
-		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
-			addError(ctx, Error.INVALID_ARGUMENTS, "The first parameter of a class extern method should be the class where the original method is defined in");
-		}
 		
 		return null;		
 	}	
@@ -1045,7 +1031,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 		
-		visitMethodPre( ctx.methodDeclarator().Identifier().getText(), ctx);
+		visitMethodPre(ctx.methodDeclarator().generalIdentifier().getText(), ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
 		
@@ -1093,7 +1079,7 @@ public class TypeUpdater extends BaseChecker {
 			declarator.addModifiers(ctx.getModifiers());
 			declarator.setDocumentation(ctx.getDocumentation());			
 			
-			String symbol = declarator.Identifier().getText();
+			String symbol = declarator.generalIdentifier().getText();
 			
 			/* Make sure we don't already have this symbol.
 			 * Methods and fields can have the same name since they can be

@@ -29,6 +29,7 @@ static void printString(int handleId, ShadowString stringRef)
 {
 	ByteArray str;
 	UnpackShadowString(stringRef, &str);
+	
 	HANDLE handle = GetStdHandle(handleId);
 	DWORD bytesWritten = 0;
 	WriteFile(handle, str.chars, str.size, &bytesWritten, NULL);
@@ -47,6 +48,7 @@ void __ShadowConsole_PrintError(ShadowString stringRef)
 static void printLine(int handleId)
 {
 	HANDLE handle = GetStdHandle(handleId);
+	
 	DWORD bytesWritten = 0;
 	WriteFile(handle, newLine, sizeof(newLine), &bytesWritten, NULL);
 }

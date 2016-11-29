@@ -1,5 +1,8 @@
-; C_Helpers.ll
+; Shared.ll
 ; 
+; A set of functions which are of help to native C code. This facilitates
+; writing C code which communicates with Shadow and LLVM.
+;
 ; Author:
 ;   Claude Abounegm
 

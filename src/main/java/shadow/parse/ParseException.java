@@ -25,6 +25,7 @@ import shadow.ShadowExceptionFactory;
  * 
  * @author Barry Wittman 
  */
+@SuppressWarnings("serial")
 public class ParseException extends ShadowException {
 	/**
 	 *  Constants for each kind of supported error, with default error messages.
@@ -37,7 +38,8 @@ public class ParseException extends ShadowException {
 		ILLEGAL_OPERATOR("Illegal operator", "Illegal operator used"),
 		NEWLINE_IN_STRING("Newline in string", "String literal contains newline"),
 		REPEATED_MODIFIERS("Repeated modifier", "Modifier cannot be repeated"),		
-		SYNTAX_ERROR("Syntax error", "Parsing failed because of syntax error");
+		SYNTAX_ERROR("Syntax error", "Parsing failed because of syntax error"),
+		INVALID_METHOD_IDENTIFIER("Invalid method identifier", "Only methods marked with extern can start with an underscore '_' or dollar '$' signs.");
 					
 		private final String name;
 		private final String message;		

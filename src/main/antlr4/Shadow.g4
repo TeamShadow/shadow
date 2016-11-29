@@ -15,8 +15,7 @@
  * 
  */ 
 
-/** A Shadow 0.7 grammar for ANTLR v4.
- */
+/** A Shadow 0.7 grammar for ANTLR v4. */
 grammar Shadow;
 
 @header {
@@ -35,7 +34,7 @@ import shadow.doctool.Documentation;
 options {contextSuperClass=shadow.parse.Context;}
 
 compilationUnit	
-    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration) EOF
+    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration) 
     ;
     
 importDeclaration
@@ -92,7 +91,7 @@ enumBody
 	;
 	
 enumConstant
-	: Identifier  arguments? classOrInterfaceBody?
+	: Identifier arguments? classOrInterfaceBody?
 	;
 	
 typeParameters
@@ -131,7 +130,7 @@ fieldDeclaration
 	;
 	
 variableDeclarator
-	: Identifier ( '=' conditionalExpression )?
+	: generalIdentifier ( '=' conditionalExpression )?
 	;
 	
 arrayInitializer
@@ -140,7 +139,11 @@ arrayInitializer
 	;
 
 methodDeclarator
-	: ('$[' type ( ',' type )* ']')? Identifier formalParameters '=>' resultTypes
+	: ('$[' type ( ',' type )* ']')? generalIdentifier formalParameters '=>' resultTypes
+	;
+
+generalIdentifier
+	: (MethodIdentifier|Identifier|IllegalIdentifier)
 	;
 
 inlineResults
@@ -329,7 +332,6 @@ rightRotateAssign
 	: first='>' second='>' third='>=' {$first.index + 1 == $second.index && $second.index + 1 == $third.index}?
 	;
 
-
 shiftExpression
 	: rotateExpression (( '<<' | rightShift ) rotateExpression )*
 	;
@@ -420,7 +422,7 @@ primaryPrefix
 	| primitiveType
 	| functionType
 	| arrayInitializer
-	| (unqualifiedName '@' )? Identifier //catches class types and identifiers
+	| (unqualifiedName '@' )? generalIdentifier //catches class types and identifiers
 	;
 
 primarySuffix
@@ -783,6 +785,9 @@ VAR			: 'var';
 WEAK		: 'weak';
 WHILE		: 'while';
 XOR			: 'xor';
+EXTERN		: 'extern';
+SEND		: 'send';
+//RECEIVE		: 'receive';
 
 // Literals
 
@@ -931,6 +936,7 @@ COLON			: ':';
 AT				: '@';
 ARROW			: '->';
 YIELDS			: '=>';
+UNDERSCORE 		: '_';
 
 // Operators
 
@@ -976,17 +982,31 @@ LEFTSHIFTASSIGN	: '<<=';
 LEFTROTATEASSIGN	: '<<<=';
 
 // Identifiers (must appear after all keywords in the grammar)
+// the order of the identifiers is very important
+
+MethodIdentifier
+	: ('$'|(UNDERSCORE+)) IdentifierFragment
+	;
 
 Identifier
-    : '$'? Letter (Letter|Nonletter)*
+	: IdentifierFragment
+	;
+
+IllegalIdentifier
+	: (['$''_'])+ IdentifierFragment
+	;
+
+fragment
+IdentifierFragment
+    : Letter (Letter|Nonletter)*
     ;
 
 fragment
 Letter
-    :   [\u005f\u0041-\u005a\u0061-\u007a\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u00ff\u0100-\u1fff\u3040-\u318f\u3300-\u337f\u3400-\u3d2d\u4e00-\u9fff\uf900-\ufaff]
+    : [\u0041-\u005a\u0061-\u007a\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u00ff\u0100-\u1fff\u3040-\u318f\u3300-\u337f\u3400-\u3d2d\u4e00-\u9fff\uf900-\ufaff]
     ;
 
 fragment
 Nonletter
-    :   [\u0030-\u0039\u005f\u0660-\u0669\u06f0-\u06f9\u0966-\u096f\u09e6-\u09ef\u0a66-\u0a6f\u0ae6-\u0aef\u0b66-\u0b6f\u0be7-\u0bef\u0c66-\u0c6f\u0ce6-\u0cef\u0d66-\u0d6f\u0e50-\u0e59\u0ed0-\u0ed9\u1040-\u1049]
+    : [\u0030-\u0039\u005f\u0660-\u0669\u06f0-\u06f9\u0966-\u096f\u09e6-\u09ef\u0a66-\u0a6f\u0ae6-\u0aef\u0b66-\u0b6f\u0be7-\u0bef\u0c66-\u0c6f\u0ce6-\u0cef\u0d66-\u0d6f\u0e50-\u0e59\u0ed0-\u0ed9\u1040-\u1049]
     ;
