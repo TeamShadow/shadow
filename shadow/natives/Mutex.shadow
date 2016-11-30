@@ -39,9 +39,9 @@ locked immutable class shadow:natives@
 	public create(boolean allowRecursiveLocks)
 	{
 		ptr = __ShadowMutex_Initialize();
-		if(!ptr->isValid) {
-			throw MutexException:create("An error occured while initializing the Mutex.");
-		}
+		
+		throw !ptr->isValid 
+				? MutexException:create("An error occured while initializing the Mutex.");
 		
 		owner = freeze(Owner:create());
 		this:allowRecursiveLocks = allowRecursiveLocks;
@@ -81,10 +81,9 @@ locked immutable class shadow:natives@
 	public unlock() => ()
 	{
 		ptr.assertValid("Mutex");
-
-		if(!owner.isCurrentThread()) {
-			throw MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
-		}
+		
+		throw !owner.isCurrentThread()
+				? MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
 		
 		$setOwner(owner, null);
 		if(!owner.isCurrentThread()) {

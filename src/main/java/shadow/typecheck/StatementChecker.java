@@ -19,9 +19,11 @@ import shadow.interpreter.ShadowString;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.ConditionalExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
+import shadow.parse.ShadowParser.ThrowConditionContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -120,6 +122,8 @@ public class StatementChecker extends BaseChecker {
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
 			currentType.addUsedType(modifiedType.getType());
 		
+		// Shadow class extern implementation; extern keyword which externs from C
+		// is implemented in different places, such as mangleName() method.
 		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
 			SequenceType params = signature.getParameterTypes();
 			Type parentClass = params.get(0).getType();
@@ -131,7 +135,7 @@ public class StatementChecker extends BaseChecker {
 			
 			MethodSignature method = parentClass.getMatchingMethod(signature.getName(), parentParams);
 			if(method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
-				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getName() + "' in class '" + parentClass.getTypeName() + "'");
+				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getName() + "' in class '" + parentClass + "'");
 			} else {
 				boolean found = false;
 				if(method.getAllowedExternTypes() != null) {
@@ -151,8 +155,8 @@ public class StatementChecker extends BaseChecker {
 		
 		currentMethod.addFirst(node);
 		openScope();
-	}	
-
+	}
+	
 	private void openScope() 
 	{
 		// we have a new scope, so we need a new HashMap in the linked list
@@ -1488,7 +1492,7 @@ public class StatementChecker extends BaseChecker {
 		Type type = ctx.conditionalExpression().getType(); 
 		
 		if( !type.equals(Type.BOOLEAN) )
-				addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + type, type);
+			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + type, type);
 		
 		return null;
 	}
@@ -1609,11 +1613,26 @@ public class StatementChecker extends BaseChecker {
 	{ 
 		visitChildren(ctx);
 		
-		Type type = ctx.conditionalExpression().getType();
+		ConditionalExpressionContext exceptionContext = ctx.conditionalExpression();
+		Type exceptionType = exceptionContext.getType();
+
+		if(!(exceptionType instanceof ExceptionType)) {
+			addError(exceptionContext, Error.INVALID_TYPE, "Supplied type " + exceptionType + " cannot be used in a throw clause, exception or error type required", exceptionType);
+		}
 		
-		if( !(type instanceof ExceptionType) )
-			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in a throw clause, exception or error type required", type);
+		return null;
+	}
+	
+	@Override
+	public Void visitThrowCondition(ThrowConditionContext ctx) {
+		visitChildren(ctx);
 		
+		Type type = resolveType(ctx.conditionalExpression()).getType();
+		if(!type.equals(Type.BOOLEAN)) {
+			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + type, type);
+		}
+
+		ctx.setType(type);
 		return null;
 	}
 	
@@ -2954,7 +2973,7 @@ public class StatementChecker extends BaseChecker {
 		
 		Type runnerType = ctx.type().getType();
 		if(runnerType.equals(Type.CAN_RUN) || !runnerType.isSubtype(Type.CAN_RUN)) {
-			addError(ctx, Error.INVALID_TYPE, runnerType.getTypeName() + " does not implement the CanRun interface");
+			addError(ctx, Error.INVALID_TYPE, runnerType + " needs to be a subtype of the " + Type.CAN_RUN + " interface");
 		}
 		
 		List<ShadowException> errors = new ArrayList<ShadowException>();
@@ -2996,7 +3015,7 @@ public class StatementChecker extends BaseChecker {
 	public Void visitSendStatement(SendStatementContext ctx) {
 		visitChildren(ctx);
 
-		if(ctx.conditionalExpression().size() != 2 || !resolveType(ctx.conditionalExpression().get(1)).getType().equals(Type.Thread)) {
+		if(ctx.conditionalExpression().size() != 2 || !resolveType(ctx.conditionalExpression(1)).getType().equals(Type.Thread)) {
 			addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
 		} else {
 			List<ShadowException> errors = new ArrayList<ShadowException>();

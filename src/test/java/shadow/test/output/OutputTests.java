@@ -5,7 +5,6 @@ import static junit.framework.Assert.assertEquals;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -1251,7 +1250,6 @@ public class OutputTests {
 	}
 	
 	@Test public void testMessagePassing() throws Exception {
-		args.add("-f");
 		args.add("shadow/test/MessagePassingTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], formatOutputString("9592"));

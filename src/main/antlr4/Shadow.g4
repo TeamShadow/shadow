@@ -34,7 +34,7 @@ import shadow.doctool.Documentation;
 options {contextSuperClass=shadow.parse.Context;}
 
 compilationUnit	
-    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration) 
+    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration) EOF
     ;
     
 importDeclaration
@@ -655,7 +655,11 @@ returnStatement
 	;
 
 throwStatement
-	: 'throw' conditionalExpression ';'
+	: 'throw' throwCondition? conditionalExpression ';'
+	;
+	
+throwCondition
+	: (conditionalExpression '?')
 	;
 	
 sendStatement

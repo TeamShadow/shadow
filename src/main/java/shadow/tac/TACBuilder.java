@@ -30,6 +30,7 @@ import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
 import shadow.parse.ShadowParser.SendStatementContext;
+import shadow.parse.ShadowParser.ThrowConditionContext;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
@@ -1694,8 +1695,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		visitChildren(ctx);
 		
 		TACLabel trueLabel = new TACLabel(method),
-				falseLabel = new TACLabel(method),
-				endLabel = ctx.statement().size() > 1 ? new TACLabel(method) : falseLabel;
+				 falseLabel = new TACLabel(method),
+				 endLabel = ctx.statement().size() > 1 ? new TACLabel(method) : falseLabel;
 		
 		new TACBranch(anchor, ctx.conditionalExpression().appendBefore(anchor), trueLabel, falseLabel);
 		trueLabel.insertBefore(anchor);
@@ -1711,7 +1712,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			branch.setContext(null); //won't cause a dead code problem if removed
 		}
 		
-		endLabel.insertBefore(anchor);		
+		endLabel.insertBefore(anchor);
 		
 		return null;
 	}
@@ -2001,9 +2002,32 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override public Void visitThrowStatement(ShadowParser.ThrowStatementContext ctx)
 	{ 
 		visitChildren(ctx);
-		TACLabel unreachableLabel = new TACLabel(method);
+		
+		TACLabel trueLabel = new TACLabel(method),
+				endLabel = new TACLabel(method);
+		
+		if(ctx.throwCondition() != null) {
+			new TACBranch(anchor, ctx.throwCondition().appendBefore(anchor), trueLabel, endLabel);
+			trueLabel.insertBefore(anchor);
+		}
+		
 		new TACThrow(anchor, ctx.conditionalExpression().appendBefore(anchor));
-		unreachableLabel.insertBefore(anchor);		
+		new TACLabel(method).insertBefore(anchor);
+		
+		if(ctx.throwCondition() != null) {
+			TACBranch branch = new TACBranch(anchor, endLabel);
+			branch.setContext(null); //won't cause a dead code problem if removed
+			endLabel.insertBefore(anchor);
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public Void visitThrowCondition(ThrowConditionContext ctx) {
+		visitChildren(ctx);
+		
+		ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
 		
 		return null;
 	}
@@ -3033,17 +3057,17 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override
 	public Void visitSendStatement(SendStatementContext ctx) {
 		visitChildren(ctx);
-		
+
 		TACOperand object = ctx.conditionalExpression(0).appendBefore(anchor);
 		TACOperand thread = ctx.conditionalExpression(1).appendBefore(anchor);
-		
+
 		TACMethodRef methodRef = new TACMethodRef(anchor, thread, ctx.getSignature());
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		params.add(methodRef.getPrefix());
 		params.add(object);
 
 		new TACCall(anchor, methodRef, params);
-		
+
 		return null;
 	}
 }

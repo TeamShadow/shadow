@@ -150,7 +150,7 @@ public class MethodType extends ClassType {
 		}			
 			
 		return parameterTypes.toString(options) + " => " + returns.toString(options);
-	}	
+	}
 	
 	public String parametersToString()
 	{
@@ -164,7 +164,7 @@ public class MethodType extends ClassType {
 			sb.append(parameterTypes.get(i).getType());
 			sb.append(" ");
 			sb.append(parameterNames.get(i));			
-		}	
+		}
 			
 		sb.append(")");
 		
