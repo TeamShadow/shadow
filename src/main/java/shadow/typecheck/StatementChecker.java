@@ -20,10 +20,12 @@ import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ConditionalExpressionContext;
+import shadow.parse.ShadowParser.ConditionalOrExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowConditionContext;
+import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -894,53 +896,76 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(ctx.coalesceExpression().getType());
 			ctx.addModifiers(ctx.coalesceExpression().getModifiers());			
 		}
-		else {
+		else { // ternary
+			ThrowOrConditionalExpressionContext first = ctx.throwOrConditionalExpression(0); 
+			ThrowOrConditionalExpressionContext second = ctx.throwOrConditionalExpression(1);
+			
 			Type t1 = ctx.coalesceExpression().getType();
 			
-			Context first = ctx.conditionalExpression(0); 
-			Type t2 = first.getType();
-			Context second = ctx.conditionalExpression(1);
-			Type t3 = second.getType();
-						
-			if( first.getModifiers().isNullable() || second.getModifiers().isNullable() )
-				ctx.addModifiers(Modifiers.NULLABLE);
-			
-			if( first.getModifiers().isNullable() != second.getModifiers().isNullable() && (t2 instanceof ArrayType || t3 instanceof ArrayType )  )
-				addError(ctx, Error.INVALID_MODIFIER, "Cannot mix nullable and non-nullable arrays", t2, t3);
-			
-			if( first.getModifiers().isReadonly() || second.getModifiers().isReadonly() )
-				ctx.addModifiers(Modifiers.READONLY);
-			else if( first.getModifiers().isTemporaryReadonly() || second.getModifiers().isTemporaryReadonly() )
-				ctx.addModifiers(Modifiers.TEMPORARY_READONLY);			
-			
-			if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )			
-				ctx.addModifiers(Modifiers.IMMUTABLE);
-			else if( first.getModifiers().isImmutable() || second.getModifiers().isImmutable() ) //immutable + regular = readonly, works for either
-				ctx.addModifiers(Modifiers.READONLY);
-			
-			if( !t1.equals(Type.BOOLEAN) ) {			
+			if(!t1.equals(Type.BOOLEAN)) {			
 				addError(ctx.coalesceExpression(), Error.INVALID_TYPE, "Supplied type " + t1 + " cannot be used in the condition of a ternary operator, boolean type required", t1);
 				ctx.setType(Type.UNKNOWN);
-			}
-			else if( t2.isSubtype(t3) )
-				ctx.setType(t3);
-			else if( t3.isSubtype(t2) )
-				ctx.setType(t2);
-			else {
-				addError(ctx, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of conditional operator", t2, t3);
-				ctx.setType(Type.UNKNOWN);
+			} else if(first.throwStatement() != null || second.throwStatement() != null) {
+				if(first.throwStatement() != null && second.throwStatement() != null) {
+					addError(ctx, Error.INVALID_STRUCTURE, "Only one throw is allowed in the clause of a ternary operator");
+					ctx.setType(Type.UNKNOWN);
+				} else {
+					ConditionalExpressionContext actual = first.throwStatement() == null ? first.conditionalExpression() : second.conditionalExpression();
+					ctx.setType(actual.getType());
+					ctx.addModifiers(actual.getModifiers());
+				}
+			} else {
+				Type t2 = first.getType();
+				Type t3 = second.getType();
+							
+				if( first.getModifiers().isNullable() || second.getModifiers().isNullable() )
+					ctx.addModifiers(Modifiers.NULLABLE);
+				
+				if( first.getModifiers().isNullable() != second.getModifiers().isNullable() && (t2 instanceof ArrayType || t3 instanceof ArrayType )  )
+					addError(ctx, Error.INVALID_MODIFIER, "Cannot mix nullable and non-nullable arrays", t2, t3);
+				
+				if( first.getModifiers().isReadonly() || second.getModifiers().isReadonly() )
+					ctx.addModifiers(Modifiers.READONLY);
+				else if( first.getModifiers().isTemporaryReadonly() || second.getModifiers().isTemporaryReadonly() )
+					ctx.addModifiers(Modifiers.TEMPORARY_READONLY);			
+				
+				if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )			
+					ctx.addModifiers(Modifiers.IMMUTABLE);
+				else if( first.getModifiers().isImmutable() || second.getModifiers().isImmutable() ) //immutable + regular = readonly, works for either
+					ctx.addModifiers(Modifiers.READONLY);
+				
+				if( t2.isSubtype(t3) )
+					ctx.setType(t3);
+				else if( t3.isSubtype(t2) )
+					ctx.setType(t2);
+				else {
+					addError(ctx, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of conditional operator", t2, t3);
+					ctx.setType(Type.UNKNOWN);
+				}
 			}
 		}
 		
 		return null;
-	}	
+	}
+	
+	@Override public Void visitThrowOrConditionalExpression(ThrowOrConditionalExpressionContext ctx) {
+		visitChildren(ctx);
+	
+		ConditionalExpressionContext cond = ctx.conditionalExpression();
+		if(cond != null) {
+			ctx.setType(cond.getType());
+			ctx.addModifiers(cond.getModifiers());
+		}
+		
+		return null;
+	}
 	
 	public void visitConditional(Context node) {		
 		if( node.getChildCount() == 1 ) {
 			Context child = (Context) node.getChild(0);
 			node.setType(child.getType());
 			node.addModifiers(child.getModifiers());	
-		}			
+		}
 		else {
 			Type result = null;
 			
@@ -968,12 +993,12 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());	
 		}
-		else {	
+		else {
 			Type result = null;
 			boolean isNullable = true;
 			int term = 0;
 			
-			for( ShadowParser.ConditionalOrExpressionContext child : ctx.conditionalOrExpression() ) { //cycle through types, upgrading to broadest legal one
+			for( ConditionalOrExpressionContext child : ctx.conditionalOrExpression() ) { //cycle through types, upgrading to broadest legal one
 				Type type = child.getType();
 				Modifiers modifiers = child.getModifiers();
 				term++;
@@ -1623,19 +1648,6 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}
 	
-	@Override
-	public Void visitThrowCondition(ThrowConditionContext ctx) {
-		visitChildren(ctx);
-		
-		Type type = resolveType(ctx.conditionalExpression()).getType();
-		if(!type.equals(Type.BOOLEAN)) {
-			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + type, type);
-		}
-
-		ctx.setType(type);
-		return null;
-	}
-	
 	@Override public Void visitCatchStatements(ShadowParser.CatchStatementsContext ctx)
 	{ 
 		visitChildren(ctx); 
@@ -1816,7 +1828,7 @@ public class StatementChecker extends BaseChecker {
 			if( !setTypeFromName( ctx, image )) { //automatically sets type if can				
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 				ctx.setType(Type.UNKNOWN);											
-			}			
+			}
 		}
 		else if( ctx.conditionalExpression() != null ) {
 			ctx.setType(ctx.conditionalExpression().getType());
@@ -3012,27 +3024,41 @@ public class StatementChecker extends BaseChecker {
 	}
 	
 	@Override
+	public Void visitThrowCondition(ThrowConditionContext ctx) {
+		visitChildren(ctx);
+		
+		Type type = resolveType(ctx.conditionalExpression()).getType();
+		if(!type.equals(Type.BOOLEAN)) {
+			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of throw statement cannot accept non-boolean type " + type, type);
+		}
+
+		ctx.setType(type);
+		return null;
+	}
+	
+	@Override
 	public Void visitSendStatement(SendStatementContext ctx) {
 		visitChildren(ctx);
 
 		if(ctx.conditionalExpression().size() != 2 || !resolveType(ctx.conditionalExpression(1)).getType().equals(Type.Thread)) {
 			addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
 		} else {
-			List<ShadowException> errors = new ArrayList<ShadowException>();
-			SequenceType sequence = new SequenceType();
-			sequence.add(resolveType(ctx.conditionalExpression().get(0)));
-			
-			MethodSignature sendSignature = Type.Thread.getMatchingMethod("sendTo", sequence, new SequenceType(), errors);
+			List<ShadowException> errors = new ArrayList<ShadowException>();		
+			MethodSignature sendSignature = Type.Thread.getMatchingMethod("sendTo", 
+													new SequenceType(resolveType(ctx.conditionalExpression().get(0))), 
+													new SequenceType(), 
+													errors);
 			if(sendSignature == null) {
 				addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
 			} else {
 				ctx.setSignature(sendSignature);
-				ctx.setType(sendSignature.getReturnTypes());
+				ctx.setType(sendSignature.getReturnTypes()); // void
 			}
 		}
 		
 		return null;
 	}
+	
 	
 	/*@Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) 
 	{

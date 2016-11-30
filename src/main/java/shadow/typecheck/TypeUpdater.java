@@ -76,7 +76,6 @@ public class TypeUpdater extends BaseChecker {
 		super( packageTree, reporter );	
 	}
 	
-	
 	/**
 	 * Updates all of the types in the given node table and returns and updated table.
 	 * This central method of the class performs all of its functions.

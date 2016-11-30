@@ -31,6 +31,7 @@ import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowConditionContext;
+import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
@@ -546,20 +547,46 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACOperand condition = ctx.coalesceExpression().appendBefore(anchor);
 		ctx.setOperand(condition);
 		
-		if( ctx.conditionalExpression().size() > 0 ) {
+		if( ctx.throwOrConditionalExpression().size() > 0 ) {
+			ThrowOrConditionalExpressionContext first = ctx.throwOrConditionalExpression(0);
+			ThrowOrConditionalExpressionContext second = ctx.throwOrConditionalExpression(1);
+			
 			TACLabel trueLabel = new TACLabel(method),
 					falseLabel = new TACLabel(method),
 					doneLabel = new TACLabel(method);
 			TACVariable var = method.addTempLocal(ctx);
 			new TACBranch(anchor, condition, trueLabel, falseLabel);
+			
 			trueLabel.insertBefore(anchor);
-			new TACLocalStore(anchor, var, ctx.conditionalExpression(0).appendBefore(anchor));
-			new TACBranch(anchor, doneLabel);
+			if(first.throwStatement() != null) {
+				first.throwStatement().getList().appendBefore(anchor);
+			} else {
+				new TACLocalStore(anchor, var, first.appendBefore(anchor));
+				new TACBranch(anchor, doneLabel);
+			}
+			
 			falseLabel.insertBefore(anchor);
-			new TACLocalStore(anchor, var, ctx.conditionalExpression(1).appendBefore(anchor));
-			new TACBranch(anchor, doneLabel);
+			if(second.throwStatement() != null) {
+				second.throwStatement().getList().appendBefore(anchor);				
+			} else {
+				new TACLocalStore(anchor, var, second.appendBefore(anchor));
+				new TACBranch(anchor, doneLabel);
+			}
+			
 			doneLabel.insertBefore(anchor);
+			
 			ctx.setOperand(new TACLocalLoad(anchor, var));
+		}
+		
+		return null;
+	}
+	
+	@Override public Void visitThrowOrConditionalExpression(ThrowOrConditionalExpressionContext ctx) 
+	{
+		visitChildren(ctx);
+		
+		if(ctx.conditionalExpression() != null) {
+			ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
 		}
 		
 		return null;
@@ -572,25 +599,36 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACOperand value = ctx.conditionalOrExpression(0).appendBefore(anchor);
 		ctx.setOperand(value);
 		
-		if( ctx.conditionalOrExpression().size() > 1 ) {
+		int childrenCount = ctx.conditionalOrExpression().size();
+		if(childrenCount > 1 || ctx.throwStatement() != null) {
 			TACLabel doneLabel = new TACLabel(method);
 			TACVariable var = method.addTempLocal(ctx);
 			
-			for( int i = 1; i < ctx.conditionalOrExpression().size(); ++i ) {
+			int size = childrenCount + (ctx.throwStatement() != null ? 1 : 0);
+			for(int i = 1; i < size; ++i) {
 				TACLabel nullLabel = new TACLabel(method);
 				TACLabel nonNullLabel = new TACLabel(method);
 				new TACBranch(anchor, new TACBinary(anchor, value, new TACLiteral(anchor, new ShadowNull(value.getType()))), nullLabel, nonNullLabel);
+				
 				nonNullLabel.insertBefore(anchor);
 				new TACLocalStore(anchor, var, value);
 				new TACBranch(anchor, doneLabel);
+				
 				nullLabel.insertBefore(anchor);
-				value = ctx.conditionalOrExpression(i).appendBefore(anchor);
-			}			
-
-			//whatever the final thing is, we're stuck with it if we got that far
-			new TACLocalStore(anchor, var, value);
-			new TACBranch(anchor, doneLabel);			
-			doneLabel.insertBefore(anchor);			
+				if(i < ctx.conditionalOrExpression().size()) {
+					value = ctx.conditionalOrExpression(i).appendBefore(anchor);
+				} else {
+					ctx.throwStatement().getList().appendBefore(anchor);
+				}
+			}
+			
+			if(ctx.throwStatement() == null) {
+				//whatever the final thing is, we're stuck with it if we got that far
+				new TACLocalStore(anchor, var, value);
+				new TACBranch(anchor, doneLabel);
+			}
+			
+			doneLabel.insertBefore(anchor);
 			ctx.setOperand(new TACLocalLoad(anchor, var));
 		}
 		

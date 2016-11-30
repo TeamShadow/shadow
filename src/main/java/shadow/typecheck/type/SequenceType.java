@@ -10,8 +10,8 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
+import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>

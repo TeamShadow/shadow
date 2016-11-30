@@ -143,7 +143,7 @@ methodDeclarator
 	;
 
 generalIdentifier
-	: (MethodIdentifier|Identifier|IllegalIdentifier)
+	: (MethodIdentifier|IllegalIdentifier|Identifier)
 	;
 
 inlineResults
@@ -267,12 +267,16 @@ assignmentOperator
 	| '|='
 	;
 
+throwOrConditionalExpression
+	: (throwStatement|conditionalExpression)
+	;
+
 conditionalExpression
-	: coalesceExpression ( '?' conditionalExpression ',' conditionalExpression )?
+	: coalesceExpression ( '?' throwOrConditionalExpression ',' throwOrConditionalExpression )?
 	;
 
 coalesceExpression
-	:  conditionalOrExpression  ('??' conditionalOrExpression )*
+	:  conditionalOrExpression  ('??' conditionalOrExpression )* ('??' throwStatement)?
 	;
 
 conditionalOrExpression
@@ -537,7 +541,7 @@ statement
 	| foreachStatement
 	| breakOrContinueStatement
 	| returnStatement
-	| throwStatement
+	| throwStatement ';'
 	| sendStatement
 	| finallyStatement // Includes try/catch/recover/finally.
 	| statementExpression ';'
@@ -655,7 +659,7 @@ returnStatement
 	;
 
 throwStatement
-	: 'throw' throwCondition? conditionalExpression ';'
+	: 'throw' throwCondition? conditionalExpression
 	;
 	
 throwCondition
@@ -992,12 +996,12 @@ MethodIdentifier
 	: ('$'|(UNDERSCORE+)) IdentifierFragment
 	;
 
-Identifier
-	: IdentifierFragment
-	;
-
 IllegalIdentifier
 	: (['$''_'])+ IdentifierFragment
+	;
+
+Identifier
+	: IdentifierFragment
 	;
 
 fragment

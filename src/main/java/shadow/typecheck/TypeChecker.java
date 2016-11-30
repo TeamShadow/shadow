@@ -30,8 +30,8 @@ import java.util.TreeSet;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
-import shadow.parse.Context;
 import shadow.ShadowException;
+import shadow.parse.Context;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 

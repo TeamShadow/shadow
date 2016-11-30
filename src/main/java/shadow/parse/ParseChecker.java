@@ -21,6 +21,7 @@ import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
 import shadow.parse.ShadowParser.CompilationUnitContext;
 import shadow.parse.ShadowParser.GeneralIdentifierContext;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Modifiers;
 
@@ -448,8 +449,8 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	public Void visitGeneralIdentifier(GeneralIdentifierContext ctx) {
 		visitChildren(ctx);
 		
-		if(ctx.IllegalIdentifier() != null) {
-			addError(ctx, Error.SYNTAX_ERROR, "a valid identifier can only start with a letter");
+		if(ctx.IllegalIdentifier() != null || (ctx.parent instanceof VariableDeclaratorContext && (ctx.getText().startsWith("$") || ctx.getText().startsWith("_") ))) {
+			addError(ctx, Error.SYNTAX_ERROR, "Only methods marked with extern can have identifiers starting with '$' or '_'");
 		}
 		
 		return null;

@@ -113,9 +113,7 @@ locked immutable class shadow:natives@
 		
 		public readonly get address() => (long)
 		{
-			if(!valid()) {
-				throw FreedResourceException:create("Pointer");
-			}
+			throw !valid() ? FreedResourceException:create("Pointer");
 			
 			return address;
 		}

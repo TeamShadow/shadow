@@ -19,9 +19,9 @@ import junit.framework.TestCase;
 import shadow.test.doctool.DocumentationTests;
 import shadow.test.output.OutputTests;
 import shadow.test.output.TACTests;
-import shadow.test.typecheck.UtilityTests;
 import shadow.test.typecheck.StandardLibraryTests;
 import shadow.test.typecheck.TypeCheckerTests;
+import shadow.test.typecheck.UtilityTests;
 import shadow.test.typecheck.WarningTests;
 
 @RunWith(Suite.class)
