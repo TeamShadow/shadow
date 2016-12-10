@@ -63,15 +63,26 @@ public class ParseException extends ShadowException {
 	}
 	
 	private final Error error;
+	private final int lineStart;
+	private final int lineEnd;
+	private final int columnStart;
+	private final int columnEnd;
+	private final int startCharacter;
+	private final int stopCharacter;
 	
 	/**
 	 * Creates a <code>ParseException</code> with a specified kind of error and a message.
 	 * @param kind			kind of error
 	 * @param message		explanatory error message
 	 */
-	public ParseException( Error kind, String message ) {
+	public ParseException( Error kind, String message, int line, int column, int startCharacter, int stopCharacter ) {
 		super( message );
 		error = kind;
+		lineStart = lineEnd = line;
+		columnStart = columnEnd = column;
+		this.startCharacter = startCharacter;
+		this.stopCharacter = stopCharacter;
+		
 	}
 	
 	/**
@@ -83,7 +94,13 @@ public class ParseException extends ShadowException {
 	 */
 	public ParseException( Error kind, String message, Context context ) {
 		super( makeMessage( kind, message, context ), context );
-		error = kind;			
+		error = kind;		
+		lineStart = context.getStart().getLine();
+		lineEnd = context.getStop().getLine();
+		columnStart = context.getStart().getCharPositionInLine();
+		columnEnd = context.getStop().getCharPositionInLine();
+		startCharacter = context.start.getStartIndex();
+		stopCharacter = context.stop.getStopIndex();
 	}		
 	
 	/**
@@ -93,5 +110,49 @@ public class ParseException extends ShadowException {
 	public Error getError() {	
 		return error;
 	}
+	
+	/**
+	 * Gets starting line where error happened.
+	 * @return			line
+	 */
+	public int lineStart() {
+		return lineStart;
+	}
+	
+	/**
+	 * Gets ending line where error happened.
+	 * @return			line
+	 */
+	public int lineEnd() {
+		return lineEnd;
+	}
+	
+	/**
+	 * Gets starting column where error happened.
+	 * @return			column
+	 */
+	public int columnStart() {
+		return columnStart;
+	}
+	
+	/**
+	 * Gets ending column where error happened.
+	 * @return			column
+	 */
+	public int columnEnd() {		
+		return columnEnd;
+	}
+	
+	
+	public int startCharacter()
+	{
+		return startCharacter;				
+	}
+	
+	public int stopCharacter()
+	{
+		return stopCharacter;		
+	}
+	
 }
 
