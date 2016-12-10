@@ -73,6 +73,21 @@ public abstract class ShadowException extends Exception {
 		return -1;
 	}
 	
+	public int startCharacter()
+	{
+		if( context != null )
+			return context.start.getStartIndex();
+		return -1;		
+		
+	}
+	
+	public int stopCharacter()
+	{
+		if( context != null )
+			return context.stop.getStopIndex();
+		return -1;
+	}
+	
 	public boolean isInside(ShadowException other)
 	{
 		if( context != null && other.context != null ) {			

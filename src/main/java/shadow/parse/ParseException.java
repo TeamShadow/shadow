@@ -67,17 +67,22 @@ public class ParseException extends ShadowException {
 	private final int lineEnd;
 	private final int columnStart;
 	private final int columnEnd;
+	private final int startCharacter;
+	private final int stopCharacter;
 	
 	/**
 	 * Creates a <code>ParseException</code> with a specified kind of error and a message.
 	 * @param kind			kind of error
 	 * @param message		explanatory error message
 	 */
-	public ParseException( Error kind, String message, int line, int column ) {
+	public ParseException( Error kind, String message, int line, int column, int startCharacter, int stopCharacter ) {
 		super( message );
 		error = kind;
 		lineStart = lineEnd = line;
 		columnStart = columnEnd = column;
+		this.startCharacter = startCharacter;
+		this.stopCharacter = stopCharacter;
+		
 	}
 	
 	/**
@@ -94,6 +99,8 @@ public class ParseException extends ShadowException {
 		lineEnd = context.getStop().getLine();
 		columnStart = context.getStart().getCharPositionInLine();
 		columnEnd = context.getStop().getCharPositionInLine();
+		startCharacter = context.start.getStartIndex();
+		stopCharacter = context.stop.getStopIndex();
 	}		
 	
 	/**
@@ -134,6 +141,17 @@ public class ParseException extends ShadowException {
 	 */
 	public int columnEnd() {		
 		return columnEnd;
+	}
+	
+	
+	public int startCharacter()
+	{
+		return startCharacter;				
+	}
+	
+	public int stopCharacter()
+	{
+		return stopCharacter;		
 	}
 	
 }
