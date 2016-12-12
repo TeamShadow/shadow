@@ -66,8 +66,11 @@ locked immutable class shadow:natives@
 	*/
 	public locked free() => ()
 	{
-		if(shouldFree and isValid()) {
-			freeMemory();
+		if(isValid()) {
+			if(shouldFree) {
+				freeMemory();
+			}
+			
 			$invalidate(pointer);
 		}
 	}

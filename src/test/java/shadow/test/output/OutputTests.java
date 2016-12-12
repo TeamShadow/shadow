@@ -1304,10 +1304,13 @@ public class OutputTests {
 	@Test public void testMutex() throws Exception {
 		args.add("shadow/test/MutexTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0],  "lock1\n" +
-							"shadow:natives@MutexException: This thread already owns this mutex.\n" +
-							"Nested locks\n" +
-							"Done!\n");
+		run(new String[0],  formatOutputString(
+							"lock1",
+							"shadow:natives@MutexException: This mutex does not allow recursive locks.",
+							"Nested locks",
+							"shadow:natives@MutexException: This mutex is not owned by 'Thread#main' and cannot be unlocked.",
+							"Done!")
+			);
 	}
 	
 	@Test public void testExternals() throws Exception {

@@ -4,35 +4,38 @@
 #ifndef SHADOW_TYPES_H
 #define SHADOW_TYPES_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 // boolean
-typedef char ShadowBoolean;
+typedef bool ShadowBoolean;
 
 // byte
-typedef signed char ShadowByte;
+typedef int8_t ShadowByte;
 
 // ubyte
-typedef unsigned char ShadowUByte;
+typedef uint8_t ShadowUByte;
 
 // short
-typedef signed short ShadowShort;
+typedef int16_t ShadowShort;
 
 // ushort
-typedef unsigned short ShadowUShort;
+typedef uint16_t ShadowUShort;
 
 // int
-typedef signed long ShadowInt;
+typedef int32_t ShadowInt;
 
 // uint
-typedef unsigned long ShadowUInt;
+typedef uint32_t ShadowUInt;
 
 // code
-typedef signed long ShadowCode;
+typedef int32_t ShadowCode;
 
 // long
-typedef signed long long ShadowLong;
+typedef int64_t ShadowLong;
 
 // ulong
-typedef unsigned long long ShadowULong;
+typedef uint64_t ShadowULong;
 
 // float
 typedef float ShadowFloat;

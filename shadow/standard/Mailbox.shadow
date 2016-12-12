@@ -28,15 +28,13 @@ locked class shadow:standard@
 	Signaler signaler;
 	MessageQueue list;
 	Mutex mutex;
-	//Thread owner;
 	
 	/**
 	* Initializes a {@code Mailbox} with a backing array that has {@code min} items space to start with
 	* and can expand up to {@code max}.
 	*/
-	public create(/*Thread owner,*/ int min, int max)
+	public create(int min, int max)
 	{
-//		this:owner = owner;
 		this:list = MessageQueue:create(min, max);
 		this:signaler = Signaler:create();
 		this:mutex = Mutex:create();
@@ -45,9 +43,9 @@ locked class shadow:standard@
 	/**
 	* Initializes a {@code Mailbox} with a backing array with an initial and maximum capacity of {@code size}.
 	*/
-	public create(/*Thread owner,*/ int size)
+	public create(int size)
 	{
-		this(/*owner,*/ size, size);
+		this(size, size);
 	}
 	
 	/**
@@ -60,9 +58,7 @@ locked class shadow:standard@
 		
 		var message = Message:create(data);
 		if(!blocking) {
-			if(!list.enqueue(message)) {
-				throw FullMailboxException:create("Mailbox is full");
-			}
+			throw (!list.enqueue(message)) ? FullMailboxException:create();
 		} else {
 			var stop = false;
 			while(!stop) {
@@ -83,29 +79,24 @@ locked class shadow:standard@
 	*/
 	public receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
 	{
-		throw UnsupportedOperationException:create();
-		/*CurrentThread.throwIfInterrupting();
+		CurrentThread.throwIfInterrupting();
 
-		if(list.isEmpty()) {
-			// if we don't immediately find the result and we are not blocking, then throw.
-			if(!blocking) {
-				throw EmptyMailboxException:create("Mailbox did not receive any messages, and is empty.");
-			}
-
-			// we block as long as the last is empty.
-			while(list.isEmpty()) {
-				signaler.waitForNotify(TIMEOUT);
+		nullable var message = list.dequeue(expectedType);
+		if(!blocking) {
+			throw (message === null) ? EmptyMailboxException:create();
+		} else {
+			while(message === null) {
+				message = list.dequeue(expectedType);
+				
+				if(message === null) {
+					signaler.waitForNotify(TIMEOUT);
+				}
 			}
 		}
 		
-		// dequeue should never throw because of an empty list,
-		// but it can and will throw if the expectedType is not
-		// the same as the available type.
-		var message = list.dequeue(expectedType);
-		
 		signaler.notifyAll();
 		
-		return (message->data, message->sender);*/
+		return (check(message)->data, check(message)->sender);
 	}
 	
 	/**
@@ -118,9 +109,7 @@ locked class shadow:standard@
 
 		nullable var message = list.dequeue(sender, expectedType);
 		if(!blocking) {
-			if(message === null) {
-				throw EmptyMailboxException:create("Mailbox is empty");
-			}
+			throw (message === null) ? EmptyMailboxException:create();
 		} else {
 			while(message === null) {
 				message = list.dequeue(sender, expectedType);

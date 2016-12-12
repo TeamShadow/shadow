@@ -97,13 +97,11 @@ is CanIndex<int, Thread>
 	* be called at safe points where the thread is safe to get interrupted. This method should only be used
 	* if there is no code that should be executed before throwing the exception; otherwise, use {@code CurrentThread->interrupting}.
 	* This method, as the {@code interrupting()} one, resets the interrupt flag, and sets it to false.
-	* This code executed in this method is simply: {@code if(CurrentThread->interrupting) throw InterruptedException:create(); }
+	* This code executed in this method is simply: {@code throw CurrentThread->interrupting ? InterruptedException:create(); }
 	*/
 	public throwIfInterrupting() => ()
 	{
-		if(interrupting()) {
-			throw InterruptedException:create();
-		}
+		throw interrupting() ? InterruptedException:create();
 	}
 	
 	/**
@@ -181,9 +179,9 @@ is CanIndex<int, Thread>
 	*
 	* @return {@code true} if the other thread is not null and is the current thread; otherwise, {@code false}.
 	*/
-	public readonly isEqualTo(nullable Thread other) => (boolean)
+	public readonly equal(nullable Thread other) => (boolean)
 	{
-		return (other !== null and check(other) === current);
+		return (other === current);
 	}
 	
 	/**

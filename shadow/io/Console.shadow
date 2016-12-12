@@ -123,7 +123,12 @@ singleton shadow:io@Console
 	 * @param value object to print
 	 * @return {@code Console} object 
 	 */
-	public printLine( nullable Object value ) => ( Console )
+	public printLine(nullable Object value) => ( Console )
+	{
+		return print(value).printLine();
+	}
+	
+	public printLine(String value) => (Console)
 	{
 		return print(value).printLine();
 	}

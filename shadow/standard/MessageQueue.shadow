@@ -14,9 +14,9 @@ is CanIndex<int, Message>
 and CanIndexStore<int, Message>
 {
 	/*
-	* TODO: Write a smarter, more efficient removeAt() which can efficiently remove
-	* 		from the beginning or from the end of the list, like the LinkedList implementation.
-	*/
+	 * TODO: Write a smarter, more efficient removeAt() which can efficiently remove
+	 * 		from the beginning or from the end of the list, like the LinkedList implementation.
+	 */
 	
 	Mutex mutex;
 	nullable Message[] elements;
@@ -152,6 +152,9 @@ and CanIndexStore<int, Message>
 		// to worry about that.
 		var message = this[index];
 		var dataType = message->data.getClass();
+		
+		// TODO: I'm not sure if we should use the Class methods such isSubType() to compare
+		// instead of a naive comparaison.
 		if(dataType !== expectedType) {
 			throw IncompatibleMessageTypeException:create(expectedType, dataType);
 		}
@@ -176,6 +179,7 @@ and CanIndexStore<int, Message>
 		size -= 1;
 		
 		// if the list is empty, we can start at zero again.
+		// not necessary, but makes me happy.
 		if(isEmpty()) {
 			start = 0;
 		}

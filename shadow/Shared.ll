@@ -38,10 +38,16 @@
 ; Custom Method Definitions
 ;---------------------------
 ; ShadowString.c
-define { %byte*, [1 x %int] }* @GetShadowArrayFromShadowString(%shadow.standard..String*) {
+define void @ExtractDataFromShadowString(%shadow.standard..String*, { %byte*, [1 x %int] }**, %boolean*) {
 entry:
 	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 2
-	ret { %byte*, [1 x %int] }* %array.addr
+	store { %byte*, [1 x %int] }* %array.addr, { %byte*, [1 x %int] }** %1
+	
+	%ascii.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3
+	%ascii = load %boolean, %boolean* %ascii.addr
+	store %boolean %ascii, %boolean* %2
+	
+	ret void
 }
 
 ; ShadowArray.c

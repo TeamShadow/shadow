@@ -24,14 +24,8 @@ class shadow:standard@Object
 	}
 	
 	// TEMP METHODS
-	private readonly extern $sendTo(Thread instance, Object data) => ();
 	private readonly extern $receiveFirst(Thread instance, Class expectedType) => (Object, Thread);
 	private readonly extern $receiveFirstFrom(Thread instance, Class expectedType, Thread from) => (Object);
-	
-	/*public readonly locked send(Object data, Thread to) => ()
-	{
-		$sendTo(to, data);
-	}*/
 	
 	public readonly locked receive(Class expectedType) => (Object, Thread)
 	{

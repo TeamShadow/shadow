@@ -11,9 +11,10 @@ typedef void* ShadowString;
 typedef struct {
 	ShadowInt size;
 	ShadowByte* chars;
-} ByteArray;
+	ShadowBoolean ascii;
+} ShadowStringData;
 
 char* UnpackShadowStringToCStr(ShadowString stringRef);
-void UnpackShadowString(ShadowString stringRef, ByteArray* str);
+void UnpackShadowString(ShadowString stringRef, ShadowStringData* str);
 
 #endif

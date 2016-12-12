@@ -1021,7 +1021,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACCall exception = new TACCall(anchor, new TACMethodRef(anchor, signature), object);
 						
 			new TACThrow(anchor, exception);
-		}	
+		}
 		
 		continueLabel.insertBefore(anchor);
 		

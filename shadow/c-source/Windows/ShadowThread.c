@@ -5,7 +5,9 @@
 
 #include <stddef.h>
 #include <pthread.h>
+
 #include <stdlib.h>
+#include <Windows.h>
 
 ShadowPointer __ShadowThread_Spawn(ShadowThread this, void* (*thread_start)(ShadowThread))
 {
@@ -15,10 +17,11 @@ ShadowPointer __ShadowThread_Spawn(ShadowThread this, void* (*thread_start)(Shad
 		ptr = NULL;
 	}
 	
-	return CreateShadowPointer(ptr, 1);
+	return CreateShadowPointer(ptr, true);
 }
 
 ShadowBoolean __ShadowCurrentThread_Yield(void)
 {
-	return (sched_yield() == 0);
+	Sleep(0);
+	return true;
 }

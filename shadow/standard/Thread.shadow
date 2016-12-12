@@ -11,8 +11,7 @@ import shadow:io@Console;
  */
 locked class shadow:standard@
 	Thread
-is CanEqual<Thread>
-and CanIndex<int, Thread>
+is CanIndex<int, Thread>
 {
 	public constant int READY = 0;
 	public constant int RUNNING = 1;
@@ -393,9 +392,7 @@ and CanIndex<int, Thread>
 	*/
 	protected $[Object] receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
-		if(from === this) {
-			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
-		}
+		throw (from === this) ? IllegalArgumentException:create("A Thread cannot receive a message from itself.");
 		
 		return mailbox.receiveFirstFrom(expectedType, from);
 	}
@@ -415,15 +412,10 @@ and CanIndex<int, Thread>
 	*
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected $[Object] sendTo(Object data) => ()
+	protected sendTo(Object data) => ()
 	{
-		if(!isAlive()) {
-			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
-		}
-		
-		if(isCurrentThread()) {
-			throw InvalidOperationException:create("A Thread cannot send a message to itself.");
-		}
+		throw !isAlive() ? InvalidOperationException:create("Cannot send a message to a dead thread.");
+		throw isCurrentThread() ? InvalidOperationException:create("A Thread cannot send a message to itself.");
 		
 		mailbox.sendTo(data);
 	}
@@ -441,6 +433,7 @@ and CanIndex<int, Thread>
 			ex = ThreadException:create(this, e);
 		} finally {
 			this->state = DEAD;
+			
 			mutex.lock();
 			handle.free();
 			signaler.free();
@@ -516,11 +509,6 @@ and CanIndex<int, Thread>
 	public readonly children() => (CanIterate<Thread>)
 	{
 		return children(false);
-	}
-	
-	public readonly equal(Thread other) => (boolean) 
-	{
-		return (this === other);
 	}
 	
 	/**

@@ -241,7 +241,8 @@ locked class shadow:natives@
 	* Frees the allocated resources of the Signaler. All waiting threads are
 	* woken up before freeing the resources. This includes threads that were
 	* put to sleep using the waitForTimeout() method. Calling {@code free()} more
-	* than once has no effect.
+	* than once has no effect. This method is not thread-safe and should only be called
+	* from one thread.
 	*/
 	public free() => ()
 	{

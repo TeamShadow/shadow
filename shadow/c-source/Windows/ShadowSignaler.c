@@ -12,73 +12,71 @@
 typedef struct {
 	pthread_cond_t cond;
 	pthread_mutex_t mutex;
-} CondData;
+} ShadowSignalerData;
 
-static void InvalidatePointer(CondData** ptr) 
+static void InvalidatePointer(ShadowSignalerData** data) 
 {
-	free(*ptr);
-	*ptr = NULL;
+	free(*data);
+	*data = NULL;
 }
 
 /// valid pointer returned on success, otherwise, invalid.
 ShadowPointer __ShadowSignaler_Initialize(void)
 {
-	CondData* ptr = malloc(sizeof(CondData));
+	ShadowSignalerData* data = malloc(sizeof(ShadowSignalerData));
 	
-	if(pthread_cond_init(&ptr->cond, NULL) != 0) {
-		InvalidatePointer(&ptr);
-	} else if(pthread_mutex_init(&ptr->mutex, NULL) != 0) {
-		pthread_cond_destroy(&ptr->mutex);
-		InvalidatePointer(&ptr);
+	if(pthread_cond_init(&data->cond, NULL) != 0) {
+		InvalidatePointer(&data);
+	} else if(pthread_mutex_init(&data->mutex, NULL) != 0) {
+		pthread_cond_destroy(&data->mutex);
+		InvalidatePointer(&data);
 	}
 	
-	return CreateShadowPointer(ptr, 0);
+	return CreateShadowPointer(data, true);
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Destroy(ShadowPointer shadowdata)
 {
-	CondData* ptr = ExtractRawPointer(shadowPtr);
+	ShadowSignalerData* data = ExtractRawPointer(shadowdata);
 	
-	int result = (pthread_cond_destroy(&ptr->cond) == 0);
-	result &= (pthread_mutex_destroy(&ptr->mutex) == 0);
-	
-	free(ptr);
-	
+	int result = (pthread_cond_destroy(&data->cond) == 0);
+	result &= (pthread_mutex_destroy(&data->mutex) == 0);
+
 	return result;
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Wait(ShadowPointer shadowdata)
 {
-	CondData* ptr = ExtractRawPointer(shadowPtr);
+	ShadowSignalerData* data = ExtractRawPointer(shadowdata);
 
-	pthread_mutex_lock(&ptr->mutex);
-	int result = pthread_cond_wait(&ptr->cond, &ptr->mutex);
-	pthread_mutex_unlock(&ptr->mutex);
+	pthread_mutex_lock(&data->mutex);
+	int result = pthread_cond_wait(&data->cond, &data->mutex);
+	pthread_mutex_unlock(&data->mutex);
 	
 	return (result == 0);
 }
 
 /// returns true if it timedout, otherwise, false.
-ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowPtr, ShadowULong currentEpochTime, ShadowULong timeout)
+ShadowBoolean __ShadowSignaler_WaitTimeout(ShadowPointer shadowdata, ShadowULong currentEpochTime, ShadowULong timeout)
 {
-	CondData* ptr = ExtractRawPointer(shadowPtr);
+	ShadowSignalerData* data = ExtractRawPointer(shadowdata);
 
 	ShadowULong absoluteNanos = currentEpochTime + timeout;
 	struct timespec time = { absoluteNanos / NANOS_IN_SECONDS, absoluteNanos % NANOS_IN_SECONDS };
 	
-	pthread_mutex_lock(&ptr->mutex);
-	int result = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &time);
-	pthread_mutex_unlock(&ptr->mutex);
+	pthread_mutex_lock(&data->mutex);
+	int result = pthread_cond_timedwait(&data->cond, &data->mutex, &time);
+	pthread_mutex_unlock(&data->mutex);
 	
 	return (result != 0);
 }
 
 /// true on success, otherwise, false.
-ShadowBoolean __ShadowSignaler_Broadcast(ShadowPointer shadowPtr)
+ShadowBoolean __ShadowSignaler_Broadcast(ShadowPointer shadowdata)
 {
-	CondData* ptr = ExtractRawPointer(shadowPtr);
+	ShadowSignalerData* data = ExtractRawPointer(shadowdata);
 	
-	return (pthread_cond_broadcast(&ptr->cond) == 0);
+	return (pthread_cond_broadcast(&data->cond) == 0);
 }

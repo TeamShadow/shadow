@@ -13,16 +13,13 @@
 locked immutable class shadow:natives@
 	Mutex
 {
-	private readonly extern $setOwner(immutable Owner owner, nullable Thread o) => ();
-	
-	private readonly extern __ShadowMutex_Initialize() => (ShadowPointer);
+	private readonly extern __ShadowMutex_Initialize(boolean allowRecursive) => (ShadowPointer);
 	private readonly extern __ShadowMutex_Destroy(ShadowPointer ptr) => (boolean);
-	private readonly extern __ShadowMutex_Lock(ShadowPointer ptr) => (boolean);
+	private readonly extern __ShadowMutex_Lock(ShadowPointer ptr, Thread currentThread) => (boolean);
 	private readonly extern __ShadowMutex_Unlock(ShadowPointer ptr) => (boolean);
+	private readonly extern __ShadowMutex_GetOwner(ShadowPointer ptr) => (nullable Thread);
 	
-	get ShadowPointer ptr;
-	immutable Owner owner;
-	boolean allowRecursiveLocks;
+	ShadowPointer ptr;
 	
 	/**
 	* Initializes a new {@code Mutex} which does not allow nested locks.
@@ -38,13 +35,9 @@ locked immutable class shadow:natives@
 	*/
 	public create(boolean allowRecursiveLocks)
 	{
-		ptr = __ShadowMutex_Initialize();
+		ptr = __ShadowMutex_Initialize(allowRecursiveLocks);
 		
-		throw !ptr->isValid 
-				? MutexException:create("An error occured while initializing the Mutex.");
-		
-		owner = freeze(Owner:create());
-		this:allowRecursiveLocks = allowRecursiveLocks;
+		throw !ptr->isValid ? MutexException:create("An error occured while initializing the Mutex.");
 	}
 	
 	/**
@@ -59,14 +52,10 @@ locked immutable class shadow:natives@
 	public lock() => ()
 	{
 		ptr.assertValid("Mutex");
-		
-		if(!owner.isCurrentThread()) {
-			__ShadowMutex_Lock(ptr);
-		} else if(!allowRecursiveLocks) {
-			throw MutexException:create("This thread already owns this mutex.");
-		}
 
-		$setOwner(owner, CurrentThread->instance);
+		if(!__ShadowMutex_Lock(ptr, CurrentThread->instance)) {
+			throw MutexException:create("This mutex does not allow recursive locks.");
+		}
 	}
 	
 	/**
@@ -82,13 +71,11 @@ locked immutable class shadow:natives@
 	{
 		ptr.assertValid("Mutex");
 		
-		throw !owner.isCurrentThread()
+		throw !isOwnerCurrentThread()
 				? MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
 		
-		$setOwner(owner, null);
-		if(!owner.isCurrentThread()) {
-			__ShadowMutex_Unlock(ptr);
-		}
+		__ShadowMutex_Unlock(ptr);
+		// TODO: error checking
 	}
 	
 	/**
@@ -99,9 +86,9 @@ locked immutable class shadow:natives@
 	public free() => ()
 	{
 		if(ptr->isValid) {
-			if(owner.isCurrentThread()) {
+			if(isOwnerCurrentThread()) {
 				unlock();
-			} else if(owner.isLocked()) {
+			} else if(owner() !== null) {
 				throw MutexException:create("Cannot free a locked Mutex.");
 			}
 			
@@ -110,47 +97,13 @@ locked immutable class shadow:natives@
 		}
 	}
 	
-	// We would like to have the Mutex as immutable to allow multithreaded
-	// code to be immutable too. This Owner class allows us to freeze it,
-	// then call the actual non-readonly method through native code.
-	private class Owner
+	private owner() => (nullable Thread)
 	{
-		nullable Thread owner;
-		int counter;
-		
-		public create()
-		{
-			owner = null;
-			counter = 0;
-		}
-		
-		public readonly isLocked() => (boolean)
-		{
-			return (owner !== null);
-		}
-		
-		public readonly isCurrentThread() => (boolean)
-		{
-			return CurrentThread.isEqualTo(owner);
-		}
-		
-		private $[Mutex] setOwner(nullable Thread o) => ()
-		{
-			if(o !== null) {
-				if(counter == 0) {
-					owner = o;
-				} else if(owner !== o) { // should never reach this, unless (take/giveUp)Ownership were incorrectly used.
-					throw MutexException:create("Cannot change Mutex owners. The owner of this mutex needs to first give up ownership of this mutex.");
-				}
-				
-				counter += 1;
-			} else {
-				if(counter == 1) {
-					owner = null;
-				}
-				
-				counter -= 1;
-			}
-		}
+		return __ShadowMutex_GetOwner(ptr);
+	}
+	
+	private isOwnerCurrentThread() => (boolean)
+	{
+		return CurrentThread.equal(owner());
 	}
 }

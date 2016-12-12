@@ -28,6 +28,11 @@ class shadow:test@MutexTest
 			mutex2.lock();
 			mutex2.unlock();
 		mutex2.unlock();
+		try {
+			mutex2.unlock();
+		} catch(MutexException e) {
+			Console.printLine(e);
+		}
 		Console.printLine("Done!");
 		
 		mutex1.free();

@@ -10,6 +10,11 @@ class shadow:test@ExternalsTest
 	{
 		__ShadowString_TestPrintf("Hello from printf!\n");
 		
+		//var arr = int:create[0];
+		//Object o = arr;
+		//Console.printLine(o.getClass());
+		//var x = cast<int[]>(o);
+		
 		/*var a = System.epochNanoTime();
 		var b = System.nanoTime();
 		CurrentThread.sleep(Time.fromSeconds(5));
