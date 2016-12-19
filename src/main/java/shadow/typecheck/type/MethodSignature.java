@@ -247,6 +247,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return symbol.equals("create");
 	}
 	
+	public boolean isDestroy() {		
+		return symbol.equals("destroy");
+	}
+	
 	public boolean isCopy()
 	{
 		return symbol.equals("copy");
@@ -292,15 +296,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		if (!isSingle())
 			throw new IllegalStateException();
 		return getReturnTypes().get(0);
-	}
-	
-	public SequenceType getSequenceReturnTypes()
-	{
-		if (!isSequence())
-			throw new IllegalStateException();
-		return getReturnTypes();
-	}
-	
+	}	
+
 	public boolean isWrapper() {
 		return wrapped != null;
 	}

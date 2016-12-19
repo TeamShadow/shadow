@@ -37,7 +37,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	{			
 		ParseErrorListener listener = new ParseErrorListener(getErrorReporter());
 		
-		ShadowLexer lexer = new ShadowLexer(new PathStream(path));
+		PathStream stream = new PathStream(path);
+		
+		ShadowLexer lexer = new ShadowLexer(stream);
 		lexer.removeErrorListeners();
 				
 		tokens = new CommonTokenStream(lexer);
@@ -67,14 +69,13 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			parser.getInterpreter().setPredictionMode(PredictionMode.LL);		
 			context = parser.compilationUnit();
 		}
-		
+
 		if( getErrorReporter().getErrorList().size() == 0)
 			visit(context);
 
 		printAndReportErrors();
 		return context;
 	}
-	
 	
 	
 	@Override public Void visitModifiers(ShadowParser.ModifiersContext ctx)

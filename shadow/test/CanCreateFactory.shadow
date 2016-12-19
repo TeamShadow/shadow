@@ -3,10 +3,8 @@ import shadow:io@Console;
 class shadow:test@CanCreateFactory<T is CanCreate>
 {
 	public generate() => (T)
-	{
-		//Console.printLine(T:class);
-		T value = T:create();
-		//Console.printLine("Fantastic!");
+	{		
+		T value = T:create();	
 		return value;
 	}
 }

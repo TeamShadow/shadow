@@ -1694,21 +1694,26 @@ public class StatementChecker extends BaseChecker {
 		if( type instanceof SingletonType ) {
 			SingletonType singletonType = (SingletonType)type;
 			if( currentMethod.isEmpty() ) {
-				//add to all creates (since it must be declared outside a method)
-				for( MethodSignature signature : currentType.getAllMethods("create"))				
-					signature.addSingleton(singletonType);
+				//don't add a singleton to itself, could cause infinite recursion
+				if( !currentType.equals(type) )
+					//add to all creates (since it must be declared outside a method)
+					for( MethodSignature signature : currentType.getAllMethods("create"))				
+						signature.addSingleton(singletonType);
 			}
-			else {
-				int i = 0;
-				Context signatureNode;
-				//find outer method, instead of adding to local or inline methods
-				do {
-					signatureNode = currentMethod.get(i);
-					i++;
-				} while( signatureNode instanceof ShadowParser.InlineMethodDefinitionContext ||
-						 signatureNode instanceof ShadowParser.LocalMethodDeclarationContext );
-				
-				signatureNode.getSignature().addSingleton(singletonType);				
+			else {				
+				//don't add a singleton to itself, could cause infinite recursion
+				if( !currentType.equals(type) ) {
+					int i = 0;
+					Context signatureNode;
+					//find outer method, instead of adding to local or inline methods
+					do {
+						signatureNode = currentMethod.get(i);
+						i++;
+					} while( signatureNode instanceof ShadowParser.InlineMethodDefinitionContext ||
+							 signatureNode instanceof ShadowParser.LocalMethodDeclarationContext );
+					
+					signatureNode.getSignature().addSingleton(singletonType);				
+				}
 			}
 		}
 		else if( type instanceof SequenceType ) {
@@ -2736,7 +2741,12 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(methodType.getReturnTypes()); //return statement set to exactly the types method returns
 													   //implicit casts are added in TAC conversion if the values don't match exactly			
 			
-			if( methodType.getReturnTypes().size() == 0 ) {
+			if( currentMethod.getFirst() instanceof ShadowParser.DestroyDeclarationContext )
+				//The reason you can't is that a destroy needs to add in reference decrements for each field, at the end of the method
+				//Using returns would complicate the code needed to insert these decrements, and also destroys should be simple,
+				//ideally created entirely by the compiler in most cases.
+				addError(ctx, Error.INVALID_RETURNS, "Cannot use a return statement inside of a destroy definition");
+			else if( methodType.getReturnTypes().size() == 0 ) {
 				if( ctx.rightSide() != null )
 					addError(ctx, Error.INVALID_RETURNS, "Cannot return values from a method that returns nothing");
 			}

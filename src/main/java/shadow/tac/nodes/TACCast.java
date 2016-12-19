@@ -16,6 +16,7 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodTableType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
@@ -194,7 +195,7 @@ public class TACCast extends TACUpdate
 			return Format.ARRAY;
 		else if( type instanceof InterfaceType )
 			return Format.INTERFACE;
-		else if( type instanceof ClassType || type instanceof TypeParameter || type instanceof MethodTableType ) {
+		else if( type instanceof ClassType || type instanceof TypeParameter || type instanceof MethodTableType || type instanceof PointerType ) {
 			if( type.isPrimitive() && !modifiers.isNullable() )
 				return Format.PRIMITIVE;			
 			return Format.OBJECT;

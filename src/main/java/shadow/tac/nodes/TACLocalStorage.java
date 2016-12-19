@@ -7,27 +7,18 @@ public abstract class TACLocalStorage extends TACUpdate {
 	
 	private final TACVariable variable;
 	private final int number;
-	private boolean garbageCollected = false;
-
+	
 	protected TACLocalStorage(TACNode node, TACVariable variable) {
 		super(node);		
 		this.variable = variable;
 		number = variable.getMethod().incrementVariableCounter();
 	}
 	
-	public boolean isGarbageCollected()
-	{
-		return garbageCollected;
-	}
 	
-	public void setGarbageCollected(boolean value)
-	{
-		garbageCollected = value;
-	}	
 	
 	@Override
 	public Object getData() {	
-		if( garbageCollected )
+		if( isGarbageCollected() )
 			return super.getData();		
 		else if( getUpdatedValue() == null )	
 			return '%' + variable.getName() + '.' + number;		

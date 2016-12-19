@@ -3,38 +3,44 @@ package shadow.tac.nodes;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PointerType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
-public class TACFieldRef implements TACReference
+public class TACFieldRef extends TACReference
 {
 	private int index;
 	private TACOperand prefix;
 	private ModifiedType type;
 	private String name;
 
-	public TACFieldRef(TACOperand fieldPrefix, String fieldName)
-	{
+	public TACFieldRef(TACOperand fieldPrefix, String fieldName) {
 		this(fieldPrefix, fieldPrefix.getType().getField(fieldName),
 				fieldName);
 	}
 	public TACFieldRef(TACOperand fieldPrefix,
-			ModifiedType fieldType, String fieldName)
-	{
+			ModifiedType fieldType, String fieldName) {
 
 		if (fieldType == null)
-			throw new NullPointerException();		
-		if( fieldName.equals("class"))
+			throw new NullPointerException();
+		if( fieldName.equals("reference count"))
 			index = 0;
-		else if( fieldName.equals("_methods"))
+		else if( fieldName.equals("class"))
 			index = 1;
-		else
-		{
-			//0 is class
-			//1 is methods
+		else if( fieldName.equals("_methods"))
+			index = 2;
+		else {
+			//0 is reference count
+			//1 is class
+			//2 is methods
 			ClassType prefixType = (ClassType)fieldPrefix.getType();
+						
+			int value = prefixType.getFieldIndex(fieldName); 
+			if( value < 0 )
+				throw new IllegalArgumentException("Field " + fieldName + " not found in type " + prefixType);
 			
 			// _outer is a member for inner classes, but it is made available through normal field lookup
-			index = prefixType.getFieldIndex(fieldName) + 2;
+			index = value + 3;
 		}
 		prefix = fieldPrefix;//check(fieldPrefix, fieldPrefix);
 		type = fieldType;
@@ -77,5 +83,14 @@ public class TACFieldRef implements TACReference
 	public String toString()
 	{
 		return prefix.toString() + ':' + name;
+	}
+	
+	@Override
+	 public boolean needsGarbageCollection() {	
+		//maybe some outer class references will get garbage collected, but not yet
+		if( name.equals("_outer") )
+			return false;
+		
+		return super.needsGarbageCollection();
 	}
 }

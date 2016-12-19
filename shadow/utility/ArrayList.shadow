@@ -11,7 +11,7 @@ is  List<V>
 	get int size = 0;
 	nullable V[] elements = V:null[10];
 	int modifications = 0;
-	
+		
 	/**
 	 * Checks whether or not the list is empty.
 	 * @return {@code true} if the list is empty
@@ -63,7 +63,7 @@ is  List<V>
 	
 	// Doubles the size of the backing array.
 	private grow() => ()
-	{
+	{		
 		nullable V[] temp = V:null[elements->size * 2];
 		for( int i = 0; i < elements->size; i += 1 )
 			temp[i] = elements[i];
@@ -80,7 +80,7 @@ is  List<V>
 	 */
 	public add(V value) => ( ArrayList<V> )
 	{		
-		index( size, value );	
+		index( size, value );
 		return this;			
 	}
 	
@@ -197,7 +197,7 @@ is  List<V>
 	{
 		int index = 0;
 		int expectedModifications = modifications;
-		
+			
 		private readonly checkForModifications() => ()
 		{
 			if( expectedModifications != modifications )

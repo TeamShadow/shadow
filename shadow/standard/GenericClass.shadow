@@ -7,7 +7,8 @@
 immutable class shadow:standard@
 	GenericClass is Class
 {	
-	get Object[] parameters; // Twice the size to hold both classes and method tables
+	get Class[] parameters; //class data
+	MethodTable[] tables;   //method tables for each class 
 	
 	/**
 	 * Creates a new {@code GenericClass} object with the given raw
@@ -18,13 +19,14 @@ immutable class shadow:standard@
 	 * @param name name of the class
 	 * @param parent parent class
 	 * @param interfaces interface classes supported by this class
-	 * @param parameters array of type parameters and associated method tables
+	 * @param parameters array of type parameters
+	 * @param parameters array of associated method tables
 	 *
 	 * @seeDoc shadow:standard@ClassSet	 	  
 	 */
-	public create(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters )
+	public create(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Class[] parameters, immutable MethodTable[] tables )
 	{
-		this(name, raw->flags | Class:GENERIC, raw->size, parent, interfaces, raw->data, parameters);		
+		this(name, raw->flags | Class:GENERIC, raw->size, parent, interfaces, raw->interfaceTables, parameters, tables);		
 	}
 	
 	/**
@@ -36,11 +38,13 @@ immutable class shadow:standard@
 	 * @param parent parent class
 	 * @param interfaces interface classes supported by this class
 	 * @param data method tables associated with each interface
-	 * @param parameters array of type parameters and associated method tables	 	  
+	 * @param parameters array of type parameters
+	 * @param parameters array of associated method tables		 	  
 	 */
-	protected create(String name, int flags, int size, nullable Class parent, immutable Class[] interfaces, immutable Object[] data, immutable Object[] parameters )
+	protected create(String name, int flags, int size, nullable Class parent, immutable Class[] interfaces, immutable MethodTable[] interfaceTables, immutable Class[] parameters, immutable MethodTable[] tables )
 	{
-		super(name, flags, size, parent, interfaces, data);
-		this:parameters = parameters;	
+		super(name, flags, size, parent, interfaces, interfaceTables);
+		this:parameters = parameters;
+		this:tables = tables;	
 	}
 }

@@ -831,6 +831,7 @@ and	CanHash
 	public toString(uint base) => (String)
 	{			
 		MutableString string = MutableString:create();
+				
 		uint value = this;
 		do
 		{								
@@ -838,6 +839,7 @@ and	CanHash
 			value /= base;		
 		}
 		while (value != 0u);
+		
 		return string.reverse().toString();
 	}
 	

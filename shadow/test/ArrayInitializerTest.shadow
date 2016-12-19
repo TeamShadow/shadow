@@ -8,16 +8,22 @@ class shadow:test@ArrayInitializerTest
 	public main() => ()
 	{
 		Console out;
-		code[] letters = {'a', 'e', 'i', 'o', 'u'};
-		int[][] complex = {{9,8,7}, {6,5,4}, {3,2,1}};
+		
+		code[] letters = {'a', 'e', 'i', 'o', 'u'};		
+		int[][] complex = {{9,8,7}, {6,5,4}, {3,2,1}};		
 		String[][] alsoComplex = {{"snap","crackle","pop"}, {"tip","top"}, {"taste","the","rainbow"}};
 		
 		letters[4] = 'y';
 		complex[1][0] = 12;
+
 		
-		out.printLine(values);	
+		out.printLine(values);
+		
 		out.printLine(words);
+				
 		out.printLine(complex);
+		
+	
 		out.printLine(letters);
 		out.printLine(alsoComplex);
 		
@@ -27,6 +33,6 @@ class shadow:test@ArrayInitializerTest
 		int[] offset = {1}; 
 		asObject[offset] = more;
 		
-		out.printLine(alsoComplex);				
+		out.printLine(alsoComplex);
 	}
 }

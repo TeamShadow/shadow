@@ -14,22 +14,26 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
-%shadow.standard..Object = type { %shadow.standard..Class*, %shadow.standard..Object_methods*  }
-%shadow.standard..Class_methods = type { %shadow.standard..Class* (%shadow.standard..Class*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %uint (%shadow.standard..Class*)*, %shadow.standard..Object* (%shadow.standard..Class*, %shadow.standard..Class*)*, { %shadow.standard..Class**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %shadow.standard..String* (%shadow.standard..Class*, %shadow.standard..String*, { %shadow.standard..Object**, [1 x %int] }, %int, %int)*, %shadow.standard..String* (%shadow.standard..Class*)*, %shadow.standard..Class* (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)* }
-%shadow.standard..Class = type { %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int }
-%shadow.standard..GenericClass_methods = type { %shadow.standard..GenericClass* (%shadow.standard..GenericClass*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %uint (%shadow.standard..Class*)*, %shadow.standard..Object* (%shadow.standard..Class*, %shadow.standard..Class*)*, { %shadow.standard..Class**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..GenericClass*, %shadow.standard..Class*)*, %shadow.standard..String* (%shadow.standard..Class*)*, %shadow.standard..Class* (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..GenericClass*)* }
-%shadow.standard..GenericClass = type { %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int, { %shadow.standard..Object**, [1 x %int] } }
-%shadow.standard..Iterator_methods = type { %boolean (%shadow.standard..Object*)*, %shadow.standard..Object* (%shadow.standard..Object*)* }
-%shadow.standard..String_methods = type { %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..String*)*, { %byte*, [1 x %int] } (%shadow.standard..String*)*, %int (%shadow.standard..String*, %shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..String*)*, %boolean (%shadow.standard..String*, %shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %byte (%shadow.standard..String*, %int)*, %boolean (%shadow.standard..String*)*, { %shadow.standard..Iterator_methods*, %shadow.standard..Object* } (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %int)*, %shadow.standard..String* (%shadow.standard..String*, %int, %int)*, %byte (%shadow.standard..String*)*, %double (%shadow.standard..String*)*, %float (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %long (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)*, %short (%shadow.standard..String*)*, %ubyte (%shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %ulong (%shadow.standard..String*)*, %ushort (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)* }
-%shadow.standard..String = type { %shadow.standard..Class*, %shadow.standard..String_methods* , { %byte*, [1 x %int] }, %boolean }
+%shadow.standard..Object_methods = type opaque
+%shadow.standard..Object = type { %uint, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
+%shadow.standard..Class_methods = type opaque
+%shadow.standard..Class = type { %uint, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
+%shadow.standard..GenericClass_methods = type opaque
+%shadow.standard..GenericClass = type { %uint, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] } }
+%shadow.standard..Iterator_methods = type opaque
+%shadow.standard..String_methods = type opaque
+%shadow.standard..String = type { %uint, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%uint, %byte}*, [1 x %int] }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
+%shadow.standard..MethodTable_methods = type opaque
+%shadow.standard..MethodTable = type opaque
 
-%shadow.standard..Exception_methods = type { %shadow.standard..Exception* (%shadow.standard..Exception*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Exception*)*, %shadow.standard..String* (%shadow.standard..Exception*)* }
-%shadow.standard..Exception = type { %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
-%shadow.io..IOException_methods = type { %shadow.io..IOException* (%shadow.io..IOException*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Exception*)*, %shadow.standard..String* (%shadow.standard..Exception*)* }
-%shadow.io..IOException = type { %shadow.standard..Class*, %shadow.io..IOException_methods* , %shadow.standard..String* }
+%shadow.standard..Exception_methods = type opaque
+%shadow.standard..Exception = type { %uint, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.io..IOException_methods = type opaque
+%shadow.io..IOException = type { %uint, %shadow.standard..Class*, %shadow.io..IOException_methods* , %shadow.standard..String* }
+%shadow.standard..OutOfMemoryException_methods = type opaque
+%shadow.standard..OutOfMemoryException = type { %uint, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException_methods* , %shadow.standard..String* }
 
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
@@ -40,17 +44,17 @@
 @shadow.io..IOException_class = external constant %shadow.standard..Class
 @shadow.io..IOException_methods = external constant %shadow.io..IOException_methods
 
-%shadow.io..File_methods = type { %shadow.io..File* (%shadow.io..File*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..File*)*, void (%shadow.io..File*)*, void (%shadow.io..File*)*, %boolean (%shadow.io..File*)*, void (%shadow.io..File*, %boolean)*, %shadow.io..Path* (%shadow.io..File*)*, %long (%shadow.io..File*)*, void (%shadow.io..File*, %long)*, %int (%shadow.io..File*, { %byte*, [1 x %int] })*, %long (%shadow.io..File*)*, void (%shadow.io..File*, %long)*, %int (%shadow.io..File*, { %byte*, [1 x %int] })* }
-%shadow.io..File = type { %shadow.standard..Class*, %shadow.io..File_methods* , %long, %shadow.io..Path* }
-%shadow.io..Path_methods = type { %shadow.io..Path* (%shadow.io..Path*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..Path*)*, %code (%shadow.io..Path*)* }
-%shadow.io..Path = type { %shadow.standard..Class*, %shadow.io..Path_methods* , { %shadow.standard..String**, [1 x %int] } }
+%shadow.io..File_methods = type opaque
+%shadow.io..File = type { %uint, %shadow.standard..Class*, %shadow.io..File_methods* , %long, %shadow.io..Path* }
+%shadow.io..Path_methods = type { %shadow.io..Path* (%shadow.io..Path*, %shadow.standard..AddressMap*)*, void (%shadow.io..Path*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..Path*)*, %code (%shadow.io..Path*)* }
+%shadow.io..Path = type { %uint, %shadow.standard..Class*, %shadow.io..Path_methods* , { %shadow.standard..String**, [1 x %int] } }
 %shadow.standard..System = type opaque
 %shadow.io..Console = type opaque
 
 declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A1(%shadow.standard..Object*, { i8*, [1 x i32] })
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object*, %shadow.standard..String*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object*)
-declare noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class*, %shadow.standard..Object_methods*)
+declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 
 
 declare i32 @__shadow_personality_v0(...)
@@ -90,7 +94,7 @@ declare x86_stdcallcc i32 @QueryPerformanceCounter(i64*)
 ; one day update this method to use the @FormatMessage() function
 define private void @throwIOException() noreturn {
 	%1 = tail call x86_stdcallcc i32 @GetLastError()
-	%2 = call noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
+	%2 = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
 	%3 = call %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object* %2)
 	%4 = bitcast %shadow.io..IOException* %3 to %shadow.standard..Object*
 	call void @__shadow_throw(%shadow.standard..Object* %4) noreturn
@@ -137,12 +141,13 @@ define { i8, i1 } @shadow.io..Console_MreadByte(%shadow.io..Console*) {
 define %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
 	%3 = alloca i32
 	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -11)
-	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 0
-	%6 = load i8*, i8** %5
-	%7 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 1, i32 0
-	%8 = load i32, i32* %7
-	%9 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %6, i32 %8, i32* %3, i8* null)
-	;%10 = call x86_stdcallcc i32 @FlushFileBuffers(i8* %4)
+	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0
+	%6 = load {i32, i8}*, {i32, i8}** %5
+	%7 = getelementptr inbounds {i32, i8}, {i32, i8}* %6, i32 0, i32 1
+	%8 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
+	%9 = load i32, i32* %8
+	%10 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %7, i32 %9, i32* %3, i8* null)
+	;%11 = call x86_stdcallcc i32 @FlushFileBuffers(i8* %4)
 	ret %shadow.io..Console* %0
 }
 define %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) {
@@ -154,12 +159,13 @@ define %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
 define %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
 	%3 = alloca i32
 	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -12)
-	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 0
-	%6 = load i8*, i8** %5
-	%7 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 1, i32 0
-	%8 = load i32, i32* %7
-	%9 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %6, i32 %8, i32* %3, i8* null)
-	;%10 = call x86_stdcallcc i32 @FlushFileBuffers(i8* %4)
+	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0
+	%6 = load {i32, i8}*, {i32, i8}** %5
+	%7 = getelementptr inbounds {i32, i8}, {i32, i8}* %6, i32 0, i32 1
+	%8 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
+	%9 = load i32, i32* %8
+	%10 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %7, i32 %9, i32* %3, i8* null)
+	;%11 = call x86_stdcallcc i32 @FlushFileBuffers(i8* %4)
 	ret %shadow.io..Console* %0
 }
 define %shadow.io..Console* @shadow.io..Console_MprintErrorLine(%shadow.io..Console*) {
@@ -174,23 +180,24 @@ define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
 }
 
 define private i8* @filepath(%shadow.io..File*) {
-	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
+	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 4
 	%3 = load %shadow.io..Path*, %shadow.io..Path** %2
-	%4 = getelementptr %shadow.io..Path, %shadow.io..Path* %3, i32 0, i32 1
+	%4 = getelementptr %shadow.io..Path, %shadow.io..Path* %3, i32 0, i32 2
 	%5 = load %shadow.io..Path_methods*, %shadow.io..Path_methods** %4
-	%6 = getelementptr %shadow.io..Path_methods, %shadow.io..Path_methods* %5, i32 0, i32 2
+	%6 = getelementptr %shadow.io..Path_methods, %shadow.io..Path_methods* %5, i32 0, i32 3
 	%7 = load %shadow.standard..String* (%shadow.io..Path*)*, %shadow.standard..String* (%shadow.io..Path*)** %6
 	%8 = tail call %shadow.standard..String* %7(%shadow.io..Path* %3)
-	%9 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 2, i32 0
-	%10 = load i8*, i8** %9
-	%11 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 2, i32 1, i32 0
-	%12 = load i32, i32* %11
-	%13 = add nuw i32 %12, 1
-	%14 = tail call noalias i8* @malloc(i32 %13)
-	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %14, i8* %10, i32 %12, i32 1, i1 0)
-	%15 = getelementptr inbounds i8, i8* %14, i32 %12
-	store i8 0, i8* %15
-	ret i8* %14
+	%9 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 0
+	%10 = load {i32, i8}*, {i32, i8}** %9
+	%11 = getelementptr inbounds {i32, i8}, {i32, i8}* %10, i32 0, i32 1	
+	%12 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 1, i32 0
+	%13 = load i32, i32* %12
+	%14 = add nuw i32 %13, 1
+	%15 = tail call noalias i8* @malloc(i32 %14)
+	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %15, i8* %11, i32 %13, i32 1, i1 0)
+	%16 = getelementptr inbounds i8, i8* %15, i32 %13
+	store i8 0, i8* %16
+	ret i8* %15
 }
 
 define i1 @shadow.io..File_Mexists(%shadow.io..File*) {
@@ -209,7 +216,7 @@ define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
 	%6 = ptrtoint i8* %5 to i64
 	%7 = icmp sge i64 %6, 0
 	br i1 %7, label %8, label %14
-	%9 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%9 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	store i64 %6, i64* %9
 	ret void
 	%11 = tail call x86_stdcallcc i32 @DeleteFileA(i8* %3)
@@ -222,7 +229,7 @@ define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
 }
 define i64 @shadow.io..File_Mposition(%shadow.io..File*) {
 	%2 = alloca i64
-	%3 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%3 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%4 = load i64, i64* %3
 	%5 = inttoptr i64 %4 to i8*
 	%6 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %5, i64 0, i64* %2, i32 1)
@@ -234,7 +241,7 @@ define i64 @shadow.io..File_Mposition(%shadow.io..File*) {
 	unreachable
 }
 define void @shadow.io..File_Mposition_long(%shadow.io..File*, i64) {
-	%3 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%3 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%4 = load i64, i64* %3
 	%5 = inttoptr i64 %4 to i8*
 	%6 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %5, i64 %1, i64* null, i32 0)
@@ -246,7 +253,7 @@ define void @shadow.io..File_Mposition_long(%shadow.io..File*, i64) {
 }
 define i64 @shadow.io..File_Msize(%shadow.io..File*) {
 	%2 = alloca i64
-	%3 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%3 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%4 = load i64, i64* %3
 	%5 = inttoptr i64 %4 to i8*
 	%6 = call x86_stdcallcc i32 @GetFileSizeEx(i8* %5, i64* %2)
@@ -259,7 +266,7 @@ define i64 @shadow.io..File_Msize(%shadow.io..File*) {
 }
 define void @shadow.io..File_Msize_long(%shadow.io..File*, i64) {
 	%3 = alloca i64
-	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%5 = load i64, i64* %4
 	%6 = inttoptr i64 %5 to i8*
 	%7 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 0, i64* %3, i32 1)
@@ -271,7 +278,7 @@ define void @shadow.io..File_Msize_long(%shadow.io..File*, i64) {
 }
 define i32 @shadow.io..File_Mread_byte_A1(%shadow.io..File*, { i8*, [1 x i32] }) {
 	%3 = alloca i32
-	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%5 = load i64, i64* %4
 	%6 = inttoptr i64 %5 to i8*
 	%7 = extractvalue { i8*, [1 x i32] } %1, 0
@@ -305,7 +312,7 @@ define i32 @shadow.io..File_Mread_byte_A1(%shadow.io..File*, { i8*, [1 x i32] })
 }
 define i32 @shadow.io..File_Mwrite_byte_A1(%shadow.io..File*, { i8*, [1 x i32] }) {
 	%3 = alloca i32
-	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%5 = load i64, i64* %4
 	%6 = inttoptr i64 %5 to i8*
 	%7 = extractvalue { i8*, [1 x i32] } %1, 0
@@ -338,7 +345,7 @@ define i32 @shadow.io..File_Mwrite_byte_A1(%shadow.io..File*, { i8*, [1 x i32] }
 	unreachable
 }
 define void @shadow.io..File_Mclose(%shadow.io..File*) {
-	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 2
+	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%3 = load i64, i64* %2
 	store i64 -1, i64* %2
 	%4 = inttoptr i64 %3 to i8*

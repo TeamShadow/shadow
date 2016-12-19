@@ -138,7 +138,8 @@ public abstract class ShadowException extends Exception {
 				for( int i = 1; i <= lineStart; ++i )
 					line = reader.readLine();
 				error.append(EOL);
-				
+				if( line == null )
+					line = ""; //needed sometimes when the error comes *after* the last line
 				line = line.replace('\t', ' ');
 				error.append(line);					
 				error.append(EOL);

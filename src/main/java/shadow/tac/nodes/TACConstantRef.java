@@ -5,7 +5,7 @@ import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACConstantRef implements TACReference {
+public class TACConstantRef extends TACReference {
 	private Type prefix;
 	private ModifiedType type;
 	private String name;

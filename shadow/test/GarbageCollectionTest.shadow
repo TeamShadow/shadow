@@ -1,0 +1,21 @@
+class shadow:test@GarbageCollectionTest
+{
+	public main(String[] args) => ()
+	{
+		String value1 = "Death";
+		String value2 = "Taxes";
+		
+		(value1, value2) = (value2, value1);
+		
+		String value3;
+		String value4;
+		
+		(value3, value4) = thing();		
+	}
+	
+	public thing() => (String, String)
+	{
+		return ("Help", "Me");
+	}
+	
+}

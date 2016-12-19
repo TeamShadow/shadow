@@ -1,3 +1,5 @@
+import shadow:io@Console;
+
 /**
  * Class {@code TreeMap<K,V>} stores an ordered map, also known as an ordered
  * symbol table, of key-value pairs with entries mapping keys of type {@code K}
@@ -179,9 +181,12 @@ is  OrderedMap<K,V>
 	 */ 
     public index(K key, V value) => ()
     {                
+    	Console.printLine("Adding to map!");    
         (root, ) = insert(root, key, value);
+        Console.printLine("Insert completed!"); 
         check(root)->red = false; // Never null after insert.         
         modifications += 1;
+        Console.printLine("Finished adding to map!");   
     }
     
    /**

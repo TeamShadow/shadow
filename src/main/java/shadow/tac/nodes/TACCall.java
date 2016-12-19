@@ -10,7 +10,9 @@ import java.util.Set;
 import shadow.ShadowException;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SequenceType;
@@ -20,8 +22,17 @@ public class TACCall extends TACUpdate
 {	
 	private TACMethodRef methodRef;
 	private List<TACOperand> parameters;
-	private TACLabel noExceptionLabel;	
+	private TACLabel noExceptionLabel;
+	private boolean delegatedCreate; //used to mark calls to super() or this() creates for GC reasons 
 
+	public boolean isDelegatedCreate() {
+		return delegatedCreate;
+	}
+	
+	public void setDelegatedCreate(boolean value) {
+		delegatedCreate = value;
+	}	
+	
 	public TACLabel getNoExceptionLabel() {
 		return noExceptionLabel;
 	}
@@ -47,8 +58,9 @@ public class TACCall extends TACUpdate
 			noExceptionLabel = new TACLabel(getMethod());
 			noExceptionLabel.insertBefore(node); //before the node but after the call
 			//new TACNodeRef(node, this);
-		}
+		}	
 	}
+	
 	public TACMethodRef getMethodRef() {
 		return methodRef;
 	}

@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import shadow.ShadowException;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Modifiers;

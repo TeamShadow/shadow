@@ -345,12 +345,12 @@ and CanHash
 	 * @param value value of new object 
 	 */
 	public create(long value)
-	{
-		ulong magnitude = value.abs();
+	{		
+		ulong magnitude = value.abs();		
 		uint[] temp;
 		if( magnitude >= BASE )
-		{
-			temp = uint:create[2];
+		{	
+			temp = uint:create[2];			
 			temp[1] = cast<uint>(magnitude / BASE); 
 			temp[0] = cast<uint>(magnitude % BASE);					
 		}
@@ -358,10 +358,9 @@ and CanHash
 		{
 			temp = uint:create[1];			 
 			temp[0] = cast<uint>(magnitude);		
-		}
-		
+		}		
 		data = freeze(temp);
-		negative = value < 0L;		
+		negative = value < 0L;
 	}
 	
 	/**
@@ -382,6 +381,7 @@ and CanHash
 	 */
 	public create(String value, uint base)
 	{	
+	
 		if( base < 2u or base > 36u )
 			throw IllegalArgumentException:create("Invalid base: " # base);
 	
@@ -431,9 +431,9 @@ and CanHash
 				holder = unsignedAdd( holder, digitRepresentation );
 				i += 1;			
 			}
-		}
+		}		
 		
-		data = freeze(holder);	
+		data = freeze(holder);
 	}
 	
 	/* Finds numerical value of letter in a given base. */

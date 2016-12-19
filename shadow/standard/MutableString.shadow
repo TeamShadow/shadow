@@ -290,8 +290,7 @@ and CanHash
 	{	
 		byte[] bytes = data;
 		if( data->size != size ) 
-			bytes = cast<byte[]>(data.subarray(0, size));
-				
+			bytes = cast<byte[]>(data.subarray(0, size));		
 		return String:create(bytes);
 	}
 	

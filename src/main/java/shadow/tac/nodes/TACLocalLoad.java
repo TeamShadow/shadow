@@ -13,28 +13,17 @@ public class TACLocalLoad extends TACUpdate {
 
 	private final TACVariable variable;
 	private TACOperand previousStore;
-	private boolean undefined = false;
-	private boolean garbageCollected = false;
+	private boolean undefined = false;	
 
-	public TACLocalLoad(TACNode node, TACVariable var)
+	public TACLocalLoad(TACNode node, TACVariable variable)
 	{
 		super(node);
-		variable = var;
+		this.variable = variable;
 	}
 	
 	public boolean isUndefined() 
 	{
 		return undefined;
-	}
-	
-	public boolean isGarbageCollected()
-	{
-		return garbageCollected;
-	}
-	
-	public void setGarbageCollected(boolean value)
-	{
-		garbageCollected = value;
 	}
 
 	public TACVariable getVariable()
@@ -138,7 +127,7 @@ public class TACLocalLoad extends TACUpdate {
 
 	@Override
 	public TACOperand getValue() {
-		if( previousStore != null && !garbageCollected )
+		if( previousStore != null && !isGarbageCollected() )
 			return previousStore;
 		else
 			return this;

@@ -17,6 +17,7 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
@@ -192,7 +193,8 @@ public class TextOutput extends AbstractOutput
 			 writer.write(inline.visit(new StringBuilder(node.getVariable().toString()).append(" = "), values.values().iterator().next()).
 						append(';').toString());
 		 else
-			 throw new IllegalArgumentException("No nodes stored in phi for " + node.getVariable().toString());			 
+			 writer.write("//No nodes stored in phi for " + node.getVariable().toString());
+			// throw new IllegalArgumentException("No nodes stored in phi for " + node.getVariable().toString());			 
 	}
 	
 	@Override
@@ -216,6 +218,24 @@ public class TextOutput extends AbstractOutput
 		visitReference(sb, reference);		
 		writer.write(inline.visit(sb.append(" = "), node.getValue()).
 				append(';').toString());
+	}
+	
+	@Override
+	public void visit(TACChangeReferenceCount node) throws ShadowException
+	{
+		endBlock(false);
+		
+		
+		StringBuilder sb = new StringBuilder( node.isIncrement() ? "_IncrementRef(" : "_DecrementRef(");
+				
+		if( node.isField() ) {
+			TACFieldRef field = node.getField();
+			visitReference(sb, field);
+		}
+		else 			
+			sb.append(node.getVariable().toString());
+		
+		writer.write(sb.append(");").toString());
 	}
 	
 

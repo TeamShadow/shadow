@@ -514,6 +514,7 @@ public class TypeCollector extends BaseChecker {
 				case "Iterator":		Type.ITERATOR = (InterfaceType) type; break;
 				case "IteratorNullable":	Type.ITERATOR_NULLABLE = (InterfaceType) type; break;
 				case "long":			Type.LONG = (ClassType)type; break;				
+				case "MethodTable":		Type.METHOD_TABLE = (ClassType)type; break;
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;

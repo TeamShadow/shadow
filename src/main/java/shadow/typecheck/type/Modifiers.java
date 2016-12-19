@@ -354,7 +354,7 @@ public final class Modifiers
 
 	public List<ShadowException> checkDestroyModifiers() 
 	{
-		return checkModifiers(new Modifiers(PUBLIC), "A destroy");
+		return checkModifiers(new Modifiers(PUBLIC | NATIVE), "A destroy");
 	}		
 
 	public List<ShadowException> checkLocalVariableModifiers() 

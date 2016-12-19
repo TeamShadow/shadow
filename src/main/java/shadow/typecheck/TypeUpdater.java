@@ -229,6 +229,18 @@ public class TypeUpdater extends BaseChecker {
 				classType.addMethod(createSignature);
 			}
 			
+			/* If no destroy is present, add the default one. */
+			if (classType.getMethods("destroy").isEmpty()) {
+				//might be a terrible idea to create a dummy node
+				ShadowParser.DestroyDeclarationContext destroyNode = new ShadowParser.DestroyDeclarationContext(null, -1);
+				destroyNode.start = destroyNode.stop = makeDummyToken(declaration);
+				destroyNode.addModifiers(Modifiers.PUBLIC);
+				MethodSignature destroySignature = new MethodSignature(classType, "destroy",
+						destroyNode.getModifiers(), destroyNode.getDocumentation(), destroyNode);
+				destroyNode.setSignature(destroySignature);
+				classType.addMethod(destroySignature);
+			}			
+			
 			/* Add copy method with a set to hold addresses. */
 			ShadowParser.MethodDeclarationContext copyNode = new ShadowParser.MethodDeclarationContext(null, -1);
 			copyNode.start = copyNode.stop = makeDummyToken(declaration);
@@ -466,11 +478,11 @@ public class TypeUpdater extends BaseChecker {
 				ClassType parent = classType.getExtendType();			
 			
 				if( parent != null) {
-					/* Enforce immutability: any mutable parent method must be overridden. */ 
+					/* Enforce immutability: any mutable parent method must be overridden by a readonly method. */ 
 					if( classType.getModifiers().isImmutable() ) {
 						List<MethodSignature> list = classType.orderAllMethods();
 						for( MethodSignature signature : list )
-							if( !signature.isCreate() && !signature.getModifiers().isReadonly() )
+							if( !signature.isCreate() && !signature.isDestroy() && !signature.getModifiers().isReadonly() )
 								addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature.getSymbol() + signature.getMethodType() + " must be overridden by readonly method" );
 					}
 					

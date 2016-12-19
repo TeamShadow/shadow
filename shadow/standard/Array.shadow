@@ -24,11 +24,7 @@ and CanIterate<T>
 	 * This method is called internally by the compiler and is only {@code protected}
 	 * because it allows other classes to see the method.
 	 */
-	protected create( immutable int[] lengths, Object data )	
-	{		
-		this:lengths = lengths;	
-		this:data = data;		
-	}	
+	protected native create( immutable int[] lengths, Object data );	
 	
 	/**
 	 * Creates an {@code Array<T>} object with the given dimensions.
@@ -36,6 +32,8 @@ and CanIterate<T>
 	 * because it allows other classes to see the method.
 	 */
 	protected native create( immutable int[] lengths );
+	
+	public native destroy;
 
 	/**
 	 * Gets the size of the array (total number of elements in all dimensions).

@@ -4,21 +4,21 @@ import shadow:utility@ArrayList;
 
 class shadow:test@BasicTest
 {
-	public main( String[] args ) => ()
+	public main() => ()
 	{		
-		Console out;		
+		Console out;
 	
 		out.printLine("Count it off!");
-		
+				
 		for( int i = 0; i < 3; i += 1 )
 			out.printLine("I say " # i + 1);	
 
 		List<String> list = ArrayList<String>:create();
+
+		list.add("Help me");
 	
-		list.add("Help me");		
-				
-		out.printLine( #list );
+		out.printLine( #list );	
 		
-		out.printLine(125);		
+		out.printLine(125);				
 	}
 }

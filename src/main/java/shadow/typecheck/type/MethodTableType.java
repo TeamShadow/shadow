@@ -28,7 +28,7 @@ public class MethodTableType extends Type {
 
 	@Override
 	public boolean isSubtype(Type other) {
-		if( other == OBJECT )
+		if( other == OBJECT || other == METHOD_TABLE )
 			return true;
 
 		return equals(other);

@@ -14,62 +14,72 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
-%shadow.standard..Object = type { %shadow.standard..Class*, %shadow.standard..Object_methods*  }
-%shadow.standard..Class_methods = type { %shadow.standard..Class* (%shadow.standard..Class*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %uint (%shadow.standard..Class*)*, %shadow.standard..Object* (%shadow.standard..Class*, %shadow.standard..Class*)*, { %shadow.standard..Class**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %shadow.standard..String* (%shadow.standard..Class*, %shadow.standard..String*, { %shadow.standard..Object**, [1 x %int] }, %int, %int)*, %shadow.standard..String* (%shadow.standard..Class*)*, %shadow.standard..Class* (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)* }
-%shadow.standard..Class = type { %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int }
-%shadow.standard..GenericClass_methods = type { %shadow.standard..GenericClass* (%shadow.standard..GenericClass*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %uint (%shadow.standard..Class*)*, %shadow.standard..Object* (%shadow.standard..Class*, %shadow.standard..Class*)*, { %shadow.standard..Class**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..GenericClass*, %shadow.standard..Class*)*, %shadow.standard..String* (%shadow.standard..Class*, %shadow.standard..String*, { %shadow.standard..Object**, [1 x %int] }, %int, %int)*, %shadow.standard..String* (%shadow.standard..Class*)*, %shadow.standard..Class* (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..GenericClass*)* }
-%shadow.standard..GenericClass = type { %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int, { %shadow.standard..Object**, [1 x %int] } }
-%shadow.standard..Iterator_methods = type { %boolean (%shadow.standard..Object*)*, %shadow.standard..Object* (%shadow.standard..Object*)* }
-%shadow.standard..String_methods = type { %shadow.standard..String* (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..String*)*, { %byte*, [1 x %int] } (%shadow.standard..String*)*, %int (%shadow.standard..String*, %shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..String*)*, %boolean (%shadow.standard..String*, %shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %byte (%shadow.standard..String*, %int)*, %boolean (%shadow.standard..String*)*, { %shadow.standard..Iterator_methods*, %shadow.standard..Object* } (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %int)*, %shadow.standard..String* (%shadow.standard..String*, %int, %int)*, %byte (%shadow.standard..String*)*, %double (%shadow.standard..String*)*, %float (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %long (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)*, %short (%shadow.standard..String*)*, %ubyte (%shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %ulong (%shadow.standard..String*)*, %ushort (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)* }
-%shadow.standard..String = type { %shadow.standard..Class*, %shadow.standard..String_methods* , { %byte*, [1 x %int] }, %boolean }
+%shadow.standard..Object_methods = type opaque
+%shadow.standard..Object = type { %uint, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
+%shadow.standard..Class_methods = type opaque
+%shadow.standard..Class = type { %uint, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
+%shadow.standard..GenericClass_methods = type opaque
+%shadow.standard..GenericClass = type { %uint, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] } }
+%shadow.standard..Iterator_methods = type opaque
+%shadow.standard..String_methods = type opaque
+%shadow.standard..String = type { %uint, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%uint, %byte}*, [1 x %int] }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
+%shadow.standard..MethodTable_methods = type opaque
+%shadow.standard..MethodTable = type opaque
+
+%shadow.standard..ClassSet_methods = type opaque
+%shadow.standard..ClassSet = type { %uint, %shadow.standard..Class*, %shadow.standard..ClassSet_methods* , { %shadow.standard..ClassSet.Node**, [1 x %int] }, %float, %int, %int, %int }
+%shadow.standard..ClassSet.Node_methods = type opaque
+%shadow.standard..ClassSet.Node = type { %uint, %shadow.standard..Class*, %shadow.standard..ClassSet.Node_methods* , %shadow.standard..ClassSet*, %shadow.standard..ClassSet.Node*, %shadow.standard..Class*, %int }
 
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
+@shadow.standard..MethodTable_class = external constant %shadow.standard..Class
 
-%shadow.standard..ArrayNullable_methods = type { %shadow.standard..ArrayNullable* (%shadow.standard..ArrayNullable*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..ArrayNullable*)*, %int (%shadow.standard..ArrayNullable*)*, %shadow.standard..Class* (%shadow.standard..ArrayNullable*)*, %shadow.standard..Object* (%shadow.standard..ArrayNullable*, { %int*, [1 x %int] })*, void (%shadow.standard..ArrayNullable*, { %int*, [1 x %int] }, %shadow.standard..Object*)*, { %int*, [1 x %int] } (%shadow.standard..ArrayNullable*)*, %int (%shadow.standard..ArrayNullable*)* }
-%shadow.standard..ArrayNullable = type { %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %shadow.standard..Object*, { %int*, [1 x %int] } }
-%shadow.standard..IteratorNullable_methods = type { %boolean (%shadow.standard..Object*)*, %shadow.standard..Object* (%shadow.standard..Object*)* }
-%shadow.standard..Array_methods = type { %shadow.standard..Array* (%shadow.standard..Array*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Array*)*, %int (%shadow.standard..Array*)*, %shadow.standard..Class* (%shadow.standard..Array*)*, %shadow.standard..Object* (%shadow.standard..Array*, { %int*, [1 x %int] })*, void (%shadow.standard..Array*, { %int*, [1 x %int] }, %shadow.standard..Object*)*, { %shadow.standard..Iterator_methods*, %shadow.standard..Object* } (%shadow.standard..Array*)*, { %int*, [1 x %int] } (%shadow.standard..Array*)*, %int (%shadow.standard..Array*)*, %shadow.standard..Array* (%shadow.standard..Array*, %int, %int)* }
-%shadow.standard..Array = type { %shadow.standard..Class*, %shadow.standard..Array_methods* , %shadow.standard..Object*, { %int*, [1 x %int] } }
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type { %uint, %shadow.standard..Class*, %shadow.standard..Array_methods* , %shadow.standard..Object*, {{%uint, %int}*, [1 x %int] } }
+%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable = type { %uint, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %shadow.standard..Object*, {{%uint, %int}*, [1 x %int] } }
+%shadow.standard..IteratorNullable_methods = type opaque
+
+declare void @__incrementRef(%shadow.standard..Object*) nounwind
+declare void @__incrementRefArray({i32, %shadow.standard..Object*}*) nounwind
+declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
+declare void @__decrementRefArray({{i32, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 %dims, %shadow.standard..Class* %base) nounwind
+
 
 ;aliases are in Array.native.ll
 
-declare i32 @__computeIndex(%shadow.standard..Array*, { i32*, [1 x i32] })	
-define %shadow.standard..Object* @shadow.standard..ArrayNullable_Mindex_int_A1(%shadow.standard..Array*, { i32*, [1 x i32] }) alwaysinline {
-	%3 = call i32 @__computeIndex(%shadow.standard..Array* %0, { i32*, [1 x i32] } %1)	
-	%4 = call %shadow.standard..Object* @shadow.standard..ArrayNullable_Mindex_int(%shadow.standard..Array* %0, i32 %3)
-	ret %shadow.standard..Object* %4
-}
+declare %shadow.standard..Object* @__arrayLoad({%uint, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Class* %class, %shadow.standard..MethodTable* %methods, %boolean %nullable)
 
-declare %shadow.standard..Object* @__arrayLoad(%shadow.standard..Object**, i32, %shadow.standard..Class*, %shadow.standard..Object*, %boolean)
-define %shadow.standard..Object* @shadow.standard..ArrayNullable_Mindex_int(%shadow.standard..Array*, i32 ) {
+define %shadow.standard..Object* @shadow.standard..ArrayNullable_Mindex_int(%shadow.standard..Array* %object, i32 %index) {
 	; get array data
-	%arrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %0, i32 0, i32 2
+	%arrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %object, i32 0, i32 3
 	%arrayAsObj = load %shadow.standard..Object*, %shadow.standard..Object** %arrayRef	
-	%array = bitcast %shadow.standard..Object* %arrayAsObj to %shadow.standard..Object**
+	%array = bitcast %shadow.standard..Object* %arrayAsObj to {%uint, %shadow.standard..Object*}*
 
 	; get array class
-	%classRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %0, i32 0, i32 0
-	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
-	%arrayClass = bitcast %shadow.standard..Class* %class to %shadow.standard..GenericClass*	
-	
+	%classRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %object, i32 0, i32 1
+    %class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
+    
 	; get base class
-	%typeParametersArrayRef = getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %arrayClass, i32 0, i32 8	
-	%typeParametersArray = load { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Object**, [1 x %int] }* %typeParametersArrayRef
-	%typeParameters = extractvalue { %shadow.standard..Object**, [1 x %int] } %typeParametersArray, 0	
-	; because the class is the first element, we can skip the getelementptr 0 stuff
-	%baseClassAsObj = load %shadow.standard..Object*, %shadow.standard..Object** %typeParameters
-	%baseClass = bitcast %shadow.standard..Object* %baseClassAsObj to %shadow.standard..Class*
+	%genericClass = bitcast %shadow.standard..Class* %class to %shadow.standard..GenericClass*
+	%typeParameters = getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %genericClass, i32 0, i32 9	
+	%baseClassArray = load {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }* %typeParameters
+	%baseClassArrayPointer = extractvalue {{%uint, %shadow.standard..Class*}*, [1 x %int] } %baseClassArray, 0
+	%baseClassRef = getelementptr {%uint, %shadow.standard..Class*}, {%uint, %shadow.standard..Class*}* %baseClassArrayPointer, i32 0, i32 1
+	%baseClass = load %shadow.standard..Class*, %shadow.standard..Class** %baseClassRef	
 	
-	; get base class method table (might be base of base of base... methods if base class is an array class)
-	%methodsRef = getelementptr inbounds %shadow.standard..Object*, %shadow.standard..Object** %typeParameters, i32 1
-	%methods = load %shadow.standard..Object*, %shadow.standard..Object** %methodsRef
+	; get method table
+	%methodTables = getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %genericClass, i32 0, i32 10	
+	%methodTablesArray = load {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }* %methodTables
+	%methodsTablesArrayPointer = extractvalue {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] } %methodTablesArray, 0
+	%methodTableRef = getelementptr {%uint, %shadow.standard..MethodTable*}, {%uint, %shadow.standard..MethodTable*}* %methodsTablesArrayPointer, i32 0, i32 1
+	%methodTable = load %shadow.standard..MethodTable*, %shadow.standard..MethodTable** %methodTableRef
 	
-	%result = call %shadow.standard..Object* @__arrayLoad(%shadow.standard..Object** %array, i32 %1, %shadow.standard..Class* %baseClass, %shadow.standard..Object* %methods, %boolean 1)
+	%result = call %shadow.standard..Object* @__arrayLoad({%uint, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Class* %baseClass, %shadow.standard..MethodTable* %methodTable, %boolean true)
 	ret %shadow.standard..Object* %result
 }

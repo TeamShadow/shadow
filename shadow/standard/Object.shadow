@@ -5,6 +5,8 @@
  */
 class shadow:standard@Object
 {
+	public native destroy;
+	
 	/**
 	 * Retrieves the {@code Class} object associated with any given object.
 	 * @return {@code Class} of the current object

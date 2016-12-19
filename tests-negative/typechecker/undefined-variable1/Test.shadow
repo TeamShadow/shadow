@@ -1,0 +1,30 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		Object a;
+		int value = 100;
+	
+	
+		if( value <= 7 )
+		{
+			a = "Hello";	
+		}
+		else if( value <= 90 )
+		{		
+			a = "Goodbye";
+		}
+		else if( value <= 200 )
+		{
+			value = 3;
+		}
+		else
+		{
+			a = "Wombat";
+		}				
+		
+		Console.printLine(a);
+	}
+}
