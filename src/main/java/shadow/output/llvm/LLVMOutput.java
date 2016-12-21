@@ -1,12 +1,9 @@
 package shadow.output.llvm;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -221,7 +218,7 @@ public class LLVMOutput extends AbstractOutput {
 									" = external constant %" + raw(Type.CLASS));
 							if(  type instanceof ClassType ) {
 								writer.write( interfaceData(unparameterizedType) +
-										" = external constant { i32, [" + type.getAllInterfaces().size() + " x " + type(Type.METHOD_TABLE) + "]}");
+										" = external constant { %ulong, [" + type.getAllInterfaces().size() + " x " + type(Type.METHOD_TABLE) + "]}");
 								writer.write(methodTable(unparameterizedType) +
 										" = external constant " + methodTableType(unparameterizedType));
 							}						
@@ -294,7 +291,7 @@ public class LLVMOutput extends AbstractOutput {
 				
 				//first thing in every object is the reference count
 				sb.append('%' + raw(type)).append(" = type { ");
-				sb.append(type(Type.UINT)).append(", ");
+				sb.append(type(Type.ULONG)).append(", ");
 
 				//second thing in every object is the class
 				sb.append(type(Type.CLASS)).append(", ");
@@ -329,7 +326,7 @@ public class LLVMOutput extends AbstractOutput {
 		//used for debugging
 		if( moduleType instanceof ClassType ) {
 			ClassType classType = (ClassType) moduleType;
-			writer.write("; 0: reference count (uint)");
+			writer.write("; 0: reference count (ulong)");
 			writer.write("; 1: class (Class)");
 			writer.write("; 2: _methods");
 			int counter = 3;			
@@ -390,14 +387,14 @@ public class LLVMOutput extends AbstractOutput {
 
 			//generic classes don't list interfaces (because their parameterized versions have those)
 			//but they do share interfaceData (the actual methods)
-			interfaceData.append("unnamed_addr constant { i32, [").
+			interfaceData.append("unnamed_addr constant { %ulong, [").
 			append(interfaceCount).append(" x ").
-			append(type(Type.METHOD_TABLE)).append("]} { i32 -1, [" + interfaceCount + " x " + type(Type.METHOD_TABLE) + "] [");
+			append(type(Type.METHOD_TABLE)).append("]} { %ulong -1, [" + interfaceCount + " x " + type(Type.METHOD_TABLE) + "] [");
 			StringBuilder interfaceClasses = new StringBuilder( interfaces(moduleType) + " = private ");
 
-			interfaceClasses.append("unnamed_addr constant { i32, [").
+			interfaceClasses.append("unnamed_addr constant { %ulong, [").
 			append(interfaceCount).append(" x ").
-			append(type(Type.CLASS)).append("]} { i32 -1, [" + interfaceCount + " x " + type(Type.CLASS) + "] [");
+			append(type(Type.CLASS)).append("]} { %ulong -1, [" + interfaceCount + " x " + type(Type.CLASS) + "] [");
 
 			boolean firstData = true;
 			boolean firstClass = true;
@@ -460,7 +457,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(classOf(moduleType) + " = constant %" +
 					raw(Type.CLASS) + " { " + 
 					
-					type(Type.UINT) + " " + literal(-1) + ", " + //reference count 
+					type(Type.ULONG) + " " + literal(-1) + ", " + //reference count 
 
 					type(Type.CLASS) + " " + classOf(Type.CLASS) + ", " + //class
 					methodTableType(Type.CLASS) + "* " + methodTable(Type.CLASS) + ", " + //methods
@@ -469,10 +466,10 @@ public class LLVMOutput extends AbstractOutput {
 					typeText(Type.CLASS, parentType != null ?  //parent class
 							classOf(parentType) : null) + ", " +
 
-					type(new ArrayType(Type.METHOD_TABLE)) + " { {i32, " + type(Type.METHOD_TABLE) + "}* " +   //interfaceTables
-					" bitcast ({i32, [" +
+					type(new ArrayType(Type.METHOD_TABLE)) + " { {%ulong, " + type(Type.METHOD_TABLE) + "}* " +   //interfaceTables
+					" bitcast ({%ulong, [" +
 					interfaceCount + " x " + type(Type.METHOD_TABLE) +
-					"]}* " + interfaceData(moduleType) + " to {i32, " + type(Type.METHOD_TABLE) + "}*), " +
+					"]}* " + interfaceData(moduleType) + " to {%ulong, " + type(Type.METHOD_TABLE) + "}*), " +
 					"[1 x " + type(Type.INT) + "] [" + typeLiteral(interfaceCount) +
 					"] }, " + 
 					type(new ArrayType(Type.CLASS)) + //interfaces 
@@ -480,10 +477,10 @@ public class LLVMOutput extends AbstractOutput {
 					( moduleType.isParameterizedIncludingOuterClasses() ?							
 							" zeroinitializer, " :		
 
-								" { {i32, " + type(Type.CLASS) + "}* " + 
-								"bitcast ({i32, [" +
+								" { {%ulong, " + type(Type.CLASS) + "}* " + 
+								"bitcast ({%ulong, [" +
 								interfaceCount + " x " + type(Type.CLASS) +
-								"]}* " + interfaces(moduleType) + " to {i32, " + type(Type.CLASS) + "}*), " +
+								"]}* " + interfaces(moduleType) + " to {%ulong, " + type(Type.CLASS) + "}*), " +
 								"[1 x " + type(Type.INT) + "] [" + typeLiteral(interfaceCount) + "] }, " )	+
 
 					typeLiteral(flags) + ", " +			//flags
@@ -499,7 +496,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(classOf(moduleType) + " = constant %" +
 					raw(Type.CLASS) + " { " + 
 					
-					type(Type.UINT) + " " + literal(-1) + ", " + //reference count
+					type(Type.ULONG) + " " + literal(-1) + ", " + //reference count
 
 					type(Type.CLASS) + " " + classOf(Type.CLASS) + ", " + //class
 					methodTableType(Type.CLASS) + "* " + methodTable(Type.CLASS) + ", " + //methods
@@ -588,17 +585,17 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		//memcopy
 		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
-		writer.write("declare void @__arrayStore({%uint," + type(Type.OBJECT) + "}*, %int, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
-		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad({%uint," + type(Type.OBJECT) + "}*, %int, " + type(Type.CLASS) + ", " + type(Type.METHOD_TABLE) + ", %boolean)");
+		writer.write("declare void @__arrayStore({%ulong," + type(Type.OBJECT) + "}*, %int, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
+		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad({%ulong," + type(Type.OBJECT) + "}*, %int, " + type(Type.CLASS) + ", " + type(Type.METHOD_TABLE) + ", %boolean)");
 		writer.write("declare void @free(i8*) nounwind");
 		
 		writer.write("declare void @__incrementRef(%shadow.standard..Object*) nounwind");
-		writer.write("declare void @__incrementRefArray({i32, %shadow.standard..Object*}*) nounwind");
+		writer.write("declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}*) nounwind");
 		writer.write("declare void @__decrementRef(%shadow.standard..Object* %object) nounwind");
-		writer.write("declare void @__decrementRefArray({{i32, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 %dims, %shadow.standard..Class* %base) nounwind");
+		writer.write("declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 %dims, %shadow.standard..Class* %base) nounwind");
 		
 		writer.write("declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)");
-		writer.write("declare noalias {i32, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements)");
+		writer.write("declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements)");
 		
 		writer.write();
 
@@ -654,17 +651,17 @@ public class LLVMOutput extends AbstractOutput {
 					append(Character.forDigit(b & 0xf, 16));
 			}
 			writer.write("@_array" + stringIndex + " = private unnamed_addr " +
-					"constant {i32, [" + data.length + " x " + type(Type.BYTE) +
-					"]} { i32 -1, [" + data.length + " x " + type(Type.BYTE) +
+					"constant {%ulong, [" + data.length + " x " + type(Type.BYTE) +
+					"]} { %ulong -1, [" + data.length + " x " + type(Type.BYTE) +
 					"] c\"" + sb + "\" }");
 			writer.write("@_string" + stringIndex + " = private unnamed_addr " +
 					"constant %" + raw(Type.STRING) + " { " +
-					type(Type.UINT) + " " + literal(-1) + ", " +					
+					type(Type.ULONG) + " " + literal(-1) + ", " +					
 					type(Type.CLASS) + " " + classOf(Type.STRING) + ", " +
 					methodTableType(Type.STRING) + "* " + methodTable(Type.STRING) + ", " +					
 					type(byteArray) + 
 					"{" + pointerType(byteArray) + " bitcast (" + 
-					"{" + type(Type.UINT) + ", [" + data.length + " x " + type(Type.BYTE) + "]}* " +
+					"{" + type(Type.ULONG) + ", [" + data.length + " x " + type(Type.BYTE) + "]}* " +
 					"@_array" + stringIndex + " to " + pointerType(byteArray) + "), " +
 					" [1 x " + type(Type.INT) +	"] [" + typeLiteral(data.length) + "] }, " +
 					typeLiteral(ascii) + " }");
@@ -841,12 +838,12 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(nextTemp() + " = bitcast " + destination + " to i8*");
 		writer.write(nextTemp() + " = bitcast " + source + " to i8*");
 		
-		//regular objects (used in copy() and freeze()) have a 4 byte reference count that should *not* be copied
+		//regular objects (used in copy() and freeze()) have an 8 byte reference count that should *not* be copied
 		//this is already taken care of with arrays
 		if( !(destinationNode.getType() instanceof ArrayType) && !(sourceNode.getType() instanceof ArrayType) ) {
-			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 4"); //destination
-			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 4"); //source			
-			writer.write(nextTemp() + " = sub i32 " + symbol(size) + ", 4");
+			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //destination
+			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //source			
+			writer.write(nextTemp() + " = sub i32 " + symbol(size) + ", 8");
 			writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(2) + ", i8* " + temp(1) + ", i32 " + temp(0) + ", i32 1, i1 0)");
 		}
 		else			
@@ -1996,7 +1993,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	protected static String pointerType(ArrayType type, boolean reference) {
-		String value = "{" + type(Type.UINT) + ", " + type(type.getBaseType()) + "}";
+		String value = "{" + type(Type.ULONG) + ", " + type(type.getBaseType()) + "}";
 		if( reference )
 			value += "*";
 		return value;
@@ -2063,12 +2060,6 @@ public class LLVMOutput extends AbstractOutput {
 				" x " + type(Type.INT) + "] }";
 	}
 
-	/*
-	protected static String simplifiedType(ArrayType type) {
-		return "{ { " + type(Type.UINT) + ", " + simplifiedType(type.getBaseType()) + " }*,  [" + type.getDimensions() +
-				" x " + type(Type.INT) + "] }";
-	}
-	*/
 
 	private static String type(SequenceType type) {
 		if (type.isEmpty())
@@ -2353,7 +2344,7 @@ public class LLVMOutput extends AbstractOutput {
 				raw(Type.CLASS) + " { " + 		
 
 				
-				type(Type.UINT) + " " + literal(-1) + ", " + //reference count
+				type(Type.ULONG) + " " + literal(-1) + ", " + //reference count
 				
 				typeText(Type.CLASS, classOf(Type.CLASS)) + ", " + //class
 				methodTableType(Type.CLASS) + "* " + methodTable(Type.CLASS) + ", " + //methods
@@ -2384,11 +2375,11 @@ public class LLVMOutput extends AbstractOutput {
 		}
 		else {
 			ArrayList<InterfaceType> interfaceList = generic.getAllInterfaces();
-			interfaceData = "{ {i32, " + type(Type.METHOD_TABLE) + "}* bitcast ({ i32, [" + interfaceList.size() + " x " +
-					type(Type.METHOD_TABLE) + "]}* " + interfaceData(noArguments) + " to {i32, " + type(Type.METHOD_TABLE) + "}*), [1 x " +
+			interfaceData = "{ {%ulong, " + type(Type.METHOD_TABLE) + "}* bitcast ({ %ulong, [" + interfaceList.size() + " x " +
+					type(Type.METHOD_TABLE) + "]}* " + interfaceData(noArguments) + " to {%ulong, " + type(Type.METHOD_TABLE) + "}*), [1 x " +
 					type(Type.INT) + "] [" + typeLiteral(interfaceList.size()) +	"] }, ";
-			interfaces = "{ {i32, " + type(Type.CLASS) + "}* bitcast ({ i32, [" + interfaceList.size() + " x " +
-					type(Type.CLASS) + "]}* " + genericInterfaces(generic) + " to {i32, " + type(Type.CLASS) + "}*), [1 x " +
+			interfaces = "{ {%ulong, " + type(Type.CLASS) + "}* bitcast ({ %ulong, [" + interfaceList.size() + " x " +
+					type(Type.CLASS) + "]}* " + genericInterfaces(generic) + " to {%ulong, " + type(Type.CLASS) + "}*), [1 x " +
 					type(Type.INT) + "] [" + typeLiteral(interfaceList.size()) + "] }, ";
 			size = typeText(Type.INT, sizeof(type(noArguments))) + ", ";
 		}	
@@ -2411,7 +2402,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(classOf(generic) + " = linkonce unnamed_addr constant  %" +
 				raw(Type.GENERIC_CLASS) + " { " + 
 				
-				type(Type.UINT) + " " + literal(-1) + ", " + //reference count				
+				type(Type.ULONG) + " " + literal(-1) + ", " + //reference count				
 
 				typeText(Type.CLASS, classOf(Type.GENERIC_CLASS)) + ", " + //class
 				methodTableType(Type.GENERIC_CLASS) + "* " + methodTable(Type.GENERIC_CLASS) + ", " + //methods
@@ -2427,13 +2418,13 @@ public class LLVMOutput extends AbstractOutput {
 				size + //size
 
 				type(new ArrayType(Type.CLASS)) + 
-				"{ {i32, " + type(Type.CLASS) + "}* bitcast ( { i32, [" + parameterList.size() + " x " + type(Type.CLASS) + "]}* " +
-				"@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to {i32, " + type(Type.CLASS) + "}*), " +
+				"{ {%ulong, " + type(Type.CLASS) + "}* bitcast ( { %ulong, [" + parameterList.size() + " x " + type(Type.CLASS) + "]}* " +
+				"@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to {%ulong, " + type(Type.CLASS) + "}*), " +
 				"[1 x " + type(Type.INT) + "] [" + typeLiteral(parameterList.size()) + "] }, " + //parameters
 
 				type(new ArrayType(Type.METHOD_TABLE)) + 
-				"{ {i32, " + type(Type.METHOD_TABLE) + "}* bitcast ( { i32, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "]}* " +
-				"@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to {i32, " + type(Type.METHOD_TABLE) + "}*), " +
+				"{ {%ulong, " + type(Type.METHOD_TABLE) + "}* bitcast ( { %ulong, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "]}* " +
+				"@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to {%ulong, " + type(Type.METHOD_TABLE) + "}*), " +
 				"[1 x " + type(Type.INT) + "] [" + typeLiteral(parameterList.size()) + "] }" + //tables
 				" }");
 
@@ -2444,7 +2435,7 @@ public class LLVMOutput extends AbstractOutput {
 		boolean first;
 		if( generic instanceof ClassType ) {
 			List<InterfaceType> interfaces = generic.getAllInterfaces();
-			StringBuilder sb = new StringBuilder("{ i32 -1, ["  + interfaces.size() + " x " + type(Type.CLASS) + "] [");
+			StringBuilder sb = new StringBuilder("{ %ulong -1, ["  + interfaces.size() + " x " + type(Type.CLASS) + "] [");
 			first = true;
 
 			for(InterfaceType _interface : interfaces ) {		
@@ -2461,13 +2452,13 @@ public class LLVMOutput extends AbstractOutput {
 			sb.append("]}");					
 
 			writer.write(genericInterfaces(generic) +
-					" = linkonce unnamed_addr constant {i32, [" + interfaces.size() + " x " + type(Type.CLASS) + "]} " + sb.toString());
+					" = linkonce unnamed_addr constant {%ulong, [" + interfaces.size() + " x " + type(Type.CLASS) + "]} " + sb.toString());
 		}				
 
 		//write definitions of type parameters
 		List<ModifiedType> parameterList = generic.getTypeParametersIncludingOuterClasses();
-		StringBuilder parameters = new StringBuilder("{ i32 -1, ["  + parameterList.size() + " x " + type(Type.CLASS) + "] [");
-		StringBuilder tables = new StringBuilder("{ i32 -1, ["  + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "] [");
+		StringBuilder parameters = new StringBuilder("{ %ulong -1, ["  + parameterList.size() + " x " + type(Type.CLASS) + "] [");
+		StringBuilder tables = new StringBuilder("{ %ulong -1, ["  + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "] [");
 		first = true;
 		 
 		for( ModifiedType parameter : parameterList ) {	
@@ -2512,10 +2503,10 @@ public class LLVMOutput extends AbstractOutput {
 		tables.append("]}");
 
 		writer.write("@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) +
-				" = linkonce unnamed_addr constant { i32, [" + parameterList.size() + " x " + type(Type.CLASS) + "] } " + parameters.toString());
+				" = linkonce unnamed_addr constant { %ulong, [" + parameterList.size() + " x " + type(Type.CLASS) + "] } " + parameters.toString());
 		
 		writer.write("@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) +
-				" = linkonce unnamed_addr constant { i32, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "] } " + tables.toString());
+				" = linkonce unnamed_addr constant { %ulong, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "] } " + tables.toString());
 		
 	}
 

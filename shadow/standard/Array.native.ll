@@ -15,23 +15,23 @@
 
 ; standard definitions
 %shadow.standard..Object_methods = type opaque
-%shadow.standard..Object = type { %uint, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
+%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %uint, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %uint, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] } }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] } }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %uint, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%uint, %byte}*, [1 x %int] }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, [1 x %int] }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
 
 %shadow.standard..ClassSet_methods = type opaque
-%shadow.standard..ClassSet = type { %uint, %shadow.standard..Class*, %shadow.standard..ClassSet_methods* , { %shadow.standard..ClassSet.Node**, [1 x %int] }, %float, %int, %int, %int }
+%shadow.standard..ClassSet = type { %ulong, %shadow.standard..Class*, %shadow.standard..ClassSet_methods* , {{%ulong, %shadow.standard..ClassSet.Node*}*, [1 x %int] }, %float, %int, %int, %int }
 %shadow.standard..ClassSet.Node_methods = type opaque
-%shadow.standard..ClassSet.Node = type { %uint, %shadow.standard..Class*, %shadow.standard..ClassSet.Node_methods* , %shadow.standard..ClassSet*, %shadow.standard..ClassSet.Node*, %shadow.standard..Class*, %int }
+%shadow.standard..ClassSet.Node = type { %ulong, %shadow.standard..Class*, %shadow.standard..ClassSet.Node_methods* , %shadow.standard..ClassSet*, %shadow.standard..ClassSet.Node*, %shadow.standard..Class*, %int }
 
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
@@ -39,17 +39,17 @@
 @shadow.standard..String_class = external constant %shadow.standard..Class
 
 %shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type { %uint, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
 %shadow.standard..IndexOutOfBoundsException_methods = type opaque
-%shadow.standard..IndexOutOfBoundsException = type { %uint, %shadow.standard..Class*, %shadow.standard..IndexOutOfBoundsException_methods* , %shadow.standard..String* }
+%shadow.standard..IndexOutOfBoundsException = type { %ulong, %shadow.standard..Class*, %shadow.standard..IndexOutOfBoundsException_methods* , %shadow.standard..String* }
 
 @shadow.standard..IndexOutOfBoundsException_class = external constant %shadow.standard..Class
 @shadow.standard..IndexOutOfBoundsException_methods = external constant %shadow.standard..IndexOutOfBoundsException_methods
 
 %shadow.standard..Array_methods = type opaque
-%shadow.standard..Array = type { %uint, %shadow.standard..Class*, %shadow.standard..Array_methods* , %shadow.standard..Object*, {{%uint, %int}*, [1 x %int] } }
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %shadow.standard..Object*, {{%ulong, %int}*, [1 x %int] } }
 %shadow.standard..ArrayNullable_methods = type opaque
-%shadow.standard..ArrayNullable = type { %uint, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %shadow.standard..Object*, {{%uint, %int}*, [1 x %int] } }
+%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %shadow.standard..Object*, {{%ulong, %int}*, [1 x %int] } }
 %shadow.standard..IteratorNullable_methods = type opaque
 
 @shadow.standard..Object_class = external constant %shadow.standard..Class
@@ -60,36 +60,35 @@
 @shadow.standard..ArrayNullable_methods = external constant %shadow.standard..ArrayNullable_methods
 @shadow.standard..MethodTable_class = external constant %shadow.standard..Class
 
-%shadow.io..Console_methods = type opaque
-%shadow.io..Console = type { %uint, %shadow.standard..Class*, %shadow.io..Console_methods* , %boolean }
+%shadow.io..Console = type opaque
 
 declare %int @shadow.standard..Array_Msize(%shadow.standard..Array*)
 
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
-declare noalias {i32, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements)
+declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements)
 declare %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object*)
 declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
 
-declare %shadow.standard..GenericClass* @shadow.standard..ClassSet_MgetGenericArray_shadow.standard..String_shadow.standard..Class_A1_shadow.standard..MethodTable_boolean(%shadow.standard..ClassSet*, %shadow.standard..String*, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %shadow.standard..MethodTable*, %boolean)
+declare %shadow.standard..GenericClass* @shadow.standard..ClassSet_MgetGenericArray_shadow.standard..String_shadow.standard..Class_A1_shadow.standard..MethodTable_boolean(%shadow.standard..ClassSet*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %shadow.standard..MethodTable*, %boolean)
 declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate(%shadow.standard..Object*)
 
 declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
 declare void @llvm.memcpy.p0i32.p0i32.i32(i32*, i32*, i32, i32, i1)
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
-declare %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A1_int_int(%shadow.standard..Class*, %shadow.standard..String*, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int)
+declare %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A1_int_int(%shadow.standard..Class*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int)
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
-declare void @__incrementRefArray({i32, %shadow.standard..Object*}*) nounwind
+declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
-declare void @__decrementRefArray({{i32, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 %dims, %shadow.standard..Class* %base) nounwind
+declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 %dims, %shadow.standard..Class* %base) nounwind
 
 @_genericSet = external global %shadow.standard..ClassSet*
 
 ; aliases used by ArrayNullable
-@shadow.standard..ArrayNullable_Mcreate_int_A1 = alias %shadow.standard..Array* (%shadow.standard..Object*, { {%uint, %int}*, [1 x %int] }), %shadow.standard..Array* (%shadow.standard..Object*, { {%uint, %int}*, [1 x %int] })* @shadow.standard..Array_Mcreate_int_A1
+@shadow.standard..ArrayNullable_Mcreate_int_A1 = alias %shadow.standard..Array* (%shadow.standard..Object*, { {%ulong, %int}*, [1 x %int] }), %shadow.standard..Array* (%shadow.standard..Object*, { {%ulong, %int}*, [1 x %int] })* @shadow.standard..Array_Mcreate_int_A1
 @shadow.standard..ArrayNullable_Mdimensions = alias %int (%shadow.standard..Array*), %int (%shadow.standard..Array*)* @shadow.standard..Array_Mdimensions
 @shadow.standard..ArrayNullable_Msubarray_int_int = alias %shadow.standard..Array* (%shadow.standard..Array*, %int, %int), %shadow.standard..Array* (%shadow.standard..Array*, %int, %int)* @shadow.standard..Array_Msubarray_int_int
-@shadow.standard..ArrayNullable_Mindex_int_A1 = alias %shadow.standard..Object* (%shadow.standard..Array*, { {i32, i32}*, [1 x i32] }), %shadow.standard..Object* (%shadow.standard..Array*, { {i32, i32}*, [1 x i32] })* @shadow.standard..Array_Mindex_int_A1
-@shadow.standard..ArrayNullable_Mindex_int_A1_T = alias void (%shadow.standard..Array*, { {i32, i32}*, [1 x i32] }, %shadow.standard..Object*), void (%shadow.standard..Array*, { {i32, i32}*, [1 x i32] }, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_int_A1_T
+@shadow.standard..ArrayNullable_Mindex_int_A1 = alias %shadow.standard..Object* (%shadow.standard..Array*, { {%ulong, i32}*, [1 x i32] }), %shadow.standard..Object* (%shadow.standard..Array*, { {%ulong, i32}*, [1 x i32] })* @shadow.standard..Array_Mindex_int_A1
+@shadow.standard..ArrayNullable_Mindex_int_A1_T = alias void (%shadow.standard..Array*, { {%ulong, i32}*, [1 x i32] }, %shadow.standard..Object*), void (%shadow.standard..Array*, { {%ulong, i32}*, [1 x i32] }, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_int_A1_T
 @shadow.standard..ArrayNullable_Mindex_int_T = alias void (%shadow.standard..Array*, %int, %shadow.standard..Object*), void (%shadow.standard..Array*, %int, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_int_T
 @shadow.standard..ArrayNullable_MgetBaseClass = alias %shadow.standard..Class* (%shadow.standard..Array*), %shadow.standard..Class* (%shadow.standard..Array*)* @shadow.standard..Array_MgetBaseClass
 @shadow.standard..ArrayNullable_Mdestroy = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array_Mdestroy
@@ -102,18 +101,18 @@ declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*
 declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 
-define i32 @__computeIndex(%shadow.standard..Array* %array, { {i32,i32}*, [1 x i32] } %indexes) alwaysinline {	
+define i32 @__computeIndex(%shadow.standard..Array* %array, { {%ulong,i32}*, [1 x i32] } %indexes) alwaysinline {	
 	%lengthsRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 4	
-	%lengths = load { {i32,i32}*, [1 x i32] }, { {i32,i32}*, [1 x i32] }* %lengthsRef
-	%indexPointer = extractvalue { {i32,i32}*, [1 x i32] } %indexes, 0
-	%indexDims = extractvalue { {i32,i32}*, [1 x i32] } %indexes, 1, 0
-	%lengthsPointer = extractvalue { {i32,i32}*, [1 x i32] } %lengths, 0
-	%lengthsDims = extractvalue { {i32,i32}*, [1 x i32] } %lengths, 1, 0
+	%lengths = load { {%ulong,i32}*, [1 x i32] }, { {%ulong,i32}*, [1 x i32] }* %lengthsRef
+	%indexPointer = extractvalue { {%ulong,i32}*, [1 x i32] } %indexes, 0
+	%indexDims = extractvalue { {%ulong,i32}*, [1 x i32] } %indexes, 1, 0
+	%lengthsPointer = extractvalue { {%ulong,i32}*, [1 x i32] } %lengths, 0
+	%lengthsDims = extractvalue { {%ulong,i32}*, [1 x i32] } %lengths, 1, 0
 	%dimsEqual = icmp eq i32 %indexDims, %lengthsDims
 	br i1 %dimsEqual, label %_equalDims, label %throw
 _equalDims:
-	%firstLengthRef = getelementptr {i32,i32}, {i32,i32}* %lengthsPointer, i32 0, i32 1
-	%firstIndexRef = getelementptr {i32,i32}, {i32,i32}* %indexPointer, i32 0, i32 1
+	%firstLengthRef = getelementptr {%ulong,i32}, {%ulong,i32}* %lengthsPointer, i32 0, i32 1
+	%firstIndexRef = getelementptr {%ulong,i32}, {%ulong,i32}* %indexPointer, i32 0, i32 1
 	br label %_loopTest
 _loopTest:
 	%currentLengthRef = phi i32* [ %firstLengthRef,  %_equalDims], [ %nextLengthRef, %_loopUpdate ]
@@ -145,22 +144,22 @@ throw:
 }
 
 
-define %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1_shadow.standard..Object(%shadow.standard..Object* %object, {{%uint, %int}*, [1 x %int] } %lengths, %shadow.standard..Object* %data) {
+define %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1_shadow.standard..Object(%shadow.standard..Object* %object, {{%ulong, %int}*, [1 x %int] } %lengths, %shadow.standard..Object* %data) {
 	call %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object* %object)   
 	
 	%array = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*       
     %lengthsRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 4
 	
 	; no need to increment ref on lengths, since they were allocated specifically for this create (with a reference count of 1)
-    store {{%uint, %int}*, [1 x %int] } %lengths, {{%uint, %int}*, [1 x %int] }* %lengthsRef
+    store {{%ulong, %int}*, [1 x %int] } %lengths, {{%ulong, %int}*, [1 x %int] }* %lengthsRef
     %dataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
-	%dataAsArray = bitcast %shadow.standard..Object* %data to {i32, %shadow.standard..Object*}*
-	call void @__incrementRefArray({i32, %shadow.standard..Object*}* %dataAsArray) nounwind
+	%dataAsArray = bitcast %shadow.standard..Object* %data to {%ulong, %shadow.standard..Object*}*
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %dataAsArray) nounwind
 	store %shadow.standard..Object* %data, %shadow.standard..Object** %dataRef
 	ret %shadow.standard..Array* %array
 }
 
-define %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1(%shadow.standard..Object* %object, { {%uint, %int}*, [1 x %int] }  %lengths) {
+define %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1(%shadow.standard..Object* %object, { {%ulong, %int}*, [1 x %int] }  %lengths) {
     ; first call parent Object create
 	call %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object* %object)
 	
@@ -168,13 +167,13 @@ define %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1(%shadow.s
 	%array = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*
 	
 	; next increment reference count on lengths	
-	%lengthsPointer = extractvalue { {%uint, %int}*, [1 x %int] } %lengths, 0	
-	%lengthsAsObjArray = bitcast {%uint, %int}* %lengthsPointer to {i32, %shadow.standard..Object*}*
-	call void @__incrementRefArray({i32, %shadow.standard..Object*}* %lengthsAsObjArray) nounwind
+	%lengthsPointer = extractvalue { {%ulong, %int}*, [1 x %int] } %lengths, 0	
+	%lengthsAsObjArray = bitcast {%ulong, %int}* %lengthsPointer to {%ulong, %shadow.standard..Object*}*
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %lengthsAsObjArray) nounwind
 	
 	; store lengths
 	%lengthsRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 4
-	store { {%uint, %int}*, [1 x %int] } %lengths, { {%uint, %int}*, [1 x %int] }* %lengthsRef
+	store { {%ulong, %int}*, [1 x %int] } %lengths, { {%ulong, %int}*, [1 x %int] }* %lengthsRef
 	
 	; get base class	
 	%baseClass = call %shadow.standard..Class* @shadow.standard..Array_MgetBaseClass(%shadow.standard..Array* %array)
@@ -183,8 +182,8 @@ define %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1(%shadow.s
 	%size = call %int @shadow.standard..Array_Msize(%shadow.standard..Array* %array)
 
 	; allocate space
-	%data = call noalias {i32, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %baseClass, %uint %size)
-	%dataAsObj = bitcast {i32, %shadow.standard..Object*}* %data to %shadow.standard..Object*
+	%data = call noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %baseClass, %uint %size)
+	%dataAsObj = bitcast {%ulong, %shadow.standard..Object*}* %data to %shadow.standard..Object*
 	
 	;store data
 	%dataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
@@ -196,16 +195,16 @@ define %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1(%shadow.s
 define void @shadow.standard..Array_Mdestroy(%shadow.standard..Array* %array) {
 _start:
 	; really awkward!  we have to reassemble a proper array in order to decrement it!
-	%fakeArray = alloca {{%uint, %shadow.standard..Object*}*, %uint}
+	%fakeArray = alloca {{%ulong, %shadow.standard..Object*}*, %uint}
 		
 	; retrieve total dimensions before cleaning up lengths
 	%dims = call %int @shadow.standard..Array_Mdimensions(%shadow.standard..Array* %array)
 	
 	%lengths = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 4
 
-	%lengthsArray = getelementptr inbounds {{%uint, %int}*, [1 x %int] }, {{%uint, %int}*, [1 x %int] }* %lengths, i32 0, i32 0
-	%sizesRef = load {%uint, %int}*, {%uint, %int}** %lengthsArray
-	%sizes = getelementptr inbounds {%uint, %int}, {%uint, %int}* %sizesRef, i32 0, i32 1
+	%lengthsArray = getelementptr inbounds {{%ulong, %int}*, [1 x %int] }, {{%ulong, %int}*, [1 x %int] }* %lengths, i32 0, i32 0
+	%sizesRef = load {%ulong, %int}*, {%ulong, %int}** %lengthsArray
+	%sizes = getelementptr inbounds {%ulong, %int}, {%ulong, %int}* %sizesRef, i32 0, i32 1
 	br label %_lengthLoop
 	; loop multiplies sizes to get full length
 _lengthLoop:	
@@ -221,26 +220,26 @@ _lengthLoop:
 _done:
 	; put single length into fake array
 	
-	%fakeArrayLength = getelementptr {{%uint, %shadow.standard..Object*}*, %uint}, {{%uint, %shadow.standard..Object*}*, %uint}* %fakeArray, i32 0, i32 1
+	%fakeArrayLength = getelementptr {{%ulong, %shadow.standard..Object*}*, %uint}, {{%ulong, %shadow.standard..Object*}*, %uint}* %fakeArray, i32 0, i32 1
 	store i32 %length.2, i32* %fakeArrayLength
 		
 	; put data into fake array
 	%dataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
     %data = load %shadow.standard..Object*, %shadow.standard..Object** %dataRef
-    %dataAsArray = bitcast %shadow.standard..Object* %data to {%uint, %shadow.standard..Object*}*
+    %dataAsArray = bitcast %shadow.standard..Object* %data to {%ulong, %shadow.standard..Object*}*
 	
-	%fakeArrayData = getelementptr {{%uint, %shadow.standard..Object*}*, %uint}, {{%uint, %shadow.standard..Object*}*, %uint}* %fakeArray, i32 0, i32 0
-	store {%uint, %shadow.standard..Object*}* %dataAsArray, {%uint, %shadow.standard..Object*}** %fakeArrayData
+	%fakeArrayData = getelementptr {{%ulong, %shadow.standard..Object*}*, %uint}, {{%ulong, %shadow.standard..Object*}*, %uint}* %fakeArray, i32 0, i32 0
+	store {%ulong, %shadow.standard..Object*}* %dataAsArray, {%ulong, %shadow.standard..Object*}** %fakeArrayData
 		
 	%baseClass = call %shadow.standard..Class* @shadow.standard..Array_MgetBaseClass(%shadow.standard..Array* %array)
 		
 	; because we already loaded up the lengths, we act like it has a dimension of 1
-    call void @__decrementRefArray({{%uint, %shadow.standard..Object*}*, %uint}* %fakeArray, i32 1, %shadow.standard..Class* %baseClass) nounwind
+    call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %uint}* %fakeArray, i32 1, %shadow.standard..Class* %baseClass) nounwind
     
     
 	; clean up lengths	
-	%lengthsForDecrement = bitcast {{%uint, %int}*, [1 x %int] }* %lengths to {{%uint, %shadow.standard..Object*}*, %uint}*
-    call void @__decrementRefArray({{%uint, %shadow.standard..Object*}*, %uint}* %lengthsForDecrement, i32 1, %shadow.standard..Class* @shadow.standard..int_class) nounwind
+	%lengthsForDecrement = bitcast {{%ulong, %int}*, [1 x %int] }* %lengths to {{%ulong, %shadow.standard..Object*}*, %uint}*
+    call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %uint}* %lengthsForDecrement, i32 1, %shadow.standard..Class* @shadow.standard..int_class) nounwind
     	
 	;parent destroy
 	%asObject = bitcast %shadow.standard..Array* %array to %shadow.standard..Object*
@@ -255,9 +254,9 @@ define %shadow.standard..Class* @shadow.standard..Array_MgetBaseClass(%shadow.st
     %class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
     %genericClass = bitcast %shadow.standard..Class* %class to %shadow.standard..GenericClass*
 	%typeParameters = getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %genericClass, i32 0, i32 9	
-	%baseClassArray = load {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }* %typeParameters
-	%baseClassArrayPointer = extractvalue {{%uint, %shadow.standard..Class*}*, [1 x %int] } %baseClassArray, 0
-	%baseClassRef = getelementptr {%uint, %shadow.standard..Class*}, {%uint, %shadow.standard..Class*}* %baseClassArrayPointer, i32 0, i32 1
+	%baseClassArray = load {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }* %typeParameters
+	%baseClassArrayPointer = extractvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int] } %baseClassArray, 0
+	%baseClassRef = getelementptr {%ulong, %shadow.standard..Class*}, {%ulong, %shadow.standard..Class*}* %baseClassArrayPointer, i32 0, i32 1
 	%baseClass = load %shadow.standard..Class*, %shadow.standard..Class** %baseClassRef
     ret %shadow.standard..Class* %baseClass
 }
@@ -266,7 +265,7 @@ define %shadow.standard..Object* @shadow.standard..Array_Mindex_int(%shadow.stan
 	; get array data
 	%arrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %object, i32 0, i32 3
 	%arrayAsObj = load %shadow.standard..Object*, %shadow.standard..Object** %arrayRef	
-	%array = bitcast %shadow.standard..Object* %arrayAsObj to {%uint, %shadow.standard..Object*}*
+	%array = bitcast %shadow.standard..Object* %arrayAsObj to {%ulong, %shadow.standard..Object*}*
 
 	; get array class
 	%classRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %object, i32 0, i32 1
@@ -275,27 +274,24 @@ define %shadow.standard..Object* @shadow.standard..Array_Mindex_int(%shadow.stan
 	; get base class
 	%genericClass = bitcast %shadow.standard..Class* %class to %shadow.standard..GenericClass*
 	%typeParameters = getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %genericClass, i32 0, i32 9	
-	%baseClassArray = load {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }* %typeParameters
-	%baseClassArrayPointer = extractvalue {{%uint, %shadow.standard..Class*}*, [1 x %int] } %baseClassArray, 0
-	%baseClassRef = getelementptr {%uint, %shadow.standard..Class*}, {%uint, %shadow.standard..Class*}* %baseClassArrayPointer, i32 0, i32 1
+	%baseClassArray = load {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }* %typeParameters
+	%baseClassArrayPointer = extractvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int] } %baseClassArray, 0
+	%baseClassRef = getelementptr {%ulong, %shadow.standard..Class*}, {%ulong, %shadow.standard..Class*}* %baseClassArrayPointer, i32 0, i32 1
 	%baseClass = load %shadow.standard..Class*, %shadow.standard..Class** %baseClassRef	
 	
 	; get method table
 	%methodTables = getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %genericClass, i32 0, i32 10	
-	%methodTablesArray = load {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }* %methodTables
-	%methodsTablesArrayPointer = extractvalue {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] } %methodTablesArray, 0
-	%methodTableRef = getelementptr {%uint, %shadow.standard..MethodTable*}, {%uint, %shadow.standard..MethodTable*}* %methodsTablesArrayPointer, i32 0, i32 1
+	%methodTablesArray = load {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }* %methodTables
+	%methodsTablesArrayPointer = extractvalue {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] } %methodTablesArray, 0
+	%methodTableRef = getelementptr {%ulong, %shadow.standard..MethodTable*}, {%ulong, %shadow.standard..MethodTable*}* %methodsTablesArrayPointer, i32 0, i32 1
 	%methodTable = load %shadow.standard..MethodTable*, %shadow.standard..MethodTable** %methodTableRef
 	
-	%result = call %shadow.standard..Object* @__arrayLoad({%uint, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Class* %baseClass, %shadow.standard..MethodTable* %methodTable, %boolean false)
+	%result = call %shadow.standard..Object* @__arrayLoad({%ulong, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Class* %baseClass, %shadow.standard..MethodTable* %methodTable, %boolean false)
 	ret %shadow.standard..Object* %result
 }
 
-define %shadow.standard..Object* @__arrayLoad({%uint, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Class* %class, %shadow.standard..MethodTable* %methods, %boolean %nullable) {
-	call %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string0)
-	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %index)
-	call %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console* null) 	
-	
+define %shadow.standard..Object* @__arrayLoad({%ulong, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Class* %class, %shadow.standard..MethodTable* %methods, %boolean %nullable) {
+
 	; get generic class flag
 	%flagRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 7
 	%flag = load i32, i32* %flagRef
@@ -314,7 +310,7 @@ _checkArray:
 	
 _checkInterface:
 
-	%elementRefBase = getelementptr inbounds {%uint, %shadow.standard..Object*}, {%uint, %shadow.standard..Object*}* %array, i32 0, i32 1
+	%elementRefBase = getelementptr inbounds {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32 0, i32 1
 
 	%interfaceFlag = and i32 %flag, 1
 	%notInterface = icmp eq i32 %interfaceFlag, 0
@@ -335,16 +331,6 @@ _object:
 
 _primitive:
 
-	call %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string1)	
-	call %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console* null) 
-
-	%trueSizeRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 8
-	%trueSize = load %int, %int* %trueSizeRef
-	
-	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %trueSize)
-	call %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console* null) 		
-	
-
 	; deal with primitive type
 	; create new wrapper object
 	%methodTable.1 = bitcast %shadow.standard..MethodTable* %methods to %shadow.standard..Object_methods*
@@ -356,13 +342,8 @@ _primitive:
 	
 		
 	%width = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %class)	
-	
-	call %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string2)
-	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %width)
-	call %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console* null) 	
-		
 	%offset = mul i32 %index, %width
-	%arrayData = getelementptr {%uint, %shadow.standard..Object*}, {%uint, %shadow.standard..Object*}* %array, i32 0, i32 1	
+	%arrayData = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32 0, i32 1	
 	%arrayAsBytes = bitcast %shadow.standard..Object** %arrayData to i8*
 	%primitiveElement = getelementptr inbounds i8, i8* %arrayAsBytes, i32 %offset
 	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %dataAsBytes, i8* %primitiveElement, i32 %width, i32 1, i1 0)
@@ -390,17 +371,17 @@ _name:
 	%arrayName = phi %shadow.standard..String* [ %nullName, %_null ], [ %notNullName, %_notNull ]
 	%methodTable.2 = phi %shadow.standard..Object_methods* [%nullMethods, %_null ], [ %notNullMethods, %_notNull ]
 
-	%parametersArray = call noalias {i32, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..Class_class, %uint 1)
-	%parameters = bitcast {i32, %shadow.standard..Object*}* %parametersArray to {i32, %shadow.standard..Class*}*	
-	%parametersRef = getelementptr inbounds {i32, %shadow.standard..Class*}, {i32, %shadow.standard..Class*}* %parameters, i32 0, i32 1
+	%parametersArray = call noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..Class_class, %uint 1)
+	%parameters = bitcast {%ulong, %shadow.standard..Object*}* %parametersArray to {%ulong, %shadow.standard..Class*}*	
+	%parametersRef = getelementptr inbounds {%ulong, %shadow.standard..Class*}, {%ulong, %shadow.standard..Class*}* %parameters, i32 0, i32 1
 	store %shadow.standard..Class* %baseClass, %shadow.standard..Class** %parametersRef
 		
-	%uninitializedParameters = insertvalue { {i32, %shadow.standard..Class*}*, [1 x i32] } undef, {i32, %shadow.standard..Class*}* %parameters, 0
-	%initializedParameters = insertvalue { {i32, %shadow.standard..Class*}*, [1 x i32] } %uninitializedParameters, i32 1, 1, 0
+	%uninitializedParameters = insertvalue { {%ulong, %shadow.standard..Class*}*, [1 x i32] } undef, {%ulong, %shadow.standard..Class*}* %parameters, 0
+	%initializedParameters = insertvalue { {%ulong, %shadow.standard..Class*}*, [1 x i32] } %uninitializedParameters, i32 1, 1, 0
 		
-	%className = call %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A1_int_int(%shadow.standard..Class* %class, %shadow.standard..String* %arrayName, { {i32, %shadow.standard..Class*}*, [1 x i32] } %initializedParameters, %int 0, %int 1)
+	%className = call %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A1_int_int(%shadow.standard..Class* %class, %shadow.standard..String* %arrayName, { {%ulong, %shadow.standard..Class*}*, [1 x i32] } %initializedParameters, %int 0, %int 1)
 	%classSet = load %shadow.standard..ClassSet*, %shadow.standard..ClassSet** @_genericSet
-	%arrayClass = call %shadow.standard..GenericClass* @shadow.standard..ClassSet_MgetGenericArray_shadow.standard..String_shadow.standard..Class_A1_shadow.standard..MethodTable_boolean(%shadow.standard..ClassSet* %classSet, %shadow.standard..String* %className, { {i32, %shadow.standard..Class*}*, [1 x i32] } %initializedParameters, %shadow.standard..MethodTable* %methods, %boolean %nullable)
+	%arrayClass = call %shadow.standard..GenericClass* @shadow.standard..ClassSet_MgetGenericArray_shadow.standard..String_shadow.standard..Class_A1_shadow.standard..MethodTable_boolean(%shadow.standard..ClassSet* %classSet, %shadow.standard..String* %className, { {%ulong, %shadow.standard..Class*}*, [1 x i32] } %initializedParameters, %shadow.standard..MethodTable* %methods, %boolean %nullable)
 	%arrayClassAsClass = bitcast %shadow.standard..GenericClass* %arrayClass to %shadow.standard..Class*
 	%arrayWrapper = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %arrayClassAsClass, %shadow.standard..Object_methods* %methodTable.2)
 	
@@ -409,49 +390,46 @@ _name:
 	%dimensions = load i32, i32* %dimensionsRef
 	
 	; allocate new array for dimensions
-	%dimensionsArrayPointer = call noalias {i32, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..int_class, i32 %dimensions)
-	%dimensionsArray = bitcast {i32, %shadow.standard..Object*}* %dimensionsArrayPointer to {i32, i32}*
+	%dimensionsArrayPointer = call noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..int_class, i32 %dimensions)
+	%dimensionsArray = bitcast {%ulong, %shadow.standard..Object*}* %dimensionsArrayPointer to {%ulong, i32}*
 	
 	; get element width (which is an array)
 	%arrayWidth = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %class)	
 	
 	%arrayOffset = mul i32 %index, %arrayWidth	
-	%arrayData2 = getelementptr {%uint, %shadow.standard..Object*}, {%uint, %shadow.standard..Object*}* %array, i32 0, i32 1
+	%arrayData2 = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32 0, i32 1
 	%arrayAsBytes2 = bitcast %shadow.standard..Object** %arrayData2 to i8*
 	
 	; get offset in bytes
 	%arrayElement = getelementptr inbounds i8, i8* %arrayAsBytes2, i32 %arrayOffset
 	
-	; cast to {%uint, %shadow.standard..Object*}**
-	%arrayElementAsArray = bitcast i8* %arrayElement to {{%uint, %shadow.standard..Object*}*, %uint}*
-	%arrayDataRef = getelementptr {{%uint, %shadow.standard..Object*}*, %uint}, {{%uint, %shadow.standard..Object*}*, %uint}* %arrayElementAsArray, i32 0, i32 0
+	; cast to {%ulong, %shadow.standard..Object*}**
+	%arrayElementAsArray = bitcast i8* %arrayElement to {{%ulong, %shadow.standard..Object*}*, %uint}*
+	%arrayDataRef = getelementptr {{%ulong, %shadow.standard..Object*}*, %uint}, {{%ulong, %shadow.standard..Object*}*, %uint}* %arrayElementAsArray, i32 0, i32 0
 	
-	%arrayAsPointer = load {%uint, %shadow.standard..Object*}*, {%uint, %shadow.standard..Object*}** %arrayDataRef
-	%arrayDataAsObj = bitcast {%uint, %shadow.standard..Object*}* %arrayAsPointer to %shadow.standard..Object*
+	%arrayAsPointer = load {%ulong, %shadow.standard..Object*}*, {%ulong, %shadow.standard..Object*}** %arrayDataRef
+	%arrayDataAsObj = bitcast {%ulong, %shadow.standard..Object*}* %arrayAsPointer to %shadow.standard..Object*
 		
 	; skip past data pointer to dimensions
-	%arraySizes = getelementptr {{%uint, %shadow.standard..Object*}*, %uint}, {{%uint, %shadow.standard..Object*}*, %uint}* %arrayElementAsArray, i32 0, i32 1	
+	%arraySizes = getelementptr {{%ulong, %shadow.standard..Object*}*, %uint}, {{%ulong, %shadow.standard..Object*}*, %uint}* %arrayElementAsArray, i32 0, i32 1	
 	
 	; copy dimensions into allocated space
-	%dimensionsArrayData = getelementptr  {i32, i32}, {i32, i32}* %dimensionsArray, i32 0, i32 1	
+	%dimensionsArrayData = getelementptr  {%ulong, i32}, {%ulong, i32}* %dimensionsArray, i32 0, i32 1	
 	call void @llvm.memcpy.p0i32.p0i32.i32(i32* %dimensionsArrayData, i32* %arraySizes, i32 %dimensions, i32 0, i1 0)
 	
 	; make lengths array
-	%lengthsArray1 = insertvalue { {i32, i32}*, [1 x i32] } undef, {i32, i32}* %dimensionsArray, 0
-	%lengthsArray2 = insertvalue { {i32, i32}*, [1 x i32] } %lengthsArray1, i32 %dimensions, 1, 0
+	%lengthsArray1 = insertvalue { {%ulong, i32}*, [1 x i32] } undef, {%ulong, i32}* %dimensionsArray, 0
+	%lengthsArray2 = insertvalue { {%ulong, i32}*, [1 x i32] } %lengthsArray1, i32 %dimensions, 1, 0
 	
 	; initialize Array<T> object
-	%initializedArray = call %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1_shadow.standard..Object(%shadow.standard..Object* %arrayWrapper, { {i32, i32}*, [1 x i32] } %lengthsArray2, %shadow.standard..Object* %arrayDataAsObj)
+	%initializedArray = call %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1_shadow.standard..Object(%shadow.standard..Object* %arrayWrapper, { {%ulong, i32}*, [1 x i32] } %lengthsArray2, %shadow.standard..Object* %arrayDataAsObj)
 	
 	; Object that just got initialized
 	ret %shadow.standard..Object* %arrayWrapper
 }
 
-; here
-
-
-define %shadow.standard..Object* @shadow.standard..Array_Mindex_int_A1(%shadow.standard..Array*, { {i32, i32}*, [1 x i32] }) alwaysinline {
-	%3 = call i32 @__computeIndex(%shadow.standard..Array* %0, { {i32, i32}*, [1 x i32] } %1)	
+define %shadow.standard..Object* @shadow.standard..Array_Mindex_int_A1(%shadow.standard..Array*, { {%ulong, i32}*, [1 x i32] }) alwaysinline {
+	%3 = call i32 @__computeIndex(%shadow.standard..Array* %0, { {%ulong, i32}*, [1 x i32] } %1)	
 	%4 = call %shadow.standard..Object* @shadow.standard..Array_Mindex_int(%shadow.standard..Array* %0, i32 %3)
 	ret %shadow.standard..Object* %4
 }
@@ -461,13 +439,13 @@ define void @shadow.standard..Array_Mindex_int_T(%shadow.standard..Array*, i32, 
 		
 	%arrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %0, i32 0, i32 3
 	%arrayAsObj = load %shadow.standard..Object*, %shadow.standard..Object** %arrayRef
-	%array = bitcast %shadow.standard..Object* %arrayAsObj to {%uint, %shadow.standard..Object*}*
+	%array = bitcast %shadow.standard..Object* %arrayAsObj to {%ulong, %shadow.standard..Object*}*
 	
-	call void @__arrayStore({%uint, %shadow.standard..Object*}* %array, i32 %1, %shadow.standard..Object* %2, %shadow.standard..Class* %baseClass)
+	call void @__arrayStore({%ulong, %shadow.standard..Object*}* %array, i32 %1, %shadow.standard..Object* %2, %shadow.standard..Class* %baseClass)
 	ret void
 }
 
-define void @__arrayStore({%uint, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Object* %object, %shadow.standard..Class* %baseClass) {
+define void @__arrayStore({%ulong, %shadow.standard..Object*}* %array, i32 %index, %shadow.standard..Object* %object, %shadow.standard..Class* %baseClass) {
 	
 	; TODO: Make this work for storing interfaces as well!  (Will need to reconstruct the interface methods)
 	
@@ -486,7 +464,7 @@ _checkArray:
 
 _object:
 	call void @__incrementRef(%shadow.standard..Object* %object) nounwind 
-	%elementRefBase = getelementptr inbounds {%uint, %shadow.standard..Object*}, {%uint, %shadow.standard..Object*}* %array, i32  0, i32 1
+	%elementRefBase = getelementptr inbounds {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32  0, i32 1
 	%elementRef = getelementptr %shadow.standard..Object*, %shadow.standard..Object** %elementRefBase, i32 %index
 	
 	%old = load %shadow.standard..Object*, %shadow.standard..Object** %elementRef
@@ -497,7 +475,7 @@ _object:
 _primitive:
 	%primitiveWidth = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %baseClass)
 	%offset = mul i32 %index, %primitiveWidth	
-	%arrayPointer1 = getelementptr {%uint, %shadow.standard..Object*}, {%uint, %shadow.standard..Object*}* %array, i32 0, i32 1
+	%arrayPointer1 = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32 0, i32 1
 	%arrayAsBytes1 = bitcast %shadow.standard..Object** %arrayPointer1 to i8*
 	%primitiveElement = getelementptr i8, i8* %arrayAsBytes1, i32 %offset
 	%primitiveWrapper = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 1
@@ -509,7 +487,7 @@ _array:
 	; get the location inside the current Array<T>
 	%arrayWidth = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %baseClass)	
 	%arrayOffset = mul i32 %index, %arrayWidth	
-	%arrayPointer2 = getelementptr {%uint, %shadow.standard..Object*}, {%uint, %shadow.standard..Object*}* %array, i32 0, i32 1
+	%arrayPointer2 = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32 0, i32 1
 	%arrayAsBytes2 = bitcast %shadow.standard..Object** %arrayPointer2 to i8*
 	%arrayElement = getelementptr i8, i8* %arrayAsBytes2, i32 %arrayOffset
 		
@@ -517,56 +495,57 @@ _array:
 	%input = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*
 	%inputArray = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %input, i32 0, i32 3
 	%inputArrayAsObj = load %shadow.standard..Object*, %shadow.standard..Object** %inputArray
-	%inputArrayPointer = bitcast %shadow.standard..Object* %inputArrayAsObj to {%uint, %shadow.standard..Object*}*
+	%inputArrayPointer = bitcast %shadow.standard..Object* %inputArrayAsObj to {%ulong, %shadow.standard..Object*}*
 				
 	; increment reference count on new array	
-	call void @__incrementRefArray({i32, %shadow.standard..Object*}* %inputArrayPointer) nounwind
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %inputArrayPointer) nounwind
 	
 	; get dimensions from new array (which must match the old one)
 	%dimensionsRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %input, i32 0, i32 4, i32 1, i32 0
 	%dimensions = load i32, i32* %dimensionsRef
 
 	; decrement reference count on old array
-	%oldArrayElement = bitcast i8* %arrayElement to {{i32, %shadow.standard..Object*}*, i32}*
+	%oldArrayElement = bitcast i8* %arrayElement to {{%ulong, %shadow.standard..Object*}*, i32}*
 	; needs to know base class of the array, which we get from the new array
 	%base = call %shadow.standard..Class* @shadow.standard..Array_MgetBaseClass(%shadow.standard..Array* %input)
-	call void @__decrementRefArray({{i32, %shadow.standard..Object*}*, i32}* %oldArrayElement, i32 %dimensions, %shadow.standard..Class* %base) nounwind
+	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, i32}* %oldArrayElement, i32 %dimensions, %shadow.standard..Class* %base) nounwind
 		
 	; store it into the array
-	%arrayPointer = getelementptr {{i32, %shadow.standard..Object*}*, i32}, {{i32, %shadow.standard..Object*}*, i32}* %oldArrayElement, i32 0, i32 0
-	store {%uint, %shadow.standard..Object*}* %inputArrayPointer, {%uint, %shadow.standard..Object*}** %arrayPointer	
+	%arrayPointer = getelementptr {{%ulong, %shadow.standard..Object*}*, i32}, {{%ulong, %shadow.standard..Object*}*, i32}* %oldArrayElement, i32 0, i32 0
+	store {%ulong, %shadow.standard..Object*}* %inputArrayPointer, {%ulong, %shadow.standard..Object*}** %arrayPointer	
 	
 	; get pointer to input lengths (from Array<T>)
 	%inputLengthsArrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %input, i32 0, i32 4
-	%inputLengthsArray = load {{i32, i32}*, [1 x i32]}, {{i32, i32}*, [1 x i32]}* %inputLengthsArrayRef
-	%inputLengthsPointer = extractvalue {{i32, i32}*, [1 x i32]} %inputLengthsArray, 0
-	%inputLengthsRef = getelementptr {i32, i32}, {i32, i32}* %inputLengthsPointer, i32 0, i32 1	
+	%inputLengthsArray = load {{%ulong, i32}*, [1 x i32]}, {{%ulong, i32}*, [1 x i32]}* %inputLengthsArrayRef
+	%inputLengthsPointer = extractvalue {{%ulong, i32}*, [1 x i32]} %inputLengthsArray, 0
+	%inputLengthsRef = getelementptr {%ulong, i32}, {%ulong, i32}* %inputLengthsPointer, i32 0, i32 1	
 	
 	
 	; get pointer to length storage location
-	%oldLengths = getelementptr inbounds {{i32, %shadow.standard..Object*}*, i32}, {{i32, %shadow.standard..Object*}*, i32}* %oldArrayElement, i32 0, i32 1
+	%oldLengths = getelementptr inbounds {{%ulong, %shadow.standard..Object*}*, i32}, {{%ulong, %shadow.standard..Object*}*, i32}* %oldArrayElement, i32 0, i32 1
 	
 	call void @llvm.memcpy.p0i32.p0i32.i32(i32* %oldLengths, i32* %inputLengthsRef, i32 %dimensions, i32 0, i1 0)	
 	ret void
 }
 
-define void @shadow.standard..Array_Mindex_int_A1_T(%shadow.standard..Array*, { {i32, i32}*, [1 x i32] }, %shadow.standard..Object*) alwaysinline {
-	%4 = call i32 @__computeIndex(%shadow.standard..Array* %0, { {i32, i32}*, [1 x i32] } %1)	
+define void @shadow.standard..Array_Mindex_int_A1_T(%shadow.standard..Array*, { {%ulong, i32}*, [1 x i32] }, %shadow.standard..Object*) alwaysinline {
+	%4 = call i32 @__computeIndex(%shadow.standard..Array* %0, { {%ulong, i32}*, [1 x i32] } %1)	
 	call void @shadow.standard..Array_Mindex_int_T(%shadow.standard..Array* %0, i32 %4, %shadow.standard..Object* %2)
 	ret void
 }
 
-; fix subarray to increase reference counts
-
 define noalias %shadow.standard..Array* @shadow.standard..Array_Msubarray_int_int(%shadow.standard..Array* %array, i32 %first, i32 %second) {
+	
 	; check sizes first
 	%size = call %int @shadow.standard..Array_Msize(%shadow.standard..Array* %array)
+	
 	%test1 = icmp ule i32 %second, %size
 	br i1 %test1, label %_secondLessThanSize, label %throw
 _secondLessThanSize:
 	%test2 = icmp ule i32 %first, %second
 	br i1 %test2, label %_firstLessThanSecond, label %throw
 _firstLessThanSecond:
+
 	; get class from original array
 	%classRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 1
 	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef		
@@ -582,16 +561,16 @@ _firstLessThanSecond:
 	; get base class
 	%genericClass = bitcast %shadow.standard..Class* %class to %shadow.standard..GenericClass*
 	%typeParameters = getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %genericClass, i32 0, i32 9	
-	%baseClassArray = load {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }* %typeParameters
-	%baseClassArrayPointer = extractvalue {{%uint, %shadow.standard..Class*}*, [1 x %int] } %baseClassArray, 0
-	%baseClassRef = getelementptr {%uint, %shadow.standard..Class*}, {%uint, %shadow.standard..Class*}* %baseClassArrayPointer, i32 0, i32 1
+	%baseClassArray = load {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }* %typeParameters
+	%baseClassArrayPointer = extractvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int] } %baseClassArray, 0
+	%baseClassRef = getelementptr {%ulong, %shadow.standard..Class*}, {%ulong, %shadow.standard..Class*}* %baseClassArrayPointer, i32 0, i32 1
 	%baseClass = load %shadow.standard..Class*, %shadow.standard..Class** %baseClassRef	
 	
 	; create array for dimensions (only a single element, since the subarray will always be 1D)
-	%dimensionsPointer = call noalias {i32, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..int_class, i32 1)
-	%dimensions = bitcast {i32, %shadow.standard..Object*}* %dimensionsPointer to {i32, i32}*
+	%dimensionsPointer = call noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..int_class, i32 1)
+	%dimensions = bitcast {%ulong, %shadow.standard..Object*}* %dimensionsPointer to {%ulong, i32}*
 	
-	%dimensionRef = getelementptr {i32, i32}, {i32, i32}* %dimensions, i32 0, i32 1
+	%dimensionRef = getelementptr {%ulong, i32}, {%ulong, i32}* %dimensions, i32 0, i32 1
 	
 	; get difference between indexes
 	%difference = sub i32 %second, %first
@@ -600,25 +579,25 @@ _firstLessThanSecond:
 	store i32 %difference, i32* %dimensionRef
 		
 	; put new dimension data into array
-	%dimensionsArray1 = insertvalue { {i32, i32}*, [1 x i32] } undef, {i32, i32}* %dimensions, 0
+	%dimensionsArray1 = insertvalue { {%ulong, i32}*, [1 x i32] } undef, {%ulong, i32}* %dimensions, 0
 	
 	; put number of dimensions (1) into array
-	%dimensionsArray2 = insertvalue { {i32, i32}*, [1 x i32] } %dimensionsArray1, i32 1, 1, 0
+	%dimensionsArray2 = insertvalue { {%ulong, i32}*, [1 x i32] } %dimensionsArray1, i32 1, 1, 0
 
 	; get array data
 	%arrayDataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
 	%arrayData = load %shadow.standard..Object*, %shadow.standard..Object** %arrayDataRef
 	
 	; cast to array pointer
-	%arrayDataAsArrayPointer = bitcast %shadow.standard..Object* %arrayData to {i32, %shadow.standard..Object*}*	
-	%arrayDataPointer = getelementptr {i32, %shadow.standard..Object*}, {i32, %shadow.standard..Object*}* %arrayDataAsArrayPointer, i32 0, i32 1
+	%arrayDataAsArrayPointer = bitcast %shadow.standard..Object* %arrayData to {%ulong, %shadow.standard..Object*}*	
+	%arrayDataPointer = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %arrayDataAsArrayPointer, i32 0, i32 1
 	
 	%arrayDataAsChar = bitcast %shadow.standard..Object** %arrayDataPointer to i8*
 	
 	
 	;allocate new real array
-	%newArray = call noalias {i32, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %baseClass, %uint %difference)
-	%newArrayDataPointer = getelementptr {i32, %shadow.standard..Object*}, {i32, %shadow.standard..Object*}* %newArray, i32 0, i32 1
+	%newArray = call noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %baseClass, %uint %difference)
+	%newArrayDataPointer = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %newArray, i32 0, i32 1
 	
 	%newArrayAsChar = bitcast %shadow.standard..Object** %newArrayDataPointer to i8*
 	
@@ -672,10 +651,10 @@ _loopTestArray:
 	br i1 %less2, label %_loopBodyArray, label %_done
 _loopBodyArray:
 	%elementRef2 = getelementptr i8, i8* %newArrayAsChar, i32 %i2
-	%elementAsArrayRef = bitcast i8* %elementRef2 to {{%uint, %shadow.standard..Object*}*, %uint }*
-	%elementAsArray = load {{%uint, %shadow.standard..Object*}*, %uint }, {{%uint, %shadow.standard..Object*}*, %uint }* %elementAsArrayRef
-	%elementAsArrayPointer = extractvalue {{%uint, %shadow.standard..Object*}*, %uint } %elementAsArray, 0
-	call void @__incrementRefArray({i32, %shadow.standard..Object*}* %elementAsArrayPointer) nounwind
+	%elementAsArrayRef = bitcast i8* %elementRef2 to {{%ulong, %shadow.standard..Object*}*, %uint }*
+	%elementAsArray = load {{%ulong, %shadow.standard..Object*}*, %uint }, {{%ulong, %shadow.standard..Object*}*, %uint }* %elementAsArrayRef
+	%elementAsArrayPointer = extractvalue {{%ulong, %shadow.standard..Object*}*, %uint } %elementAsArray, 0
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %elementAsArrayPointer) nounwind
 	%incremented2 = add i32 %i2, %width
 	br label %_loopTestArray
 	
@@ -693,31 +672,38 @@ _loopBodyObj:
 	br label %_loopTestObj	
 	
 _done:	
-	%newArrayAsObj = bitcast {i32, %shadow.standard..Object*}* %newArray to %shadow.standard..Object*	
-	%initializedArray = call %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1_shadow.standard..Object(%shadow.standard..Object* %arrayObj, { {i32, i32}*, [1 x i32] } %dimensionsArray2, %shadow.standard..Object* %newArrayAsObj)		
+	%newArrayAsObj = bitcast {%ulong, %shadow.standard..Object*}* %newArray to %shadow.standard..Object*	
+	%initializedArray = call %shadow.standard..Array* @shadow.standard..Array_Mcreate_int_A1_shadow.standard..Object(%shadow.standard..Object* %arrayObj, { {%ulong, i32}*, [1 x i32] } %dimensionsArray2, %shadow.standard..Object* %newArrayAsObj)		
 	ret %shadow.standard..Array* %initializedArray	
 throw:
 	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..IndexOutOfBoundsException_methods* @shadow.standard..IndexOutOfBoundsException_methods to %shadow.standard..Object_methods*))
 	%ex.ex = call %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate(%shadow.standard..Object* %ex.obj)
+	
 	call void @__shadow_throw(%shadow.standard..Object* %ex.obj) noreturn	
 	unreachable
 }
 
 define %int @shadow.standard..Array_Mdimensions(%shadow.standard..Array*) {
     %2 = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %0, i32 0, i32 4
-    %3 = load {{%uint, %int}*, [1 x %int] } , {{%uint, %int}*, [1 x %int] }* %2
-    %4 = extractvalue { {%uint, %int}*, [1 x %int] } %3, 1, 0
+    %3 = load {{%ulong, %int}*, [1 x %int] } , {{%ulong, %int}*, [1 x %int] }* %2
+    %4 = extractvalue { {%ulong, %int}*, [1 x %int] } %3, 1, 0
     ret %int %4
 }
 
 
-@_array0 = private unnamed_addr constant {i32, [12 x %byte]} { i32 -1, [12 x %byte] c"Array Load: " }
-@_string0 = private unnamed_addr constant %shadow.standard..String { %uint -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%uint, %byte}*, [1 x %int] }{{%uint, %byte}* bitcast ({%uint, [12 x %byte]}* @_array0 to {%uint, %byte}*),  [1 x %int] [%int 12] }, %boolean true }
+@_array0 = private unnamed_addr constant {%ulong, [17 x %byte]} { %ulong -1, [17 x %byte] c"Subarray started!" }
+@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%ulong, %byte}*, [1 x %int] }{{%ulong, %byte}* bitcast ({%ulong, [17 x %byte]}* @_array0 to {%ulong, %byte}*),  [1 x %int] [%int 17] }, %boolean true }
 
-@_array1 = private unnamed_addr constant {i32, [12 x %byte]} { i32 -1, [12 x %byte] c"Primitive!!!" }
-@_string1 = private unnamed_addr constant %shadow.standard..String { %uint -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%uint, %byte}*, [1 x %int] }{{%uint, %byte}* bitcast ({%uint, [12 x %byte]}* @_array1 to {%uint, %byte}*),  [1 x %int] [%int 12] }, %boolean true }
+@_array1 = private unnamed_addr constant {%ulong, [17 x %byte]} { %ulong -1, [17 x %byte] c"Subarray done!!!!" }
+@_string1 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%ulong, %byte}*, [1 x %int] }{{%ulong, %byte}* bitcast ({%ulong, [17 x %byte]}* @_array1 to {%ulong, %byte}*),  [1 x %int] [%int 17] }, %boolean true }
 
-@_array2 = private unnamed_addr constant {i32, [12 x %byte]} { i32 -1, [12 x %byte] c"Item width: " }
-@_string2 = private unnamed_addr constant %shadow.standard..String { %uint -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%uint, %byte}*, [1 x %int] }{{%uint, %byte}* bitcast ({%uint, [12 x %byte]}* @_array2 to {%uint, %byte}*),  [1 x %int] [%int 12] }, %boolean true }
+@_array2 = private unnamed_addr constant {%ulong, [17 x %byte]} { %ulong -1, [17 x %byte] c"Past checks!!!!!!" }
+@_string2 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%ulong, %byte}*, [1 x %int] }{{%ulong, %byte}* bitcast ({%ulong, [17 x %byte]}* @_array2 to {%ulong, %byte}*),  [1 x %int] [%int 17] }, %boolean true }
+
+@_array3 = private unnamed_addr constant {%ulong, [17 x %byte]} { %ulong -1, [17 x %byte] c"Reaching throw!!!" }
+@_string3 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%ulong, %byte}*, [1 x %int] }{{%ulong, %byte}* bitcast ({%ulong, [17 x %byte]}* @_array3 to {%ulong, %byte}*),  [1 x %int] [%int 17] }, %boolean true }
+
+@_array4 = private unnamed_addr constant {%ulong, [17 x %byte]} { %ulong -1, [17 x %byte] c"Got size!!!!!!!!!" }
+@_string4 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, {{%ulong, %byte}*, [1 x %int] }{{%ulong, %byte}* bitcast ({%ulong, [17 x %byte]}* @_array4 to {%ulong, %byte}*),  [1 x %int] [%int 17] }, %boolean true }
 
 

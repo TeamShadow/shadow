@@ -40,10 +40,11 @@ and CanIterate<T>
 	 * @return number of all elements
 	 */
 	public readonly get size() => ( int )
-	{
+	{		
 		int size = lengths[0];
 		for ( int i = 1; i < lengths->size; i += 1 )
 			size *= lengths[i];
+			
 		return size;
 	}
 	

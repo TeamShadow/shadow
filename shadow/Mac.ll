@@ -15,25 +15,25 @@
 
 ; standard definitions
 %shadow.standard..Object_methods = type opaque
-%shadow.standard..Object = type { %uint, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
+%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %uint, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %uint, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%uint, %shadow.standard..Class*}*, [1 x %int] }, {{%uint, %shadow.standard..MethodTable*}*, [1 x %int] } }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] } }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %uint, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%uint, %byte}*, [1 x %int] }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, [1 x %int] }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
 
 %shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type { %uint, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
 %shadow.io..IOException_methods = type opaque
-%shadow.io..IOException = type { %uint, %shadow.standard..Class*, %shadow.io..IOException_methods* , %shadow.standard..String* }
+%shadow.io..IOException = type { %ulong, %shadow.standard..Class*, %shadow.io..IOException_methods* , %shadow.standard..String* }
 %shadow.standard..OutOfMemoryException_methods = type opaque
-%shadow.standard..OutOfMemoryException = type { %uint, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException_methods* , %shadow.standard..String* }
+%shadow.standard..OutOfMemoryException = type { %ulong, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException_methods* , %shadow.standard..String* }
 
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
@@ -43,18 +43,20 @@
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.io..IOException_class = external constant %shadow.standard..Class
 @shadow.io..IOException_methods = external constant %shadow.io..IOException_methods
+@shadow.standard..byte_class = external constant %shadow.standard..Class
 
 %shadow.io..File_methods = type opaque
-%shadow.io..File = type { %uint, %shadow.standard..Class*, %shadow.io..File_methods* , %long, %shadow.io..Path* }
+%shadow.io..File = type { %ulong, %shadow.standard..Class*, %shadow.io..File_methods* , %long, %shadow.io..Path* }
 %shadow.io..Path_methods = type { %shadow.io..Path* (%shadow.io..Path*, %shadow.standard..AddressMap*)*, void (%shadow.io..Path*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..Path*)*, %code (%shadow.io..Path*)* }
-%shadow.io..Path = type { %uint, %shadow.standard..Class*, %shadow.io..Path_methods* , { %shadow.standard..String**, [1 x %int] } }
+%shadow.io..Path = type { %ulong, %shadow.standard..Class*, %shadow.io..Path_methods* , {{%ulong, %shadow.standard..String*}*, [1 x %int] } }
 %shadow.standard..System = type opaque
 %shadow.io..Console = type opaque
 
-declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A1(%shadow.standard..Object*, { i8*, [1 x i32] })
+declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A1(%shadow.standard..Object*, {{%ulong, %byte}*, [1 x i32]})
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object*, %shadow.standard..String*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object*)
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
+declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements)
 
 declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
@@ -66,6 +68,7 @@ declare void @free(i8*) nounwind
 declare i32* @__error() nounwind readnone
 declare i8* @strerror_r(i32, i8*, i32) nounwind
 declare i32 @strlen(i8*) nounwind readonly
+declare i8* @strcpy(i8*, i8*) nounwind
 declare i32 @access(i8* nocapture, i32)
 declare i64 @lseek(i32, i64, i32)
 declare i32 @truncate(i8* nocapture, i64)
@@ -86,14 +89,19 @@ define private void @throwIOException() noreturn {
 	%2 = tail call i32* @__error() nounwind readnone
 	%3 = load i32, i32* %2
 	%4 = call i8* @strerror_r(i32 %3, i8* %1, i32 256) nounwind
-	%5 = insertvalue { i8*, [1 x i32] } undef, i8* %4, 0
-	%6 = tail call i32 @strlen(i8* %4)
-	%7 = insertvalue { i8*, [1 x i32] } %5, i32 %6, 1, 0
-	%8 = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))
-	%9 = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A1(%shadow.standard..Object* %8, { i8*, [1 x i32] } %7)
-	%10 = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
-	%11 = call %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object* %10, %shadow.standard..String* %9)
-	call void @__shadow_throw(%shadow.standard..Object* %10) noreturn
+	%5 = tail call i32 @strlen(i8* %4)
+	%6 = call noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..byte_class, %uint %5) nounwind
+	%7 = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %6, i32 0, i32 1
+	%8 = bitcast %shadow.standard..Object** %7 to i8*
+	%9 = call i8* @strcpy(i8* %8, i8* %1) nounwind
+	%10 = bitcast {%ulong, %shadow.standard..Object*}* %6 to {%ulong, %byte}*
+	%11 = insertvalue {{%ulong, %byte}*, [1 x i32]} undef, {%ulong, %byte}* %10, 0
+	%12 = insertvalue {{%ulong, %byte}*, [1 x i32]} %11, i32 %5, 1, 0
+	%13 = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))
+	%14 = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A1(%shadow.standard..Object* %13, {{%ulong, %byte}*, [1 x i32]} %12)	
+	%15 = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
+	%16 = call %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object* %15, %shadow.standard..String* %14)
+	call void @__shadow_throw(%shadow.standard..Object* %15) noreturn
     unreachable
 }
 
@@ -130,8 +138,8 @@ define { i8, i1 } @shadow.io..Console_MreadByte(%shadow.io..Console*) {
 }
 define %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
 	%3 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0	
-	%4 = load {i32, i8}*, {i32, i8}** %3
-	%5 = getelementptr inbounds {i32, i8}, {i32, i8}* %4, i32 0, i32 1	
+	%4 = load {%ulong, i8}*, {%ulong, i8}** %3
+	%5 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %4, i32 0, i32 1	
 	%6 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
 	%7 = load i32, i32* %6
 	%8 = call i32 @write(i32 1, i8* nocapture %5, i32 %7)
@@ -143,8 +151,8 @@ define %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
 }
 define %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
 	%3 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0	
-	%4 = load {i32, i8}*, {i32, i8}** %3
-	%5 = getelementptr inbounds {i32, i8}, {i32, i8}* %4, i32 0, i32 1	
+	%4 = load {%ulong, i8}*, {%ulong, i8}** %3
+	%5 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %4, i32 0, i32 1	
 	%6 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
 	%7 = load i32, i32* %6
 	%8 = call i32 @write(i32 2, i8* nocapture %5, i32 %7)
@@ -168,8 +176,8 @@ define private i8* @filepath(%shadow.io..File*) {
 	%7 = load %shadow.standard..String* (%shadow.io..Path*)*, %shadow.standard..String* (%shadow.io..Path*)** %6
 	%8 = tail call %shadow.standard..String* %7(%shadow.io..Path* %3)
 	%9 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 0	
-	%10 = load {i32, i8}*, {i32, i8}** %9
-	%11 = getelementptr inbounds {i32, i8}, {i32, i8}* %10, i32 0, i32 1		
+	%10 = load {%ulong, i8}*, {%ulong, i8}** %9
+	%11 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %10, i32 0, i32 1		
 	%12 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 1, i32 0
 	%13 = load i32, i32* %12
 	%14 = add nuw i32 %13, 1

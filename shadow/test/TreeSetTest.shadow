@@ -5,25 +5,18 @@ class shadow:test@TreeSetTest
 {
 	public main() => ()
 	{
-		Console out;
-		out.printLine("Starting");
+		Console out;		
 	
 		var set1 = TreeSet<int>:create();
 		var set2 = TreeSet<String>:create();
 		
-		out.printLine("Created");		
-		
 		set1[4] = true;
 		set1[13] = true;
-		
-		out.printLine("Assigned to int set");
-		
+	
 		set2["Bozo"] = true;
 		set2["the"] = true;
 		set2["Clown"] = true;
-		
-		out.printLine("Assigned to tree set");
-		
+	
 		if( set1.contains(4) )
 			out.printLine("Passed 1");
 		else

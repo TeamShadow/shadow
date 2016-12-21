@@ -7,33 +7,17 @@ class shadow:test@MatrixTest
 		Console out;
 	
 		Matrix a = Matrix:create(3,3);
-		//Matrix b = Matrix:create(3,3);
+		Matrix b = Matrix:create(3,3);
 		
-		a[0][0] = 1;
+		(a[0][0], a[1][1], a[2][2]) = (1, 1, 1);
+		a[1][2] = 4;
 		
-		//(a[0][0], a[1][1], a[2][2]) = (1, 1, 1);
-		//a[1][2] = 4;
-		
-		double[] stuff = a[0];
-		
-		Array<double> array = stuff;
-		
-		int[] indexes = int:create[1];
-		
-		out.printLine(array[indexes]);
-		//out.printLine(a[1][1]);
-		//out.printLine(a[2][2]);
-		//out.printLine(a[1][2]);
-		
-		//out.printLine("a:\n" # a);
-		
-		/*
+		out.printLine("a:\n" # a);
 				
 		(b[0][0], b[1][1], b[2][2]) = (1, 1, 1);
 		b[2][0] = 3;
 		
-		out.printLine("b:\n" # b);
-		
+		out.printLine("b:\n" # b);		
 		
 		Matrix c = a + b;
 		Matrix d = a - b;
@@ -41,8 +25,6 @@ class shadow:test@MatrixTest
 		
 		out.printLine("c:\n" # c);
 		out.printLine("d:\n" # d);
-		out.printLine("e:\n" # e);
-		
-		*/
+		out.printLine("e:\n" # e);		
 	}
 }

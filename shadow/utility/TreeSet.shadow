@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 /**
  * Class {@code TreeSet<V>} stores an ordered set, an ordered collection of
  * objects of type {@code V} with no repetitions. Internally, this ordered set
@@ -47,16 +45,10 @@ is  OrderedSet<V>
 	 */
 	public index( V value, boolean add ) => ()
 	{
-		if ( add ) {
-			Console.printLine("Adding!");
-			map[value] = value;
-		}
-		else {
-			Console.printLine("Removing!");
+		if ( add )
+			map[value] = value;		
+		else			
 			map.remove(value);
-		}
-		
-		Console.printLine("Completed add or removal!");		
 	}
 
 	/**

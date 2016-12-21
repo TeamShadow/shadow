@@ -735,7 +735,7 @@ and	CanHash
 	 */ 
 	public toString(uint base) => (String)
 	{		
-		String string = abs().toString(base);
+		String string = abs().toString(base);		
 		return this >= 0 ? string, '-' # string;
 	}	
 }

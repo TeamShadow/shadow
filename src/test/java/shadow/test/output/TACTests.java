@@ -98,15 +98,17 @@ public class TACTests {
 	
 	@Test public void testGarbageCollection() throws Exception {
 		args.add("shadow/test/GarbageCollectionTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		// can't test without more predictable floating point output
+		Main.run(args.toArray(new String[] { }));		
 	}
+	
+	
 	
 	@Test public void testMath() throws Exception {
 		args.add("shadow/test/MathTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		// can't test without more predictable floating point output
 	}
+	
 	
 	@Test public void testRandom() throws Exception {
 		args.add("shadow/test/RandomTest.shadow");

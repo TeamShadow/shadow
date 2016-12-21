@@ -179,7 +179,7 @@ public class TACMethod
 			TACPhi phi = new TACPhi(root.getLabel(), method.addTempLocal(new SimpleModifiedType(new PointerType())));
 			*/
     	
-    		TACNode last = getNode().getPrevious(); //should be indirect branch at the end of finally
+    		TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
     		TACNode start = last.getPrevious(); //cleanup nodes will be added between start and last
     		    	
     		while( storedVariables.size() > 0 ) {				

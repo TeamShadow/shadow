@@ -50,7 +50,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -1067,7 +1067,7 @@ public class OutputTests {
 				"finally\n"
 				);
 	}	
-	/*
+
 	@Test public void testTreeMap() throws Exception {
 		args.add("shadow/test/TreeMapTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -1127,8 +1127,6 @@ public class OutputTests {
 				"Ceiling (5): 9\n" + 
 				"Elements (10-100): [16, 25, 36, 49, 64, 81, 100]\n");		
 	}
-	
-	*/
 	
 	@Test public void testConstantPropagation() throws Exception {
 		args.add("shadow/test/ConstantPropagation.shadow");

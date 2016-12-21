@@ -2390,10 +2390,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private void setupGCMethod() {
 		//begin synthetic finally for gc handling
 		
-		method.setGarbageCollected(true);
+		method.setGarbageCollected(true);		
 		block = new TACBlock(method).addDone();
 		//block = new TACBlock(method); //no done needed, since nothing should come after?
-		anchor = new TACDummyNode(null, block);
+		anchor = new TACDummyNode(null, block);		
+		
 		
 		//synthetic recoverStatement
 		block = new TACBlock(anchor, block).addLandingpad().addUnwind().
@@ -2447,7 +2448,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//all the decrements go before this indirect branch		
 		new TACBranch(anchor, phi);				
 	
-		//block.getDone().insertBefore(anchor); //should never be used?		
+		block.getDone().insertBefore(anchor); //catches things that should have a return but don't		
 		//block = block.getParent();	
 				
 		//turn context back on
