@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import shadow.Arguments;
 import shadow.Configuration;
@@ -38,6 +38,7 @@ public class DocumentationTool
 	private static final String SRC_EXTENSION = ".shadow";
 	private static final String PKG_INFO_FILE = "package-info.txt";
 	
+	// ToDo; Figure out what libraries from org.slf4j.*
 	private static Logger logger = Loggers.DOC_TOOL;
 	
 	public static void main(String[] args)

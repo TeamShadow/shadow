@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.IntStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.Token;
 
 import shadow.ShadowException;
 import shadow.parse.ParseException.Error;
@@ -27,6 +28,8 @@ public class ParseErrorListener extends BaseErrorListener {
 			int line, int charPositionInLine,
 			String msg, RecognitionException e)
 	{
+		
+		Token t = e.getOffendingToken();
 		IntStream stream = recognizer.getInputStream();
 		Path path = null;
 		String sourceName = null;
@@ -54,7 +57,7 @@ public class ParseErrorListener extends BaseErrorListener {
 		else
 			error = String.format("[%d:%d] %s: %s", line, charPositionInLine, Error.SYNTAX_ERROR.getName(), msg);
 
-		reporter.addError(new ParseException(Error.SYNTAX_ERROR, error));
+		reporter.addError(new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, t.getStartIndex(), t.getStopIndex()));
 	}
 
 }

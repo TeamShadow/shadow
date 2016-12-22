@@ -3,7 +3,6 @@ package shadow;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,7 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -207,47 +206,22 @@ public class Main {
 			//usually opt
 			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), "-O3")./*redirectOutput(new File("a.s")).*/redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
-				
-				
 				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
-				String line = main.readLine();
-				
-				final OutputStream out = link.getOutputStream();
-				/*
-				
-				final OutputStream stream = link.getOutputStream();
-				final FileOutputStream file = new FileOutputStream(new File(mainClass + ".ll"));				
-				
-				final OutputStream out = new OutputStream() {
-					
-					@Override
-					public void write(byte[] b) throws IOException {
-						stream.write(b);
-						file.write(b);
-					}
-					
-					@Override
-					public void write(int b) throws IOException {
-						stream.write(b);
-						file.write(b);						
-					}
-					
-				};
-				*/
-										
+				String line = main.readLine();				
+				final OutputStream out = link.getOutputStream();				
 				while (line != null) {
 					
 					if( line.contains("@main")) { //declare externally defined generics
 						for( String generic : generics )
 							out.write(LLVMOutput.declareGeneric(generic).getBytes());
 						for( String array : arrays )
-							out.write(LLVMOutput.declareArray(array).getBytes());
+							out.write(LLVMOutput.declareArray(array).getBytes());	
 						
 						out.write(System.lineSeparator().getBytes());
 					}
@@ -262,11 +236,9 @@ public class Main {
 					}					
 					
 					line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
-					out.write(line.getBytes());					
+					out.write(line.getBytes());
 					line = main.readLine();
 				}
-				
-				//file.close();
 
 				try {
 					main.close();				
@@ -307,8 +279,9 @@ public class Main {
 
 		//just type check until ANTLR migration is finished
 		try {
-			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation
-			for( Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile()) ) {				
+			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation			
+			for( Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter) ) {				
 				Path file = node.getPath();
 				
 				if( currentJob.isCheckOnly() ) {				
@@ -336,8 +309,7 @@ public class Main {
 							throw new CompileException("File " + file + " does not contain an appropriate main() method");							
 					}
 				
-					//if the LLVM didn't exist, the full .shadow file would have been used	
-					//FIX THIS back to not always using existing
+					//if the LLVM didn't exist, the full .shadow file would have been used				
 					if( file.toString().endsWith(".meta") ) {
 						logger.info("Using pre-existing LLVM code for " + name);
 						addToLink(node.getType(), file, linkCommand);
@@ -398,6 +370,7 @@ public class Main {
 			modules.add(module);
 			modules.addAll(innerClasses);
 			
+			//ToDo; not sure what libray is needed
 			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 			
 			
