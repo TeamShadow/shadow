@@ -15,8 +15,7 @@ void __ShadowConsole_Initialize(void)
 void __ShadowConsole_ReadByte(ShadowByte* value, ShadowBoolean* eof)
 {
 	DWORD bytesRead = 0;
-	HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
-	ReadFile(handle, value, 1, &bytesRead, NULL);
+	ReadFile(GetStdHandle(STD_INPUT_HANDLE), value, 1, &bytesRead, NULL);
 	
 	*eof = 0;
 	if(bytesRead == 0) {
@@ -27,12 +26,11 @@ void __ShadowConsole_ReadByte(ShadowByte* value, ShadowBoolean* eof)
 
 static void printString(int handleId, ShadowString stringRef)
 {
-	ByteArray str;
+	ShadowStringData str; // { size, chars, ascii }
 	UnpackShadowString(stringRef, &str);
 	
-	HANDLE handle = GetStdHandle(handleId);
 	DWORD bytesWritten = 0;
-	WriteFile(handle, str.chars, str.size, &bytesWritten, NULL);
+	WriteFile(GetStdHandle(handleId), str.chars, str.size, &bytesWritten, NULL);
 }
 
 void __ShadowConsole_Print(ShadowString stringRef)
@@ -47,10 +45,8 @@ void __ShadowConsole_PrintError(ShadowString stringRef)
 
 static void printLine(int handleId)
 {
-	HANDLE handle = GetStdHandle(handleId);
-	
 	DWORD bytesWritten = 0;
-	WriteFile(handle, newLine, sizeof(newLine), &bytesWritten, NULL);
+	WriteFile(GetStdHandle(handleId), newLine, sizeof(newLine), &bytesWritten, NULL);
 }
 
 void __ShadowConsole_PrintLine(void)

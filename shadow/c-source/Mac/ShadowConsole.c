@@ -3,5 +3,5 @@
  */
 #include "ShadowConsole.h"
 
-void __ShadowConsole_Initialize(ShadowConsole) { }
+void __ShadowConsole_Initialize(void) { }
 

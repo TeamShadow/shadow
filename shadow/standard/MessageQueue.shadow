@@ -41,7 +41,7 @@ and CanIndexStore<int, Message>
 		this:start = 0;
 		this:maxCapacity = maxCapacity;
 		this:size = 0;
-		this:mutex = Mutex:create(true);
+		this:mutex = Mutex:create();
 	}
 	
 	/**
@@ -52,41 +52,31 @@ and CanIndexStore<int, Message>
 	*/
 	public get isFull() => (boolean)
 	{
-		mutex.lock();
-		try {
-			if (size == elements->size) {
-				if(size == maxCapacity) {
-					return true;
-				}
-
-				int newSize = elements->size * 2;
-				if(newSize > maxCapacity) {
-					newSize = maxCapacity;
-				}
-
-				nullable Message[] temp = Message:null[newSize];
-				for(int i = 0; i < size; i += 1) {
-					temp[i] = this[i];
-				}
-
-				elements = temp;
-				start = 0;
+		if (size == elements->size) {
+			if(size == maxCapacity) {
+				return true;
 			}
-			
-			return false;
-		} finally {
-			mutex.unlock();
+
+			int newSize = elements->size * 2;
+			if(newSize > maxCapacity) {
+				newSize = maxCapacity;
+			}
+
+			nullable Message[] temp = Message:null[newSize];
+			for(int i = 0; i < size; i += 1) {
+				temp[i] = this[i];
+			}
+
+			elements = temp;
+			start = 0;
 		}
+		
+		return false;
 	}
 	
 	public readonly get isEmpty() => (boolean)
 	{
-		mutex.lock();
-		try {
-			return (size == 0);
-		} finally {
-			mutex.unlock();
-		}
+		return (size == 0);
 	}
 
 	public enqueue(Message message) => (boolean)
@@ -113,10 +103,20 @@ and CanIndexStore<int, Message>
 				return null;
 			}
 			
+			try {
 			return removeAt(0, expectedType);
+			} catch(Exception e) {
+				shadow:io@Console.printLine(e);
+				return null;
+			}
 		} finally {
+		try {
 			mutex.unlock();
+			}catch(Exception e) {
+			shadow:io@Console.printLine(e);
+			}
 		}
+		throw Exception:create();
 	}
 	
 	public dequeue(Thread sender, Class expectedType) => (nullable Message)
@@ -190,23 +190,13 @@ and CanIndexStore<int, Message>
 	// CanIndex<int, Message>
 	public readonly index(int index) => (Message)
 	{
-		mutex.lock();
-		try {
 			return check(elements[rawIndex(index)]);
-		} finally {
-			mutex.unlock();
-		}
 	}
 	
 	// CanIndexStore<int, Message>
 	public index(int index, Message message) => ()
 	{
-		mutex.lock();
-		try {
 			elements[rawIndex(index)] = message;
-		} finally {
-			mutex.unlock();
-		}
 	}
 	
 	/// sets the item at index to null.

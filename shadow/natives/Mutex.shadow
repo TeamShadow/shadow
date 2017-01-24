@@ -72,7 +72,7 @@ locked immutable class shadow:natives@
 		ptr.assertValid("Mutex");
 		
 		throw !isOwnerCurrentThread()
-				? MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked.");
+				? MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked." # (owner() === null ? "", #owner()));
 		
 		__ShadowMutex_Unlock(ptr);
 		// TODO: error checking

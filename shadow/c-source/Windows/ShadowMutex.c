@@ -21,12 +21,12 @@ ShadowPointer __ShadowMutex_Initialize(ShadowBoolean allowRecursive)
 	ShadowMutexData* data = calloc(1, sizeof(ShadowMutexData));
 	data->lockEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	data->allowRecursive = allowRecursive;
-	return CreateShadowPointer(data, true);
+	return CreateShadowPointer(data, SHADOW_CAN_FREE);
 }
 
 ShadowBoolean __ShadowMutex_Destroy(ShadowPointer pointer)
 {
-	return CloseHandle(((ShadowMutexData*)ExtractRawPointer(pointer))->lockEvent);
+	return CloseHandle(ExtractPointer(ShadowMutexData, pointer)->lockEvent);
 }
 
 ShadowBoolean __ShadowMutex_Lock(ShadowPointer pointer, ShadowThread currentThread)
@@ -74,5 +74,5 @@ ShadowBoolean __ShadowMutex_Unlock(ShadowPointer pointer)
 
 ShadowThread __ShadowMutex_GetOwner(ShadowPointer pointer)
 {
-	return ((ShadowMutexData*)ExtractRawPointer(pointer))->owner;
+	return ExtractPointer(ShadowMutexData, pointer)->owner;
 }

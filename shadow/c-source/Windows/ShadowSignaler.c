@@ -32,7 +32,7 @@ ShadowPointer __ShadowSignaler_Initialize(void)
 		InvalidatePointer(&data);
 	}
 	
-	return CreateShadowPointer(data, true);
+	return CreateShadowPointer(data, SHADOW_CAN_FREE);
 }
 
 /// true on success, otherwise, false.

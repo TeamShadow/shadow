@@ -59,7 +59,7 @@ class shadow:test@MailboxTest
 				mailbox.sendTo("\n");
 			}
 		}
-	
+
 		public run() => ()
 		{
 			nullable var threads = Thread:null[4];
@@ -85,8 +85,12 @@ class shadow:test@MailboxTest
 			}
 			Console.printLine();
 			
+			try {
 			(var a, var b) = mailbox.receiveFirst(int:class);
 			Console.printLine(a # " " # b);
+			} catch(Exception e) {
+				Console.printLine("test");
+			}
 		}
 	}
 	

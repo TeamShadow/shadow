@@ -2,7 +2,6 @@
  * Author: Claude Abounegm
  */
 #include "ShadowArray.h"
-#include <stdlib.h>
 
 void ExtractDataFromShadowArray(ShadowArray, ShadowInt*, void**);
 

@@ -1,6 +1,6 @@
 /**
  * Class {@code ShadowPointer} is used to initialize a block of memory on the heap, and
- * pass it to native LLVM code. This eases interaction between Shadow an native LLVM methods.
+ * pass it to native LLVM code. This eases interaction between Shadow, C and native LLVM methods.
  *
  * @author Claude Abounegm
  *

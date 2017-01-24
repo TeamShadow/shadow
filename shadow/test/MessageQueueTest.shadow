@@ -11,9 +11,7 @@ class shadow:test@MessageQueueTest
 			queue.enqueue(Message:create(queue->size));
 		}
 		
-		try {
-			queue.enqueue(Message:create("wrong"));
-		} catch(FullListException e) {
+		if(!queue.enqueue(Message:create("wrong"))) {
 			Console.printLine("FullListException");
 		}
 		
