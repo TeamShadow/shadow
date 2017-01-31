@@ -349,7 +349,7 @@ public class Configuration {
 			// This is used to remove the "jar:" from the path when called through reflection. 
 			if(path.toString().startsWith("jar:file")) {
 				path = ((JarURLConnection) path.openConnection()).getJarFileURL();
-				//return Paths.get(path.getPath()).getParent().toAbsolutePath();
+				return Paths.get(path.getPath()).getParent().toAbsolutePath();
 			}
 			
 			return Paths.get(path.toURI()).getParent().toAbsolutePath();
