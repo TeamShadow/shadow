@@ -3,6 +3,8 @@ package shadow.typecheck;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Logger;
+
 import shadow.Main;
 import shadow.ShadowException;
 import shadow.ShadowExceptionFactory;
@@ -16,9 +18,9 @@ public class ErrorReporter {
 	protected final ArrayList<ShadowException> errorList = new ArrayList<ShadowException>();
 	protected final ArrayList<ShadowException> warningList = new ArrayList<ShadowException>();	
 	
-	private final org.slf4j.Logger LOGGER;
+	private final Logger LOGGER;
 	
-	public ErrorReporter(org.slf4j.Logger typeChecker) {
+	public ErrorReporter(Logger typeChecker) {
 		LOGGER = typeChecker;
 	}	
 	

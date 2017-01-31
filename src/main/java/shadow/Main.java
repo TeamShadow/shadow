@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -118,6 +118,7 @@ public class Main {
 	}
 
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
+	
 		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
 		
