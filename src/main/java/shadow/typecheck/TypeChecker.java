@@ -54,6 +54,7 @@ public class TypeChecker {
 	public static List<Context> typeCheck(Path file, boolean useSourceFiles, ErrorReporter reporter)
 			throws ShadowException, IOException, ConfigurationException {	
 		
+		Type.clearTypes();		
 		Package packageTree = new Package(); // Root of all packages, storing all types
 		
 		

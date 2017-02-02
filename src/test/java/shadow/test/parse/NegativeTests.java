@@ -74,14 +74,23 @@ public class NegativeTests {
 		enforce(Error.ILLEGAL_OPERATOR);
 	}
 	
-	
-	
 	@Test public void testMemberVisibility() throws Exception
 	{
 		args.add("tests-negative/parser/member-visibility/Test.shadow");
 		enforce(Error.ILLEGAL_MODIFIER);
 	}
 	
+	@Test public void testMissingLeftBrace() throws Exception
+	{
+		args.add("tests-negative/parser/missing-left-brace/Test.shadow");
+		enforce(Error.SYNTAX_ERROR);
+	}
+	
+	@Test public void testMissingRightBrace() throws Exception
+	{
+		args.add("tests-negative/parser/missing-right-brace/Test.shadow");
+		enforce(Error.SYNTAX_ERROR);
+	}
 	
 	@Test public void testNewlineInString() throws Exception
 	{

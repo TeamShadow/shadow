@@ -27,9 +27,7 @@ public class ParseErrorListener extends BaseErrorListener {
 	public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
 			int line, int charPositionInLine,
 			String msg, RecognitionException e)
-	{
-		
-		Token t = e.getOffendingToken();
+	{	
 		IntStream stream = recognizer.getInputStream();
 		Path path = null;
 		String sourceName = null;
@@ -57,7 +55,12 @@ public class ParseErrorListener extends BaseErrorListener {
 		else
 			error = String.format("[%d:%d] %s: %s", line, charPositionInLine, Error.SYNTAX_ERROR.getName(), msg);
 
-		reporter.addError(new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, t.getStartIndex(), t.getStopIndex()));
+		if( e != null ) {
+			Token t = e.getOffendingToken();		
+			reporter.addError(new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, t.getStartIndex(), t.getStopIndex()));
+		}
+		else
+			reporter.addError(new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, -1, -1));
 	}
 
 }
