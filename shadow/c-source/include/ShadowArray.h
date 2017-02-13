@@ -6,12 +6,12 @@
 
 #include "ShadowTypes.h"
 
+typedef void* ShadowArray;
+
 typedef struct {
 	ShadowInt size;
 	void* data;
 } VoidArray;
-
-typedef void* ShadowArray;
 
 void UnpackShadowArray(ShadowArray arrayRef, VoidArray* array);
 

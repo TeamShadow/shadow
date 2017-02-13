@@ -17,10 +17,11 @@ void __ShadowConsole_ReadByte(ShadowByte* value, ShadowBoolean* eof)
 	DWORD bytesRead = 0;
 	ReadFile(GetStdHandle(STD_INPUT_HANDLE), value, 1, &bytesRead, NULL);
 	
-	*eof = 0;
 	if(bytesRead == 0) {
 		*value = 0;
 		*eof = 1;
+	} else {
+		*eof = 0;	
 	}
 }
 

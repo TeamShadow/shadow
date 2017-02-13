@@ -111,42 +111,6 @@ define i64 @shadow.standard..System_MnanoTime(%shadow.standard..System*) {
 	ret i64 0
 }
 
-@newline = private unnamed_addr constant [1 x i8] c"\0A"
-define { i8, i1 } @shadow.io..Console_MreadByte(%shadow.io..Console*) {
-	%2 = alloca i8
-	%3 = call i32 @read(i32 0, i8* nocapture %2, i32 1)
-	%4 = icmp ne i32 %3, 1
-	%5 = insertvalue { i8, i1 } undef, i1 %4, 1
-	%6 = load i8, i8* %2
-	%7 = select i1 %4, i8 0, i8 %6
-	%8 = insertvalue { i8, i1 } %5, i8 %7, 0
-	ret { i8, i1 } %8
-}
-define %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
-	%3 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 0
-	%4 = load i8*, i8** %3
-	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 1, i32 0
-	%6 = load i32, i32* %5
-	%7 = call i32 @write(i32 1, i8* nocapture %4, i32 %6)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) {
-	%2 = call i32 @write(i32 1, i8* nocapture getelementptr inbounds ([1 x i8], [1 x i8]* @newline, i32 0, i32 0), i32 1)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
-	%3 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 0
-	%4 = load i8*, i8** %3
-	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 2, i32 1, i32 0
-	%6 = load i32, i32* %5
-	%7 = call i32 @write(i32 2, i8* nocapture %4, i32 %6)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintErrorLine(%shadow.io..Console*) {
-	%2 = call i32 @write(i32 2, i8* nocapture getelementptr inbounds ([1 x i8], [1 x i8]* @newline, i32 0, i32 0), i32 1)
-	ret %shadow.io..Console* %0
-}
-
 define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
 	ret i32 47
 }

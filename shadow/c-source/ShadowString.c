@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-ShadowArray ExtractDataFromShadowString(ShadowString, ShadowArray*, ShadowBoolean*);
+void ExtractDataFromShadowString(ShadowString, ShadowArray*, ShadowBoolean*);
 
 char* UnpackShadowStringToCStr(ShadowString stringRef)
 {
@@ -16,7 +16,6 @@ char* UnpackShadowStringToCStr(ShadowString stringRef)
 	UnpackShadowString(stringRef, &str);
 	
 	char* dest = malloc(str.size + 1);
-
 	int i;
 	for(i = 0; i < str.size; ++i) {
 		dest[i] = str.chars[i];
@@ -30,6 +29,7 @@ void UnpackShadowString(ShadowString stringRef, ShadowStringData* str)
 {
 	ShadowArray chars;	
 	ExtractDataFromShadowString(stringRef, &chars, &str->ascii);
+	
 	UnpackShadowArray(chars, (VoidArray*)str);
 }
 
