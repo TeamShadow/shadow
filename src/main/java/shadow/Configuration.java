@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.JarURLConnection;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -21,7 +20,7 @@ import java.util.regex.Pattern;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.jaxb.Shadow;
 
@@ -349,7 +348,7 @@ public class Configuration {
 			// This is used to remove the "jar:" from the path when called through reflection. 
 			if(path.toString().startsWith("jar:file")) {
 				path = ((JarURLConnection) path.openConnection()).getJarFileURL();
-				//return Paths.get(path.getPath()).getParent().toAbsolutePath();
+				return Paths.get(path.getPath()).getParent().toAbsolutePath();
 			}
 			
 			return Paths.get(path.toURI()).getParent().toAbsolutePath();

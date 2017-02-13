@@ -8,7 +8,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.slf4j.event.Level;
+import org.apache.logging.log4j.Level;
+
 
 /** 
  * Represents any information given on the command line. Parses, processes,

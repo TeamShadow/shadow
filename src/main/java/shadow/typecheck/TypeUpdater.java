@@ -353,12 +353,16 @@ public class TypeUpdater extends BaseChecker {
 		for(Context declarationNode : nodeTable.values() )
 			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  ) {
 				Context dependencyNode = uninstantiatedNodes.get( dependency.getTypeWithoutTypeArguments() );
+				if( dependencyNode != null )
+					graph.addEdge(dependencyNode, declarationNode);
+				/*
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " +
 							declarationNode.getType() + " is dependent on unavailable type " +
 							dependency, dependency);
 				else
-					graph.addEdge(dependencyNode, declarationNode);				
+					graph.addEdge(dependencyNode, declarationNode);
+				*/
 			}
 		
 		/* Update parameters based on topological sort of type parameter dependencies. */
@@ -400,20 +404,28 @@ public class TypeUpdater extends BaseChecker {
 				
 				if( classType.getExtendType() != null ) {
 					Context dependencyNode = nodeTable.get(classType.getExtendType().getTypeWithoutTypeArguments());
-					if( dependencyNode == null )
+					if( dependencyNode != null )
+						graph.addEdge(dependencyNode, declarationNode);
+					
+					/*if( dependencyNode == null )
 						addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 					else
 						graph.addEdge(dependencyNode, declarationNode);
+					*/
 				}
 			}
 				
 			for( Type dependency : type.getInterfaces() ) {				
 				dependency = dependency.getTypeWithoutTypeArguments();
 				Context dependencyNode = nodeTable.get(dependency);
+				if( dependencyNode != null )
+					graph.addEdge(dependencyNode, declarationNode);
+				/*				
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 				else
 					graph.addEdge(dependencyNode, declarationNode);
+				*/
 			}
 		}
 		

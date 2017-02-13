@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -49,7 +49,7 @@ public class Main {
 	
 	// Version of the Shadow compiler
 	public static final String VERSION 				= "0.7a";	
-	public static final String MINIMUM_LLVM_VERSION  = "3.6";
+	public static final String MINIMUM_LLVM_VERSION  = "3.8";
 		
 	// These are the error codes returned by the compiler
 	public static final int NO_ERROR				=  0;
@@ -118,6 +118,7 @@ public class Main {
 	}
 
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
+	
 		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
 		
@@ -265,19 +266,18 @@ public class Main {
 		}
 	}
 
-	/**
+	/*
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file. This involves either finding an existing .ll file
 	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
 	 */
 	private static void generateLLVM(List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
-		Type.clearTypes();		
+		
 
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = BaseChecker.stripExtension(TypeCollector.canonicalize(mainFile)); 
 
-		//just type check until ANTLR migration is finished
 		try {
 			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation			
@@ -440,7 +440,7 @@ public class Main {
 			linkCommand.add(TypeCollector.canonicalize(nativeFile));
 	}
 
-	/** A simple class used to redirect an InputStream into a specified OutputStream */
+	/* A simple class used to redirect an InputStream into a specified OutputStream */
 	private static class Pipe extends Thread {
 		private InputStream input;
 		private OutputStream output;
