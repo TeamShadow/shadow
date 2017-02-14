@@ -659,11 +659,7 @@ returnStatement
 	;
 
 throwStatement
-	: 'throw' throwCondition? conditionalExpression
-	;
-	
-throwCondition
-	: (conditionalExpression '?')
+	: 'throw' conditionalExpression
 	;
 	
 sendStatement

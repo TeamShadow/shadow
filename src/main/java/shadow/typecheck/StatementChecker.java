@@ -24,7 +24,6 @@ import shadow.parse.ShadowParser.ConditionalOrExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
-import shadow.parse.ShadowParser.ThrowConditionContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
@@ -3020,19 +3019,6 @@ public class StatementChecker extends BaseChecker {
 		}
 		ctx.setType(sequence);
 		
-		return null;
-	}
-	
-	@Override
-	public Void visitThrowCondition(ThrowConditionContext ctx) {
-		visitChildren(ctx);
-		
-		Type type = resolveType(ctx.conditionalExpression()).getType();
-		if(!type.equals(Type.BOOLEAN)) {
-			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of throw statement cannot accept non-boolean type " + type, type);
-		}
-
-		ctx.setType(type);
 		return null;
 	}
 	

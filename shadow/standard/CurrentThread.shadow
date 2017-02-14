@@ -9,7 +9,7 @@ singleton shadow:standard@
 	CurrentThread
 is CanIndex<int, Thread>
 {
-	private readonly native get currentThread() => (Thread);
+	private readonly native currentThread() => (Thread);
 
 	private readonly extern $interrupting(Thread instance) => (boolean);	
 	private readonly extern $sleep(Thread instance, TimeSpan time) => ();
@@ -97,11 +97,13 @@ is CanIndex<int, Thread>
 	* be called at safe points where the thread is safe to get interrupted. This method should only be used
 	* if there is no code that should be executed before throwing the exception; otherwise, use {@code CurrentThread->interrupting}.
 	* This method, as the {@code interrupting()} one, resets the interrupt flag, and sets it to false.
-	* This code executed in this method is simply: {@code throw CurrentThread->interrupting ? InterruptedException:create(); }
+	* This code executed in this method is simply: {@code if(CurrentThread->interrupting) throw InterruptedException:create(); }
 	*/
 	public throwIfInterrupting() => ()
 	{
-		throw interrupting() ? InterruptedException:create();
+		if(interrupting()) {
+			throw InterruptedException:create();
+		}
 	}
 	
 	/**

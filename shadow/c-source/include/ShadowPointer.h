@@ -38,4 +38,6 @@ void* ExtractRawPointer(ShadowPointer);
 
 #define ExtractPointer(Type, ShadowPointer) ((Type*)ExtractRawPointer(ShadowPointer))
 
+void __ShadowPointer_Free(void* ptr);
+
 #endif

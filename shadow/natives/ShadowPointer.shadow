@@ -1,6 +1,6 @@
 /**
- * Class {@code ShadowPointer} is used to initialize a block of memory on the heap, and
- * pass it to native LLVM code. This eases interaction between Shadow, C and native LLVM methods.
+ * Class {@code ShadowPointer} is used to hold a pointer to a block of memory intialized on the heap.
+ * This eases interaction between Shadow, C and native LLVM methods.
  *
  * @author Claude Abounegm
  *
@@ -12,40 +12,36 @@
 locked immutable class shadow:natives@
 	ShadowPointer
 {
-	private readonly native allocMemory(int size) => (long address);
-	private readonly native freeMemory() => ();
-	private readonly extern $invalidate(immutable LongPointer ptr) => ();
+	private extern __ShadowPointer_Free(long address) => ();
+	private native invalidateAddress() => ();
 	
-	immutable LongPointer pointer;
-	boolean shouldFree = true;
+	long address;
+	boolean shouldFree;
 	
-	/**
-	* Allocates a block of memory on the heap which is {@code size} bytes long, 
-	* and initializes all its bits to zero.
-	*
-	* @param {@code size} The size, in bytes, that needs to be allocated on the heap.
-	*/
-	public create(int size)
+	public create() 
 	{
-		pointer = freeze(LongPointer:create(size));
+		this(0, false);
 	}
 	
-	/**
-	* Initializes a new, invalid, ShadowPointer. This does not allocate any memory.
-	*/
-	public create()
+	private create(long address, boolean shouldFree)
 	{
-		pointer = freeze(LongPointer:create(0L));
+		this:address = address;
+		this:shouldFree = shouldFree;
 	}
 	
+	private createNative(long address, boolean shouldFree) => (ShadowPointer)
+	{
+		return ShadowPointer:create(address, shouldFree);
+	}
+
 	/**
 	* Gets whether this pointer is valid. i.e. has not been freed.
 	*
 	* @return {@code true} if this pointer points to valid memory; otherwise, {@code false}.
 	*/
-	public locked get isValid() => (boolean)
+	public get isValid() => (boolean)
 	{
-		return (pointer.valid());
+		return (address != 0);
 	}
 	
 	/**
@@ -53,7 +49,7 @@ locked immutable class shadow:natives@
 	*
 	* @throws FreedResourceException if this resource has been freed.
 	*/
-	public locked assertValid(String className) => ()
+	public assertValid(String className) => ()
 	{
 		if(!isValid()) {
 			throw FreedResourceException:create(className);
@@ -64,71 +60,23 @@ locked immutable class shadow:natives@
 	* Frees the memory allocated by this pointer. Calling this method more than once does
 	* not have any side effects.
 	*/
-	public locked free() => ()
+	public free() => ()
 	{
 		if(isValid()) {
 			if(shouldFree) {
-				freeMemory();
+				__ShadowPointer_Free(address);
 			}
 			
-			$invalidate(pointer);
+			invalidateAddress();
 		}
 	}
 	
 	private getAddressNative() => (long)
 	{
-		return pointer->address;
-	}
-	
-	private create(long address, boolean shouldFree)
-	{
-		pointer = freeze(LongPointer:create(address));
-		this:shouldFree = shouldFree;
-	}
-	
-	private createNative(long address, boolean shouldFree) => (ShadowPointer)
-	{
-		return ShadowPointer:create(address, shouldFree);
-	}
+		if(!isValid()) {
+			throw FreedResourceException:create("Pointer");
+		}
 
-	private class LongPointer
-	{
-		long address = -1;
-		
-		public create(int size)
-		{
-			if(size <= 0) {
-				throw IllegalArgumentException:create("The {size} of the memory to be allocated should be greater than zero.");
-			}
-
-			this:address = allocMemory(size);
-			if(this:address == 0) {
-				throw OutOfMemoryException:create();
-			}
-		}
-		
-		public create(long address)
-		{
-			if(address != 0) {
-				this:address = address;
-			}
-		}
-		
-		public readonly get address() => (long)
-		{
-			throw !valid() ? FreedResourceException:create("Pointer");
-			
-			return address;
-		}
-		
-		public readonly valid() => (boolean)
-		{
-			return (address != -1);
-		}
-		
-		private $[ShadowPointer] invalidate() => ()
-		{
-			this:address = -1;
-		}
+		return address;
 	}
 }

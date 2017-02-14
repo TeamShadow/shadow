@@ -27,7 +27,7 @@ locked class shadow:standard@
 	
 	Signaler signaler;
 	MessageQueue list;
-	Mutex mutex;
+	//Mutex mutex;
 	
 	/**
 	* Initializes a {@code Mailbox} with a backing array that has {@code min} items space to start with
@@ -37,7 +37,7 @@ locked class shadow:standard@
 	{
 		this:list = MessageQueue:create(min, max);
 		this:signaler = Signaler:create();
-		this:mutex = Mutex:create();
+		//this:mutex = Mutex:create();
 	}	
 	
 	/**
@@ -58,7 +58,7 @@ locked class shadow:standard@
 		
 		var message = Message:create(data);
 		if(!blocking) {
-			throw (!list.enqueue(message)) ? FullMailboxException:create();
+			if(!list.enqueue(message)) throw FullMailboxException:create();
 		} else {
 			var stop = false;
 			while(!stop) {
@@ -83,7 +83,7 @@ locked class shadow:standard@
 
 		nullable var message = list.dequeue(expectedType);
 		if(!blocking) {
-			throw (message === null) ? EmptyMailboxException:create();
+			if(message === null) throw EmptyMailboxException:create();
 		} else {
 			while(message === null) {
 				message = list.dequeue(expectedType);
@@ -109,7 +109,7 @@ locked class shadow:standard@
 
 		nullable var message = list.dequeue(sender, expectedType);
 		if(!blocking) {
-			throw (message === null) ? EmptyMailboxException:create();
+			if(message === null) throw EmptyMailboxException:create();
 		} else {
 			while(message === null) {
 				message = list.dequeue(sender, expectedType);

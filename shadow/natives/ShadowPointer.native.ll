@@ -1,7 +1,7 @@
 ; Pointer.native.ll
 ; 
 ; Author:
-; Claude Abounegm
+; 	Claude Abounegm
 
 ;-------------
 ; Definitions
@@ -24,35 +24,21 @@
 ; Object
 %shadow.standard..Object = type opaque
 
+; Class
+%shadow.standard..Class = type opaque
+
 ; Pointer
-%shadow.natives..ShadowPointer = type opaque
-
-;---------------------
-; Method Declarations
-;---------------------
-; void* calloc(int num, int size);
-declare noalias %void* @calloc(%int, %int) nounwind
-; void free(void* ptr);
-declare void @free(%void*) nounwind
-
-; ExtractRawPointer()
-declare %void* @ExtractRawPointer(%shadow.natives..ShadowPointer*)
+%shadow.natives..ShadowPointer_methods = type opaque
+%shadow.natives..ShadowPointer = type { %shadow.standard..Class*, %shadow.natives..ShadowPointer_methods* , %long, %boolean }
 
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
-; allocMemory(int size) => (long address);
-define %long @shadow.natives..ShadowPointer_MallocMemory_int(%shadow.natives..ShadowPointer*, %int) {
+define void @shadow.natives..ShadowPointer_MinvalidateAddress(%shadow.natives..ShadowPointer*)
+{
 entry:
-	%pointer = call noalias %void* @calloc(%int 1, %int %1) nounwind
-	%address =  ptrtoint %void* %pointer to %long
-	ret %long %address
-}
-
-; freeMemory() => ();
-define void @shadow.natives..ShadowPointer_MfreeMemory(%shadow.natives..ShadowPointer*) {
-entry:
-	%pointer = call %void* @ExtractRawPointer(%shadow.natives..ShadowPointer* %0)
-	call void @free(%void* %pointer)
+	%ptr = getelementptr inbounds %shadow.natives..ShadowPointer, %shadow.natives..ShadowPointer* %0, i32 0, i32 2
+    store %long 0, %long* %ptr
+	
 	ret void
 }

@@ -257,7 +257,7 @@ is CanIndex<int, Thread>
 					signaler.waitForNotify();
 				}
 			} catch(InterruptedException e) {
-				// An interrupted join is not succesful, so we decrease its count.
+				// An interrupted join is not successful, so we decrease its count.
 				mutex.lock();
 				joined -= 1;
 				mutex.unlock();
@@ -392,7 +392,9 @@ is CanIndex<int, Thread>
 	*/
 	protected $[Object] receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
-		throw (from === this) ? IllegalArgumentException:create("A Thread cannot receive a message from itself.");
+		if (from === this) {
+			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
+		}
 		
 		return mailbox.receiveFirstFrom(expectedType, from);
 	}
@@ -414,8 +416,13 @@ is CanIndex<int, Thread>
 	*/
 	protected sendTo(Object data) => ()
 	{
-		throw !isAlive() ? InvalidOperationException:create("Cannot send a message to a dead thread.");
-		throw isCurrentThread() ? InvalidOperationException:create("A Thread cannot send a message to itself.");
+		if (!isAlive()) {
+			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
+		}
+		
+		if(isCurrentThread()) {
+			throw InvalidOperationException:create("A Thread cannot send a message to itself.");
+		}
 		
 		mailbox.sendTo(data);
 	}

@@ -30,7 +30,6 @@ import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
 import shadow.parse.ShadowParser.SendStatementContext;
-import shadow.parse.ShadowParser.ThrowConditionContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
@@ -2044,28 +2043,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACLabel trueLabel = new TACLabel(method),
 				endLabel = new TACLabel(method);
 		
-		if(ctx.throwCondition() != null) {
-			new TACBranch(anchor, ctx.throwCondition().appendBefore(anchor), trueLabel, endLabel);
-			trueLabel.insertBefore(anchor);
-		}
-		
 		new TACThrow(anchor, ctx.conditionalExpression().appendBefore(anchor));
 		new TACLabel(method).insertBefore(anchor);
-		
-		if(ctx.throwCondition() != null) {
-			TACBranch branch = new TACBranch(anchor, endLabel);
-			branch.setContext(null); //won't cause a dead code problem if removed
-			endLabel.insertBefore(anchor);
-		}
-		
-		return null;
-	}
-	
-	@Override
-	public Void visitThrowCondition(ThrowConditionContext ctx) {
-		visitChildren(ctx);
-		
-		ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
 		
 		return null;
 	}
