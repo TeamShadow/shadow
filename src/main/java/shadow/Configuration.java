@@ -217,14 +217,13 @@ public class Configuration {
 				if( getOs().equals("Linux") ) {
 					linkCommand.add("-lm");
 					linkCommand.add("-lrt");
+					linkCommand.add("-pthread");
 				} else {
 					// we need this for MinGW pthreads
 					linkCommand.add("-static");
 				}
 			}
 		}
-		
-	
 
 		if( systemPath == null )
 			systemPath = getRunningDirectory();
@@ -239,7 +238,6 @@ public class Configuration {
 	
 	/** Parses a config file and fills the corresponding fields */
 	private void parse(Path configFile) {
-		
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Shadow.class);
 	 

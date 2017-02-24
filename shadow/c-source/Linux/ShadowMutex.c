@@ -2,6 +2,7 @@
  * Author: Claude Abounegm
  */
 #include "ShadowMutex.h"
+#include <stdlib.h>
 
 ShadowPointer __ShadowMutex_Initialize(ShadowBoolean allowRecursive)
 {
@@ -10,17 +11,17 @@ ShadowPointer __ShadowMutex_Initialize(ShadowBoolean allowRecursive)
 
 ShadowBoolean __ShadowMutex_Destroy(ShadowPointer pointer)
 {
-	return false;
+	return true;
 }
 
 ShadowBoolean __ShadowMutex_Lock(ShadowPointer pointer, ShadowThread currentThread)
 {
-	return false;
+	return true;
 }
 
 ShadowBoolean __ShadowMutex_Unlock(ShadowPointer pointer)
 {
-	return false;
+	return true;
 }
 
 ShadowThread __ShadowMutex_GetOwner(ShadowPointer pointer)
