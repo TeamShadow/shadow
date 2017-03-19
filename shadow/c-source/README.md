@@ -49,7 +49,7 @@ printf("%d\n", total); // prints 100
 
 ## ShadowString
 A Shadow String can be directly passed from Shadow to C code. The framework supplies two different methods to manipulate strings in C. `char* UnpackShadowStringToCStr(ShadowString)` and `void UnpackShadowString(ShadowString, ShadowStringData*)`.
-The `UnpackShadowStringToCStr` method clones the string data and returns a null-terminated C string. The `UnpackShadowString` method on the other hand, stores the data in the pointer pass as the second argument as it is; thus, if the string is modified in C, it will also be modified in Shadow. 
+The `UnpackShadowStringToCStr` method clones the string data and returns a null-terminated C string. The `UnpackShadowString` method on the other hand, stores the data in the pointer which is passed as the second argument as it is; thus, if the string is modified in C, it will also be modified in Shadow.
 The structure of the struct is as follows:
 ```C
 typedef struct {
@@ -73,12 +73,13 @@ void __PrintFromC(ShadowString strRef) {
 	ShadowStringData data;
 	UnpackShadowString(strRef, &data);
 	
+	data.chars[17] = '.'; // changes the string in Shadow to "Hello from Shadow."
 	int i;
 	for(i = 0; i < data.size; ++i) {
 		printf("%c", data.chars[i]);
 	}
 	printf("\n");
 	
-	// prints Hello from Shadow!
+	// prints "Hello from Shadow."
 }
 ```
