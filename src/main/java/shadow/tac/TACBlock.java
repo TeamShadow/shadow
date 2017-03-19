@@ -5,7 +5,6 @@ import java.util.List;
 
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACLabel;
-import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
 import shadow.typecheck.type.PointerType;
@@ -146,14 +145,6 @@ public class TACBlock
 		if (landingpadLabel != null)
 			return landingpadLabel;
 		return parent == null ? null : parent.getLandingpad();
-	}
-	public TACLandingpad getLandingpadNode()
-	{
-		TACNode node = getLandingpad();
-		do
-			node = node.getNext();
-		while (!(node instanceof TACLandingpad));
-		return (TACLandingpad)node;
 	}
 	public TACBlock addLandingpad()
 	{

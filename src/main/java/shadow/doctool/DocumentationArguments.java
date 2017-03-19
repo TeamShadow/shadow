@@ -12,8 +12,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-//import org.apache.logging.log4j.Level;
-import org.slf4j.event.Level;
+import org.apache.logging.log4j.Level;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;

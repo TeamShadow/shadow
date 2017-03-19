@@ -46,8 +46,8 @@ is  OrderedSet<V>
 	public index( V value, boolean add ) => ()
 	{
 		if ( add )
-			map[value] = value;
-		else
+			map[value] = value;		
+		else			
 			map.remove(value);
 	}
 

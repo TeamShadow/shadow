@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import shadow.ShadowException;
+import shadow.parse.Context;
 import shadow.parse.ParseException;
 import shadow.parse.ParseException.Error;
 
@@ -63,8 +64,6 @@ public final class Modifiers
 	public static final int SET				= 0x0400;
 	public static final int CONSTANT		= 0x0800;
 	public static final int LOCKED			= 0x1000;
-	public static final int EXTERN			= 0x40000;
-	public static final int EXTERN_SHARABLE = 0x80000;
 
 	public static final int ASSIGNABLE   	= 0x2000;
 	public static final int TYPE_NAME   	= 0x4000;
@@ -155,8 +154,6 @@ public final class Modifiers
 			sb.append("readonly ");
 		if( isNative() )
 			sb.append("native ");
-		if( isExtern() )
-			sb.append("extern ");
 		if( isWeak() )
 			sb.append("weak ");
 		if( isImmutable() )
@@ -203,12 +200,8 @@ public final class Modifiers
 	public boolean isAbstract() { return (modifiers & ABSTRACT) != 0; }
 	//public boolean isFinal() { return (modifiers & FINAL) != 0; }
 	public boolean isReadonly() { return (modifiers & READONLY) != 0; }
-	
 	public boolean isNative() { return (modifiers & NATIVE) != 0; }
-	public boolean isExtern() { return (modifiers & EXTERN) != 0; }	
-	public boolean isExternSharable() { return (modifiers & EXTERN_SHARABLE) != 0; }	
-	public boolean isNativeOrExtern() { return (isNative() || isExtern()); }
-	
+
 	public boolean isGet() { return (modifiers & GET) != 0; }
 	public boolean isSet() { return (modifiers & SET) != 0; }
 
@@ -252,148 +245,132 @@ public final class Modifiers
 			addModifier(Modifiers.TEMPORARY_READONLY);
 	}
 
-	private List<ShadowException> checkModifiers( Modifiers legal, String name)
+	private List<ShadowException> checkModifiers( Modifiers legal, String name, Context ctx)
 	{	
 		List<ShadowException> exceptions = new ArrayList<ShadowException>();
 		
 		if( isPublic() && !legal.isPublic()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked public"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked public", ctx));
 		if( isProtected() && !legal.isProtected( )  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked protected"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked protected", ctx));
 		if( isPrivate() && !legal.isPrivate()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked private"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked private", ctx));
 		if( isAbstract() && !legal.isAbstract()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked abstract"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked abstract", ctx));
 		if( isReadonly() && !legal.isReadonly()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked readonly"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked readonly", ctx));
 		if( isNative() && !legal.isNative()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked native"));
-		if( isExtern() && !legal.isExtern()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked extern"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked native", ctx));
 		if( isGet() && !legal.isGet()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked get"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked get", ctx));
 		if( isSet() && !legal.isSet()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked set"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked set", ctx));
 		if( isConstant() && !legal.isConstant()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked constant"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked constant", ctx));
 		if( isWeak() && !legal.isWeak()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked weak"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked weak", ctx));
 		if( isImmutable() && !legal.isImmutable()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked immutable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked immutable", ctx));
 		if( isNullable() && !legal.isNullable()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked nullable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked nullable", ctx));
 		if( isLocked() && !legal.isLocked()  )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked locked"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked locked", ctx));
 		
 		return exceptions;
 	}
 
-	public List<ShadowException> checkClassModifiers()
+	public List<ShadowException> checkClassModifiers(Context ctx)
 	{
-		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | IMMUTABLE | LOCKED), "A class");		
+		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | IMMUTABLE | LOCKED), "A class", ctx);		
 	}
 
 
-	public List<ShadowException> checkSingletonModifiers() 
+	public List<ShadowException> checkSingletonModifiers(Context ctx) 
 	{		  
-		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | IMMUTABLE), "A singleton");
+		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | IMMUTABLE), "A singleton", ctx);
 	}
 
-	public List<ShadowException> checkExceptionModifiers() 
+	public List<ShadowException> checkExceptionModifiers(Context ctx) 
 	{		  
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE ), "An exception");
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE ), "An exception", ctx);
 		if( isReadonly() && isImmutable() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "An exception cannot be marked both readonly and immutable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "An exception cannot be marked both readonly and immutable", ctx));
 		return exceptions;
 	}
 
-	public List<ShadowException> checkInterfaceModifiers() 
+	public List<ShadowException> checkInterfaceModifiers(Context ctx) 
 	{
-		return checkModifiers( new Modifiers(), "An interface");
+		return checkModifiers( new Modifiers(), "An interface", ctx);
 	}
 
-	public List<ShadowException> checkEnumModifiers() 
+	public List<ShadowException> checkEnumModifiers(Context ctx) 
 	{
-		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "An enum");
+		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "An enum", ctx);
 	}
 
-	public List<ShadowException> checkFieldModifiers() 
+	public List<ShadowException> checkFieldModifiers(Context ctx) 
 	{
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE | PUBLIC | PRIVATE | PROTECTED), "A field");
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE | PUBLIC | PRIVATE | PROTECTED), "A field", ctx);
 		if( isReadonly() && isImmutable() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both readonly and immutable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both readonly and immutable", ctx));
 		if( isSet() && isImmutable() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both set and immutable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both set and immutable", ctx));
 		if( isSet() && isReadonly() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both set and readonly"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both set and readonly", ctx));
 		if( isConstant() && isImmutable() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both constant and immutable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both constant and immutable", ctx));
 		if( isConstant() && isReadonly() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both constant and readonly"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both constant and readonly", ctx));
 		if( !isConstant() ) {
 			if( isPublic() )
-				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked public"));
+				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked public", ctx));
 			else if( isProtected() )
-				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked protected"));
+				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked protected", ctx));
 			else if( isPrivate() )
-				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked private"));
+				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked private", ctx));
 		}
 		return exceptions;
 	}
 
-	public List<ShadowException> checkMethodModifiers() 
+	public List<ShadowException> checkMethodModifiers(Context ctx) 
 	{
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE | EXTERN | LOCKED), "A method");
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE | LOCKED), "A method", ctx);
 		if( isGet() &&  isSet() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both get and set"));		
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both get and set", ctx));		
 		if( isReadonly() && isImmutable() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both readonly and immutable"));
-		if(isNative() && isExtern()) {
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both native and extern"));			
-		}
-		
-		if(isExtern() && !isPrivate()) {
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "An extern method can only be private"));	
-		}	
-		if(isExtern() && isExternSharable()) {
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A strictly sharable method cannot be marked extern"));
-		}
-		if(isExternSharable() && isPublic()) {
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A strictly sharable method cannot be public"));
-		}
-		
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both readonly and immutable", ctx));
 		return exceptions;
 	}
 
-	public List<ShadowException> checkLocalMethodModifiers() 
+	public List<ShadowException> checkLocalMethodModifiers(Context ctx) 
 	{
-		return checkModifiers( new Modifiers(READONLY), "A local method");
+		return checkModifiers( new Modifiers(READONLY), "A local method", ctx);
 	}
 
 
-	public List<ShadowException> checkCreateModifiers() 
+	public List<ShadowException> checkCreateModifiers(Context ctx) 
 	{
-		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | NATIVE), "A create");
+		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | NATIVE), "A create", ctx);
 	}
 
-	public List<ShadowException> checkDestroyModifiers() 
+	public List<ShadowException> checkDestroyModifiers(Context ctx) 
 	{
-		return checkModifiers(new Modifiers(PUBLIC), "A destroy");
+		return checkModifiers(new Modifiers(PUBLIC | NATIVE), "A destroy", ctx);
 	}		
 
-	public List<ShadowException> checkLocalVariableModifiers() 
+	public List<ShadowException> checkLocalVariableModifiers(Context ctx) 
 	{
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | IMMUTABLE | WEAK | NULLABLE), "A local variable");
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | IMMUTABLE | WEAK | NULLABLE), "A local variable", ctx);
 		if( isReadonly() && isImmutable() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A local variable cannot be marked both readonly and immutable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A local variable cannot be marked both readonly and immutable", ctx));
 		return exceptions;
 	}
 
-	public List<ShadowException> checkParameterAndReturnModifiers() 
+	public List<ShadowException> checkParameterAndReturnModifiers(Context ctx) 
 	{
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | IMMUTABLE | NULLABLE), "Method parameter and return types");
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | IMMUTABLE | NULLABLE), "Method parameter and return types", ctx);
 		if( isReadonly() && isImmutable() )
-			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Method parameter and return types cannot be marked both readonly and immutable"));
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Method parameter and return types cannot be marked both readonly and immutable", ctx));
 		return exceptions;
 	}
 

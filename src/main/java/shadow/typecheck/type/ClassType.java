@@ -211,25 +211,31 @@ public class ClassType extends Type {
 	}
 	
 	private Map<String, Integer> fieldIndexCache;
-	public int getFieldIndex( String fieldName ) {
-		// Lazily load cache
+	
+	//returns number of fields, including parent fields
+	private int buildFieldIndexCache() {		
+		int extendFieldSize = getExtendType() == null ? 0 : getExtendType().buildFieldIndexCache();
+		
 		if ( fieldIndexCache == null ) {
-			int start = recursivelyCountParentFields();
+			int next = extendFieldSize;
 			Map<String, Integer> cache = new HashMap<String, Integer>();
 			for (Map.Entry<String, ? extends ModifiedType> field :
-					sortFields())
-				cache.put(field.getKey(), start++);
+				sortFields())
+				cache.put(field.getKey(), next++);
 			fieldIndexCache = cache;
+			return next;
 		}
+		else
+			return fieldIndexCache.size() + extendFieldSize;		
+	}
+	
+	
+	public int getFieldIndex( String fieldName ) {
+		// Lazily load cache
+		buildFieldIndexCache();		
 		
 		Integer index = fieldIndexCache.get(fieldName);
-		return index == null ? -1 : index;
-	}
-	private int recursivelyCountParentFields() {
-		if ( getExtendType() == null )
-			return 0;
-		return getExtendType().recursivelyCountParentFields() +
-				getExtendType().sortFields().size();
+		return index == null ? ( getExtendType() == null ? -1 : getExtendType().getFieldIndex(fieldName)) : index;
 	}
 
 	public List<Entry<String, ? extends ModifiedType>> orderAllFields() {
@@ -245,7 +251,7 @@ public class ClassType extends Type {
 		fieldList.addAll(sortFields());
 	}
 	
-	private Set<Entry<String, ? extends ModifiedType>> sortFields() {
+	public Set<Entry<String, ? extends ModifiedType>> sortFields() {
 		Set<Entry<String, ? extends ModifiedType>> set = new TreeSet<Entry<String, ? extends ModifiedType>>(new Comparator<Entry<String, ? extends ModifiedType>>() {
 			@Override
 			public int compare(Entry<String, ? extends ModifiedType> first, Entry<String, ? extends ModifiedType> second) {
@@ -460,6 +466,9 @@ public class ClassType extends Type {
 			return false;
 	
 		if( this == NULL || t == Type.OBJECT || t == Type.VAR || equals(t) )
+			return true;
+		
+		if( t instanceof MethodTableType && this == METHOD_TABLE )
 			return true;
 		
 		if( t instanceof TypeParameter )

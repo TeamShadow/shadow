@@ -1,5 +1,8 @@
 package shadow.tac.analysis;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,9 +24,12 @@ import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
+import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACChangeReferenceCount;
+import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
@@ -33,6 +39,8 @@ import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStorage;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACMethodRef;
+import shadow.tac.nodes.TACNewArray;
+import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
@@ -40,6 +48,7 @@ import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;
 import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
+import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
 import shadow.tac.nodes.TACUpdate;
@@ -50,6 +59,8 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PointerType;
+import shadow.typecheck.type.SequenceType;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
@@ -86,8 +97,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			type = type.getOuter();
 		}
 		
+		//addGarbageCollection();
 		createBlocks(method);
 		addEdges();
+		
 	}
 
 	/**
@@ -191,7 +204,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				node = node.getNext();
 		}
 	}
-
+	
 	/*
 	 * Divides the code in a method into blocks.
 	 */
@@ -202,7 +215,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		boolean done = false;
 		Block block = null;
 		
-		Set<TACVariable> usedLocalVariables = method.getUsedLocals(); //initially empty
+		Set<TACVariable> usedLocalVariables = new HashSet<TACVariable>();
 		
 		// Loop through circular linked-list
 		while( !done ) {
@@ -247,7 +260,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			else if( node instanceof TACPhi ) {
 				TACPhi phi = (TACPhi)node;
 				usedLocalVariables.add(phi.getVariable());
-			}
+			}			
 			
 			block.addNode(node);
 						
@@ -264,7 +277,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				//special compiler-created variables (_temp, _exception, etc.) start with _
 				//no need to check on "this"
 				
-				if( !name.startsWith("_") && !name.equals("this") ) { 
+				if( !name.startsWith("_") && !name.equals("this") && !name.equals("return") ) { 
 					if( !usedLocalVariables.contains(variable) ) {
 						ModifiedType type = variable.getModifiedType();					
 						//kind of a hack to get the declaration
@@ -278,9 +291,115 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							addWarning( method.getSignature().getNode(), Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
 					}
 				}
-			}
-		
+			}		
 	}
+	
+	/*
+	public void addGarbageCollection() {
+		
+		TACNode start = method.getNode(); //junk tree thing?
+		TACNode node = start.getNext();
+		
+		while( node != start ) {
+			TACNode next = node.getNext();
+			
+			if( node instanceof TACLocalStore ) {
+				TACLocalStore store = (TACLocalStore) node;
+				TACVariable variable = store.getVariable();
+				//type that needs garbage collection will be stored in alloc'ed variable
+				if( needsGarbageCollection(variable) ) {
+					store.setGarbageCollected(true);
+					
+					if( variable.getType() instanceof ArrayType && store.getClassData() == null ) {
+						ArrayType arrayType = (ArrayType) variable.getType();
+						TACClass classData = new TACClass(node, arrayType.getBaseType());
+						store.setClassData(classData.getClassData());
+					}
+				}				
+			}
+			else if( node instanceof TACLocalLoad ) {
+				TACLocalLoad load = (TACLocalLoad)node;
+				TACVariable variable = load.getVariable();
+				//type that needs garbage collection will be loaded from alloc'ed variable
+				if( needsGarbageCollection(variable) )
+					load.setGarbageCollected(true);
+			}
+			else if( node instanceof TACPhi ) {
+				TACPhi phi = (TACPhi)node;
+				TACVariable variable = phi.getVariable();
+				if( needsGarbageCollection(variable) )
+					phi.setGarbageCollected(true);												
+			}
+			else if( node instanceof TACStore ) {
+				TACStore store = (TACStore) node;
+				TACReference reference = store.getReference();
+				if( needsGarbageCollection(reference) ) {
+					store.setGarbageCollected(true);
+					if( reference.getType() instanceof ArrayType && store.getClassData() == null ) {
+						ArrayType arrayType = (ArrayType) reference.getType();
+						TACClass classData = new TACClass(node, arrayType.getBaseType());
+						store.setClassData(classData.getClassData());
+					}
+				}
+			}											
+			else if( node instanceof TACNewArray ) {
+				TACNewArray newArray = (TACNewArray) node;
+				if( !newArray.hasLocalStore() && !newArray.hasMemoryStore() ) {					
+					TACVariable temp = getMethod().addTempLocal(newArray);
+					getMethod().getUsedLocals().add(temp);
+					//store into temporary for reference count purposes (and change next)
+					TACLocalStore store = new TACLocalStore(next, temp, (TACNewArray)node, false);
+					store.setGarbageCollected(true);
+					store.setClassData(newArray.getBaseClass());
+					next = store;
+				}
+			}
+			else if( node instanceof TACCall ) {
+				TACCall call = (TACCall) node;
+				if( call.hasLocalStore() ) {
+					TACLocalStore store = call.getLocalStore();
+					if( needsGarbageCollection(store.getVariable() ) )
+						store.setIncrementReference(false);
+				}
+				else if( call.hasMemoryStore() ) {
+					TACStore store = call.getMemoryStore();
+					if( needsGarbageCollection(store.getReference()))
+						store.setIncrementReference(false);
+				}
+				else {
+					//if method return is not saved, save it for ref counting purposes
+					//complex case because of possible multiple return values
+					MethodSignature signature = call.getMethodRef().getSignature();
+					SequenceType returns = signature.getFullReturnTypes();						
+					if( returns.size() == 1 ) {
+						TACVariable temp = getMethod().addTempLocal(call);
+						//getMethod().getUsedLocals().add(temp);
+						//store into temporary for reference count purposes (and change next)
+						TACLocalStore store = new TACLocalStore(next, temp, call, false);
+						if( needsGarbageCollection(temp))
+							store.setGarbageCollected(true);			
+						next = store;
+					}
+					else if( returns.size() > 1 ) {
+						TACLocalStore store = null;
+						for( int i = 0; i < signature.getReturnTypes().size(); ++i ) {
+							TACVariable temp = getMethod().addTempLocal(returns.get(0));
+							//getMethod().getUsedLocals().add(temp);
+							//store into temporary for reference count purposes (and change next)
+							store = new TACLocalStore(next, temp, new TACSequenceElement(next, call, i), false);
+							if( needsGarbageCollection(temp))
+								store.setGarbageCollected(true);
+						}
+						next = store;
+					}
+				}
+			}				
+			
+			node = next;
+		}				
+	}
+	*/
+	
 	
 	/**
 	 * Removes blocks of code that are unreachable.
@@ -310,6 +429,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				nodeBlocks.remove(block.getLabel());
 				block.removeEdges();
 			}
+			
+			//blocks with indirect branches might need to update outgoing
+			//based on changing phi situations
+			for( Block block : reachable )
+				if( block.updatePhiBranches() )
+					edgesUpdated = true;			
 			
 		} while( edgesUpdated );
 		
@@ -356,7 +481,6 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			for (Block child : block.getOutgoing())
 				if (!returns(child, visited))
 					return false;
-			
 			return true;
 		} else {
 			// If we don't branch, this block should return directly or unwind by throwing an uncaught exception
@@ -472,7 +596,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		for( TACLocalLoad undefined : undefinedLoads )
 			//_exception is a special variable used only for exception handling
 			//indirect breaks for finally make its value tricky, but it's guaranteed to never *really* be undefined
-			if( !undefined.getVariable().getOriginalName().equals("_exception") )
+			if( !undefined.getVariable().getOriginalName().equals("_exception") && !undefined.getVariable().getOriginalName().equals("return")  && !undefined.getVariable().getOriginalName().startsWith("_return")  )
 				addError(undefined.getContext(), Error.UNDEFINED_VARIABLE, "Variable " + undefined.getVariable().getOriginalName() + " may not have been defined before use");
 		
 		return changed;
@@ -557,15 +681,32 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			changed = false;
 			
 			for(Block block : blocks ) {
-				if( block != root ) {					
+				if( block != root && !block.hasIndirectBranch() ) {					
 					//find previous stores, the intersection of the stores of previous blocks
 					Set<String> previousStores = null;				
 					
 					for( Block parent : block.incoming ) {	
-						if( previousStores == null )
-							previousStores = allStores.get(parent);
+						Set<String> parentStores = null;
+						
+						//indirect branching blocks are tricky
+						//probably only one parent of the indirect
+						//block will reach the child we're looking at
+						if( parent.hasIndirectBranch() ) {
+							parentStores = initialStores.get(parent);							
+							TACBranch phiBranch = (TACBranch) parent.getLast();
+							for( Entry<TACLabel, TACOperand> entry :  phiBranch.getPhi().getPreviousStores().entrySet() ) {
+								TACLabelAddress address = (TACLabelAddress) entry.getValue();
+								if( address.getLabel().getNumber() == block.getLabel().getNumber() )
+									parentStores = union( parentStores, allStores.get(nodeBlocks.get(entry.getKey())));
+							}							
+						}
 						else
-							previousStores = intersect( previousStores, allStores.get(parent));
+							parentStores = allStores.get(parent);
+						
+						if( previousStores == null )
+							previousStores = parentStores;
+						else
+							previousStores = intersect( previousStores, parentStores );
 					}
 					allPreviousStores.put(block, previousStores); //keep record for later error reporting					
 					
@@ -648,6 +789,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		return result;
 	}
 	
+	private Set<String> union(Set<String> a, Set<String> b) {		
+		Set<String> result = new TreeSet<String>(a);
+		result.addAll(b);
+		return result;
+	}
+	
+	
 	//constants are already taken care of
 	//nullable fields are initialized to null
 	//primitive types are initialized to reasonable defaults
@@ -676,6 +824,11 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		private boolean returns = false;
 		private boolean unwinds = false;
 		private TACNode lastNode = null;  //last TAC node in this block
+		
+		
+		public boolean hasIndirectBranch() {
+			return lastNode instanceof TACBranch && ((TACBranch)lastNode).isIndirect();
+		}
 		
 		@Override
 		public String toString()
@@ -765,9 +918,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( node instanceof TACCall ) {
 					TACCall call = (TACCall)node;
 					MethodSignature signature = call.getMethodRef().getSignature();
-					if(signature.isExtern() ||  operandIsThis( call.getPrefix(), type ) ) {
+					if( operandIsThis( call.getPrefix(), type ) ) {
 						//creates are handled separately, and we have to assume that native code works
-						if( !signature.isCreate() && !signature.isNativeOrExtern() ) {							
+						if( !signature.isCreate() && !signature.isNative() ) {							
 							//if we've recorded the fields a method uses, add those to the loads before stores
 							if( methodData.containsKey(signature) ) {							
 								loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
@@ -944,6 +1097,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			boolean changed = false;			
 			Set<TACUpdate> currentlyUpdating = new HashSet<TACUpdate>();
+			//Can't use the iterator because of node removal
+			
 			for( TACNode node : this ) {				
 				if( node instanceof TACUpdate )
 					if( ((TACUpdate)node).update(currentlyUpdating) )
@@ -953,9 +1108,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACLocalLoad load = (TACLocalLoad)node;
 					if( load.isUndefined() )
 						undefinedLoads.add(load);
-				}
-				
-				if( node instanceof TACBranch ) {
+				}								
+				else if( node instanceof TACBranch ) {
 					TACBranch branch = (TACBranch) node;
 					if( branch.isConditional() && branch.getCondition() instanceof TACUpdate  ) {
 						TACUpdate update = (TACUpdate) branch.getCondition();
@@ -973,12 +1127,16 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 								Block falseBlock = nodeBlocks.get(falseLabel);
 								outgoing.remove(falseBlock);
 								falseBlock.incoming.remove(this);
+								
+								falseBlock.removePhiInput(this);								
 							}
 							else {								
 								branch.convertToDirect(falseLabel);
 								Block trueBlock = nodeBlocks.get(trueLabel);
 								outgoing.remove(trueBlock);
-								trueBlock.incoming.remove(this);								
+								trueBlock.incoming.remove(this);
+								
+								trueBlock.removePhiInput(this);
 							}
 							changed = true;
 						}
@@ -992,7 +1150,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		public void removeEdges() {
 			for( Block block : incoming )
 				block.outgoing.remove(this);
-			for( Block block : outgoing )
+			for( Block block : outgoing )	
 				block.incoming.remove(this);
 		}
 
@@ -1028,6 +1186,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 
 			//else insert phi node after label
 			TACPhi phi = new TACPhi(label.getNext(), variable);
+			if( variable.needsGarbageCollection() )
+				phi.setGarbageCollected(true);		
 			stores.put(variable, phi);
 			for( Block block : incoming )
 				phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastStores));
@@ -1054,6 +1214,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					if( store == null ) {
 						//add phi
 						TACPhi phi = new TACPhi(label.getNext(), variable);
+						if( variable.needsGarbageCollection() )
+							phi.setGarbageCollected(true);		
 						if( !stores.containsKey(variable) )
 							stores.put(variable, phi);
 						predecessors.put(variable, phi);
@@ -1065,6 +1227,45 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						load.setPreviousStore(store);
 				}
 			}					
+		}
+		
+		
+		/*
+		 * Changes to phi nodes used for indirect branches may have been taken place.
+		 * This method updates the incoming and outgoing sets for Blocks based on those changes.
+		 */		
+		public boolean updatePhiBranches() {
+			boolean changed = false;
+			if( lastNode instanceof TACBranch ) {
+				TACBranch branch = (TACBranch) lastNode;
+				if( branch.isIndirect() ) {
+					TACPhi phi = branch.getPhi();
+					//indirect phi branches are fewer than currently believed to be outgoing!	
+					if( phi.getPreviousStores().size() < outgoing.size() ) {
+						changed = true;
+						
+						//find all possible destinations
+						Set<TACLabel> destinations = new HashSet<TACLabel>();
+						for( TACOperand address : phi.getPreviousStores().values() )
+							destinations.add(((TACLabelAddress)address).getLabel());
+						
+						//find blocks that are no longer visited						
+						Set<Block> notVisited = new HashSet<Block>();
+						for( Block block : outgoing )
+							if( !destinations.contains(block.label) )
+								notVisited.add(block);
+						
+						//remove such blocks from outgoing
+						//and remove ourself from their incoming
+						for( Block block : notVisited ) {
+							outgoing.remove(block);
+							block.incoming.remove(this);							
+						}						
+					}
+				}
+			}
+			
+			return changed;
 		}
 
 		public Set<Block> getOutgoing()
@@ -1283,6 +1484,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		//Then, update all used local stores and loads to
 		//regular stores and loads, if they are Object types
 		//Remove phi nodes for such variables as well
+		/*
 		public void addGarbageCollection() {
 			TACNode node = label;
 			
@@ -1295,8 +1497,15 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACVariable variable = store.getVariable();
 					if( getMethod().getUsedLocals().contains(variable )) {
 						//type that needs garbage collection will be stored in alloc'ed variable
-						if( needsGarbageCollection(variable) )
-							store.setGarbageCollected(true);							
+						if( needsGarbageCollection(variable) ) {
+							store.setGarbageCollected(true);
+							
+							if( variable.getType() instanceof ArrayType && store.getClassData() == null ) {
+								ArrayType arrayType = (ArrayType) variable.getType();
+								TACClass classData = new TACClass(node, arrayType.getBaseType());
+								store.setClassData(classData.getClassData());
+							}
+						}
 					}
 					else
 						node.remove();
@@ -1318,11 +1527,81 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					else
 						node.remove();								
 				}
+				else if( node instanceof TACStore ) {
+					TACStore store = (TACStore) node;
+					TACReference reference = store.getReference();
+					if( needsGarbageCollection(reference) ) {
+						store.setGarbageCollected(true);
+						if( reference.getType() instanceof ArrayType && store.getClassData() == null ) {
+							ArrayType arrayType = (ArrayType) reference.getType();
+							TACClass classData = new TACClass(node, arrayType.getBaseType());
+							store.setClassData(classData);
+						}
+					}
+				}											
+				else if( node instanceof TACNewArray ) {
+					TACNewArray newArray = (TACNewArray) node;
+					if( !newArray.hasLocalStore() && !newArray.hasMemoryStore() ) {					
+						TACVariable temp = getMethod().addTempLocal(newArray);
+						getMethod().getUsedLocals().add(temp);
+						//store into temporary for reference count purposes (and change next)
+						TACLocalStore store = new TACLocalStore(next, temp, (TACNewArray)node, false);
+						store.setGarbageCollected(true);
+						store.setClassData(newArray.getBaseClass());
+						next = store;
+					}
+				}
+				else if( node instanceof TACCall ) {
+					TACCall call = (TACCall) node;
+					if( call.hasLocalStore() ) {
+						TACLocalStore store = call.getLocalStore();
+						if( needsGarbageCollection(store.getVariable() ) )
+							store.setIncrementReference(false);
+					}
+					else if( call.hasMemoryStore() ) {
+						TACStore store = call.getMemoryStore();
+						if( needsGarbageCollection(store.getReference()))
+							store.setIncrementReference(false);
+					}
+					else {
+						//if method return is not saved, save it for ref counting purposes
+						//complex case because of possible multiple return values
+						MethodSignature signature = call.getMethodRef().getSignature();
+						SequenceType returns = signature.getFullReturnTypes();						
+						if( returns.size() == 1 ) {
+							TACVariable temp = getMethod().addTempLocal(call);
+							getMethod().getUsedLocals().add(temp);
+							//store into temporary for reference count purposes (and change next)
+							TACLocalStore store = new TACLocalStore(next, temp, call, false);
+							if( needsGarbageCollection(temp))
+								store.setGarbageCollected(true);			
+							next = store;
+						}
+						else if( returns.size() > 1 ) {
+							TACNode firstStore = null;
+							for( int i = 0; i < signature.getReturnTypes().size(); ++i ) {
+								TACVariable temp = getMethod().addTempLocal(returns.get(0));
+								getMethod().getUsedLocals().add(temp);
+								//store into temporary for reference count purposes (and change next)
+								TACLocalStore store = new TACLocalStore(next, temp, new TACSequenceElement(next, call, i), false);
+								if( needsGarbageCollection(temp))
+									store.setGarbageCollected(true);															
+								if( i == 0 )
+									firstStore = store;
+							}
+							next = firstStore;
+						}
+					}
+				}				
 				
 				node = next;
 			}				
-		}
+		}*/
 	}
+	
+	
+
+	
 
 	/* Allows strings to be sorted based on given indexes */
 	private static class IndexedString implements Comparable<IndexedString>
@@ -1391,20 +1670,19 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		}
 		
 	}
-
-	public void addGarbageCollection() {
-		for( Block block : this )
-			block.addGarbageCollection();
-	}
 	
-	public static boolean needsGarbageCollection(TACVariable variable)
-	{
-		Type type = variable.getType();
-		
-		return !variable.getName().equals("_exception") && 
-				!(type instanceof PointerType) &&
-				//!(type instanceof ArrayType) &&
-				//!(type instanceof InterfaceType) &&
-				(!type.isPrimitive() || variable.getModifiers().isNullable());
-	}
+	//increments reference count on variable associated with value, if such variable exists
+	/*private static void incrementReference(TACNode anchor, TACOperand value ) {
+		if( value instanceof TACLocalLoad ) {
+			TACLocalLoad load = (TACLocalLoad) value;
+			new TACChangeReferenceCount(anchor, load.getVariable(), true);
+		}
+		else if( value instanceof TACLocalStorage ) {
+			TACLocalStorage storage = (TACLocalStorage) value;
+			new TACChangeReferenceCount(anchor, storage.getVariable(), true);
+		}
+	}*/
+	
+	
+
 }

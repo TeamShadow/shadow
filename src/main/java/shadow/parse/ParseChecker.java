@@ -19,9 +19,6 @@ import shadow.doctool.DocumentationException;
 import shadow.parse.ParseException.Error;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
 import shadow.parse.ShadowParser.CompilationUnitContext;
-import shadow.parse.ShadowParser.GeneralIdentifierContext;
-import shadow.parse.ShadowParser.MethodDeclaratorContext;
-import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Modifiers;
 
@@ -40,7 +37,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	{			
 		ParseErrorListener listener = new ParseErrorListener(getErrorReporter());
 		
-		ShadowLexer lexer = new ShadowLexer(new PathStream(path));
+		PathStream stream = new PathStream(path);
+		
+		ShadowLexer lexer = new ShadowLexer(stream);
 		lexer.removeErrorListeners();
 				
 		tokens = new CommonTokenStream(lexer);
@@ -70,13 +69,14 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			parser.getInterpreter().setPredictionMode(PredictionMode.LL);		
 			context = parser.compilationUnit();
 		}
-		
+
 		if( getErrorReporter().getErrorList().size() == 0)
 			visit(context);
 
 		printAndReportErrors();
 		return context;
 	}
+	
 	
 	@Override public Void visitModifiers(ShadowParser.ModifiersContext ctx)
 	{ 
@@ -99,7 +99,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 				case "set":  newModifier = ctx.addModifiers(Modifiers.SET); break;
 				case "constant":  newModifier = ctx.addModifiers(Modifiers.CONSTANT); break;
 				case "locked":  newModifier = ctx.addModifiers(Modifiers.LOCKED); break;
-				case "extern" : newModifier = ctx.addModifiers(Modifiers.EXTERN); break;
 			}
 			
 			if( !newModifier )				
@@ -119,7 +118,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			checkClassOrInterfaceDeclaration( ctx.classOrInterfaceDeclaration(), ctx.modifiers());		
 		else if( ctx.enumDeclaration() != null ) {
 			ctx.enumDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkEnumModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkEnumModifiers(ctx));
 		}	
 		
 		return null;
@@ -147,7 +146,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkCreateModifiers());
+		addErrors(mods, modifiers.checkCreateModifiers(ctx));
 		
 		visitChildren(ctx);
 		
@@ -209,7 +208,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkEnumModifiers());
+		addErrors(mods, modifiers.checkEnumModifiers(ctx));
 		
 		return visitChildren(ctx);
 	}
@@ -222,7 +221,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkDestroyModifiers());
+		addErrors(mods, modifiers.checkDestroyModifiers(ctx));
 		
 		return visitChildren(ctx);		
 	}
@@ -235,7 +234,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkFieldModifiers());
+		addErrors(mods, modifiers.checkFieldModifiers(ctx));
 		ctx.type().addModifiers(modifiers); //also add to type
 		
 		return visitChildren(ctx);		
@@ -249,23 +248,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ShadowParser.ModifiersContext mods = getModifiers(ctx);
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
-		addErrors(mods, modifiers.checkMethodModifiers());
+		addErrors(mods, modifiers.checkMethodModifiers(ctx));
 		
-		MethodDeclaratorContext declarator = ctx.methodDeclarator();
-		String symbol = declarator.generalIdentifier().getText();
-		if(!modifiers.isExtern() && (symbol.startsWith("_") || symbol.startsWith("$"))) {
-			addError(ctx, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
-		}
-		
-		if(modifiers.isExtern() && symbol.startsWith("$") && declarator.formalParameters().formalParameter().isEmpty()) {
-			addError(ctx, Error.SYNTAX_ERROR, "A class-externed method should accept at least one parameter");
-		}
-		
-		if(!declarator.type().isEmpty()) {
-			ctx.addModifiers(Modifiers.EXTERN_SHARABLE);
-		}
-		
-		return visitChildren(ctx);
+		return visitChildren(ctx);		
 	}
 	
 	@Override public Void visitEmptyStatement(ShadowParser.EmptyStatementContext ctx)
@@ -281,10 +266,10 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
 		switch( ctx.getStart().getText() ) {
-			case "class": addErrors(mods, modifiers.checkClassModifiers()); break;
-			case "singleton": addErrors(mods, modifiers.checkSingletonModifiers()); break;
-			case "exception": addErrors(mods, modifiers.checkExceptionModifiers()); break;
-			case "interface": addErrors(mods, modifiers.checkInterfaceModifiers()); break;
+			case "class": addErrors(mods, modifiers.checkClassModifiers(ctx)); break;
+			case "singleton": addErrors(mods, modifiers.checkSingletonModifiers(ctx)); break;
+			case "exception": addErrors(mods, modifiers.checkExceptionModifiers(ctx)); break;
+			case "interface": addErrors(mods, modifiers.checkInterfaceModifiers(ctx)); break;
 		}
 	}
 	
@@ -300,7 +285,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = ctx.modifiers().getModifiers();
 		ctx.type().addModifiers(modifiers);
 		ctx.addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers(ctx));
 		
 		return null;
 	}
@@ -323,7 +308,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = ctx.modifiers().getModifiers();
 		ctx.type().addModifiers(modifiers);
 		ctx.addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkParameterAndReturnModifiers(ctx));
 		
 		return null;
 	}
@@ -340,7 +325,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ctx.addModifiers(modifiers);
 		if( ctx.type() != null )
 			ctx.type().addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 		
 		return null;
 	}
@@ -364,20 +349,20 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = ctx.modifiers().getModifiers();
 		if( ctx.localMethodDeclaration() != null ) {
 			ctx.localMethodDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkLocalMethodModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkLocalMethodModifiers(ctx));
 		}
 		else if( ctx.localVariableDeclaration() != null ) {
 			ctx.localVariableDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 			if( ctx.localVariableDeclaration().type() != null )
 				ctx.localVariableDeclaration().type().addModifiers(modifiers);
 		}
 		
 		return null;
 	}
-
+	
 	@Override public Void visitPrimaryExpression(ShadowParser.PrimaryExpressionContext ctx)
-	{
+	{	
 		if(ctx.getChild(0).getText().equals("++"))
 			addError(ctx, Error.ILLEGAL_OPERATOR, "++ is not a legal operator");		
 		
@@ -406,7 +391,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		ctx.addModifiers(modifiers);
 		if( ctx.type() != null )
 			ctx.type().addModifiers(modifiers);
-		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+		addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 		
 		return null;
 	}
@@ -417,7 +402,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		if( ctx.localVariableDeclaration() != null ) {
 			Modifiers modifiers = ctx.modifiers().getModifiers();
 			ctx.localVariableDeclaration().addModifiers(modifiers);
-			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers());
+			addErrors(ctx.modifiers(), modifiers.checkLocalVariableModifiers(ctx));
 			if( ctx.localVariableDeclaration().type() != null )
 				ctx.localVariableDeclaration().type().addModifiers(modifiers);
 		}
@@ -439,20 +424,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		if( ctx.recoverStatement().block() != null )
 			recover = true;		
 		
-		if( !recover && !catch_ && !finally_ )
+		if( !recover && !catch_ && !finally_ )			
 			addError(ctx.recoverStatement().catchStatements().tryStatement(), Error.INCOMPLETE_TRY, "Given try statement is not followed by catch, recover, or finally statements" );
 		
 		return visitChildren(ctx);
-	}
-	
-	@Override
-	public Void visitGeneralIdentifier(GeneralIdentifierContext ctx) {
-		visitChildren(ctx);
-		
-		if(ctx.IllegalIdentifier() != null || (ctx.parent instanceof VariableDeclaratorContext && (ctx.getText().startsWith("$") || ctx.getText().startsWith("_") ))) {
-			addError(ctx, Error.SYNTAX_ERROR, "Only methods marked with extern can have identifiers starting with '$' or '_'");
-		}
-		
-		return null;
 	}
 }

@@ -5,35 +5,25 @@
  */
 class shadow:standard@Object
 {
+	public native destroy;
+	
 	/**
 	 * Retrieves the {@code Class} object associated with any given object.
 	 * @return {@code Class} of the current object
 	 */
-	public native readonly locked getClass() => ( Class );
-	
+	public native readonly locked
+	getClass() => ( Class );
+
 	/** 
 	 * Returns a {@code String} representation of the object. This default
 	 * implementation returns a representation of class information.
 	 * Most classes should override this method to provide a more useful
 	 * representation.	 
-	 * @return {@code String} representation
+	 * @return  {@code String} representation
 	 */ 
-	public readonly toString() => ( String )
+	public readonly
+	toString() => ( String )
 	{
 		return getClass().toString();
-	}
-	
-	// TEMP METHODS
-	private readonly extern $receiveFirst(Thread instance, Class expectedType) => (Object, Thread);
-	private readonly extern $receiveFirstFrom(Thread instance, Class expectedType, Thread from) => (Object);
-	
-	public readonly locked receive(Class expectedType) => (Object, Thread)
-	{
-		return $receiveFirst(CurrentThread->instance, expectedType);
-	}
-	
-	public readonly locked receive(Class expectedType, Thread from) => (Object)
-	{
-		return $receiveFirstFrom(CurrentThread->instance, expectedType, from);
 	}
 }

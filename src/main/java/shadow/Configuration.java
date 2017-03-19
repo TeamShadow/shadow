@@ -5,8 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
+import java.net.JarURLConnection;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,7 +20,7 @@ import java.util.regex.Pattern;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.jaxb.Shadow;
 
@@ -207,23 +208,21 @@ public class Configuration {
 				linkCommand.add("-");
 				linkCommand.add("-lm");
 				linkCommand.add("-lSystem");
-			}
+			}			
 			else {
 				linkCommand.add("gcc");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
-				linkCommand.add("-");
+				linkCommand.add("-");					
 				
 				if( getOs().equals("Linux") ) {
 					linkCommand.add("-lm");
 					linkCommand.add("-lrt");
-					linkCommand.add("-pthread");
-				} else {
-					// we need this for MinGW pthreads
-					linkCommand.add("-static");
 				}
 			}
 		}
+		
+	
 
 		if( systemPath == null )
 			systemPath = getRunningDirectory();
@@ -238,6 +237,7 @@ public class Configuration {
 	
 	/** Parses a config file and fills the corresponding fields */
 	private void parse(Path configFile) {
+		
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Shadow.class);
 	 
@@ -343,14 +343,23 @@ public class Configuration {
 	/** Gets the directory within which the compiler is currently running */
 	public static Path getRunningDirectory() throws ConfigurationException {		
 		try {
-			URI path = Main.class.getProtectionDomain().getCodeSource().getLocation().toURI();
-			return Paths.get(path).getParent();
+			URL path = Main.class.getProtectionDomain().getCodeSource().getLocation();
+			
+			// This is used to remove the "jar:" from the path when called through reflection. 
+			if(path.toString().startsWith("jar:file")) {
+				path = ((JarURLConnection) path.openConnection()).getJarFileURL();
+				return Paths.get(path.getPath()).getParent().toAbsolutePath();
+			}
+			
+			return Paths.get(path.toURI()).getParent().toAbsolutePath();
 		}
 		catch( SecurityException e ) {
 			throw new ConfigurationException("Insufficient permissions to access the running directory");
-		} 
-		catch (URISyntaxException e) {
-			throw new ConfigurationException("Invalid URI syntax for the running directory");
+		}
+		catch (IOException e) {
+			throw new ConfigurationException(e.toString());
+		} catch (URISyntaxException e) {
+			throw new ConfigurationException(e.toString());
 		}
 	}
 	

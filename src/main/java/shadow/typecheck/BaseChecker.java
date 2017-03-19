@@ -165,7 +165,8 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 			ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
 					"Singleton reference cannot be assigned to" );
 			return false;
-		}		
+		}
+		
 		
 		// Type parameter binding follows its own rules
 		if( substitutionKind.equals( SubstitutionKind.TYPE_PARAMETER ) ) {			

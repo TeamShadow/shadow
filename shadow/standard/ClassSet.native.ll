@@ -19,71 +19,124 @@ declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
-%shadow.standard..Object = type { %shadow.standard..Class*, %shadow.standard..Object_methods*  }
-%shadow.standard..Class_methods = type { %shadow.standard..Class* (%shadow.standard..Class*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Class*)*, { %shadow.standard..Object**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %uint (%shadow.standard..Class*)*, %shadow.standard..Object* (%shadow.standard..Class*, %shadow.standard..Class*)*, { %shadow.standard..Class**, [1 x %int] } (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*)*, %boolean (%shadow.standard..Class*, %shadow.standard..Class*)*, %shadow.standard..String* (%shadow.standard..Class*, %shadow.standard..String*, { %shadow.standard..Object**, [1 x %int] }, %int, %int)*, %shadow.standard..String* (%shadow.standard..Class*)*, %shadow.standard..Class* (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)*, %int (%shadow.standard..Class*)* }
-%shadow.standard..Class = type { %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, { %shadow.standard..Object**, [1 x %int] }, { %shadow.standard..Class**, [1 x %int] }, %int, %int }
-%shadow.standard..Iterator_methods = type { %boolean (%shadow.standard..Object*)*, %shadow.standard..Object* (%shadow.standard..Object*)* }
-%shadow.standard..String_methods = type { %shadow.standard..String* (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..String*)*, { %byte*, [1 x %int] } (%shadow.standard..String*)*, %int (%shadow.standard..String*, %shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %shadow.standard..String*)*, %boolean (%shadow.standard..String*, %shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %byte (%shadow.standard..String*, %int)*, %boolean (%shadow.standard..String*)*, { %shadow.standard..Iterator_methods*, %shadow.standard..Object* } (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*, %int)*, %shadow.standard..String* (%shadow.standard..String*, %int, %int)*, %byte (%shadow.standard..String*)*, %double (%shadow.standard..String*)*, %float (%shadow.standard..String*)*, %int (%shadow.standard..String*)*, %long (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)*, %short (%shadow.standard..String*)*, %ubyte (%shadow.standard..String*)*, %uint (%shadow.standard..String*)*, %ulong (%shadow.standard..String*)*, %ushort (%shadow.standard..String*)*, %shadow.standard..String* (%shadow.standard..String*)* }
-%shadow.standard..String = type { %shadow.standard..Class*, %shadow.standard..String_methods* , { %byte*, [1 x %int] }, %boolean }
+%shadow.standard..Object_methods = type opaque
+%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
+%shadow.standard..Class_methods = type opaque
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
+%shadow.standard..GenericClass_methods = type opaque
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] } }
+%shadow.standard..Iterator_methods = type opaque
+%shadow.standard..String_methods = type opaque
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, [1 x %int] }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
+%shadow.standard..MethodTable_methods = type opaque
+%shadow.standard..MethodTable = type opaque
 
-%shadow.standard..Exception_methods = type { %shadow.standard..Exception* (%shadow.standard..Exception*)*, %shadow.standard..Exception* (%shadow.standard..Exception*, %shadow.standard..AddressMap*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Exception*)*, %shadow.standard..String* (%shadow.standard..Exception*)* }
-%shadow.standard..Exception = type { %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.standard..Exception_methods = type opaque
+%shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
+%shadow.standard..OutOfMemoryException_methods = type opaque
+%shadow.standard..OutOfMemoryException = type { %ulong, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException_methods* , %shadow.standard..String* }
 
-%shadow.standard..ClassSet_methods = type opaque
-%shadow.standard..ClassSet = type opaque
-
-@shadow.standard..Object_class = external constant %shadow.standard..Class
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
+@shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
+@shadow.standard..Exception_class = external constant %shadow.standard..Class
+@shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
+@shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
 
-@shadow.standard..Array_methods = external constant %shadow.standard..Object
+%shadow.standard..ClassSet_methods = type opaque
+%shadow.standard..ClassSet = type opaque
+
+@shadow.standard..Array_methods = external constant %shadow.standard..MethodTable
 @shadow.standard..Array_class = external constant %shadow.standard..Class
 @int_A1_class = external constant %shadow.standard..Class
+@shadow.standard..Object_class = external constant %shadow.standard..Class
+@shadow.standard..int_methods = external constant %shadow.standard..MethodTable
 
-declare noalias %shadow.standard..Object* @shadow.standard..Class_Mallocate_int(%shadow.standard..Class*, %int)
+declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
+declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements)
 
 define %shadow.standard..Class* @shadow.standard..ClassSet_MgetIntArrayClass(%shadow.standard..ClassSet*) alwaysinline {
 	ret %shadow.standard..Class* @int_A1_class
 }
 
-define {%shadow.standard..Object**, [1 x %int]} @shadow.standard..ClassSet_MgetEmptyObjectArray(%shadow.standard..ClassSet*) alwaysinline {
-	ret {%shadow.standard..Object**, [1 x %int]} zeroinitializer
+define %shadow.standard..MethodTable* @shadow.standard..ClassSet_MgetIntMethodTable(%shadow.standard..ClassSet*) alwaysinline {
+	ret %shadow.standard..MethodTable* @shadow.standard..int_methods
 }
 
-define {%shadow.standard..Object**, [1 x %int]} @shadow.standard..ClassSet_MmakeObjectArray_shadow.standard..Object_shadow.standard..Object_shadow.standard..Object_shadow.standard..Object(%shadow.standard..ClassSet*, %shadow.standard..Object*, %shadow.standard..Object*, %shadow.standard..Object*, %shadow.standard..Object* ) {
-	%memory = call %shadow.standard..Object* @shadow.standard..Class_Mallocate_int(%shadow.standard..Class* @shadow.standard..Object_class, i32 4)
-	%pointer = bitcast %shadow.standard..Object* %memory to %shadow.standard..Object**
-	store %shadow.standard..Object* %1, %shadow.standard..Object** %pointer
-	%spot2 = getelementptr %shadow.standard..Object*, %shadow.standard..Object** %pointer, %int 1
-	store %shadow.standard..Object* %2, %shadow.standard..Object** %spot2
-	%spot3 = getelementptr %shadow.standard..Object*, %shadow.standard..Object** %pointer, %int 2
-	store %shadow.standard..Object* %3, %shadow.standard..Object** %spot3
-	%spot4 = getelementptr %shadow.standard..Object*, %shadow.standard..Object** %pointer, %int 3
-	store %shadow.standard..Object* %4, %shadow.standard..Object** %spot4
-	%array1 = insertvalue {%shadow.standard..Object**, [1 x %int]} zeroinitializer, %shadow.standard..Object** %pointer, 0
-	%array2 = insertvalue {%shadow.standard..Object**, [1 x %int]} %array1, %int 4, 1, 0
-	ret  {%shadow.standard..Object**, [1 x %int]} %array2
+define {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} @shadow.standard..ClassSet_MgetEmptyMethodTableArray(%shadow.standard..ClassSet*) alwaysinline {
+	ret {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} zeroinitializer
 }
 
 
-define {%shadow.standard..Class**, [1 x %int]} @shadow.standard..ClassSet_MgetEmptyClassArray(%shadow.standard..ClassSet*) alwaysinline {
-	ret {%shadow.standard..Class**, [1 x %int]} zeroinitializer
+define {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} @shadow.standard..ClassSet_MmakeMethodTableArray_shadow.standard..MethodTable(%shadow.standard..ClassSet*, %shadow.standard..MethodTable*) {
+	%memory = call {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..Object_class, %uint 1)
+	%memoryAsTables = bitcast {%ulong, %shadow.standard..Object*}* %memory to {%ulong, %shadow.standard..MethodTable*}*
+	%array = getelementptr {%ulong, %shadow.standard..MethodTable*}, {%ulong, %shadow.standard..MethodTable*}* %memoryAsTables, i32 0, i32 1
+	store %shadow.standard..MethodTable* %1, %shadow.standard..MethodTable** %array
+	%array1 = insertvalue {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} zeroinitializer, {%ulong, %shadow.standard..MethodTable*}* %memoryAsTables, 0
+	%array2 = insertvalue {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} %array1, %int 1, 1, 0
+	ret  {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} %array2
 }
 
-define {%shadow.standard..Class**, [1 x %int]} @shadow.standard..ClassSet_MmakeClassArray_shadow.standard..Class_shadow.standard..Class_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*, %shadow.standard..Class*, %shadow.standard..Class* ) {
-	%memory = call %shadow.standard..Object* @shadow.standard..Class_Mallocate_int(%shadow.standard..Class* @shadow.standard..Class_class, i32 3)
-	%pointer = bitcast %shadow.standard..Object* %memory to %shadow.standard..Class**
-	store %shadow.standard..Class* %1, %shadow.standard..Class** %pointer
-	%spot2 = getelementptr %shadow.standard..Class*, %shadow.standard..Class** %pointer, %int 1
+
+define {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} @shadow.standard..ClassSet_MmakeMethodTableArray_shadow.standard..MethodTable_shadow.standard..MethodTable(%shadow.standard..ClassSet*, %shadow.standard..MethodTable*, %shadow.standard..MethodTable* ) {
+	%memory = call {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..Object_class, %uint 2)
+	%memoryAsTables = bitcast {%ulong, %shadow.standard..Object*}* %memory to {%ulong, %shadow.standard..MethodTable*}*
+	%array = getelementptr {%ulong, %shadow.standard..MethodTable*}, {%ulong, %shadow.standard..MethodTable*}* %memoryAsTables, i32 0, i32 1
+	store %shadow.standard..MethodTable* %1, %shadow.standard..MethodTable** %array
+	%spot2 = getelementptr %shadow.standard..MethodTable*, %shadow.standard..MethodTable** %array, %int 1
+	store %shadow.standard..MethodTable* %2, %shadow.standard..MethodTable** %spot2	
+	%array1 = insertvalue {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} zeroinitializer, {%ulong, %shadow.standard..MethodTable*}* %memoryAsTables, 0
+	%array2 = insertvalue {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} %array1, %int 2, 1, 0
+	ret  {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int]} %array2
+}
+
+
+define {{%ulong, %shadow.standard..Class*}*, [1 x %int]} @shadow.standard..ClassSet_MgetEmptyClassArray(%shadow.standard..ClassSet*) alwaysinline {
+	ret {{%ulong, %shadow.standard..Class*}*, [1 x %int]} zeroinitializer
+}
+
+; 1 class version
+define {{%ulong, %shadow.standard..Class*}*, [1 x %int]} @shadow.standard..ClassSet_MmakeClassArray_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*) {
+	%memory = call {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..Class_class, %uint 1)
+	%asClasses = bitcast {%ulong, %shadow.standard..Object*}* %memory to {%ulong, %shadow.standard..Class*}*	
+	%array = getelementptr {%ulong, %shadow.standard..Class*}, {%ulong, %shadow.standard..Class*}* %asClasses, i32 0, i32 1
+	store %shadow.standard..Class* %1, %shadow.standard..Class** %array
+	%array1 = insertvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int]} zeroinitializer, {%ulong, %shadow.standard..Class*}* %asClasses, 0
+	%array2 = insertvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int]} %array1, %int 1, 1, 0
+	ret  {{%ulong, %shadow.standard..Class*}*, [1 x %int]} %array2
+}
+
+
+
+; 2 class version
+define {{%ulong, %shadow.standard..Class*}*, [1 x %int]} @shadow.standard..ClassSet_MmakeClassArray_shadow.standard..Class_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*, %shadow.standard..Class*) {
+	%memory = call {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..Class_class, %uint 2)
+	%asClasses = bitcast {%ulong, %shadow.standard..Object*}* %memory to {%ulong, %shadow.standard..Class*}*	
+	%array = getelementptr {%ulong, %shadow.standard..Class*}, {%ulong, %shadow.standard..Class*}* %asClasses, i32 0, i32 1
+	store %shadow.standard..Class* %1, %shadow.standard..Class** %array
+	%spot2 = getelementptr %shadow.standard..Class*, %shadow.standard..Class** %array, %int 1
 	store %shadow.standard..Class* %2, %shadow.standard..Class** %spot2
-	%spot3 = getelementptr %shadow.standard..Class*, %shadow.standard..Class** %pointer, %int 2
+	%array1 = insertvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int]} zeroinitializer, {%ulong, %shadow.standard..Class*}* %asClasses, 0
+	%array2 = insertvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int]} %array1, %int 2, 1, 0
+	ret  {{%ulong, %shadow.standard..Class*}*, [1 x %int]} %array2
+}
+
+; 3 class version
+define {{%ulong, %shadow.standard..Class*}*, [1 x %int]} @shadow.standard..ClassSet_MmakeClassArray_shadow.standard..Class_shadow.standard..Class_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*, %shadow.standard..Class*, %shadow.standard..Class* ) {
+	%memory = call {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..Class_class, %uint 3)
+	%asClasses = bitcast {%ulong, %shadow.standard..Object*}* %memory to {%ulong, %shadow.standard..Class*}*	
+	%array = getelementptr {%ulong, %shadow.standard..Class*}, {%ulong, %shadow.standard..Class*}* %asClasses, i32 0, i32 1
+	store %shadow.standard..Class* %1, %shadow.standard..Class** %array
+	%spot2 = getelementptr %shadow.standard..Class*, %shadow.standard..Class** %array, %int 1
+	store %shadow.standard..Class* %2, %shadow.standard..Class** %spot2
+	%spot3 = getelementptr %shadow.standard..Class*, %shadow.standard..Class** %array, %int 2
 	store %shadow.standard..Class* %3, %shadow.standard..Class** %spot3
-	%array1 = insertvalue {%shadow.standard..Class**, [1 x %int]} zeroinitializer, %shadow.standard..Class** %pointer, 0
-	%array2 = insertvalue {%shadow.standard..Class**, [1 x %int]} %array1, %int 3, 1, 0
-	ret  {%shadow.standard..Class**, [1 x %int]} %array2
+	%array1 = insertvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int]} zeroinitializer, {%ulong, %shadow.standard..Class*}* %asClasses, 0
+	%array2 = insertvalue {{%ulong, %shadow.standard..Class*}*, [1 x %int]} %array1, %int 3, 1, 0
+	ret  {{%ulong, %shadow.standard..Class*}*, [1 x %int]} %array2
 }

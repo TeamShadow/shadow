@@ -30,8 +30,8 @@ import java.util.TreeSet;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
-import shadow.ShadowException;
 import shadow.parse.Context;
+import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
@@ -51,11 +51,12 @@ public class TypeChecker {
 	 * @throws IOException 
 	 * @throws ConfigurationException 
 	 */
-	public static List<Context> typeCheck(Path file, boolean useSourceFiles)
+	public static List<Context> typeCheck(Path file, boolean useSourceFiles, ErrorReporter reporter)
 			throws ShadowException, IOException, ConfigurationException {	
 		
+		Type.clearTypes();		
 		Package packageTree = new Package(); // Root of all packages, storing all types
-		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+		
 		
 		/* Collector looks over all files and creates types for everything needed. */
 		TypeCollector collector = new TypeCollector( packageTree, reporter, useSourceFiles );

@@ -211,7 +211,7 @@ and CanHash
 	 * @return {@code MutableString} object after append
 	 */
 	public append( nullable Object value ) => ( MutableString )
-	{
+	{		
 		String string = #value;		
 		ensureCapacity( size + string->size );
 		for ( int i = 0; i < string->size; i += 1, size += 1 )
@@ -289,9 +289,10 @@ and CanHash
 	public readonly toString() => ( String )
 	{	
 		byte[] bytes = data;
-		if( data->size != size ) 
+
+		if( data->size != size )
 			bytes = cast<byte[]>(data.subarray(0, size));
-				
+
 		return String:create(bytes);
 	}
 	

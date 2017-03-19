@@ -14,6 +14,9 @@ public class TACStore extends TACNode
 {
 	private TACReference reference;
 	private TACOperand value;
+	private TACOperand classData; //only used for array stores
+	private boolean incrementReference = true;
+	private boolean decrementReference = true;
 
 	public TACStore(TACNode node, TACReference ref, TACOperand op)
 	{
@@ -21,7 +24,6 @@ public class TACStore extends TACNode
 		reference = ref;
 		value = check(op, ref);		
 		op.setMemoryStore(this);
-		//new TACNodeRef(node, value);
 	}
 
 	public TACReference getReference()
@@ -32,6 +34,25 @@ public class TACStore extends TACNode
 	{
 		return value;
 	}
+
+	public boolean isIncrementReference()
+	{
+		return incrementReference;		
+	}
+
+	public void setIncrementReference(boolean value)
+	{
+		incrementReference = value;		
+	}	
+	
+	public boolean isDecrementReference() {
+		return decrementReference;
+	}
+	
+	public void setDecrementReference(boolean value) {
+		decrementReference = value;
+	}
+
 
 	@Override
 	public int getNumOperands()
@@ -56,5 +77,15 @@ public class TACStore extends TACNode
 	public String toString()
 	{
 		return reference + " = " + value;
+	}
+	
+	public void setClassData(TACOperand classData)
+	{
+		this.classData = classData;
+	}
+	
+	public TACOperand getClassData()
+	{
+		return classData;
 	}
 }

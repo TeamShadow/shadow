@@ -48,7 +48,7 @@ is  Set<Class>
 	 */
 	public create(int initialCapacity)
 	{
-		this(initialCapacity, DEFAULT_LOAD_FACTOR);
+		this(initialCapacity, DEFAULT_LOAD_FACTOR);		
 	}
 	
 	/**
@@ -58,13 +58,13 @@ is  Set<Class>
 	 * @param loadFactor maximum load factor before the map is resized
 	 */
 	public create(int initialCapacity, float loadFactor)
-	{
+	{		
 		int capacity = 1;
 		while( capacity < initialCapacity ) // Makes capacity a power of 2.
-			capacity <<= 1;		
-		table = Node:null[capacity];
+			capacity <<= 1;	
+		table = Node:null[capacity];		
 		this:loadFactor = loadFactor;
-		threshold = cast<int>(capacity * loadFactor);
+		threshold = cast<int>(capacity * loadFactor);		
 	}
 	
 	/*
@@ -133,10 +133,10 @@ is  Set<Class>
 		}
 		
 		public create( int hash, Class value, nullable Node after )
-		{
+		{			
 			this:hash = hash;			
 			this:value = value;
-			next = after;
+			next = after;			
 		}
 	}	
 	
@@ -208,7 +208,7 @@ is  Set<Class>
 	{
 		( int index, int hash ) = findIndex(#value, table->size);
 		try
-		{
+		{			
 			Node current = check(table[index]);
 			while ( current->hash != hash and current->value !== value )
 				current = check(current->next);
@@ -217,7 +217,9 @@ is  Set<Class>
 		}
 		recover // Hits null before finding existing value.
 		{
-			table[index] = Node:create(hash, value, table[index]);
+			Node node = Node:create(hash, value, table[index]);
+			table[index] = node;
+			
 			modifications += 1;
 			size += 1;
 			
@@ -367,7 +369,7 @@ is  Set<Class>
 	 * @param parameters array of type parameters and associated method tables
 	 * @return matching generic class if found, {@code null} otherwise
 	 */	  
-	public locked readonly findGeneric(String name, immutable Object[] parameters) => (nullable GenericClass)
+	public locked readonly findGeneric(String name, immutable Class[] parameters) => (nullable GenericClass)
 	{
 		(int index, int hash) = findIndex( name, table->size );
 		try
@@ -381,7 +383,7 @@ is  Set<Class>
 					if( other->parameters->size == parameters->size )
 					{
 						int i;
-						for( i = 0; i < parameters->size and parameters[i] === other->parameters[i]; i += 2 )
+						for( i = 0; i < parameters->size and parameters[i] === other->parameters[i]; i += 1 )
 							skip;
 						if( i >= parameters->size and name == other->name )							
 							return other;					
@@ -441,9 +443,9 @@ is  Set<Class>
 	 * @param parameters array of type parameters and associated method tables
 	 * @return newly created generic class
 	 */
-	public locked addGeneric(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Object[] parameters) => (GenericClass)
+	public locked addGeneric(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Class[] parameters, immutable MethodTable[] tables) => (GenericClass)
 	{
-		GenericClass newGeneric = GenericClass:create(raw, name, parent, interfaces, parameters);
+		GenericClass newGeneric = GenericClass:create(raw, name, parent, interfaces, parameters, tables);
 		(int index, int hash) = findIndex( name, table->size );		
 		table[index] = Node:create(hash, newGeneric, table[index]);
 		modifications += 1;
@@ -460,10 +462,14 @@ is  Set<Class>
 	 * natively for efficiency and to avoid complexities in the type-checker.
 	 */		
 	private native getIntArrayClass() => (Class);
-	private native getEmptyObjectArray() => (immutable Object[]);
-	private native makeObjectArray(nullable readonly Object object0, nullable readonly Object object1, nullable readonly Object object2, nullable readonly Object object3) => (immutable Object[]);
+	private native getIntMethodTable() => (MethodTable);
+	private native getEmptyMethodTableArray() => (immutable MethodTable[]);
+	private native makeMethodTableArray(nullable readonly MethodTable object0) => (immutable MethodTable[]);
+	private native makeMethodTableArray(nullable readonly MethodTable object0, nullable readonly MethodTable object1) => (immutable MethodTable[]);
 	private native getEmptyClassArray() => (immutable Class[]);
+	private native makeClassArray(nullable Class class0) => (immutable Class[]);
 	private native makeClassArray(nullable Class class0, nullable Class class1, nullable Class class2) => (immutable Class[]);
+	private native makeClassArray(nullable Class class0, nullable Class class1) => (immutable Class[]);
 	
 	/**
 	 * Method that looks for a generic array class with the given name,
@@ -472,13 +478,14 @@ is  Set<Class>
 	 * If the class is found, it returns it. If the class is not found, it 
 	 * creates it. 
 	 * @param name name of class to find	 
-	 * @param parameters array of type parameters and associated method tables
+	 * @param parameters array of type parameters (only contains one item)
+	 * @param table associated method table
 	 * @param isNull {@code true} if the array type is nullable, {@code false}
 	 * otherwise
 	 * @return matching generic class, either pre-existing or newly created
 	 */
-	public locked getGenericArray(String name, immutable Object[] parameters, boolean isNull) => (GenericClass)
-	{		
+	public locked getGenericArray(String name, immutable Class[] parameters, immutable MethodTable methodTable, boolean isNull) => (GenericClass)
+	{
 		try
 		{	
 			return check(findGeneric(name, parameters));
@@ -487,7 +494,9 @@ is  Set<Class>
 		{	
 			//CanIndex			
 			//immutable Object[] canIndexParameters = freeze({ getIntArrayClass(), getNull(), parameter, parameterMethods });
-			immutable Object[] canIndexParameters = makeObjectArray(getIntArrayClass(), null, parameters[0], parameters[1]);
+			immutable Class[] canIndexParameters = makeClassArray(getIntArrayClass(), parameters[0]);
+			immutable MethodTable[] canIndexTables = makeMethodTableArray(getIntMethodTable(), methodTable);
+			immutable MethodTable[] tables = makeMethodTableArray(methodTable);
 			//same parameters used for CanIndex and CanIndexStore 
 			Class base;
 			String canIndexName;
@@ -496,10 +505,10 @@ is  Set<Class>
 			else
 				base = CanIndex:class;
 				
-			canIndexName = base.makeName(#base, canIndexParameters, 0, 4);
+			canIndexName = base.makeName(#base, canIndexParameters, 0, 2);
 			nullable GenericClass canIndex = findGeneric(canIndexName, canIndexParameters);
 			if( canIndex === null )
-				canIndex = addGeneric(base, canIndexName, null, getEmptyClassArray(), canIndexParameters);
+				canIndex = addGeneric(base, canIndexName, null, getEmptyClassArray(), canIndexParameters, canIndexTables);
 			
 			//CanIndexStore						
 			String canIndexStoreName;
@@ -508,10 +517,10 @@ is  Set<Class>
 			else
 				base = CanIndexStore:class;
 
-			canIndexStoreName = base.makeName(#base, canIndexParameters, 0, 4);
+			canIndexStoreName = base.makeName(#base, canIndexParameters, 0, 2);
 			nullable GenericClass canIndexStore = findGeneric(canIndexStoreName, canIndexParameters);
 			if( canIndexStore === null )
-				canIndexStore = addGeneric(base, canIndexStoreName, null, getEmptyClassArray(), canIndexParameters);
+				canIndexStore = addGeneric(base, canIndexStoreName, null, getEmptyClassArray(), canIndexParameters, canIndexTables);
 
 			//CanIterate
 			String canIterateName;
@@ -519,11 +528,11 @@ is  Set<Class>
 				base = CanIterateNullable:class;
 			else
 				base = CanIterate:class;
-			canIterateName = base.makeName(#base, parameters, 0, 2);
+			canIterateName = base.makeName(#base, parameters, 0, 1);
 			
 			nullable GenericClass canIterate = findGeneric(canIterateName, parameters);
-			if( canIterate === null )
-				canIterate = addGeneric(base, canIterateName, null, getEmptyClassArray(), parameters);
+			if( canIterate === null )			
+				canIterate = addGeneric(base, canIterateName, null, getEmptyClassArray(), parameters, tables);
 									
 			//return addGenericArray(name, parameter, freeze({cast<Class>(check(canIndex)), check(canIndexStore), check(canIterate)}), freeze({genericParameter, genericMethods}));
 			if( isNull )
@@ -531,7 +540,7 @@ is  Set<Class>
 			else
 				base = Array:class;			
 			
-			return addGeneric(base, name, Object:class, makeClassArray(canIndex, canIndexStore, canIterate), parameters);
+			return addGeneric(base, name, Object:class, makeClassArray(canIndex, canIndexStore, canIterate), parameters, tables);
 		}	
 	}	
 
@@ -549,9 +558,9 @@ is  Set<Class>
 	locked public addArray(String name, Class base, int dimensions) => (Class)
 	{
 		immutable Class[] interfaces = getEmptyClassArray();
-		immutable Object[] data = getEmptyObjectArray();
+		immutable MethodTable[] tables = getEmptyMethodTableArray();
 
-		Class newArray = Class:create(name, Class:ARRAY, dimensions, base, interfaces, data);
+		Class newArray = Class:create(name, Class:ARRAY, dimensions, base, interfaces, tables);
 		(int index, int hash) = findIndex( name, table->size );		
 		table[index] = Node:create(hash, newArray, table[index]);
 		modifications += 1;

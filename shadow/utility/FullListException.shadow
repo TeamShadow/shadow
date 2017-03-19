@@ -1,4 +1,0 @@
-exception shadow:utility@
-	FullListException
-{
-}

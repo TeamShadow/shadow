@@ -17,8 +17,7 @@ class shadow:test@MatrixTest
 		(b[0][0], b[1][1], b[2][2]) = (1, 1, 1);
 		b[2][0] = 3;
 		
-		out.printLine("b:\n" # b);
-		
+		out.printLine("b:\n" # b);		
 		
 		Matrix c = a + b;
 		Matrix d = a - b;
@@ -26,6 +25,6 @@ class shadow:test@MatrixTest
 		
 		out.printLine("c:\n" # c);
 		out.printLine("d:\n" # d);
-		out.printLine("e:\n" # e);
+		out.printLine("e:\n" # e);		
 	}
 }

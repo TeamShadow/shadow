@@ -1,5 +1,0 @@
-interface shadow:utility@
-	Equate<T>
-{
-	readonly isEqual(T a, T b) => (boolean);
-}

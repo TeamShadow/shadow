@@ -1,0 +1,12 @@
+/**
+ * {@code MethodTable} pointers are used to hold pointers to method tables.
+ * They are not actually objects, although Shadow pretends that they are.
+ * This special type is used to prevent reference-counting operations on
+ * method tables, which do not have reference counts. 
+ */
+immutable class shadow:standard@
+	MethodTable
+{
+	private create()
+	{}
+}

@@ -1,8 +1,7 @@
 package shadow.typecheck.type;
 
-import java.util.List;
-
 import shadow.doctool.Documentation;
+import java.util.List;
 
 
 public class UnboundMethodType extends ClassType

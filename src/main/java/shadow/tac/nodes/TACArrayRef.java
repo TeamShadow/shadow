@@ -21,7 +21,7 @@ import shadow.typecheck.type.Type;
  * @author Jacob Young
  * @author Barry Wittman
  */
-public class TACArrayRef implements TACReference
+public class TACArrayRef extends TACReference
 {
 	private TACOperand array, total;
 	private List<TACOperand> indices;

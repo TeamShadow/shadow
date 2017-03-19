@@ -1,0 +1,4 @@
+interface shadow:test@CanRun
+{
+	run() => ();
+}

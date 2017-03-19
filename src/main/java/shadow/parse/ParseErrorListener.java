@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.IntStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.Token;
 
 import shadow.ShadowException;
 import shadow.parse.ParseException.Error;
@@ -26,7 +27,7 @@ public class ParseErrorListener extends BaseErrorListener {
 	public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
 			int line, int charPositionInLine,
 			String msg, RecognitionException e)
-	{
+	{	
 		IntStream stream = recognizer.getInputStream();
 		Path path = null;
 		String sourceName = null;
@@ -54,7 +55,12 @@ public class ParseErrorListener extends BaseErrorListener {
 		else
 			error = String.format("[%d:%d] %s: %s", line, charPositionInLine, Error.SYNTAX_ERROR.getName(), msg);
 
-		reporter.addError(new ParseException(Error.SYNTAX_ERROR, error));
+		if( e != null ) {
+			Token t = e.getOffendingToken();		
+			reporter.addError(new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, t.getStartIndex(), t.getStopIndex()));
+		}
+		else
+			reporter.addError(new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, -1, -1));
 	}
 
 }

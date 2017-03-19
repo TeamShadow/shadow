@@ -4,7 +4,8 @@ class shadow:test@PropertyTest
 {
 	public main( String[] args ) => ()
 	{	
-		Console out;	
+		Console out;
+		
 		var property = Property:create();
 		
 		property->x = 17;
@@ -24,6 +25,6 @@ class shadow:test@PropertyTest
 		
 		property->strange2 = 91;
 		
-		out.printLine(property->strange2); //182					
+		out.printLine(property->strange2); //182				
 	}
 }

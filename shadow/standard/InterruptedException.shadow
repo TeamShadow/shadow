@@ -1,7 +1,0 @@
-/**
- * @author Claude Abounegm
- */
-exception shadow:standard@
-	InterruptedException
-{
-}

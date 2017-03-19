@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.Arguments;
 import shadow.Configuration;
@@ -33,8 +33,7 @@ import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
-public class DocumentationTool 
-{
+public class DocumentationTool {
 	private static final String SRC_EXTENSION = ".shadow";
 	private static final String PKG_INFO_FILE = "package-info.txt";
 	

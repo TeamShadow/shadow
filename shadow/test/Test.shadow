@@ -5,6 +5,7 @@ class shadow:test@Test
 	public main(String[] args) => ()
 	{
 		Console console;
+		
 		{
 			(int x, int y) = 5;
 			console.printLine(x === y); // is true
@@ -14,10 +15,12 @@ class shadow:test@Test
 			int y = x;
 			console.printLine(x === y); // is true
 		}
+		
 		{
 			(immutable Object x, immutable Object y) = 5;
 			console.printLine(x === y); // is false
 		}
+				
 		{
 			immutable Object x = 5;
 			immutable Object y = 5;
@@ -27,6 +30,6 @@ class shadow:test@Test
 			immutable Object x = 5;
 			immutable Object y = x;
 			console.printLine(x === y); // is true
-		}
+		}		
 	}
 }

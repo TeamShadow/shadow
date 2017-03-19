@@ -35,6 +35,8 @@ and CanIterateNullable<T>
 		this:data = data;		
 	}
 	
+	public native destroy;
+	
 	/**
 	 * Gets the size of the array (total number of elements in all dimensions).
 	 * @return number of all elements

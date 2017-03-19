@@ -5,6 +5,7 @@ import static junit.framework.Assert.assertEquals;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -718,7 +719,12 @@ public class OutputTests {
 				"20\n" + 
 				"21\n" + 
 				"22\n" + 
-				"23\n");
+				"23\n" +
+				"20 19 18 17 16 \n" +
+				"15 14 13 12 11 \n" +
+				"10 9 8 7 6 \n" +
+				"5 4 3 2 1 \n"
+				);
 	}	
 	
 	@Test public void testGeneric() throws Exception {
@@ -1061,8 +1067,7 @@ public class OutputTests {
 				"finally\n"
 				);
 	}	
-	
-	
+
 	@Test public void testTreeMap() throws Exception {
 		args.add("shadow/test/TreeMapTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -1131,191 +1136,5 @@ public class OutputTests {
 				"130\n" + 
 				"false\n" + 
 				"countrytime\n");	
-	}
-
-	@Test public void testThread() throws Exception {
-		args.add("shadow/test/ThreadTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				// stdin
-				"Thread#main\n" +
-				"Thread#1\n" +
-				"Thread#2\n" +
-				"Thread#3\n" +
-				"Thread#4\n" + 
-				"Thread#5\n" + 
-				"true\n" +
-				"true\n" +
-				"Thread#6\n" +
-				"Thread#7\n" +
-				"Thread#8\n",
-
-				// stderr
-				"Uncaught Thread Exception @Thread#3:\n" +
-				"   Propagated from: (Thread#3)\n" +
-				"   Throwing: (shadow:standard@Exception: from Thread#3)\n" +
-				
-				"Uncaught Thread Exception @Thread#4:\n" +
-				"   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)\n" +
-				"   Throwing: (shadow:standard@Exception: from Thread#8)\n" +
-				
-				"Uncaught Thread Exception @Thread#7:\n" +
-				"   Propagated from: (Thread#7)\n" +
-				"   Throwing: (shadow:standard@Exception: from Thread#7)\n"
-			);
-	}
-	
-	@Test public void testThreadSleep() throws Exception {
-		args.add("shadow/test/ThreadSleepTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"I am going to wait 3 seconds.\n" +
-				"I waited 3 seconds.\n" +
-				"I am a thread.\n" +
-			    "I am a thread.\n" +
-				"I am a thread.\n" +
-			    "true\n");
-	}
-	
-	@Test public void testTLSThread() throws Exception {
-		args.add("shadow/test/TLSTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"1\n" +
-				"1\n");
-	}
-	
-	@Test public void testThreadIsolatedRunner() throws Exception {
-		args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"1 1\n" +
-				"1 1\n" +
-				"1 1\n" +
-				"0\n");
-	}
-	
-	@Test public void testSignaler() throws Exception {
-		args.add("shadow/test/SignalerTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], 
-				"Thread#1: waiting!\n" + 
-				"Thread#2: waiting!\n" + 
-				"Thread#3: waiting!\n" + 
-				"Thread#3: finished waiting!\n" + 
-				"Thread#4: waiting!\n" + 
-				"Thread#5: waiting!\n" + 
-				"Thread#1: finished waiting!\n" + 
-				"Thread#2: finished waiting!\n" + 
-				"Thread#4: finished waiting!\n" + 
-				"Thread#5: finished waiting!\n"
-				);
-	}
-	
-	private String formatOutputString(CharSequence... elements)
-	{
-		return String.join("\n", elements) + "\n";
-	}
-	
-	@Test public void testMailbox() throws Exception {
-		args.add("shadow/test/MailboxTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		/*run(new String[0], formatOutputString(
-							"Test1",
-							"Thread#2: hello world!",
-							"Thread#3: hello world!",
-							"Thread#4: hello world!",
-							"Thread#5: hello world!",
-							"Thread#main: stop",
-							
-							"Test2",
-							"true",
-							"Thread#7",
-							"Thread#8",
-							
-							"A string from Thread#7",
-							"Secret number: 0",
-							"[0, 1, 2, 3, 4]",
-							"done",
-							"[0, 1, 2, 3, 4]",
-							
-							"A string from Thread#8",
-							"Secret number: 1",
-							"[10, 11, 12, 13, 14]",
-							"done",
-							"[10, 11, 12, 13, 14]"
-						),
-				"shadow:standard@IncompatibleMessageTypeException: Expected 'int' but got 'shadow:standard@String'.\n"			
-		);*/
-	}
-	
-	@Test public void testMessagePassing() throws Exception {
-		args.add("shadow/test/MessagePassingTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], formatOutputString("9592"));
-	}
-	
-	@Test public void testInterrupt() throws Exception {
-		args.add("shadow/test/InterruptTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], formatOutputString(
-				"waiting",
-				"I am Thread#2",
-				"Thread#2: 0",
-				"I am Thread#3",
-				"Thread#3: 1",
-				"end",
-				"InterruptedException thrown",
-				"1",
-				"done")
-			);
-	}
-	
-	@Test public void testEqualityComparer() throws Exception {
-		args.add("shadow/test/EqualityComparerTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n");
-	}
-	
-	@Test public void testMessageQueue() throws Exception {
-		args.add("shadow/test/MessageQueueTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "FullListException\n" + 
-							"10\n");
-	}
-	
-	@Test public void testGenericInterface() throws Exception {
-		args.add("shadow/test/GenericInterfaceTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],  "true\n" + 
-							"true\n" + 
-							"true\n" +
-							"true\n" +
-							"false\n");
-	}
-	
-	@Test public void testMutex() throws Exception {
-		args.add("shadow/test/MutexTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],  formatOutputString(
-							"lock1",
-							"shadow:natives@MutexException: This mutex does not allow recursive locks.",
-							"Nested locks",
-							"shadow:natives@MutexException: This mutex is not owned by 'Thread#main' and cannot be unlocked.",
-							"Done!")
-			);
-	}
-	
-	@Test public void testExternals() throws Exception {
-		args.add("shadow/test/ExternalsTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "Hello from printf!\n");
 	}
 }

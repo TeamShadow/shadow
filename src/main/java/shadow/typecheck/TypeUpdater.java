@@ -76,6 +76,7 @@ public class TypeUpdater extends BaseChecker {
 		super( packageTree, reporter );	
 	}
 	
+	
 	/**
 	 * Updates all of the types in the given node table and returns and updated table.
 	 * This central method of the class performs all of its functions.
@@ -134,7 +135,7 @@ public class TypeUpdater extends BaseChecker {
 		printAndReportErrors();
 		
 		return typeTable;
-	}
+	}	
 		
 	private void updateFieldsAndMethods( List<Context> nodeList ) {
 		//update fields and methods			
@@ -227,6 +228,18 @@ public class TypeUpdater extends BaseChecker {
 				createNode.setSignature(createSignature);
 				classType.addMethod(createSignature);
 			}
+			
+			/* If no destroy is present, add the default one. */
+			if (classType.getMethods("destroy").isEmpty()) {
+				//might be a terrible idea to create a dummy node
+				ShadowParser.DestroyDeclarationContext destroyNode = new ShadowParser.DestroyDeclarationContext(null, -1);
+				destroyNode.start = destroyNode.stop = makeDummyToken(declaration);
+				destroyNode.addModifiers(Modifiers.PUBLIC);
+				MethodSignature destroySignature = new MethodSignature(classType, "destroy",
+						destroyNode.getModifiers(), destroyNode.getDocumentation(), destroyNode);
+				destroyNode.setSignature(destroySignature);
+				classType.addMethod(destroySignature);
+			}			
 			
 			/* Add copy method with a set to hold addresses. */
 			ShadowParser.MethodDeclarationContext copyNode = new ShadowParser.MethodDeclarationContext(null, -1);
@@ -340,12 +353,16 @@ public class TypeUpdater extends BaseChecker {
 		for(Context declarationNode : nodeTable.values() )
 			for( Type dependency : declarationNode.getType().getTypeParameterDependencies()  ) {
 				Context dependencyNode = uninstantiatedNodes.get( dependency.getTypeWithoutTypeArguments() );
+				if( dependencyNode != null )
+					graph.addEdge(dependencyNode, declarationNode);
+				/*
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " +
 							declarationNode.getType() + " is dependent on unavailable type " +
 							dependency, dependency);
 				else
-					graph.addEdge(dependencyNode, declarationNode);				
+					graph.addEdge(dependencyNode, declarationNode);
+				*/
 			}
 		
 		/* Update parameters based on topological sort of type parameter dependencies. */
@@ -387,20 +404,28 @@ public class TypeUpdater extends BaseChecker {
 				
 				if( classType.getExtendType() != null ) {
 					Context dependencyNode = nodeTable.get(classType.getExtendType().getTypeWithoutTypeArguments());
-					if( dependencyNode == null )
+					if( dependencyNode != null )
+						graph.addEdge(dependencyNode, declarationNode);
+					
+					/*if( dependencyNode == null )
 						addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 					else
 						graph.addEdge(dependencyNode, declarationNode);
+					*/
 				}
 			}
 				
 			for( Type dependency : type.getInterfaces() ) {				
 				dependency = dependency.getTypeWithoutTypeArguments();
 				Context dependencyNode = nodeTable.get(dependency);
+				if( dependencyNode != null )
+					graph.addEdge(dependencyNode, declarationNode);
+				/*				
 				if( dependencyNode == null )
 					addError(declarationNode, Error.INVALID_DEPENDENCY, "Dependency not found");
 				else
 					graph.addEdge(dependencyNode, declarationNode);
+				*/
 			}
 		}
 		
@@ -465,11 +490,11 @@ public class TypeUpdater extends BaseChecker {
 				ClassType parent = classType.getExtendType();			
 			
 				if( parent != null) {
-					/* Enforce immutability: any mutable parent method must be overridden. */ 
+					/* Enforce immutability: any mutable parent method must be overridden by a readonly method. */ 
 					if( classType.getModifiers().isImmutable() ) {
 						List<MethodSignature> list = classType.orderAllMethods();
 						for( MethodSignature signature : list )
-							if( !signature.isCreate() && !signature.getModifiers().isReadonly() )
+							if( !signature.isCreate() && !signature.isDestroy() && !signature.getModifiers().isReadonly() )
 								addError(signature.getNode(), Error.INVALID_METHOD, "Mutable parent method " + signature.getSymbol() + signature.getMethodType() + " must be overridden by readonly method" );
 					}
 					
@@ -698,11 +723,11 @@ public class TypeUpdater extends BaseChecker {
 				addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 			
 			if( !isMeta ) {					
-				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.isNativeOrExtern() )
+				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
-				if( hasBlock && (signature.getModifiers().isAbstract() || signature.isNativeOrExtern() ) )
-					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : (signature.isNative() ? "Native" : "Extern")) + " method " + signature + " must not define a body");
+				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
+					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
 				
 				/* Check to see if the method's parameters and return types are the
 				 * correct level of visibility, e.g., a public method shouldn't
@@ -754,16 +779,14 @@ public class TypeUpdater extends BaseChecker {
 		visitChildren(ctx);
 		
 		ShadowParser.MethodDeclarationContext parent = (ShadowParser.MethodDeclarationContext) ctx.getParent();
-		MethodSignature signature = parent.getSignature();
-		
-		visitDeclarator( ctx, ctx.formalParameters(), signature );
+		visitDeclarator( ctx, ctx.formalParameters(), parent.getSignature() );
 		
 		return null;		
 	}	
 	
 	private void visitDeclarator( Context node, ShadowParser.FormalParametersContext parameters, MethodSignature signature ) {
 		// Add parameters to the signature		
-		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )
+		for( ShadowParser.FormalParameterContext parameter : parameters.formalParameter() )				
 			signature.addParameter(parameter.Identifier().getText(), parameter);
 		
 		if( signature.getModifiers().isSet() ) {				
@@ -1030,7 +1053,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 		
-		visitMethodPre(ctx.methodDeclarator().generalIdentifier().getText(), ctx);
+		visitMethodPre( ctx.methodDeclarator().Identifier().getText(), ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
 		
@@ -1078,7 +1101,7 @@ public class TypeUpdater extends BaseChecker {
 			declarator.addModifiers(ctx.getModifiers());
 			declarator.setDocumentation(ctx.getDocumentation());			
 			
-			String symbol = declarator.generalIdentifier().getText();
+			String symbol = declarator.Identifier().getText();
 			
 			/* Make sure we don't already have this symbol.
 			 * Methods and fields can have the same name since they can be

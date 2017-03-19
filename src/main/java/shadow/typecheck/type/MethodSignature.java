@@ -1,6 +1,5 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -8,9 +7,6 @@ import java.util.Set;
 
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
-import shadow.parse.ShadowParser;
-import shadow.parse.ShadowParser.MethodDeclaratorContext;
-import shadow.parse.ShadowParser.TypeContext;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
@@ -20,8 +16,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private MethodSignature signatureWithoutTypeArguments;
 	private Type outer;
 	private Set<SingletonType> singletons = new HashSet<SingletonType>();
-	List<Type> allowedExternTypes = null;
-	
+
 	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
 	{
 		this.type = type;
@@ -78,14 +73,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	{
 		return type.canAccept(argumentTypes);		
 	}
-	
-	
-	public List<Type> getAllowedExternTypes()
-	{
-		return allowedExternTypes;
-	}
-	
-	
+
 	public boolean equals(Object o)
 	{
 		if( o != null && o instanceof MethodSignature )
@@ -132,49 +120,36 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	// These are the true parameter types that the compiler will use
 	public SequenceType getFullParameterTypes() {
 		SequenceType paramTypes = new SequenceType();
+		Type outerType = getOuter();
+		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
+			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
+		else
+			paramTypes.add(new SimpleModifiedType(outerType)); // this
+			
+		if( isCreate() && getOuter().hasOuter() )
+				paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));			
 		
 		MethodType methodType;
+		
 		//if( isWrapper() || getOuter() instanceof InterfaceType )
 			methodType = signatureWithoutTypeArguments.type;
 		//else
-			//methodType = type;
-			
-		if(!isExtern()) {
-			Type outerType = getOuter();
-			if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
-				paramTypes.add(new SimpleModifiedType(Type.OBJECT));
-			else
-				paramTypes.add(new SimpleModifiedType(outerType)); // this
+			//methodType = type;		
+		 
+		if (methodType.isParameterized())
+			for (int i = methodType.getTypeParameters().size(); i > 0; i--)
+				paramTypes.add(new SimpleModifiedType(Type.CLASS));
+		//TODO: add twice as many?  class type + method table?
 				
-			if( isCreate() && getOuter().hasOuter() )
-					paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));
-			 
-			if (methodType.isParameterized())
-				for (int i = methodType.getTypeParameters().size(); i > 0; i--)
-					paramTypes.add(new SimpleModifiedType(Type.CLASS));
-			//TODO: add twice as many?  class type + method table?
-		}
-		
 		for (ModifiedType parameterType : methodType.getParameterTypes())
-			paramTypes.add(parameterType);
-
+			paramTypes.add(parameterType);	
+			
 		return paramTypes;
 	}
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		if(getAllowedExternTypes() != null) {
-			sb.append("$[");
-			for(int i = 0; i < getAllowedExternTypes().size(); ++i) {
-				if(i > 0) {
-					sb.append(",");
-				}
-				sb.append(getAllowedExternTypes().get(i));
-			}
-			sb.append("] ");
-		}
-		
-		sb.append(symbol);
+		sb.append(symbol);		
 		
 		//nothing more for destroy
 		if( !symbol.equals("destroy") ) {			
@@ -193,36 +168,17 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return getMangledName().hashCode();
 	}
 	
-	public String getName() {
-		if(isExtern() && symbol.startsWith("$")) {
-			return symbol.substring(1, symbol.length());
-		}
-		
-		return symbol;
-	}
-	
 	//Is it only the wrapped ones that correspond to interface methods?
 	//If so, those are the ones that need special generic attention
 	public String getMangledName() {
-		String currentSymbol = symbol;
-		if(isExtern()) {
-			if(!symbol.startsWith("$")) {
-				return symbol;
-			}
-			
-			currentSymbol = symbol.substring(1, symbol.length());
-		}
-		
 		StringBuilder sb = new StringBuilder();
 		
 		if( isWrapper() )		
 			sb.append(getWrapped().getOuter().toString(Type.MANGLE));			
-		else if(!isExtern())
-			sb.append(getOuter().toString(Type.MANGLE));
 		else
-			sb.append(getParameterTypes().get(0).getType().toString(Type.MANGLE));
+			sb.append(getOuter().toString(Type.MANGLE));
 		
-		sb.append("_M").append(Type.mangle(currentSymbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS | (symbol.startsWith("$") ? Type.MANGLE_EXTERN : 0) ));
+		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
 		
 		if (isWrapper())
 			sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS));
@@ -270,17 +226,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public void updateFieldsAndMethods() throws InstantiationException {
 		type.updateFieldsAndMethods();
-		
-		if(isExternSharable()) {
-			allowedExternTypes = new ArrayList<Type>();
-			
-			if(node instanceof ShadowParser.MethodDeclarationContext) {
-				MethodDeclaratorContext methodContext = ((ShadowParser.MethodDeclarationContext)node).methodDeclarator();
-				for(TypeContext context : methodContext.type()) {
-					allowedExternTypes.add(context.getType());
-				}
-			}
-		}
 	}
 	
 	public MethodSignature getSignatureWithoutTypeArguments()
@@ -300,6 +245,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public boolean isCreate() {		
 		return symbol.equals("create");
+	}
+	
+	public boolean isDestroy() {		
+		return symbol.equals("destroy");
 	}
 	
 	public boolean isCopy()
@@ -327,19 +276,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.getModifiers().isNative();
 	}
 	
-	public boolean isExtern() {
-		return type.getModifiers().isExtern();
-	}
-	
-	public boolean isExternSharable() {
-		return type.getModifiers().isExternSharable();
-	}
-	
-	public boolean isNativeOrExtern()
-	{
-		return (isNative() || isExtern());
-	}
-	
 	public boolean isVoid()
 	{
 		return type.getReturnTypes().size() == 0;
@@ -360,15 +296,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		if (!isSingle())
 			throw new IllegalStateException();
 		return getReturnTypes().get(0);
-	}
-	
-	public SequenceType getSequenceReturnTypes()
-	{
-		if (!isSequence())
-			throw new IllegalStateException();
-		return getReturnTypes();
-	}
-	
+	}	
+
 	public boolean isWrapper() {
 		return wrapped != null;
 	}

@@ -7,10 +7,13 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACMethod;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -26,6 +29,19 @@ public abstract class TACNode implements Iterable<TACOperand> {
     private Context context; // associated AST context, used for error messages
     private TACBlock block; //which block the node is in
 
+	private boolean garbageCollected = false;
+
+	public boolean isGarbageCollected()
+	{
+		return garbageCollected;
+	}
+	
+	public void setGarbageCollected(boolean value)
+	{
+		garbageCollected = value;
+	}
+    
+    
     /**
      * Constructor adds current node *before* parameter node
      *
@@ -214,4 +230,6 @@ public abstract class TACNode implements Iterable<TACOperand> {
     
 
     public abstract void accept(TACVisitor visitor) throws ShadowException;
+    
+      
 }

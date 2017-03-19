@@ -2,7 +2,6 @@ package shadow;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,8 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -51,7 +49,7 @@ public class Main {
 	
 	// Version of the Shadow compiler
 	public static final String VERSION 				= "0.7a";	
-	public static final String MINIMUM_LLVM_VERSION  = "3.6";
+	public static final String MINIMUM_LLVM_VERSION  = "3.8";
 		
 	// These are the error codes returned by the compiler
 	public static final int NO_ERROR				=  0;
@@ -120,13 +118,14 @@ public class Main {
 	}
 
 	public static void run(String[] args) throws  FileNotFoundException, ParseException, ShadowException, IOException, org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
+	
 		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
 		
 		// Detect and establish the current settings based on the arguments
 		config = Configuration.buildConfiguration(compilerArgs.getMainFileArg(),
 				compilerArgs.getConfigFileArg(), false);
-		currentJob = new Job(compilerArgs);
+		currentJob = new Job(compilerArgs);		
 		
 		// Print help and exit
 		if (compilerArgs.hasOption(Arguments.HELP)) {
@@ -156,7 +155,6 @@ public class Main {
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
-		linkCommand.add(system.resolve(Paths.get("shadow", "Shared.ll")).toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
@@ -165,7 +163,7 @@ public class Main {
 		Set<String> arrays = new HashSet<String>();
 		
 		generateLLVM(linkCommand, generics, arrays);
-		
+
 		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {			
 			// Check LLVM version using lexical comparison
 			String LLVMVersion = Configuration.getLLVMVersion(); 
@@ -178,22 +176,16 @@ public class Main {
 				logger.error(error);
 				return;
 			}
-
-			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
-			
-			// compile and add the C source files to the assembler
-			if(!compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "c-source")).toFile())) {
-				logger.error("Failed to compile C source files.");
-				throw new CompileException("FAILED TO COMPILE");
-			}
 			
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.flush();
 			try { Thread.sleep(500); }
 			catch (InterruptedException ex) { }
-			
+
 			logger.info("Building for target \"" + config.getTarget() + "\"");
-			
+
+			List<String> assembleCommand = config.getLinkCommand(currentJob);
+
 			Path mainLL;
 
 			if( mainArguments )
@@ -211,19 +203,18 @@ public class Main {
 			String nativeIntegers = "n8:16:32:64";
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
 			
-			String optimisationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimisationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
 				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
-				String line = main.readLine();
+				String line = main.readLine();				
 				final OutputStream out = link.getOutputStream();				
 				while (line != null) {
 					
@@ -264,7 +255,7 @@ public class Main {
 				if (assemble.waitFor() != 0)
 					throw new CompileException("FAILED TO ASSEMBLE");
 			} catch (InterruptedException ex) {
-			} finally {				
+			} finally {
 				link.destroy();
 				optimize.destroy();
 				compile.destroy();
@@ -275,107 +266,22 @@ public class Main {
 		}
 	}
 
-	private static boolean compileCSourceFiles(List<String> assembleCommand, File srcDirectory)
-	{
-		// no need to compile anything if 
-		if(!srcDirectory.exists()) {
-			return true;
-		}
-		
-		// compile the files to assembly, to be ready for linkage
-		List<String> compileCommand = new ArrayList<String>();
-		compileCommand.add("gcc");
-		compileCommand.add("-S");
-		compileCommand.add("-I../include/");
-
-		// create the target directory
-		File binPath = Paths.get(srcDirectory.getAbsolutePath(), "bin").toFile();
-		binPath.mkdir();
-		
-		// the filter to only find .c files.
-		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
-		
-		List<File> assemblyFiles = new ArrayList<File>();
-		
-		// we add the general C files
-		addCSourceFiles(srcDirectory, binPath, filter, compileCommand, assemblyFiles);
-		
-		// we add the OS specific C files
-		File osSpecificExternals = Paths.get(srcDirectory.getPath(), config.getOs()).toFile();
-		if(osSpecificExternals.exists()) {
-			addCSourceFiles(osSpecificExternals, binPath, filter, compileCommand, assemblyFiles);
-		}
-		
-		boolean success = true;
-		// we need to have at least one file to compile
-		if(compileCommand.size() > 3) {
-			try {
-				success = new ProcessBuilder(compileCommand)
-							.directory(binPath)
-							.redirectError(Redirect.INHERIT)
-							.start()
-							.waitFor() == 0;
-			} catch (InterruptedException | IOException e) {
-			}
-		}
-		
-		if(success) {
-			// still need to find and add the .s files to the linker
-			for(File f : binPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
-				assembleCommand.add(f.getAbsolutePath());
-			}
-		} else {
-			for(File f : assemblyFiles) {
-				f.delete();
-			}
-		}
-		
-		return success;
-	}
-	
-	private static void addCSourceFiles(File srcDirectory, File targetPath, FileFilter filter, List<String> compileCommand, List<File> assemblyFiles)
-	{
-		for(File f : srcDirectory.listFiles(filter)) {
-			Path assemblyPath = Paths.get(targetPath.getAbsolutePath(), (getBaseName(f.getName()) + ".s"));
-			String parentDirectoryName = srcDirectory.getParentFile().getName();
-			
-			try {
-				if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(f.toPath())) < 0) {
-					logger.info("Compiling C source file: '" + (parentDirectoryName.equals("src") ? (srcDirectory.getName() + File.separator) : "") + f.getName() + "'");
-					assemblyFiles.add(assemblyPath.toFile());
-					compileCommand.add(f.getAbsolutePath());
-				}
-			} catch (IOException e) {
-			}
-		}
-	}
-	
-	private static String getBaseName(String fileName)
-	{
-		int pos = fileName.lastIndexOf(".");
-		if (pos > 0) {
-			return fileName.substring(0, pos);
-		}
-		
-		return fileName;
-	}
-	
-	/**
+	/*
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file. This involves either finding an existing .ll file
 	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
 	 */
 	private static void generateLLVM(List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
-		Type.clearTypes();		
+		
 
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = BaseChecker.stripExtension(TypeCollector.canonicalize(mainFile)); 
 
-		//just type check until ANTLR migration is finished
 		try {
-			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation
-			for( Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile()) ) {				
+			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+			//TypeChecker generates a list of AST nodes corresponding to classes needing compilation			
+			for( Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter) ) {				
 				Path file = node.getPath();
 				
 				if( currentJob.isCheckOnly() ) {				
@@ -427,7 +333,7 @@ public class Main {
 							output.close();							
 							Files.deleteIfExists(llvmFile);
 							throw new CompileException(e.getMessage());
-						}
+						}				
 	
 						if( Files.exists(llvmFile) )
 							linkCommand.add(TypeCollector.canonicalize(llvmFile));
@@ -464,6 +370,7 @@ public class Main {
 			modules.add(module);
 			modules.addAll(innerClasses);
 			
+			//ToDo; not sure what libray is needed
 			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 			
 			
@@ -496,7 +403,7 @@ public class Main {
 				if( !type.equals(Type.ARRAY) && !type.equals(Type.ARRAY_NULLABLE)) {
 					Set<String> usedFields = allUsedFields.get(type);
 					for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
-						if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()))
+						if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
 							reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
 					}
 				}
@@ -504,7 +411,7 @@ public class Main {
 				//give warnings if private methods are never used
 				for( List<MethodSignature> signatures : type.getMethodMap().values() )
 					for( MethodSignature signature : signatures )
-						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) && !signature.getSymbol().endsWith("Native") && !signature.isExternSharable())
+						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) )
 							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
 				
 			}					
@@ -533,7 +440,7 @@ public class Main {
 			linkCommand.add(TypeCollector.canonicalize(nativeFile));
 	}
 
-	/** A simple class used to redirect an InputStream into a specified OutputStream */
+	/* A simple class used to redirect an InputStream into a specified OutputStream */
 	private static class Pipe extends Thread {
 		private InputStream input;
 		private OutputStream output;

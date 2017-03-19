@@ -3,26 +3,14 @@
  * implemented with a circular, doubly linked list as internal storage.
  */
 class shadow:utility@
-	LinkedList<V>
+	LinkedList<V is CanEqual<V>>
 is  List<V>
 and Deque<V>
 {
 	/// Gets size of the list.
 	get int size = 0;
-	
 	Node header = Node:create();
 	int modifications = 0;
-	Equate<V> equater;
-	
-	public create()
-	{
-		this(DefaultEqualizer<V>:create());
-	}
-	
-	public create(Equate<V> equater)
-	{
-		this:equater = equater;
-	}
 
 	private class Node
 	{
@@ -86,7 +74,7 @@ and Deque<V>
 	
 	
 	// Finds a Node storing the given value and returns it and its index.
-	private readonly findNode( V value ) => ( int index, nullable Node node )
+	private readonly findNode( CanEqual<V> value ) => ( int index, nullable Node node )
 	{
 		int index = 0;
 		Node current = header;		
@@ -94,14 +82,10 @@ and Deque<V>
 		while (true)
 		{
 			current = current->next;
-			if (current === header) {
+			if ( current === header )
 				return ( -1, null );
-			}
-			
-			if(equater.isEqual(value, check(current->value))) {
+			if ( value == check(current->value) )
 				return ( index, current );
-			}
-			
 			index += 1;
 		}
 	}
@@ -163,7 +147,7 @@ and Deque<V>
 	 * @param value value of element to remove
 	 * @return {@code true} if the element was found and removed	 
 	 */	
-	public remove( V value ) => ( boolean success )
+	public remove( V value ) => ( boolean removed )
 	{
 		try
 		{

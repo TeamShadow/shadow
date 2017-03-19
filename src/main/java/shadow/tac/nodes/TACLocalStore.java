@@ -5,17 +5,45 @@ import java.util.Set;
 import shadow.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ArrayType;
 
 public class TACLocalStore extends TACLocalStorage {
-	private TACOperand value;	
+	private TACOperand value;
+	private TACOperand classData; //only used for array stores
+	private boolean incrementReference;
+	private boolean decrementReference = true;
 
 	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op)
+	{
+		this(node, variable, op, true);		
+	}
+	
+	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op, boolean incrementReference)
 	{
 		super(node, variable);		
 		value = check(op, variable);
 		value.setLocalStore(this);
+		this.incrementReference = incrementReference;
 	}
 	
+	public boolean isIncrementReference()
+	{
+		return incrementReference;		
+	}
+	
+
+	public void setIncrementReference(boolean value)
+	{
+		incrementReference = value;		
+	}
+	
+	public boolean isDecrementReference() {
+		return decrementReference;
+	}
+	
+	public void setDecrementReference(boolean value) {
+		decrementReference = value;
+	}
 
 	@Override
 	public boolean update(Set<TACUpdate> currentlyUpdating)
@@ -77,7 +105,8 @@ public class TACLocalStore extends TACLocalStorage {
 	}	
 		
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(Object other)
+	{
 		if( other == null || !(other instanceof TACLocalStore)  )
 			return false;
 		
@@ -87,5 +116,15 @@ public class TACLocalStore extends TACLocalStorage {
 		TACLocalStore store = (TACLocalStore) other;
 		
 		return getNumber() == store.getNumber() && getVariable().equals(store.getVariable());
+	}
+	
+	public void setClassData(TACOperand classData)
+	{
+		this.classData = classData;
+	}
+	
+	public TACOperand getClassData()
+	{
+		return classData;
 	}
 }

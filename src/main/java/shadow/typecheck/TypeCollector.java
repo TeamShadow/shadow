@@ -489,7 +489,6 @@ public class TypeCollector extends BaseChecker {
 				case "CanModulus":		Type.CAN_MODULUS = (InterfaceType)type; break;
 				case "CanMultiply":		Type.CAN_MULTIPLY = (InterfaceType)type; break;
 				case "CanNegate":		Type.CAN_NEGATE = (InterfaceType)type; break;
-				case "CanRun": 			Type.CAN_RUN = (InterfaceType)type; break;
 				case "CanSubtract":		Type.CAN_SUBTRACT = (InterfaceType)type; break;
 				case "CanIndex":		Type.CAN_INDEX = (InterfaceType) type; break;
 				case "CanIndexNullable":	Type.CAN_INDEX_NULLABLE = (InterfaceType) type; break;				
@@ -515,6 +514,7 @@ public class TypeCollector extends BaseChecker {
 				case "Iterator":		Type.ITERATOR = (InterfaceType) type; break;
 				case "IteratorNullable":	Type.ITERATOR_NULLABLE = (InterfaceType) type; break;
 				case "long":			Type.LONG = (ClassType)type; break;				
+				case "MethodTable":		Type.METHOD_TABLE = (ClassType)type; break;
 				case "Number":			Type.NUMBER = (InterfaceType) type; break;
 				case "Object":			Type.OBJECT = (ClassType) type; break;				
 				case "short":			Type.SHORT = (ClassType)type; break;
@@ -524,7 +524,6 @@ public class TypeCollector extends BaseChecker {
 				case "ulong":			Type.ULONG = (ClassType)type; break;				
 				case "UnexpectedNullException": Type.UNEXPECTED_NULL_EXCEPTION = (ExceptionType)type; break;
 				case "ushort":			Type.USHORT = (ClassType)type; break;
-				case "Thread": 			Type.Thread = (ClassType)type; break;
 				}
 			}		
 			

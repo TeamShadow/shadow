@@ -35,7 +35,8 @@ public class SimpleTest
 		
 		//add desired files to list		
 		//args.add("tests-negative/typechecker/dead-code/Test.shadow");
-		args.add("shadow/test/Matrix.shadow");
+		args.add("tests-negative/parser/missing-left-brace/Test.shadow");
+		//args.add("shadow/test/Matrix.shadow");
 
 		Main.main(args.toArray(new String[] { }));		
 	}

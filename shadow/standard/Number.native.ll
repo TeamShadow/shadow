@@ -175,7 +175,7 @@ define i8 @shadow.standard..byte_Mnegate(i8) #0 {
 define i8 @shadow.standard..byte_MtoByte(i8) #0 {	
 	ret i8 %0
 }
-@shadow.standard..byte_MtoUByte = alias i8 (i8)* @shadow.standard..byte_MtoByte
+@shadow.standard..byte_MtoUByte = alias i8 (i8), i8 (i8)* @shadow.standard..byte_MtoByte
 define i16 @shadow.standard..byte_MtoShort(i8) #0 {	
 	%2 = sext i8 %0 to i16
 	ret i16 %2
@@ -192,7 +192,7 @@ define i32 @shadow.standard..byte_MtoUInt(i8) #0 {
 	%2 = zext i8 %0 to i32
 	ret i32 %2
 }
-@shadow.standard..byte_MtoCode = alias i32 (i8)* @shadow.standard..byte_MtoUInt
+@shadow.standard..byte_MtoCode = alias i32 (i8), i32 (i8)* @shadow.standard..byte_MtoUInt
 define i64 @shadow.standard..byte_MtoLong(i8) #0 {
 	%2 = sext i8 %0 to i64
 	ret i64 %2
@@ -226,11 +226,11 @@ define i8 @shadow.standard..byte_MtrailingZeroes(i8) #0 {
 
 ; shadow.standard@UByte native methods
 
-@shadow.standard..ubyte_MbitComplement = alias i8 (i8)* @shadow.standard..byte_MbitComplement
-@shadow.standard..ubyte_MbitOr_ubyte = alias i8 (i8, i8)* @shadow.standard..byte_MbitOr_byte
-@shadow.standard..ubyte_MbitXor_ubyte = alias i8 (i8, i8)* @shadow.standard..byte_MbitXor_byte
-@shadow.standard..ubyte_MbitAnd_ubyte = alias i8 (i8, i8)* @shadow.standard..byte_MbitAnd_byte
-@shadow.standard..ubyte_MbitShiftLeft_uint = alias i8 (i8, i32)* @shadow.standard..byte_MbitShiftLeft_uint
+@shadow.standard..ubyte_MbitComplement = alias i8 (i8), i8 (i8)* @shadow.standard..byte_MbitComplement
+@shadow.standard..ubyte_MbitOr_ubyte = alias i8 (i8, i8), i8 (i8, i8)* @shadow.standard..byte_MbitOr_byte
+@shadow.standard..ubyte_MbitXor_ubyte = alias i8 (i8, i8), i8 (i8, i8)* @shadow.standard..byte_MbitXor_byte
+@shadow.standard..ubyte_MbitAnd_ubyte = alias i8 (i8, i8), i8 (i8, i8)* @shadow.standard..byte_MbitAnd_byte
+@shadow.standard..ubyte_MbitShiftLeft_uint = alias i8 (i8, i32), i8 (i8, i32)* @shadow.standard..byte_MbitShiftLeft_uint
 define i8 @shadow.standard..ubyte_MbitShiftRight_uint(i8, i32) #0 {
 	%3 = icmp ult i32 %1, 8
 	br i1 %3, label %4, label %7
@@ -239,12 +239,12 @@ define i8 @shadow.standard..ubyte_MbitShiftRight_uint(i8, i32) #0 {
 	ret i8 %6
 	ret i8 0
 }
-@shadow.standard..ubyte_MbitRotateLeft_uint = alias i8 (i8, i32)* @shadow.standard..byte_MbitRotateLeft_uint
-@shadow.standard..ubyte_MbitRotateRight_uint = alias i8 (i8, i32)* @shadow.standard..byte_MbitRotateRight_uint
+@shadow.standard..ubyte_MbitRotateLeft_uint = alias i8 (i8, i32), i8 (i8, i32)* @shadow.standard..byte_MbitRotateLeft_uint
+@shadow.standard..ubyte_MbitRotateRight_uint = alias i8 (i8, i32), i8 (i8, i32)* @shadow.standard..byte_MbitRotateRight_uint
 
-@shadow.standard..ubyte_Madd_ubyte = alias i8 (i8, i8)* @shadow.standard..byte_Madd_byte
-@shadow.standard..ubyte_Msubtract_ubyte = alias i8 (i8, i8)* @shadow.standard..byte_Msubtract_byte
-@shadow.standard..ubyte_Mmultiply_ubyte = alias i8 (i8, i8)* @shadow.standard..byte_Mmultiply_byte
+@shadow.standard..ubyte_Madd_ubyte = alias i8 (i8, i8), i8 (i8, i8)* @shadow.standard..byte_Madd_byte
+@shadow.standard..ubyte_Msubtract_ubyte = alias i8 (i8, i8), i8 (i8, i8)* @shadow.standard..byte_Msubtract_byte
+@shadow.standard..ubyte_Mmultiply_ubyte = alias i8 (i8, i8), i8 (i8, i8)* @shadow.standard..byte_Mmultiply_byte
 define i8 @shadow.standard..ubyte_Mdivide_ubyte(i8, i8) #0 {
 	%3 = udiv i8 %0, %1
 	ret i8 %3
@@ -262,17 +262,17 @@ define i32 @shadow.standard..ubyte_Mcompare_ubyte(i8, i8) #0 {
 	ret i32 %6
 }
 
-@shadow.standard..ubyte_Mequal_ubyte = alias i1 (i8, i8)* @shadow.standard..byte_Mequal_byte
+@shadow.standard..ubyte_Mequal_ubyte = alias i1 (i8, i8), i1 (i8, i8)* @shadow.standard..byte_Mequal_byte
 
-@shadow.standard..ubyte_MtoByte = alias i8 (i8)* @shadow.standard..byte_MtoByte 
-@shadow.standard..ubyte_MtoUByte = alias i8 (i8)* @shadow.standard..byte_MtoByte
-@shadow.standard..ubyte_MtoShort = alias i16 (i8)* @shadow.standard..byte_MtoUShort 
-@shadow.standard..ubyte_MtoUShort = alias i16 (i8)* @shadow.standard..byte_MtoUShort
-@shadow.standard..ubyte_MtoInt = alias i32 (i8)* @shadow.standard..byte_MtoUInt
-@shadow.standard..ubyte_MtoUInt = alias i32 (i8)* @shadow.standard..byte_MtoUInt
-@shadow.standard..ubyte_MtoCode = alias i32 (i8)* @shadow.standard..byte_MtoUInt
-@shadow.standard..ubyte_MtoLong = alias i64 (i8)* @shadow.standard..byte_MtoULong
-@shadow.standard..ubyte_MtoULong = alias i64 (i8)* @shadow.standard..byte_MtoULong
+@shadow.standard..ubyte_MtoByte = alias i8 (i8), i8 (i8)* @shadow.standard..byte_MtoByte 
+@shadow.standard..ubyte_MtoUByte = alias i8 (i8), i8 (i8)* @shadow.standard..byte_MtoByte
+@shadow.standard..ubyte_MtoShort = alias i16 (i8), i16 (i8)* @shadow.standard..byte_MtoUShort 
+@shadow.standard..ubyte_MtoUShort = alias i16 (i8), i16 (i8)* @shadow.standard..byte_MtoUShort
+@shadow.standard..ubyte_MtoInt = alias i32 (i8), i32 (i8)* @shadow.standard..byte_MtoUInt
+@shadow.standard..ubyte_MtoUInt = alias i32 (i8), i32 (i8)* @shadow.standard..byte_MtoUInt
+@shadow.standard..ubyte_MtoCode = alias i32 (i8), i32 (i8)* @shadow.standard..byte_MtoUInt
+@shadow.standard..ubyte_MtoLong = alias i64 (i8), i64 (i8)* @shadow.standard..byte_MtoULong
+@shadow.standard..ubyte_MtoULong = alias i64 (i8), i64 (i8)* @shadow.standard..byte_MtoULong
 
 define float @shadow.standard..ubyte_MtoFloat(i8) #0 {
 	%2 = uitofp i8 %0 to float
@@ -284,9 +284,9 @@ define double @shadow.standard..ubyte_MtoDouble(i8) #0 {
 	ret double %2
 }
 
-@shadow.standard..ubyte_Mones = alias i8 (i8)* @shadow.standard..byte_Mones
-@shadow.standard..ubyte_MleadingZeroes = alias i8 (i8)* @shadow.standard..byte_MleadingZeroes
-@shadow.standard..ubyte_MtrailingZeroes = alias i8 (i8)* @shadow.standard..byte_MtrailingZeroes	
+@shadow.standard..ubyte_Mones = alias i8 (i8), i8 (i8)* @shadow.standard..byte_Mones
+@shadow.standard..ubyte_MleadingZeroes = alias i8 (i8), i8 (i8)* @shadow.standard..byte_MleadingZeroes
+@shadow.standard..ubyte_MtrailingZeroes = alias i8 (i8), i8 (i8)* @shadow.standard..byte_MtrailingZeroes	
 
 ; shadow.standard@Short native methods
 
@@ -385,11 +385,11 @@ define i8 @shadow.standard..short_MtoByte(i16) #0 {
 	%2 = trunc i16 %0 to i8
 	ret i8 %2
 }
-@shadow.standard..short_MtoUByte = alias i8 (i16)* @shadow.standard..short_MtoByte	
+@shadow.standard..short_MtoUByte = alias i8 (i16), i8 (i16)* @shadow.standard..short_MtoByte	
 define i16 @shadow.standard..short_MtoShort(i16) #0 {	
 	ret i16 %0
 }
-@shadow.standard..short_MtoUShort = alias i16 (i16)* @shadow.standard..short_MtoShort 
+@shadow.standard..short_MtoUShort = alias i16 (i16), i16 (i16)* @shadow.standard..short_MtoShort 
 define i32 @shadow.standard..short_MtoInt(i16) #0 {	
 	%2 = sext i16 %0 to i32
 	ret i32 %2
@@ -398,7 +398,7 @@ define i32 @shadow.standard..short_MtoUInt(i16) #0 {
 	%2 = zext i16 %0 to i32
 	ret i32 %2
 }
-@shadow.standard..short_MtoCode = alias i32 (i16)* @shadow.standard..short_MtoUInt 
+@shadow.standard..short_MtoCode = alias i32 (i16), i32 (i16)* @shadow.standard..short_MtoUInt 
 define i64 @shadow.standard..short_MtoLong(i16) #0 {
 	%2 = sext i16 %0 to i64
 	ret i64 %2
@@ -452,11 +452,11 @@ define {i16, i1} @shadow.standard..short_MmultiplyWithOverflow_short(i16, i16) #
 
 ; shadow.standard@UShort native methods
 
-@shadow.standard..ushort_MbitComplement = alias i16 (i16)* @shadow.standard..short_MbitComplement
-@shadow.standard..ushort_MbitOr_ushort = alias i16 (i16, i16)* @shadow.standard..short_MbitOr_short
-@shadow.standard..ushort_MbitXor_ushort = alias i16 (i16, i16)* @shadow.standard..short_MbitXor_short
-@shadow.standard..ushort_MbitAnd_ushort = alias i16 (i16, i16)* @shadow.standard..short_MbitAnd_short
-@shadow.standard..ushort_MbitShiftLeft_uint = alias i16 (i16, i32)* @shadow.standard..short_MbitShiftLeft_uint
+@shadow.standard..ushort_MbitComplement = alias i16 (i16), i16 (i16)* @shadow.standard..short_MbitComplement
+@shadow.standard..ushort_MbitOr_ushort = alias i16 (i16, i16), i16 (i16, i16)* @shadow.standard..short_MbitOr_short
+@shadow.standard..ushort_MbitXor_ushort = alias i16 (i16, i16), i16 (i16, i16)* @shadow.standard..short_MbitXor_short
+@shadow.standard..ushort_MbitAnd_ushort = alias i16 (i16, i16), i16 (i16, i16)* @shadow.standard..short_MbitAnd_short
+@shadow.standard..ushort_MbitShiftLeft_uint = alias i16 (i16, i32), i16 (i16, i32)* @shadow.standard..short_MbitShiftLeft_uint
 define i16 @shadow.standard..ushort_MbitShiftRight_uint(i16, i32) #0 {
 	%3 = icmp ult i32 %1, 16
 	br i1 %3, label %4, label %7
@@ -465,12 +465,12 @@ define i16 @shadow.standard..ushort_MbitShiftRight_uint(i16, i32) #0 {
 	ret i16 %6
 	ret i16 0
 }
-@shadow.standard..ushort_MbitRotateLeft_uint = alias i16 (i16, i32)* @shadow.standard..short_MbitRotateLeft_uint
-@shadow.standard..ushort_MbitRotateRight_uint = alias i16 (i16, i32)* @shadow.standard..short_MbitRotateRight_uint
+@shadow.standard..ushort_MbitRotateLeft_uint = alias i16 (i16, i32), i16 (i16, i32)* @shadow.standard..short_MbitRotateLeft_uint
+@shadow.standard..ushort_MbitRotateRight_uint = alias i16 (i16, i32), i16 (i16, i32)* @shadow.standard..short_MbitRotateRight_uint
 
-@shadow.standard..ushort_Madd_ushort = alias i16 (i16, i16)* @shadow.standard..short_Madd_short
-@shadow.standard..ushort_Msubtract_ushort = alias i16 (i16, i16)* @shadow.standard..short_Msubtract_short
-@shadow.standard..ushort_Mmultiply_ushort = alias i16 (i16, i16)* @shadow.standard..short_Mmultiply_short
+@shadow.standard..ushort_Madd_ushort = alias i16 (i16, i16), i16 (i16, i16)* @shadow.standard..short_Madd_short
+@shadow.standard..ushort_Msubtract_ushort = alias i16 (i16, i16), i16 (i16, i16)* @shadow.standard..short_Msubtract_short
+@shadow.standard..ushort_Mmultiply_ushort = alias i16 (i16, i16), i16 (i16, i16)* @shadow.standard..short_Mmultiply_short
 define i16 @shadow.standard..ushort_Mdivide_ushort(i16, i16) #0 {
 	%3 = udiv i16 %0, %1
 	ret i16 %3
@@ -488,17 +488,17 @@ define i32 @shadow.standard..ushort_Mcompare_ushort(i16, i16) #0 {
 	ret i32 %6
 }
 
-@shadow.standard..ushort_Mequal_ushort = alias i1 (i16, i16)* @shadow.standard..short_Mequal_short
+@shadow.standard..ushort_Mequal_ushort = alias  i1 (i16, i16), i1 (i16, i16)* @shadow.standard..short_Mequal_short
 
-@shadow.standard..ushort_MtoByte = alias i8 (i16)* @shadow.standard..short_MtoByte
-@shadow.standard..ushort_MtoUByte = alias i8 (i16)* @shadow.standard..short_MtoByte
-@shadow.standard..ushort_MtoShort = alias i16 (i16)* @shadow.standard..short_MtoShort 
-@shadow.standard..ushort_MtoUShort = alias i16 (i16)* @shadow.standard..short_MtoShort
-@shadow.standard..ushort_MtoInt = alias i32 (i16)* @shadow.standard..short_MtoUInt 	
-@shadow.standard..ushort_MtoUInt = alias i32 (i16)* @shadow.standard..short_MtoUInt
-@shadow.standard..ushort_MtoCode = alias i32 (i16)* @shadow.standard..short_MtoUInt
-@shadow.standard..ushort_MtoLong = alias i64 (i16)* @shadow.standard..short_MtoULong 
-@shadow.standard..ushort_MtoULong = alias i64 (i16)* @shadow.standard..short_MtoULong
+@shadow.standard..ushort_MtoByte = alias i8 (i16),  i8 (i16)* @shadow.standard..short_MtoByte
+@shadow.standard..ushort_MtoUByte = alias i8 (i16),  i8 (i16)* @shadow.standard..short_MtoByte
+@shadow.standard..ushort_MtoShort = alias i16 (i16), i16 (i16)* @shadow.standard..short_MtoShort 
+@shadow.standard..ushort_MtoUShort = alias i16 (i16), i16 (i16)* @shadow.standard..short_MtoShort
+@shadow.standard..ushort_MtoInt = alias  i32 (i16), i32 (i16)* @shadow.standard..short_MtoUInt 	
+@shadow.standard..ushort_MtoUInt = alias  i32 (i16), i32 (i16)* @shadow.standard..short_MtoUInt
+@shadow.standard..ushort_MtoCode = alias  i32 (i16), i32 (i16)* @shadow.standard..short_MtoUInt
+@shadow.standard..ushort_MtoLong = alias i64 (i16), i64 (i16)* @shadow.standard..short_MtoULong 
+@shadow.standard..ushort_MtoULong = alias i64 (i16), i64 (i16)* @shadow.standard..short_MtoULong
 define float @shadow.standard..ushort_MtoFloat(i16) #0 {
 	%2 = uitofp i16 %0 to float
 	ret float %2
@@ -508,10 +508,10 @@ define double @shadow.standard..ushort_MtoDouble(i16) #0 {
 	ret double %2
 }
 
-@shadow.standard..ushort_MflipEndian = alias i16 (i16)* @shadow.standard..short_MflipEndian
-@shadow.standard..ushort_Mones = alias i16 (i16)* @shadow.standard..short_Mones
-@shadow.standard..ushort_MleadingZeroes = alias i16 (i16)* @shadow.standard..short_MleadingZeroes
-@shadow.standard..ushort_MtrailingZeroes = alias i16 (i16)* @shadow.standard..short_MtrailingZeroes	
+@shadow.standard..ushort_MflipEndian = alias i16 (i16), i16 (i16)* @shadow.standard..short_MflipEndian
+@shadow.standard..ushort_Mones = alias i16 (i16), i16 (i16)* @shadow.standard..short_Mones
+@shadow.standard..ushort_MleadingZeroes = alias i16 (i16), i16 (i16)* @shadow.standard..short_MleadingZeroes
+@shadow.standard..ushort_MtrailingZeroes = alias i16 (i16), i16 (i16)* @shadow.standard..short_MtrailingZeroes	
 	
 define {i16, i1} @shadow.standard..ushort_MaddWithOverflow_ushort(i16, i16) #0 {
 	%3 = call {i16, i1} @llvm.uadd.with.overflow.i16(i16 %0, i16 %1)
@@ -620,17 +620,17 @@ define i8 @shadow.standard..int_MtoByte(i32) #0 {
 	%2 = trunc i32 %0 to i8
 	ret i8 %2
 }
-@shadow.standard..int_MtoUByte = alias i8 (i32)* @shadow.standard..int_MtoByte  
+@shadow.standard..int_MtoUByte = alias i8 (i32), i8 (i32)* @shadow.standard..int_MtoByte  
 define i16 @shadow.standard..int_MtoShort(i32) #0 {
 	%2 = trunc i32 %0 to i16
 	ret i16 %2
 }
-@shadow.standard..int_MtoUShort = alias i16 (i32)* @shadow.standard..int_MtoShort
+@shadow.standard..int_MtoUShort = alias i16 (i32), i16 (i32)* @shadow.standard..int_MtoShort
 define i32 @shadow.standard..int_MtoInt(i32) #0 {	
 	ret i32 %0
 }
-@shadow.standard..int_MtoUInt = alias i32 (i32)* @shadow.standard..int_MtoInt
-@shadow.standard..int_MtoCode = alias i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..int_MtoUInt = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..int_MtoCode = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
 
 define i64 @shadow.standard..int_MtoLong(i32) #0 {
 	%2 = sext i32 %0 to i64
@@ -685,11 +685,11 @@ define {i32, i1} @shadow.standard..int_MmultiplyWithOverflow_int(i32, i32) #0 {
 
 ; shadow.standard@UInt native methods
 
-@shadow.standard..uint_MbitComplement = alias i32 (i32)* @shadow.standard..int_MbitComplement
-@shadow.standard..uint_MbitOr_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitOr_int
-@shadow.standard..uint_MbitXor_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitXor_int
-@shadow.standard..uint_MbitAnd_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitAnd_int
-@shadow.standard..uint_MbitShiftLeft_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitShiftLeft_uint
+@shadow.standard..uint_MbitComplement = alias i32 (i32), i32 (i32)* @shadow.standard..int_MbitComplement
+@shadow.standard..uint_MbitOr_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitOr_int
+@shadow.standard..uint_MbitXor_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitXor_int
+@shadow.standard..uint_MbitAnd_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitAnd_int
+@shadow.standard..uint_MbitShiftLeft_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitShiftLeft_uint
 define i32 @shadow.standard..uint_MbitShiftRight_uint(i32, i32) #0 {
 	%3 = icmp ult i32 %1, 32
 	br i1 %3, label %4, label %6
@@ -697,12 +697,12 @@ define i32 @shadow.standard..uint_MbitShiftRight_uint(i32, i32) #0 {
 	ret i32 %5
 	ret i32 0
 }
-@shadow.standard..uint_MbitRotateLeft_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitRotateLeft_uint
-@shadow.standard..uint_MbitRotateRight_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitRotateRight_uint
+@shadow.standard..uint_MbitRotateLeft_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitRotateLeft_uint
+@shadow.standard..uint_MbitRotateRight_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitRotateRight_uint
 
-@shadow.standard..uint_Madd_uint = alias i32 (i32, i32)* @shadow.standard..int_Madd_int
-@shadow.standard..uint_Msubtract_uint = alias i32 (i32, i32)* @shadow.standard..int_Msubtract_int
-@shadow.standard..uint_Mmultiply_uint = alias i32 (i32, i32)* @shadow.standard..int_Mmultiply_int
+@shadow.standard..uint_Madd_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_Madd_int
+@shadow.standard..uint_Msubtract_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_Msubtract_int
+@shadow.standard..uint_Mmultiply_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_Mmultiply_int
 define i32 @shadow.standard..uint_Mdivide_uint(i32, i32) #0 {
 	%3 = udiv i32 %0, %1
 	ret i32 %3
@@ -720,17 +720,17 @@ define i32 @shadow.standard..uint_Mcompare_uint(i32, i32) #0 {
 	ret i32 %6
 }
 
-@shadow.standard..uint_Mequal_uint = alias i1 (i32, i32)* @shadow.standard..int_Mequal_int
+@shadow.standard..uint_Mequal_uint = alias i1 (i32, i32), i1 (i32, i32)* @shadow.standard..int_Mequal_int
 
-@shadow.standard..uint_MtoByte = alias i8 (i32)* @shadow.standard..int_MtoByte 	
-@shadow.standard..uint_MtoUByte = alias i8 (i32)* @shadow.standard..int_MtoByte
-@shadow.standard..uint_MtoShort = alias i16 (i32)* @shadow.standard..int_MtoShort 
-@shadow.standard..uint_MtoUShort = alias i16 (i32)* @shadow.standard..int_MtoShort
-@shadow.standard..uint_MtoInt = alias i32 (i32)* @shadow.standard..int_MtoInt
-@shadow.standard..uint_MtoUInt = alias i32 (i32)* @shadow.standard..int_MtoInt
-@shadow.standard..uint_MtoCode = alias i32 (i32)* @shadow.standard..int_MtoInt
-@shadow.standard..uint_MtoLong = alias i64 (i32)* @shadow.standard..int_MtoULong 
-@shadow.standard..uint_MtoULong = alias i64 (i32)* @shadow.standard..int_MtoULong
+@shadow.standard..uint_MtoByte = alias i8 (i32), i8 (i32)* @shadow.standard..int_MtoByte 	
+@shadow.standard..uint_MtoUByte = alias i8 (i32), i8 (i32)* @shadow.standard..int_MtoByte
+@shadow.standard..uint_MtoShort = alias i16 (i32), i16 (i32)* @shadow.standard..int_MtoShort 
+@shadow.standard..uint_MtoUShort = alias i16 (i32), i16 (i32)* @shadow.standard..int_MtoShort
+@shadow.standard..uint_MtoInt = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..uint_MtoUInt = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..uint_MtoCode = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..uint_MtoLong = alias i64 (i32), i64 (i32)* @shadow.standard..int_MtoULong 
+@shadow.standard..uint_MtoULong = alias i64 (i32), i64 (i32)* @shadow.standard..int_MtoULong
 define float @shadow.standard..uint_MtoFloat(i32) #0 {
 	%2 = uitofp i32 %0 to float
 	ret float %2
@@ -740,10 +740,10 @@ define double @shadow.standard..uint_MtoDouble(i32) #0 {
 	ret double %2
 }
 
-@shadow.standard..uint_MflipEndian = alias i32 (i32)* @shadow.standard..int_MflipEndian
-@shadow.standard..uint_Mones = alias i32 (i32)* @shadow.standard..int_Mones
-@shadow.standard..uint_MleadingZeroes = alias i32 (i32)* @shadow.standard..int_MleadingZeroes
-@shadow.standard..uint_MtrailingZeroes = alias i32 (i32)* @shadow.standard..int_MtrailingZeroes	
+@shadow.standard..uint_MflipEndian = alias i32 (i32), i32 (i32)* @shadow.standard..int_MflipEndian
+@shadow.standard..uint_Mones = alias i32 (i32), i32 (i32)* @shadow.standard..int_Mones
+@shadow.standard..uint_MleadingZeroes = alias i32 (i32), i32 (i32)* @shadow.standard..int_MleadingZeroes
+@shadow.standard..uint_MtrailingZeroes = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtrailingZeroes	
 	
 define {i32, i1} @shadow.standard..uint_MaddWithOverflow_uint(i32, i32) #0 {
 	%3 = call {i32, i1} @llvm.uadd.with.overflow.i32(i32 %0, i32 %1)
@@ -762,34 +762,34 @@ define {i32, i1} @shadow.standard..uint_MmultiplyWithOverflow_uint(i32, i32) #0 
 
 ; shadow.standard@Code native methods
 
-@shadow.standard..code_MtoByte = alias i8 (i32)* @shadow.standard..int_MtoByte
-@shadow.standard..code_MtoUByte = alias i8 (i32)* @shadow.standard..int_MtoByte
-@shadow.standard..code_MtoShort = alias i16 (i32)* @shadow.standard..int_MtoShort
-@shadow.standard..code_MtoUShort = alias i16 (i32)* @shadow.standard..int_MtoShort
-@shadow.standard..code_MtoInt = alias i32 (i32)* @shadow.standard..int_MtoInt
-@shadow.standard..code_MtoUInt = alias i32 (i32)* @shadow.standard..int_MtoInt
-@shadow.standard..code_MtoCode = alias i32 (i32)* @shadow.standard..int_MtoInt
-@shadow.standard..code_MtoLong = alias i64 (i32)* @shadow.standard..int_MtoULong
-@shadow.standard..code_MtoULong = alias i64 (i32)* @shadow.standard..int_MtoULong
-@shadow.standard..code_MtoFloat = alias float (i32)* @shadow.standard..uint_MtoFloat
-@shadow.standard..code_MtoDouble = alias double (i32)* @shadow.standard..uint_MtoDouble
+@shadow.standard..code_MtoByte = alias i8 (i32), i8 (i32)* @shadow.standard..int_MtoByte
+@shadow.standard..code_MtoUByte = alias i8 (i32), i8 (i32)* @shadow.standard..int_MtoByte
+@shadow.standard..code_MtoShort = alias i16 (i32), i16 (i32)* @shadow.standard..int_MtoShort
+@shadow.standard..code_MtoUShort = alias i16 (i32), i16 (i32)* @shadow.standard..int_MtoShort
+@shadow.standard..code_MtoInt = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..code_MtoUInt = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..code_MtoCode = alias i32 (i32), i32 (i32)* @shadow.standard..int_MtoInt
+@shadow.standard..code_MtoLong = alias i64 (i32), i64 (i32)* @shadow.standard..int_MtoULong
+@shadow.standard..code_MtoULong = alias i64 (i32), i64 (i32)* @shadow.standard..int_MtoULong
+@shadow.standard..code_MtoFloat = alias float (i32), float (i32)* @shadow.standard..uint_MtoFloat
+@shadow.standard..code_MtoDouble = alias double (i32), double (i32)* @shadow.standard..uint_MtoDouble
 
-@shadow.standard..code_MbitComplement = alias i32 (i32)* @shadow.standard..int_MbitComplement
-@shadow.standard..code_MbitOr_code = alias i32 (i32, i32)* @shadow.standard..int_MbitOr_int
-@shadow.standard..code_MbitXor_code = alias i32 (i32, i32)* @shadow.standard..int_MbitXor_int
-@shadow.standard..code_MbitAnd_code = alias i32 (i32, i32)* @shadow.standard..int_MbitAnd_int
-@shadow.standard..code_MbitShiftLeft_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitShiftLeft_uint
-@shadow.standard..code_MbitShiftRight_uint = alias i32 (i32, i32)* @shadow.standard..uint_MbitShiftRight_uint
-@shadow.standard..code_MbitRotateLeft_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitRotateLeft_uint
-@shadow.standard..code_MbitRotateRight_uint = alias i32 (i32, i32)* @shadow.standard..int_MbitRotateRight_uint
+@shadow.standard..code_MbitComplement = alias i32 (i32), i32 (i32)* @shadow.standard..int_MbitComplement
+@shadow.standard..code_MbitOr_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitOr_int
+@shadow.standard..code_MbitXor_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitXor_int
+@shadow.standard..code_MbitAnd_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitAnd_int
+@shadow.standard..code_MbitShiftLeft_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitShiftLeft_uint
+@shadow.standard..code_MbitShiftRight_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..uint_MbitShiftRight_uint
+@shadow.standard..code_MbitRotateLeft_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitRotateLeft_uint
+@shadow.standard..code_MbitRotateRight_uint = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_MbitRotateRight_uint
 
-@shadow.standard..code_Madd_code = alias i32 (i32, i32)* @shadow.standard..int_Madd_int
-@shadow.standard..code_Msubtract_code = alias i32 (i32, i32)* @shadow.standard..int_Msubtract_int
-@shadow.standard..code_Mmultiply_code = alias i32 (i32, i32)* @shadow.standard..int_Mmultiply_int
-@shadow.standard..code_Mdivide_code = alias i32 (i32, i32)* @shadow.standard..uint_Mdivide_uint
-@shadow.standard..code_Mmodulus_code = alias i32 (i32, i32)* @shadow.standard..uint_Mmodulus_uint
-@shadow.standard..code_Mcompare_code = alias i32 (i32, i32)* @shadow.standard..uint_Mcompare_uint
-@shadow.standard..code_Mequal_code = alias i1 (i32, i32)* @shadow.standard..int_Mequal_int
+@shadow.standard..code_Madd_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_Madd_int
+@shadow.standard..code_Msubtract_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_Msubtract_int
+@shadow.standard..code_Mmultiply_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..int_Mmultiply_int
+@shadow.standard..code_Mdivide_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..uint_Mdivide_uint
+@shadow.standard..code_Mmodulus_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..uint_Mmodulus_uint
+@shadow.standard..code_Mcompare_code = alias i32 (i32, i32), i32 (i32, i32)* @shadow.standard..uint_Mcompare_uint
+@shadow.standard..code_Mequal_code = alias i1 (i32, i32), i1 (i32, i32)* @shadow.standard..int_Mequal_int
 
 ; shadow.standard@Long native methods
 
@@ -888,22 +888,22 @@ define i8 @shadow.standard..long_MtoByte(i64) #0 {
 	%2 = trunc i64 %0 to i8
 	ret i8 %2
 }
-@shadow.standard..long_MtoUByte = alias i8 (i64)* @shadow.standard..long_MtoByte
+@shadow.standard..long_MtoUByte = alias i8 (i64), i8 (i64)* @shadow.standard..long_MtoByte
 define i16 @shadow.standard..long_MtoShort(i64) #0 {
 	%2 = trunc i64 %0 to i16
 	ret i16 %2
 }
-@shadow.standard..long_MtoUShort = alias i16 (i64)* @shadow.standard..long_MtoShort 
+@shadow.standard..long_MtoUShort = alias i16 (i64), i16 (i64)* @shadow.standard..long_MtoShort 
 define i32 @shadow.standard..long_MtoInt(i64) #0 {
 	%2 = trunc i64 %0 to i32
 	ret i32 %2
 }
-@shadow.standard..long_MtoUInt = alias i32 (i64)* @shadow.standard..long_MtoInt 
-@shadow.standard..long_MtoCode = alias i32 (i64)* @shadow.standard..long_MtoInt
+@shadow.standard..long_MtoUInt = alias i32 (i64), i32 (i64)* @shadow.standard..long_MtoInt 
+@shadow.standard..long_MtoCode = alias i32 (i64), i32 (i64)* @shadow.standard..long_MtoInt
 define i64 @shadow.standard..long_MtoLong(i64) #0 {
 	ret i64 %0
 }
-@shadow.standard..long_MtoULong = alias i64 (i64)* @shadow.standard..long_MtoLong
+@shadow.standard..long_MtoULong = alias i64 (i64), i64 (i64)* @shadow.standard..long_MtoLong
 define float @shadow.standard..long_MtoFloat(i64) #0 {
 	%2 = sitofp i64 %0 to float
 	ret float %2
@@ -950,11 +950,11 @@ define i64 @shadow.standard..long_MtrailingZeroes(i64) #0 {
 
 ; shadow.standard@ULong native methods
 
-@shadow.standard..ulong_MbitComplement = alias i64 (i64)* @shadow.standard..long_MbitComplement
-@shadow.standard..ulong_MbitOr_ulong = alias i64 (i64, i64)* @shadow.standard..long_MbitOr_long
-@shadow.standard..ulong_MbitXor_ulong = alias i64 (i64, i64)* @shadow.standard..long_MbitXor_long
-@shadow.standard..ulong_MbitAnd_ulong = alias i64 (i64, i64)* @shadow.standard..long_MbitAnd_long
-@shadow.standard..ulong_MbitShiftLeft_uint = alias i64 (i64, i32)* @shadow.standard..long_MbitShiftLeft_uint
+@shadow.standard..ulong_MbitComplement = alias i64 (i64), i64 (i64)* @shadow.standard..long_MbitComplement
+@shadow.standard..ulong_MbitOr_ulong = alias i64 (i64, i64), i64 (i64, i64)* @shadow.standard..long_MbitOr_long
+@shadow.standard..ulong_MbitXor_ulong = alias i64 (i64, i64), i64 (i64, i64)* @shadow.standard..long_MbitXor_long
+@shadow.standard..ulong_MbitAnd_ulong = alias i64 (i64, i64), i64 (i64, i64)* @shadow.standard..long_MbitAnd_long
+@shadow.standard..ulong_MbitShiftLeft_uint = alias i64 (i64, i32), i64 (i64, i32)* @shadow.standard..long_MbitShiftLeft_uint
 define i64 @shadow.standard..ulong_MbitShiftRight_uint(i64, i32) #0 {
 	%3 = icmp ult i32 %1, 64
 	br i1 %3, label %4, label %7
@@ -963,12 +963,12 @@ define i64 @shadow.standard..ulong_MbitShiftRight_uint(i64, i32) #0 {
 	ret i64 %6
 	ret i64 0
 }
-@shadow.standard..ulong_MbitRotateLeft_uint = alias i64 (i64, i32)* @shadow.standard..long_MbitRotateLeft_uint
-@shadow.standard..ulong_MbitRotateRight_uint = alias i64 (i64, i32)* @shadow.standard..long_MbitRotateRight_uint
+@shadow.standard..ulong_MbitRotateLeft_uint = alias i64 (i64, i32), i64 (i64, i32)* @shadow.standard..long_MbitRotateLeft_uint
+@shadow.standard..ulong_MbitRotateRight_uint = alias i64 (i64, i32), i64 (i64, i32)* @shadow.standard..long_MbitRotateRight_uint
 
-@shadow.standard..ulong_Madd_ulong = alias i64 (i64, i64)* @shadow.standard..long_Madd_long
-@shadow.standard..ulong_Msubtract_ulong = alias i64 (i64, i64)* @shadow.standard..long_Msubtract_long
-@shadow.standard..ulong_Mmultiply_ulong = alias i64 (i64, i64)* @shadow.standard..long_Mmultiply_long
+@shadow.standard..ulong_Madd_ulong = alias i64 (i64, i64), i64 (i64, i64)* @shadow.standard..long_Madd_long
+@shadow.standard..ulong_Msubtract_ulong = alias i64 (i64, i64), i64 (i64, i64)* @shadow.standard..long_Msubtract_long
+@shadow.standard..ulong_Mmultiply_ulong = alias i64 (i64, i64), i64 (i64, i64)* @shadow.standard..long_Mmultiply_long
 define i64 @shadow.standard..ulong_Mdivide_ulong(i64, i64) #0 {
 	%3 = udiv i64 %0, %1
 	ret i64 %3
@@ -986,17 +986,17 @@ define i32 @shadow.standard..ulong_Mcompare_ulong(i64, i64) #0 {
 	ret i32 %6
 }
 
-@shadow.standard..ulong_Mequal_ulong = alias i1 (i64, i64)* @shadow.standard..long_Mequal_long
+@shadow.standard..ulong_Mequal_ulong = alias i1 (i64, i64), i1 (i64, i64)* @shadow.standard..long_Mequal_long
 
-@shadow.standard..ulong_MtoByte = alias i8 (i64)* @shadow.standard..long_MtoByte 
-@shadow.standard..ulong_MtoUByte = alias i8 (i64)* @shadow.standard..long_MtoByte
-@shadow.standard..ulong_MtoShort = alias i16 (i64)* @shadow.standard..long_MtoShort 
-@shadow.standard..ulong_MtoUShort = alias i16 (i64)* @shadow.standard..long_MtoShort
-@shadow.standard..ulong_MtoInt = alias i32 (i64)* @shadow.standard..long_MtoInt 
-@shadow.standard..ulong_MtoUInt = alias i32 (i64)* @shadow.standard..long_MtoInt
-@shadow.standard..ulong_MtoCode = alias i32 (i64)* @shadow.standard..long_MtoInt
-@shadow.standard..ulong_MtoLong = alias i64 (i64)* @shadow.standard..long_MtoLong 
-@shadow.standard..ulong_MtoULong = alias i64 (i64)* @shadow.standard..long_MtoLong
+@shadow.standard..ulong_MtoByte = alias i8 (i64), i8 (i64)* @shadow.standard..long_MtoByte 
+@shadow.standard..ulong_MtoUByte = alias i8 (i64), i8 (i64)* @shadow.standard..long_MtoByte
+@shadow.standard..ulong_MtoShort = alias i16 (i64), i16 (i64)* @shadow.standard..long_MtoShort 
+@shadow.standard..ulong_MtoUShort = alias i16 (i64), i16 (i64)* @shadow.standard..long_MtoShort
+@shadow.standard..ulong_MtoInt = alias i32 (i64), i32 (i64)* @shadow.standard..long_MtoInt 
+@shadow.standard..ulong_MtoUInt = alias i32 (i64), i32 (i64)* @shadow.standard..long_MtoInt
+@shadow.standard..ulong_MtoCode = alias i32 (i64), i32 (i64)* @shadow.standard..long_MtoInt
+@shadow.standard..ulong_MtoLong = alias i64 (i64), i64 (i64)* @shadow.standard..long_MtoLong 
+@shadow.standard..ulong_MtoULong = alias i64 (i64), i64 (i64)* @shadow.standard..long_MtoLong
 define float @shadow.standard..ulong_MtoFloat(i64) #0 {
 	%2 = uitofp i64 %0 to float
 	ret float %2
@@ -1006,10 +1006,10 @@ define double @shadow.standard..ulong_MtoDouble(i64) #0 {
 	ret double %2
 }
 
-@shadow.standard..ulong_MflipEndian = alias i64 (i64)* @shadow.standard..long_MflipEndian
-@shadow.standard..ulong_Mones = alias i64 (i64)* @shadow.standard..long_Mones
-@shadow.standard..ulong_MleadingZeroes = alias i64 (i64)* @shadow.standard..long_MleadingZeroes
-@shadow.standard..ulong_MtrailingZeroes = alias i64 (i64)* @shadow.standard..long_MtrailingZeroes	
+@shadow.standard..ulong_MflipEndian = alias i64 (i64), i64 (i64)* @shadow.standard..long_MflipEndian
+@shadow.standard..ulong_Mones = alias i64 (i64), i64 (i64)* @shadow.standard..long_Mones
+@shadow.standard..ulong_MleadingZeroes = alias i64 (i64), i64 (i64)* @shadow.standard..long_MleadingZeroes
+@shadow.standard..ulong_MtrailingZeroes = alias i64 (i64), i64 (i64)* @shadow.standard..long_MtrailingZeroes	
 	
 ;define {i64, i1} @shadow.standard..ulong_MaddWithOverflow_ulong(i64, i64) #0 {
 ;	%3 = call {i64, i1} @llvm.uadd.with.overflow.i64(i64 %0, i64 %1)

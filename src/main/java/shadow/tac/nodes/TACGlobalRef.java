@@ -3,7 +3,7 @@ package shadow.tac.nodes;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
-public class TACGlobalRef implements TACReference
+public class TACGlobalRef extends TACReference
 {
 	private Type type;
 	private String name;

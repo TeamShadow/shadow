@@ -178,10 +178,10 @@ is  OrderedMap<K,V>
 	 * @param value value to store
 	 */ 
     public index(K key, V value) => ()
-    {                
-        (root, ) = insert(root, key, value);
+    {
+        (root, ) = insert(root, key, value);         
         check(root)->red = false; // Never null after insert.         
-        modifications += 1;
+        modifications += 1;           
     }
     
    /**
@@ -757,8 +757,7 @@ is  OrderedMap<K,V>
     private class TreeMapIterator is Iterator<V>
 	{
 		// Current stack of Nodes, since this tree doesn't have parent references.
-		ArrayDeque<Node> stack = ArrayDeque<Node>:create();
-		int state;		 		
+		ArrayDeque<Node> stack = ArrayDeque<Node>:create();		 		
 		int expectedModifications = modifications;
 		
 		// Go all the way to left when creating iterator.

@@ -1,8 +1,0 @@
-exception shadow:natives@
-	MutexException
-{
-	public create(String message)
-	{
-		super(message);
-	}
-}

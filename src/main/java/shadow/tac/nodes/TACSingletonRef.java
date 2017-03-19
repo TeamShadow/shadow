@@ -4,7 +4,7 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
-public class TACSingletonRef implements TACReference
+public class TACSingletonRef extends TACReference
 {
 	private SingletonType type;
 

@@ -10,8 +10,8 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.typecheck.BaseChecker;
-import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.ErrorReporter;
+import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.TypeCheckException.Error;
 
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType>
@@ -142,13 +142,8 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	public String toString(String begin, String end, int options ) {
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
-		
-		int i = 0;
-		if((options & Type.MANGLE_EXTERN) != 0) ++i;
-		
-		for(; i < types.size(); ++i) {
-			ModifiedType modifiedType = types.get(i);
-			
+		 
+		for(ModifiedType modifiedType: types) {			
 			if( (options & MANGLE ) != 0 )
 				builder.append("_");			
 			else if( first )

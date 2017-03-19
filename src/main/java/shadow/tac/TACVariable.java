@@ -2,6 +2,8 @@ package shadow.tac;
 
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PointerType;
+import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
 public class TACVariable implements ModifiedType
@@ -87,5 +89,27 @@ public class TACVariable implements ModifiedType
 		TACVariable var = (TACVariable) other;
 		
 		return getName().equals(var.getName());
+	}
+	
+	public boolean isReturn() {
+		return getOriginalName().equals("return") || getOriginalName().startsWith("_return");
+	}
+	
+	public boolean needsGarbageCollection() {
+		Type type = getType();
+		
+		
+		return !getOriginalName().equals("_exception") &&
+				!getOriginalName().equals("this") &&
+				!getMethod().getSignature().isCopy() &&
+				//!variable.getName().equals("return") &&
+				!(type instanceof PointerType) &&
+				//!(type instanceof ArrayType) &&
+				//!(type instanceof InterfaceType) &&
+				!(type instanceof SingletonType) &&
+				!type.equals(Type.CLASS) &&
+				!type.equals(Type.GENERIC_CLASS) &&
+				!type.equals(Type.METHOD_TABLE) &&
+				(!type.isPrimitive() || getModifiers().isNullable());
 	}
 }

@@ -19,12 +19,8 @@ import shadow.interpreter.ShadowString;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
-import shadow.parse.ShadowParser.ConditionalExpressionContext;
-import shadow.parse.ShadowParser.ConditionalOrExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
-import shadow.parse.ShadowParser.SendStatementContext;
-import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -101,10 +97,8 @@ public class StatementChecker extends BaseChecker {
 			node instanceof ShadowParser.InlineMethodDefinitionContext ){	
 			if( node instanceof ShadowParser.InlineMethodDefinitionContext )
 				signature = new MethodSignature( currentType, "", node.getModifiers(), node.getDocumentation(), node);
-			else {
-				signature = new MethodSignature( currentType, ((ShadowParser.LocalMethodDeclarationContext)node).methodDeclarator().generalIdentifier().getText(), node.getModifiers(), node.getDocumentation(), node);
-			}
-			
+			else
+				signature = new MethodSignature( currentType, ((ShadowParser.LocalMethodDeclarationContext)node).methodDeclarator().Identifier().getText(), node.getModifiers(), node.getDocumentation(), node);
 			node.setSignature(signature);
 			MethodType methodType = signature.getMethodType();
 
@@ -121,43 +115,12 @@ public class StatementChecker extends BaseChecker {
 			currentType.addUsedType(modifiedType.getType());
 		
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
-			currentType.addUsedType(modifiedType.getType());
-		
-		// Shadow class extern implementation; extern keyword which externs from C
-		// is implemented in different places, such as mangleName() method.
-		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
-			SequenceType params = signature.getParameterTypes();
-			Type parentClass = params.get(0).getType();
-			
-			SequenceType parentParams = new SequenceType();
-			for(int i = 1; i < params.size(); ++i) {
-				parentParams.add(params.get(i));
-			}
-			
-			MethodSignature method = parentClass.getMatchingMethod(signature.getName(), parentParams);
-			if(method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
-				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getName() + "' in class '" + parentClass + "'");
-			} else {
-				boolean found = false;
-				if(method.getAllowedExternTypes() != null) {
-					for(Type type : method.getAllowedExternTypes()) {
-						if(signature.getOuter().equals(type)) {
-							found = true;
-							break;
-						}
-					}
-				}
-				
-				if(!found) {
-					addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getName() + "' method in '" + parentClass +"' is not allowed to be shared with '" + signature.getOuter() + "'");
-				}
-			}
-		}
+			currentType.addUsedType(modifiedType.getType());			
 		
 		currentMethod.addFirst(node);
 		openScope();
-	}
-	
+	}	
+
 	private void openScope() 
 	{
 		// we have a new scope, so we need a new HashMap in the linked list
@@ -251,7 +214,7 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitLocalMethodDeclaration(ShadowParser.LocalMethodDeclarationContext ctx)
 	{ 					
-		addSymbol(ctx.methodDeclarator().generalIdentifier().getText(), ctx);
+		addSymbol(ctx.methodDeclarator().Identifier().getText(), ctx);
 		visitMethodPre(ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
@@ -425,7 +388,7 @@ public class StatementChecker extends BaseChecker {
 	@Override public Void visitLocalVariableDeclaration(ShadowParser.LocalVariableDeclarationContext ctx)
 	{ 
 		visitChildren(ctx);
-
+		
 		Type type;
 		boolean isVar = false;
 		
@@ -441,14 +404,9 @@ public class StatementChecker extends BaseChecker {
 		//add variables
 		for( ShadowParser.VariableDeclaratorContext declarator : ctx.variableDeclarator() ) {
 			if( isVar ) {
-				if( declarator.conditionalExpression() != null ) { //has initializer
-					if(resolveType(declarator.conditionalExpression()).equals(new SequenceType())) {
-						type = Type.UNKNOWN;
-						addError(declarator, Error.UNDEFINED_TYPE, "Cannot initialize var with type ()");
-					} else {
-						type = declarator.conditionalExpression().getType();
-					}
-				} else {
+				if( declarator.conditionalExpression() != null ) //has initializer						
+					type = declarator.conditionalExpression().getType();					
+				else {
 					type = Type.UNKNOWN;
 					addError(declarator, Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
 				}
@@ -461,7 +419,7 @@ public class StatementChecker extends BaseChecker {
 
 			declarator.setType(type);										
 			declarator.addModifiers(ctx.getModifiers());					
-			addSymbol(declarator.generalIdentifier().getText(), declarator ); //add to local scope
+			addSymbol( declarator.Identifier().getText(), declarator ); //add to local scope
 		}
 					
 		checkInitializers( ctx.variableDeclarator() );
@@ -895,76 +853,53 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(ctx.coalesceExpression().getType());
 			ctx.addModifiers(ctx.coalesceExpression().getModifiers());			
 		}
-		else { // ternary
-			ThrowOrConditionalExpressionContext first = ctx.throwOrConditionalExpression(0); 
-			ThrowOrConditionalExpressionContext second = ctx.throwOrConditionalExpression(1);
-			
+		else {
 			Type t1 = ctx.coalesceExpression().getType();
 			
-			if(!t1.equals(Type.BOOLEAN)) {			
+			Context first = ctx.conditionalExpression(0); 
+			Type t2 = first.getType();
+			Context second = ctx.conditionalExpression(1);
+			Type t3 = second.getType();
+						
+			if( first.getModifiers().isNullable() || second.getModifiers().isNullable() )
+				ctx.addModifiers(Modifiers.NULLABLE);
+			
+			if( first.getModifiers().isNullable() != second.getModifiers().isNullable() && (t2 instanceof ArrayType || t3 instanceof ArrayType )  )
+				addError(ctx, Error.INVALID_MODIFIER, "Cannot mix nullable and non-nullable arrays", t2, t3);
+			
+			if( first.getModifiers().isReadonly() || second.getModifiers().isReadonly() )
+				ctx.addModifiers(Modifiers.READONLY);
+			else if( first.getModifiers().isTemporaryReadonly() || second.getModifiers().isTemporaryReadonly() )
+				ctx.addModifiers(Modifiers.TEMPORARY_READONLY);			
+			
+			if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )			
+				ctx.addModifiers(Modifiers.IMMUTABLE);
+			else if( first.getModifiers().isImmutable() || second.getModifiers().isImmutable() ) //immutable + regular = readonly, works for either
+				ctx.addModifiers(Modifiers.READONLY);
+			
+			if( !t1.equals(Type.BOOLEAN) ) {			
 				addError(ctx.coalesceExpression(), Error.INVALID_TYPE, "Supplied type " + t1 + " cannot be used in the condition of a ternary operator, boolean type required", t1);
 				ctx.setType(Type.UNKNOWN);
-			} else if(first.throwStatement() != null || second.throwStatement() != null) {
-				if(first.throwStatement() != null && second.throwStatement() != null) {
-					addError(ctx, Error.INVALID_STRUCTURE, "Only one throw is allowed in the clause of a ternary operator");
-					ctx.setType(Type.UNKNOWN);
-				} else {
-					ConditionalExpressionContext actual = first.throwStatement() == null ? first.conditionalExpression() : second.conditionalExpression();
-					ctx.setType(actual.getType());
-					ctx.addModifiers(actual.getModifiers());
-				}
-			} else {
-				Type t2 = first.getType();
-				Type t3 = second.getType();
-							
-				if( first.getModifiers().isNullable() || second.getModifiers().isNullable() )
-					ctx.addModifiers(Modifiers.NULLABLE);
-				
-				if( first.getModifiers().isNullable() != second.getModifiers().isNullable() && (t2 instanceof ArrayType || t3 instanceof ArrayType )  )
-					addError(ctx, Error.INVALID_MODIFIER, "Cannot mix nullable and non-nullable arrays", t2, t3);
-				
-				if( first.getModifiers().isReadonly() || second.getModifiers().isReadonly() )
-					ctx.addModifiers(Modifiers.READONLY);
-				else if( first.getModifiers().isTemporaryReadonly() || second.getModifiers().isTemporaryReadonly() )
-					ctx.addModifiers(Modifiers.TEMPORARY_READONLY);			
-				
-				if( first.getModifiers().isImmutable() && second.getModifiers().isImmutable() )			
-					ctx.addModifiers(Modifiers.IMMUTABLE);
-				else if( first.getModifiers().isImmutable() || second.getModifiers().isImmutable() ) //immutable + regular = readonly, works for either
-					ctx.addModifiers(Modifiers.READONLY);
-				
-				if( t2.isSubtype(t3) )
-					ctx.setType(t3);
-				else if( t3.isSubtype(t2) )
-					ctx.setType(t2);
-				else {
-					addError(ctx, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of conditional operator", t2, t3);
-					ctx.setType(Type.UNKNOWN);
-				}
+			}
+			else if( t2.isSubtype(t3) )
+				ctx.setType(t3);
+			else if( t3.isSubtype(t2) )
+				ctx.setType(t2);
+			else {
+				addError(ctx, Error.MISMATCHED_TYPE, "Supplied type " + t2 + " must match " + t3 + " in execution of conditional operator", t2, t3);
+				ctx.setType(Type.UNKNOWN);
 			}
 		}
 		
 		return null;
-	}
-	
-	@Override public Void visitThrowOrConditionalExpression(ThrowOrConditionalExpressionContext ctx) {
-		visitChildren(ctx);
-	
-		ConditionalExpressionContext cond = ctx.conditionalExpression();
-		if(cond != null) {
-			ctx.setType(cond.getType());
-			ctx.addModifiers(cond.getModifiers());
-		}
-		
-		return null;
-	}
+	}	
 	
 	public void visitConditional(Context node) {		
 		if( node.getChildCount() == 1 ) {
 			Context child = (Context) node.getChild(0);
 			node.setType(child.getType());
 			node.addModifiers(child.getModifiers());	
-		}
+		}			
 		else {
 			Type result = null;
 			
@@ -992,12 +927,12 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());	
 		}
-		else {
+		else {	
 			Type result = null;
 			boolean isNullable = true;
 			int term = 0;
 			
-			for( ConditionalOrExpressionContext child : ctx.conditionalOrExpression() ) { //cycle through types, upgrading to broadest legal one
+			for( ShadowParser.ConditionalOrExpressionContext child : ctx.conditionalOrExpression() ) { //cycle through types, upgrading to broadest legal one
 				Type type = child.getType();
 				Modifiers modifiers = child.getModifiers();
 				term++;
@@ -1516,7 +1451,7 @@ public class StatementChecker extends BaseChecker {
 		Type type = ctx.conditionalExpression().getType(); 
 		
 		if( !type.equals(Type.BOOLEAN) )
-			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + type, type);
+				addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Condition of if statement cannot accept non-boolean type " + type, type);
 		
 		return null;
 	}
@@ -1637,12 +1572,10 @@ public class StatementChecker extends BaseChecker {
 	{ 
 		visitChildren(ctx);
 		
-		ConditionalExpressionContext exceptionContext = ctx.conditionalExpression();
-		Type exceptionType = exceptionContext.getType();
-
-		if(!(exceptionType instanceof ExceptionType)) {
-			addError(exceptionContext, Error.INVALID_TYPE, "Supplied type " + exceptionType + " cannot be used in a throw clause, exception or error type required", exceptionType);
-		}
+		Type type = ctx.conditionalExpression().getType();
+		
+		if( !(type instanceof ExceptionType) )
+			addError(ctx.conditionalExpression(), Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in a throw clause, exception or error type required", type);
 		
 		return null;
 	}
@@ -1749,12 +1682,7 @@ public class StatementChecker extends BaseChecker {
 			ShadowParser.PrimaryPrefixContext child = ctx.primaryPrefix();			
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());
-			
-			if(child.spawnExpression() != null) {
-				ctx.action = true;
-				currentType.addUsedType(Type.Thread);
-			}
-		}
+		}		
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
 		
@@ -1766,21 +1694,26 @@ public class StatementChecker extends BaseChecker {
 		if( type instanceof SingletonType ) {
 			SingletonType singletonType = (SingletonType)type;
 			if( currentMethod.isEmpty() ) {
-				//add to all creates (since it must be declared outside a method)
-				for( MethodSignature signature : currentType.getAllMethods("create"))				
-					signature.addSingleton(singletonType);
+				//don't add a singleton to itself, could cause infinite recursion
+				if( !currentType.equals(type) )
+					//add to all creates (since it must be declared outside a method)
+					for( MethodSignature signature : currentType.getAllMethods("create"))				
+						signature.addSingleton(singletonType);
 			}
-			else {
-				int i = 0;
-				Context signatureNode;
-				//find outer method, instead of adding to local or inline methods
-				do {
-					signatureNode = currentMethod.get(i);
-					i++;
-				} while( signatureNode instanceof ShadowParser.InlineMethodDefinitionContext ||
-						 signatureNode instanceof ShadowParser.LocalMethodDeclarationContext );
-				
-				signatureNode.getSignature().addSingleton(singletonType);				
+			else {				
+				//don't add a singleton to itself, could cause infinite recursion
+				if( !currentType.equals(type) ) {
+					int i = 0;
+					Context signatureNode;
+					//find outer method, instead of adding to local or inline methods
+					do {
+						signatureNode = currentMethod.get(i);
+						i++;
+					} while( signatureNode instanceof ShadowParser.InlineMethodDefinitionContext ||
+							 signatureNode instanceof ShadowParser.LocalMethodDeclarationContext );
+					
+					signatureNode.getSignature().addSingleton(singletonType);				
+				}
 			}
 		}
 		else if( type instanceof SequenceType ) {
@@ -1823,11 +1756,11 @@ public class StatementChecker extends BaseChecker {
 					ctx.getModifiers().upgradeToTemporaryReadonly();					
 			}
 		}	
-		else if( ctx.generalIdentifier() != null ) {							
+		else if( ctx.Identifier() != null ) {							
 			if( !setTypeFromName( ctx, image )) { //automatically sets type if can				
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 				ctx.setType(Type.UNKNOWN);											
-			}
+			}			
 		}
 		else if( ctx.conditionalExpression() != null ) {
 			ctx.setType(ctx.conditionalExpression().getType());
@@ -2808,7 +2741,12 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(methodType.getReturnTypes()); //return statement set to exactly the types method returns
 													   //implicit casts are added in TAC conversion if the values don't match exactly			
 			
-			if( methodType.getReturnTypes().size() == 0 ) {
+			if( currentMethod.getFirst() instanceof ShadowParser.DestroyDeclarationContext )
+				//The reason you can't is that a destroy needs to add in reference decrements for each field, at the end of the method
+				//Using returns would complicate the code needed to insert these decrements, and also destroys should be simple,
+				//ideally created entirely by the compiler in most cases.
+				addError(ctx, Error.INVALID_RETURNS, "Cannot use a return statement inside of a destroy definition");
+			else if( methodType.getReturnTypes().size() == 0 ) {
 				if( ctx.rightSide() != null )
 					addError(ctx, Error.INVALID_RETURNS, "Cannot return values from a method that returns nothing");
 			}
@@ -2976,81 +2914,5 @@ public class StatementChecker extends BaseChecker {
 		}
 		
 		return null;
-	}
-	
-	@Override public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx)
-	{
-		visitChildren(ctx);
-		
-		Type runnerType = ctx.type().getType();
-		if(runnerType.equals(Type.CAN_RUN) || !runnerType.isSubtype(Type.CAN_RUN)) {
-			addError(ctx, Error.INVALID_TYPE, runnerType + " needs to be a subtype of the " + Type.CAN_RUN + " interface");
-		}
-		
-		List<ShadowException> errors = new ArrayList<ShadowException>();
-		MethodSignature runnerCreateSignature = runnerType.getMatchingMethod("create", (SequenceType)ctx.spawnRunnerCreateCall().getType(), new SequenceType(), errors);
-		if(runnerCreateSignature == null) {
-			addErrors(ctx, errors);
-		} else {
-			ctx.spawnRunnerCreateCall().setSignature(runnerCreateSignature);
-		}
-		
-		// we should find the thread create since we're the ones who defined it.
-		// Two overloads: Thread(CanRun) and Thread(String, CanRun)
-		SequenceType sequence = new SequenceType();
-		if(ctx.StringLiteral() != null) {
-			sequence.add(new SimpleModifiedType(Type.STRING));
-		}
-		sequence.add(new SimpleModifiedType(Type.CAN_RUN));
-		
-		ctx.setSignature(Type.Thread.getMatchingMethod("create", sequence));
-		ctx.setType(Type.Thread);
-		
-		return null;
-	}
-	
-	@Override public Void visitSpawnRunnerCreateCall(shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx)
-	{
-		visitChildren(ctx);
-		
-		SequenceType sequence = new SequenceType();
-		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {
-			sequence.add(child);
-		}
-		ctx.setType(sequence);
-		
-		return null;
-	}
-	
-	@Override
-	public Void visitSendStatement(SendStatementContext ctx) {
-		visitChildren(ctx);
-
-		if(ctx.conditionalExpression().size() != 2 || !resolveType(ctx.conditionalExpression(1)).getType().equals(Type.Thread)) {
-			addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
-		} else {
-			List<ShadowException> errors = new ArrayList<ShadowException>();		
-			MethodSignature sendSignature = Type.Thread.getMatchingMethod("sendTo", 
-													new SequenceType(resolveType(ctx.conditionalExpression().get(0))), 
-													new SequenceType(), 
-													errors);
-			if(sendSignature == null) {
-				addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
-			} else {
-				ctx.setSignature(sendSignature);
-				ctx.setType(sendSignature.getReturnTypes()); // void
-			}
-		}
-		
-		return null;
-	}
-	
-	
-	/*@Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) 
-	{
-		visitChildren(ctx);
-		
-		
-		return null;
-	}*/
+	}	
 }

@@ -8,14 +8,6 @@
  */
 singleton shadow:io@Console
 {
-	private readonly extern __ShadowConsole_Initialize() => ();
-	
-	private readonly extern __ShadowConsole_Print(String str) => ();
-	private readonly extern __ShadowConsole_PrintLine() => ();
-	
-	private readonly extern __ShadowConsole_PrintError(String str) => ();
-	private readonly extern __ShadowConsole_PrintErrorLine() => ();
-	
 	boolean wasLF = false;
 	
 	/**
@@ -23,8 +15,9 @@ singleton shadow:io@Console
 	 */
 	public create()
 	{
-		__ShadowConsole_Initialize();
+		init();
 	}
+	private native init() => ();
 
 	/**
 	 * Reads the next line of text from {@code stdin}, stopping when a new line
@@ -105,7 +98,7 @@ singleton shadow:io@Console
 	 * @return next byte
 	 * @return {@code true} if the end of the file was reached 
 	 */
-	public native readByte() => (byte, boolean eof);
+	public native readByte() => ( byte, boolean eof );
 
 	/**
 	 * Prints an object's {@code String} representation to {@code stdout}.	 	 
@@ -123,12 +116,7 @@ singleton shadow:io@Console
 	 * @param value object to print
 	 * @return {@code Console} object 
 	 */
-	public printLine(nullable Object value) => ( Console )
-	{
-		return print(value).printLine();
-	}
-	
-	public printLine(String value) => (Console)
+	public printLine( nullable Object value ) => ( Console )
 	{
 		return print(value).printLine();
 	}
@@ -138,21 +126,13 @@ singleton shadow:io@Console
 	 * @param value {@code String} to print
 	 * @return {@code Console} object 
 	 */
-	public print(String value) => (Console)
-	{
-		__ShadowConsole_Print(value);
-		return this;
-	}
+	public native print( String value ) => ( Console );
 	
 	/**
 	 * Prints a new line character to {@code stdout}.
 	 * @return {@code Console} object 
 	 */
-	public printLine() => (Console)
-	{
-		__ShadowConsole_PrintLine();
-		return this;
-	}
+	public native printLine() => ( Console );
 	
 	/**
 	 * Prints an object's {@code String} representation to {@code stderr}.	 	 
@@ -180,19 +160,59 @@ singleton shadow:io@Console
 	 * @param value {@code String} to print
 	 * @return {@code Console} object 
 	 */
-	public printError(String value) => (Console)
-	{
-		__ShadowConsole_PrintError(value);
-		return this;
-	}
+	public native printError( String value ) => ( Console );
 	
 	/**
 	 * Prints a new line character to {@code stdout}.
 	 * @return {@code Console} object 
 	 */
-	public printErrorLine() => (Console)
+	public native printErrorLine() => ( Console );
+	
+	public debugPrint(String data) => ()
 	{
-		__ShadowConsole_PrintErrorLine();
+		print(data);
+		printLine();
+	}
+	
+	
+	public debugPrint(int value) => ( Console )
+	{
+		print("Debug print!");
+		printLine();
+	
+		if( value < 0 ) {
+			value *= -1;
+			print("-");
+		}
+		
+		int power = 1;
+		
+		while( power <= value )
+			power *= 10;
+		power /= 10;
+		
+		if( value == 0 )
+			print("0");		
+				
+		while( power > 0 ) {
+			switch( value / power )
+			{
+			case( 0 ) print("0");
+			case( 1 ) print("1");
+			case( 2 ) print("2");
+			case( 3 ) print("3");
+			case( 4 ) print("4");
+			case( 5 ) print("5");
+			case( 6 ) print("6");
+			case( 7 ) print("7");
+			case( 8 ) print("8");
+			case( 9 ) print("9");			
+			}
+			
+			value %= power;
+			power /= 10;
+		}
+		
 		return this;
 	}
 }

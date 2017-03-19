@@ -14,8 +14,8 @@ import java.util.TreeMap;
 import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
-import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
+import shadow.parse.Context.AssignmentKind;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 import shadow.typecheck.ErrorReporter;
@@ -58,11 +58,12 @@ public abstract class Type implements Comparable<Type> {
 	 */
 	
 	public static ClassType OBJECT = null;
-	public static ClassType Thread = null;
 	public static ClassType CLASS = null;  // meta class for holding normal :class variables
 	public static ClassType GENERIC_CLASS = null;  // meta class for holding generic :class variables
 	public static ClassType ARRAY = null;  // object representation of all array types
 	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types	
+	
+	public static ClassType METHOD_TABLE = null; //really just a pointer for method tables, but we sometimes act like it is a class
 	
 	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
 	public static ExceptionType EXCEPTION = null;
@@ -116,7 +117,6 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_DIVIDE = null;
 	public static InterfaceType CAN_MODULUS = null;
 	public static InterfaceType CAN_NEGATE = null;	
-	public static InterfaceType CAN_RUN = null;
 	
 	
 	//constants used for options in toString()
@@ -126,7 +126,6 @@ public abstract class Type implements Comparable<Type> {
 	public static final int PARAMETER_BOUNDS =  4;
 	public static final int CONVERT_ARRAYS =  8;
 	public static final int MANGLE =  16;
-	public static final int MANGLE_EXTERN = 32;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
@@ -190,8 +189,8 @@ public abstract class Type implements Comparable<Type> {
 	//used to clear out types between runs of the JUnit tests
 	//otherwise, types can become mixed between two different runs of the type checker
 	public static void clearTypes()	{
-		Thread = null;
 		OBJECT = null;
+		METHOD_TABLE = null;
 		CAST_EXCEPTION = null;
 		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
 		UNEXPECTED_NULL_EXCEPTION = null;
@@ -236,7 +235,6 @@ public abstract class Type implements Comparable<Type> {
 		CAN_DIVIDE = null;
 		CAN_MODULUS = null;
 		CAN_NEGATE = null;
-		CAN_RUN = null;
 	}
 	
 	/*
@@ -706,7 +704,7 @@ public abstract class Type implements Comparable<Type> {
 		}			
 	
 		if( candidate == null )			
-			ErrorReporter.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in class '" + getTypeName() + "'", arguments);
+			ErrorReporter.addError(errors, Error.INVALID_METHOD, "No definition of " + methodName + " with arguments " + arguments + " in this context", arguments);
 		
 		return candidate;
 	}
@@ -784,8 +782,7 @@ public abstract class Type implements Comparable<Type> {
 		return parameterized; 
 	}
 	
-	//Must have type parameters AND have them all filled in
-	//or have none and have all outer types all filled in
+	//Must have type parameters AND have them all filled in	
 	public boolean isFullyInstantiated()
 	{
 		if( !isParameterizedIncludingOuterClasses() )

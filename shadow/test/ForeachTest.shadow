@@ -41,5 +41,21 @@ class shadow:test@ForeachTest
 		
 		foreach( int value in iterable )
 			out.printLine( value );
+			
+			
+		int[][] table = int:create[4][5];
+		int start = 20;
+		
+		for( int i = 0; i < 4; i += 1 )
+			for( int j = 0; j < 5; j += 1 ) {
+				table[i][j] = start;
+				start -= 1;
+			}
+	
+		foreach( int[] row in table ) {
+			foreach( int element in row )
+				out.print(element # " ");
+			out.printLine();
+		}			
 	}
 }
