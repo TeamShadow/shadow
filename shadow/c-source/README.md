@@ -64,8 +64,9 @@ typedef struct {
 private extern __PrintFromC(String str) => ();
 
 // in some method:
-__PrintFromC("Hello from Shadow!");
-
+String str = "Hello from Shadow!";
+__PrintFromC(str);
+Console.printLine(str); // prints Hello from Shadow.
 
 // C side
 #include "ShadowString.h"
