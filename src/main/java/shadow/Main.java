@@ -2,6 +2,7 @@ package shadow;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.logging.log4j.Logger;
 
 import shadow.output.llvm.LLVMOutput;
@@ -155,6 +157,7 @@ public class Main {
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
+		linkCommand.add(system.resolve(Paths.get("shadow", "Shared.ll")).toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
@@ -177,15 +180,20 @@ public class Main {
 				return;
 			}
 			
+			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
+			
+			// compile and add the C source files to the assembler
+			if(!compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "c-source")).toFile())) {
+				logger.error("Failed to compile C source files.");
+				throw new CompileException("FAILED TO COMPILE");
+			}
+			
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.flush();
 			try { Thread.sleep(500); }
 			catch (InterruptedException ex) { }
 
 			logger.info("Building for target \"" + config.getTarget() + "\"");
-
-			List<String> assembleCommand = config.getLinkCommand(currentJob);
-
 			Path mainLL;
 
 			if( mainArguments )
@@ -203,11 +211,12 @@ public class Main {
 			String nativeIntegers = "n8:16:32:64";
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
 			
+			String optimisationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimisationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
@@ -266,6 +275,92 @@ public class Main {
 		}
 	}
 
+	private static boolean compileCSourceFiles(List<String> assembleCommand, File srcDirectory)
+	{
+		// no need to compile anything if there are no c-source files
+		if(!srcDirectory.exists()) {
+			return true;
+		}
+		
+		// compile the files to assembly, to be ready for linkage
+		// TODO: Add gcc to Configuration instead of here
+		List<String> compileCommand = new ArrayList<String>();
+		compileCommand.add("gcc");
+		compileCommand.add("-S");
+		compileCommand.add("-I../include/");
+
+		// create the target directory
+		File binPath = Paths.get(srcDirectory.getAbsolutePath(), "bin").toFile();
+		binPath.mkdir();
+		
+		// the filter to only find .c files.
+		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
+		
+		List<File> assemblyFiles = new ArrayList<File>();
+		
+		// we add the general C files
+		addCSourceFiles(srcDirectory, binPath, filter, compileCommand, assemblyFiles);
+		
+		// we add the OS specific C files
+		File osSpecificExternals = Paths.get(srcDirectory.getPath(), config.getOs()).toFile();
+		if(osSpecificExternals.exists()) {
+			addCSourceFiles(osSpecificExternals, binPath, filter, compileCommand, assemblyFiles);
+		}
+		
+		boolean success = true;
+		// we need to have at least one file to compile
+		if(compileCommand.size() > 3) {
+			try {
+				success = new ProcessBuilder(compileCommand)
+							.directory(binPath)
+							.redirectError(Redirect.INHERIT)
+							.start()
+							.waitFor() == 0;
+			} catch (InterruptedException | IOException e) {
+			}
+		}
+		
+		if(success) {
+			// still need to find and add the .s files to the linker
+			for(File f : binPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
+				assembleCommand.add(f.getAbsolutePath());
+			}
+		} else {
+			for(File f : assemblyFiles) {
+				f.delete();
+			}
+		}
+		
+		return success;
+	}
+	
+	private static void addCSourceFiles(File srcDirectory, File targetPath, FileFilter filter, List<String> compileCommand, List<File> assemblyFiles)
+	{
+		for(File f : srcDirectory.listFiles(filter)) {
+			Path assemblyPath = Paths.get(targetPath.getAbsolutePath(), (getBaseName(f.getName()) + ".s"));
+			String parentDirectoryName = srcDirectory.getParentFile().getName();
+			
+			try {
+				if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(f.toPath())) < 0) {
+					logger.info("Compiling C source file: '" + (parentDirectoryName.equals("src") ? (srcDirectory.getName() + File.separator) : "") + f.getName() + "'");
+					assemblyFiles.add(assemblyPath.toFile());
+					compileCommand.add(f.getAbsolutePath());
+				}
+			} catch (IOException e) {
+			}
+		}
+	}
+	
+	private static String getBaseName(String fileName)
+	{
+		int pos = fileName.lastIndexOf(".");
+		if (pos > 0) {
+			return fileName.substring(0, pos);
+		}
+		
+		return fileName;
+	}
+	
 	/*
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file. This involves either finding an existing .ll file
@@ -325,7 +420,7 @@ public class Main {
 						llvmFile = file.getParent().resolve(className + ".ll");						
 						Path nativeFile = file.getParent().resolve(className + ".native.ll");
 						LLVMOutput output = new LLVMOutput(llvmFile);
-						try {					
+						try {
 							output.build(module);
 						}
 						catch(ShadowException e) {

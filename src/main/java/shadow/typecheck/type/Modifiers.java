@@ -50,26 +50,27 @@ public final class Modifiers
 {
 	/* Definitions of the bits in the modifiers field.  */
 	/* Unused Java modifiers are commented out until modifiers are finalized */ 
-	public static final int PUBLIC         	= 0x0001;
-	public static final int PROTECTED      	= 0x0002;
-	public static final int PRIVATE       	= 0x0004;
-	public static final int ABSTRACT       	= 0x0008;	
+	public static final int PUBLIC         	= 1 << 0;
+	public static final int PROTECTED      	= 1 << 2;
+	public static final int PRIVATE       	= 1 << 3;
+	public static final int ABSTRACT       	= 1 << 4;	
      
-	public static final int READONLY		= 0x0010;
-	public static final int NATIVE			= 0x0020;     
-	public static final int WEAK           	= 0x0040;
-	public static final int IMMUTABLE      	= 0x0080;
-	public static final int NULLABLE      	= 0x0100;
-	public static final int GET				= 0x0200;
-	public static final int SET				= 0x0400;
-	public static final int CONSTANT		= 0x0800;
-	public static final int LOCKED			= 0x1000;
+	public static final int READONLY		= 1 << 5;
+	public static final int NATIVE			= 1 << 6;
+	public static final int EXTERN 			= 1 << 7;
+	public static final int WEAK           	= 1 << 8;
+	public static final int IMMUTABLE      	= 1 << 9;
+	public static final int NULLABLE      	= 1 << 10;
+	public static final int GET				= 1 << 11;
+	public static final int SET				= 1 << 12;
+	public static final int CONSTANT		= 1 << 13;
+	public static final int LOCKED			= 1 << 14;
 
-	public static final int ASSIGNABLE   	= 0x2000;
-	public static final int TYPE_NAME   	= 0x4000;
-	public static final int FIELD		   	= 0x8000;
-	public static final int PROPERTY	   	= 0x10000;
-	public static final int TEMPORARY_READONLY	= 0x20000;
+	public static final int ASSIGNABLE   	= 1 << 15;
+	public static final int TYPE_NAME   	= 1 << 16;
+	public static final int FIELD		   	= 1 << 17;
+	public static final int PROPERTY	   	= 1 << 18;
+	public static final int TEMPORARY_READONLY	= 1 << 19;
 	
 	public static final Modifiers NO_MODIFIERS = new Modifiers();
 
@@ -93,7 +94,8 @@ public final class Modifiers
 		constant	(only for fields, public constant)
 				
 		weak		(reference will not stop GC)
-		native      (used to map in C functions)
+		native      (used to map in LLVM functions)
+		extern		(used to map in C functions)
 		nullable	(variables that can be null)
 		immutable	(all references to this object are readonly)
 		readonly	(no mutable methods can be called on this reference)
@@ -154,6 +156,8 @@ public final class Modifiers
 			sb.append("readonly ");
 		if( isNative() )
 			sb.append("native ");
+		if( isExtern() )
+			sb.append("extern ");
 		if( isWeak() )
 			sb.append("weak ");
 		if( isImmutable() )
@@ -171,7 +175,7 @@ public final class Modifiers
 		
 		return sb.toString();
 	}
-	
+
 	public String toDebugString()
 	{
 		StringBuilder sb = new StringBuilder(toString());
@@ -201,6 +205,7 @@ public final class Modifiers
 	//public boolean isFinal() { return (modifiers & FINAL) != 0; }
 	public boolean isReadonly() { return (modifiers & READONLY) != 0; }
 	public boolean isNative() { return (modifiers & NATIVE) != 0; }
+	public boolean isExtern() { return (modifiers & EXTERN) != 0; }
 
 	public boolean isGet() { return (modifiers & GET) != 0; }
 	public boolean isSet() { return (modifiers & SET) != 0; }
@@ -261,6 +266,8 @@ public final class Modifiers
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked readonly", ctx));
 		if( isNative() && !legal.isNative()  )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked native", ctx));
+		if( isExtern() && !legal.isExtern() )
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked extern", ctx));
 		if( isGet() && !legal.isGet()  )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, name + " cannot be marked get", ctx));
 		if( isSet() && !legal.isSet()  )
@@ -334,11 +341,14 @@ public final class Modifiers
 
 	public List<ShadowException> checkMethodModifiers(Context ctx) 
 	{
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE | LOCKED), "A method", ctx);
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE | ABSTRACT | READONLY | GET | SET | NATIVE | EXTERN | LOCKED), "A method", ctx);
 		if( isGet() &&  isSet() )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both get and set", ctx));		
 		if( isReadonly() && isImmutable() )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both readonly and immutable", ctx));
+		if(isNative() && isExtern()) {
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A method cannot be marked both native and extern", ctx));			
+		}
 		return exceptions;
 	}
 

@@ -90,6 +90,7 @@ public abstract class Type implements Comparable<Type> {
 	public static ClassType STRING = null;
 	public static ClassType ADDRESS_MAP = null; //used for copying
 	public static ClassType CLASS_SET = null;	//used to store generic Class objects
+	public static ClassType SHADOW_POINTER = null;
 	
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
@@ -235,6 +236,7 @@ public abstract class Type implements Comparable<Type> {
 		CAN_DIVIDE = null;
 		CAN_MODULUS = null;
 		CAN_NEGATE = null;
+		SHADOW_POINTER = null;
 	}
 	
 	/*

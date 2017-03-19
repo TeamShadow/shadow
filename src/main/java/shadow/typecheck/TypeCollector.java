@@ -525,7 +525,13 @@ public class TypeCollector extends BaseChecker {
 				case "UnexpectedNullException": Type.UNEXPECTED_NULL_EXCEPTION = (ExceptionType)type; break;
 				case "ushort":			Type.USHORT = (ClassType)type; break;
 				}
-			}		
+			}
+			
+			if( currentPackage.getQualifiedName().equals("shadow:natives") ) {
+				switch( typeName ) {
+					case "ShadowPointer": Type.SHADOW_POINTER = (ClassType)type; break;
+				}
+			}
 			
 			// Let type know what it has imported.
 			type.addImportedItems( importedItems );

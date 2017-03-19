@@ -154,7 +154,7 @@ and	CanHash
 	 * @return {@code byte} array	 
 	 */
 	public get chars() => ( immutable byte[] )
-	{		
+	{
 		return data;
 	}
 	

@@ -92,6 +92,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 				case "abstract":  newModifier = ctx.addModifiers(Modifiers.ABSTRACT); break;
 				case "readonly":  newModifier = ctx.addModifiers(Modifiers.READONLY); break;
 				case "native":  newModifier = ctx.addModifiers(Modifiers.NATIVE); break;
+				case "extern":	newModifier = ctx.addModifiers(Modifiers.EXTERN); break;
 				case "weak":  newModifier = ctx.addModifiers(Modifiers.WEAK); break;
 				case "immutable": newModifier = ctx.addModifiers(Modifiers.IMMUTABLE); break;
 				case "nullable":  newModifier = ctx.addModifiers(Modifiers.NULLABLE); break;
@@ -422,7 +423,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			catch_ = true;
 		
 		if( ctx.recoverStatement().block() != null )
-			recover = true;		
+			recover = true;
 		
 		if( !recover && !catch_ && !finally_ )			
 			addError(ctx.recoverStatement().catchStatements().tryStatement(), Error.INCOMPLETE_TRY, "Given try statement is not followed by catch, recover, or finally statements" );

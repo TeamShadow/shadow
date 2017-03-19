@@ -186,6 +186,8 @@ public class TypeUpdater extends BaseChecker {
 			// String
 			type.addUsedType(Type.STRING);
 			
+			type.addUsedType(Type.SHADOW_POINTER);
+			
 			// Adding the self adds parents and interfaces and methods
 			type.addUsedType(type); 
 			
@@ -723,7 +725,7 @@ public class TypeUpdater extends BaseChecker {
 				addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 			
 			if( !isMeta ) {					
-				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() )
+				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() && !signature.getModifiers().isExtern() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
 				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
@@ -1053,7 +1055,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 		
-		visitMethodPre( ctx.methodDeclarator().Identifier().getText(), ctx);
+		visitMethodPre( ctx.methodDeclarator().generalIdentifier().getText(), ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
 		
@@ -1101,7 +1103,7 @@ public class TypeUpdater extends BaseChecker {
 			declarator.addModifiers(ctx.getModifiers());
 			declarator.setDocumentation(ctx.getDocumentation());			
 			
-			String symbol = declarator.Identifier().getText();
+			String symbol = declarator.generalIdentifier().getText();
 			
 			/* Make sure we don't already have this symbol.
 			 * Methods and fields can have the same name since they can be

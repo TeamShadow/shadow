@@ -119,27 +119,29 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	// These are the true parameter types that the compiler will use
 	public SequenceType getFullParameterTypes() {
-		SequenceType paramTypes = new SequenceType();
-		Type outerType = getOuter();
-		if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
-			paramTypes.add(new SimpleModifiedType(Type.OBJECT));
-		else
-			paramTypes.add(new SimpleModifiedType(outerType)); // this
-			
-		if( isCreate() && getOuter().hasOuter() )
-				paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));			
+		SequenceType paramTypes = new SequenceType();	
 		
 		MethodType methodType;
-		
 		//if( isWrapper() || getOuter() instanceof InterfaceType )
 			methodType = signatureWithoutTypeArguments.type;
 		//else
 			//methodType = type;		
-		 
-		if (methodType.isParameterized())
-			for (int i = methodType.getTypeParameters().size(); i > 0; i--)
-				paramTypes.add(new SimpleModifiedType(Type.CLASS));
-		//TODO: add twice as many?  class type + method table?
+
+		if(!isExtern()) {
+			Type outerType = getOuter();
+			if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
+				paramTypes.add(new SimpleModifiedType(Type.OBJECT));
+			else
+				paramTypes.add(new SimpleModifiedType(outerType)); // this
+
+			if( isCreate() && getOuter().hasOuter() )
+					paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));
+	
+			if (methodType.isParameterized())
+				for (int i = methodType.getTypeParameters().size(); i > 0; i--)
+					paramTypes.add(new SimpleModifiedType(Type.CLASS));
+			//TODO: add twice as many?  class type + method table?
+		}
 				
 		for (ModifiedType parameterType : methodType.getParameterTypes())
 			paramTypes.add(parameterType);	
@@ -171,6 +173,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	//Is it only the wrapped ones that correspond to interface methods?
 	//If so, those are the ones that need special generic attention
 	public String getMangledName() {
+		if(isExtern()) {
+			return symbol;
+		}
+		
 		StringBuilder sb = new StringBuilder();
 		
 		if( isWrapper() )		
@@ -274,6 +280,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	public boolean isNative()
 	{
 		return type.getModifiers().isNative();
+	}
+	
+	public boolean isExtern()
+	{
+		return type.getModifiers().isExtern();
 	}
 	
 	public boolean isVoid()

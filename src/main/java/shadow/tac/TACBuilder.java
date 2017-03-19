@@ -29,6 +29,7 @@ import shadow.parse.ShadowParser.FinallyStatementContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
+import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
@@ -168,7 +169,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		for (ShadowParser.VariableDeclaratorContext constant : type.getFields().values())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
-						constant.Identifier().getText()), constant);
+						constant.generalIdentifier().getText()), constant);
 		block = oldBlock;
 		
 		for (List<MethodSignature> methods : type.getMethodMap().values())
@@ -202,7 +203,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		visitChildren(ctx);
 	
 		if( !(ctx.getType() instanceof SingletonType) ) { 
-			String name = ctx.Identifier().getText();			
+			String name = ctx.generalIdentifier().getText();			
 			if( ctx.getModifiers().isField() ) {
 				TACReference ref = new TACFieldRef(new TACLocalLoad(anchor, method.getThis()), name);
 				
@@ -438,7 +439,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				//signature for other operation
 				signature = node.getOperations().get(0);
 				
-				if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
+				if( left.getType().isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
 					right = new TACBinary(anchor, result, signature, operation, right);
 				else {
 					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
@@ -529,20 +530,46 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACOperand condition = ctx.coalesceExpression().appendBefore(anchor);
 		ctx.setOperand(condition);
 		
-		if( ctx.conditionalExpression().size() > 0 ) {
+		if( ctx.throwOrConditionalExpression().size() > 0 ) {
+			ThrowOrConditionalExpressionContext first = ctx.throwOrConditionalExpression(0);
+			ThrowOrConditionalExpressionContext second = ctx.throwOrConditionalExpression(1);
+			
 			TACLabel trueLabel = new TACLabel(method),
 					falseLabel = new TACLabel(method),
 					doneLabel = new TACLabel(method);
 			TACVariable var = method.addTempLocal(ctx);
 			new TACBranch(anchor, condition, trueLabel, falseLabel);
+			
 			trueLabel.insertBefore(anchor);
-			new TACLocalStore(anchor, var, ctx.conditionalExpression(0).appendBefore(anchor));
-			new TACBranch(anchor, doneLabel);
+			if(first.throwStatement() != null) {
+				first.throwStatement().getList().appendBefore(anchor);
+			} else {
+				new TACLocalStore(anchor, var, first.appendBefore(anchor));
+				new TACBranch(anchor, doneLabel);
+			}
+			
 			falseLabel.insertBefore(anchor);
-			new TACLocalStore(anchor, var, ctx.conditionalExpression(1).appendBefore(anchor));
-			new TACBranch(anchor, doneLabel);
+			if(second.throwStatement() != null) {
+				second.throwStatement().getList().appendBefore(anchor);				
+			} else {
+				new TACLocalStore(anchor, var, second.appendBefore(anchor));
+				new TACBranch(anchor, doneLabel);
+			}
+			
 			doneLabel.insertBefore(anchor);
+			
 			ctx.setOperand(new TACLocalLoad(anchor, var));
+		}
+		
+		return null;
+	}
+	
+	@Override public Void visitThrowOrConditionalExpression(ThrowOrConditionalExpressionContext ctx) 
+	{
+		visitChildren(ctx);
+		
+		if(ctx.conditionalExpression() != null) {
+			ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
 		}
 		
 		return null;
@@ -913,7 +940,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					ctx.setOperand(new TACUnary(anchor, "!", operand));
 				else {
 					MethodSignature signature = ctx.getOperations().get(0); 
-					if( type.isPrimitive() && signature.getModifiers().isNative() )
+					if( type.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
 						ctx.setOperand(new TACUnary(anchor, signature, op, operand));				
 					else 
 						ctx.setOperand(new TACCall(anchor, new TACMethodRef(anchor, operand, ctx.getOperations().get(0)), operand));					
@@ -1096,7 +1123,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		methodRef.setSuper(explicitSuper);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 
-		params.add(methodRef.getPrefix());
+		if(!signature.isExtern()) {
+			params.add(methodRef.getPrefix());
+		}
 		for( Context child : list )	//potentially empty list				
 			params.add(child.appendBefore(anchor));
 		
@@ -1619,7 +1648,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						TACOperand comparison;
 						MethodSignature signature = type.getMatchingMethod("equal", new SequenceType(operand));
 						
-						if( type.isPrimitive() && signature.getModifiers().isNative() )
+						if( type.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
 							comparison = new TACBinary(anchor, value, operand); //equivalent to ===
 						else								
 							comparison = new TACCall(anchor, new TACMethodRef(anchor, value, signature), value, operand);
@@ -2465,7 +2494,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACNode saveTree = anchor;
 		TACMethod method = this.method = new TACMethod(methodSignature);
 		boolean implicitCreate = false;
-		if( moduleStack.peek().isClass() && !methodSignature.isNative() ) {				
+		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExtern() ) {				
 			
 			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
 				setupNonGCMethod();				
@@ -2847,7 +2876,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			MethodSignature signature = node.getOperations().get(i - 1);
 			boolean isCompare = ( op.equals("<") || op.equals(">") || op.equals("<=") || op.equals(">=") );
 			Type currentType = resolveType(current.getType());
-			if( currentType.isPrimitive() && signature.getModifiers().isNative() ) //operation based on method
+			if( currentType.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() ) //operation based on method
 				current = new TACBinary(anchor, current, signature, op, next, isCompare );
 			else {	
 				//comparisons will always give positive, negative or zero integer
