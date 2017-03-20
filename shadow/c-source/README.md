@@ -8,7 +8,7 @@ At the time of this writing, the general folder (the root folder of the `c-sourc
 The other three folders are `Linux`, `Mac` and `Windows`. Those are chosen by the Shadow compiler, according to the operating system on which the compiler is ran. This is an advantage as we could write a unified Shadow code, and write C specific code for low level features which require system calls and platform specific operations that would otherwise be difficult to write in Shadow or LLVM. A good example for this is `ShadowConsole.c` which is available on the three platforms.
 
 ## C Includes
-The compiler automatically references all .h files in the include folder. This means that whether you're in the root of the `c-source` folder, or in a platform specific one, any `.c` file could have a direct `#include` to the header files. For example, if we need to use `ShadowArray` features, we would simply `#include "ShadowArray.h"` and it will be included as expected at compile time.
+The compiler automatically references all `.h` files in the `include` folder. This means that whether you're in the root of the `c-source` folder, or in a platform specific one, any `.c` file could have a direct `#include` to the header files. For example, if we need to use `ShadowArray` features, we would simply `#include "ShadowArray.h"` and it will be included as expected at compile time.
 
 ## Shadow Classes/Objects/Singletons
 Most of the `.c` files in the `c-source` folder, have a one-to-one representation with Shadow. For example, we have a class called `ShadowPointer` and we also have a `ShadowPointer.c`. Since C does not know anything about Shadow objects, we represent the classes simply as a `void*`. This allows us to still be able to pass the Shadow object back to Shadow from C code even if we cannot perform operations on it. An example of this could be seen in `ShadowThread.c` where the reference of the `Thread` object is passed to the newly spawned thread. The definition of the `ShadowThread` in C is simply `typedef void* ShadowThread;`.
@@ -82,5 +82,37 @@ void __PrintFromC(ShadowString strRef) {
 	printf("\n");
 	
 	// prints "Hello from Shadow."
+}
+```
+
+## ShadowPointer
+Shadow does not support direct pointer manipulation. For cross-platform compatibility, we sometimes need to allocate memory in C code, and store that pointer in Shadow. `ShadowPointer` is a managed wrapper, which stores the address of the pointer and can be passed around in Shadow. Shadow can perform several operations on it such as freeing this block of memory, and checking whether the pointer is valid.
+When a block of memory is allocated in C, for example using `malloc/calloc`, we can store that pointer in Shadow to use it later. The managed `ShadowPointer` could be allocated using `ShadowPointer CreateShadowPointer(void* ptr, ShadowPointerType type);`
+
+1. The first argument is the pointer allocated in C.
+2. The second argument specifies whether Shadow code can free the pointer using `free()` or not. `SHADOW_CANNOT_FREE` specifies that calling `ShadowPointer.free()` would only invalidate the `ShadowPointer`. `SHADOW_CAN_FREE` speficies that calling `ShadowPointer.free()` would call the C `free()` and then would invalidate the `ShadowPointer`. Invalidating the `ShadowPointer` means that `ShadowPointer->isValid` would return `false` after calling `ShadowPointer.free()`. Calling `ShadowPointer.free()` more than once has no effect.
+
+###### Example
+```C
+// Shadow side
+private extern __allocateAnInteger(int i) => (ShadowPointer);
+private extern __printInteger(ShadowPointer ptr) => ();
+public main() => ()
+{
+	ShadowPointer ptr = __allocateAnInteger(55);
+	__printInteger(ptr); // prints 55
+}
+
+// C side
+#include "ShadowPointer.h"
+ShadowPointer __allocateAnInteger(ShadowInteger i) {
+	ShadowInteger* intPtr = malloc(sizeof(ShadowInteger));
+	*intPtr = i;
+	return CreateShadowPointer(intPtr, SHADOW_CAN_FREE);
+}
+
+void __printInteger(ShadowPointer ptr) {
+	ShadowInteger* intPtr = ExtractPointer(ShadowInteger, ptr);
+	printf("%d\n", *intPtr);
 }
 ```
