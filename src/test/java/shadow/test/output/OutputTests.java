@@ -1318,6 +1318,7 @@ public class OutputTests {
 	}
 	
 	@Test public void testExternals() throws Exception {
+		args.add("-f");
 		args.add("shadow/test/ExternalsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "Hello from printf!\n");

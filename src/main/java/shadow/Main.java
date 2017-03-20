@@ -288,6 +288,7 @@ public class Main {
 		compileCommand.add("gcc");
 		compileCommand.add("-S");
 		compileCommand.add("-I../include/");
+		compileCommand.add("-I../include/Classes/");
 
 		// create the target directory
 		File binPath = Paths.get(srcDirectory.getAbsolutePath(), "bin").toFile();

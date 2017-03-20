@@ -15,6 +15,7 @@ typedef struct {
 } ShadowStringData;
 
 char* UnpackShadowStringToCStr(ShadowString stringRef);
+
 void UnpackShadowString(ShadowString stringRef, ShadowStringData* str);
 
 #endif
