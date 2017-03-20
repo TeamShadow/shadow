@@ -213,16 +213,18 @@ public class Configuration {
 				linkCommand.add("gcc");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
-				linkCommand.add("-");					
+				linkCommand.add("-");
 				
 				if( getOs().equals("Linux") ) {
 					linkCommand.add("-lm");
 					linkCommand.add("-lrt");
-				}
+					linkCommand.add("-pthread");
+				} /*else {
+					// we need this for MinGW pthreads
+					linkCommand.add("-static");
+				}*/
 			}
 		}
-		
-	
 
 		if( systemPath == null )
 			systemPath = getRunningDirectory();

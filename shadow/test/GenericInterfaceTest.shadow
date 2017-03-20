@@ -1,0 +1,14 @@
+import shadow:io@Console;
+import shadow:utility;
+
+class shadow:test@GenericInterfaceTest
+{
+	public main(String[] args) => ()
+	{
+		Console.printLine(CanEqual<Point>:class.isInterface());
+		Console.printLine(CanEqual<Thread>:class.isInterface());
+		Console.printLine(CanEqual<int>:class.isInterface());
+		Console.printLine(CanRun:class.isInterface());
+		Console.printLine(Thread:class.isInterface());
+	}
+}
