@@ -4,6 +4,9 @@
  */
 immutable singleton shadow:standard@System
 {
+	private readonly extern __ShadowSystem_GetEpochNanoTime() => (long);
+	private readonly extern __ShadowSystem_GetNanoTime() => (long);
+	
 	/**
 	 * Returns the number of nanoseconds elapsed since the Unix Epoch,
 	 * 12:00:00 AM January 1, 1970.  Accuracy will usually be much coarser
@@ -11,5 +14,13 @@ immutable singleton shadow:standard@System
 	 * characteristics.
 	 * @return nanoseconds elapsed since midnight on January 1, 1970
 	 */
-	public native nanoTime() => ( long );
+	public readonly epochNanoTime() => (long)
+	{
+		return __ShadowSystem_GetEpochNanoTime();
+	}
+	
+	public readonly nanoTime() => (long)
+	{
+		return __ShadowSystem_GetNanoTime();
+	}
 }

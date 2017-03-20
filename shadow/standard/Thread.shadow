@@ -1,0 +1,373 @@
+import shadow:utility;
+import shadow:natives;
+import shadow:io@Console;
+
+/**
+ * Class {@code Thread} provides ways to manipulate threads. 
+ * All threads are required to terminate for the main process to terminate as well.
+ * If the main method returns and there are still running threads, 
+ *
+ * @author Claude Abounegm
+ */
+locked class shadow:standard@
+	Thread
+is CanIndex<int, Thread>
+{
+	private readonly native spawnThread() => (ShadowPointer);
+	private readonly native get staticNextId() => (int);
+
+	/// Gets the Shadow-specific thread ID.
+	get int id;
+	
+	/// Gets the main thread, which is the root of all threads.
+	public readonly native get main() => (Thread);
+	
+	/**
+	* Gets the {@code Thread} which spawned this thread. The Main thread does not
+	* have a parent, and is null.
+	*/
+	get nullable Thread parent = null;
+	
+	/**
+	* Gets the name of the thread set at spawn time. If no name is set
+	* at spawn time, the name takes the format "Thread#{id}".
+	*/
+	get String name;
+	
+	/**
+	* Gets whether this thread is running.
+	*
+	* @return {@code true} if the thread is alive; otherwise, {@code false}.
+	*/
+	public readonly get isAlive() => (boolean)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	private set state(int state) => ()
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/// Gets the state of this thread. It can be one of {@code READY}, {@code RUNNING}, {@code WAITING}, or {@code DEAD}.
+	public readonly get state() => (int)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/// Gets the string representation of the state of this thread.
+	public readonly get stateStr() => (String)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread.
+	* 
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(CanRun runner)
+	{
+		this(null, runner);
+	}
+	
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread, and takes a {@code String} which is the name
+	* of the thread for reference purposes.
+	* 
+	* @param name The name of the thread.
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(nullable String name, CanRun runner)
+	{
+		this:id = this->staticNextId;
+
+		if(id > 0) {
+			throw UnsupportedOperationException:create();
+		}
+		
+		try {
+			this:name = check(name);
+		} recover {
+			this:name = "Thread#" # id;
+		}
+	}
+	
+	/**
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
+	* 
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
+	*/
+	public join() => ()
+	{
+		join(false, Time->InfiniteTimeout);
+	}
+	
+	/**
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
+	*
+	* @param timeout the time to wait for.
+	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+	*
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
+	*/
+	public join(TimeSpan timeout) => (boolean)
+	{
+		return join(false, timeout);
+	}
+	
+	/**
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
+	*
+	* @param millisecondsTimeout the time to wait for in milliseconds.
+	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+	*
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
+	*/
+	public join(int millisecondsTimeout) => (boolean)
+	{
+		return join(false, Time.fromMilliSeconds(millisecondsTimeout));
+	}
+	
+	private join(boolean finalizing, TimeSpan timeout) => (boolean)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* Requests this thread to be interrupted. If the thread is currently in the {@code WAITING} state, 
+	* the thread is interrupted and the method that caused the thread to be in the {@code WAITING} state
+	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()}, 
+	* {@code sleep()}, {@code send()}, {@code receive()}, and all their overloads.
+	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
+	* as soon as one of the above interruptible methods above are called, or when the user calls 
+	* {@code CurrentThread.throwIfInterrupting()}, or throws an exception using {@code CurrentThread->interrupting}.
+	*
+	* @return {@code true} if the thread was interrupted; otherwise, {@code false} the interrupt flag has been set.
+	*/
+	public interrupt() => (boolean)
+	{
+		return interrupt(true);
+	}
+	
+	private interrupt(boolean shouldThrow) => (boolean)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/// Implemented for CurrentThread->interrupting.
+	private [CurrentThread] $interrupting() => (boolean)
+	{
+		throw UnsupportedOperationException:create();
+	}
+
+	/**
+	* {@code Interruptible}
+	* @throws InterruptedException
+	* @seeDoc shadow:natives@Signaler
+	*/
+	private [CurrentThread] $sleep(TimeSpan timeout) => ()
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* {@code Interruptible}
+	* @throws InterruptedException
+	* @seeDoc shadow:natives@Signaler
+	*/
+	private [CurrentThread] $sleep(int millisecondsTimeout) => ()
+	{
+		throw UnsupportedOperationException:create();
+	}
+
+	/**
+	* {@code Interruptible}. Receives data with the desired {@code expectedType}. This method will throw an exception 
+	* and will not retrieve the message if the expected type is not the same as the actual one
+	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
+	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
+	*
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
+	* @seeDoc shadow:standard@Mailbox
+	*/
+	protected [Object] $receiveFirst(Class expectedType) => (Object, Thread)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* {@code Interruptible}. Receives data with the desired {@code expectedType} from the desired thread.
+	* This method will throw an exception and will not retrieve the message if the
+	* expected type is not the same as the actual one sent by the thread. A thread
+	* can send as many messages as it desires, but the receiving thread should always
+	* receive the data in the order it was sent, or otherwise an exception is thrown.
+	*
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
+	* @seeDoc shadow:standard@Mailbox
+	*/
+	protected [Object] $receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* {@code Interruptible}. Sends the desired data to this thread. This method copies all the data before
+	* sending it to this thread. Thus no data is shared between two threads.
+	* This is a blocking method, and it will block if the mailbox of this thread is full.
+	* The method will immediately unblock when there is space for the item to be
+	* deposited in the mailbox. Mailbox is first come first serve, and the threads sending data
+	* will unblock in the order they were blocked in.
+	*
+	* @param data The data to be cloned and sent to this thread.
+	* 
+	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
+	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
+	*
+	* @seeDoc shadow:standard@Mailbox
+	*/
+	protected sendTo(Object data) => ()
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* This method is natively executed from the newly spawned thread.
+	* !!DO NOT MANUALLY EXECUTE!!
+	*/
+	private runnerNative() => ()
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/// Gets whether this thread is the current executing thread.
+	public readonly get isCurrentThread() => (boolean)
+	{
+		return (currentThread() === this);
+	}
+	
+	/**
+	* Gets the number of children the thread currently has. This method should be used with caution
+	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
+	* drastically change between each call.
+	*
+	* @return how many children that thread has
+	*/
+	public readonly get childrenCount() => (int)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific id.
+	*
+	* @param index the index of the child in the range [0, childrenCount).
+	* @return the n-th child {@code Thread}.
+	*/
+	public readonly childAt(int index) => (Thread)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific id.
+	* This is a shortcut to Thread.childAt(), to allow easy indexing of children using Thread[index].
+	*
+	* @param index the index of the child in the range [0, childrenCount).
+	* @return the n-th child {@code Thread}.
+	*/
+	public readonly index(int index) => (Thread)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* Gets the children of this thread. If {@code recurse} is true, this method
+	* will also traverse the children of the children recursively, until all children
+	* have been visited.
+	* Care should be taken using this function, as enumerating can throw an exception
+	* if the children have changed.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children(boolean recurse) => (CanIterate<Thread>)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* Gets the children of this thread. This method only enumerates through the first generation
+	* children of this thread. i.e. only the thread that this thread spawned.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children() => (CanIterate<Thread>)
+	{
+		throw UnsupportedOperationException:create();
+	}
+	
+	/**
+	* Returns a string with the format: "Thread ({Thread->name}): {Thread->stateStr}". 
+	*/
+	public readonly toString() => (String)
+	{
+		return "Thread (" # name # "): " # this->stateStr;
+	}
+	
+	private readonly currentThread() => (Thread)
+	{
+		return CurrentThread->instance;
+	}
+	
+	private waitForThreadsNative() => ()
+	{
+	}
+	
+	private readonly createMainNative() => (Thread) 
+	{
+		return Thread:create("Thread#main", NopRunner:create()); 
+	}
+	
+	/// {Thread:this} does not work right now to get the outer reference, so we use this
+	/// workaround instead.
+	private readonly instance() => (Thread)
+	{
+		return this;
+	}
+	
+	// A Runner which performs no operations. A null runner would had been prefered
+	// but Shadow does not currenly support nullable interfaces, so until then, this is
+	// the most elegant solution.
+	private class NopRunner
+		is CanRun
+	{
+		public run() => () {}
+	}
+}

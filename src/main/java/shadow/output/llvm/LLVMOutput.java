@@ -513,7 +513,7 @@ public class LLVMOutput extends AbstractOutput {
 		}
 
 		if (moduleType instanceof SingletonType)
-			writer.write('@' + raw(moduleType, "_instance") + " = global " +
+			writer.write('@' + raw(moduleType, "_instance") + " = thread_local global " +
 					type(moduleType) + " null");
 
 		writer.write();

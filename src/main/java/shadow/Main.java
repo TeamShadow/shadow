@@ -506,7 +506,7 @@ public class Main {
 				//give warnings if private methods are never used
 				for( List<MethodSignature> signatures : type.getMethodMap().values() )
 					for( MethodSignature signature : signatures )
-						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) )
+						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) && !signature.getSymbol().startsWith("$"))
 							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
 				
 			}					
@@ -515,7 +515,7 @@ public class Main {
 		}
 		
 		return module;
-	}	
+	}
 
 	private static void addToLink( Type type, Path file, List<String> linkCommand ) throws IOException, ShadowException {
 		

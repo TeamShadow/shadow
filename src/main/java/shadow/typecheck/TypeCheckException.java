@@ -88,7 +88,9 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached"),
 		UNUSED_FIELD("Unused field", "Field is never used"),		
 		UNUSED_METHOD("Unused method", "Method is never used"),
-		UNUSED_VARIABLE("Unused variable", "Local variable is never used");
+		UNUSED_VARIABLE("Unused variable", "Local variable is never used"),
+		INVALID_METHODIDENTIFIER("Invalid idendtifier", "Only methods marked with extern can start with an underscore."),
+		INVALID_EXTERN_METHOD("Invalid class extern method", "The referenced class does not contain a method which matches this method's signature.");
 		
 		private final String name;
 		private final String message;		

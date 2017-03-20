@@ -19,6 +19,8 @@ import shadow.doctool.DocumentationException;
 import shadow.parse.ParseException.Error;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
 import shadow.parse.ShadowParser.CompilationUnitContext;
+import shadow.parse.ShadowParser.GeneralIdentifierContext;
+import shadow.parse.ShadowParser.MethodDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Modifiers;
 
@@ -250,6 +252,17 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
 		addErrors(mods, modifiers.checkMethodModifiers(ctx));
+		
+		MethodDeclaratorContext declarator = ctx.methodDeclarator();
+		String symbol = declarator.generalIdentifier().getText();
+		
+		if(symbol.startsWith("$") && modifiers.isPublic()) {
+			addError(ctx, Error.ILLEGAL_MODIFIER, "Class externs cannot be public.");			
+		}
+		
+		if(!declarator.type().isEmpty() && (!symbol.startsWith("$") || (symbol.startsWith("$") && modifiers.isExtern()))) {
+			addError(ctx, Error.SYNTAX_ERROR, "Only class extern methods starting with $ can contain a list of allowed extern classes.");
+		}
 		
 		return visitChildren(ctx);		
 	}

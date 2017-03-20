@@ -22,7 +22,9 @@ import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ConditionalExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
+import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
+import shadow.parse.ShadowParser.TypeContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -68,7 +70,7 @@ public class StatementChecker extends BaseChecker {
 	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
 	
 	@Override public Void visitClassOrInterfaceBody(ShadowParser.ClassOrInterfaceBodyContext ctx)
-	{	
+	{
 		currentType = ((Context)ctx.getParent()).getType(); //get type from declaration
 		
 		for( InterfaceType interfaceType : currentType.getInterfaces() )
@@ -110,18 +112,49 @@ public class StatementChecker extends BaseChecker {
 			node.setType(methodType);			
 			//what modifiers (if any) are allowed for a local method declaration?
 		}
-		else
+		else {
 			signature = node.getSignature();
+		}
 		
 		for( ModifiedType modifiedType : signature.getParameterTypes() )
 			currentType.addUsedType(modifiedType.getType());
 		
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
-			currentType.addUsedType(modifiedType.getType());			
+			currentType.addUsedType(modifiedType.getType());
+		
+		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
+			SequenceType params = signature.getParameterTypes();
+			Type parentClass = params.get(0).getType();
+			
+			SequenceType parentParams = new SequenceType();
+			for(int i = 1; i < params.size(); ++i) {
+				parentParams.add(params.get(i));
+			}
+			
+			MethodSignature method = parentClass.getMatchingMethod(signature.getSymbol(), parentParams);
+			if(method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
+				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getSymbol() + "' in class '" + parentClass + "'");
+			} else {
+				boolean found = false;
+				ShadowParser.MethodDeclarationContext p = (ShadowParser.MethodDeclarationContext)method.getNode();
+				
+				List<TypeContext> contexts = p.methodDeclarator().type();
+				for(TypeContext t : contexts) {
+					if(signature.getOuter().equals(t.getType())) {
+						found = true;
+						break;
+					}
+				}
+				
+				if(!found) {
+					addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getSymbol() + "' method in '" + parentClass +"' is not allowed to be shared with '" + signature.getOuter() + "'");
+				}
+			}
+		}
 		
 		currentMethod.addFirst(node);
 		openScope();
-	}	
+	}
 
 	private void openScope() 
 	{
@@ -1707,6 +1740,11 @@ public class StatementChecker extends BaseChecker {
 			ShadowParser.PrimaryPrefixContext child = ctx.primaryPrefix();			
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());
+			
+			if(child.spawnExpression() != null) {
+				ctx.action = true;
+				currentType.addUsedType(Type.THREAD);
+			}
 		}		
 		
 		curPrefix.removeFirst();  //pop prefix type off stack
@@ -2940,4 +2978,79 @@ public class StatementChecker extends BaseChecker {
 		
 		return null;
 	}
+	
+	@Override public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx)
+	{
+		visitChildren(ctx);
+		
+		Type runnerType = ctx.type().getType();
+		if(runnerType.equals(Type.CAN_RUN) || !runnerType.isSubtype(Type.CAN_RUN)) {
+			addError(ctx, Error.INVALID_TYPE, runnerType + " needs to be a subtype of the " + Type.CAN_RUN + " interface");
+		}
+		
+		List<ShadowException> errors = new ArrayList<ShadowException>();
+		MethodSignature runnerCreateSignature = runnerType.getMatchingMethod("create", (SequenceType)ctx.spawnRunnerCreateCall().getType(), new SequenceType(), errors);
+		if(runnerCreateSignature == null) {
+			addErrors(ctx, errors);
+		} else {
+			ctx.spawnRunnerCreateCall().setSignature(runnerCreateSignature);
+		}
+		
+		// we should find the thread create since we're the ones who defined it.
+		// Two overloads: Thread(CanRun) and Thread(String, CanRun)
+		SequenceType sequence = new SequenceType();
+		if(ctx.StringLiteral() != null) {
+			sequence.add(new SimpleModifiedType(Type.STRING));
+		}
+		sequence.add(new SimpleModifiedType(Type.CAN_RUN));
+		
+		ctx.setSignature(Type.THREAD.getMatchingMethod("create", sequence));
+		ctx.setType(Type.THREAD);
+		
+		return null;
+	}
+	
+	@Override public Void visitSpawnRunnerCreateCall(shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx)
+	{
+		visitChildren(ctx);
+		
+		SequenceType sequence = new SequenceType();
+		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {
+			sequence.add(child);
+		}
+		ctx.setType(sequence);
+		
+		return null;
+	}
+	
+	@Override
+	public Void visitSendStatement(SendStatementContext ctx) {
+		visitChildren(ctx);
+
+		if(ctx.conditionalExpression().size() != 2 || !resolveType(ctx.conditionalExpression(1)).getType().equals(Type.THREAD)) {
+			addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
+		} else {
+			List<ShadowException> errors = new ArrayList<ShadowException>();		
+			MethodSignature sendSignature = Type.THREAD.getMatchingMethod("sendTo", 
+													new SequenceType(resolveType(ctx.conditionalExpression().get(0))), 
+													new SequenceType(), 
+													errors);
+			if(sendSignature == null) {
+				addError(ctx, Error.INVALID_ARGUMENTS, "The arguments do not match the signature: send(Object data, Thread to)");
+			} else {
+				ctx.setSignature(sendSignature);
+				ctx.setType(sendSignature.getReturnTypes()); // void
+			}
+		}
+		
+		return null;
+	}
+	
+	/*@Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) 
+	{
+		visitChildren(ctx);
+		
+		
+		return null;
+	}*/
 }

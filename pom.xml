@@ -37,6 +37,7 @@
 	            <exclude>Unwind32.ll</exclude>
 	            <exclude>Unwind64.ll</exclude>
 	            <exclude>Windows.ll</exclude>
+				<exclude>Shared.ll</exclude>
 	          </excludes>
 	          <followSymlinks>false</followSymlinks>
 	        </fileset>	        

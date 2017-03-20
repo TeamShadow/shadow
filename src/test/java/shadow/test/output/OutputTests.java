@@ -28,8 +28,7 @@ public class OutputTests {
 	private ArrayList<String> args = new ArrayList<String>();
 	
 	@Before
-	public void setup() throws Exception {		
-				
+	public void setup() throws Exception {
 		args.add("-o");
 		args.add(executableName);
 		

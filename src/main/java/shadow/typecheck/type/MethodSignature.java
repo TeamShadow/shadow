@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -173,7 +174,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	//Is it only the wrapped ones that correspond to interface methods?
 	//If so, those are the ones that need special generic attention
 	public String getMangledName() {
-		if(isExtern()) {
+		if(isExtern() && !symbol.startsWith("$")) {
 			return symbol;
 		}
 		
@@ -181,10 +182,12 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		
 		if( isWrapper() )		
 			sb.append(getWrapped().getOuter().toString(Type.MANGLE));			
-		else
+		else if(!isExtern())
 			sb.append(getOuter().toString(Type.MANGLE));
+		else
+			sb.append(getParameterTypes().get(0).getType().toString(Type.MANGLE));
 		
-		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
+		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS | (isExtern() ? Type.MANGLE_EXTERN : 0)));
 		
 		if (isWrapper())
 			sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS));
@@ -228,7 +231,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		return replaced;
 	}
-	
 
 	public void updateFieldsAndMethods() throws InstantiationException {
 		type.updateFieldsAndMethods();

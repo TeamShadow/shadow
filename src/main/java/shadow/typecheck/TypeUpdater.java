@@ -728,8 +728,8 @@ public class TypeUpdater extends BaseChecker {
 				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() && !signature.getModifiers().isExtern() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
-				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
-					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
+				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() || signature.getModifiers().isExtern() ) )
+					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : (signature.getModifiers().isNative() ? "Native": "Extern")) + " method " + signature + " must not define a body");
 				
 				/* Check to see if the method's parameters and return types are the
 				 * correct level of visibility, e.g., a public method shouldn't
@@ -802,7 +802,15 @@ public class TypeUpdater extends BaseChecker {
 			if( parameters.formalParameter().size() != 0 )
 				addError(node, Error.INVALID_MODIFIER,
 						"Methods marked with get cannot have any parameters");
-		}		
+		} 
+		
+		if(!signature.isExtern() && signature.getSymbol().startsWith("_")) {
+  			addError(node, Error.INVALID_METHODIDENTIFIER, Error.INVALID_METHODIDENTIFIER.getMessage());
+  		}
+		
+		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
+			addError(node, Error.INVALID_ARGUMENTS, "To extern a method from another class, the first parameter of this method should be the class which contains the method being externed.");
+		}
 
 		// Add return types
 		if( node instanceof ShadowParser.MethodDeclaratorContext ) {
