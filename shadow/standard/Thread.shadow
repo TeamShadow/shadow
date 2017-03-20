@@ -13,6 +13,7 @@ locked class shadow:standard@
 	Thread
 is CanIndex<int, Thread>
 {
+	/// @unused
 	private readonly native spawnThread() => (ShadowPointer);
 	private readonly native get staticNextId() => (int);
 
@@ -44,6 +45,7 @@ is CanIndex<int, Thread>
 		throw UnsupportedOperationException:create();
 	}
 	
+	/// @unused
 	private set state(int state) => ()
 	{
 		throw UnsupportedOperationException:create();
@@ -261,6 +263,7 @@ is CanIndex<int, Thread>
 	/**
 	* This method is natively executed from the newly spawned thread.
 	* !!DO NOT MANUALLY EXECUTE!!
+	* @unused
 	*/
 	private runnerNative() => ()
 	{
@@ -346,10 +349,12 @@ is CanIndex<int, Thread>
 		return CurrentThread->instance;
 	}
 	
+	/// @unused
 	private waitForThreadsNative() => ()
 	{
 	}
 	
+	/// @unused
 	private readonly createMainNative() => (Thread) 
 	{
 		return Thread:create("Thread#main", NopRunner:create()); 
@@ -357,6 +362,7 @@ is CanIndex<int, Thread>
 	
 	/// {Thread:this} does not work right now to get the outer reference, so we use this
 	/// workaround instead.
+	/// @unused
 	private readonly instance() => (Thread)
 	{
 		return this;

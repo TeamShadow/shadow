@@ -107,7 +107,6 @@ public class LLVMOutput extends AbstractOutput {
 	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
 	private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
 
-
 	private Set<String> genericClasses = new TreeSet<String>();
 	private Set<String> arrayClasses = new TreeSet<String>();
 
@@ -222,7 +221,7 @@ public class LLVMOutput extends AbstractOutput {
 								writer.write(methodTable(unparameterizedType) +
 										" = external constant " + methodTableType(unparameterizedType));
 							}						
-						}						
+						}
 					}
 
 					if( type.isFullyInstantiated()  )
@@ -270,7 +269,7 @@ public class LLVMOutput extends AbstractOutput {
 				sb.append('%' + raw(type)).append(" = type opaque");
 				writer.write(sb.toString());
 			}
-		}	
+		}
 	}
 
 	private void writeTypeDefinition(Type type) throws ShadowException {
@@ -461,7 +460,7 @@ public class LLVMOutput extends AbstractOutput {
 
 					type(Type.CLASS) + " " + classOf(Type.CLASS) + ", " + //class
 					methodTableType(Type.CLASS) + "* " + methodTable(Type.CLASS) + ", " + //methods
-					typeLiteral(moduleType.toString(moduleType.hasOuter() ? Type.NO_OPTIONS : Type.PACKAGES )) + ", " +  //name
+					typeLiteral(moduleType.toString(Type.PACKAGES)) + ", " +  //name
 
 					typeText(Type.CLASS, parentType != null ?  //parent class
 							classOf(parentType) : null) + ", " +
@@ -501,8 +500,8 @@ public class LLVMOutput extends AbstractOutput {
 					type(Type.CLASS) + " " + classOf(Type.CLASS) + ", " + //class
 					methodTableType(Type.CLASS) + "* " + methodTable(Type.CLASS) + ", " + //methods
 
-					typeLiteral(moduleType.toString(moduleType.hasOuter() ? Type.NO_OPTIONS :  Type.PACKAGES)) + ", " + //name 
-					type(Type.CLASS) + " null, " + //parent 					
+					typeLiteral(moduleType.toString(Type.PACKAGES)) + ", " + //name 
+					type(Type.CLASS) + " null, " + //parent
 
 					type(new ArrayType(Type.METHOD_TABLE)) + " zeroinitializer, " + //interfaceTables
 					type(new ArrayType(Type.CLASS)) +  " zeroinitializer, " + //interfaces
@@ -2368,8 +2367,10 @@ public class LLVMOutput extends AbstractOutput {
 		String interfaceData;
 		String interfaces;
 		String size;
+		int flags = GENERIC;
 
 		if( generic instanceof InterfaceType ) {
+			flags |= INTERFACE;
 			interfaceData = interfaces = " zeroinitializer, ";
 			size = typeLiteral(-1) + ", ";
 		}
@@ -2382,7 +2383,7 @@ public class LLVMOutput extends AbstractOutput {
 					type(Type.CLASS) + "]}* " + genericInterfaces(generic) + " to {%ulong, " + type(Type.CLASS) + "}*), [1 x " +
 					type(Type.INT) + "] [" + typeLiteral(interfaceList.size()) + "] }, ";
 			size = typeText(Type.INT, sizeof(type(noArguments))) + ", ";
-		}	
+		}
 
 		//get parent class
 		String parentClass;
@@ -2414,7 +2415,7 @@ public class LLVMOutput extends AbstractOutput {
 
 				typeText(new ArrayType(Type.CLASS), interfaces) + //interfaces
 
-				typeLiteral(GENERIC) + ", " + //flags							
+				typeLiteral(flags) + ", " + //flags							
 				size + //size
 
 				type(new ArrayType(Type.CLASS)) + 

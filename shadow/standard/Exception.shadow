@@ -24,10 +24,11 @@ exception shadow:standard@Exception
 		this:message = message;
 	}
 
-	/*
+	/**
 	 * Displays an error message on {@code stderr} based on the type of exception.
 	 * This method is called by the run-time system if the exception is uncaught
 	 * and crashes the program. 
+	 * @unused
 	 */
 	private terminate() => ( int )
 	{

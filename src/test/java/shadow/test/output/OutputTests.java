@@ -42,6 +42,8 @@ public class OutputTests {
 			args.add("-c");
 			args.add("mac.xml");
 		}
+		
+		//args.add("-f");
 	}
 	
 	@After
@@ -49,7 +51,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -99,8 +101,6 @@ public class OutputTests {
 		
 		program.waitFor(); //keeps program from being deleted while running
 	}
-	
-
 	
 	@Test public void testAddressMap() throws Exception {
 		args.add("shadow/test/AddressMapTest.shadow");
@@ -1318,7 +1318,6 @@ public class OutputTests {
 	}
 	
 	@Test public void testExternals() throws Exception {
-		args.add("-f");
 		args.add("shadow/test/ExternalsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "Hello from printf!\n");

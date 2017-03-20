@@ -36,6 +36,11 @@ ShadowPointer CreateShadowPointer(void* ptr, ShadowPointerType type);
  */
 void* ExtractRawPointer(ShadowPointer);
 
+/**
+ * Works the same as ExtractRawPointer() but returns a Type* instead of a void*.
+ * With the RawPointer format we got to do a cast as follows: (SomethingUseful*)ExtractRawPointer(ptr),
+ * with this marco we can do ExtractPointer(SomethingUseful, ptr) and it returns SomethingUseful*.
+ */
 #define ExtractPointer(Type, ShadowPointer) ((Type*)ExtractRawPointer(ShadowPointer))
 
 #endif

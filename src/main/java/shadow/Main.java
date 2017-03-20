@@ -23,6 +23,8 @@ import java.util.Set;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.logging.log4j.Logger;
 
+import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
@@ -46,6 +48,7 @@ import shadow.typecheck.type.Type;
  * @author Barry Wittman
  * @author Jacob Young
  * @author Brian Stottler
+ * @author Claude Abounegm
  */
 public class Main {
 	
@@ -310,7 +313,7 @@ public class Main {
 		
 		boolean success = true;
 		// we need to have at least one file to compile
-		if(compileCommand.size() > 3) {
+		if(compileCommand.size() > 4) {
 			try {
 				success = new ProcessBuilder(compileCommand)
 							.directory(binPath)
@@ -499,19 +502,33 @@ public class Main {
 				if( !type.equals(Type.ARRAY) && !type.equals(Type.ARRAY_NULLABLE)) {
 					Set<String> usedFields = allUsedFields.get(type);
 					for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
-						if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
-							reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
+						if( !entry.getValue().getModifiers().isConstant() 
+								&& !usedFields.contains(entry.getKey()) 
+								&& entry.getValue().getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
+						  ) {
+							reporter.addWarning(entry.getValue(), 
+									TypeCheckException.Error.UNUSED_FIELD, 
+									"Field " + entry.getKey() + " is never used");
+						}
 					}
 				}
 				
 				//give warnings if private methods are never used
-				for( List<MethodSignature> signatures : type.getMethodMap().values() )
-					for( MethodSignature signature : signatures )
-						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) && !signature.getSymbol().startsWith("$"))
-							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
-				
-			}					
-			
+				for( List<MethodSignature> signatures : type.getMethodMap().values() ) {
+					for( MethodSignature signature : signatures ) {
+						if( signature.getModifiers().isPrivate() 
+								&& !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) 
+								&& !signature.getSymbol().startsWith("$") && !signature.isExtern() 
+								&& signature.getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
+						  ) {
+							reporter.addWarning(signature.getNode(), 
+									TypeCheckException.Error.UNUSED_METHOD, 
+									"Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
+						}
+					}
+				}
+			}
+
 			reporter.printAndReportErrors();
 		}
 		

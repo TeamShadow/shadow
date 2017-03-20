@@ -808,8 +808,12 @@ public class TypeUpdater extends BaseChecker {
   			addError(node, Error.INVALID_METHODIDENTIFIER, Error.INVALID_METHODIDENTIFIER.getMessage());
   		}
 		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$") && signature.getParameterTypes().size() == 0) {
-			addError(node, Error.INVALID_ARGUMENTS, "To extern a method from another class, the first parameter of this method should be the class which contains the method being externed.");
+		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
+			if(signature.getParameterTypes().size() == 0) {
+				addError(node, Error.INVALID_ARGUMENTS, "To extern a method from another class, the first parameter of this method should be the class which contains the method being externed.");
+			} else if(!signature.getModifiers().isPrivate()) {
+				addError(node, Error.INVALID_MODIFIER, "An externed method from another class should be private.");
+			}
 		}
 
 		// Add return types
