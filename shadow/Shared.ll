@@ -28,7 +28,7 @@
 %shadow.standard..Class = type opaque
 
 ; ShadowPointer
-%shadow.natives..ShadowPointer = type opaque
+%shadow.natives..Pointer = type opaque
 
 ; String
 %shadow.standard..String_methods = type opaque
@@ -67,19 +67,19 @@ entry:
 }
 
 ; ShadowPointer.h
-declare %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long_boolean(%shadow.natives..ShadowPointer*, %long, %boolean)
-define %shadow.natives..ShadowPointer* @CreateShadowPointer(%void*, %boolean) {
+declare %shadow.natives..Pointer* @shadow.natives..Pointer_McreateNative_long_boolean(%shadow.natives..Pointer*, %long, %boolean)
+define %shadow.natives..Pointer* @shadow_CreatePointer(%void*, %boolean) {
 entry:
 	%address = ptrtoint %void* %0 to %long
-	%call = call %shadow.natives..ShadowPointer* @shadow.natives..ShadowPointer_McreateNative_long_boolean(%shadow.natives..ShadowPointer* null, %long %address, %boolean %1)
-	ret %shadow.natives..ShadowPointer* %call
+	%call = call %shadow.natives..Pointer* @shadow.natives..Pointer_McreateNative_long_boolean(%shadow.natives..Pointer* null, %long %address, %boolean %1)
+	ret %shadow.natives..Pointer* %call
 }
 
 ; ShadowPointer.h
-declare %long @shadow.natives..ShadowPointer_MgetAddressNative(%shadow.natives..ShadowPointer*)
-define %void* @ExtractRawPointer(%shadow.natives..ShadowPointer*) {
+declare %long @shadow.natives..Pointer_MgetAddressNative(%shadow.natives..Pointer*)
+define %void* @shadow_ExtractToVoidPointer(%shadow.natives..Pointer*) {
 entry:
-	%address = call %long @shadow.natives..ShadowPointer_MgetAddressNative(%shadow.natives..ShadowPointer* %0)
+	%address = call %long @shadow.natives..Pointer_MgetAddressNative(%shadow.natives..Pointer* %0)
 	%pointer = inttoptr %long %address to %void*
 	ret %void* %pointer
 }

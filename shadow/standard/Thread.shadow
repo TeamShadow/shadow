@@ -14,7 +14,7 @@ locked class shadow:standard@
 is CanIndex<int, Thread>
 {
 	/// @unused
-	private readonly native spawnThread() => (ShadowPointer);
+	private readonly native spawnThread() => (Pointer);
 	private readonly native get staticNextId() => (int);
 
 	/// Gets the Shadow-specific thread ID.

@@ -168,7 +168,8 @@ public class Main {
 		Set<String> generics = new HashSet<String>();
 		Set<String> arrays = new HashSet<String>();
 		
-		generateLLVM(linkCommand, generics, arrays);
+		List<File> cFiles = new ArrayList<>();
+		generateLLVM(cFiles, linkCommand, generics, arrays);
 
 		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {			
 			// Check LLVM version using lexical comparison
@@ -186,7 +187,7 @@ public class Main {
 			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
 			
 			// compile and add the C source files to the assembler
-			if(!compileCSourceFiles(assembleCommand, system.resolve(Paths.get("shadow", "c-source")).toFile())) {
+			if(!compileCSourceFiles(cFiles, assembleCommand, system.resolve(Paths.get("shadow", "c-source")).normalize())) {
 				logger.error("Failed to compile C source files.");
 				throw new CompileException("FAILED TO COMPILE");
 			}
@@ -278,91 +279,86 @@ public class Main {
 		}
 	}
 
-	private static boolean compileCSourceFiles(List<String> assembleCommand, File srcDirectory)
+	private static boolean compileCSourceFiles(List<File> cFiles, List<String> assembleCommand, Path srcPath) throws IOException
 	{
+		File srcFile = srcPath.toFile();
+		
 		// no need to compile anything if there are no c-source files
-		if(!srcDirectory.exists()) {
+		if(!srcFile.exists()) {
 			return true;
 		}
 		
 		// compile the files to assembly, to be ready for linkage
-		// TODO: Add gcc to Configuration instead of here
 		List<String> compileCommand = new ArrayList<String>();
 		compileCommand.add("gcc");
 		compileCommand.add("-S");
-		compileCommand.add("-I../include/");
-		compileCommand.add("-I../include/Classes/");
-
-		// create the target directory
-		File binPath = Paths.get(srcDirectory.getAbsolutePath(), "bin").toFile();
-		binPath.mkdir();
+		compileCommand.add("-I" + srcPath.resolve(Paths.get("include")).toFile().getCanonicalPath());
+		compileCommand.add("-I" + srcPath.resolve(Paths.get("include", "platform", config.getOs())).toFile().getCanonicalPath());
 		
 		// the filter to only find .c files.
-		FileFilter filter = (FileFilter)new WildcardFileFilter("*.c");
-		
-		List<File> assemblyFiles = new ArrayList<File>();
-		
-		// we add the general C files
-		addCSourceFiles(srcDirectory, binPath, filter, compileCommand, assemblyFiles);
-		
-		// we add the OS specific C files
-		File osSpecificExternals = Paths.get(srcDirectory.getPath(), config.getOs()).toFile();
-		if(osSpecificExternals.exists()) {
-			addCSourceFiles(osSpecificExternals, binPath, filter, compileCommand, assemblyFiles);
+		List<String> mainCFiles = new ArrayList<>(compileCommand);
+		for(File f : srcFile.listFiles((FileFilter)new WildcardFileFilter("*.c"))) {
+			if(shouldCompileCFile(f) != null)
+				mainCFiles.add(f.getCanonicalPath());
 		}
 		
-		boolean success = true;
+		boolean success = false;
 		// we need to have at least one file to compile
-		if(compileCommand.size() > 4) {
-			try {
-				success = new ProcessBuilder(compileCommand)
-							.directory(binPath)
-							.redirectError(Redirect.INHERIT)
-							.start()
-							.waitFor() == 0;
-			} catch (InterruptedException | IOException e) {
+		if(mainCFiles.size() > 4) {
+			success = runCCompiler(mainCFiles, srcFile);
+		}
+		
+		// still need to find and add the .s files to the linker
+		for(File f : srcFile.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
+			if(success) {
+				assembleCommand.add(f.getAbsolutePath());
+			} else {
+				f.delete();
 			}
 		}
 		
-		if(success) {
-			// still need to find and add the .s files to the linker
-			for(File f : binPath.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
-				assembleCommand.add(f.getAbsolutePath());
-			}
-		} else {
-			for(File f : assemblyFiles) {
-				f.delete();
+		if(success)
+		{
+			Path p = null;
+			for(File f : cFiles) {
+				if((p = shouldCompileCFile(f)) != null) {
+					compileCommand.add(4, f.getCanonicalPath());
+					if(runCCompiler(compileCommand, f.getParentFile())) {
+						assembleCommand.add(p.toFile().getAbsolutePath());
+					} else {
+						p.toFile().delete();
+						return false;
+					}
+				}
 			}
 		}
 		
 		return success;
 	}
 	
-	private static void addCSourceFiles(File srcDirectory, File targetPath, FileFilter filter, List<String> compileCommand, List<File> assemblyFiles)
+	private static boolean runCCompiler(List<String> compileCommand, File srcFile) throws IOException
 	{
-		for(File f : srcDirectory.listFiles(filter)) {
-			Path assemblyPath = Paths.get(targetPath.getAbsolutePath(), (getBaseName(f.getName()) + ".s"));
-			String parentDirectoryName = srcDirectory.getParentFile().getName();
-			
-			try {
-				if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(f.toPath())) < 0) {
-					logger.info("Compiling C source file: '" + (parentDirectoryName.equals("src") ? (srcDirectory.getName() + File.separator) : "") + f.getName() + "'");
-					assemblyFiles.add(assemblyPath.toFile());
-					compileCommand.add(f.getAbsolutePath());
-				}
-			} catch (IOException e) {
-			}
-		}
-	}
-	
-	private static String getBaseName(String fileName)
-	{
-		int pos = fileName.lastIndexOf(".");
-		if (pos > 0) {
-			return fileName.substring(0, pos);
+		try {
+			return new ProcessBuilder(compileCommand)
+						.directory(srcFile)
+						.redirectError(Redirect.INHERIT)
+						.start()
+						.waitFor() == 0;
+		} catch (InterruptedException e) {
 		}
 		
-		return fileName;
+		return false;
+	}
+	
+	public static Path shouldCompileCFile(File currentFile) throws IOException
+	{
+		Path assemblyPath = Paths.get(BaseChecker.stripExtension(currentFile.getAbsolutePath()) + ".s").normalize();
+		if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(currentFile.toPath())) < 0) {
+			logger.info("Compiling C source file: " + currentFile.getName());
+			return assemblyPath;
+		}
+		
+		return null;
 	}
 	
 	/*
@@ -371,9 +367,7 @@ public class Main {
 	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
 	 */
-	private static void generateLLVM(List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
-		
-
+	private static void generateLLVM(List<File> cFiles, List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = BaseChecker.stripExtension(TypeCollector.canonicalize(mainFile)); 
 
@@ -420,9 +414,11 @@ public class Main {
 						TACModule module = optimizeTAC( new TACBuilder().build(node), false );
 	
 						// Write to file
-						String className = typeToFileName(type);						
-						llvmFile = file.getParent().resolve(className + ".ll");						
+						String className = typeToFileName(type);
+						llvmFile = file.getParent().resolve(className + ".ll");
 						Path nativeFile = file.getParent().resolve(className + ".native.ll");
+						Path cFile = file.getParent().resolve(className + ".c").normalize();
+						
 						LLVMOutput output = new LLVMOutput(llvmFile);
 						try {
 							output.build(module);
@@ -432,7 +428,7 @@ public class Main {
 							output.close();							
 							Files.deleteIfExists(llvmFile);
 							throw new CompileException(e.getMessage());
-						}				
+						}
 	
 						if( Files.exists(llvmFile) )
 							linkCommand.add(TypeCollector.canonicalize(llvmFile));
@@ -441,6 +437,10 @@ public class Main {
 	
 						if( Files.exists(nativeFile) )
 							linkCommand.add(TypeCollector.canonicalize(nativeFile));						
+						
+						if(Files.exists(cFile)) {
+							cFiles.add(cFile.toFile());
+						}
 						
 						//it's important to add generics after generating the LLVM, since more are found
 						generics.addAll(output.getGenericClasses());						

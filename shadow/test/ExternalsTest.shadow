@@ -4,11 +4,11 @@ import shadow:natives;
 
 class shadow:test@ExternalsTest
 {
-	private readonly extern __ShadowString_TestPrintf(String str) => ();
+	private readonly extern __ShadowExternalTest_TestPrintf(String str) => ();
 	
 	public main(String[] args) => ()
 	{
-		__ShadowString_TestPrintf("Hello from printf!\n");
+		__ShadowExternalTest_TestPrintf("Hello from printf!\n");
 
 		//var arr = int:create[0];
 		//Object o = arr;

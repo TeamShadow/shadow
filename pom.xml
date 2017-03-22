@@ -26,9 +26,10 @@
 	          <directory>shadow</directory>
 	          <includes>
 	            <include>**/*.meta</include>	            
-	            <include>**/*.ll</include>	            
+	            <include>**/*.ll</include>
+	            <include>**/*.s</include>
 	          </includes>
-	          <excludes>	            
+	          <excludes>
 	            <exclude>**/*.native.ll</exclude>
 	            <exclude>Linux.ll</exclude>
 	            <exclude>Mac.ll</exclude>

@@ -1,6 +1,7 @@
 bin/
 *.meta
 *.ll
+*.s
 !*.native.ll
 *.exe
 *.out
