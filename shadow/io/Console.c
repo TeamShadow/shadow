@@ -84,7 +84,7 @@
 	static void printString(int fd, shadow_String_t* stringRef)
 	{
 		ShadowStringData str; // { size, chars, ascii }
-		UnpackShadowString(stringRef, &str);
+		shadow_UnpackString(stringRef, &str);
 
 		write(fd, str.chars, str.size);
 	}

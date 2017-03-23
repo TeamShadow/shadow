@@ -13,12 +13,10 @@
 		return true;
 	}
 #else
-	#include <stddef.h>
-	#include <pthread.h>
-	#include <stdlib.h>
+	#include <sched.h>
 
 	shadow_boolean_t __ShadowCurrentThread_Yield(void)
 	{
-		return pthread_yield() == 0;
+		return sched_yield() == 0;
 	}
 #endif
