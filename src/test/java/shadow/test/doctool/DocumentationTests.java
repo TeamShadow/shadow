@@ -40,14 +40,13 @@ public class DocumentationTests
 		
 		String os = System.getProperty("os.name").toLowerCase();
 		
-		if( os.contains("windows") ) {
-			args.add("-c");
-			args.add("windows.xml");
-		}
-		else if( os.contains("mac") ) {
-			args.add("-c");
+		args.add("-c");
+		if( os.contains("windows") )
+			args.add("windows.xml");		
+		else if( os.contains("mac") )
 			args.add("mac.xml");
-		}
+		else
+			args.add("linux.xml");
 		
 		args.add("-d");
 		args.add(outputDirectory.toString());
