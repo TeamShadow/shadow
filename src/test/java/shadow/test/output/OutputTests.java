@@ -35,16 +35,12 @@ public class OutputTests {
 		String os = System.getProperty("os.name").toLowerCase();
 		
 		args.add("-c");
-		if( os.contains("windows") ) {
-			args.add("windows.xml");
-		}
-		else if( os.contains("mac") ) {
+		if( os.contains("windows") )
+			args.add("windows.xml");		
+		else if( os.contains("mac") )
 			args.add("mac.xml");
-		} else {
+		else
 			args.add("linux.xml");
-		}
-		
-		//args.add("-f");
 	}
 	
 	@After
