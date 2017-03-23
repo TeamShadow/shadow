@@ -11,8 +11,7 @@ class shadow:standard@Object
 	 * Retrieves the {@code Class} object associated with any given object.
 	 * @return {@code Class} of the current object
 	 */
-	public native readonly locked
-	getClass() => ( Class );
+	public native readonly locked getClass() => ( Class );
 
 	/** 
 	 * Returns a {@code String} representation of the object. This default
@@ -21,8 +20,7 @@ class shadow:standard@Object
 	 * representation.	 
 	 * @return  {@code String} representation
 	 */ 
-	public readonly
-	toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		return getClass().toString();
 	}

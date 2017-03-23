@@ -79,10 +79,6 @@ declare i32 @write(i32, i8* nocapture, i32)
 declare i32 @unlink(i8*)
 declare i32 @close(i32)
 
-%struct.timespec = type { i1*, i1* }
-declare i32 @clock_gettime(i32, %struct.timespec*) nounwind
-
-
 define private void @throwIOException() noreturn {
 	%1 = alloca i8, i32 256
 	%2 = tail call i32* @__errno_location() nounwind readnone
@@ -102,64 +98,6 @@ define private void @throwIOException() noreturn {
 	%16 = call %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object* %15, %shadow.standard..String* %14)
 	call void @__shadow_throw(%shadow.standard..Object* %15) noreturn
     unreachable
-}
-
-define i64 @shadow.standard..System_MnanoTime(%shadow.standard..System*) {
-	%2 = alloca %struct.timespec
-	%3 = call i32 @clock_gettime(i32 1, %struct.timespec* %2) nounwind
-	%4 = icmp eq i32 %3, 0
-	br i1 %4, label %5, label %14
-	%6 = getelementptr inbounds %struct.timespec, %struct.timespec* %2, i32 0, i32 0
-	%7 = load i1*, i1** %6
-	%8 = ptrtoint i1* %7 to i64
-	%9 = mul nuw i64 %8, 1000000000
-	%10 = getelementptr inbounds %struct.timespec, %struct.timespec* %2, i32 0, i32 1
-	%11 = load i1*, i1** %10
-	%12 = ptrtoint i1* %11 to i64
-	%13 = add i64 %9, %12
-	ret i64 %13
-	ret i64 0
-}
-
-@newline = private unnamed_addr constant [1 x i8] c"\0A"
-define void @shadow.io..Console_Minit(%shadow.io..Console*) {
-	ret void
-}
-define { i8, i1 } @shadow.io..Console_MreadByte(%shadow.io..Console*) {
-	%2 = alloca i8
-	%3 = call i32 @read(i32 0, i8* nocapture %2, i32 1)
-	%4 = icmp ne i32 %3, 1
-	%5 = insertvalue { i8, i1 } undef, i1 %4, 1
-	%6 = load i8, i8* %2
-	%7 = select i1 %4, i8 0, i8 %6
-	%8 = insertvalue { i8, i1 } %5, i8 %7, 0
-	ret { i8, i1 } %8
-}
-define %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
-	%3 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0	
-	%4 = load {%ulong, i8}*, {%ulong, i8}** %3
-	%5 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %4, i32 0, i32 1	
-	%6 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
-	%7 = load i32, i32* %6
-	%8 = call i32 @write(i32 1, i8* nocapture %5, i32 %7)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) {
-	%2 = call i32 @write(i32 1, i8* nocapture getelementptr inbounds ([1 x i8], [1 x i8]* @newline, i32 0, i32 0), i32 1)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
-	%3 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0	
-	%4 = load {%ulong, i8}*, {%ulong, i8}** %3
-	%5 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %4, i32 0, i32 1	
-	%6 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
-	%7 = load i32, i32* %6
-	%8 = call i32 @write(i32 2, i8* nocapture %5, i32 %7)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintErrorLine(%shadow.io..Console*) {
-	%2 = call i32 @write(i32 2, i8* nocapture getelementptr inbounds ([1 x i8], [1 x i8]* @newline, i32 0, i32 0), i32 1)
-	ret %shadow.io..Console* %0
 }
 
 define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {

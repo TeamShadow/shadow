@@ -1,0 +1,12 @@
+/**
+ * Interface {@code CanRun} is the link between Threads and user code. This interface should
+ * be implemented by the user and used to spawn a new thread. The {@code run()} method is
+ * then executed on the newly spawned thread.
+ *
+ * @author Claude Abounegm
+ * @seeDoc shadow:standard@Thread
+ */
+interface shadow:standard@CanRun
+{
+	run() => ();
+}

@@ -143,7 +143,11 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		StringBuilder builder = new StringBuilder(begin);
 		boolean first = true;
 		 
-		for(ModifiedType modifiedType: types) {			
+		int i = 0;
+		if((options & Type.MANGLE_EXTERN) != 0) ++i;
+		
+		for(; i < types.size(); ++i) {
+			ModifiedType modifiedType = types.get(i);
 			if( (options & MANGLE ) != 0 )
 				builder.append("_");			
 			else if( first )

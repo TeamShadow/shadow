@@ -9,7 +9,8 @@ is	CanRead
 and CanWrite
 and CanClose
 {
-	// data contains OS-specific file handle information 
+	/// data contains OS-specific file handle information 
+	/// @unused
 	long data = -1L;
 	get Path path;
 

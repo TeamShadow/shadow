@@ -90,6 +90,8 @@ public abstract class Type implements Comparable<Type> {
 	public static ClassType STRING = null;
 	public static ClassType ADDRESS_MAP = null; //used for copying
 	public static ClassType CLASS_SET = null;	//used to store generic Class objects
+	public static ClassType SHADOW_POINTER = null;
+	public static ClassType THREAD = null;	
 	
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
@@ -117,7 +119,7 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_DIVIDE = null;
 	public static InterfaceType CAN_MODULUS = null;
 	public static InterfaceType CAN_NEGATE = null;	
-	
+	public static InterfaceType CAN_RUN = null;
 	
 	//constants used for options in toString()
 	public static final int NO_OPTIONS = 0;
@@ -126,6 +128,7 @@ public abstract class Type implements Comparable<Type> {
 	public static final int PARAMETER_BOUNDS =  4;
 	public static final int CONVERT_ARRAYS =  8;
 	public static final int MANGLE =  16;
+	public static final int MANGLE_EXTERN = 32;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
@@ -235,6 +238,9 @@ public abstract class Type implements Comparable<Type> {
 		CAN_DIVIDE = null;
 		CAN_MODULUS = null;
 		CAN_NEGATE = null;
+		SHADOW_POINTER = null;
+		CAN_RUN = null;
+		THREAD = null;
 	}
 	
 	/*

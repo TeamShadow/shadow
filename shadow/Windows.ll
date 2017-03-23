@@ -63,7 +63,6 @@ declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
 declare noalias i8* @malloc(i32) nounwind
 declare void @free(i8*) nounwind
 
-@newline = private unnamed_addr constant [2 x i8] c"\0D\0A"
 declare x86_stdcallcc i8* @GetStdHandle(i32)
 declare x86_stdcallcc i32 @GetFileType(i8*)
 declare x86_stdcallcc i32 @GetConsoleMode(i8*, i32*)
@@ -87,9 +86,6 @@ declare x86_stdcallcc i32 @CloseHandle(i8*)
 
 declare x86_stdcallcc i32 @MultiByteToWideChar(i32, i32, i8*, i32, i16*, i32)
 
-declare x86_stdcallcc i32 @QueryPerformanceFrequency(i64*)
-declare x86_stdcallcc i32 @QueryPerformanceCounter(i64*)
-
 ; one day update this method to use the @FormatMessage() function
 define private void @throwIOException() noreturn {
 	%1 = tail call x86_stdcallcc i32 @GetLastError()
@@ -98,80 +94,6 @@ define private void @throwIOException() noreturn {
 	%4 = bitcast %shadow.io..IOException* %3 to %shadow.standard..Object*
 	call void @__shadow_throw(%shadow.standard..Object* %4) noreturn
     unreachable	
-}
-
-define i64 @shadow.standard..System_MnanoTime(%shadow.standard..System*) {
-	%2 = alloca i64
-	%3 = alloca i64
-	%4 = call x86_stdcallcc i32 @QueryPerformanceFrequency(i64* %2)
-	%5 = icmp ne i32 %4, 0
-	br i1 %5, label %6, label %14
-	%7 = call x86_stdcallcc i32 @QueryPerformanceCounter(i64* %3)
-	%8 = icmp ne i32 %7, 0
-	br i1 %8, label %9, label %14
-	%10 = load i64, i64* %2
-	%11 = load i64, i64* %3
-	%12 = mul nuw i64 %11, 1000000000
-	%13 = udiv i64 %12, %10
-	ret i64 %13
-	ret i64 0
-}
-
-define void @shadow.io..Console_Minit(%shadow.io..Console*) {
-	%2 = call x86_stdcallcc i32 @SetConsoleCP(i32 65001)
-	%3 = call x86_stdcallcc i32 @SetConsoleOutputCP(i32 65001)
-	ret void
-}
-define { i8, i1 } @shadow.io..Console_MreadByte(%shadow.io..Console*) {
-	%2 = alloca i32
-	%3 = alloca i8
-	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -10)
-	%5 = call x86_stdcallcc i32 @ReadFile(i8* %4, i8* %3, i32 1, i32* %2, i8* null)
-	%6 = load i32, i32* %2
-	%7 = icmp ne i32 %6, 1
-	%8 = load i8, i8* %3
-	%9 = select i1 %7, i8 0, i8 %8
-	%10 = insertvalue { i8, i1 } undef, i8 %9, 0
-	%11 = insertvalue { i8, i1 } %10, i1 %7, 1
-	ret { i8, i1 } %11
-}
-
-; does this work for non-ASCII strings?
-define %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
-	%3 = alloca i32
-	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -11)
-	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0
-	%6 = load {%ulong, i8}*, {%ulong, i8}** %5
-	%7 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %6, i32 0, i32 1
-	%8 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
-	%9 = load i32, i32* %8
-	%10 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %7, i32 %9, i32* %3, i8* null)
-	;%11 = call x86_stdcallcc i32 @FlushFileBuffers(i8* %4)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) {
-	%2 = alloca i32
-	%3 = call x86_stdcallcc i8* @GetStdHandle(i32 -11)
-	%4 = call x86_stdcallcc i32 @WriteFile(i8* %3, i8* nocapture getelementptr inbounds ([2 x i8], [2 x i8]* @newline, i32 0, i32 0), i32 2, i32* %2, i8* null)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*) {
-	%3 = alloca i32
-	%4 = call x86_stdcallcc i8* @GetStdHandle(i32 -12)
-	%5 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 0
-	%6 = load {%ulong, i8}*, {%ulong, i8}** %5
-	%7 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %6, i32 0, i32 1
-	%8 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %1, i32 0, i32 3, i32 1, i32 0
-	%9 = load i32, i32* %8
-	%10 = call x86_stdcallcc i32 @WriteFile(i8* %4, i8* %7, i32 %9, i32* %3, i8* null)
-	;%11 = call x86_stdcallcc i32 @FlushFileBuffers(i8* %4)
-	ret %shadow.io..Console* %0
-}
-define %shadow.io..Console* @shadow.io..Console_MprintErrorLine(%shadow.io..Console*) {
-	%2 = alloca i32
-	%3 = call x86_stdcallcc i8* @GetStdHandle(i32 -12)
-	%4 = call x86_stdcallcc i32 @WriteFile(i8* %3, i8* nocapture getelementptr inbounds ([2 x i8], [2 x i8]* @newline, i32 0, i32 0), i32 2, i32* %2, i8* null)
-	ret %shadow.io..Console* %0
 }
 
 define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {

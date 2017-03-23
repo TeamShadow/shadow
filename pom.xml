@@ -26,9 +26,10 @@
 	          <directory>shadow</directory>
 	          <includes>
 	            <include>**/*.meta</include>	            
-	            <include>**/*.ll</include>	            
+	            <include>**/*.ll</include>
+	            <include>**/*.s</include>
 	          </includes>
-	          <excludes>	            
+	          <excludes>
 	            <exclude>**/*.native.ll</exclude>
 	            <exclude>Linux.ll</exclude>
 	            <exclude>Mac.ll</exclude>
@@ -37,6 +38,7 @@
 	            <exclude>Unwind32.ll</exclude>
 	            <exclude>Unwind64.ll</exclude>
 	            <exclude>Windows.ll</exclude>
+				<exclude>Shared.ll</exclude>
 	          </excludes>
 	          <followSymlinks>false</followSymlinks>
 	        </fileset>	        

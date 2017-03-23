@@ -467,6 +467,7 @@ is  Set<Class>
 	private native makeMethodTableArray(nullable readonly MethodTable object0) => (immutable MethodTable[]);
 	private native makeMethodTableArray(nullable readonly MethodTable object0, nullable readonly MethodTable object1) => (immutable MethodTable[]);
 	private native getEmptyClassArray() => (immutable Class[]);
+	/// @unused
 	private native makeClassArray(nullable Class class0) => (immutable Class[]);
 	private native makeClassArray(nullable Class class0, nullable Class class1, nullable Class class2) => (immutable Class[]);
 	private native makeClassArray(nullable Class class0, nullable Class class1) => (immutable Class[]);

@@ -141,7 +141,7 @@ public class TextOutput extends AbstractOutput
 		for (ModifiedType retType : signature.getFullReturnTypes())
 			sb.append(retType.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS));
 		sb.append(')');
-		if (signature.isNative())
+		if (signature.isNative() || signature.isExtern())
 			writer.write(sb.append(';').toString());
 		else
 		{
@@ -158,7 +158,7 @@ public class TextOutput extends AbstractOutput
 	public void endMethod(TACMethod method, TACModule module) throws ShadowException
 	{
 		//startBlock(defaultBlock);
-		if (!method.getSignature().isNative())
+		if (!method.getSignature().isNative() || !method.getSignature().isExtern())
 		{
 			writer.outdent();
 			writer.write('}');

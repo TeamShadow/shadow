@@ -920,9 +920,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					MethodSignature signature = call.getMethodRef().getSignature();
 					if( operandIsThis( call.getPrefix(), type ) ) {
 						//creates are handled separately, and we have to assume that native code works
-						if( !signature.isCreate() && !signature.isNative() ) {							
+						if( !signature.isCreate() && !signature.isNative() && !signature.isExtern() ) {							
 							//if we've recorded the fields a method uses, add those to the loads before stores
-							if( methodData.containsKey(signature) ) {							
+							if( methodData.containsKey(signature) ) {
 								loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
 								loads.addAll(methodData.get(signature).getLoads());
 								thisStores.addAll(methodData.get(signature).getThisStores());

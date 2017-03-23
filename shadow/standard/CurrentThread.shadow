@@ -1,0 +1,216 @@
+/**
+ * Singleton {@code CurrentThread} provides methods which can be called on the current thread.
+ * It also provides a way to access the actual {@code Thread} instance of this thread. 
+ * 
+ * @author Claude Abounegm
+ * @seeDoc shadow:standard@Thread
+ */
+singleton shadow:standard@
+	CurrentThread
+is CanIndex<int, Thread>
+{
+	private readonly native currentThread() => (Thread);
+
+	private readonly extern $interrupting(Thread instance) => (boolean);	
+	private readonly extern $sleep(Thread instance, TimeSpan time) => ();
+	private readonly extern $sleep(Thread instance, int milliseconds) => ();
+	
+	private readonly extern __ShadowCurrentThread_Yield() => (boolean);
+	
+	Thread current;
+	
+	public create()
+	{
+		current = currentThread();
+	}
+	
+	/**
+	* Gets the current thread's actual instance.
+	*
+	* @return The instance of the current thread.
+	*/
+	public readonly get instance() => (Thread)
+	{
+		return current;
+	}
+	
+	/**
+	* Gets the Shadow-specific thread ID.
+	*/
+	public readonly get id() => (int)
+	{
+		return current->id;
+	}
+	
+	/**
+	* Gets the main thread, which is the root of all threads.
+	*/
+	public readonly get main() => (Thread)
+	{
+		return current->main;
+	}
+	
+	/**
+	* Gets the {@code Thread} which spawned this thread. The Main thread does not
+	* have a parent, and is null.
+	*/
+	public readonly get parent() => (nullable Thread)
+	{
+		return current->parent;
+	}
+
+	/**
+	* Gets the name of the thread set at spawn time. If no name is set
+	* at spawn time, the name takes the format "Thread#{id}".
+	*/
+	public readonly get name() => (String)
+	{
+		return current->name;
+	}
+	
+	/**
+	* Requests this thread to be interrupted. If the thread is currently in the {@code WAITING} state, 
+	* the thread is interrupted and the method that caused the thread to be in the {@code WAITING} state
+	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()}, 
+	* {@code sleep()}, {@code send()}, {@code receive()}, and all their overloads.
+	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
+	* as soon as one of the above interruptible methods above are called, or when the user calls 
+	* {@code CurrentThread.throwIfInterrupting()}, or throws an exception using {@code CurrentThread->interrupting}.
+	*/
+	public interrupt() => ()
+	{
+		current.interrupt();
+	}
+	
+	/**
+	* Gets whether the thread should be interrupted and resets the interrupt flag to false.
+	* The way it should be used it as follows: {@code if(CurrentThread->interrupting) throw InterruptedException:create(); }
+	*/
+	public get interrupting() => (boolean)
+	{
+		return $interrupting(current);
+	}
+	
+	/**
+	* Throws an {@code InterruptedException} if the current thread has been requested to interrupt.
+	* This can be used as a cancellation point in the program. The {@code throwIfInterrupting()} should
+	* be called at safe points where the thread is safe to get interrupted. This method should only be used
+	* if there is no code that should be executed before throwing the exception; otherwise, use {@code CurrentThread->interrupting}.
+	* This method, as the {@code interrupting()} one, resets the interrupt flag, and sets it to false.
+	* This code executed in this method is simply: {@code if(CurrentThread->interrupting) throw InterruptedException:create(); }
+	*/
+	public throwIfInterrupting() => ()
+	{
+		if(interrupting()) {
+			throw InterruptedException:create();
+		}
+	}
+	
+	/**
+	* Suspends the current running thread for the specfied amount of time.
+	* 
+	* @param timeout The amount of time to pause this thread for.
+	*/
+	public readonly sleep(TimeSpan timeout) => ()
+	{
+		$sleep(current, timeout);
+	}
+	
+	/**
+	* Suspends the current running thread for {@code milliseconds} milliseconds.
+	* 
+	* @param millisecondsTimeout The milliseconds to pause this thread for.
+	*/
+	public readonly sleep(int millisecondsTimeout) => ()
+	{
+		$sleep(current, millisecondsTimeout);
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
+	* If the thread has four children, this method could be used to retrieve the n-th child, for example
+	* the third child (thus, its index is 2).
+	* @param index the index of the child in the range [0, childrenCount).
+	*/
+	public readonly childAt(int index) => (Thread)
+	{
+		return current.childAt(index);
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific {@code Thread->id}.
+	* If the thread has four children, this method could be used to retrieve the n-th child, for example
+	* the third child (thus, its index is 2).
+	* @param index the index of the child in the range [0, childrenCount).
+	*/
+	public readonly index(int index) => (Thread)
+	{
+		return current[index];
+	}
+	
+	/**
+	* Gets the children of this thread, and if {@code recurse} is true, this method
+	* will also traverse the children of the children recursively, until all children
+	* have been visited.
+	* Care should be taken using this function, as enumerating can throw an exception
+	* if the children have changed.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children(boolean recurse) => (CanIterate<Thread>)
+	{
+		return current.children(recurse);
+	}
+	
+	/**
+	* Gets the children of this thread. This method only enumerates through the first generation
+	* children of this thread. i.e. only the thread that this thread spawned.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children() => (CanIterate<Thread>)
+	{
+		return current.children();
+	}
+	
+	/**
+	* Checks whether the {@code thread} is the same as the current thread.
+	* This is equivalent to {@code thread->isCurrentThread}, but with null checking as well.
+	*
+	* @param other The thread to equate against the current thread.
+	*
+	* @return {@code true} if the other thread is not null and is the current thread; otherwise, {@code false}.
+	*/
+	public readonly equal(nullable Thread other) => (boolean)
+	{
+		return (other === current);
+	}
+	
+	/**
+	* Gets the number of children the thread currently has. This method should be used with caution
+	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
+	* drastically change between each call.
+	*/
+	public readonly get childrenCount() => (int)
+	{
+		return current->childrenCount;
+	}
+	
+	/**
+	* Causes the current thread to yield execution to another thread.
+	*
+	* @return {@code true} if the yield was successful; otherwise, {@code false}.
+	*/
+	public readonly yield() => (boolean)
+	{
+		return __ShadowCurrentThread_Yield();
+	}
+	
+	/**
+	* Returns a string with the format: "Thread ({Thread->name}): {Thread->stateStr}".
+	*/
+	public readonly toString() => (String)
+	{
+		return #current;
+	}
+}

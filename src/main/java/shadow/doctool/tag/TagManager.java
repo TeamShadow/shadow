@@ -51,6 +51,7 @@ public class TagManager
 		SEE_DOC("seeDoc", new ArgDescriptionParser(1, true)),
 		SEE_URL("seeUrl", new ArgDescriptionParser(1, true)),
 		THROWS("throws", new ArgDescriptionParser(1, true)),
+		UNUSED("unused", new ArgDescriptionParser(0, false)),
 		
 		/* End of tag list */ ;
 		

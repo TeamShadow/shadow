@@ -186,6 +186,8 @@ public class TypeUpdater extends BaseChecker {
 			// String
 			type.addUsedType(Type.STRING);
 			
+			type.addUsedType(Type.SHADOW_POINTER);
+			
 			// Adding the self adds parents and interfaces and methods
 			type.addUsedType(type); 
 			
@@ -723,11 +725,11 @@ public class TypeUpdater extends BaseChecker {
 				addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 			
 			if( !isMeta ) {					
-				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() )
+				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() && !signature.getModifiers().isExtern() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
-				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() ) )
-					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
+				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() || signature.getModifiers().isExtern() ) )
+					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : (signature.getModifiers().isNative() ? "Native": "Extern")) + " method " + signature + " must not define a body");
 				
 				/* Check to see if the method's parameters and return types are the
 				 * correct level of visibility, e.g., a public method shouldn't
@@ -800,7 +802,19 @@ public class TypeUpdater extends BaseChecker {
 			if( parameters.formalParameter().size() != 0 )
 				addError(node, Error.INVALID_MODIFIER,
 						"Methods marked with get cannot have any parameters");
-		}		
+		} 
+		
+		if(!signature.isExtern() && signature.getSymbol().startsWith("_")) {
+  			addError(node, Error.INVALID_METHODIDENTIFIER, Error.INVALID_METHODIDENTIFIER.getMessage());
+  		}
+		
+		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
+			if(signature.getParameterTypes().size() == 0) {
+				addError(node, Error.INVALID_ARGUMENTS, "To extern a method from another class, the first parameter of this method should be the class which contains the method being externed.");
+			} else if(!signature.getModifiers().isPrivate()) {
+				addError(node, Error.INVALID_MODIFIER, "An externed method from another class should be private.");
+			}
+		}
 
 		// Add return types
 		if( node instanceof ShadowParser.MethodDeclaratorContext ) {
@@ -1053,7 +1067,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 		
-		visitMethodPre( ctx.methodDeclarator().Identifier().getText(), ctx);
+		visitMethodPre( ctx.methodDeclarator().generalIdentifier().getText(), ctx);
 		visitChildren(ctx); 
 		visitMethodPost(ctx);
 		
@@ -1101,7 +1115,7 @@ public class TypeUpdater extends BaseChecker {
 			declarator.addModifiers(ctx.getModifiers());
 			declarator.setDocumentation(ctx.getDocumentation());			
 			
-			String symbol = declarator.Identifier().getText();
+			String symbol = declarator.generalIdentifier().getText();
 			
 			/* Make sure we don't already have this symbol.
 			 * Methods and fields can have the same name since they can be
