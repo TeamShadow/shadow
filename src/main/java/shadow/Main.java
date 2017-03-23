@@ -291,36 +291,49 @@ public class Main {
 		List<String> compileCommand = new ArrayList<String>();
 		compileCommand.add("gcc");
 		compileCommand.add("-S");
+		
+		// include directories to be in the search path of gcc
 		compileCommand.add("-I" + srcPath.resolve(Paths.get("include")).toFile().getCanonicalPath());
 		compileCommand.add("-I" + srcPath.resolve(Paths.get("include", "platform", config.getOs())).toFile().getCanonicalPath());
 		compileCommand.add("-I" + srcPath.resolve(Paths.get("include", "platform", "Arch" + config.getArch())).toFile().getCanonicalPath());
 		
-		// the filter to only find .c files.
-		List<String> coreCFiles = new ArrayList<>(compileCommand);
+		/*
+		 * The compiling of the C files is done in two stages:
+		 *   1. We traverse the `c-source` directory looking for `.c` files, and we add those to the coreCFiles
+		 *   	list. All those files are compiled in one gcc run, and the corresponding .s files are generated
+		 *   	next to the .c files, with the same name.
+		 *   2. The cFiles list contains all the .c files found while generating LLVM for .shadow files. Each `.c`
+		 *   	file is compiled using a gcc run. So, if there are 100 .c files, we will run gcc a 100 times.
+		 */
+		
+		// we create a new compileCommand list to compile only the core .c files, we use the original compileCommand
+		// later on for the separate .c files.
+		List<String> coreCompileCommand = new ArrayList<>(compileCommand);
+		
+		// the filter to only find .c files in the `c-source` folder.
 		for(File f : srcFile.listFiles((FileFilter)new WildcardFileFilter("*.c"))) {
 			if(shouldCompileCFile(f, assembleCommand)) {
-				coreCFiles.add(f.getCanonicalPath());
+				coreCompileCommand.add(f.getCanonicalPath());
+			}
+		}
+		// if any files were to be compiled, we run the compiler, otherwise, we skip.
+		if(coreCompileCommand.size() > compileCommand.size()) {
+			if(!runCCompiler(coreCompileCommand, srcFile)) {
+				return false;
 			}
 		}
 		
-		boolean success = true;
-		// we need to have at least one file to compile
-		if(coreCFiles.size() > 5) {
-			success = runCCompiler(coreCFiles, srcFile);
-		}
-		
-		if(success) {
-			for(File f : cFiles) {
-				if(shouldCompileCFile(f, assembleCommand)) {
-					compileCommand.add(4, f.getCanonicalPath());
-					if(!runCCompiler(compileCommand, f.getParentFile())) {
-						return false;
-					}
+		// 
+		for(File f : cFiles) {
+			if(shouldCompileCFile(f, assembleCommand)) {
+				compileCommand.add(4, f.getCanonicalPath());
+				if(!runCCompiler(compileCommand, f.getParentFile())) {
+					return false;
 				}
 			}
 		}
 		
-		return success;
+		return true;
 	}
 	
 	private static boolean runCCompiler(List<String> compileCommand, File srcFile) throws IOException
