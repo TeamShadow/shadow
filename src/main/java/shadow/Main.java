@@ -186,8 +186,8 @@ public class Main {
 			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
 			
 			// compile and add the C source files to the assembler
-			if(!compileCSourceFiles(cFiles, assembleCommand, system.resolve(Paths.get("shadow", "c-source")).normalize())) {
-				logger.error("Failed to compile one or more C source file.");
+			if(!compileCSourceFiles(system.resolve(Paths.get("shadow", "c-source")).normalize(), cFiles, assembleCommand)) {
+				logger.error("Failed to compile one or more C source files.");
 				throw new CompileException("FAILED TO COMPILE");
 			}
 			
@@ -278,13 +278,13 @@ public class Main {
 		}
 	}
 
-	private static boolean compileCSourceFiles(List<File> cFiles, List<String> assembleCommand, Path srcPath) throws IOException
-	{
-		File srcFile = srcPath.toFile();
+	private static boolean compileCSourceFiles(Path cSourcePath, List<File> cShadowFiles, List<String> assembleCommand) throws IOException {
+		File cSourceDirectory = cSourcePath.toFile();
 		
 		// no need to compile anything if there are no c-source files
-		if(!srcFile.exists()) {
-			return true;
+		if(!cSourceDirectory.exists()) {
+			logger.error("The c-source directory was not found and is necessary for the Shadow runtime.");
+			return false;
 		}
 		
 		// compile the files to assembly, to be ready for linkage
@@ -293,9 +293,9 @@ public class Main {
 		compileCommand.add("-S");
 		
 		// include directories to be in the search path of gcc
-		compileCommand.add("-I" + srcPath.resolve(Paths.get("include")).toFile().getCanonicalPath());
-		compileCommand.add("-I" + srcPath.resolve(Paths.get("include", "platform", config.getOs())).toFile().getCanonicalPath());
-		compileCommand.add("-I" + srcPath.resolve(Paths.get("include", "platform", "Arch" + config.getArch())).toFile().getCanonicalPath());
+		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include")).toFile().getCanonicalPath());
+		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include", "platform", config.getOs())).toFile().getCanonicalPath());
+		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include", "platform", "Arch" + config.getArch())).toFile().getCanonicalPath());
 		
 		/*
 		 * The compiling of the C files is done in two stages:
@@ -311,23 +311,26 @@ public class Main {
 		List<String> coreCompileCommand = new ArrayList<>(compileCommand);
 		
 		// the filter to only find .c files in the `c-source` folder.
-		for(File f : srcFile.listFiles((FileFilter)new WildcardFileFilter("*.c"))) {
-			if(shouldCompileCFile(f, assembleCommand)) {
-				coreCompileCommand.add(f.getCanonicalPath());
+		for(File cFile : cSourceDirectory.listFiles((FileFilter)new WildcardFileFilter("*.c"))) {
+			if(shouldCompileCFile(cFile, assembleCommand)) {
+				coreCompileCommand.add(cFile.getCanonicalPath());
 			}
 		}
 		// if any files were to be compiled, we run the compiler, otherwise, we skip.
 		if(coreCompileCommand.size() > compileCommand.size()) {
-			if(!runCCompiler(coreCompileCommand, srcFile)) {
+			if(!runCCompiler(coreCompileCommand, cSourceDirectory)) {
 				return false;
 			}
 		}
 		
-		// 
-		for(File f : cFiles) {
-			if(shouldCompileCFile(f, assembleCommand)) {
-				compileCommand.add(4, f.getCanonicalPath());
-				if(!runCCompiler(compileCommand, f.getParentFile())) {
+		compileCommand.add(null);
+		// we compile each Shadow c file on its own
+		for(File cFile : cShadowFiles) {
+			// checks if the files should be compiled, and add the .s file path to the assembleCommand
+			// list whether or not the file needs to be compiled.
+			if(shouldCompileCFile(cFile, assembleCommand)) {
+				compileCommand.set(compileCommand.size() - 1, cFile.getCanonicalPath());
+				if(!runCCompiler(compileCommand, cFile.getParentFile())) {
 					return false;
 				}
 			}
@@ -336,11 +339,10 @@ public class Main {
 		return true;
 	}
 	
-	private static boolean runCCompiler(List<String> compileCommand, File srcFile) throws IOException
-	{
+	private static boolean runCCompiler(List<String> compileCommand, File cSourceDirectory) throws IOException {
 		try {
 			return new ProcessBuilder(compileCommand)
-						.directory(srcFile)
+						.directory(cSourceDirectory)
 						.redirectError(Redirect.INHERIT)
 						.start()
 						.waitFor() == 0;
@@ -350,8 +352,7 @@ public class Main {
 		return false;
 	}
 	
-	public static boolean shouldCompileCFile(File currentFile, List<String> assembleCommand) throws IOException
-	{
+	public static boolean shouldCompileCFile(File currentFile, List<String> assembleCommand) throws IOException {
 		Path assemblyPath = Paths.get(BaseChecker.stripExtension(currentFile.getAbsolutePath()) + ".s").normalize();
 		assembleCommand.add(assemblyPath.toFile().getAbsolutePath());
 		
