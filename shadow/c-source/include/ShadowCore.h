@@ -7,6 +7,7 @@
 #include <_ShadowCorePointer.h>
 #include <_ShadowCoreString.h>
 
-#include <_ShadowPlatform.h>
+#include <_ShadowOs.h>
+#include <_ShadowArch.h>
 
 #endif

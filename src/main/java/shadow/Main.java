@@ -188,7 +188,7 @@ public class Main {
 			
 			// compile and add the C source files to the assembler
 			if(!compileCSourceFiles(cFiles, assembleCommand, system.resolve(Paths.get("shadow", "c-source")).normalize())) {
-				logger.error("Failed to compile C source files.");
+				logger.error("Failed to compile one or more C source file.");
 				throw new CompileException("FAILED TO COMPILE");
 			}
 			
@@ -294,39 +294,27 @@ public class Main {
 		compileCommand.add("-S");
 		compileCommand.add("-I" + srcPath.resolve(Paths.get("include")).toFile().getCanonicalPath());
 		compileCommand.add("-I" + srcPath.resolve(Paths.get("include", "platform", config.getOs())).toFile().getCanonicalPath());
+		compileCommand.add("-I" + srcPath.resolve(Paths.get("include", "platform", "Arch" + config.getArch())).toFile().getCanonicalPath());
 		
 		// the filter to only find .c files.
-		List<String> mainCFiles = new ArrayList<>(compileCommand);
+		List<String> coreCFiles = new ArrayList<>(compileCommand);
 		for(File f : srcFile.listFiles((FileFilter)new WildcardFileFilter("*.c"))) {
-			if(shouldCompileCFile(f) != null)
-				mainCFiles.add(f.getCanonicalPath());
-		}
-		
-		boolean success = false;
-		// we need to have at least one file to compile
-		if(mainCFiles.size() > 4) {
-			success = runCCompiler(mainCFiles, srcFile);
-		}
-		
-		// still need to find and add the .s files to the linker
-		for(File f : srcFile.listFiles((FileFilter)new WildcardFileFilter("*.s"))) {
-			if(success) {
-				assembleCommand.add(f.getAbsolutePath());
-			} else {
-				f.delete();
+			if(shouldCompileCFile(f, assembleCommand)) {
+				coreCFiles.add(f.getCanonicalPath());
 			}
 		}
 		
-		if(success)
-		{
-			Path p = null;
+		boolean success = true;
+		// we need to have at least one file to compile
+		if(coreCFiles.size() > 5) {
+			success = runCCompiler(coreCFiles, srcFile);
+		}
+		
+		if(success) {
 			for(File f : cFiles) {
-				if((p = shouldCompileCFile(f)) != null) {
+				if(shouldCompileCFile(f, assembleCommand)) {
 					compileCommand.add(4, f.getCanonicalPath());
-					if(runCCompiler(compileCommand, f.getParentFile())) {
-						assembleCommand.add(p.toFile().getAbsolutePath());
-					} else {
-						p.toFile().delete();
+					if(!runCCompiler(compileCommand, f.getParentFile())) {
 						return false;
 					}
 				}
@@ -350,15 +338,17 @@ public class Main {
 		return false;
 	}
 	
-	public static Path shouldCompileCFile(File currentFile) throws IOException
+	public static boolean shouldCompileCFile(File currentFile, List<String> assembleCommand) throws IOException
 	{
 		Path assemblyPath = Paths.get(BaseChecker.stripExtension(currentFile.getAbsolutePath()) + ".s").normalize();
+		assembleCommand.add(assemblyPath.toFile().getAbsolutePath());
+		
 		if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(currentFile.toPath())) < 0) {
-			logger.info("Compiling C source file: " + currentFile.getName());
-			return assemblyPath;
+			logger.info("Generating Assembly code for " + currentFile.getName());
+			return true;
 		}
 		
-		return null;
+		return false;
 	}
 	
 	/*
@@ -401,6 +391,12 @@ public class Main {
 						else
 							throw new CompileException("File " + file + " does not contain an appropriate main() method");							
 					}
+					
+					String className = typeToFileName(type);
+					Path cFile = file.getParent().resolve(className + ".c").normalize();
+					if(Files.exists(cFile)) {
+						cFiles.add(cFile.toFile());
+					}
 				
 					//if the LLVM didn't exist, the full .shadow file would have been used				
 					if( file.toString().endsWith(".meta") ) {
@@ -414,10 +410,8 @@ public class Main {
 						TACModule module = optimizeTAC( new TACBuilder().build(node), false );
 	
 						// Write to file
-						String className = typeToFileName(type);
 						llvmFile = file.getParent().resolve(className + ".ll");
 						Path nativeFile = file.getParent().resolve(className + ".native.ll");
-						Path cFile = file.getParent().resolve(className + ".c").normalize();
 						
 						LLVMOutput output = new LLVMOutput(llvmFile);
 						try {
@@ -437,10 +431,6 @@ public class Main {
 	
 						if( Files.exists(nativeFile) )
 							linkCommand.add(TypeCollector.canonicalize(nativeFile));						
-						
-						if(Files.exists(cFile)) {
-							cFiles.add(cFile.toFile());
-						}
 						
 						//it's important to add generics after generating the LLVM, since more are found
 						generics.addAll(output.getGenericClasses());						
