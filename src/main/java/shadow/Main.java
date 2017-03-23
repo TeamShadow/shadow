@@ -24,7 +24,6 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.logging.log4j.Logger;
 
 import shadow.doctool.tag.TagManager.BlockTagType;
-import shadow.doctool.tag.TagManager.InlineTag;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
@@ -346,6 +345,8 @@ public class Main {
 		if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(currentFile.toPath())) < 0) {
 			logger.info("Generating Assembly code for " + currentFile.getName());
 			return true;
+		} else {
+			logger.info("Using pre-existing Assembly code for " + currentFile.getName());
 		}
 		
 		return false;
