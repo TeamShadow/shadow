@@ -54,6 +54,9 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	
 	protected void visit(TACNode node) throws ShadowException
 	{
+		if(node == null) {
+			throw new RuntimeException();
+		}
 		node.accept(this);
 	}
 	

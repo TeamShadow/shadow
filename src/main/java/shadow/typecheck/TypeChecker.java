@@ -57,7 +57,6 @@ public class TypeChecker {
 		Type.clearTypes();		
 		Package packageTree = new Package(); // Root of all packages, storing all types
 		
-		
 		/* Collector looks over all files and creates types for everything needed. */
 		TypeCollector collector = new TypeCollector( packageTree, reporter, useSourceFiles );
 		
@@ -70,7 +69,7 @@ public class TypeChecker {
 		 *  Type parameters (including necessary instantiations)
 		 *  All types with type parameters (except for declarations) are UninitializedTypes
 		 *  Extends and implements lists
-		 */				
+		 */
 		TypeUpdater updater = new TypeUpdater(packageTree, reporter);
 		nodeTable = updater.update( nodeTable );
 		

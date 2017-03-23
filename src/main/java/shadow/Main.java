@@ -2,6 +2,7 @@ package shadow;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,8 +20,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.logging.log4j.Logger;
 
+import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
@@ -44,6 +47,7 @@ import shadow.typecheck.type.Type;
  * @author Barry Wittman
  * @author Jacob Young
  * @author Brian Stottler
+ * @author Claude Abounegm
  */
 public class Main {
 	
@@ -155,6 +159,7 @@ public class Main {
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
+		linkCommand.add(system.resolve(Paths.get("shadow", "Shared.ll")).toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
@@ -162,7 +167,8 @@ public class Main {
 		Set<String> generics = new HashSet<String>();
 		Set<String> arrays = new HashSet<String>();
 		
-		generateLLVM(linkCommand, generics, arrays);
+		List<File> cFiles = new ArrayList<>();
+		generateLLVM(cFiles, linkCommand, generics, arrays);
 
 		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {			
 			// Check LLVM version using lexical comparison
@@ -177,15 +183,20 @@ public class Main {
 				return;
 			}
 			
+			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
+			
+			// compile and add the C source files to the assembler
+			if(!compileCSourceFiles(system.resolve(Paths.get("shadow", "c-source")).normalize(), cFiles, assembleCommand)) {
+				logger.error("Failed to compile one or more C source files.");
+				throw new CompileException("FAILED TO COMPILE");
+			}
+			
 			// any output after this point is important, avoid getting it mixed in with previous output
 			System.out.flush();
 			try { Thread.sleep(500); }
 			catch (InterruptedException ex) { }
 
 			logger.info("Building for target \"" + config.getTarget() + "\"");
-
-			List<String> assembleCommand = config.getLinkCommand(currentJob);
-
 			Path mainLL;
 
 			if( mainArguments )
@@ -203,11 +214,12 @@ public class Main {
 			String nativeIntegers = "n8:16:32:64";
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
 			
+			String optimisationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), "-O3", dataLayout).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), "-O3")/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimisationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
@@ -266,15 +278,101 @@ public class Main {
 		}
 	}
 
+	private static boolean compileCSourceFiles(Path cSourcePath, List<File> cShadowFiles, List<String> assembleCommand) throws IOException {
+		File cSourceDirectory = cSourcePath.toFile();
+		
+		// no need to compile anything if there are no c-source files
+		if(!cSourceDirectory.exists()) {
+			logger.error("The c-source directory was not found and is necessary for the Shadow runtime.");
+			return false;
+		}
+		
+		// compile the files to assembly, to be ready for linkage
+		List<String> compileCommand = new ArrayList<String>();
+		compileCommand.add("gcc");
+		compileCommand.add("-S");
+		
+		// include directories to be in the search path of gcc
+		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include")).toFile().getCanonicalPath());
+		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include", "platform", config.getOs())).toFile().getCanonicalPath());
+		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include", "platform", "Arch" + config.getArch())).toFile().getCanonicalPath());
+		
+		/*
+		 * The compiling of the C files is done in two stages:
+		 *   1. We traverse the `c-source` directory looking for `.c` files, and we add those to the coreCFiles
+		 *   	list. All those files are compiled in one gcc run, and the corresponding .s files are generated
+		 *   	next to the .c files, with the same name.
+		 *   2. The cFiles list contains all the .c files found while generating LLVM for .shadow files. Each `.c`
+		 *   	file is compiled using a gcc run. So, if there are 100 .c files, we will run gcc a 100 times.
+		 */
+		
+		// we create a new compileCommand list to compile only the core .c files, we use the original compileCommand
+		// later on for the separate .c files.
+		List<String> coreCompileCommand = new ArrayList<>(compileCommand);
+		
+		// the filter to only find .c files in the `c-source` folder.
+		for(File cFile : cSourceDirectory.listFiles((FileFilter)new WildcardFileFilter("*.c"))) {
+			if(shouldCompileCFile(cFile, assembleCommand)) {
+				coreCompileCommand.add(cFile.getCanonicalPath());
+			}
+		}
+		// if any files were to be compiled, we run the compiler, otherwise, we skip.
+		if(coreCompileCommand.size() > compileCommand.size()) {
+			if(!runCCompiler(coreCompileCommand, cSourceDirectory)) {
+				return false;
+			}
+		}
+		
+		compileCommand.add(null);
+		// we compile each Shadow c file on its own
+		for(File cFile : cShadowFiles) {
+			// checks if the files should be compiled, and add the .s file path to the assembleCommand
+			// list whether or not the file needs to be compiled.
+			if(shouldCompileCFile(cFile, assembleCommand)) {
+				compileCommand.set(compileCommand.size() - 1, cFile.getCanonicalPath());
+				if(!runCCompiler(compileCommand, cFile.getParentFile())) {
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	private static boolean runCCompiler(List<String> compileCommand, File cSourceDirectory) throws IOException {
+		try {
+			return new ProcessBuilder(compileCommand)
+						.directory(cSourceDirectory)
+						.redirectError(Redirect.INHERIT)
+						.start()
+						.waitFor() == 0;
+		} catch (InterruptedException e) {
+		}
+		
+		return false;
+	}
+	
+	public static boolean shouldCompileCFile(File currentFile, List<String> assembleCommand) throws IOException {
+		Path assemblyPath = Paths.get(BaseChecker.stripExtension(currentFile.getAbsolutePath()) + ".s").normalize();
+		assembleCommand.add(assemblyPath.toFile().getAbsolutePath());
+		
+		if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(currentFile.toPath())) < 0) {
+			logger.info("Generating Assembly code for " + currentFile.getName());
+			return true;
+		} else {
+			logger.info("Using pre-existing Assembly code for " + currentFile.getName());
+		}
+		
+		return false;
+	}
+	
 	/*
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
 	 * containing class/file. This involves either finding an existing .ll file
 	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
 	 */
-	private static void generateLLVM(List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {		
-		
-
+	private static void generateLLVM(List<File> cFiles, List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = BaseChecker.stripExtension(TypeCollector.canonicalize(mainFile)); 
 
@@ -308,6 +406,12 @@ public class Main {
 						else
 							throw new CompileException("File " + file + " does not contain an appropriate main() method");							
 					}
+					
+					String className = typeToFileName(type);
+					Path cFile = file.getParent().resolve(className + ".c").normalize();
+					if(Files.exists(cFile)) {
+						cFiles.add(cFile.toFile());
+					}
 				
 					//if the LLVM didn't exist, the full .shadow file would have been used				
 					if( file.toString().endsWith(".meta") ) {
@@ -321,11 +425,11 @@ public class Main {
 						TACModule module = optimizeTAC( new TACBuilder().build(node), false );
 	
 						// Write to file
-						String className = typeToFileName(type);						
-						llvmFile = file.getParent().resolve(className + ".ll");						
+						llvmFile = file.getParent().resolve(className + ".ll");
 						Path nativeFile = file.getParent().resolve(className + ".native.ll");
+						
 						LLVMOutput output = new LLVMOutput(llvmFile);
-						try {					
+						try {
 							output.build(module);
 						}
 						catch(ShadowException e) {
@@ -333,7 +437,7 @@ public class Main {
 							output.close();							
 							Files.deleteIfExists(llvmFile);
 							throw new CompileException(e.getMessage());
-						}				
+						}
 	
 						if( Files.exists(llvmFile) )
 							linkCommand.add(TypeCollector.canonicalize(llvmFile));
@@ -403,24 +507,38 @@ public class Main {
 				if( !type.equals(Type.ARRAY) && !type.equals(Type.ARRAY_NULLABLE)) {
 					Set<String> usedFields = allUsedFields.get(type);
 					for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
-						if( !entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey()) )
-							reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD, "Field " + entry.getKey() + " is never used");
+						if( !entry.getValue().getModifiers().isConstant() 
+								&& !usedFields.contains(entry.getKey()) 
+								&& entry.getValue().getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
+						  ) {
+							reporter.addWarning(entry.getValue(), 
+									TypeCheckException.Error.UNUSED_FIELD, 
+									"Field " + entry.getKey() + " is never used");
+						}
 					}
 				}
 				
 				//give warnings if private methods are never used
-				for( List<MethodSignature> signatures : type.getMethodMap().values() )
-					for( MethodSignature signature : signatures )
-						if( signature.getModifiers().isPrivate() && !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) )
-							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD, "Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
-				
-			}					
-			
+				for( List<MethodSignature> signatures : type.getMethodMap().values() ) {
+					for( MethodSignature signature : signatures ) {
+						if( signature.getModifiers().isPrivate() 
+								&& !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments()) 
+								&& !signature.getSymbol().startsWith("$") && !signature.isExtern() 
+								&& signature.getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
+						  ) {
+							reporter.addWarning(signature.getNode(), 
+									TypeCheckException.Error.UNUSED_METHOD, 
+									"Private method " + signature.getSymbol() + signature.getMethodType() + " is never used");
+						}
+					}
+				}
+			}
+
 			reporter.printAndReportErrors();
 		}
 		
 		return module;
-	}	
+	}
 
 	private static void addToLink( Type type, Path file, List<String> linkCommand ) throws IOException, ShadowException {
 		

@@ -133,7 +133,7 @@ _loopEnd:
 	%uninitializedArraySet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
 	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_int(%shadow.standard..Object* %uninitializedArraySet, %int %arraySize) ; %arraySize is replaced by compiler
 	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet		
-	invoke void @shadow.test..Test_Mmain_shadow.standard..String_A1(%shadow.test..Test* %initialized, { {%ulong, %shadow.standard..String*}*, [1 x i32] } %args)
+	invoke void @callMain(%shadow.test..Test* %initialized, { {%ulong, %shadow.standard..String*}*, [1 x i32] } %args)
 			to label %_success unwind label %_exception
 _success:		
 	call void @__decrementRef(%shadow.standard..Object* %object) nounwind
@@ -147,4 +147,16 @@ _exception:
 	%exceptionAsObject = bitcast %shadow.standard..Exception* %exception to %shadow.standard..Object*	
 	call %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console* %console, %shadow.standard..Object* %exceptionAsObject )
 	ret i32 1
+}
+
+%shadow.standard..Thread = type opaque
+declare %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
+declare void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread*)
+define void @callMain(%shadow.test..Test* %initialized, { {%ulong, %shadow.standard..String*}*, [1 x i32] } %args) {
+entry:
+	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
+	call void @shadow.test..Test_Mmain_shadow.standard..String_A1(%shadow.test..Test* %initialized, { {%ulong, %shadow.standard..String*}*, [1 x i32] } %args)
+	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* %mainThread)
+	
+	ret void
 }

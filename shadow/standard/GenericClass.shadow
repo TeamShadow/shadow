@@ -8,6 +8,7 @@ immutable class shadow:standard@
 	GenericClass is Class
 {	
 	get Class[] parameters; //class data
+	/// @unused
 	MethodTable[] tables;   //method tables for each class 
 	
 	/**

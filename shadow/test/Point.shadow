@@ -1,0 +1,23 @@
+class shadow:test@
+	Point
+is CanEqual<Point>
+{
+	get int x;
+	get int y;
+	
+	public create(int x, int y)
+	{
+		this:x = x;
+		this:y = y;
+	}
+	
+	public readonly equal(Point other) => (boolean)
+	{
+		return (x == other->x and y == other->y);
+	}
+	
+	private createNative(int x, int y) => (Point)
+	{
+		return Point:create(x, y);
+	}
+}

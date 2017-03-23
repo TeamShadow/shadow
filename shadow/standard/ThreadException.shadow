@@ -1,0 +1,38 @@
+/**
+ * @author Claude Abounegm
+ */
+exception shadow:standard@
+	ThreadException
+{
+	immutable get String message;
+	get Thread thread;
+	get Exception parent;
+	get Exception actual;
+	
+	public create(Thread thread, Exception parent) 
+	{
+		this:thread = thread;
+		this:parent = parent;
+
+		// generate the propagation stack
+		var propagationStr = thread->name;
+		var ex = parent;
+		while(ex is ThreadException) {
+			var threadEx = cast<ThreadException>(ex);
+			propagationStr = threadEx:thread->name # " to " # propagationStr;
+
+			ex = threadEx:parent;
+		}
+
+		this:message =  "Thread Exception @" # thread->name # ":\n" #
+						"   Propagated from: (" # propagationStr # ")\n" #
+						"   Throwing: (" # ex # ")";
+
+		this:actual = ex;
+	}
+
+	public readonly toString() => (String)
+	{
+		return message;
+	}
+}
