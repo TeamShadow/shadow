@@ -3,8 +3,6 @@
 
 #include <natives/Pointer.h>
 
-void* shadow_ExtractToVoidPointer(shadow_Pointer_t*);
-
 typedef enum {
 	// This means that the method ShadowPointer.free() will not call C's free() function
 	// when called. This is used when the pointer was allocated using a function such as
@@ -17,6 +15,9 @@ typedef enum {
 	SHADOW_CAN_FREE = 1
 } free_type_t;
 
+void* _shadow_ExtractPointer(shadow_Pointer_t*);
+shadow_Pointer_t* _shadow_CreatePointer(void* ptr, free_type_t type);
+
 /**
  * Creates a managed shadow:natives@ShadowPointer from the void pointer. A NULL pointer
  * initializes an invalid ShadowPointer, which tells Shadow code that something went wrong.
@@ -26,13 +27,13 @@ typedef enum {
  *		return shadow_CreatePointer(malloc(sizeof(UsefulStruct)), SHADOW_CAN_FREE);
  *	}
  */
-shadow_Pointer_t* shadow_CreatePointer(void* ptr, free_type_t type);
+#define shadow_CreatePointer _shadow_CreatePointer
 
 /**
  * Works the same as ExtractRawPointer() but returns a Type* instead of a void*.
  * With the RawPointer format we got to do a cast as follows: (SomethingUseful*)ExtractRawPointer(ptr),
  * with this marco we can do ExtractPointer(SomethingUseful, ptr) and it returns SomethingUseful*.
  */
-#define shadow_ExtractPointer(Type, ShadowPointer) ((Type*)shadow_ExtractToVoidPointer(ShadowPointer))
+#define shadow_ExtractPointer(T, ShadowPointer) ((T*)_shadow_ExtractPointer(ShadowPointer))
 
 #endif

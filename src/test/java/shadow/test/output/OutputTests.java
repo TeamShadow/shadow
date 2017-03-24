@@ -1156,6 +1156,25 @@ public class OutputTests {
 		run(new String[0], "Hello from printf!\n");
 	}
 	
+	@Test public void testReadOnlyList() throws Exception {
+		args.add("shadow/test/ReadOnlyListTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], formatOutputString("5", "7"));
+	}
+	
+	@Test public void testEqualityComparer() throws Exception {
+		args.add("shadow/test/EqualityComparerTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n" +
+				"true\n");
+	}
+	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -1306,18 +1325,5 @@ public class OutputTests {
 				"1 1\n" +
 				"1 1\n" +
 				"0\n");
-	}
-	
-	@Test public void testEqualityComparer() throws Exception {
-		args.add("shadow/test/EqualityComparerTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n" +
-				"true\n");
 	}*/
 }

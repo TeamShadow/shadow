@@ -4,7 +4,7 @@
 #include <ShadowCore.h>
 #include <stdlib.h>
 
-void ExtractDataFromShadowString(shadow_String_t*, shadow_NativeArray_t**, shadow_boolean_t*);
+void _shadow_UnpackString(shadow_String_t*, shadow_NativeArray_t**, shadow_boolean_t*);
 
 char* shadow_UnpackStringToCStr(shadow_String_t* stringRef)
 {
@@ -24,7 +24,7 @@ char* shadow_UnpackStringToCStr(shadow_String_t* stringRef)
 void shadow_UnpackString(shadow_String_t* stringRef, ShadowStringData* str)
 {
 	shadow_NativeArray_t* array;
-	ExtractDataFromShadowString(stringRef, &array, &str->ascii);
+	_shadow_UnpackString(stringRef, &array, &str->ascii);
 	
 	shadow_UnpackArray(array, (VoidArray*)str);
 }
