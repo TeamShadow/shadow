@@ -4,22 +4,40 @@
  * storage.
  */
 class shadow:utility@
-	ArrayList<V is CanEqual<V>>
+	ArrayList<V>
 is  List<V>
 {
 	/// Gets size of the list.
 	get int size = 0;
-	nullable V[] elements = V:null[10];
+	
+	nullable V[] elements;
 	int modifications = 0;
-		
+	Equate<V> equater;
+	
+	public create()
+	{
+		this(10);
+	}
+	
+	public create(int initialCapacity)
+	{
+		this(initialCapacity, DefaultEqualizer<V>:create());
+	}
+	
+	public create(int initialCapacity, Equate<V> equater)
+	{
+		this:elements = V:null[initialCapacity];
+		this:equater = equater;
+	}
+	
 	/**
 	 * Checks whether or not the list is empty.
 	 * @return {@code true} if the list is empty
 	 */
-	public isEmpty() => ( boolean )
+	public readonly isEmpty() => ( boolean )
 	{
 		return size == 0;
-	}	
+	}
 	
 	/**
 	 * Retrieves the element at the given index. Legal indexes are from 0
@@ -63,7 +81,7 @@ is  List<V>
 	
 	// Doubles the size of the backing array.
 	private grow() => ()
-	{		
+	{
 		nullable V[] temp = V:null[elements->size * 2];
 		for( int i = 0; i < elements->size; i += 1 )
 			temp[i] = elements[i];
@@ -81,7 +99,7 @@ is  List<V>
 	public add(V value) => ( ArrayList<V> )
 	{		
 		index( size, value );
-		return this;			
+		return this;
 	}
 	
 	/**
@@ -89,7 +107,7 @@ is  List<V>
 	 * constant time.	 
 	 * @return list after being cleared	 	   
 	 */		
-	public clear() => ( ArrayList<V> )
+	public clear() => (ArrayList<V>)
 	{
 		size = 0;
 		modifications += 1;
@@ -103,7 +121,7 @@ is  List<V>
 	 */
 	public readonly contains(V value) => (boolean found)
 	{				
-		return indexOf(value) != -1;	
+		return indexOf(value) != -1;
 	}
 	
 	/**
@@ -112,14 +130,14 @@ is  List<V>
 	 * @param value element to search for
 	 * @return index of element or -1 if not found
 	 */
-	public readonly indexOf(CanEqual<V> value) => (int index)
+	public readonly indexOf(V value) => (int index)
 	{	
-		for( int i = 0; i < size; i += 1 )
-		{
-			if( value == check(elements[i]) )
+		for(int i = 0; i < size; i += 1) {
+			if(equater.areEqual(value, check(elements[i]))) {
 				return i;
+			}
 		}
-	
+
 		return -1;
 	}
 	
@@ -129,19 +147,19 @@ is  List<V>
 	 * @param index index of element to remove
 	 * @return element being removed
 	 * @throws IndexOutOfBoundsException if an illegal index is specified
-	 */	
-	public delete(int index) => ( V value )
+	 */
+	public delete(int index) => (V value)
 	{
-		if( index < 0 or index >= size )
+		if(index < 0 or index >= size)
 			throw IndexOutOfBoundsException:create();
-	
-		V temp = check(elements[index]);	
-		for( int i = index; i < size - 1; i += 1 )
+
+		V temp = check(elements[index]);
+		for(int i = index; i < size - 1; i += 1)
 			elements[i] = elements[i + 1];
 		size -= 1;
 		modifications += 1;
 		return temp;
-	}	
+	}
 	
 	/**
 	 * Removes the first occurrence of an element. This operation is linear
@@ -149,14 +167,14 @@ is  List<V>
 	 * @param value value of element to remoe
 	 * @return {@code true} if the element was found and removed	 
 	 */	
-	public remove( V value ) => (boolean success)
+	public remove(V value) => (boolean success)
 	{
 		int index = indexOf(value);
-		if( index == -1 )
+		if(index == -1)
 			return false;
-			
+
 		delete(index);
-		return true;	
+		return true;
 	}
 	
 	/**
@@ -165,18 +183,19 @@ is  List<V>
 	 * @return {@code String} representation 
 	 */
 	public readonly toString() => (String)
-	{		
+	{
 		MutableString string = MutableString:create("[");
 		boolean first = true;
-		foreach( V value in this )
-		{					
-			if( first )
+		foreach(V value in this)
+		{
+			if(first)
 				first = false;
 			else
 				string.append(", ");
 			
-			string.append(#value);			
+			string.append(#value);
 		}
+		
 		return string.append("]").toString();
 	}
 
@@ -197,10 +216,10 @@ is  List<V>
 	{
 		int index = 0;
 		int expectedModifications = modifications;
-			
+		
 		private readonly checkForModifications() => ()
 		{
-			if( expectedModifications != modifications )
+			if(expectedModifications != modifications)
 				throw IllegalModificationException:create();		
 		}
 	

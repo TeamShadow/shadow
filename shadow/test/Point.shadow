@@ -15,9 +15,4 @@ is CanEqual<Point>
 	{
 		return (x == other->x and y == other->y);
 	}
-	
-	private createNative(int x, int y) => (Point)
-	{
-		return Point:create(x, y);
-	}
 }
