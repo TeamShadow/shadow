@@ -1,0 +1,39 @@
+import shadow:io;
+import shadow:utility;
+
+class shadow:utility@
+	DefaultEqualizer<T>
+is Equate<T>
+{
+	Equate<T> comparer;
+
+	public create()
+	{
+		if((T:class).isSubtype(CanEqual<T>:class)) {
+			comparer = canEqualComparer:create();
+		} else {
+			comparer = referenceComparer:create();
+		}
+	}
+	
+	public readonly areEqual(T a, T b) => (boolean)
+	{
+		return comparer.areEqual(a, b);
+	}
+	
+	private class canEqualComparer is Equate<T>
+	{
+		public readonly areEqual(T a, T b) => (boolean)
+		{
+			return cast<CanEqual<T>>(cast<Object>(a)).equal(b);
+		}
+	}
+	
+	private class referenceComparer is Equate<T>
+	{
+		public readonly areEqual(T a, T b) => (boolean)
+		{
+			return (a === b);
+		}
+	}
+}

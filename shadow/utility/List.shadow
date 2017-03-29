@@ -4,7 +4,7 @@
  * for storing and retrieving elements at indexes.
  */
 interface shadow:utility@
-	List<E is CanEqual<E>>
+	List<E>
 is	CanIterate<E>
 and CanIndex<int, E>
 and CanIndexStore<int, E>

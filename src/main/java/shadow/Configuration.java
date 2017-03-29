@@ -96,6 +96,7 @@ public class Configuration {
 	 * 		-Exception if not found
 	 * 2. A file in the source directory with the default name
 	 * 3. A file in the running directory with the default name
+	 * 4. A file in the working directory with the default name
 	 */
 	private Path locateConfig(String mainFilePath, String configFilePath) throws FileNotFoundException, ConfigurationException {
 		
@@ -150,6 +151,10 @@ public class Configuration {
 		/// 3: Default config file, local to the running directory
 		else if( Files.exists(runningDir.resolve(defaultFile)) ) {
 			return runningDir.resolve(defaultFile);
+		}
+		/// 4: Default config file, local to the working directory
+		else if( Files.exists(workingDir.resolve(defaultFile)) ) {
+			return workingDir.resolve(defaultFile);
 		}
 		else {
 			return null;

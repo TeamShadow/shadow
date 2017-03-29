@@ -1,0 +1,11 @@
+/**
+ * @author Claude Abounegm
+ */
+exception shadow:standard@
+	InvalidOperationException
+{
+	public create(String message) 
+	{
+		super(message); 
+	}
+}
