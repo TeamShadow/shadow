@@ -42,18 +42,18 @@ class shadow:test@EqualityComparerTest
 		var p2 = Point1:create(1, 1);
 		var p3 = Point1:create(2, 2);
 
-		Console.printLine(comp1.areEqual(p1, p1) == true);
-		Console.printLine(comp1.areEqual(p1, p2) == false);
-		Console.printLine(comp1.areEqual(p1, p3) == false);
+		Console.printLine(comp1.equal(p1, p1));
+		Console.printLine(!comp1.equal(p1, p2));
+		Console.printLine(!comp1.equal(p1, p3));
 
 		var p4 = Point2:create(1, 1);
 		var p5 = Point2:create(1, 1);
 		var p6 = Point2:create(2, 2);
 
-		Console.printLine(comp2.areEqual(p4, p4) == true);
-		Console.printLine(comp2.areEqual(p4, p5) == true);
-		Console.printLine(comp2.areEqual(p4, p6) == false);
+		Console.printLine(comp2.equal(p4, p4));
+		Console.printLine(comp2.equal(p4, p5));
+		Console.printLine(!comp2.equal(p4, p6));
 
-		Console.printLine(comp3.areEqual(Point:create(1, 1), Point:create(1, 1)) == true);		
+		Console.printLine(comp3.equal(Point:create(1, 1), Point:create(1, 1)));		
 	}
 }

@@ -98,7 +98,7 @@ and Deque<V>
 				return ( -1, null );
 			}
 			
-			if(equater.areEqual(value, check(current->value))) {
+			if(equater.equal(value, check(current->value))) {
 				return ( index, current );
 			}
 			

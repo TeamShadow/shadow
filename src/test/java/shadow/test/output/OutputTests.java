@@ -41,6 +41,8 @@ public class OutputTests {
 			args.add("mac.xml");
 		else
 			args.add("linux.xml");
+		
+		//args.add("-f");
 	}
 	
 	@After

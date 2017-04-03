@@ -9,10 +9,7 @@ class shadow:test@ReadOnlyListTest
 	public create()
 	{
 		list = ArrayList<int>:create();
-		readonlyList = ReadOnlyList<int>:create(list); // currently fails at compiler level
-		
-		// workaround which works:
-		// readonlyList = ReadOnlyList<int>:create(cast<List<int>>(list));
+		readonlyList = ReadOnlyList<int>:create(list);
 	}
 	
 	public main(String[] args) => ()
