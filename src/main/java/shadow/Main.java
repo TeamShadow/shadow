@@ -87,13 +87,11 @@ public class Main {
 			System.err.println("FILE NOT FOUND: " + e.getLocalizedMessage());
 			System.exit(FILE_NOT_FOUND_ERROR);
 		}
-		catch(ParseException e) {
-			System.err.println("PARSE ERROR: " + e.getLocalizedMessage());
+		catch(ParseException e) {			
 			System.exit(PARSE_ERROR);
 		}
 		catch (IOException e) {
-			System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
-			e.printStackTrace();
+			System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());			
 			System.exit(TYPE_CHECK_ERROR);
 		}
 		catch (org.apache.commons.cli.ParseException e) {
@@ -106,17 +104,14 @@ public class Main {
 			Arguments.printHelp();
 			System.exit(CONFIGURATION_ERROR);
 		}
-		catch (TypeCheckException e) {
-			System.err.println("TYPE CHECK ERROR: " + e.getLocalizedMessage());
+		catch (TypeCheckException e) {			
 			System.exit(TYPE_CHECK_ERROR);
 		}
-		catch (CompileException e) {
-			System.err.println("COMPILATION ERROR: " + e.getLocalizedMessage());
+		catch (CompileException e) {			
 			System.exit(COMPILE_ERROR);
 		}
 		catch (ShadowException e) {
-			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
-			e.printStackTrace();
+			System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());			
 			System.exit(TYPE_CHECK_ERROR);
 		}
 	}
@@ -159,7 +154,11 @@ public class Main {
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
-		linkCommand.add(system.resolve(Paths.get("shadow", "Shared.ll")).toString());
+		Path shared = system.resolve(Paths.get("shadow", "Shared.ll"));
+		
+		if( !Files.exists(shared) )
+			System.out.println("Oh no!");
+		linkCommand.add(shared.toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();

@@ -1,0 +1,22 @@
+import shadow:io@Console;
+import shadow:utility@ArrayList;
+import shadow:utility@ReadOnlyList;
+
+
+class GenericInterface
+{
+	public main(String[] args) => ()
+	{
+		var list = ArrayList<int>:create();
+	
+		// PROBLEM HERE
+		var readonlyList = ReadOnlyList<int>:create(list);
+		
+		list.add(5);
+		list.add(7);
+		
+		foreach(int value in readonlyList) {
+			Console.printLine(value);
+		}
+	}
+}
