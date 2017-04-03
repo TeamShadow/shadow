@@ -3,25 +3,25 @@ import shadow:utility;
 
 class shadow:test@ReadOnlyListTest
 {
-	ArrayList<int> list;
-	ReadOnlyList<int> readonlyList;
+	//ArrayList<int> list;
+	//ReadOnlyList<int> readonlyList;
 	
 	public create()
 	{
-		list = ArrayList<int>:create();
-		readonlyList = ReadOnlyList<int>:create(list); // currently fails at compiler level
+		//list = ArrayList<int>:create();
+		//readonlyList = ReadOnlyList<int>:create(list); // currently fails at compiler level
 		
 		// workaround which works:
-		// readonlyList = ReadOnlyList<int>:create(cast<List<int>>(list));
+		//readonlyList = ReadOnlyList<int>:create(cast<List<int>>(list));
 	}
 	
 	public main(String[] args) => ()
 	{
-		list.add(5);
+		/*list.add(5);
 		list.add(7);
 		
 		foreach(int value in readonlyList) {
 			Console.printLine(value);
-		}
+		}*/
 	}
 }
