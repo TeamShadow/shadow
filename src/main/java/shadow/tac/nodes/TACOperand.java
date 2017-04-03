@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PointerType;
@@ -81,8 +82,14 @@ public abstract class TACOperand extends TACNode implements ModifiedType
 		if(( (type.getType() instanceof ArrayType) && getType().equals(type.getType())  && !(getType() instanceof ArrayType) ))
 			return TACCast.cast(node, type, this);		
 		
-		if( type.getType().isParameterized() && getType().getTypeWithoutTypeArguments().isStrictSubtype(type.getType()))
-			return TACCast.cast(node, type, this);
+		if( type.getType().isParameterized() ) {
+			//generic interfaces require special handling
+			if( type.getType() instanceof InterfaceType && getType().hasUninstantiatedInterface((InterfaceType)type.getType()) )
+				return TACCast.cast(node, type, this);
+			
+			if( getType().getTypeWithoutTypeArguments().isStrictSubtype(type.getType()))
+				return TACCast.cast(node, type, this);			
+		}		
 		
 		//if it got past the typechecker, we need to cast this type parameter into a real thing
 		if( (getType() instanceof TypeParameter) && !(type.getType() instanceof TypeParameter)  )

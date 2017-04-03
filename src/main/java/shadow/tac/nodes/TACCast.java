@@ -61,125 +61,136 @@ public class TACCast extends TACUpdate
 		return cast(node, destination, op, false);
 	}
 
+	
+	static int levels = 0;
+	
 	@SuppressWarnings("incomplete-switch")
 	public static TACCast cast(TACNode node, ModifiedType destination, TACOperand op, boolean check)
-	{
-		if (destination.getType() == Type.NULL)
-			destination = new SimpleModifiedType(Type.OBJECT,
-					new Modifiers(Modifiers.NULLABLE));
-		
-		Format in = typeToFormat(op);
-		Type inType = op.getType();
-		Type outType = destination.getType();
-		Format out = typeToFormat(destination);
-		ModifiedType intermediate;
-		
-		switch( in ) {
-		case ARRAY:			
-			switch( out ) {
-			case INTERFACE:
-				intermediate = new SimpleModifiedType(((ArrayType)inType).convertToGeneric());
-				return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check ), Kind.OBJECT_TO_INTERFACE, check);
-			case OBJECT:
-				intermediate = new SimpleModifiedType(((ArrayType)inType).convertToGeneric());
-				//the "same" types, no object cast needed
-				if( needsCast(intermediate, destination)  )
-					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check ), Kind.OBJECT_TO_OBJECT, check);
-				else
-					return new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check );
-			case SEQUENCE:
-				return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);				
-			}			
-			break;
+	{		
+		levels++;
+		try
+		{
+			if (destination.getType() == Type.NULL)
+				destination = new SimpleModifiedType(Type.OBJECT,
+						new Modifiers(Modifiers.NULLABLE));
 			
-		case INTERFACE:
-			switch( out ) {
-			case ARRAY:
-				intermediate = new SimpleModifiedType(((ArrayType)outType).convertToGeneric());
-				return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, check ), Kind.OBJECT_TO_ARRAY, check);
-			case INTERFACE:
-				intermediate = new SimpleModifiedType(Type.OBJECT);
-				return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, false ), Kind.OBJECT_TO_INTERFACE, check);
-			case OBJECT:
-				intermediate = new SimpleModifiedType(Type.OBJECT);
-				//the "same" types, no object cast needed
-				if( needsCast(intermediate, destination)  )				
-					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, false ), Kind.OBJECT_TO_OBJECT, check);	
-				else
-					return new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, false );
-			case PRIMITIVE:
-				intermediate = new SimpleModifiedType(outType, new Modifiers(destination.getModifiers().getModifiers() | Modifiers.NULLABLE));
-				return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, check ), Kind.OBJECT_TO_PRIMITIVE, check);
-			case SEQUENCE:
-				return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);
-			}			
-			break;
+			Format in = typeToFormat(op);
+			Type inType = op.getType();
+			Type outType = destination.getType();
+			Format out = typeToFormat(destination);
+			ModifiedType intermediate;
 			
-		case NULL:
-			switch( out ) {
-			case ARRAY:
-				return new TACCast(node, destination, op, Kind.NULL_TO_ARRAY, check);
+			switch( in ) {
+			case ARRAY:			
+				switch( out ) {
+				case INTERFACE:
+					intermediate = new SimpleModifiedType(((ArrayType)inType).convertToGeneric());
+					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check ), Kind.OBJECT_TO_INTERFACE, check);
+				case OBJECT:
+					intermediate = new SimpleModifiedType(((ArrayType)inType).convertToGeneric());
+					//the "same" types, no object cast needed
+					if( needsCast(intermediate, destination)  )
+						return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check ), Kind.OBJECT_TO_OBJECT, check);
+					else
+						return new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check );
+				case SEQUENCE:
+					return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);				
+				}			
+				break;
+				
 			case INTERFACE:
-				return new TACCast(node, destination, op, Kind.NULL_TO_INTERFACE, check);				
+				switch( out ) {
+				case ARRAY:
+					intermediate = new SimpleModifiedType(((ArrayType)outType).convertToGeneric());
+					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, check ), Kind.OBJECT_TO_ARRAY, check);
+				case INTERFACE:
+					intermediate = new SimpleModifiedType(Type.OBJECT);
+					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, false ), Kind.OBJECT_TO_INTERFACE, check);
+				case OBJECT:
+					intermediate = new SimpleModifiedType(Type.OBJECT);
+					//the "same" types, no object cast needed
+					if( needsCast(intermediate, destination)  )				
+						return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, false ), Kind.OBJECT_TO_OBJECT, check);	
+					else
+						return new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, false );
+				case PRIMITIVE:
+					intermediate = new SimpleModifiedType(outType, new Modifiers(destination.getModifiers().getModifiers() | Modifiers.NULLABLE));
+					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, check ), Kind.OBJECT_TO_PRIMITIVE, check);
+				case SEQUENCE:
+					return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);
+				}			
+				break;
+				
+			case NULL:
+				switch( out ) {
+				case ARRAY:
+					return new TACCast(node, destination, op, Kind.NULL_TO_ARRAY, check);
+				case INTERFACE:
+					return new TACCast(node, destination, op, Kind.NULL_TO_INTERFACE, check);				
+				case OBJECT:
+					return new TACCast(node, destination, op, Kind.OBJECT_TO_OBJECT, check);				
+				case SEQUENCE:
+					return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);				
+				}
+				break;
+				
 			case OBJECT:
-				return new TACCast(node, destination, op, Kind.OBJECT_TO_OBJECT, check);				
-			case SEQUENCE:
-				return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);				
-			}
-			break;
-			
-		case OBJECT:
-			switch( out ) {
-			case ARRAY:
-				return new TACCast(node, destination, op, Kind.OBJECT_TO_ARRAY, check);
-			case INTERFACE:
-				return new TACCast(node, destination, op, Kind.OBJECT_TO_INTERFACE, check);
-			case OBJECT:
-				return new TACCast(node, destination, op, Kind.OBJECT_TO_OBJECT, check);
+				switch( out ) {
+				case ARRAY:
+					return new TACCast(node, destination, op, Kind.OBJECT_TO_ARRAY, check);
+				case INTERFACE:
+					return new TACCast(node, destination, op, Kind.OBJECT_TO_INTERFACE, check);
+				case OBJECT:
+					return new TACCast(node, destination, op, Kind.OBJECT_TO_OBJECT, check);
+				case PRIMITIVE:
+					return new TACCast(node, destination, op, Kind.OBJECT_TO_PRIMITIVE, check);
+				case SEQUENCE:
+					return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);				
+				}
+	
+				break;
 			case PRIMITIVE:
-				return new TACCast(node, destination, op, Kind.OBJECT_TO_PRIMITIVE, check);
+				switch( out ) {
+				case INTERFACE:
+					intermediate = new SimpleModifiedType(inType, new Modifiers(destination.getModifiers().getModifiers() | Modifiers.NULLABLE)); 
+					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), Kind.OBJECT_TO_INTERFACE, check);
+				case OBJECT:
+					intermediate = new SimpleModifiedType(inType, new Modifiers(Modifiers.NULLABLE));
+					if( needsCast(intermediate, destination)  )
+						return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), Kind.OBJECT_TO_OBJECT, check);
+					else
+						return new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false );
+				case PRIMITIVE:
+					return new TACCast(node, destination, op, Kind.PRIMITIVE_TO_PRIMITIVE, false );
+				case SEQUENCE:
+					break;
+				}
+	
+				break;
 			case SEQUENCE:
-				return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);				
-			}
-
-			break;
-		case PRIMITIVE:
-			switch( out ) {
-			case INTERFACE:
-				intermediate = new SimpleModifiedType(inType, new Modifiers(destination.getModifiers().getModifiers() | Modifiers.NULLABLE)); 
-				return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), Kind.OBJECT_TO_INTERFACE, check);
-			case OBJECT:
-				intermediate = new SimpleModifiedType(inType, new Modifiers(Modifiers.NULLABLE));
-				if( needsCast(intermediate, destination)  )
-					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), Kind.OBJECT_TO_OBJECT, check);
-				else
-					return new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false );
-			case PRIMITIVE:
-				return new TACCast(node, destination, op, Kind.PRIMITIVE_TO_PRIMITIVE, false );
-			case SEQUENCE:
+				switch( out ) {
+				case ARRAY:
+				case INTERFACE:
+				case OBJECT:
+				case PRIMITIVE:
+					intermediate = ((SequenceType)inType).get(0);
+					if( needsCast(intermediate, destination) )				
+						return TACCast.cast(node, destination, new TACCast(node, intermediate, op, Kind.SEQUENCE_TO_ITEM, check), check);
+					else
+						return new TACCast(node, destination, op, Kind.SEQUENCE_TO_ITEM, check);
+				case SEQUENCE:
+					return new TACCast(node, destination, op, Kind.SEQUENCE_TO_SEQUENCE, check);
+				}
+	
 				break;
 			}
-
-			break;
-		case SEQUENCE:
-			switch( out ) {
-			case ARRAY:
-			case INTERFACE:
-			case OBJECT:
-			case PRIMITIVE:
-				intermediate = ((SequenceType)inType).get(0);
-				if( needsCast(intermediate, destination) )				
-					return TACCast.cast(node, destination, new TACCast(node, intermediate, op, Kind.SEQUENCE_TO_ITEM, check), check);
-				else
-					return new TACCast(node, destination, op, Kind.SEQUENCE_TO_ITEM, check);
-			case SEQUENCE:
-				return new TACCast(node, destination, op, Kind.SEQUENCE_TO_SEQUENCE, check);
-			}
-
-			break;
+			
+			throw new IllegalArgumentException();
 		}
-		
-		throw new IllegalArgumentException();
+		finally
+		{
+			levels--;
+		}
 	}
 	
 	
@@ -219,11 +230,13 @@ public class TACCast extends TACUpdate
 	@SuppressWarnings("incomplete-switch")
 	private TACCast(TACNode node, ModifiedType destination, TACOperand op, Kind kind, boolean check ) {
 		super(node);
-		op = check(op, op); //gets rid of references
 		
 		type = destination.getType();
 		modifiers = new Modifiers(destination.getModifiers());
-		this.kind = kind;		
+		this.kind = kind;
+		
+		//big change removing this!
+		//op = check(op, op); //gets rid of references
 		
 		ModifiedType modifiedType;
 		SequenceType destinationSequence;
@@ -272,7 +285,7 @@ public class TACCast extends TACUpdate
 					operands.add(element);
 				index++;
 			}
-		}
+		}	
 	}
 	
 	private TACOperand getInterfaceData(TACOperand source, Type destination) {

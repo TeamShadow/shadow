@@ -841,22 +841,7 @@ public abstract class Type implements Comparable<Type> {
 
 	public boolean isUninstantiated()
 	{
-		return equals(getTypeWithoutTypeArguments());
-		
-		/*
-		if( !isParameterizedIncludingOuterClasses() )
-			return true;
-		
-		if( parameterized )
-			for( ModifiedType parameter : typeParameters )		
-				if( !(parameter.getType() instanceof TypeParameter) )
-					return false;		
-
-		if( hasOuter() )			
-			return getOuter().isUninstantiated();
-		
-		return true;
-		*/
+		return equals(getTypeWithoutTypeArguments());		
 	}
 
 

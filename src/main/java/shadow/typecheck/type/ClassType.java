@@ -525,9 +525,10 @@ public class ClassType extends Type {
 	public boolean hasInterface(InterfaceType type) {	
 		ClassType current = this;
 		while( current != null ) {
-			for( InterfaceType interfaceType : current.getInterfaces() )			
+			for( InterfaceType interfaceType : current.getInterfaces() ) {
 				if( interfaceType.hasInterface(type) )
 					return true;
+			}
 			
 			current = current.getExtendType();			
 		}

@@ -130,8 +130,13 @@ public class TypeCheckerTests {
 		args.add("tests/compile/Foreach.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+		
+	@Test public void testGenericInterface() throws Exception {
+		args.add("tests/compile/GenericInterface.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
-		@Test public void testGrandchild() throws Exception {
+	@Test public void testGrandchild() throws Exception {
 		args.add("tests/compile/Grandchild.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}

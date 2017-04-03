@@ -154,7 +154,11 @@ public class Main {
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
 		linkCommand.add(OsFile.toString());
-		linkCommand.add(system.resolve(Paths.get("shadow", "Shared.ll")).toString());
+		Path shared = system.resolve(Paths.get("shadow", "Shared.ll"));
+		
+		if( !Files.exists(shared) )
+			System.out.println("Oh no!");
+		linkCommand.add(shared.toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
