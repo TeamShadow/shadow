@@ -102,10 +102,19 @@ public class TACMethodRef extends TACOperand
 	public SequenceType getParameterTypes() {		
 		return signature.getFullParameterTypes();
 	}
+	
+	public SequenceType getUninstantiatedParameterTypes() {		
+		return signature.getSignatureWithoutTypeArguments().getFullParameterTypes();
+	}
 
 	public SequenceType getReturnTypes() {		
 		return signature.getFullReturnTypes();
 	}
+	
+	public SequenceType getUninstantiatedReturnTypes() {		
+		return signature.getSignatureWithoutTypeArguments().getFullReturnTypes();
+	}
+	
 	public int getReturnCount() {
 		return getReturnTypes().size();
 	}
@@ -113,7 +122,7 @@ public class TACMethodRef extends TACOperand
 		return getReturnCount() == 0;
 	}
 	public Type getReturnType() {
-		SequenceType returnTypes = signature.getFullReturnTypes();
+		SequenceType returnTypes = getUninstantiatedReturnTypes();
 		if( returnTypes.isEmpty() )
 			return null;
 		else if( returnTypes.size() == 1 )

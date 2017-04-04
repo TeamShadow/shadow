@@ -762,7 +762,7 @@ public class LLVMOutput extends AbstractOutput {
 			skipMethod = true;
 		}
 		else {
-			SequenceType parameters = signature.getFullParameterTypes();
+			SequenceType parameters = signature.getSignatureWithoutTypeArguments().getFullParameterTypes();
 			tempCounter = parameters.size();
 			writer.write("define " + methodToString(method) +
 					(signature.isWrapper() ? " unnamed_addr" : "" ) +
@@ -1944,7 +1944,7 @@ public class LLVMOutput extends AbstractOutput {
 				sb.append(type(signature.getOuter(), true)); //the nullable looks odd, but it gets the Object version of the primitive
 		}
 		else {
-			SequenceType returnTypes = signature.getFullReturnTypes();
+			SequenceType returnTypes = signature.getSignatureWithoutTypeArguments().getFullReturnTypes();
 			if( returnTypes.size() == 0 )
 				sb.append("void");
 			else if (returnTypes.size() == 1 )			
@@ -1958,7 +1958,7 @@ public class LLVMOutput extends AbstractOutput {
 		if (parameters) {
 			sb.append('(');
 			boolean first = true;
-			SequenceType parameterTypes = signature.getFullParameterTypes();
+			SequenceType parameterTypes = signature.getSignatureWithoutTypeArguments().getFullParameterTypes();
 
 			for (int i = 0; i < parameterTypes.size(); i++) {
 				if (first) {
