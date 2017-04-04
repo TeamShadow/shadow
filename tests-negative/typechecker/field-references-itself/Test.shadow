@@ -9,13 +9,13 @@ class Test
                 	field = this;                
                 }
 
-                public spawn() => (Dummy)
+                public make() => (Dummy)
                 {
                    return Dummy:create();
                 }
         }
 
-        Dummy a = a.spawn();
+        Dummy a = a.make();
         Dummy b = b->field;
 
         public main(String[] args) => ()

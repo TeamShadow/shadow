@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <pthread.h>
+//#include <pthread.h>
 
 shadow_Pointer_t* __ShadowThread_Spawn(shadow_Thread_t* this, void* (*thread_start)(void*))
 {

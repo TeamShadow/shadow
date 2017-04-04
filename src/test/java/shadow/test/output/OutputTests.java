@@ -99,9 +99,8 @@ public class OutputTests {
 		assertEquals(expectedError, error);		
 		
 		program.waitFor(); //keeps program from being deleted while running
-	}
-	
-	@SuppressWarnings("unused")
+	}	
+
 	private String formatOutputString(CharSequence... elements)
 	{
 		return String.join("\n", elements) + "\n";
