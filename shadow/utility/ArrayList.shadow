@@ -97,7 +97,7 @@ is  List<V>
 	 * @return list after the add
 	 */
 	public add(V value) => ( ArrayList<V> )
-	{		
+	{
 		index( size, value );
 		return this;
 	}

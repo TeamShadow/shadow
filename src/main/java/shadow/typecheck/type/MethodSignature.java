@@ -112,10 +112,12 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			return new SequenceType(Collections.<ModifiedType>singletonList(modified));
 		}
 		
-		//if( isWrapper() || outerType instanceof InterfaceType )
-			return signatureWithoutTypeArguments.type.getReturnTypes();
+		//if( isWrapper() || outerType instanceof InterfaceType )		
+			//return signatureWithoutTypeArguments.type.getReturnTypes();
 		//else
-			//return type.getReturnTypes();
+			return type.getReturnTypes();
+		
+		//return type.getReturnTypes();
 	}
 	
 	// These are the true parameter types that the compiler will use
@@ -124,9 +126,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		
 		MethodType methodType;
 		//if( isWrapper() || getOuter() instanceof InterfaceType )
-			methodType = signatureWithoutTypeArguments.type;
+			//methodType = signatureWithoutTypeArguments.type;
 		//else
-			//methodType = type;		
+			methodType = type;		
 
 		if(!isExtern()) {
 			Type outerType = getOuter();
@@ -137,11 +139,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 			if( isCreate() && getOuter().hasOuter() )
 					paramTypes.add(new SimpleModifiedType(getOuter().getOuter()));
-	
-			if (methodType.isParameterized())
-				for (int i = methodType.getTypeParameters().size(); i > 0; i--)
-					paramTypes.add(new SimpleModifiedType(Type.CLASS));
-			//TODO: add twice as many?  class type + method table?
 		}
 				
 		for (ModifiedType parameterType : methodType.getParameterTypes())

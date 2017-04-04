@@ -153,12 +153,8 @@ public class Main {
 		linkCommand.add(config.getLlvmLink()); //usually llvm-link
 		linkCommand.add("-");
 		linkCommand.add(unwindFile.toString());
-		linkCommand.add(OsFile.toString());
-		Path shared = system.resolve(Paths.get("shadow", "Shared.ll"));
-		
-		if( !Files.exists(shared) )
-			System.out.println("Oh no!");
-		linkCommand.add(shared.toString());
+		linkCommand.add(OsFile.toString());		
+		linkCommand.add(system.resolve(Paths.get("shadow", "Shared.ll")).toString());
 
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();

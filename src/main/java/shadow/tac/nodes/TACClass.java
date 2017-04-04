@@ -174,7 +174,7 @@ public class TACClass extends TACOperand
 			//get generics field from GenericClass
 			//get arrayref to index location
 			
-			TACVariable _this = method.getThis();				
+			TACVariable _this = method.getThis();
 			TACLoad classValue = new TACLoad(this, new TACFieldRef(new TACLocalLoad(this, _this), new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class")); 
 			TACOperand genericClass = TACCast.cast(this, new SimpleModifiedType(Type.GENERIC_CLASS), classValue);
 			TACOperand generics = new TACLoad(this, new TACFieldRef(genericClass, "parameters"));
