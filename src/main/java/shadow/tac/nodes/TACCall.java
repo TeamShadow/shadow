@@ -44,13 +44,27 @@ public class TACCall extends TACUpdate
 		super(node);		
 		this.methodRef = methodRef;
 		SequenceType types = methodRef.getParameterTypes();
+		SequenceType uninstantiatedTypes = methodRef.getUninstantiatedParameterTypes();
 		if (params.size() != types.size())
 			throw new IllegalArgumentException("Wrong # args");
 		Iterator<? extends TACOperand> paramIter = params.iterator();
-		Iterator<ModifiedType> typeIter = types.iterator();
+		int i = 0;
 		parameters = new ArrayList<TACOperand>(params.size());
-		while (paramIter.hasNext())
-			parameters.add(check(paramIter.next(), typeIter.next()));
+		
+		while (paramIter.hasNext()) {
+			TACOperand parameter = paramIter.next();
+			ModifiedType type = types.get(i);
+			parameter = check(parameter, type);			
+			ModifiedType uninstantiatedType = uninstantiatedTypes.get(i);
+			
+			if( !uninstantiatedType.getType().equals(type.getType()))
+				parameter = check(parameter, uninstantiatedType);
+			
+			parameters.add(parameter);
+			
+			i++;
+		}
+					
 		
 		if( getBlock().hasLandingpad() ) {
 			noExceptionLabel = new TACLabel(getMethod());

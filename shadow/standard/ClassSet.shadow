@@ -154,7 +154,7 @@ is  Set<Class>
 	 * length.
 	 */
 	private readonly findIndex( String value, int length ) => ( int index, int hash )
-	{
+	{		
 		uint temp = value->hash;			
 		temp ^= (temp >> 20) ^ (temp >> 12);
 		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
@@ -370,8 +370,8 @@ is  Set<Class>
 	 * @return matching generic class if found, {@code null} otherwise
 	 */	  
 	public locked readonly findGeneric(String name, immutable Class[] parameters) => (nullable GenericClass)
-	{
-		(int index, int hash) = findIndex( name, table->size );
+	{		
+		(int index, int hash) = findIndex( name, table->size );	
 		try
 		{
 			Node current = check(table[index]);			
@@ -385,15 +385,16 @@ is  Set<Class>
 						int i;
 						for( i = 0; i < parameters->size and parameters[i] === other->parameters[i]; i += 1 )
 							skip;
-						if( i >= parameters->size and name == other->name )							
-							return other;					
+						if( i >= parameters->size and name == other->name )
+							return other;
 					}
 				}
 				current = check(current->next);
 			}			
 		}
 		recover
-		{}		
+		{}
+		
 		return null;		
 	}
 	

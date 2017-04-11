@@ -332,7 +332,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			//turn context back on
 			anchor.setContext(ctx);
 
-			new TACReturn(anchor, method.getSignature().getFullReturnTypes(),
+			new TACReturn(anchor, method.getSignature().getSignatureWithoutTypeArguments().getFullReturnTypes(),
 					new TACLocalLoad(anchor, method.getLocal("this")));			
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}
@@ -1136,7 +1136,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		MethodType methodType = signature.getMethodType();
 		//sometimes a cast is needed when dealing with generic types
 		SequenceType requiredReturnTypes = methodType.getReturnTypes();
-		SequenceType methodReturnTypes = methodRef.getReturnTypes();		
+		SequenceType methodReturnTypes = methodRef.getUninstantiatedReturnTypes();		
 		
 		if( !methodReturnTypes.matches(requiredReturnTypes) ) {
 			if( requiredReturnTypes.size() == 1 )			
@@ -2028,7 +2028,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		anchor.setContext(context);
 		
 		if( method.getSignature().isCreate() )				
-			new TACReturn(anchor, method.getSignature().getFullReturnTypes(),
+			new TACReturn(anchor, method.getSignature().getSignatureWithoutTypeArguments().getFullReturnTypes(),
 					new TACLocalLoad(anchor, method.getLocal("this")));		
 		else {			
 			if( rightSide != null ) {
@@ -2509,7 +2509,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					//after incrementing reference count
 					if( !type.isPrimitive() )
 						new TACChangeReferenceCount(anchor, method.getThis(), true);
-					new TACReturn(anchor, methodSignature.getFullReturnTypes(), new TACLocalLoad(
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(
 							anchor, method.getThis()));
 				}			
 				else {					
@@ -2662,7 +2662,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					
 					
 					//No GC for a duplicated object, since it's "born" with a ref count of 1					
-					new TACReturn(anchor, methodSignature.getFullReturnTypes(), duplicate);
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), duplicate);
 					
 					returnLabel.insertBefore(anchor);
 					
@@ -2673,7 +2673,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					//storage is used to add a reference for GC (since this is a non-GC method, it's never decremented)					
 					TACVariable variable = method.addTempLocal(duplicate);
 					new TACLocalStore(anchor, variable, existingObject );					
-					new TACReturn(anchor, methodSignature.getFullReturnTypes(), existingObject);					
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), existingObject);					
 				}
 				
 				cleanupNonGCMethod();
@@ -2691,14 +2691,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					//add a reference count since whoever is getting this element expects it to go up by one 									
 					if( field.needsGarbageCollection() )
 						new TACChangeReferenceCount(anchor, field, true);
-					new TACReturn(anchor, methodSignature.getFullReturnTypes(),	load);
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(),	load);
 				}
 				else if (methodSignature.isSet()) {
 					TACVariable value = null;
 					for (TACVariable parameter : method.getParameters())
 						value = parameter;
 					new TACStore(anchor, field, new TACLocalLoad(anchor, value));
-					new TACReturn(anchor, methodSignature.getFullReturnTypes());
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
 				}				
 				
 				cleanupNonGCMethod();		
@@ -2707,8 +2707,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				setupGCMethod();				
 				
 				MethodSignature wrapped = methodSignature.getWrapped();
-				SequenceType fromTypes = methodSignature.getFullParameterTypes(),
-						toTypes = wrapped.getFullParameterTypes();
+				SequenceType fromTypes = methodSignature.getSignatureWithoutTypeArguments().getFullParameterTypes(),
+						toTypes = wrapped.getSignatureWithoutTypeArguments().getFullParameterTypes();
 				Iterator<TACVariable> fromArguments = method.addParameters(anchor, true).
 						getParameters().iterator();
 				List<TACOperand> toArguments = new ArrayList<TACOperand>(
@@ -2736,11 +2736,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					//turn context back on
 					anchor.setContext(context);					
 					
-					new TACReturn(anchor, methodSignature.getFullReturnTypes(), null);
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), null);
 				}
 				else {
-					fromTypes = wrapped.getFullReturnTypes();
-					toTypes = methodSignature.getFullReturnTypes();
+					fromTypes = wrapped.getSignatureWithoutTypeArguments().getFullReturnTypes();
+					toTypes = methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes();
 					
 					//cast all returns and store them in appropriate variables
 					if( value.getType() instanceof SequenceType ) {						

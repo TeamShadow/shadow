@@ -291,7 +291,7 @@ public class TACMethod
 									//complex case because of possible multiple return values
 									//delegated create return values should not be GC'd
 									MethodSignature signature = call.getMethodRef().getSignature();
-									SequenceType returns = signature.getFullReturnTypes();
+									SequenceType returns = signature.getSignatureWithoutTypeArguments().getFullReturnTypes();
 									TACNode anchor = next;
 									if( call.getNoExceptionLabel() != null )
 										anchor = call.getNoExceptionLabel().getNext();									
@@ -524,6 +524,7 @@ public class TACMethod
 							//delegated create return values should not be GC'd
 							MethodSignature signature = call.getMethodRef().getSignature();
 							SequenceType returns = signature.getFullReturnTypes();
+							//SequenceType returns = signature.getReturnTypes();
 							TACNode anchor = next;
 							if( call.getNoExceptionLabel() != null )
 								anchor = call.getNoExceptionLabel().getNext();
@@ -601,6 +602,9 @@ public class TACMethod
 	public TACVariable addLocal(ModifiedType type, String name)
 	{
 		TACVariable variable = new TACVariable(type, name, this);
+		Type varType =  variable.getType();
+		
+		
 		while (locals.containsKey(variable.getName()))
 			variable.rename();
 		locals.put(variable.getName(), variable);
