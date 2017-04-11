@@ -225,26 +225,30 @@ public class Main {
 				final OutputStream out = link.getOutputStream();				
 				while (line != null) {
 					
-					if( line.contains("@main")) { //declare externally defined generics
-						for( String generic : generics )
-							out.write(LLVMOutput.declareGeneric(generic).getBytes());
-						for( String array : arrays )
-							out.write(LLVMOutput.declareArray(array).getBytes());	
-						
-						out.write(System.lineSeparator().getBytes());
-					}
-					else if( line.trim().startsWith("%genericSet"))
-						line = line.replace("%genericSize", "" + generics.size()*2);
-					else if( line.trim().startsWith("%arraySet"))
-						line = line.replace("%arraySize", "" + arrays.size()*2);
-					else if( line.trim().startsWith("invoke")) { 
+					
+					if(line.contains("_INITIALIZE_CLASS_SETS_")) {						 
 						//add in all externally declared generics
 						LLVMOutput.addGenerics("%genericSet", generics, false, out);
-						LLVMOutput.addGenerics("%arraySet", arrays, true, out);						
-					}					
+						LLVMOutput.addGenerics("%arraySet", arrays, true, out);		
+					}
+					else {					
+						if( line.contains("@main")) { //declare externally defined generics
+							for( String generic : generics )
+								out.write(LLVMOutput.declareGeneric(generic).getBytes());
+							for( String array : arrays )
+								out.write(LLVMOutput.declareArray(array).getBytes());	
+							
+							out.write(System.lineSeparator().getBytes());
+						}
+						else if( line.trim().startsWith("%genericSet"))
+							line = line.replace("%genericSize", "" + generics.size()*2);
+						else if( line.trim().startsWith("%arraySet"))
+							line = line.replace("%arraySize", "" + arrays.size()*2);										
+						
+						line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
+						out.write(line.getBytes());
+					}
 					
-					line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
-					out.write(line.getBytes());
 					line = main.readLine();
 				}
 

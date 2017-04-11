@@ -8,7 +8,7 @@ class shadow:test@ReadOnlyListTest
 	
 	public create()
 	{
-		list = ArrayList<int>:create();
+		list = ArrayList<int>:create();	
 		readonlyList = ReadOnlyList<int>:create(list);
 	}
 	
@@ -19,6 +19,6 @@ class shadow:test@ReadOnlyListTest
 		
 		foreach(int value in readonlyList) {
 			Console.printLine(value);
-		}
+		}		
 	}
 }

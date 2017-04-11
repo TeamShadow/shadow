@@ -89,19 +89,19 @@ declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.st
 @_genericSet = global %shadow.standard..ClassSet* null;
 @_arraySet = global %shadow.standard..ClassSet* null;
 
-define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {	
-	
-	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
-	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
-    store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
-	%object = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.test..Test_class, %shadow.standard..Object_methods* bitcast(%shadow.test..Test_methods* @shadow.test..Test_methods to %shadow.standard..Object_methods*))		
-	%initialized = call %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object* %object)
+define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {		
 	%uninitializedGenericSet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
 	%genericSet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_int(%shadow.standard..Object* %uninitializedGenericSet, %int %genericSize) ; compiler replaces %genericSize
 	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	
 	%uninitializedArraySet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
 	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_int(%shadow.standard..Object* %uninitializedArraySet, %int %arraySize) ; compiler replaces %arraySize 
 	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet	
+	_INITIALIZE_CLASS_SETS_
+	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
+	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
+    store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance		
+	%object = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.test..Test_class, %shadow.standard..Object_methods* bitcast(%shadow.test..Test_methods* @shadow.test..Test_methods to %shadow.standard..Object_methods*))		
+	%initialized = call %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object* %object)	
 	invoke void @callMain(%shadow.test..Test* %initialized)
 			to label %_success unwind label %_exception
 _success:	
