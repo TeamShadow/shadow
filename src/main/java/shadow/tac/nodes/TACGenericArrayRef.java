@@ -1,7 +1,5 @@
 package shadow.tac.nodes;
 
-import java.util.Collection;
-
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
@@ -17,13 +15,13 @@ public class TACGenericArrayRef extends TACArrayRef {
 	private boolean isNullable;
 
 	public TACGenericArrayRef(TACNode node, TACOperand reference,
-			Collection<TACOperand> ops) {
-		this(node, reference, ops, true);
+			TACOperand index) {
+		this(node, reference, index, true);
 	}
 	
 	public TACGenericArrayRef(TACNode node, TACOperand reference,
-			Collection<TACOperand> ops, boolean check) {
-		super(node, reference, ops, check);
+			TACOperand index, boolean check) {
+		super(node, reference, index, check);
 		
 		ArrayType arrayType = (ArrayType) reference.getType();
 		Type baseType = arrayType.getBaseType();
@@ -37,6 +35,5 @@ public class TACGenericArrayRef extends TACArrayRef {
 	
 	public boolean isNullable() {
 		return isNullable;
-	}
-	
+	}	
 }

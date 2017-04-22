@@ -689,21 +689,14 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 		return visitChildren(ctx);
 	}
 	
-	public List<Integer> getDimensions(Context context)
-	{		
-		List<Integer> dimensions = new ArrayList<Integer>();
-		int value = 1;		
+	public int getDimensions(Context context) {		
+		int dimensions = 0;		
 		
 		for( ParseTree tree : context.children ) {
 			if( tree instanceof TerminalNode ) {
-				String token = ((TerminalNode)tree).getText();
-			
-				if( token.equals(",")  )
-					value++;
-				else if( token.equals("]")) {
-					dimensions.add(value);
-					value = 1;
-				}
+				String token = ((TerminalNode)tree).getText();			
+				if( token.equals("]"))					
+					dimensions++;				
 			}
 		}
 		

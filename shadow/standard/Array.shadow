@@ -36,24 +36,17 @@ and CanIterate<T>
 	public native destroy;
 
 	/**
-	 * Gets the size of the array (total number of elements in all dimensions).
-	 * @return number of all elements
+	 * Gets the size of the array (total number of elements) as an {@code int}.
+	 * @return size of array
 	 */
-	public readonly get size() => ( int )
-	{		
-		int size = lengths[0];
-		for ( int i = 1; i < lengths->size; i += 1 )
-			size *= lengths[i];
-			
-		return size;
-	}
+	public readonly native get size() => ( int );
 	
 	/**
-	 * Gets the number of dimensions in the array.
-	 * @return dimensions
+	 * Gets the size of the array (total number of elements) as a {@code long}.
+	 * @return size of array
 	 */
-	public readonly native get dimensions() => ( int );	
-	
+	public readonly native get longSize() => ( long );	
+
 	/* 
 	// Copy implementation based off the following code:
 	private readonly copyProxy(AddressMap addresses) => ( Array<T> )

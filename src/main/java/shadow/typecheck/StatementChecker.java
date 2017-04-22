@@ -408,8 +408,8 @@ public class StatementChecker extends BaseChecker {
 		Context child = (Context)ctx.getChild(0);  //either primitive type or class type
 		Type type = child.getType();		
 				
-		List<Integer> dimensions = getDimensions( ctx );
-		if( dimensions.size() != 0 )
+		int dimensions = getDimensions( ctx );
+		if( dimensions != 0 )
 			type = new ArrayType(type, dimensions, false);
 		
 		ctx.setType(type);
@@ -1952,7 +1952,7 @@ public class StatementChecker extends BaseChecker {
 		prefixNode = resolveType( prefixNode );
 		Type prefixType = prefixNode.getType();
 												
-		if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof ArrayType) ) {
+		if( prefixNode.getModifiers().isTypeName() && !(prefixType instanceof ArrayType) ) {			
 			ctx.setType(new ArrayType( prefixType,  getDimensions(ctx), false) );
 			ctx.addModifiers(Modifiers.TYPE_NAME);
 		}
@@ -1971,88 +1971,74 @@ public class StatementChecker extends BaseChecker {
 		
 		ModifiedType prefixNode = curPrefix.getFirst();
 		prefixNode = resolveType( prefixNode );
-		Type prefixType = prefixNode.getType();		
-		int dimension = ctx.conditionalExpression().size();
+		Type prefixType = prefixNode.getType();
 		
 		if( prefixType instanceof ArrayType ) {
 			ArrayType arrayType = (ArrayType)prefixType;
 			
-			for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() ) {
-				Type childType = child.getType();
-				
-				if( !childType.isIntegral() ) {
-					addError(child, Error.INVALID_SUBSCRIPT, "Subscript type " + childType + " is invalid, integral type required", childType);
-					ctx.setType(Type.UNKNOWN);
-					return null;
-				}
-			}
+			ShadowParser.ConditionalExpressionContext child = ctx.conditionalExpression();
+			Type childType = child.getType();
 			
-		    //only goes one level deep							
-			if( dimension == arrayType.getDimensions() ) {
-				ctx.setType( arrayType.getBaseType() );
+			if( !childType.isIntegral() ) {
+				addError(child, Error.INVALID_SUBSCRIPT, "Subscript type " + childType + " is invalid, integral type required", childType);
+				ctx.setType(Type.UNKNOWN);
+				return null;
+			}			
+			
+			ctx.setType( arrayType.getBaseType() );
+			if( prefixNode.getModifiers().isImmutable() )
+				ctx.addModifiers(Modifiers.IMMUTABLE);
+			else if( prefixNode.getModifiers().isReadonly() )
+				ctx.addModifiers(Modifiers.READONLY);
+			else if( prefixNode.getModifiers().isTemporaryReadonly() )
+				ctx.addModifiers(Modifiers.TEMPORARY_READONLY);
+			else
+				ctx.addModifiers(Modifiers.ASSIGNABLE);
+			
+			//backdoor for creates
+			//immutable and readonly array should only be assignable in creates
+			if( prefixNode.getModifiers().isAssignable() ) 
+				ctx.addModifiers(Modifiers.ASSIGNABLE);
+			
+			//primitive arrays are initialized to default values
+			//non-primitive array elements could be null
+			//however, arrays of arrays are not-null
+			//instead, they will be filled with default values, including a length of zero
+			//thus, we don't need to check nullability, but we do need a range check				
+			
+			//nullable array means what you get out is nullable, not the array itself
+			if( arrayType.isNullable() ) 
+				ctx.addModifiers(Modifiers.NULLABLE);							
+		}						
+		else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_NULLABLE) ||
+				 prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)) {
+			
+			SequenceType arguments = new SequenceType();
+			ShadowParser.ConditionalExpressionContext child = ctx.conditionalExpression();
+			arguments.add(child);
+			
+			MethodSignature signature = setMethodType( ctx, prefixType, "index", arguments);
+			
+			if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() ) {
+				ctx.setType(Type.UNKNOWN);
+				addError(ctx, Error.INVALID_SUBSCRIPT, "Cannot apply mutable subscript to immutable or readonly prefix");						
+			}
+			else {
+				//if signature is null, then it is not a load
+				SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType), prefixNode, currentType);
+				ctx.setType(subscriptType);
+				if( signature != null )
+					ctx.addModifiers(subscriptType.getGetType().getModifiers());								
+				
 				if( prefixNode.getModifiers().isImmutable() )
 					ctx.addModifiers(Modifiers.IMMUTABLE);
 				else if( prefixNode.getModifiers().isReadonly() )
 					ctx.addModifiers(Modifiers.READONLY);
 				else if( prefixNode.getModifiers().isTemporaryReadonly() )
 					ctx.addModifiers(Modifiers.TEMPORARY_READONLY);
-				else
+				else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)  ) 
 					ctx.addModifiers(Modifiers.ASSIGNABLE);
-				
-				//backdoor for creates
-				//immutable and readonly array should only be assignable in creates
-				if( prefixNode.getModifiers().isAssignable() ) 
-					ctx.addModifiers(Modifiers.ASSIGNABLE);
-				
-				//primitive arrays are initialized to default values
-				//non-primitive array elements could be null
-				//however, arrays of arrays are not-null
-				//instead, they will be filled with default values, including a length of zero
-				//thus, we don't need to check nullability, but we do need a range check				
-				
-				//nullable array means what you get out is nullable, not the array itself
-				if( arrayType.isNullable() ) 
-					ctx.addModifiers(Modifiers.NULLABLE);
-			}				
-			else {
-				ctx.setType(Type.UNKNOWN);
-				addError(ctx, Error.INVALID_SUBSCRIPT, "Subscript gives " + dimension + " indexes but "  + arrayType.getDimensions() + " are required");
-			}				
-		}						
-		else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_NULLABLE) ||
-				 prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)) {
-			if( dimension == 1) {
-				SequenceType arguments = new SequenceType();
-				ShadowParser.ConditionalExpressionContext child = ctx.conditionalExpression(0);
-				arguments.add(child);
-				
-				MethodSignature signature = setMethodType( ctx, prefixType, "index", arguments);
-				
-				if( signature != null && (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly() || prefixNode.getModifiers().isImmutable()) && signature.getModifiers().isMutable() ) {
-					ctx.setType(Type.UNKNOWN);
-					addError(ctx, Error.INVALID_SUBSCRIPT, "Cannot apply mutable subscript to immutable or readonly prefix");						
-				}
-				else {
-					//if signature is null, then it is not a load
-					SubscriptType subscriptType = new SubscriptType(signature, child, new UnboundMethodType("index", prefixType), prefixNode, currentType);
-					ctx.setType(subscriptType);
-					if( signature != null )
-						ctx.addModifiers(subscriptType.getGetType().getModifiers());								
-					
-					if( prefixNode.getModifiers().isImmutable() )
-						ctx.addModifiers(Modifiers.IMMUTABLE);
-					else if( prefixNode.getModifiers().isReadonly() )
-						ctx.addModifiers(Modifiers.READONLY);
-					else if( prefixNode.getModifiers().isTemporaryReadonly() )
-						ctx.addModifiers(Modifiers.TEMPORARY_READONLY);
-					else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)  ) 
-						ctx.addModifiers(Modifiers.ASSIGNABLE);
-				}											
-			}
-			else {
-				ctx.setType(Type.UNKNOWN);
-				addError(ctx, Error.INVALID_SUBSCRIPT, "Subscript supplies multiple indexes into non-array type " + prefixType, prefixType);
-			}				
+			}							
 		}			
 		else {
 			ctx.setType(Type.UNKNOWN);

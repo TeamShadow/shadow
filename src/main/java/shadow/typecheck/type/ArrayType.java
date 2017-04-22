@@ -1,29 +1,13 @@
 package shadow.typecheck.type;
 
-import java.util.Collections;
 import java.util.List;
 
 import shadow.ShadowException;
 
 public class ArrayType extends ClassType
 {	
-	private final int dimensions;
 	private final Type baseType;
 	private final boolean nullable;
-	private final String brackets;
-	
-	public static String makeBrackets(int dimensions ) {
-		StringBuilder brackets = new StringBuilder("[");		
-		for( int i = 1; i < dimensions; i++) //no extra comma for 1 dimension 
-			brackets.append(",");
-		brackets.append("]");
-		return brackets.toString();		
-	}
-
-	public int getDimensions()
-	{
-		return dimensions;
-	}
 	
 	@Override
 	public int getWidth()
@@ -40,27 +24,15 @@ public class ArrayType extends ClassType
 			return ((ArrayType)baseType).recursivelyGetBaseType();
 		
 		return baseType;
-	}
-	
+	}	
+
 	public Type getBaseType() {
 		return baseType;
 	}
 	
 	public ArrayType(Type baseType) {
-		this(baseType, Collections.singletonList(1), 0, false);
-	}
-
-	public ArrayType(Type baseType, boolean nullable ) {
-		this(baseType, Collections.singletonList(1), 0, nullable);
+		this(baseType, false);
 	}	
-
-	public ArrayType( Type baseType, int dimensions, boolean nullable ) {
-		this(baseType, Collections.singletonList(dimensions), 0, nullable);		
-	}
-	
-	public ArrayType(Type baseType, List<Integer> arrayDimensions, boolean nullable ) {
-		this( baseType, arrayDimensions, 0, nullable );
-	}
 	
 	protected static Type getLowestBase(Type type) {
 		if( type instanceof ArrayType )
@@ -68,18 +40,21 @@ public class ArrayType extends ClassType
 		return type;		
 	}
 	
-	protected ArrayType(Type baseType, List<Integer> arrayDimensions, int index, boolean nullable ) {
+	public ArrayType(Type baseType, boolean nullable ) {
+		this( baseType, 1, nullable );
+	}
+	
+	public ArrayType(Type baseType, int dimensions, boolean nullable ) {
 		super( getLowestBase(baseType).getTypeName(), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getDocumentation(), baseType.getOuter() );		
 		if( nullable )		
 			setExtendType(Type.ARRAY_NULLABLE);
 		else
-			setExtendType(Type.ARRAY);
-		dimensions = arrayDimensions.get(index);
-		brackets = makeBrackets(dimensions);
-		if( arrayDimensions.size() == index + 1 )
+			setExtendType(Type.ARRAY);	
+		
+		if( dimensions == 1 )
 			this.baseType = baseType;
 		else
-			this.baseType = new ArrayType( baseType, arrayDimensions, index + 1, nullable);		
+			this.baseType = new ArrayType( baseType, dimensions - 1, nullable);	
 		
 		if( baseType.isParameterized() )
 			setParameterized(true);
@@ -91,12 +66,12 @@ public class ArrayType extends ClassType
 	public String toString(int options) {
 		if( (options & MANGLE) != 0 ) {
 			if( baseType.isPrimitive() )
-				return baseType.getTypeName() + "_A" + dimensions;
+				return baseType.getTypeName() + "_A";
 			else
-				return baseType.toString(options & ~CONVERT_ARRAYS) + "_A" + dimensions;
+				return baseType.toString(options & ~CONVERT_ARRAYS) + "_A";
 		}
 		
-		return baseType.toString(options) + brackets;
+		return baseType.toString(options) + "[]";
 	}
 	
 	@Override
@@ -112,7 +87,7 @@ public class ArrayType extends ClassType
 		if( type instanceof ArrayType )
 		{
 			ArrayType other = (ArrayType)type;
-			if( dimensions == other.dimensions && nullable == other.nullable )
+			if( nullable == other.nullable )
 				return baseType.equals(other.baseType);			
 		}
 		return false;
@@ -138,7 +113,7 @@ public class ArrayType extends ClassType
 			ArrayType type = (ArrayType)this;
 			ArrayType other = (ArrayType)t;
 			//invariant subtyping on arrays
-			if( type.getDimensions() == other.getDimensions() && type.nullable == other.nullable )
+			if( type.nullable == other.nullable )
 				return type.getBaseType().equals(other.getBaseType());
 			else
 				return false;
@@ -151,7 +126,7 @@ public class ArrayType extends ClassType
 	@Override
 	public ArrayType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{	
-		return new ArrayType( baseType.replace(values, replacements), dimensions, nullable);		
+		return new ArrayType( baseType.replace(values, replacements), nullable);		
 	}
 		
 	public ClassType convertToGeneric() {
@@ -173,7 +148,7 @@ public class ArrayType extends ClassType
 		if( nullable )
 			return this;
 		else		
-			return new ArrayType( baseType, dimensions, true);
+			return new ArrayType( baseType, true);
 	}
 	
 	public boolean isNullable() {

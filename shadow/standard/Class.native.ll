@@ -65,9 +65,16 @@ declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*
 declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 define %int @shadow.standard..Class_MpointerSize(%shadow.standard..Class*) alwaysinline nounwind readnone {
+		%2 = ptrtoint {%shadow.standard..Class*, %shadow.standard..Object*, %ulong}* getelementptr ({%shadow.standard..Class*, %shadow.standard..Object*, %ulong}, {%shadow.standard..Class*, %shadow.standard..Object*, %ulong}* null, i32 1) to i32
+		ret %int %2
+}
+
+
+define %int @shadow.standard..Class_MarraySize(%shadow.standard..Class*) alwaysinline nounwind readnone {
 		%2 = ptrtoint %shadow.standard..Object** getelementptr (%shadow.standard..Object*, %shadow.standard..Object** null, i32 1) to i32
 		ret %int %2
 }
+
 
 define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods) {	
 	%sizeRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 8
