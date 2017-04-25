@@ -1,8 +1,19 @@
 /**
  * Author: Claude Abounegm
  */
-#include <ShadowCore.h>
 #include <io/Console.h>
+
+// METHOD SIGNATURES //
+void __ShadowConsole_Initialize(void);
+void __ShadowConsole_ReadByte(shadow_byte_t*, shadow_boolean_t*);
+
+void __ShadowConsole_Print(shadow_String_t*);
+void __ShadowConsole_PrintError(shadow_String_t*);
+
+void __ShadowConsole_PrintLine(void);
+void __ShadowConsole_PrintErrorLine(void);
+// METHOD SIGNATURES //
+
 
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
@@ -31,7 +42,7 @@
 	static void printString(int handleId, shadow_String_t* stringRef)
 	{
 		ShadowStringData str; // { size, chars, ascii }
-		shadow_UnpackString(stringRef, &str);
+		shadow_GetStringData(stringRef, &str);
 		
 		DWORD bytesWritten = 0;
 		WriteFile(GetStdHandle(handleId), str.chars, str.size, &bytesWritten, NULL);
@@ -84,7 +95,7 @@
 	static void printString(int fd, shadow_String_t* stringRef)
 	{
 		ShadowStringData str; // { size, chars, ascii }
-		shadow_UnpackString(stringRef, &str);
+		shadow_GetStringData(stringRef, &str);
 
 		write(fd, str.chars, str.size);
 	}

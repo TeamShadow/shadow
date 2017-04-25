@@ -42,7 +42,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-f");
+		args.add("-f");
 	}
 	
 	@After
@@ -50,7 +50,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -1154,7 +1154,12 @@ public class OutputTests {
 	@Test public void testExternals() throws Exception {
 		args.add("shadow/test/ExternalsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "Hello from printf!\n");
+		run(new String[0], formatOutputString(
+								"ExternalsTest returning a String", 
+								"Hello World from C!", 
+								"2500", 
+								"3500"
+		));
 	}
 	
 	@Test public void testReadOnlyList() throws Exception {

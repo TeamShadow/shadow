@@ -1,3 +1,5 @@
+import shadow:natives@Pointer;
+
 /**
  * Class {@code File} provides utilities for interacting with a file in the
  * operating system, such as creating a new file, deleting an existing file,
@@ -9,11 +11,22 @@ is	CanRead
 and CanWrite
 and CanClose
 {
+	//public constant int SUCCESS = 0;
+	//public constant int OUT_OF_MEMORY = 1;
+	//private readonly extern __ShadowFile_Get_Exists(Pointer ptr) => (int);
+	//private readonly extern __ShadowFile_Set_Exists(Pointer ptr, boolean createOrDelete) => (int);
+	
 	/// data contains OS-specific file handle information 
+	/// TODO: use pointer instead
 	/// @unused
 	long data = -1L;
+	
 	get Path path;
+	immutable Pointer ptr;
 
+	private readonly extern __ShadowFile_Initialize(String path) => (Pointer);
+	private readonly extern __ShadowFile_Close(Pointer ptr) => ();
+	
 	/**
 	 * Creates a {@code File} object associated with the file on the given
 	 * path.
@@ -21,7 +34,7 @@ and CanClose
 	 */
 	public create( String path )
 	{
-		this:path = Path:create(path);
+		this(Path:create(path));
 	}
 	
 	/**
@@ -32,6 +45,7 @@ and CanClose
 	public create( Path path )
 	{
 		this:path = path;
+		this:ptr = __ShadowFile_Initialize(#path);
 	}
 	
 	/**
@@ -109,5 +123,11 @@ and CanClose
 	/**
 	 * Closes the file.
 	 */
-	public native close() => ();
+	public close() => ()
+	{
+		if(ptr->isValid) {
+			__ShadowFile_Close(ptr);
+			ptr.free();
+		}
+	}
 }

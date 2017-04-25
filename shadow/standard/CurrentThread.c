@@ -1,8 +1,12 @@
 /**
  * Author: Claude Abounegm
  */
-#include <ShadowCore.h>
 #include <standard/CurrentThread.h>
+
+// METHOD SIGNATURES //
+shadow_boolean_t __ShadowCurrentThread_Yield(void);
+// METHOD SIGNATURES //
+
 
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>

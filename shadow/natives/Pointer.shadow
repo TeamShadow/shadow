@@ -4,7 +4,6 @@
  *
  * @author Claude Abounegm
  *
- * @seeDoc shadow:natives@AbsoluteTime
  * @seeDoc shadow:natives@Mutex
  * @seeDoc shadow:natives@Signaler
  * @seeDoc shadow:standard@Thread
@@ -27,12 +26,6 @@ locked immutable class shadow:natives@
 	{
 		this:address = address;
 		this:shouldFree = shouldFree;
-	}
-
-	/// @unused	
-	private createNative(long address, boolean shouldFree) => (Pointer)
-	{
-		return Pointer:create(address, shouldFree);
 	}
 
 	/**
@@ -72,18 +65,23 @@ locked immutable class shadow:natives@
 		}
 	}
 	
-	/// @unused
-	private getAddressNative() => (long)
+	public destroy
+	{
+		free();
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern _shadow_CreatePointer(long address, boolean shouldFree) => (Pointer)
+	{
+		return Pointer:create(address, shouldFree);
+	}
+	
+	private extern _shadow_ExtractPointer() => (long)
 	{
 		if(!isValid()) {
 			throw FreedResourceException:create("Pointer");
 		}
 
 		return address;
-	}
-	
-	public destroy
-	{
-		free();
 	}
 }

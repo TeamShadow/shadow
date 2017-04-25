@@ -3,28 +3,49 @@
  */
 #include <ShadowCore.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
 
-void _shadow_UnpackString(shadow_String_t*, shadow_NativeArray_t**, shadow_boolean_t*);
+void _shadow_GetStringData(const shadow_String_t*, shadow_PrimitiveArray_t**, shadow_boolean_t*);
+shadow_String_t* _shadow_CreateString(const shadow_String_t*, __array);
 
-char* shadow_UnpackStringToCStr(shadow_String_t* stringRef)
+void shadow_GetStringData(const shadow_String_t* instance, ShadowStringData* str)
+{
+	shadow_PrimitiveArray_t* array;
+	_shadow_GetStringData(instance, &array, &str->ascii);
+	
+	shadow_GetArrayData(array, (VoidArray*)str);
+}
+
+char* shadow_GetStringDataAsCStr(const shadow_String_t* instance)
 {
 	ShadowStringData str;
-	shadow_UnpackString(stringRef, &str);
+	shadow_GetStringData(instance, &str);
 	
 	char* dest = malloc(str.size + 1);
-	int i;
-	for(i = 0; i < str.size; ++i) {
-		dest[i] = str.chars[i];
-	}
-	dest[i] = '\0';
+	memcpy(dest, str.chars, str.size);
+	dest[str.size] = '\0';
 	
 	return dest;
 }
 
-void shadow_UnpackString(shadow_String_t* stringRef, ShadowStringData* str)
+shadow_String_t* shadow_CreateString(const char* string)
 {
-	shadow_NativeArray_t* array;
-	_shadow_UnpackString(stringRef, &array, &str->ascii);
+	int length = strlen(string);
 	
-	shadow_UnpackArray(array, (VoidArray*)str);
+	char* chars;
+	__array* array = (__array*)shadow_CreateArray(length, sizeof(char), (void**)&chars);
+	memcpy(chars, string, length);
+	
+	return _shadow_CreateString(NULL, *array);
+}
+
+void shadow_FreeString(shadow_String_t* instance)
+{
+	shadow_PrimitiveArray_t* array;
+	shadow_boolean_t ascii;
+	
+	_shadow_GetStringData(instance, &array, &ascii);
+	shadow_FreeArray(array);
+	free(instance);
 }

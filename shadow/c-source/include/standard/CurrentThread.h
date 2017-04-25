@@ -8,6 +8,4 @@
 
 typedef void* shadow_CurrentThread_t;
 
-shadow_boolean_t __ShadowCurrentThread_Yield(void);
-
 #endif

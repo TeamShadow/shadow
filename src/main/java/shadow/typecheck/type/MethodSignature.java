@@ -8,6 +8,7 @@ import java.util.Set;
 
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
+import shadow.parse.ShadowParser;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	protected final MethodType type;
@@ -130,7 +131,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		//else
 			methodType = type;		
 
-		if(!isExtern()) {
+		if(!isExternWithoutBlock()) {
 			Type outerType = getOuter();
 			if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
 				paramTypes.add(new SimpleModifiedType(Type.OBJECT));
@@ -286,6 +287,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.getModifiers().isExtern();
 	}
 	
+	public boolean isExternWithoutBlock()
+	{
+		return isExtern() && !hasBlock();
+	}
+	
 	public boolean isVoid()
 	{
 		return type.getReturnTypes().size() == 0;
@@ -354,5 +360,22 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public Set<SingletonType> getSingletons() {
 		return singletons;
+	}
+	
+	public boolean hasBlock() {
+		boolean hasBlock = true;
+		
+		if( node instanceof ShadowParser.CreateDeclarationContext )
+			hasBlock = ((ShadowParser.CreateDeclarationContext)node).createBlock() != null;
+		else if( node instanceof ShadowParser.DestroyDeclarationContext )
+			hasBlock = ((ShadowParser.DestroyDeclarationContext)node).block() != null;
+		else if( node instanceof ShadowParser.MethodDeclarationContext )
+			hasBlock = ((ShadowParser.MethodDeclarationContext)node).block() != null;
+		
+		return hasBlock;
+	}
+	
+	public boolean isAbstract() {
+		return type.getModifiers().isAbstract();
 	}
 }

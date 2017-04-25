@@ -624,5 +624,11 @@ and	CanHash
 			index += 1;
 			return cast<code>(value);
 		}
-	}	
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern _shadow_CreateString(byte[] data) => (String)
+	{
+		return String:create(data);
+	}
 }

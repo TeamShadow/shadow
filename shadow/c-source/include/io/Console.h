@@ -8,13 +8,10 @@
 
 typedef void* shadow_Console_t;
 
-void __ShadowConsole_Initialize(void);
-void __ShadowConsole_ReadByte(shadow_byte_t*, shadow_boolean_t*);
+void _shadow_PrintLine(shadow_Console_t*, shadow_String_t*);
+void _shadow_PrintErrorLine(shadow_Console_t*, shadow_String_t*);
 
-void __ShadowConsole_Print(shadow_String_t*);
-void __ShadowConsole_PrintError(shadow_String_t*);
-
-void __ShadowConsole_PrintLine(void);
-void __ShadowConsole_PrintErrorLine(void);
+#define shadow_PrintLine(str) _shadow_PrintLine(0, str)
+#define shadow_PrintErrorLine(str) _shadow_PrintErrorLine(0, str)
 
 #endif

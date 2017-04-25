@@ -1,8 +1,8 @@
 /**
  * Author: Claude Abounegm
  */
-#ifndef SHADOW_CORE_TYPES_H
-#define SHADOW_CORE_TYPES_H
+#ifndef SHADOW_PRIMITIVE_TYPES_H
+#define SHADOW_PRIMITIVE_TYPES_H
 
 #include <stdbool.h>
 #include <stdint.h>

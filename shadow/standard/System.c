@@ -3,6 +3,11 @@
  */
 #include <standard/System.h>
 
+// METHOD SIGNATURES //
+shadow_ulong_t __ShadowSystem_GetNanoTime(void);
+shadow_ulong_t __ShadowSystem_GetEpochNanoTime(void);
+// METHOD SIGNATURES //
+
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
 	#define OFFSET_FROM_1601_TO_1970 116444736000000000ULL

@@ -24,4 +24,10 @@ class shadow:standard@Object
 	{
 		return getClass().toString();
 	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadow_ToString() => (String)
+	{
+		return #this;
+	}
 }

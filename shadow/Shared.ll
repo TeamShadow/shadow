@@ -38,7 +38,7 @@
 ; Custom Method Definitions
 ;---------------------------
 ; ShadowString.c
-define void @_shadow_UnpackString(%shadow.standard..String*, {{ %ulong, %byte }*, [1 x %int] }**, %boolean*) {
+define void @_shadow_GetStringData(%shadow.standard..String*, {{ %ulong, %byte }*, [1 x %int] }**, %boolean*) {
 entry:
 	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3
 	store {{ %ulong, %byte }*, [1 x %int] }* %array.addr, {{ %ulong, %byte }*, [1 x %int] }** %1
@@ -52,7 +52,7 @@ entry:
 
 ; ShadowArray.c
 %ShadowArray = type {{ %ulong, %void }*, [1 x %int] }
-define void @_shadow_UnpackArray(%ShadowArray*, %int*, %void**) {
+define void @_shadow_GetArrayData(%ShadowArray*, %int*, %void**) {
 entry:
 	%arrayData = load %ShadowArray, %ShadowArray* %0
 	
@@ -64,22 +64,4 @@ entry:
 	store %void* %array, %void** %2
 	
 	ret void
-}
-
-; ShadowPointer.h
-declare %shadow.natives..Pointer* @shadow.natives..Pointer_McreateNative_long_boolean(%shadow.natives..Pointer*, %long, %boolean)
-define %shadow.natives..Pointer* @_shadow_CreatePointer(%void*, %boolean) {
-entry:
-	%address = ptrtoint %void* %0 to %long
-	%call = call %shadow.natives..Pointer* @shadow.natives..Pointer_McreateNative_long_boolean(%shadow.natives..Pointer* null, %long %address, %boolean %1)
-	ret %shadow.natives..Pointer* %call
-}
-
-; ShadowPointer.h
-declare %long @shadow.natives..Pointer_MgetAddressNative(%shadow.natives..Pointer*)
-define %void* @_shadow_ExtractPointer(%shadow.natives..Pointer*) {
-entry:
-	%address = call %long @shadow.natives..Pointer_MgetAddressNative(%shadow.natives..Pointer* %0)
-	%pointer = inttoptr %long %address to %void*
-	ret %void* %pointer
 }

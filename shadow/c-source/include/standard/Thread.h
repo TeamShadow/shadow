@@ -8,6 +8,4 @@
 
 typedef void* shadow_Thread_t;
 
-shadow_Pointer_t* __ShadowThread_Spawn(shadow_Thread_t*, void* (*thread_start)(void*));
-
 #endif

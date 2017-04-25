@@ -8,7 +8,4 @@
 
 typedef void* shadow_System_t;
 
-shadow_ulong_t __ShadowSystem_GetNanoTime(void);
-shadow_ulong_t __ShadowSystem_GetEpochNanoTime(void);
-
 #endif

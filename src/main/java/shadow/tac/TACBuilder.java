@@ -440,7 +440,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				//signature for other operation
 				signature = node.getOperations().get(0);
 				
-				if( left.getType().isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
+				if( left.getType().isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
 					right = new TACBinary(anchor, result, signature, operation, right);
 				else {
 					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
@@ -941,7 +941,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					ctx.setOperand(new TACUnary(anchor, "!", operand));
 				else {
 					MethodSignature signature = ctx.getOperations().get(0); 
-					if( type.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
+					if( type.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
 						ctx.setOperand(new TACUnary(anchor, signature, op, operand));				
 					else 
 						ctx.setOperand(new TACCall(anchor, new TACMethodRef(anchor, operand, ctx.getOperations().get(0)), operand));					
@@ -1126,7 +1126,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		methodRef.setSuper(explicitSuper);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 
-		if(!signature.isExtern()) {
+		if(!signature.isExternWithoutBlock()) {
 			params.add(methodRef.getPrefix());
 		}
 		for( Context child : list )	//potentially empty list				
@@ -1651,7 +1651,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						TACOperand comparison;
 						MethodSignature signature = type.getMatchingMethod("equal", new SequenceType(operand));
 						
-						if( type.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
+						if( type.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
 							comparison = new TACBinary(anchor, value, operand); //equivalent to ===
 						else								
 							comparison = new TACCall(anchor, new TACMethodRef(anchor, value, signature), value, operand);
@@ -2497,7 +2497,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACNode saveTree = anchor;
 		TACMethod method = this.method = new TACMethod(methodSignature);
 		boolean implicitCreate = false;
-		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExtern() ) {				
+		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExternWithoutBlock() ) {				
 			
 			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
 				setupNonGCMethod();				
@@ -2879,7 +2879,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			MethodSignature signature = node.getOperations().get(i - 1);
 			boolean isCompare = ( op.equals("<") || op.equals(">") || op.equals("<=") || op.equals(">=") );
 			Type currentType = resolveType(current.getType());
-			if( currentType.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() ) //operation based on method
+			if( currentType.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() ) //operation based on method
 				current = new TACBinary(anchor, current, signature, op, next, isCompare );
 			else {	
 				//comparisons will always give positive, negative or zero integer
