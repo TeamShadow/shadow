@@ -14,15 +14,15 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type opaque
+%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] } }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong } }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, [1 x %int] }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
@@ -39,6 +39,7 @@
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
+@shadow.standard..byte_class = external constant %shadow.standard..Class
 @shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.io..IOException_class = external constant %shadow.standard..Class
@@ -47,7 +48,7 @@
 %shadow.io..File_methods = type opaque
 %shadow.io..File = type { %ulong, %shadow.standard..Class*, %shadow.io..File_methods* , %long, %shadow.io..Path* }
 %shadow.io..Path_methods = type { %shadow.io..Path* (%shadow.io..Path*, %shadow.standard..AddressMap*)*, void (%shadow.io..Path*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..Path*)*, %code (%shadow.io..Path*)* }
-%shadow.io..Path = type { %ulong, %shadow.standard..Class*, %shadow.io..Path_methods* , {{%ulong, %shadow.standard..String*}*, [1 x %int] } }
+%shadow.io..Path = type { %ulong, %shadow.standard..Class*, %shadow.io..Path_methods* , {{%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } }
 %shadow.standard..System = type opaque
 %shadow.io..Console = type opaque
 
@@ -111,14 +112,15 @@ define private i8* @filepath(%shadow.io..File*) {
 	%9 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 0
 	%10 = load {%ulong, i8}*, {%ulong, i8}** %9
 	%11 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %10, i32 0, i32 1	
-	%12 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 1, i32 0
-	%13 = load i32, i32* %12
-	%14 = add nuw i32 %13, 1
-	%15 = tail call noalias i8* @malloc(i32 %14)
-	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %15, i8* %11, i32 %13, i32 1, i1 0)
-	%16 = getelementptr inbounds i8, i8* %15, i32 %13
-	store i8 0, i8* %16
-	ret i8* %15
+	%12 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 2
+	%13 = load i64, i64* %12
+	%14 = trunc i64 %13 to i32
+	%15 = add nuw i32 %14, 1	
+	%16 = tail call noalias i8* @malloc(i32 %15)
+	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %16, i8* %11, i32 %14, i32 1, i1 0)
+	%17 = getelementptr inbounds i8, i8* %16, i32 %14
+	store i8 0, i8* %17
+	ret i8* %16
 }
 
 define i1 @shadow.io..File_Mexists(%shadow.io..File*) {
@@ -197,71 +199,95 @@ define void @shadow.io..File_Msize_long(%shadow.io..File*, i64) {
 	%11 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 %10, i64* null, i32 0)
 	ret void
 }
-define i32 @shadow.io..File_Mread_byte_A1(%shadow.io..File*, { i8*, [1 x i32] }) {
-	%3 = alloca i32
-	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
-	%5 = load i64, i64* %4
-	%6 = inttoptr i64 %5 to i8*
-	%7 = extractvalue { i8*, [1 x i32] } %1, 0
-	%8 = extractvalue { i8*, [1 x i32] } %1, 1, 0
-	br label %9
-	%10 = phi i8* [ %6, %2 ], [ %26, %23 ]
-	%11 = call x86_stdcallcc i32 @ReadFile(i8* %10, i8* %7, i32 %8, i32* %3, i8* null)
-	%12 = icmp ne i32 %11, 0
-	br i1 %12, label %13, label %15
-	%14 = load i32, i32* %3
-	ret i32 %14
-	%16 = tail call i32 @GetLastError()
-	%17 = icmp eq i32 %16, 5
-	%18 = icmp eq i32 %16, 6
-	%19 = or i1 %17, %18
-	br i1 %19, label %20, label %29
-	%21 = icmp sge i64 %5, 0
-	br i1 %21, label %22, label %23
-	tail call void @shadow.io..File_Mclose(%shadow.io..File* %0)
-	br label %23
-	%24 = phi i32 [ shl (i32 1, i32 31), %20 ], [ shl (i32 3, i32 30), %22 ]
-	%25 = tail call i8* @filepath(%shadow.io..File* %0)
-	%26 = tail call x86_stdcallcc i8* @CreateFileA(i8* %25, i32 %24, i32 7, i8* null, i32 3, i32 0, i8* null)
-	tail call void @free(i8* %25)
-	%27 = ptrtoint i8* %26 to i64
-	store i64 %27, i64* %4
-	%28 = icmp sge i64 %27, 0
-	br i1 %28, label %9, label %29
+define i32 @shadow.io..File_Mread_byte_A(%shadow.io..File* %file, { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array) {
+_entry:
+	%bytesReadRef = alloca i32
+	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
+	%descriptorAsLong = load i64, i64* %descriptorRef
+	%handle = inttoptr i64 %descriptorAsLong to i8*
+	%bufferWithRef = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 0
+	%buffer = getelementptr {%ulong, i8}, {%ulong, i8}* %bufferWithRef, i32 0, i32 1
+	%longLength = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 2
+	%length = trunc %ulong %longLength to %int	
+	br label %_read
+_read:
+	%realHandle = phi i8* [ %handle, %_entry ], [ %newHandle, %_open ]
+	%result = call x86_stdcallcc i32 @ReadFile(i8* %realHandle, i8* %buffer, i32 %length, i32* %bytesReadRef, i8* null)
+	%checkError = icmp ne i32 %result, 0
+	br i1 %checkError, label %_success, label %_error
+_success:
+	%bytesRead = load i32, i32* %bytesReadRef
+	ret i32 %bytesRead
+_error:
+	%error = tail call i32 @GetLastError()	
+	; ERROR_ACCESS_DENIED = 5, ERROR_INVALID_HANDLE = 6	
+	%denied = icmp eq i32 %error, 5
+	%invalid = icmp eq i32 %error, 6
+	%deniedOrInvalid = or i1 %denied, %invalid
+	br i1 %deniedOrInvalid, label %_checkIfOpen, label %_throw
+_checkIfOpen:
+	%open = icmp sge i64 %descriptorAsLong, 0
+	br i1 %open, label %_close, label %_open
+_close:
+	tail call void @shadow.io..File_Mclose(%shadow.io..File* %file)
+	br label %_open
+_open:
+	; GENERIC_READ = 0x80000000, GENERIC_READ | GENERIC_WRITE = 0xC0000000
+	%access = phi i32 [ shl (i32 1, i32 31), %_checkIfOpen ], [ shl (i32 3, i32 30), %_close ]
+	%path = tail call i8* @filepath(%shadow.io..File* %file)
+	%newHandle = tail call x86_stdcallcc i8* @CreateFileA(i8* %path, i32 %access, i32 7, i8* null, i32 3, i32 0, i8* null)
+	tail call void @free(i8* %path)
+	%handleAsLong = ptrtoint i8* %newHandle to i64
+	store i64 %handleAsLong, i64* %descriptorRef
+	%checkValid = icmp sge i64 %handleAsLong, 0
+	br i1 %checkValid, label %_read, label %_throw
+_throw:
 	tail call void @throwIOException() noreturn
 	unreachable
 }
-define i32 @shadow.io..File_Mwrite_byte_A1(%shadow.io..File*, { i8*, [1 x i32] }) {
-	%3 = alloca i32
-	%4 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
-	%5 = load i64, i64* %4
-	%6 = inttoptr i64 %5 to i8*
-	%7 = extractvalue { i8*, [1 x i32] } %1, 0
-	%8 = extractvalue { i8*, [1 x i32] } %1, 1, 0
-	br label %9
-	%10 = phi i8* [ %6, %2 ], [ %26, %23 ]
-	%11 = call x86_stdcallcc i32 @WriteFile(i8* %10, i8* %7, i32 %8, i32* %3, i8* null)
-	%12 = icmp ne i32 %11, 0
-	br i1 %12, label %13, label %15
-	%14 = load i32, i32* %3
-	ret i32 %14
-	%16 = tail call i32 @GetLastError()
-	%17 = icmp eq i32 %16, 5
-	%18 = icmp eq i32 %16, 6
-	%19 = or i1 %17, %18
-	br i1 %19, label %20, label %29
-	%21 = icmp sge i64 %5, 0
-	br i1 %21, label %22, label %23
-	tail call void @shadow.io..File_Mclose(%shadow.io..File* %0)
-	br label %23
-	%24 = phi i32 [ shl (i32 1, i32 30), %20 ], [ shl (i32 3, i32 30), %22 ]
-	%25 = tail call i8* @filepath(%shadow.io..File* %0)
-	%26 = tail call x86_stdcallcc i8* @CreateFileA(i8* %25, i32 %24, i32 7, i8* null, i32 3, i32 0, i8* null)
-	tail call void @free(i8* %25)
-	%27 = ptrtoint i8* %26 to i64
-	store i64 %27, i64* %4
-	%28 = icmp sge i64 %27, 0
-	br i1 %28, label %9, label %29
+define i32 @shadow.io..File_Mwrite_byte_A(%shadow.io..File* %file, { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array) {
+_entry:
+	%bytesWrittenRef = alloca i32
+	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
+	%descriptorAsLong = load i64, i64* %descriptorRef
+	%handle = inttoptr i64 %descriptorAsLong to i8*
+	%bufferWithRef = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 0
+	%buffer = getelementptr {%ulong, i8}, {%ulong, i8}* %bufferWithRef, i32 0, i32 1
+	%longLength = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 2
+	%length = trunc %ulong %longLength to %int
+	br label %_write
+_write:
+	%realHandle = phi i8* [ %handle, %_entry ], [ %newHandle, %_open ]
+	%result = call x86_stdcallcc i32 @WriteFile(i8* %realHandle, i8* %buffer, i32 %length, i32* %bytesWrittenRef, i8* null)
+	%checkError = icmp ne i32 %result, 0
+	br i1 %checkError, label %_success, label %_error
+_success:
+	%bytesWritten = load i32, i32* %bytesWrittenRef
+	ret i32 %bytesWritten
+_error:
+	%error = tail call i32 @GetLastError()	
+	; ERROR_ACCESS_DENIED = 5, ERROR_INVALID_HANDLE = 6	
+	%denied = icmp eq i32 %error, 5
+	%invalid = icmp eq i32 %error, 6
+	%deniedOrInvalid = or i1 %denied, %invalid
+	br i1 %deniedOrInvalid, label %_checkIfOpen, label %_throw
+_checkIfOpen:
+	%open = icmp sge i64 %descriptorAsLong, 0
+	br i1 %open, label %_close, label %_open
+_close:
+	tail call void @shadow.io..File_Mclose(%shadow.io..File* %file)
+	br label %_open
+_open:
+	; GENERIC_WRITE = 0x40000000, GENERIC_READ | GENERIC_WRITE = 0xC0000000
+	%access = phi i32 [ shl (i32 1, i32 30), %_checkIfOpen ], [ shl (i32 3, i32 30), %_close ]
+	%path = tail call i8* @filepath(%shadow.io..File* %file)
+	%newHandle = tail call x86_stdcallcc i8* @CreateFileA(i8* %path, i32 %access, i32 7, i8* null, i32 3, i32 0, i8* null)
+	tail call void @free(i8* %path)
+	%handleAsLong = ptrtoint i8* %newHandle to i64
+	store i64 %handleAsLong, i64* %descriptorRef
+	%checkValid = icmp sge i64 %handleAsLong, 0
+	br i1 %checkValid, label %_write, label %_throw
+_throw:
 	tail call void @throwIOException() noreturn
 	unreachable
 }

@@ -584,14 +584,14 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		//memcopy
 		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
-		writer.write("declare void @__arrayStore({%ulong," + type(Type.OBJECT) + "}*, %int, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
-		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad({%ulong," + type(Type.OBJECT) + "}*, %int, " + type(Type.CLASS) + ", " + type(Type.METHOD_TABLE) + ", %boolean)");
+		writer.write("declare void @__arrayStore({%ulong," + type(Type.OBJECT) + "}*, %ulong, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
+		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad({%ulong," + type(Type.OBJECT) + "}*, %ulong, " + type(Type.CLASS) + ", " + type(Type.METHOD_TABLE) + ", %boolean)");
 		writer.write("declare void @free(i8*) nounwind");
 		
 		writer.write("declare void @__incrementRef(%shadow.standard..Object*) nounwind");
 		writer.write("declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}*) nounwind");
 		writer.write("declare void @__decrementRef(%shadow.standard..Object* %object) nounwind");
-		writer.write("declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 %dims, %shadow.standard..Class* %base) nounwind");
+		writer.write("declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %arrayPtr) nounwind");
 		
 		writer.write("declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)");
 		writer.write("declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements)");
