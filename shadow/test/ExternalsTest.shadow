@@ -15,6 +15,9 @@ class shadow:test@ExternalsTest
 	// prints the number passed earlier to the console, then calls Shadow code to print the number + offset
 	private readonly extern __ShadowExternalTest_PrintPointerData(ExternalsTest instance, Pointer ptr) => ();
 	
+	// prints the string representation of the Class object for ExternalsTest and all primitives
+	private readonly extern __ShadowExternalTest_PrintClasses(ExternalsTest instance) => ();	
+	
 	immutable Pointer ptr;
 	int offset = 1000;
 	
@@ -28,6 +31,7 @@ class shadow:test@ExternalsTest
 		__ShadowExternalTest_PrintfToString(this);
 		__ShadowExternalTest_CreateString();
 		__ShadowExternalTest_PrintPointerData(this, ptr);
+		__ShadowExternalTest_PrintClasses(this);
 	}
 	
 	public readonly toString() => (String)

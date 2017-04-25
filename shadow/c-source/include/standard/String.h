@@ -21,25 +21,25 @@ typedef struct {
 } StringData;
 
 /**
- * Takes a ShadowString and stores the data in the StringData struct supplied
+ * Takes a Shadow String and stores the data in the StringData struct supplied
  * as the second argument.
  */
 StringData* shadowString_GetData(const shadow_String_t* instance, StringData* str);
 
 /**
- * Returns a null-terminated clone of the supplied ShadowString. Since this is a copy,
+ * Returns a null-terminated clone of the supplied Shadow String. Since this is a copy,
  * the result needs to be freed after use.
  */
 char* shadowString_GetCString(const shadow_String_t* instance);
 
 /**
- * Creates a Shadow String from the NULL-terminated C String.
+ * Creates a Shadow String from a NULL-terminated C String.
  */
 shadow_String_t* shadowString_Create(const char*);
 
 /**
- * Frees a Shadow String that was created using shadow_CreateString()
+ * Frees a Shadow String that was created using shadowString_Create()
  */
-void shadowString_Free(shadow_String_t*);
+void shadowString_Free(shadow_String_t* instance);
 
 #endif

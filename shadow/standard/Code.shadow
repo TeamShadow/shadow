@@ -301,5 +301,11 @@ and CanHash
 		code[] array = code:create[1];
 		array[0] = this;
 		return String:create(array);
-	}	
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowCode_GetClass() => (Class)
+	{
+		return code:class;
+	}
 }

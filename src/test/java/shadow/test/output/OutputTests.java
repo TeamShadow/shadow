@@ -1158,7 +1158,20 @@ public class OutputTests {
 								"This is the result from running shadow_ToString(ref) from C!!", 
 								"This is a string created in C and printed using Shadow's Console.printLine()", 
 								"2500", 
-								"3500"
+								"3500",
+								"shadow:test@ExternalsTest",
+								"boolean",
+								"byte",
+								"ubyte",
+								"short",
+								"ushort",
+								"int",
+								"uint",
+								"code",
+								"long",
+								"ulong",
+								"float",
+								"double"
 		));
 	}
 	

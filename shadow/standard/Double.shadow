@@ -524,5 +524,11 @@ and	CanHash
 	 * Negates the value.
 	 * @return negated value	 
 	 */
-	public native negate() => (double);	
+	public native negate() => (double);
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowDouble_GetClass() => (Class)
+	{
+		return double:class;
+	}
 }

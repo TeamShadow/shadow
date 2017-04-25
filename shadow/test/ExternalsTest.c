@@ -10,7 +10,7 @@
 typedef void* shadow_ExternalsTest_t;
 
 void __ShadowExternalTest_PrintfToString(shadow_ExternalsTest_t* ref)
-{
+{	
 	// equivalent to ref.toString()
 	shadow_String_t* str = shadowObject_ToString(ref);
 	
@@ -35,7 +35,7 @@ void __ShadowExternalTest_CreateString()
 	// Create a Shadow string from a C string
 	shadow_String_t* string = shadowString_Create("This is a string created in C and printed using Shadow's Console.printLine()");
 
-	// this method is equivalent to Console.printLine()
+	// this method is equivalent to Console.printLine(Object)
 	shadowConsole_PrintLine(string);
 	
 	// free the String we created
@@ -67,4 +67,30 @@ void __ShadowExternalTest_PrintPointerData(shadow_ExternalsTest_t* instance, sha
 	
 	// pass the number to Shadow to print it with an offset
 	_shadowExternalsTest_PrintNumberWithOffset(instance, data->number);
+}
+
+void __ShadowExternalTest_PrintClasses(shadow_ExternalsTest_t* instance)
+{
+	// object class
+	shadowConsole_PrintLine(shadowObject_GetClass(instance));
+	
+	
+	// primitives
+	shadowConsole_PrintLine(shadowBoolean_GetClass());
+	
+	shadowConsole_PrintLine(shadowByte_GetClass());
+	shadowConsole_PrintLine(shadowUByte_GetClass());
+	
+	shadowConsole_PrintLine(shadowShort_GetClass());
+	shadowConsole_PrintLine(shadowUShort_GetClass());
+	
+	shadowConsole_PrintLine(shadowInt_GetClass());
+	shadowConsole_PrintLine(shadowUInt_GetClass());
+	shadowConsole_PrintLine(shadowCode_GetClass());
+	
+	shadowConsole_PrintLine(shadowLong_GetClass());
+	shadowConsole_PrintLine(shadowULong_GetClass());
+	
+	shadowConsole_PrintLine(shadowFloat_GetClass());
+	shadowConsole_PrintLine(shadowDouble_GetClass());
 }

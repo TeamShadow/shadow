@@ -22,22 +22,40 @@ Usage:
 = Primitive types =
 ===================
   shadow_boolean_t
-
+  shadow_Class_t* shadowBoolean_GetClass();
+  
   shadow_byte_t
+  shadow_Class_t* shadowByte_GetClass();
+  
   shadow_ubyte_t
-
+  shadow_Class_t* shadowUByte_GetClass();
+  
   shadow_short_t
+  shadow_Class_t* shadowShort_GetClass();
+  
   shadow_ushort_t
+  shadow_Class_t* shadowUShort_GetClass();
 
   shadow_int_t
+  shadow_Class_t* shadowInt_GetClass();
+
   shadow_uint_t
+  shadow_Class_t* shadowUInt_GetClass();
+  
   shadow_code_t
+  shadow_Class_t* shadowCode_GetClass();
 
   shadow_long_t
+  shadow_Class_t* shadowLong_GetClass();
+  
   shadow_ulong_t
+  shadow_Class_t* shadowULong_GetClass();
 
   shadow_float_t
+  shadow_Class_t* shadowFloat_GetClass();
+  
   shadow_double_t
+  shadow_Class_t* shadowDouble_GetClass();
 -----------------------------------------------------------------------------------
 ====================
 =  Primitive Array =
@@ -103,8 +121,8 @@ Usage:
   type: shadow_Console_t*
   ---
 
-  void shadowConsole_PrintLine(shadow_String_t*);
-  void shadowConsole_PrintErrorLine(shadow_String_t*);
+  void shadowConsole_PrintLine(shadow_Object_t*);
+  void shadowConsole_PrintErrorLine(shadow_Object_t*);
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------

@@ -1,5 +1,7 @@
-#ifndef SHADOW_PRIMITIVE_ARRAY_H
-#define SHADOW_PRIMITIVE_ARRAY_H
+#ifndef PRIMITIVE_ARRAY_H
+#define PRIMITIVE_ARRAY_H
+
+#include <PrimitiveTypes.h>
 
 // This should be changed when the structure of the arrays change.
 // YOU SHOULD NOT ATTEMPT TO USE THIS STRUCT UNLESS YOU REALLY KNOW
@@ -7,6 +9,8 @@
 typedef struct {
 	shadow_ulong_t* data;
 	shadow_int_t size;
+//	shadow_Class_t* class_ref;
+//  shadow_ulong_t size;
 } shadow_PrimitiveArray_t;
 
 /**
