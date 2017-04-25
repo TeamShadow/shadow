@@ -41,8 +41,8 @@ void __ShadowConsole_PrintErrorLine(void);
 
 	static void printString(int handleId, shadow_String_t* stringRef)
 	{
-		ShadowStringData str; // { size, chars, ascii }
-		shadow_GetStringData(stringRef, &str);
+		StringData str; // { size, chars, ascii }
+		shadowString_GetData(stringRef, &str);
 		
 		DWORD bytesWritten = 0;
 		WriteFile(GetStdHandle(handleId), str.chars, str.size, &bytesWritten, NULL);
@@ -94,8 +94,8 @@ void __ShadowConsole_PrintErrorLine(void);
 
 	static void printString(int fd, shadow_String_t* stringRef)
 	{
-		ShadowStringData str; // { size, chars, ascii }
-		shadow_GetStringData(stringRef, &str);
+		StringData str; // { size, chars, ascii }
+		shadowString_GetData(stringRef, &str);
 
 		write(fd, str.chars, str.size);
 	}

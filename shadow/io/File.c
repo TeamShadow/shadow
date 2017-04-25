@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 // METHOD SIGNATURES //
-shadow_Pointer_t* __ShadowFile_Initialize(shadow_String_t* pathRef);
+shadow_Pointer_t* __ShadowFile_Initialize(shadow_String_t* str);
 void __ShadowFile_Close(shadow_Pointer_t* ptr);
 // METHOD SIGNATURES //
 
@@ -23,10 +23,10 @@ typedef struct {
 #endif
 } FileData;
 
-shadow_Pointer_t* __ShadowFile_Initialize(shadow_String_t* pathRef)
+shadow_Pointer_t* __ShadowFile_Initialize(shadow_String_t* str)
 {
 	FileData* data = calloc(1, sizeof(FileData));
-	char* path = shadow_GetStringDataAsCStr(pathRef);
+	char* path = shadowString_GetCString(str);
 	
 #ifdef SHADOW_WINDOWS
 	//data->fd = CreateFileA(path, ...);
@@ -37,12 +37,12 @@ shadow_Pointer_t* __ShadowFile_Initialize(shadow_String_t* pathRef)
 	free(path);
 	
 	// return a pointer that can be freed in Shadow
-	return shadow_CreatePointer(data, SHADOW_CAN_FREE);
+	return shadowPointer_Create(data, SHADOW_CAN_FREE);
 }
 
 void __ShadowFile_Close(shadow_Pointer_t* ptr)
 {
-	FileData* data = shadow_ExtractPointer(FileData, ptr);
+	FileData* data = shadowPointer_Extract(FileData, ptr);
 	
 #ifdef SHADOW_WINDOWS
 	CloseHandle(data->fd);

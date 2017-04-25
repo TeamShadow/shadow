@@ -627,8 +627,13 @@ and	CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern _shadow_CreateString(byte[] data) => (String)
+	private extern _shadowString_CreateBytes(byte[] data) => (String)
 	{
 		return String:create(data);
+	}
+	
+	private extern _shadowString_IsAscii() => (boolean)
+	{
+		return this:ascii;
 	}
 }

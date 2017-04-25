@@ -18,28 +18,28 @@ typedef struct {
 	
 	// A boolean to whether the chars array is in ascii or not.
 	shadow_boolean_t ascii;
-} ShadowStringData;
+} StringData;
 
 /**
- * Takes a ShadowString and stores the data in the ShadowStringData struct supplied
+ * Takes a ShadowString and stores the data in the StringData struct supplied
  * as the second argument.
  */
-void shadow_GetStringData(const shadow_String_t*, ShadowStringData*);
+StringData* shadowString_GetData(const shadow_String_t* instance, StringData* str);
 
 /**
  * Returns a null-terminated clone of the supplied ShadowString. Since this is a copy,
  * the result needs to be freed after use.
  */
-char* shadow_GetStringDataAsCStr(const shadow_String_t*);
+char* shadowString_GetCString(const shadow_String_t* instance);
 
 /**
  * Creates a Shadow String from the NULL-terminated C String.
  */
-shadow_String_t* shadow_CreateString(const char*);
+shadow_String_t* shadowString_Create(const char*);
 
 /**
  * Frees a Shadow String that was created using shadow_CreateString()
  */
-void shadow_FreeString(shadow_String_t*);
+void shadowString_Free(shadow_String_t*);
 
 #endif

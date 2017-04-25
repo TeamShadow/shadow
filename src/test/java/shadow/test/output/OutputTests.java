@@ -1155,8 +1155,8 @@ public class OutputTests {
 		args.add("shadow/test/ExternalsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], formatOutputString(
-								"ExternalsTest returning a String", 
-								"Hello World from C!", 
+								"This is the result from running shadow_ToString(ref) from C!!", 
+								"This is a string created in C and printed using Shadow's Console.printLine()", 
 								"2500", 
 								"3500"
 		));

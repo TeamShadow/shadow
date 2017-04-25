@@ -27,7 +27,7 @@
 ; Class
 %shadow.standard..Class = type opaque
 
-; ShadowPointer
+; Pointer
 %shadow.natives..Pointer = type opaque
 
 ; String
@@ -37,31 +37,9 @@
 ;---------------------------
 ; Custom Method Definitions
 ;---------------------------
-; ShadowString.c
-define void @_shadow_GetStringData(%shadow.standard..String*, {{ %ulong, %byte }*, [1 x %int] }**, %boolean*) {
+; String.c
+define {{ %ulong, %byte }*, [1 x %int] }* @_shadowString_GetDataArray(%shadow.standard..String*) {
 entry:
-	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3
-	store {{ %ulong, %byte }*, [1 x %int] }* %array.addr, {{ %ulong, %byte }*, [1 x %int] }** %1
-	
-	%ascii.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 4
-	%ascii = load %boolean, %boolean* %ascii.addr
-	store %boolean %ascii, %boolean* %2
-	
-	ret void
-}
-
-; ShadowArray.c
-%ShadowArray = type {{ %ulong, %void }*, [1 x %int] }
-define void @_shadow_GetArrayData(%ShadowArray*, %int*, %void**) {
-entry:
-	%arrayData = load %ShadowArray, %ShadowArray* %0
-	
-	%size = extractvalue %ShadowArray %arrayData, 1, 0
-	store %int %size, %int* %1
-
-	%array.ptr = extractvalue %ShadowArray %arrayData, 0
-	%array = getelementptr inbounds { %ulong, %void }, { %ulong, %void }* %array.ptr, i32 0, i32 1
-	store %void* %array, %void** %2
-	
-	ret void
+	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3	
+	ret {{ %ulong, %byte }*, [1 x %int] }* %array.addr
 }

@@ -3,30 +3,38 @@
  */
 #include <ShadowCore.h>
 #include <stdlib.h>
-#include <__PrimitiveArrayType.h>
 
-void _shadow_GetArrayData(const shadow_PrimitiveArray_t*, shadow_int_t*, void**);
 
-void shadow_GetArrayData(const shadow_PrimitiveArray_t* arrayRef, VoidArray* array)
+ArrayData* shadowArray_GetData(const shadow_PrimitiveArray_t* shadowArray, ArrayData* array)
 {
-	_shadow_GetArrayData(arrayRef, &array->size, &array->data);
+	if(!array) {
+		array = malloc(sizeof(ArrayData));
+	}
+	
+	array->size = shadowArray->size;
+	array->data = &shadowArray->data[1];
+	return array;
 }
 
-shadow_PrimitiveArray_t* shadow_CreateArray(size_t num, size_t size, void** data)
+shadow_PrimitiveArray_t* shadowArray_Create(size_t num, size_t size, void** data)
 {
-	__primitive_array* ret = malloc(sizeof(__primitive_array));
+	// we first allocate memory to hold the bare bones of the array
+	shadow_PrimitiveArray_t* ret = malloc(sizeof(shadow_PrimitiveArray_t));
 	
+	// now we allocate the memory needed + 8 bytes for the reference count
 	ret->data = calloc(1, sizeof(shadow_ulong_t) + num*size);
+	// set the size of the array
 	ret->size = num;
 	
+	// give the user access to the first element of the array, since the first
+	// item is the ulong, we jump and skip that.
 	*data = &ret->data[1];
 	
-	return (shadow_PrimitiveArray_t*)ret;
+	return ret;
 }
 
-void shadow_FreeArray(shadow_PrimitiveArray_t* ref)
+void shadowArray_Free(shadow_PrimitiveArray_t* array)
 {
-	__primitive_array* array = (__primitive_array*)ref;
 	free(array->data);
 	free(array);
 }

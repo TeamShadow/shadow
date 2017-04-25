@@ -3,11 +3,16 @@ import shadow:io;
 
 class shadow:test@ExternalsTest
 {
+	// uses shadow_ToString() to get the Shadow String, then extracts it to a C String and
+	// prints it to the console using printf()
 	private readonly extern __ShadowExternalTest_PrintfToString(ExternalsTest ref) => ();
 
-	private readonly extern __ShadowExternalTest_CreateArray() => ();
+	// creates a Shadow String from a C String and prints it using Shadow Console
+	private readonly extern __ShadowExternalTest_CreateString() => ();
 
+	// creates a Pointer which holds the number passed as a parameter for later use
 	private readonly extern __ShadowExternalTest_InitPointer(int start) => (Pointer);
+	// prints the number passed earlier to the console, then calls Shadow code to print the number + offset
 	private readonly extern __ShadowExternalTest_PrintPointerData(ExternalsTest instance, Pointer ptr) => ();
 	
 	immutable Pointer ptr;
@@ -21,13 +26,13 @@ class shadow:test@ExternalsTest
 	public main(String[] args) => ()
 	{
 		__ShadowExternalTest_PrintfToString(this);
-		__ShadowExternalTest_CreateArray();
+		__ShadowExternalTest_CreateString();
 		__ShadowExternalTest_PrintPointerData(this, ptr);
 	}
 	
 	public readonly toString() => (String)
 	{
-		return "ExternalsTest returning a String";
+		return "This is the result from running shadow_ToString(ref) from C!!";
 	}
 	
 	private extern _shadowExternalsTest_PrintNumberWithOffset(int number) => ()

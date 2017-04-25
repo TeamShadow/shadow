@@ -12,5 +12,5 @@ shadow_Pointer_t* __ShadowThread_Spawn(shadow_Thread_t*, void* (*thread_start)(v
 
 shadow_Pointer_t* __ShadowThread_Spawn(shadow_Thread_t* this, void* (*thread_start)(void*))
 {
-	return shadow_CreatePointer(malloc(1), SHADOW_CAN_FREE);
+	return shadowPointer_Create(malloc(1), SHADOW_CAN_FREE);
 }

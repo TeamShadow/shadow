@@ -71,12 +71,12 @@ locked immutable class shadow:natives@
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern _shadow_CreatePointer(long address, boolean shouldFree) => (Pointer)
+	private extern _shadowPointer_Create(long address, boolean shouldFree) => (Pointer)
 	{
 		return Pointer:create(address, shouldFree);
 	}
 	
-	private extern _shadow_ExtractPointer() => (long)
+	private extern _shadowPointer_Extract() => (long)
 	{
 		if(!isValid()) {
 			throw FreedResourceException:create("Pointer");

@@ -9,19 +9,13 @@
 
 typedef void* shadow_ExternalsTest_t;
 
-typedef struct {
-	int number;
-} TestData;
-
-void _shadowExternalsTest_PrintNumberWithOffset(shadow_ExternalsTest_t* instance, int number);
-
 void __ShadowExternalTest_PrintfToString(shadow_ExternalsTest_t* ref)
 {
 	// equivalent to ref.toString()
-	shadow_String_t* str = shadow_ToString(ref);
+	shadow_String_t* str = shadowObject_ToString(ref);
 	
 	// get the C string from the Shadow String object
-	char* cStr = shadow_GetStringDataAsCStr(str);
+	char* cStr = shadowString_GetCString(str);
 	
 	// print the C null terminated string
 	printf("%s\n", cStr);
@@ -31,36 +25,46 @@ void __ShadowExternalTest_PrintfToString(shadow_ExternalsTest_t* ref)
 	// for consistency.
 	fflush(stdout);
 	
-	// the shadow_UnpackStringToCStr allocates memory,
+	// the shadowString_GetCString() allocates memory,
 	// so we free it.
 	free(cStr);
 }
 
-void __ShadowExternalTest_CreateArray()
+void __ShadowExternalTest_CreateString()
 {
 	// Create a Shadow string from a C string
-	shadow_String_t* string = shadow_CreateString("Hello World from C!");
+	shadow_String_t* string = shadowString_Create("This is a string created in C and printed using Shadow's Console.printLine()");
 
-	shadow_PrintLine(string);
+	// this method is equivalent to Console.printLine()
+	shadowConsole_PrintLine(string);
 	
 	// free the String we created
-	shadow_FreeString(string);
+	shadowString_Free(string);
 }
+
+
+typedef struct {
+	int number;
+} TestData;
 
 shadow_Pointer_t* __ShadowExternalTest_InitPointer(int number)
 {
 	TestData* data = malloc(sizeof(TestData));
 	data->number = number;
 	
-	return shadow_CreatePointer(data, SHADOW_CAN_FREE);
+	return shadowPointer_Create(data, SHADOW_CAN_FREE);
 }
 
+void _shadowExternalsTest_PrintNumberWithOffset(shadow_ExternalsTest_t* instance, int number);
 void __ShadowExternalTest_PrintPointerData(shadow_ExternalsTest_t* instance, shadow_Pointer_t* ptr)
 {
-	TestData* data = shadow_ExtractPointer(TestData, ptr);
+	// retrieve the original pointer we allocated earlier
+	TestData* data = shadowPointer_Extract(TestData, ptr);
 	
+	// print the number that we set earlier
 	printf("%d\n", data->number);
 	fflush(stdout);
 	
+	// pass the number to Shadow to print it with an offset
 	_shadowExternalsTest_PrintNumberWithOffset(instance, data->number);
 }

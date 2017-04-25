@@ -9,6 +9,6 @@
 
 typedef void* shadow_Object_t;
 
-shadow_String_t* shadow_ToString(shadow_Object_t* ref);
+shadow_String_t* shadowObject_ToString(shadow_Object_t* ref);
 
 #endif
