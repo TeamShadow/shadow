@@ -2,12 +2,13 @@
  * Author: Claude Abounegm
  */
 #include <ShadowCore.h>
+#include <__PrimitiveArrayType.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 
 void _shadow_GetStringData(const shadow_String_t*, shadow_PrimitiveArray_t**, shadow_boolean_t*);
-shadow_String_t* _shadow_CreateString(const shadow_String_t*, __array);
+shadow_String_t* _shadow_CreateString(const shadow_String_t*, __primitive_array);
 
 void shadow_GetStringData(const shadow_String_t* instance, ShadowStringData* str)
 {
@@ -34,7 +35,7 @@ shadow_String_t* shadow_CreateString(const char* string)
 	int length = strlen(string);
 	
 	char* chars;
-	__array* array = (__array*)shadow_CreateArray(length, sizeof(char), (void**)&chars);
+	__primitive_array* array = (__primitive_array*)shadow_CreateArray(length, sizeof(char), (void**)&chars);
 	memcpy(chars, string, length);
 	
 	return _shadow_CreateString(NULL, *array);

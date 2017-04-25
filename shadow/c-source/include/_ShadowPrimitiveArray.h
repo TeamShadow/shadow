@@ -34,9 +34,4 @@ shadow_PrimitiveArray_t* shadow_CreateArray(size_t num, size_t size, void** data
  */
 void shadow_FreeArray(shadow_PrimitiveArray_t*);
 
-typedef struct {
-	shadow_ulong_t* data;
-	shadow_int_t size;
-} __array;
-
 #endif
