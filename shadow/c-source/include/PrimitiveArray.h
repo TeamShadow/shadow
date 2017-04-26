@@ -2,6 +2,7 @@
 #define PRIMITIVE_ARRAY_H
 
 #include <Shadow.h>
+#include <stddef.h>
 
 // This should be changed when the structure of the arrays change.
 // YOU SHOULD NOT ATTEMPT TO USE THIS STRUCT UNLESS YOU REALLY KNOW

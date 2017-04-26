@@ -55,6 +55,6 @@ shadow_PrimitiveArray_t* shadowArray_Create(size_t num, size_t size, void** data
 
 void shadowArray_Free(shadow_PrimitiveArray_t* array)
 {
-	free(array->data);
-	free(array);
+	//free(array->data);
+	//free(array);
 }

@@ -59,8 +59,8 @@ shadow_String_t* shadowString_Create(const char* c_str)
 void shadowString_Free(shadow_String_t* instance)
 {
 	// free the data array
-	shadowArray_Free(_shadowString_GetDataArray(instance));
+	//shadowArray_Free(_shadowString_GetDataArray(instance));
 	
 	// free the string reference
-	free(instance);
+	//free(instance);
 }
