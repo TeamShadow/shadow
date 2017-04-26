@@ -4,6 +4,7 @@
 #include <Shadow.h>
 #include <stdlib.h>
 
+shadow_ulong_t* __allocateArray(shadow_Class_t* class, shadow_uint_t elements);
 
 ArrayData* shadowArray_GetData(const shadow_PrimitiveArray_t* shadowArray, ArrayData* array)
 {
@@ -16,33 +17,17 @@ ArrayData* shadowArray_GetData(const shadow_PrimitiveArray_t* shadowArray, Array
 	return array;
 }
 
-// code for future implementation
-/*shadow_PrimitiveArray_t* shadowArray_Create(size_t num, size_t size, shadow_Class_t* class_ref, void** data)
+shadow_PrimitiveArray_t* shadowArray_Create(size_t num, shadow_Class_t* class, void** data)
 {
 	// we first allocate memory to hold the bare bones of the array
 	shadow_PrimitiveArray_t* ret = malloc(sizeof(shadow_PrimitiveArray_t));
 	
-	// now we allocate the memory needed + 8 bytes for the reference count
-	ret->data = calloc(1, sizeof(shadow_ulong_t) + num*size);
+	// now we allocate the actual array
+	ret->data = __allocateArray(class, num);
+	
 	// set the class
-	ret->class_ref = class_ref;
-	// set the size of the array
-	ret->size = num;
+	//ret->class = class;
 	
-	// give the user access to the first element of the array, since the first
-	// item is the ulong, we jump and skip that.
-	*data = &ret->data[1];
-	
-	return ret;
-}*/
-
-shadow_PrimitiveArray_t* shadowArray_Create(size_t num, size_t size, void** data)
-{
-	// we first allocate memory to hold the bare bones of the array
-	shadow_PrimitiveArray_t* ret = malloc(sizeof(shadow_PrimitiveArray_t));
-	
-	// now we allocate the memory needed + 8 bytes for the reference count
-	ret->data = calloc(1, sizeof(shadow_ulong_t) + num*size);
 	// set the size of the array
 	ret->size = num;
 	

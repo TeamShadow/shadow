@@ -34,11 +34,11 @@ ArrayData* shadowArray_GetData(const shadow_PrimitiveArray_t* shadowArray, Array
  * Creates a Shadow Array which can be passed to Shadow methods.
  *
  * param num - the number of elements in the array.
- * param size - the size of each element in the array.
+ * param class - the Shadow Class of the type the array is of.
  * param data - this is a block of memory initialized using calloc(num, size)
  *				and is the actual data that Shadow will use. So index through that.
  */
-shadow_PrimitiveArray_t* shadowArray_Create(size_t num, size_t size, void** data);
+shadow_PrimitiveArray_t* shadowArray_Create(size_t num, shadow_Class_t* class, void** data);
 
 /**
  * Frees the array that was created using shadowArray_Create();

@@ -47,7 +47,7 @@ shadow_String_t* shadowString_Create(const char* c_str)
 	shadow_byte_t* chars;
 
 	// create the array then copy the c_str to chars without the null terminator
-	shadow_PrimitiveArray_t* array = shadowArray_Create(length, sizeof(shadow_byte_t), /*shadowByte_GetClass(),*/ (void**)&chars);
+	shadow_PrimitiveArray_t* array = shadowArray_Create(length, shadowByte_GetClass(), (void**)&chars);
 	memcpy(chars, c_str, length);
 	
 	// we then need to create the actual Shadow String, but Shadow deals with arrays
@@ -55,7 +55,6 @@ shadow_String_t* shadowString_Create(const char* c_str)
 	return _shadowString_CreateBytes(NULL, *array);
 }
 
-// memory leak?
 void shadowString_Free(shadow_String_t* instance)
 {
 	// free the data array
