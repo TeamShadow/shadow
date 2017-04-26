@@ -42,7 +42,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-f");
+		args.add("-f");
 	}
 	
 	@After
@@ -1192,6 +1192,12 @@ public class OutputTests {
 				"true\n" +
 				"true\n" +
 				"true\n");
+	}
+	
+	@Test public void testFile() throws Exception {
+		args.add("shadow/test/FileTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[] { "FileTest.txt" }, formatOutputString("Hello World!"));
 	}
 	
 	/*@Test public void testMessageQueue() throws Exception {

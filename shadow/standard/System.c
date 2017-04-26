@@ -1,6 +1,7 @@
 /**
  * Author: Claude Abounegm
  */
+#include <Shadow.h>
 #include <standard/System.h>
 
 // METHOD SIGNATURES //

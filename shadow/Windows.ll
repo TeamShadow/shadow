@@ -121,14 +121,6 @@ define private i8* @filepath(%shadow.io..File*) {
 	store i8 0, i8* %16
 	ret i8* %15
 }
-
-define i1 @shadow.io..File_Mexists(%shadow.io..File*) {
-	%2 = tail call i8* @filepath(%shadow.io..File* %0)
-	%3 = tail call x86_stdcallcc i32 @GetFileAttributesA(i8* %2)
-	tail call void @free(i8* %2)
-	%4 = icmp sge i32 %3, 0
-	ret i1 %4
-}
 define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
 	tail call void @shadow.io..File_Mclose(%shadow.io..File* %0)
 	%3 = tail call i8* @filepath(%shadow.io..File* %0)

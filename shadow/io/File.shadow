@@ -1,5 +1,3 @@
-import shadow:natives@Pointer;
-
 /**
  * Class {@code File} provides utilities for interacting with a file in the
  * operating system, such as creating a new file, deleting an existing file,
@@ -11,21 +9,12 @@ is	CanRead
 and CanWrite
 and CanClose
 {
-	//public constant int SUCCESS = 0;
-	//public constant int OUT_OF_MEMORY = 1;
-	//private readonly extern __ShadowFile_Get_Exists(Pointer ptr) => (int);
-	//private readonly extern __ShadowFile_Set_Exists(Pointer ptr, boolean createOrDelete) => (int);
-	
-	/// data contains OS-specific file handle information 
-	/// TODO: use pointer instead
-	/// @unused
-	long data = -1L;
-	
+	/// handle contains OS-specific file handle information 
+	long handle = -1L;
 	get Path path;
-	immutable Pointer ptr;
-
-	private readonly extern __ShadowFile_Initialize(String path) => (Pointer);
-	private readonly extern __ShadowFile_Close(Pointer ptr) => ();
+	
+	private readonly extern __shadowFile_Exists(String path) => (boolean);
+	private readonly extern __shadowFile_Close(long handle) => ();
 	
 	/**
 	 * Creates a {@code File} object associated with the file on the given
@@ -45,7 +34,6 @@ and CanClose
 	public create( Path path )
 	{
 		this:path = path;
-		this:ptr = __ShadowFile_Initialize(#path);
 	}
 	
 	/**
@@ -69,7 +57,10 @@ and CanClose
 	 * path in this {@code File} object.
 	 * @return {@code true} if the file exists
 	 */	
-	public native get readonly exists() => ( boolean );	
+	public readonly get exists() => ( boolean )
+	{
+		return __shadowFile_Exists(#path);
+	}
 	
 	/**
 	 * Creates or deletes a file in the operating system with the path of 
@@ -125,9 +116,15 @@ and CanClose
 	 */
 	public close() => ()
 	{
-		if(ptr->isValid) {
-			__ShadowFile_Close(ptr);
-			ptr.free();
+		if(handle != -1) {
+			__shadowFile_Close(handle);
+			handle = -1;
 		}
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern _shadowFile_SetHandle(long handle) => ()
+	{
+		this:handle = handle;
 	}
 }

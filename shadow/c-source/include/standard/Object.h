@@ -4,7 +4,6 @@
 #ifndef SHADOW_OBJECT_H
 #define SHADOW_OBJECT_H
 
-#include <ShadowCore.h>
 #include <standard/String.h>
 #include <standard/Class.h>
 

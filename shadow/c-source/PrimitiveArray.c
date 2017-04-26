@@ -1,7 +1,7 @@
 /**
  * Author: Claude Abounegm
  */
-#include <ShadowCore.h>
+#include <Shadow.h>
 #include <stdlib.h>
 
 

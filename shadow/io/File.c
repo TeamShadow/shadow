@@ -1,12 +1,20 @@
 /**
  * Author: Claude Abounegm
  */
+#include <Shadow.h>
 #include <io/File.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 // METHOD SIGNATURES //
-shadow_Pointer_t* __ShadowFile_Initialize(shadow_String_t* str);
-void __ShadowFile_Close(shadow_Pointer_t* ptr);
+
+// HELPERS
+void _shadowFile_SetHandle(shadow_File_t* instance, shadow_long_t handle);
+
+// to be implemented:
+shadow_boolean_t __shadowFile_Exists(shadow_String_t* str);
+void __shadowFile_Close(shadow_long_t handle);
+
 // METHOD SIGNATURES //
 
 #ifdef SHADOW_WINDOWS
@@ -15,38 +23,28 @@ void __ShadowFile_Close(shadow_Pointer_t* ptr);
 	#include <unistd.h>
 #endif
 
-typedef struct {
-#ifdef SHADOW_WINDOWS
-	HANDLE fd;
-#else
-	int fd;
-#endif
-} FileData;
-
-shadow_Pointer_t* __ShadowFile_Initialize(shadow_String_t* str)
+shadow_boolean_t __shadowFile_Exists(shadow_String_t* str)
 {
-	FileData* data = calloc(1, sizeof(FileData));
 	char* path = shadowString_GetCString(str);
-	
-#ifdef SHADOW_WINDOWS
-	//data->fd = CreateFileA(path, ...);
-#else
-	//data->fd = open(path, FLAGS);
-#endif
 
+	shadow_boolean_t ret;
+#ifdef SHADOW_WINDOWS
+	ret = (GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES);
+#else
+	ret = (access(path, F_OK) == 0);
+#endif
+	
+	// free the allocated string
 	free(path);
 	
-	// return a pointer that can be freed in Shadow
-	return shadowPointer_Create(data, SHADOW_CAN_FREE);
+	return ret;
 }
 
-void __ShadowFile_Close(shadow_Pointer_t* ptr)
+void __shadowFile_Close(shadow_long_t handle)
 {
-	FileData* data = shadowPointer_Extract(FileData, ptr);
-	
 #ifdef SHADOW_WINDOWS
-	CloseHandle(data->fd);
+	CloseHandle((HANDLE)(intptr_t)handle);
 #else
-	close(data->fd);
+	close((int)handle);
 #endif
 }

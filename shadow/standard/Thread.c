@@ -1,6 +1,7 @@
 /**
  * Author: Claude Abounegm
  */
+#include <Shadow.h>
 #include <standard/Thread.h>
 #include <stddef.h>
 #include <stdlib.h>

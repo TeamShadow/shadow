@@ -1,6 +1,11 @@
 All the stuff below are included with this include:
-  #include <ShadowCore.h>
+  #include <Shadow.h>
 
+NOTE1: If C calls a Shadow method that throws an exception, the program will immediately crash.
+NOTE2: Standards used are:
+		- C Core Method: shadowClassName_FunctionName(...)
+		- C Helper Implemented in Shadow: _shadowClassName_FunctionName(...)
+		- Shadow Method needed to be implemented in C: __shadowClassName_FunctionName(...)
 -----------------------------------------------------------------------------------
 Usage:
   #ifdef SHADOW_*
@@ -72,7 +77,7 @@ Usage:
 ==========
 = Object =
 ==========
-  #include <standard/Object.h> // optional
+  #include <standard/Object.h>
   type: shadow_Object_t*
   ---
 
@@ -81,11 +86,13 @@ Usage:
   //       a Shadow String containing the path of the file. This is 
   //       equivalent to ref.toString() but in C.
   shadow_String_t* shadowObject_ToString(shadow_Object_t* ref);
+  
+  shadow_Class_t* shadowObject_GetClass(shadow_Object_t* ref);
 -----------------------------------------------------------------------------------
 ==========
 = String =
 ==========
-  #include <standard/String.h> // optional
+  #include <standard/String.h>
   type: shadow_String_t*
   ---
   
@@ -105,7 +112,7 @@ Usage:
 ===========
 = Pointer =
 ===========
-  #include <natives/Pointer.h> // optional
+  #include <natives/Pointer.h>
   type: shadow_Pointer_t*
   ---
 
@@ -117,7 +124,7 @@ Usage:
 ===========
 = Console =
 ===========
-  #include <io/Console.h>
+  #include <io/Console.h> // needed to be included
   type: shadow_Console_t*
   ---
 
@@ -126,8 +133,6 @@ Usage:
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
-
-
 
 ======================
 = On the Shadow side =

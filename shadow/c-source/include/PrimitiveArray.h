@@ -1,7 +1,7 @@
 #ifndef PRIMITIVE_ARRAY_H
 #define PRIMITIVE_ARRAY_H
 
-#include <PrimitiveTypes.h>
+#include <Shadow.h>
 
 // This should be changed when the structure of the arrays change.
 // YOU SHOULD NOT ATTEMPT TO USE THIS STRUCT UNLESS YOU REALLY KNOW
