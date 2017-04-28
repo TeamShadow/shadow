@@ -226,7 +226,7 @@ public class Main {
 				while (line != null) {
 					
 					
-					if(line.contains("_INITIALIZE_CLASS_SETS_")) {						 
+					if(line.contains(";_INITIALIZE_CLASS_SETS_")) {						 
 						//add in all externally declared generics
 						LLVMOutput.addGenerics("%genericSet", generics, false, out);
 						LLVMOutput.addGenerics("%arraySet", arrays, true, out);		

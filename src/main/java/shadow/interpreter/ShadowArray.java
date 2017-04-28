@@ -9,67 +9,41 @@ import shadow.typecheck.type.Type;
 public class ShadowArray extends ShadowValue
 {
 	private ArrayType type;
-	private ShadowReference[] data;
-	private int[] lengths;
-	private int offset;
-	public ShadowArray(ArrayType type, int... lengths) throws ShadowException
+	private ShadowReference[] data;	
+	public ShadowArray(ArrayType type, int length) throws ShadowException
 	{
-		if (type.getDimensions() != lengths.length)
-			throw new InterpreterException("Cannot create array with " +
-					lengths.length + " dimensions from " + lengths.length +
-					" lengths");
-		int length = 1;
-		for (int i = 0; i < lengths.length; i++)
-			length *= lengths[i];
 		ShadowReference[] data = new ShadowReference[length];
 		ModifiedType baseType = new SimpleModifiedType(type.getBaseType());
 		for (int i = 0; i < data.length; i++)
 			data[i] = new ShadowReference(baseType);
 		this.type = type;
 		this.data = data;
-		this.lengths = lengths;
-		this.offset = 0;
 	}
 	@Override
 	public ArrayType getType()
 	{
 		return this.type;
 	}
-
-	public int getLength(int dimension)
-	{
-		return this.lengths[dimension];
+	
+	public ShadowReference get(int index) {
+		return data[index];
 	}
-	private ShadowReference index(int... indices) throws ShadowException
+	
+	public void set(int index, ShadowReference reference) {
+		data[index] = reference;
+	}
+
+	public int getLength()
 	{
-		if (indices.length != this.lengths.length)
-			throw new InterpreterException("Cannot index into array with " +
-					lengths.length + " dimensions with " + indices.length +
-					" indices");
-		int index = 0;
-		for (int i = 0; i < indices.length; i++)
-		{
-			if (indices[i] < 0 || indices[i] >= this.lengths[i])
-				throw new InterpreterException("Indices out of bounds");
-			index = index * lengths[i] + indices[i];
-		}
-		return data[index + this.offset];
+		return data.length;
 	}
 
 	@Override
 	public ShadowValue copy() throws ShadowException
 	{
-		ShadowArray copy = new ShadowArray(getType());
-		int[] indices = new int[getType().getDimensions()];
-		while (indices[0] != getLength(0))
-		{
-			copy.index(indices).setValue(index(indices).getValue());
-			int i;
-			for (i = indices.length - 1; i > 0 &&
-					indices[i - 1] != getLength(i - 1); i--)
-				indices[i] = 0;
-			indices[i]++;
-		}
+		ShadowArray copy = new ShadowArray(getType(), data.length);
+		for ( int i = 0; i < data.length; ++i )
+			copy.data[i] = data[i].copy();
 		return copy;
 	}
 	@Override

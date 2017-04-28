@@ -400,15 +400,14 @@ is  Set<Class>
 	
 	
 	/**
-	 * Finds an array class with the given name, base class, and number of
-	 * dimensions.  This method assumes that it will only ever be called on
+	 * Finds an array class with the given name and base class.
+	 * This method assumes that it will only ever be called on
 	 * a set containing all array classes.
 	 * @param name name of class to find
 	 * @param base class of array base type
-	 * @param dimensions number of dimensions that the array has
 	 * @return matching array class if found, {@code null} otherwise
 	 */
-	public locked readonly findArray(String name, Class base, int dimensions) => (nullable Class)
+	public locked readonly findArray(String name, Class base) => (nullable Class)
 	{
 		(int index, int hash) = findIndex( name, table->size );
 		try
@@ -419,7 +418,7 @@ is  Set<Class>
 				if( current->hash == hash )
 				{
 					Class other = current->value;					
-					if( other->size == dimensions and other->parent === base and (other->flags & Class:ARRAY) != 0)
+					if( other->parent === base and (other->flags & Class:ARRAY) != 0)
 						return other;
 				}
 				current = check(current->next);
@@ -547,22 +546,21 @@ is  Set<Class>
 	}	
 
 	/**
-	 * Creates and adds a new array class with the name, base class, and
-	 * number of dimensions. This method assumes that 
-	 * {@code findArray} has already been called and failed to find the
-	 * matching class.  Likewise, it is assumed that this method will only
-	 * ever be called on a set containing all array classes.
+	 * Creates and adds a new array class with the name, and base class.
+	 * This method assumes that {@code findArray} has already been called 
+	 * and failed to find the matching class.  Likewise, it is assumed that
+	 * this method will only ever be called on a set containing all array
+	 * classes.
 	 * @param name name of class to add
-	 * @param base class of array base type
-	 * @param dimensions number of dimensions that the array has	 
+	 * @param base class of array base type	 	 
 	 * @return newly created array class
 	 */
-	locked public addArray(String name, Class base, int dimensions) => (Class)
+	locked public addArray(String name, Class base) => (Class)
 	{
 		immutable Class[] interfaces = getEmptyClassArray();
 		immutable MethodTable[] tables = getEmptyMethodTableArray();
 
-		Class newArray = Class:create(name, Class:ARRAY, dimensions, base, interfaces, tables);
+		Class newArray = Class:create(name, Class:ARRAY, base.arraySize(), base, interfaces, tables);
 		(int index, int hash) = findIndex( name, table->size );		
 		table[index] = Node:create(hash, newArray, table[index]);
 		modifications += 1;

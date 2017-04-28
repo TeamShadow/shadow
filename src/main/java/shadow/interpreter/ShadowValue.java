@@ -188,7 +188,7 @@ public abstract class ShadowValue implements ModifiedType {
         if (type instanceof ArrayType) {
             final ArrayType arrayType = (ArrayType) type;
             
-            return new ShadowArray(arrayType, new int[arrayType.getDimensions()]);
+            return new ShadowArray(arrayType, 0);
         }
         
         throw new InterpreterException("Unsupported type " + type.getType());

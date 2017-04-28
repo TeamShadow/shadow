@@ -32,16 +32,16 @@
 
 ; String
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods*, {{ %ulong, %byte }*, [1 x %int] }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }, %boolean }
 
 ;---------------------------
 ; Custom Method Definitions
 ;---------------------------
 ; ShadowString.c
-define void @_shadow_UnpackString(%shadow.standard..String*, {{ %ulong, %byte }*, [1 x %int] }**, %boolean*) {
+define void @_shadow_UnpackString(%shadow.standard..String*, {{ %ulong, %byte }*, %shadow.standard..Class*, %ulong }**, %boolean*) {
 entry:
 	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3
-	store {{ %ulong, %byte }*, [1 x %int] }* %array.addr, {{ %ulong, %byte }*, [1 x %int] }** %1
+	store {{ %ulong, %byte }*, %shadow.standard..Class*, %ulong }* %array.addr, {{ %ulong, %byte }*, %shadow.standard..Class*, %ulong }** %1
 	
 	%ascii.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 4
 	%ascii = load %boolean, %boolean* %ascii.addr
@@ -51,13 +51,13 @@ entry:
 }
 
 ; ShadowArray.c
-%ShadowArray = type {{ %ulong, %void }*, [1 x %int] }
-define void @_shadow_UnpackArray(%ShadowArray*, %int*, %void**) {
+%ShadowArray = type {{ %ulong, %void }*, %shadow.standard..Class*, %ulong }
+define void @_shadow_UnpackArray(%ShadowArray*, %ulong*, %void**) {
 entry:
 	%arrayData = load %ShadowArray, %ShadowArray* %0
 	
-	%size = extractvalue %ShadowArray %arrayData, 1, 0
-	store %int %size, %int* %1
+	%size = extractvalue %ShadowArray %arrayData, 2
+	store %ulong %size, %ulong* %1
 
 	%array.ptr = extractvalue %ShadowArray %arrayData, 0
 	%array = getelementptr inbounds { %ulong, %void }, { %ulong, %void }* %array.ptr, i32 0, i32 1

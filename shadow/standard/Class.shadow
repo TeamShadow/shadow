@@ -267,7 +267,16 @@ is  CanHash
 	 * 64-bit systems.	 
 	 * @return size of a pointer
 	 */
-	public locked native readonly pointerSize() => ( int );	
+	public locked native readonly pointerSize() => ( int );
+	
+	/**
+	 * Returns the size of an array in bytes in the current run-time
+	 * system. The expected values are 16 for 32-bit systems or 24 for
+	 * 64-bit systems.	 
+	 * @return size of an array
+	 */
+	public locked native readonly arraySize() => ( int );	
+		
 
 	/**
 	 * For normal types, returns the size required for an object whose type

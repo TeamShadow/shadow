@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Set;
 
 import shadow.ShadowException;
-import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
@@ -256,9 +254,7 @@ public class TACCast extends TACUpdate
 			if( needsCast(modifiedType, op) )
 				operands.set(0, cast(this, modifiedType, op, check));			
 			break;			
-		case OBJECT_TO_ARRAY:
-			if( check )
-				objectToArrayCheck(op);	
+		case OBJECT_TO_ARRAY: //do nothing now?			
 			break;
 		case OBJECT_TO_INTERFACE:
 			operands.add(getInterfaceData(op, type));
@@ -357,38 +353,6 @@ public class TACCast extends TACUpdate
 		doneLabel.insertBefore(this);	//done label
 	}
 	
-	
-	private void objectToArrayCheck(TACOperand op) {
-		ArrayType arrayType = (ArrayType) type;
-		
-		//get dimensions from object
-		TACMethodRef methodRef = new TACMethodRef(this, op,
-				op.getType().getMatchingMethod("dimensions", new SequenceType()));						
-		
-		TACOperand dimensions = new TACCall(this, methodRef, methodRef.getPrefix());
-		
-		//no operand is straight === comparison
-		TACOperand condition = new TACBinary(this, dimensions, new TACLiteral(this, new ShadowInteger(arrayType.getDimensions())));
-		
-		TACLabel throwLabel = new TACLabel(getMethod());
-		TACLabel doneLabel = new TACLabel(getMethod());
-		
-		new TACBranch(this, condition, doneLabel, throwLabel);
-		
-		throwLabel.insertBefore(this);
-		
-		TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
-		SequenceType params = new SequenceType();
-		TACOperand message = new TACLiteral(this, new ShadowString("Array dimensions do not match")); 
-		params.add(message);
-								
-		MethodSignature signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
-		TACCall exception = new TACCall(this, new TACMethodRef(this, signature), object, message);
-					
-		new TACThrow(this, exception);
-		doneLabel.insertBefore(this);	//done label
-	}
-
 	@Override
 	public Modifiers getModifiers()
 	{

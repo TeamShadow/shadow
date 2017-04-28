@@ -22,12 +22,12 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 %shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] }, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, %int, %int, {{%ulong, %shadow.standard..Class*}*, [1 x %int] }, {{%ulong, %shadow.standard..MethodTable*}*, [1 x %int] } }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong } }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, [1 x %int] }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
@@ -43,14 +43,14 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
+@shadow.standard..byte_class = external constant %shadow.standard..Class
 @shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
 @shadow.standard..MethodTable_class = external constant %shadow.standard..Class
 
-declare noalias i8* @calloc(i32, i32) nounwind
-declare noalias i8* @memset(i8*, i32, i32) nounwind
+declare noalias i8* @calloc(i64, i64) nounwind
 declare void @free(i8*) nounwind
 declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryException_Mcreate(%shadow.standard..Object*)
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
@@ -64,16 +64,24 @@ declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..Object(
 declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
 declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
+
+define %int @shadow.standard..Class_MarraySize(%shadow.standard..Class*) alwaysinline nounwind readnone {
+		%2 = ptrtoint {%shadow.standard..Class*, %shadow.standard..Object*, %ulong}* getelementptr ({%shadow.standard..Class*, %shadow.standard..Object*, %ulong}, {%shadow.standard..Class*, %shadow.standard..Object*, %ulong}* null, i32 1) to i32
+		ret %int %2
+}
+
 define %int @shadow.standard..Class_MpointerSize(%shadow.standard..Class*) alwaysinline nounwind readnone {
 		%2 = ptrtoint %shadow.standard..Object** getelementptr (%shadow.standard..Object*, %shadow.standard..Object** null, i32 1) to i32
 		ret %int %2
 }
 
+
 define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods) {	
 	%sizeRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 8
-	%size = load i32, i32* %sizeRef		
+	%size = load %uint, %uint* %sizeRef	
+	%sizeLong = zext %uint %size to %ulong
 	
-	%memory = call noalias i8* @calloc(i32 1, i32 %size) nounwind
+	%memory = call noalias i8* @calloc(%ulong 1, %ulong %sizeLong) nounwind
 	%isNull = icmp eq i8* %memory, null
 	br i1 %isNull, label %_outOfMemory, label %_success
 _outOfMemory: 
@@ -88,20 +96,19 @@ _success:
 	%object.class = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 1
     store %shadow.standard..Class* %class, %shadow.standard..Class** %object.class
     %object.methods = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 2
-    store %shadow.standard..Object_methods* %methods, %shadow.standard..Object_methods** %object.methods	
-
+    store %shadow.standard..Object_methods* %methods, %shadow.standard..Object_methods** %object.methods
 	
 	ret %shadow.standard..Object* %object
 }
 
-define noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %uint %elements) {
-	%classAsObj = bitcast %shadow.standard..Class* %class to %shadow.standard..Object*
-	%perObject = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %class)		
-	%size = mul i32 %perObject, %elements
+define noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %ulong %elements) {	
+	%perObject = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %class)	
+	%perObjectLong = zext %int %perObject to %ulong
+	%size = mul %ulong %perObjectLong, %elements
 	
 	; Add extra room for reference count (stored before array space)
-	%sizeWithCounter = add i32 %size, 8	
-	%arrayAsBytes = call noalias i8* @calloc(i32 1, i32 %sizeWithCounter)	
+	%sizeWithCounter = add %ulong %size, 8	
+	%arrayAsBytes = call noalias i8* @calloc(%ulong 1, %ulong %sizeWithCounter)	
 	%isNull = icmp eq i8* %arrayAsBytes, null
 	br i1 %isNull, label %_outOfMemory, label %_success
 _outOfMemory:
@@ -143,13 +150,6 @@ _freeLabel:
     call void %destroy(%shadow.standard..Object* %object)
 	
 	; free	
-	;%classRef = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 1
-	;%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
-	
-	;%nameRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 3
-	;%name = load %shadow.standard..String*, %shadow.standard..String** %nameRef
-
-	
 	%address = bitcast %shadow.standard..Object* %object to i8*
 	tail call void @free(i8* %address) nounwind
 	ret void
@@ -176,12 +176,12 @@ _exit:
 	ret void
 }
 
-define void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %array) nounwind {	
-
-	%isNull = icmp eq {%ulong, %shadow.standard..Object*}* %array, null
+define void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind {
+	%arrayData = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 0
+	%isNull = icmp eq {%ulong, %shadow.standard..Object*}* %arrayData, null
 	br i1 %isNull, label %_exit, label %_check
 _check:
-	%countRef = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32 0, i32 0
+	%countRef = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %arrayData, i32 0, i32 0
 	%count = load %ulong, %ulong* %countRef
 	; check if reference count is not ulong max (marks non-gc objects)  (unsigned -1 is ulong max)
 	%isGC = icmp ne %ulong %count, -1
@@ -194,23 +194,11 @@ _exit:
 	ret void
 }
 
-; %sizes are sizes of each dimension
-; %dims is the number of dimensions
-; %base class is the base class of the array
-; Example 1: int[,][][,,] stuff = int:create[3,4][5][6,7,8]; would have:
-; @__decrementRefArray(stuff pointer, i32 2, int[][,,]:class)
-; Example 2: String[][] stuff = String:create[10][20]; would have:
-; @__decrementRefArray(stuff pointer, i32 1, String[]:class)
-define void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 %dims, %shadow.standard..Class* %base) nounwind {
-	
-	%isNull = icmp eq {{%ulong, %shadow.standard..Object*}*, i32}* %arrayPtr, null
-	br i1 %isNull, label %_exit, label %_check1
-_check1:
-	%countAndArrayRef = getelementptr {{%ulong, %shadow.standard..Object*}*, i32}, {{%ulong, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 0, i32 0
-	%countAndArray = load {%ulong, %shadow.standard..Object*}*, {%ulong, %shadow.standard..Object*}** %countAndArrayRef
+define void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind {	
+	%countAndArray = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 0
 	%arrayNull = icmp eq {%ulong, %shadow.standard..Object*}* %countAndArray, null
-	br i1 %arrayNull, label %_exit, label %_check2	
-_check2:	
+	br i1 %arrayNull, label %_exit, label %_check	
+_check:	
 	%countRef = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %countAndArray, i32 0, i32 0
 	%count = load %ulong, %ulong* %countRef
 	; check if reference count is not ulong max (marks non-gc objects)  (unsigned -1 is ulong max)
@@ -222,9 +210,14 @@ _checkPassed:
 	%oldCount = atomicrmw sub %ulong* %countRef, %ulong 1 acquire
 	; if old value was 1, call destroy and deallocate (prevents double free in multithreaded situations)
 	%free = icmp eq %ulong %oldCount, 1
-	br i1 %free, label %_freeLabel, label %_exit
-_freeLabel:	
+	br i1 %free, label %_checkLength, label %_exit
+_checkLength:	
+	%size = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 2
+	%check.length = icmp ne i64 %size, 0
+	br i1 %check.length, label %_getClass, label %_freeArray
+_getClass:	
 	; here's where things change from objects
+	%base = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 1	
 	%flagRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %base, i32 0, i32 7	
 	%flag = load i32, i32* %flagRef
 	%primitiveFlag = and i32 %flag, 2	
@@ -232,31 +225,14 @@ _freeLabel:
 	%notMethodTable = icmp ne %shadow.standard..Class* %base, @shadow.standard..MethodTable_class
 	%notPrimitiveOrMethodTable = and i1 %notPrimitive, %notMethodTable	
 	; if primitive or method table elements, no elements to decrement
-	br i1 %notPrimitiveOrMethodTable, label %_loopInit, label %_freeArray	
-_loopInit:
-	%array = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %countAndArray, i32 0, i32 1
-	%sizes = getelementptr inbounds {{%ulong, %shadow.standard..Object*}*, i32}, {{%ulong, %shadow.standard..Object*}*, i32}* %arrayPtr, i32 0, i32 1
-	br label %_lengthLoop
-	; loop multiplies sizes to get full length
-_lengthLoop:	
-	%i.1 = phi i32 [0, %_loopInit], [%i.2, %_lengthLoop]
-	%length.1 = phi i32 [1, %_loopInit], [%length.2, %_lengthLoop]
-	%nextSizeRef = getelementptr inbounds i32, i32* %sizes, i32 %i.1
-	%nextSize = load i32, i32* %nextSizeRef
-	%length.2 = mul i32 %length.1, %nextSize
-	%i.2 = add i32 %i.1, 1
-	%check.i2 = icmp ult i32 %i.2, %dims
-	br i1 %check.i2, label %_lengthLoop, label %_checkLength	
-	; shouldn't get this far if the array has zero length...but just to be safe
-_checkLength:
-	%check.length = icmp ne i32 %length.2, 0
-	br i1 %check.length, label %_checkFlag, label %_freeArray
+	br i1 %notPrimitiveOrMethodTable, label %_checkFlag, label %_freeArray	
+
 	; see if it's an array of arrays
 _checkFlag:
+	%arrayData = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %countAndArray, i32 0, i32 1
 	%arrayFlag = and i32 %flag, 8	
 	%notArray = icmp eq i32 %arrayFlag, 0
-	br i1 %notArray, label %_checkInterface, label %_array	
-	
+	br i1 %notArray, label %_checkInterface, label %_array
 	
 _checkInterface:
 	%interfaceFlag = and i32 %flag, 1
@@ -266,49 +242,42 @@ _checkInterface:
 	; array of objects to free
 	; loop through and decrement
 _object:
-	%i.3 = phi i32 [0, %_checkInterface], [%i.4, %_object]
-	%element.1.ref = getelementptr inbounds %shadow.standard..Object*, %shadow.standard..Object** %array, i32 %i.3	
+	%i.3 = phi i64 [0, %_checkInterface], [%i.4, %_object]
+	%element.1.ref = getelementptr inbounds %shadow.standard..Object*, %shadow.standard..Object** %arrayData, i64 %i.3	
 	%element.1 = load %shadow.standard..Object*, %shadow.standard..Object** %element.1.ref		
 	call void @__decrementRef(%shadow.standard..Object* %element.1)
-	%i.4 = add i32 %i.3, 1
-	%check.i4 = icmp ult i32 %i.4, %length.2
+	%i.4 = add i64 %i.3, 1
+	%check.i4 = icmp ult i64 %i.4, %size
 	br i1 %check.i4, label %_object, label %_freeArray
 
 	; array of arrays to free
 _array:
-	; width of each element in bytes
-	%width.1 = call i32 @shadow.standard..Class_Mwidth(%shadow.standard..Class* %base)
-	%newBaseRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %base, i32 0, i32 4	
-	%newBase = load %shadow.standard..Class*, %shadow.standard..Class** %newBaseRef
-	%newDimsRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %base, i32 0, i32 8
-	%newDims = load i32, i32* %newDimsRef
-	%arrayAsBytes = bitcast %shadow.standard..Object** %array to i8*
+	; width of each element in bytes	
+	%arrayElements = bitcast %shadow.standard..Object** %arrayData to {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}*
 	br label %_arrayLoop
 	
 	; loop through and decrement array elements (which are also arrays)
 _arrayLoop:
-	%i.5 = phi i32 [0, %_array], [%i.6, %_arrayLoop]
-	%offset = mul i32 %i.5, %width.1
-	%element.2 = getelementptr inbounds i8, i8* %arrayAsBytes, i32 %offset
-	; cast because an array is {{i32, %shadow.standard..Object*}*, i32}		
-	%arrayElement = bitcast i8* %element.2 to {{%ulong, %shadow.standard..Object*}*, i32}*		
-	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, i32}* %arrayElement, i32 %newDims, %shadow.standard..Class* %newBase)
-	%i.6 = add i32 %i.5, 1
-	%check.i6 = icmp ult i32 %i.6, %length.2
+	%i.5 = phi i64 [0, %_array], [%i.6, %_arrayLoop]	
+	%element.2.ref = getelementptr inbounds {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %arrayElements, i64 %i.5
+	%element.2 = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %element.2.ref
+	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %element.2)
+	%i.6 = add i64 %i.5, 1
+	%check.i6 = icmp ult i64 %i.6, %size
 	br i1 %check.i6, label %_arrayLoop, label %_freeArray
 		
 	; array of interfaces to free
 _interface:
-	%elements = bitcast %shadow.standard..Object** %array to {%shadow.standard..MethodTable*, %shadow.standard..Object*}*
+	%elements = bitcast %shadow.standard..Object** %arrayData to {%shadow.standard..MethodTable*, %shadow.standard..Object*}*
 	br label %_interfaceLoop
 _interfaceLoop:
-	%i.7 = phi i32 [0, %_interface], [%i.8, %_interfaceLoop]
-	%element.3.ref = getelementptr inbounds {%shadow.standard..MethodTable*, %shadow.standard..Object*}, {%shadow.standard..MethodTable*, %shadow.standard..Object*}* %elements, i32 %i.7	
+	%i.7 = phi i64 [0, %_interface], [%i.8, %_interfaceLoop]
+	%element.3.ref = getelementptr inbounds {%shadow.standard..MethodTable*, %shadow.standard..Object*}, {%shadow.standard..MethodTable*, %shadow.standard..Object*}* %elements, i64 %i.7	
 	%element.3 = load {%shadow.standard..MethodTable*, %shadow.standard..Object*}, {%shadow.standard..MethodTable*, %shadow.standard..Object*}* %element.3.ref		
 	%elementObject = extractvalue {%shadow.standard..MethodTable*, %shadow.standard..Object*} %element.3, 1
 	call void @__decrementRef(%shadow.standard..Object* %elementObject)
-	%i.8 = add i32 %i.7, 1
-	%check.i8 = icmp ult i32 %i.8, %length.2
+	%i.8 = add i64 %i.7, 1
+	%check.i8 = icmp ult i64 %i.8, %size
 	br i1 %check.i8, label %_interfaceLoop, label %_freeArray
 
 _freeArray:
@@ -320,23 +289,5 @@ _exit:
 }
 
 @_array0 = private unnamed_addr constant {%ulong, [20 x %byte] } {%ulong -1, [20 x %byte] c"Heap space exhausted"}
-@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, [1 x %int] } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array0 to { %ulong, %byte }* ), [1 x %int] [%int 20] }, %boolean true }
+@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, %shadow.standard..Class*, %ulong } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array0 to { %ulong, %byte }* ), %shadow.standard..Class* @shadow.standard..byte_class, %ulong 20}, %boolean true }
 @_OutOfMemoryException = private constant %shadow.standard..OutOfMemoryException { %ulong -1, %shadow.standard..Class* @shadow.standard..OutOfMemoryException_class, %shadow.standard..OutOfMemoryException_methods* @shadow.standard..OutOfMemoryException_methods, %shadow.standard..String* @_string0 }
-
-
-@_array1 = private unnamed_addr constant {%ulong, [20 x %byte] } {%ulong -1, [20 x %byte] c"Increment ref!!!!!!!"}
-@_string1 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, [1 x %int] } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array1 to { %ulong, %byte }* ), [1 x %int] [%int 20] }, %boolean true }
-
-@_array2 = private unnamed_addr constant {%ulong, [20 x %byte] } {%ulong -1, [20 x %byte] c"Decrement ref!!!!!!!"}
-@_string2 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, [1 x %int] } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array2 to { %ulong, %byte }* ), [1 x %int] [%int 20] }, %boolean true }
-
-@_array3 = private unnamed_addr constant {%ulong, [20 x %byte] } {%ulong -1, [20 x %byte] c"Increment ref array!"}
-@_string3 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, [1 x %int] } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array3 to { %ulong, %byte }* ), [1 x %int] [%int 20] }, %boolean true }
-
-@_array4 = private unnamed_addr constant {%ulong, [20 x %byte] } {%ulong -1, [20 x %byte] c"Decrement ref array!"}
-@_string4 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, [1 x %int] } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array4 to { %ulong, %byte }* ), [1 x %int] [%int 20] }, %boolean true }
-
-@_array5 = private unnamed_addr constant {%ulong, [20 x %byte] } {%ulong -1, [20 x %byte] c"Give us us free!!!!!"}
-@_string5 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, [1 x %int] } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array5 to { %ulong, %byte }* ), [1 x %int] [%int 20] }, %boolean true }
-
-

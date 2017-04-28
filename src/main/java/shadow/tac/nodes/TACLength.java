@@ -7,28 +7,30 @@ import shadow.typecheck.type.Type;
 public class TACLength extends TACOperand
 {
 	private TACOperand array;
-	private int dimension;
+	private boolean isLong;
+	
+	public TACLength(TACNode node, TACOperand arrayRef) {
+		this( node, arrayRef, false);		
+	}
+	
 
-	public TACLength(TACNode node, TACOperand arrayRef, int dim)
-	{
+	public TACLength(TACNode node, TACOperand arrayRef, boolean isLong) {
 		super(node);
 		array = check(arrayRef, arrayRef);
-		dimension = dim;
+		this.isLong = isLong;
 	}
 
 	public TACOperand getArray()
 	{
 		return array;
-	}
-	public int getDimension()
-	{
-		return dimension;
-	}
+	}	
 	
 	@Override
-	public Type getType()
-	{
-		return Type.INT;
+	public Type getType() {
+		if( isLong )
+			return Type.LONG;
+		else					
+			return Type.INT;
 	}
 	@Override
 	public int getNumOperands()
@@ -52,6 +54,9 @@ public class TACLength extends TACOperand
 	@Override
 	public String toString()
 	{
-		return array + "->lengths[" + dimension + ']';
+		if( isLong )
+			return array + "->longSize";
+		else
+			return array + "->size";
 	}
 }

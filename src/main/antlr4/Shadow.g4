@@ -194,8 +194,8 @@ type
 	;
 
 referenceType
-	: primitiveType ( '[' ( ',' )* ']' )+
-  	| classOrInterfaceType ( '[' ( ',' )* ']' )*
+	: primitiveType ( '[' ']' )+
+  	| classOrInterfaceType ( '[' ']' )*
 	;
 
 functionType
@@ -456,7 +456,7 @@ qualifiedKeyword
 	;
 
 brackets
-	: ( '[' (',')* ']')+
+	: ( '[' ']')+
 	;
 	
 arrayCreate
@@ -473,11 +473,11 @@ arrayDefault
 	;
 
 arrayDimensions
-	: ( '[' conditionalExpression (',' conditionalExpression )* ']' )+
+	: ( '[' conditionalExpression ']' )+
 	;
 
 subscript
-	: '[' conditionalExpression (',' conditionalExpression )* ']'
+	: '[' conditionalExpression ']'
 	;
 
 create

@@ -1,7 +1,7 @@
 
 class Arrays {
 
-    int[][][,,,][][,] a = int:create[4][5][8,7,6,5][31][4,2];
+    int[][][][][] a = int:create[4][5][2][31][42];
 
     // create a single array
     int[] a1;
@@ -12,12 +12,7 @@ class Arrays {
     get set int[][] b1;
     int[][] b2 = int:create[3][4];
     int[][] b3 = b2;
-    
-    // contiguous arrays    
-    int[,] c1;
-    int[,] c2 = int:create[3,4];
-    int[,] c3 = c2;
-    
+
     public blah() => () {
         // test the same but in a method
 
@@ -30,11 +25,6 @@ class Arrays {
 	    int[][] b1;
 	    int[][] b2 = int:create[3][4];
 	    int[][] b3 = b2;
-	    
-	    // contiguous arrays    
-	    int[,] c1;
-	    int[,] c2 = int:create[30,40];
-	    int[,] c3 = c2;
              
         // test some other array expressions
         
@@ -43,17 +33,14 @@ class Arrays {
         a2[7] = a3[8];
         
     	b2[7][8] = 3;
-    	b2[7][8] = a2[8];
-      
-        
-        c2[7,8] = 3;
-        c2[7,8] = a2[8];
+    	b2[7][8] = a2[8];     
+
         int x = 4;
         
-        int [,,,,] m = int:create[ 3, 5, 7, 10, 14];
-        int [][,,][] n = int:create[5][3,9,14][8];
-        m[2, 4, 6, x + 4, 13] = 15;
-        n[4][2, x + 4, 13][7] = 15;
+        int [][][][][] m = int:create[3][5][7][10][14];
+        int [][][] n = int:create[5][3][8];
+        m[2][4][6][x + 4][13] = 15;
+        n[4][x + 4][7] = 15;
                 
         int[][] b = { {1, 2, 3}, {4, 5, 6}, {7, 8, 9} };  
    }

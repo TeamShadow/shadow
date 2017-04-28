@@ -235,9 +235,8 @@ public class TACClass extends TACOperand
 		return false;	
 	}
 	
-	private TACOperand buildArrayClass(ArrayType type) {
+	private TACOperand buildArrayClass(ArrayType type) {		
 		
-		TACOperand dimensions = new TACLiteral(this, new ShadowInteger(type.getDimensions()));
 		TACOperand base = new TACClass(this, type.getBaseType());							
 		TACOperand name;
 		
@@ -245,12 +244,8 @@ public class TACClass extends TACOperand
 			name = new TACLiteral(this, new ShadowString(type.toString()));
 		else {
 			TACMethodRef getName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("toString", new SequenceType()));					
-				TACOperand baseName = new TACCall(this, getName, base);
-				StringBuilder builder = new StringBuilder("[");
-				for( int i = 1; i < type.getDimensions(); ++i )
-					builder.append(",");
-				builder.append("]");
-				TACOperand brackets = new TACLiteral(this, new ShadowString(builder.toString()));
+				TACOperand baseName = new TACCall(this, getName, base);				
+				TACOperand brackets = new TACLiteral(this, new ShadowString("[]"));
 				name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), baseName, brackets);
 		}
 
@@ -261,12 +256,11 @@ public class TACClass extends TACOperand
 		
 		SequenceType arguments = new SequenceType();
 		arguments.add(name);
-		arguments.add(base);
-		arguments.add(dimensions);
+		arguments.add(base);		
 		
 		TACMethodRef findArray = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("findArray", arguments));
 		
-		TACCall class_ = new TACCall(this, findArray, classSet, name, base, dimensions);
+		TACCall class_ = new TACCall(this, findArray, classSet, name, base);
 		TACOperand isNull = new TACBinary(this, class_, new TACLiteral(this, new ShadowNull(class_.getType())));
 		TACLabel nullCase = new TACLabel(method);
 		TACLabel notNullCase = new TACLabel(method);
@@ -274,7 +268,7 @@ public class TACClass extends TACOperand
 		new TACBranch(this, isNull, nullCase, notNullCase);
 		nullCase.insertBefore(this);
 		TACMethodRef addArray = new TACMethodRef(this, classSet, Type.CLASS_SET.getMatchingMethod("addArray", arguments));
-		TACCall addedClass = new TACCall(this, addArray, classSet, name, base, dimensions);
+		TACCall addedClass = new TACCall(this, addArray, classSet, name, base);
 		new TACLocalStore(this, var, addedClass);
 		new TACBranch(this, done);
 		notNullCase.insertBefore(this);

@@ -635,7 +635,7 @@ public class ClassOrInterfacePage extends Page
 		if( to instanceof ArrayType ) {
 			ArrayType arrayType = (ArrayType) to;
 			writeCrossLink(arrayType.getBaseType(), options, out);
-			out.add(ArrayType.makeBrackets(arrayType.getDimensions()));
+			out.add("[]");
 		}
 		else if( to.isParameterizedIncludingOuterClasses() && linkableTypes.contains(to.getTypeWithoutTypeArguments()) && (options & Type.TYPE_PARAMETERS) != 0) {
 			Type current = to;

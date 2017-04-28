@@ -52,4 +52,10 @@ public class ShadowReference implements ModifiedType {
             throw new InterpreterException("Cannot store a value of type " + value.getType() + " to a reference of type " + getType());
         this.value = value;
     }
+    
+    public ShadowReference copy() throws ShadowException {
+    	ShadowReference reference = new ShadowReference(type);
+    	reference.value = value.copy();
+    	return reference;
+    }
 }
