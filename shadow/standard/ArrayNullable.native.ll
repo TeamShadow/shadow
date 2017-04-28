@@ -39,9 +39,9 @@
 %shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} }
 
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
-declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}*) nounwind
+declare void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
-declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %arrayPtr) nounwind 
+declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind 
 
 ;aliases are in Array.native.ll
 

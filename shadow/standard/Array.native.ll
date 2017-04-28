@@ -68,9 +68,9 @@ declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
 declare %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A_int_int(%shadow.standard..Class*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int)
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
-declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}*) nounwind
+declare void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
-declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %arrayPtr) nounwind 
+declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind 
 
 @_genericSet = external global %shadow.standard..ClassSet*
 
@@ -94,9 +94,7 @@ define %shadow.standard..Array* @shadow.standard..Array_Mcreate_shadow.standard.
 	call %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object* %object)   
 	
 	%array = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*
-
-	%dataArray = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data, 0
-	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %dataArray) nounwind
+	call void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data) nounwind
 	
     %dataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3		
     store {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %dataRef
@@ -137,9 +135,14 @@ define %shadow.standard..Array* @shadow.standard..Array_Mcreate_long(%shadow.sta
 }
 
 define void @shadow.standard..Array_Mdestroy(%shadow.standard..Array* %array) {
-	%arrayPtr = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
-	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %arrayPtr) nounwind
-	
+	%dataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
+	%null = icmp eq {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %dataRef, null
+	br i1 %null, label %_destroyObject, label %_notNull
+_notNull:
+	%data = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %dataRef
+	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data) nounwind
+	br label %_destroyObject
+_destroyObject:
 	;parent destroy
 	%asObject = bitcast %shadow.standard..Array* %array to %shadow.standard..Object*
     call void @shadow.standard..Object_Mdestroy(%shadow.standard..Object* %asObject)
@@ -356,17 +359,17 @@ _array:
 	; get the location inside the current Array<T>
 	%arrayRefBase = bitcast %shadow.standard..Object** %arrayData to {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }*
 	%arrayRef = getelementptr {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %arrayRefBase, %ulong %index
-		
-	; get the array data from the input Array<T> (which it must be, since anything else isnt' going to have an ArrayType as a parameter)
+	%oldArray = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %arrayRef
+	
+	; get the array data from the input Array<T> (which it must be, since anything else isn't going to have an ArrayType as a parameter)
 	%input = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*
 	%inputArrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %input, i32 0, i32 3
 	%inputArray = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %inputArrayRef
-	%inputArrayData = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong } %inputArray, 0
-				
+					
 	; increment reference count on new array	
-	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %inputArrayData) nounwind	
+	call void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %inputArray) nounwind	
 	; decrement reference count on old array
-	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %arrayRef) nounwind
+	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %oldArray) nounwind
 		
 	; store new array into the old array location	
 	store {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong } %inputArray, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %arrayRef	
@@ -469,10 +472,9 @@ _loopTestArray:
 	br i1 %less2, label %_loopBodyArray, label %_done
 _loopBodyArray:
 	%elementRef2 = getelementptr i8, i8* %newArrayAsChar, %ulong %i2
-	%elementAsArrayRef = bitcast i8* %elementRef2 to {{%ulong, %shadow.standard..Object*}*, %uint }*
-	%elementAsArray = load {{%ulong, %shadow.standard..Object*}*, %uint }, {{%ulong, %shadow.standard..Object*}*, %uint }* %elementAsArrayRef
-	%elementAsArrayPointer = extractvalue {{%ulong, %shadow.standard..Object*}*, %uint } %elementAsArray, 0
-	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %elementAsArrayPointer) nounwind
+	%elementAsArrayRef = bitcast i8* %elementRef2 to {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }*
+	%elementAsArray = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %elementAsArrayRef	
+	call void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong } %elementAsArray) nounwind
 	%incremented2 = add %ulong %i2, %width
 	br label %_loopTestArray
 	
@@ -492,8 +494,9 @@ _loopBodyObj:
 _done:		
 	%initializedArray = call %shadow.standard..Array* @shadow.standard..Array_Mcreate_shadow.standard..Object_A(%shadow.standard..Object* %arrayObj, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %newArray3)		
 	%newArrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %initializedArray, i32 0, i32 3
+	%newArray = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %newArrayRef
 	; decrement new array, since it just got incremented when used in Array create (and was already incremented when it was born)
-	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %newArrayRef) nounwind	
+	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %newArray) nounwind	
 	ret %shadow.standard..Array* %initializedArray	
 throw:
 	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..IndexOutOfBoundsException_methods* @shadow.standard..IndexOutOfBoundsException_methods to %shadow.standard..Object_methods*))

@@ -11,7 +11,7 @@
  */
 abstract locked class shadow:standard@
 	Array<T>
-and CanIndex<long,T>
+is CanIndex<long,T>
 and CanIndexStore<long,T>
 and CanIterate<T>
 {

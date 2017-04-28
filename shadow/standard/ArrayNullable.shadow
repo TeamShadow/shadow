@@ -75,7 +75,7 @@ and CanIterateNullable<T>
 	 * @param index	location to store at	 
 	 * @param value value to be stored
 	 */	
-	public native index( long index, T value ) => ();
+	public native index( long index, nullable T value ) => ();
 
 	
 	/**
