@@ -29,9 +29,8 @@ class shadow:test@ArrayInitializerTest
 		
 		Array<String[]> asObject = alsoComplex;
 		
-		String[] more = {"cranberry", "jamboplexy", "in", "place"};
-		int[] offset = {1}; 
-		asObject[offset] = more;
+		String[] more = {"cranberry", "jamboplexy", "in", "place"};		 
+		asObject[1] = more;
 		
 		out.printLine(alsoComplex);
 	}

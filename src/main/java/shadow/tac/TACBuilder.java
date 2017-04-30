@@ -31,7 +31,6 @@ import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
-import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBaseClass;
 import shadow.tac.nodes.TACBinary;
@@ -81,7 +80,6 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -111,8 +109,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}
 	
 	@Override
-	public Void visit(ParseTree node)
-	{
+	public Void visit(ParseTree node) {
 		Context context = (Context) node;
 		TACNode saveList = anchor;
 		anchor = new TACDummyNode(context, block);
@@ -154,8 +151,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			return type;
 	}
 	
-	@Override public Void visitClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx)
-	{ 
+	@Override public Void visitClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx) { 
 		Type type = ctx.getType();
 		TACModule newModule = new TACModule(type);
 		
@@ -189,13 +185,12 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		for (MethodSignature method : type.orderMethods())
 			visitMethod(method);
 
-		//TACTree saveTree = tree; //already saved by visitor		
+		//tree saved by visitor		
 		ShadowParser.ClassOrInterfaceBodyContext body = ctx.classOrInterfaceBody();
 		for( ShadowParser.ClassOrInterfaceBodyDeclarationContext declaration : body.classOrInterfaceBodyDeclaration() ) {
 			if( declaration.classOrInterfaceDeclaration() != null )					
 				build(declaration.classOrInterfaceDeclaration());
-		}
-		//tree = saveTree;
+		}		
 		
 		return null; //no children
 	}	
@@ -305,7 +300,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			//do the cleanup, de-referencing variables
 			visitCleanup(null, null);
 			
-			TACReturn explicitReturn = new TACReturn(anchor, new SequenceType() );
+			//explicit return statement
+			new TACReturn(anchor, new SequenceType() );
 			
 			anchor.setContext(context);
 			

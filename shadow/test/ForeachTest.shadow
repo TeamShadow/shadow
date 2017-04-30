@@ -6,8 +6,7 @@ class shadow:test@ForeachTest
 	public main( String[] args ) => ()
 	{	
 		Console out;
-		int[] array = int:create[20];		
-		int[,,] values = int:create[2,4,3];
+		int[] array = int:create[20];
 	
 		var list = LinkedList<String>:create();
 		
@@ -18,30 +17,12 @@ class shadow:test@ForeachTest
 		
 		for( int i = 0; i < array->size; i += 1 )
 			array[i] = array->size - i;
-			
-		int counter = 0;
-		for( int i = 0; i < 2; i += 1 )
-			for( int j = 0; j < 4; j += 1 )
-				for( int k = 0; k < 3; k += 1 )
-				{
-					values[i,j,k] = counter;
-					counter += 1;
-				}		
 		
 		foreach( int value in array )
 			out.printLine( value );
 			
 		foreach( String word in list )
-			out.printLine( word );
-			
-		foreach( int value in values )
-			out.printLine( value );
-			
-		CanIterate<int> iterable = values;
-		
-		foreach( int value in iterable )
-			out.printLine( value );
-			
+			out.printLine( word );			
 			
 		int[][] table = int:create[4][5];
 		int start = 20;
