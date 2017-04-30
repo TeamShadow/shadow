@@ -358,10 +358,9 @@ public class Main {
 		if(currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath).compareTo(Files.getLastModifiedTime(currentFile.toPath())) < 0) {
 			logger.info("Generating Assembly code for " + currentFile.getName());
 			return true;
-		} else {
-			logger.info("Using pre-existing Assembly code for " + currentFile.getName());
 		}
 		
+		logger.info("Using pre-existing Assembly code for " + currentFile.getName());
 		return false;
 	}
 	

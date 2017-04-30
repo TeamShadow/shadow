@@ -926,5 +926,11 @@ and	CanHash
 	public toString(uint base) => (String)
 	{		
 		return toInt().toString(base);
-	}	
+	}
+
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowByte_GetClass() => (Class)
+	{
+		return byte:class;
+	}
 }

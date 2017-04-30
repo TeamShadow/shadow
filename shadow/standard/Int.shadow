@@ -737,5 +737,11 @@ and	CanHash
 	{		
 		String string = abs().toString(base);		
 		return this >= 0 ? string, '-' # string;
-	}	
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowInt_GetClass() => (Class)
+	{
+		return int:class;
+	}
 }

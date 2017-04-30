@@ -4,17 +4,14 @@
 #ifndef SHADOW_CONSOLE_H
 #define SHADOW_CONSOLE_H
 
-#include <ShadowCore.h>
+#include <Shadow.h>
 
 typedef void* shadow_Console_t;
 
-void __ShadowConsole_Initialize(void);
-void __ShadowConsole_ReadByte(shadow_byte_t*, shadow_boolean_t*);
+void _shadowConsole_PrintLine(shadow_Console_t*, shadow_Object_t*);
+void _shadowConsole_PrintErrorLine(shadow_Console_t*, shadow_Object_t*);
 
-void __ShadowConsole_Print(shadow_String_t*);
-void __ShadowConsole_PrintError(shadow_String_t*);
-
-void __ShadowConsole_PrintLine(void);
-void __ShadowConsole_PrintErrorLine(void);
+#define shadowConsole_PrintLine(obj) _shadowConsole_PrintLine(0, obj)
+#define shadowConsole_PrintErrorLine(obj) _shadowConsole_PrintErrorLine(0, obj)
 
 #endif

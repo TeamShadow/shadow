@@ -849,5 +849,11 @@ and	CanHash
 		if (digit < 10u)
 			return cast<byte>(digit + '0');
 		return cast<byte>(digit - 10u + 'a');
-	}	
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowUInt_GetClass() => (Class)
+	{
+		return uint:class;
+	}
 }

@@ -1,29 +1,51 @@
-import shadow:io@Console;
 import shadow:natives;
-//import shadow:standard@Thread;
+import shadow:io;
 
 class shadow:test@ExternalsTest
 {
-	private readonly extern __ShadowExternalTest_TestPrintf(String str) => ();
+	// uses shadow_ToString() to get the Shadow String, then extracts it to a C String and
+	// prints it to the console using printf()
+	private readonly extern __shadowExternalTest_PrintfToString(ExternalsTest ref) => ();
+
+	// creates a Shadow String from a C String and prints it using Shadow Console
+	private readonly extern __shadowExternalTest_CreateString() => ();
+
+	// creates a Pointer which holds the number passed as a parameter for later use
+	private readonly extern __shadowExternalTest_InitPointer(int start) => (Pointer);
+	// prints the number passed earlier to the console, then calls Shadow code to print the number + offset
+	private readonly extern __shadowExternalTest_PrintPointerData(ExternalsTest instance, Pointer ptr) => ();
+	
+	// prints the string representation of the Class object for ExternalsTest and all primitives
+	private readonly extern __shadowExternalTest_PrintClasses(ExternalsTest instance) => ();	
+	
+	immutable Pointer ptr;
+	int offset = 1000;
+	
+	public create()
+	{
+		ptr = __shadowExternalTest_InitPointer(2500);
+	}
 	
 	public main(String[] args) => ()
 	{
-		__ShadowExternalTest_TestPrintf("Hello from printf!\n");
-
-		//var arr = int:create[0];
-		//Object o = arr;
-		//Console.printLine(o.getClass());
-		//var x = cast<int[]>(o);
-		
-		/*var a = System.epochNanoTime();
-		var b = System.nanoTime();
-		CurrentThread.sleep(Time.fromSeconds(5));
-		var c = System.epochNanoTime();
-		var d = System.nanoTime();
-		
-		Console.printLine(a # "  " # c);
-		Console.printLine(b # "  " # d);
-		Console.printLine(c - a);
-		Console.printLine(d - b);*/
+		__shadowExternalTest_PrintfToString(this);
+		__shadowExternalTest_CreateString();
+		__shadowExternalTest_PrintPointerData(this, ptr);
+		__shadowExternalTest_PrintClasses(this);
+	}
+	
+	public readonly toString() => (String)
+	{
+		return "This is the result from running shadow_ToString(ref) from C!!";
+	}
+	
+	private extern _shadowExternalsTest_PrintNumberWithOffset(int number) => ()
+	{
+		Console.printLine(number + offset);
+	}
+	
+	public destroy
+	{
+		ptr.free();
 	}
 }

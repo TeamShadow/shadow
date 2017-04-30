@@ -754,9 +754,9 @@ public class LLVMOutput extends AbstractOutput {
 			
 		MethodSignature signature = method.getSignature();
 		if (module.getType() instanceof InterfaceType ) {
-			skipMethod = true;			
-		}		
-		else if (signature.isNative() || signature.isExtern()) {
+			skipMethod = true;
+		}
+		else if (signature.isNative() || signature.isExternWithoutBlock()) {
 			writer.write("declare " + methodToString(method));
 			writer.write();
 			skipMethod = true;

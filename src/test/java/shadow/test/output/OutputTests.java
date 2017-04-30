@@ -50,7 +50,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -1154,7 +1154,25 @@ public class OutputTests {
 	@Test public void testExternals() throws Exception {
 		args.add("shadow/test/ExternalsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "Hello from printf!\n");
+		run(new String[0], formatOutputString(
+								"This is the result from running shadow_ToString(ref) from C!!", 
+								"This is a string created in C and printed using Shadow's Console.printLine()", 
+								"2500", 
+								"3500",
+								"shadow:test@ExternalsTest",
+								"boolean",
+								"byte",
+								"ubyte",
+								"short",
+								"ushort",
+								"int",
+								"uint",
+								"code",
+								"long",
+								"ulong",
+								"float",
+								"double"
+		));
 	}
 	
 	@Test public void testReadOnlyList() throws Exception {
@@ -1174,6 +1192,12 @@ public class OutputTests {
 				"true\n" +
 				"true\n" +
 				"true\n");
+	}
+	
+	@Test public void testFile() throws Exception {
+		args.add("shadow/test/FileTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[] { "FileTest.txt" }, formatOutputString("Hello World!"));
 	}
 	
 	/*@Test public void testMessageQueue() throws Exception {
