@@ -423,8 +423,14 @@ and	CanHash
 	 * scientific notation is used.
 	 * @return  {@code String} representation
 	 */ 
-	public  toString(int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
+	public toString(int maxPrecision, int integerThreshold, int fractionalThreshold ) => (String)
 	{
 		return toDouble().toString(maxPrecision, integerThreshold, fractionalThreshold);
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowFloat_GetClass() => (Class)
+	{
+		return float:class;
 	}
 }

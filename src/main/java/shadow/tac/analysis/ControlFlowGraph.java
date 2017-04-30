@@ -906,9 +906,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( node instanceof TACCall ) {
 					TACCall call = (TACCall)node;
 					MethodSignature signature = call.getMethodRef().getSignature();
-					if( operandIsThis( call.getPrefix(), type ) ) {
+					if( signature.isExternWithoutBlock() || operandIsThis( call.getPrefix(), type ) ) {
 						//creates are handled separately, and we have to assume that native code works
-						if( !signature.isCreate() && !signature.isNative() && !signature.isExtern() ) {							
+						if( !signature.isCreate() && !signature.isNative() && !signature.isExternWithoutBlock() ) {							
 							//if we've recorded the fields a method uses, add those to the loads before stores
 							if( methodData.containsKey(signature) ) {
 								loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());

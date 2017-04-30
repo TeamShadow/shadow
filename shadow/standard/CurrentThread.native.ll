@@ -1,4 +1,4 @@
-; System.native.ll
+; CurrentThread.native.ll
 ; 
 ; Author:
 ; Claude Abounegm
@@ -21,14 +21,8 @@
 %double = type double
 %void = type i8
 
-; Object
-%shadow.standard..Object = type opaque
-
 ; Thread
 %shadow.standard..Thread = type opaque
-
-; TimeSpan
-%shadow.standard..TimeSpan = type opaque
 
 ; CurrentThread
 %shadow.standard..CurrentThread = type opaque

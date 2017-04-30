@@ -1,14 +1,20 @@
-# C micro-framework Documentation
+# C Framework Documentation
+- Last updated: 04/25/2017
 
-This documentation will explain a few features available in the Shadow-C micro-framework.
+This documentation will attempt to explain the current features available in the C Framework.
 
 ## Folder Structure
-There are four folders in which `.c` files could be placed. Three platform specific folders and one general folder.
-At the time of this writing, the general folder (the root folder of the `c-source`) contains `ShadowArray.c`, `ShadowPointer.c` and `ShadowString.c`; this files implement general functionalities that communicate with native Shadow code. The specifics of each, are explained later on.
-The other three folders are `Linux`, `Mac` and `Windows`. Those are chosen by the Shadow compiler, according to the operating system on which the compiler is ran. This is an advantage as we could write a unified Shadow code, and write C specific code for low level features which require system calls and platform specific operations that would otherwise be difficult to write in Shadow or LLVM. A good example for this is `ShadowConsole.c` which is available on the three platforms.
+Only the core features should be included in the `c-source` folder. The `.c` files that implement core features are put in the root directory,
+while header files are put in the `include` folder. The header files in the `include` folder should only contain methods intented to be used
+by developers on the global level of Shadow. `extern` methods needed to be implemented in C should be put in the same directory as the `.shadow`
+file which requires the methods to be implemented. For example, if `Wombat.shadow` requires an `extern` method to be implemented, a `Wombat.c`
+file should be added in the same directory.
 
 ## C Includes
-The compiler automatically references all `.h` files in the `include` folder. This means that whether you're in the root of the `c-source` folder, or in a platform specific one, any `.c` file could have a direct `#include` to the header files. For example, if we need to use `ShadowArray` features, we would simply `#include "ShadowArray.h"` and it will be included as expected at compile time.
+The compiler automatically references all `.h` files in the `include` folder.
+This means that whether you're in the root of the `c-source` folder, or in a platform specific one, any `.c` 
+file could have a direct `#include` to the header files. For example, if we need to use `ShadowArray` features, 
+we would simply `#include "ShadowArray.h"` and it will be included as expected at compile time.
 
 ## Shadow Classes/Objects/Singletons
 Most of the `.c` files in the `c-source` folder, have a one-to-one representation with Shadow. For example, we have a class called `ShadowPointer` and we also have a `ShadowPointer.c`. Since C does not know anything about Shadow objects, we represent the classes simply as a `void*`. This allows us to still be able to pass the Shadow object back to Shadow from C code even if we cannot perform operations on it. An example of this could be seen in `ShadowThread.c` where the reference of the `Thread` object is passed to the newly spawned thread. The definition of the `ShadowThread` in C is simply `typedef void* ShadowThread;`.

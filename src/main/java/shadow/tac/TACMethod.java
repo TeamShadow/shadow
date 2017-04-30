@@ -107,7 +107,7 @@ public class TACMethod
 				new TACLocalStore(node, addParameter(modifiedType, "_outer"), new TACParameter(node, modifiedType, parameter++));				
 			}
 		}
-		else if(!signature.isExtern()) {
+		else if(!signature.isExternWithoutBlock()) {
 			new TACLocalStore(node, addParameter(modifiedType, "this"), new TACParameter(node, modifiedType, parameter++));
 		}
 		

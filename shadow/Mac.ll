@@ -107,6 +107,7 @@ define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
 	ret i32 47
 }
 
+declare void @shadow.io..File_Mclose(%shadow.io..File*)
 define private i8* @filepath(%shadow.io..File*) {
 	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 4
 	%3 = load %shadow.io..Path*, %shadow.io..Path** %2
@@ -129,13 +130,6 @@ define private i8* @filepath(%shadow.io..File*) {
 	ret i8* %16
 }
 
-define i1 @shadow.io..File_Mexists(%shadow.io..File*) {
-	%2 = tail call i8* @filepath(%shadow.io..File* %0)
-	%3 = tail call i32 @access(i8* %2, i32 0)
-	tail call void @free(i8* %2)
-	%4 = icmp sge i32 %3, 0
-	ret i1 %4
-}
 define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
 	tail call void @shadow.io..File_Mclose(%shadow.io..File* %0)
 	%3 = tail call i8* @filepath(%shadow.io..File* %0)
@@ -291,21 +285,6 @@ _open:
 	%checkValid = icmp sge i64 %newDescriptorAsLong, 0
 	br i1 %checkValid, label %_write, label %_throw
 _throw:
-	tail call void @throwIOException() noreturn
-	unreachable
-}
-
-define void @shadow.io..File_Mclose(%shadow.io..File*) {
-	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
-	%3 = load i64, i64* %2
-	store i64 -1, i64* %2
-	%4 = trunc i64 %3 to i32
-	%5 = tail call i32 @close(i32 %4)
-	%6 = icmp sge i32 %5, 0
-	br i1 %6, label %7, label %8
-	ret void
-	%9 = icmp slt i64 %3, 0
-	br i1 %9, label %7, label %10
 	tail call void @throwIOException() noreturn
 	unreachable
 }
