@@ -2,6 +2,7 @@ package shadow.tac;
 
 import shadow.ShadowException;
 import shadow.tac.nodes.TACAllocateVariable;
+import shadow.tac.nodes.TACBaseClass;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -39,6 +40,7 @@ import shadow.tac.nodes.TACUnary;
 public interface TACVisitor
 {	
 	public abstract void visit(TACAllocateVariable node) throws ShadowException;
+	public abstract void visit(TACBaseClass node) throws ShadowException;
 	public abstract void visit(TACBinary node) throws ShadowException;	
 	public abstract void visit(TACBlock node) throws ShadowException;
 	public abstract void visit(TACBranch node) throws ShadowException;

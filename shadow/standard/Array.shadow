@@ -29,7 +29,7 @@ and CanIterate<T>
 	 * This method is called internally by the compiler and is only {@code protected}
 	 * because it allows other classes to see the method.
 	 */
-	protected native create( long size );
+	//protected native create( long size );
 	
 	public native destroy;
 

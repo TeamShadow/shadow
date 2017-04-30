@@ -43,6 +43,7 @@ import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACArrayRef;
+import shadow.tac.nodes.TACBaseClass;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -90,7 +91,6 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodTableType;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -112,6 +112,10 @@ public class LLVMOutput extends AbstractOutput {
 
 	private TACModule module;
 	private boolean skipMethod = false;
+	
+	private final ArrayType OBJECT_ARRAY = new ArrayType(Type.OBJECT);
+	private final ArrayType METHOD_TABLE_ARRAY = new ArrayType(Type.METHOD_TABLE);
+	private final ArrayType CLASS_ARRAY = new ArrayType(Type.CLASS);
 
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 
@@ -450,9 +454,6 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(methodTable(moduleType) + " = constant " +
 					methodTableType(moduleType) + " { " +					
 					methodList(methods, true) + " }");
-			
-			ArrayType methodTableArray = new ArrayType(Type.METHOD_TABLE);
-			ArrayType classArray = new ArrayType(Type.CLASS);
 
 			//nothing will ever be the raw, unparameterized class ...now they will!
 			//if( !moduleType.isParameterizedIncludingOuterClasses() ) {
@@ -468,22 +469,22 @@ public class LLVMOutput extends AbstractOutput {
 					typeText(Type.CLASS, parentType != null ?  //parent class
 							classOf(parentType) : null) + ", " +
 
-					type(new ArrayType(Type.METHOD_TABLE)) + " {" + pointerType(methodTableArray) + " " +   //interfaceTables
+					type(METHOD_TABLE_ARRAY) + " {" + pointerType(METHOD_TABLE_ARRAY) + " " +   //interfaceTables
 					" bitcast ({%ulong, [" +
 					interfaceCount + " x " + type(Type.METHOD_TABLE) +
-					"]}* " + interfaceData(moduleType) + " to " + pointerType(methodTableArray) + "), " +
+					"]}* " + interfaceData(moduleType) + " to " + pointerType(METHOD_TABLE_ARRAY) + "), " +
 					typeText(Type.CLASS, classOf(Type.METHOD_TABLE)) + ", " +
 					"%ulong " + literal((long)interfaceCount) +
 					"}, " + 
-					type(new ArrayType(Type.CLASS)) + //interfaces 
+					type(CLASS_ARRAY) + //interfaces 
 
 					( moduleType.isParameterizedIncludingOuterClasses() ?							
 							" zeroinitializer, " :		
 
-								" " + pointerType(classArray) + " " + 
+								" " + pointerType(CLASS_ARRAY) + " " + 
 								"bitcast ({%ulong, [" +
 								interfaceCount + " x " + type(Type.CLASS) +
-								"]}* " + interfaces(moduleType) + " to " + pointerType(classArray) + "), " +
+								"]}* " + interfaces(moduleType) + " to " + pointerType(CLASS_ARRAY) + "), " +
 								typeText(Type.CLASS, classOf(Type.CLASS)) + ", %ulong " + literal((long)interfaceCount) + "}, " )	+
 
 					typeLiteral(flags) + ", " +			//flags
@@ -507,8 +508,8 @@ public class LLVMOutput extends AbstractOutput {
 					typeLiteral(moduleType.toString(Type.PACKAGES)) + ", " + //name 
 					type(Type.CLASS) + " null, " + //parent
 
-					type(new ArrayType(Type.METHOD_TABLE)) + " zeroinitializer, " + //interfaceTables
-					type(new ArrayType(Type.CLASS)) +  " zeroinitializer, " + //interfaces
+					type(METHOD_TABLE_ARRAY) + " zeroinitializer, " + //interfaceTables
+					type(CLASS_ARRAY) +  " zeroinitializer, " + //interfaces
 
 					typeLiteral(flags) + ", " +
 					typeLiteral(-1) + //size (unknown for interfaces) 
@@ -681,22 +682,19 @@ public class LLVMOutput extends AbstractOutput {
 		if (moduleType instanceof ClassType ) {
 			if( !moduleType.encloses(Type.ARRAY) )
 				writer.write("declare " + type(Type.ARRAY) + " @" +
-						raw(Type.ARRAY, "_Mcreate_" + new ArrayType(Type.INT).
-								toString(Type.MANGLE) + "_" + Type.OBJECT.toString(Type.MANGLE)) + '(' +
+						raw(Type.ARRAY, "_Mcreate_" + OBJECT_ARRAY.
+								toString(Type.MANGLE)) + '(' +
 						type(Type.OBJECT) + ", " +
-						type(new ArrayType(Type.INT)) + ", " +
-						type(Type.OBJECT) + ')');
+						type(OBJECT_ARRAY) + ')');
 
 
 			if( !moduleType.encloses(Type.ARRAY_NULLABLE) )
 				writer.write("declare " + type(Type.ARRAY_NULLABLE) + " @" +
-						raw(Type.ARRAY_NULLABLE, "_Mcreate_" + new ArrayType(Type.INT).
-								toString(Type.MANGLE) + "_" + Type.OBJECT.toString(Type.MANGLE)) + '(' +
+						raw(Type.ARRAY_NULLABLE, "_Mcreate_" + OBJECT_ARRAY.
+								toString(Type.MANGLE)) + '(' +
 						type(Type.OBJECT) + ", " +
-						type(new ArrayType(Type.INT)) + ", " +
-						type(Type.OBJECT) + ')');
+						type(OBJECT_ARRAY) + ')');				
 		}
-
 
 		//declare the two sets used to keep track of all generic classes and array classes
 		writer.write();
@@ -936,12 +934,11 @@ public class LLVMOutput extends AbstractOutput {
 			srcType = genericArray;
 			srcName = temp(0);
 		}		
-				
-		ArrayType objectArray = new ArrayType(Type.OBJECT, false);
+
 		String arrayTypeName = type(arrayType);
 		writer.write(nextTemp() + " = getelementptr inbounds %" + raw(srcType) + ", " +
 				typeText(srcType, srcName) + ", i32 0, i32 3");
-		writer.write(nextTemp() + " = bitcast " + type(objectArray) + "* " + temp(1) + " to " + arrayTypeName);
+		writer.write(nextTemp() + " = bitcast " + type(OBJECT_ARRAY) + "* " + temp(1) + " to " + arrayTypeName);
 		writer.write(nextTemp(node) + " = load" + arrayTypeName + ", " + arrayTypeName + "* " + temp(1));
 	}
 
@@ -951,9 +948,8 @@ public class LLVMOutput extends AbstractOutput {
 			genericArray = Type.ARRAY_NULLABLE;				
 		else
 			genericArray = Type.ARRAY;				
-		
-		ArrayType objArray = new ArrayType(Type.OBJECT);
-		writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to " + type(objArray));		
+				
+		writer.write(nextTemp() + " = bitcast " + typeSymbol(source) + " to " + type(OBJECT_ARRAY));		
 		writer.write(nextTemp() + " = bitcast " + typeText(Type.GENERIC_CLASS, symbol(arrayClass.getClassData())) + " to " + type(Type.CLASS));
 
 		writer.write(nextTemp() + " = call noalias " +
@@ -962,13 +958,13 @@ public class LLVMOutput extends AbstractOutput {
 				')');
 
 		SequenceType arguments = new SequenceType();
-		arguments.add(new SimpleModifiedType(objArray));		
+		arguments.add(new SimpleModifiedType(OBJECT_ARRAY));		
 		MethodSignature arrayCreate = genericArray.getMatchingMethod("create", arguments);
 		int offset = node.hasLocalStore() ? 0 : 1;				
 		writer.write(nextTemp(node) + " = call " + type(genericArray) + " " +
 			name(arrayCreate) + '(' +
 			typeTemp(Type.OBJECT, offset) + ", " +						
-			typeTemp(objArray, offset + 2) + ')');
+			typeTemp(OBJECT_ARRAY, offset + 2) + ')');
 	}
 
 	@Override
@@ -1127,12 +1123,11 @@ public class LLVMOutput extends AbstractOutput {
 
 	@Override
 	public void visit(TACNewArray node) throws ShadowException {		
-		String allocationClass = typeSymbol(node.getBaseClass());
-		ArrayType objArray = new ArrayType(Type.OBJECT);
+		String allocationClass = typeSymbol(node.getBaseClass());		
 
-		writer.write(nextTemp() + " = call noalias " + pointerType(objArray) + " @__allocateArray(" +
+		writer.write(nextTemp() + " = call noalias " + pointerType(OBJECT_ARRAY) + " @__allocateArray(" +
 				allocationClass + ", " + typeSymbol(node.getSize()) + ')');
-		writer.write(nextTemp() + " = bitcast " + pointerType(objArray) + " " +
+		writer.write(nextTemp() + " = bitcast " + pointerType(OBJECT_ARRAY) + " " +
 				temp(1) + " to " + pointerType(node.getType()));
 		writer.write(nextTemp() + " = insertvalue " + type(node) +
 				" zeroinitializer, " + pointerType(node.getType()) + " " + temp(1) + ", 0");
@@ -1140,6 +1135,13 @@ public class LLVMOutput extends AbstractOutput {
 				temp(1) + ", " + allocationClass + ", 1");
 		writer.write(nextTemp(node) + " = insertvalue " + type(node) +
 				temp(1) + ", " + typeSymbol(node.getSize()) + ", 2");
+	}
+	
+
+	@Override
+	public void visit(TACBaseClass node) throws ShadowException {
+		writer.write(nextTemp(node) + " = extractvalue " +
+				typeSymbol(node.getArray()) + ", 1");
 	}
 
 	@Override
@@ -1191,7 +1193,7 @@ public class LLVMOutput extends AbstractOutput {
 		
 		String name;
 		
-		String objectArrayType = type(new ArrayType(Type.OBJECT));
+		String objectArrayType = type(OBJECT_ARRAY);
 		
 		if( node.isField() )			
 			reference = field = node.getField();		
@@ -1483,10 +1485,9 @@ public class LLVMOutput extends AbstractOutput {
 		}
 		else if( reference instanceof TACGenericArrayRef ) {
 			TACGenericArrayRef arrayRef = (TACGenericArrayRef) reference;			
-			writer.write(nextTemp() + " = extractvalue " + typeSymbol(arrayRef.getArray()) + ", 0");
-			ArrayType arrayType = new ArrayType(Type.OBJECT);
+			writer.write(nextTemp() + " = extractvalue " + typeSymbol(arrayRef.getArray()) + ", 0");			
 			back1 = temp(0);
-			writer.write(nextTemp(node) + " = call " + type(Type.OBJECT) + " @__arrayLoad(" + pointerType(arrayType) +  " " + back1 + ", " + 
+			writer.write(nextTemp(node) + " = call " + type(Type.OBJECT) + " @__arrayLoad(" + pointerType(OBJECT_ARRAY) +  " " + back1 + ", " + 
 					typeSymbol(arrayRef.getIndex()) + ", " +
 					typeSymbol(arrayRef.getGenericParameter().getClassData()) + ", " +
 					typeSymbol(Type.METHOD_TABLE, arrayRef.getGenericParameter().getMethodTable()) + ", " +
@@ -1542,10 +1543,9 @@ public class LLVMOutput extends AbstractOutput {
 					typeText(singleton, '@' + raw(singleton.getType(), "_instance"), true));			
 		}
 		else if( reference instanceof TACGenericArrayRef ) {
-			TACGenericArrayRef arrayRef = (TACGenericArrayRef) reference;
-			ArrayType arrayType = new ArrayType(Type.OBJECT);			
+			TACGenericArrayRef arrayRef = (TACGenericArrayRef) reference;						
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(arrayRef.getArray()) + ", 0");
-			writer.write("call void @__arrayStore(" + pointerType(arrayType) + " " + temp(0) + ", " + 
+			writer.write("call void @__arrayStore(" + pointerType(OBJECT_ARRAY) + " " + temp(0) + ", " + 
 					typeSymbol(arrayRef.getIndex()) + ", " + typeSymbol(node.getValue()) + ", " +
 					typeSymbol(arrayRef.getGenericParameter().getClassData()) + ")");
 		}
@@ -1601,18 +1601,17 @@ public class LLVMOutput extends AbstractOutput {
 	
 	//storing a whole array into an array reference, NOT storing an element into an array
 	private void gcArrayStore(String destination, ArrayType type, TACOperand value, TACOperand classData, boolean increment, boolean decrement ) throws ShadowException {
-		ArrayType objArray = new ArrayType(Type.OBJECT);
 		if( increment ) {
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(value) + ", 0");			
 			writer.write(nextTemp() + " = bitcast " + pointerType(type) + " " + temp(1) + " to " + 
-					pointerType(objArray));
-			writer.write("call void @__incrementRefArray(" + pointerType(objArray) + " " + temp(0) + ") nounwind");
+					pointerType(OBJECT_ARRAY));
+			writer.write("call void @__incrementRefArray(" + pointerType(OBJECT_ARRAY) + " " + temp(0) + ") nounwind");
 		}
 		
 		if( decrement ) {
-			writer.write(nextTemp() + " = bitcast " + typeText(type, destination, true) + " to " + type(objArray) + "*");
-			writer.write(nextTemp() + " = load " + type(objArray) + ", " + typeText(objArray, temp(1), true));
-			writer.write("call void @__decrementRefArray(" + typeText(objArray, temp(0)) + ") nounwind");				
+			writer.write(nextTemp() + " = bitcast " + typeText(type, destination, true) + " to " + type(OBJECT_ARRAY) + "*");
+			writer.write(nextTemp() + " = load " + type(OBJECT_ARRAY) + ", " + typeText(OBJECT_ARRAY, temp(1), true));
+			writer.write("call void @__decrementRefArray(" + typeText(OBJECT_ARRAY, temp(0)) + ") nounwind");				
 		}
 		writer.write("store " + typeSymbol(value) + ", " + typeText(type, destination, true));
 	}
@@ -2289,8 +2288,6 @@ public class LLVMOutput extends AbstractOutput {
 			baseClass = typeText(Type.CLASS, "(" + type(Type.GENERIC_CLASS) + " " + classOf(baseType) + " to " + type(Type.CLASS) + ")");
 		else
 			baseClass = typeText(Type.CLASS, classOf(baseType));
-		
-		ArrayType objArray = new ArrayType(Type.OBJECT);
 
 		arrayClasses.add("@" + withGenerics(type,  "_class"));
 
@@ -2306,11 +2303,11 @@ public class LLVMOutput extends AbstractOutput {
 				typeLiteral(type.toString()) + ", " + //name 
 				baseClass + ", "  +//parent 					
 
-				typeText(new ArrayType(Type.METHOD_TABLE), "zeroinitializer, ") + //data											
-				typeText(new ArrayType(Type.CLASS), "zeroinitializer, ") + //interfaces
+				typeText(METHOD_TABLE_ARRAY, "zeroinitializer, ") + //data											
+				typeText(CLASS_ARRAY, "zeroinitializer, ") + //interfaces
 
 				typeLiteral(ARRAY) + ", " + //flags	
-				typeText(Type.INT, sizeof(type(objArray))) + //size
+				typeText(Type.INT, sizeof(type(OBJECT_ARRAY))) + //size
 				" }");
 	}
 
@@ -2321,10 +2318,7 @@ public class LLVMOutput extends AbstractOutput {
 		String interfaceData;
 		String interfaces;
 		String size;
-		int flags = GENERIC;
-		
-		ArrayType methodTableArray = new ArrayType(Type.METHOD_TABLE);
-		ArrayType classArray = new ArrayType(Type.CLASS);
+		int flags = GENERIC;		
 
 		if( generic instanceof InterfaceType ) {
 			flags |= INTERFACE;
@@ -2336,11 +2330,11 @@ public class LLVMOutput extends AbstractOutput {
 			
 			
 			ArrayList<InterfaceType> interfaceList = generic.getAllInterfaces();
-			interfaceData = "{" + pointerType(methodTableArray) + " bitcast ({ %ulong, [" + interfaceList.size() + " x " +
-					type(Type.METHOD_TABLE) + "]}* " + interfaceData(noArguments) + " to " + pointerType(methodTableArray) + "), " +
+			interfaceData = "{" + pointerType(METHOD_TABLE_ARRAY) + " bitcast ({ %ulong, [" + interfaceList.size() + " x " +
+					type(Type.METHOD_TABLE) + "]}* " + interfaceData(noArguments) + " to " + pointerType(METHOD_TABLE_ARRAY) + "), " +
 					typeText(Type.CLASS, classOf(Type.METHOD_TABLE)) + ", %ulong " + literal((long)interfaceList.size()) + "}, ";
-			interfaces = "{" + pointerType(classArray) + " bitcast ({ %ulong, [" + interfaceList.size() + " x " +
-					type(Type.CLASS) + "]}* " + genericInterfaces(generic) + " to " + pointerType(classArray) + "), " + 
+			interfaces = "{" + pointerType(CLASS_ARRAY) + " bitcast ({ %ulong, [" + interfaceList.size() + " x " +
+					type(Type.CLASS) + "]}* " + genericInterfaces(generic) + " to " + pointerType(CLASS_ARRAY) + "), " + 
 					typeText(Type.CLASS, classOf(Type.CLASS)) + ", %ulong " + literal((long)interfaceList.size()) + "}, ";
 			size = typeText(Type.INT, sizeof(type(noArguments))) + ", ";
 		}
@@ -2371,21 +2365,21 @@ public class LLVMOutput extends AbstractOutput {
 				typeLiteral(generic.toString()) + ", " + //name 
 				parentClass + ", "  +//parent 					
 
-				typeText(new ArrayType(Type.METHOD_TABLE), interfaceData) + //data
+				typeText(METHOD_TABLE_ARRAY, interfaceData) + //data
 
-				typeText(new ArrayType(Type.CLASS), interfaces) + //interfaces
+				typeText(CLASS_ARRAY, interfaces) + //interfaces
 
 				typeLiteral(flags) + ", " + //flags							
 				size + //size
 				
-				type(new ArrayType(Type.CLASS)) + " " +
-				pointerType(classArray) + " bitcast ( { %ulong, [" + parameterList.size() + " x " + type(Type.CLASS) + "]}* " +
-				"@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to " + pointerType(classArray)+ "), " +
+				type(CLASS_ARRAY) + " " +
+				pointerType(CLASS_ARRAY) + " bitcast ( { %ulong, [" + parameterList.size() + " x " + type(Type.CLASS) + "]}* " +
+				"@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to " + pointerType(CLASS_ARRAY)+ "), " +
 				typeText(Type.CLASS, classOf(Type.CLASS)) + ", %ulong " + literal((long)parameterList.size()) + "}, " + //parameters
 
-				type(new ArrayType(Type.METHOD_TABLE)) + " " + 
-				pointerType(methodTableArray) + " bitcast ( { %ulong, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "]}* " +
-				"@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to " + pointerType(methodTableArray) + "), " +
+				type(METHOD_TABLE_ARRAY) + " " + 
+				pointerType(METHOD_TABLE_ARRAY) + " bitcast ( { %ulong, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "]}* " +
+				"@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS) + " to " + pointerType(METHOD_TABLE_ARRAY) + "), " +
 				typeText(Type.CLASS, classOf(Type.METHOD_TABLE)) + ", %ulong " + literal((long)parameterList.size()) + "}" + //tables
 				" }");
 

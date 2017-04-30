@@ -33,6 +33,7 @@ import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACArrayRef;
+import shadow.tac.nodes.TACBaseClass;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -96,10 +97,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private TACOperand prefix;
 	private boolean explicitSuper;	
 	private TACBlock block;	
-	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();	 	
+	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();
 	
 	public TACModule build(Context node) {		
-		//anchor = new TACTree(); //no block				
+		//anchor = new TACTree(); //no block
+		
 		method = null;
 		prefix = null;
 		explicitSuper = false;
@@ -2519,26 +2521,30 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
 						Type genericArray = type.getTypeWithoutTypeArguments();
 						
-						//call private create to allocate space
-						TACMethodRef create = new TACMethodRef(anchor, genericArray.getMatchingMethod("create", new SequenceType(new SimpleModifiedType( new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)))));
-						TACOperand lengths = new TACLoad(anchor, new TACFieldRef(this_, "lengths" ));
-						duplicate = new TACCall(anchor, create, object, lengths); //performs cast to Array as well
+						ArrayType objArrayType = new ArrayType(Type.OBJECT);
 						
-						//get size (product of all dimension lengths)
-						TACMethodRef sizeMethod = new TACMethodRef(anchor, genericArray.getMatchingMethod("size", new SequenceType()));					
-						TACOperand size = new TACCall(anchor, sizeMethod, this_);
+						//call protected create to allocate space
+						TACMethodRef create = new TACMethodRef(anchor, genericArray.getMatchingMethod("create", new SequenceType(objArrayType)));
+						TACOperand data = new TACLoad(anchor, new TACFieldRef(this_, "data" ));
+						TACOperand baseClass = new TACBaseClass(anchor, data);
+						TACOperand length = new TACLength(anchor, data, true);
+						
+						TACOperand array = new TACNewArray(anchor, objArrayType, baseClass, length);						
+						
+						duplicate = new TACCall(anchor, create, object, array); //performs cast to Array as well
+
 						TACLabel done = new TACLabel(method);
 						TACLabel body = new TACLabel(method);
 						TACLabel condition = new TACLabel(method);
 						
-						TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.INT));
-						new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0)));
+						TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.LONG));
+						new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0L)));
 						new TACBranch(anchor, condition);
 						
 						//start loop
 						condition.insertBefore(anchor);
 						
-						TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), "<", size, true );
+						TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
 						new TACBranch(anchor, loop, body, done);
 						body.insertBefore(anchor);
 						
@@ -2547,8 +2553,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						TACMethodRef indexLoad = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
 						indexArguments.add(genericArray.getTypeParameters().get(0));
 						TACMethodRef indexStore = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
-						
-						
+												
 						TACOperand value = new TACCall(anchor, indexLoad, this_, new TACLocalLoad(anchor, i));
 						
 						TACLabel skipLabel = new TACLabel(method);
@@ -2566,7 +2571,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						
 						skipLabel.insertBefore(anchor);						
 						
-						new TACLocalStore(anchor, i, new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+", new TACLiteral(anchor, new ShadowInteger(1)), false ));
+						new TACLocalStore(anchor, i, new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", new TACLiteral(anchor, new ShadowInteger(1L)), false ));
 						new TACBranch(anchor, condition);					
 						
 						done.insertBefore(anchor);
