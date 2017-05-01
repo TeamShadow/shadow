@@ -460,9 +460,8 @@ is  Set<Class>
 	/*
 	 * Utility methods for creating generic and array classes, implemented
 	 * natively for efficiency and to avoid complexities in the type-checker.
-	 */		
-	private native getIntArrayClass() => (Class);
-	private native getIntMethodTable() => (MethodTable);
+	 */
+	private native getLongMethodTable() => (MethodTable);
 	private native getEmptyMethodTableArray() => (immutable MethodTable[]);
 	private native makeMethodTableArray(nullable readonly MethodTable object0) => (immutable MethodTable[]);
 	private native makeMethodTableArray(nullable readonly MethodTable object0, nullable readonly MethodTable object1) => (immutable MethodTable[]);
@@ -495,8 +494,8 @@ is  Set<Class>
 		{	
 			//CanIndex			
 			//immutable Object[] canIndexParameters = freeze({ getIntArrayClass(), getNull(), parameter, parameterMethods });
-			immutable Class[] canIndexParameters = makeClassArray(getIntArrayClass(), parameters[0]);
-			immutable MethodTable[] canIndexTables = makeMethodTableArray(getIntMethodTable(), methodTable);
+			immutable Class[] canIndexParameters = makeClassArray(long:class, parameters[0]);
+			immutable MethodTable[] canIndexTables = makeMethodTableArray(getLongMethodTable(), methodTable);
 			immutable MethodTable[] tables = makeMethodTableArray(methodTable);
 			//same parameters used for CanIndex and CanIndexStore 
 			Class base;

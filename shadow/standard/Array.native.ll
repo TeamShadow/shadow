@@ -17,9 +17,9 @@
 %shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong } }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String = type opaque
 %shadow.standard..AddressMap_methods = type opaque
@@ -59,7 +59,7 @@ declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %
 declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %ulong %elements)
 declare %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object*)
 declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
-declare %shadow.standard..MethodTable* @shadow.standard..Class_MinterfaceData(%shadow.standard..Class* %class, %shadow.standard..Class* %interface)
+declare %shadow.standard..MethodTable* @shadow.standard..Class_MinterfaceData_shadow.standard..Class(%shadow.standard..Class* %class, %shadow.standard..Class* %interface)
 
 declare %shadow.standard..GenericClass* @shadow.standard..ClassSet_MgetGenericArray_shadow.standard..String_shadow.standard..Class_A_shadow.standard..MethodTable_boolean(%shadow.standard..ClassSet*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %shadow.standard..MethodTable*, %boolean)
 declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate(%shadow.standard..Object*)
@@ -68,7 +68,7 @@ declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
 declare %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A_int_int(%shadow.standard..Class*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int)
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
-declare void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind
+declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %arrayData) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind 
 
@@ -94,7 +94,8 @@ define %shadow.standard..Array* @shadow.standard..Array_Mcreate_shadow.standard.
 	call %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object* %object)   
 	
 	%array = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*
-	call void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data) nounwind
+	%dataPointer = extractvalue  {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data, 0		
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %dataPointer) nounwind
 	
     %dataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3		
     store {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %dataRef
@@ -235,17 +236,17 @@ _array:
 	; create new Array wrapper
 	; ugh, have to create Array<T> class or ArrayNullable<T>
 	; parent in array class is base type: i.e., String[] parent -> String
-	%baseClassRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 4
+	%baseClassRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 6
 	%baseClass = load %shadow.standard..Class*, %shadow.standard..Class** %baseClassRef
 	
 	br i1 %nullable, label %_null, label %_notNull
 _null:
-	%nullNameRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* @shadow.standard..ArrayNullable_class, i32 0, i32 3
+	%nullNameRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* @shadow.standard..ArrayNullable_class, i32 0, i32 5
 	%nullName = load %shadow.standard..String*, %shadow.standard..String** %nullNameRef
 	%nullMethods = bitcast %shadow.standard..ArrayNullable_methods* @shadow.standard..ArrayNullable_methods to %shadow.standard..Object_methods*
 	br label %_name	
 _notNull:
-	%notNullNameRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* @shadow.standard..Array_class , i32 0, i32 3
+	%notNullNameRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* @shadow.standard..Array_class , i32 0, i32 5
 	%notNullName = load %shadow.standard..String*, %shadow.standard..String** %notNullNameRef
 	%notNullMethods = bitcast %shadow.standard..Array_methods* @shadow.standard..Array_methods to %shadow.standard..Object_methods*
 	br label %_name
@@ -330,7 +331,7 @@ _null:
 _notNull:
 	%objectClassRef = getelementptr %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 1
 	%objectClass = load %shadow.standard..Class*, %shadow.standard..Class** %objectClassRef
-	%methodTable = call %shadow.standard..MethodTable* @shadow.standard..Class_MinterfaceData(%shadow.standard..Class* %objectClass, %shadow.standard..Class* %baseClass)
+	%methodTable = call %shadow.standard..MethodTable* @shadow.standard..Class_MinterfaceData_shadow.standard..Class(%shadow.standard..Class* %objectClass, %shadow.standard..Class* %baseClass)
 	%methods = bitcast %shadow.standard..MethodTable* %methodTable to %shadow.standard..Object_methods*
 	%interface1 = insertvalue { %shadow.standard..Object_methods*, %shadow.standard..Object* } zeroinitializer, %shadow.standard..Object_methods* %methods, 0
 	%interface2 = insertvalue { %shadow.standard..Object_methods*, %shadow.standard..Object* } %interface1, %shadow.standard..Object* %object, 1
@@ -365,9 +366,10 @@ _array:
 	%input = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*
 	%inputArrayRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %input, i32 0, i32 3
 	%inputArray = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %inputArrayRef
-					
+	%inputData = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong } %inputArray, 0
+	
 	; increment reference count on new array	
-	call void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %inputArray) nounwind	
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %inputData) nounwind	
 	; decrement reference count on old array
 	call void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %oldArray) nounwind
 		
@@ -474,7 +476,8 @@ _loopBodyArray:
 	%elementRef2 = getelementptr i8, i8* %newArrayAsChar, %ulong %i2
 	%elementAsArrayRef = bitcast i8* %elementRef2 to {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }*
 	%elementAsArray = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong }* %elementAsArrayRef	
-	call void @__incrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong } %elementAsArray) nounwind
+	%elementAsArrayData = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong } %elementAsArray, 0
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %elementAsArrayData) nounwind
 	%incremented2 = add %ulong %i2, %width
 	br label %_loopTestArray
 	

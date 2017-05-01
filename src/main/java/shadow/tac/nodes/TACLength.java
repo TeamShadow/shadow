@@ -19,6 +19,10 @@ public class TACLength extends TACOperand
 		array = check(arrayRef, arrayRef);
 		this.isLong = isLong;
 	}
+	
+	public boolean isLong() {
+		return isLong;
+	}	
 
 	public TACOperand getArray()
 	{
@@ -49,7 +53,7 @@ public class TACLength extends TACOperand
 	public void accept(TACVisitor visitor) throws ShadowException
 	{
 		visitor.visit(this);
-	}
+	}	
 
 	@Override
 	public String toString()
