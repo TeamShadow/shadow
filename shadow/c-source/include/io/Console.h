@@ -4,7 +4,7 @@
 #ifndef SHADOW_CONSOLE_H
 #define SHADOW_CONSOLE_H
 
-#include <ShadowCore.h>
+#include <Shadow.h>
 
 typedef void* shadow_Console_t;
 

@@ -17,12 +17,12 @@
 %shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..String*, %shadow.standard..Class*, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong }, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,  %ulong } }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*,%ulong}, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
@@ -101,6 +101,7 @@ define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
 	ret i32 92
 }
 
+declare void @shadow.io..File_Mclose(%shadow.io..File*)
 define private i8* @filepath(%shadow.io..File*) {
 	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 4
 	%3 = load %shadow.io..Path*, %shadow.io..Path** %2
@@ -123,13 +124,6 @@ define private i8* @filepath(%shadow.io..File*) {
 	ret i8* %16
 }
 
-define i1 @shadow.io..File_Mexists(%shadow.io..File*) {
-	%2 = tail call i8* @filepath(%shadow.io..File* %0)
-	%3 = tail call x86_stdcallcc i32 @GetFileAttributesA(i8* %2)
-	tail call void @free(i8* %2)
-	%4 = icmp sge i32 %3, 0
-	ret i1 %4
-}
 define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
 	tail call void @shadow.io..File_Mclose(%shadow.io..File* %0)
 	%3 = tail call i8* @filepath(%shadow.io..File* %0)
@@ -245,6 +239,7 @@ _throw:
 	tail call void @throwIOException() noreturn
 	unreachable
 }
+
 define i32 @shadow.io..File_Mwrite_byte_A(%shadow.io..File* %file, { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array) {
 _entry:
 	%bytesWrittenRef = alloca i32
@@ -288,20 +283,6 @@ _open:
 	%checkValid = icmp sge i64 %handleAsLong, 0
 	br i1 %checkValid, label %_write, label %_throw
 _throw:
-	tail call void @throwIOException() noreturn
-	unreachable
-}
-define void @shadow.io..File_Mclose(%shadow.io..File*) {
-	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
-	%3 = load i64, i64* %2
-	store i64 -1, i64* %2
-	%4 = inttoptr i64 %3 to i8*
-	%5 = tail call x86_stdcallcc i32 @CloseHandle(i8* %4)
-	%6 = icmp ne i32 %5, 0
-	br i1 %6, label %7, label %8
-	ret void
-	%9 = icmp slt i64 %3, 0
-	br i1 %9, label %7, label %10
 	tail call void @throwIOException() noreturn
 	unreachable
 }

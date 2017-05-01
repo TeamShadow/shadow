@@ -31,8 +31,8 @@ import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.RecoverStatementContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
-import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACArrayRef;
+import shadow.tac.nodes.TACBaseClass;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -80,7 +80,6 @@ import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -96,10 +95,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private TACOperand prefix;
 	private boolean explicitSuper;	
 	private TACBlock block;	
-	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();	 	
+	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();
 	
 	public TACModule build(Context node) {		
-		//anchor = new TACTree(); //no block				
+		//anchor = new TACTree(); //no block
+		
 		method = null;
 		prefix = null;
 		explicitSuper = false;
@@ -109,8 +109,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}
 	
 	@Override
-	public Void visit(ParseTree node)
-	{
+	public Void visit(ParseTree node) {
 		Context context = (Context) node;
 		TACNode saveList = anchor;
 		anchor = new TACDummyNode(context, block);
@@ -152,8 +151,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			return type;
 	}
 	
-	@Override public Void visitClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx)
-	{ 
+	@Override public Void visitClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx) { 
 		Type type = ctx.getType();
 		TACModule newModule = new TACModule(type);
 		
@@ -187,13 +185,12 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		for (MethodSignature method : type.orderMethods())
 			visitMethod(method);
 
-		//TACTree saveTree = tree; //already saved by visitor		
+		//tree saved by visitor		
 		ShadowParser.ClassOrInterfaceBodyContext body = ctx.classOrInterfaceBody();
 		for( ShadowParser.ClassOrInterfaceBodyDeclarationContext declaration : body.classOrInterfaceBodyDeclaration() ) {
 			if( declaration.classOrInterfaceDeclaration() != null )					
 				build(declaration.classOrInterfaceDeclaration());
-		}
-		//tree = saveTree;
+		}		
 		
 		return null; //no children
 	}	
@@ -303,7 +300,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			//do the cleanup, de-referencing variables
 			visitCleanup(null, null);
 			
-			TACReturn explicitReturn = new TACReturn(anchor, new SequenceType() );
+			//explicit return statement
+			new TACReturn(anchor, new SequenceType() );
 			
 			anchor.setContext(context);
 			
@@ -440,7 +438,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				//signature for other operation
 				signature = node.getOperations().get(0);
 				
-				if( left.getType().isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
+				if( left.getType().isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
 					right = new TACBinary(anchor, result, signature, operation, right);
 				else {
 					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
@@ -941,7 +939,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					ctx.setOperand(new TACUnary(anchor, "!", operand));
 				else {
 					MethodSignature signature = ctx.getOperations().get(0); 
-					if( type.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
+					if( type.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
 						ctx.setOperand(new TACUnary(anchor, signature, op, operand));				
 					else 
 						ctx.setOperand(new TACCall(anchor, new TACMethodRef(anchor, operand, ctx.getOperations().get(0)), operand));					
@@ -1126,7 +1124,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		methodRef.setSuper(explicitSuper);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 
-		if(!signature.isExtern()) {
+		if(!signature.isExternWithoutBlock()) {
 			params.add(methodRef.getPrefix());
 		}
 		for( Context child : list )	//potentially empty list				
@@ -1640,7 +1638,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						TACOperand comparison;
 						MethodSignature signature = type.getMatchingMethod("equal", new SequenceType(operand));
 						
-						if( type.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() )
+						if( type.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
 							comparison = new TACBinary(anchor, value, operand); //equivalent to ===
 						else								
 							comparison = new TACCall(anchor, new TACMethodRef(anchor, value, signature), value, operand);
@@ -2475,7 +2473,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACNode saveTree = anchor;
 		TACMethod method = this.method = new TACMethod(methodSignature);
 		boolean implicitCreate = false;
-		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExtern() ) {				
+		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExternWithoutBlock() ) {				
 			
 			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
 				setupNonGCMethod();				
@@ -2519,26 +2517,30 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
 						Type genericArray = type.getTypeWithoutTypeArguments();
 						
-						//call private create to allocate space
-						TACMethodRef create = new TACMethodRef(anchor, genericArray.getMatchingMethod("create", new SequenceType(new SimpleModifiedType( new ArrayType(Type.INT), new Modifiers(Modifiers.IMMUTABLE)))));
-						TACOperand lengths = new TACLoad(anchor, new TACFieldRef(this_, "lengths" ));
-						duplicate = new TACCall(anchor, create, object, lengths); //performs cast to Array as well
+						ArrayType objArrayType = new ArrayType(Type.OBJECT);
 						
-						//get size (product of all dimension lengths)
-						TACMethodRef sizeMethod = new TACMethodRef(anchor, genericArray.getMatchingMethod("size", new SequenceType()));					
-						TACOperand size = new TACCall(anchor, sizeMethod, this_);
+						//call protected create to allocate space
+						TACMethodRef create = new TACMethodRef(anchor, genericArray.getMatchingMethod("create", new SequenceType(objArrayType)));
+						TACOperand data = new TACLoad(anchor, new TACFieldRef(this_, "data" ));
+						TACOperand baseClass = new TACBaseClass(anchor, data);
+						TACOperand length = new TACLength(anchor, data, true);
+						
+						TACOperand array = new TACNewArray(anchor, objArrayType, baseClass, length);						
+						
+						duplicate = new TACCall(anchor, create, object, array); //performs cast to Array as well
+
 						TACLabel done = new TACLabel(method);
 						TACLabel body = new TACLabel(method);
 						TACLabel condition = new TACLabel(method);
 						
-						TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.INT));
-						new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0)));
+						TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.LONG));
+						new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0L)));
 						new TACBranch(anchor, condition);
 						
 						//start loop
 						condition.insertBefore(anchor);
 						
-						TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), "<", size, true );
+						TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
 						new TACBranch(anchor, loop, body, done);
 						body.insertBefore(anchor);
 						
@@ -2547,8 +2549,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						TACMethodRef indexLoad = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
 						indexArguments.add(genericArray.getTypeParameters().get(0));
 						TACMethodRef indexStore = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
-						
-						
+												
 						TACOperand value = new TACCall(anchor, indexLoad, this_, new TACLocalLoad(anchor, i));
 						
 						TACLabel skipLabel = new TACLabel(method);
@@ -2566,7 +2567,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						
 						skipLabel.insertBefore(anchor);						
 						
-						new TACLocalStore(anchor, i, new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+", new TACLiteral(anchor, new ShadowInteger(1)), false ));
+						new TACLocalStore(anchor, i, new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", new TACLiteral(anchor, new ShadowInteger(1L)), false ));
 						new TACBranch(anchor, condition);					
 						
 						done.insertBefore(anchor);
@@ -2858,7 +2859,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			MethodSignature signature = node.getOperations().get(i - 1);
 			boolean isCompare = ( op.equals("<") || op.equals(">") || op.equals("<=") || op.equals(">=") );
 			Type currentType = resolveType(current.getType());
-			if( currentType.isPrimitive() && signature.getModifiers().isNative() && signature.getModifiers().isExtern() ) //operation based on method
+			if( currentType.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() ) //operation based on method
 				current = new TACBinary(anchor, current, signature, op, next, isCompare );
 			else {	
 				//comparisons will always give positive, negative or zero integer

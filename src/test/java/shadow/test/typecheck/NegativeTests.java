@@ -330,6 +330,12 @@ public class NegativeTests {
 		enforce(Error.INVALID_CREATE);		
 	}
 	
+	@Test public void testBadArrayCast() throws Exception
+	{
+		args.add("tests-negative/typechecker/bad-array-cast/Test.shadow"); 
+		enforce(Error.MISMATCHED_TYPE);		
+	}
+	
 	@Test public void testBreakOutsideLoop() throws Exception
 	{
 		args.add("tests-negative/typechecker/break-outside-loop/Test.shadow"); 

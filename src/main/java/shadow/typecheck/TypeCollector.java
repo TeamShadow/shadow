@@ -18,6 +18,7 @@
 package shadow.typecheck;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -216,11 +217,13 @@ public class TypeCollector extends BaseChecker {
 			throw new ConfigurationException("Invalid path to shadow:standard: " + canonicalize(standard));
 		
 		TreeSet<String> standardDependencies = new TreeSet<String>(); 
-				
-		for( Path file :  Files.newDirectoryStream(standard, "*.shadow") ) {
-			String name = stripExtension(canonicalize(file));			
-			uncheckedFiles.add(name);
-			standardDependencies.add(name);
+		
+		try (DirectoryStream<Path> p = Files.newDirectoryStream(standard, "*.shadow")) {
+			for (Path file : p) {
+				String name = stripExtension(canonicalize(file));
+				uncheckedFiles.add(name);
+				standardDependencies.add(name);
+			}
 		}
 		
 		/* Add io imports (necessary for console programs). */
@@ -318,14 +321,16 @@ public class TypeCollector extends BaseChecker {
 					dependencySet.add(_import);
 			}
 			
-			/* Add files in the directory after imports. */			
-			for( Path file :  Files.newDirectoryStream(canonicalFile.getParent(), "*.shadow") ) {
-				String name = stripExtension(file.toAbsolutePath().normalize().toString()); 
-				if( !fileTable.containsKey(name) )
-					uncheckedFiles.add(name);
-				
-				if( dependencySet != null )
-					dependencySet.add(name);
+			/* Add files in the directory after imports. */		
+			try (DirectoryStream<Path> stream = Files.newDirectoryStream(canonicalFile.getParent(), "*.shadow")) {
+				for (Path file : stream) {
+					String name = stripExtension(file.toAbsolutePath().normalize().toString());
+					if (!fileTable.containsKey(name))
+						uncheckedFiles.add(name);
+
+					if (dependencySet != null)
+						dependencySet.add(name);
+				}
 			}
 			
 			/* Copy file table from other collector into our table. */
@@ -590,14 +595,18 @@ public class TypeCollector extends BaseChecker {
 				if( !path.contains("@")) {  						
 					Path fullPath = importPath.resolve(path);
 					if( Files.isDirectory(fullPath) ) {
-						try {						
-							for( Path file : Files.newDirectoryStream(fullPath, "*.shadow") )							
-								importList.add(stripExtension(file.toAbsolutePath().normalize().toString()));
-															
-							for( Path file : Files.newDirectoryStream(fullPath, "*.meta") ) {
-								String canonicalPath = stripExtension(file.toAbsolutePath().normalize().toString());
-								if( !importList.contains( canonicalPath ) )
-									importList.add( canonicalPath );
+						try {
+							try (DirectoryStream<Path> p = Files.newDirectoryStream(fullPath, "*.shadow")) {
+								for (Path file : p)
+									importList.add(stripExtension(file.toAbsolutePath().normalize().toString()));
+							}
+							
+							try (DirectoryStream<Path> p = Files.newDirectoryStream(fullPath, "*.meta")) {
+								for (Path file : p) {
+									String canonicalPath = stripExtension(file.toAbsolutePath().normalize().toString());
+									if (!importList.contains(canonicalPath))
+										importList.add(canonicalPath);
+								}
 							}
 							
 							success = true;

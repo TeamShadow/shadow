@@ -710,14 +710,7 @@ public class TypeUpdater extends BaseChecker {
 			return;
 		}
 		
-		boolean hasBlock = false;
-		
-		if( node instanceof ShadowParser.CreateDeclarationContext )
-			hasBlock = ((ShadowParser.CreateDeclarationContext)node).createBlock() != null;
-		else if( node instanceof ShadowParser.DestroyDeclarationContext )
-			hasBlock = ((ShadowParser.DestroyDeclarationContext)node).block() != null;
-		else if( node instanceof ShadowParser.MethodDeclarationContext )
-			hasBlock = ((ShadowParser.MethodDeclarationContext)node).block() != null;
+		boolean hasBlock = signature.hasBlock();
 		
 		/* Check to see if the method has a body or not (and if it should). */
 		if( currentType instanceof ClassType ) {			
@@ -725,11 +718,11 @@ public class TypeUpdater extends BaseChecker {
 				addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 			
 			if( !isMeta ) {					
-				if( !hasBlock && !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() && !signature.getModifiers().isExtern() )
+				if( !hasBlock && !signature.isAbstract() && !signature.isNative() && !signature.isExternWithoutBlock() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
-				if( hasBlock && (signature.getModifiers().isAbstract() || signature.getModifiers().isNative() || signature.getModifiers().isExtern() ) )
-					addError(node, Error.INVALID_STRUCTURE, (signature.getModifiers().isAbstract() ? "Abstract" : (signature.getModifiers().isNative() ? "Native": "Extern")) + " method " + signature + " must not define a body");
+				if( hasBlock && (signature.isAbstract() || signature.isNative() ) )
+					addError(node, Error.INVALID_STRUCTURE, (signature.isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
 				
 				/* Check to see if the method's parameters and return types are the
 				 * correct level of visibility, e.g., a public method shouldn't

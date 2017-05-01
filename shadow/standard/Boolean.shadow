@@ -35,4 +35,10 @@ is  CanEqual<boolean>
 	{
 		return this === other;	
 	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowBoolean_GetClass() => (Class)
+	{
+		return boolean:class;
+	}
 }

@@ -1223,5 +1223,11 @@ and	CanHash
 	public toString(uint base) => (String)
 	{
 		return toUInt().toString(base);
-	}		
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowUByte_GetClass() => (Class)
+	{
+		return ubyte:class;
+	}
 }

@@ -1,7 +1,13 @@
 /**
  * Author: Claude Abounegm
  */
+#include <Shadow.h>
 #include <standard/System.h>
+
+// METHOD SIGNATURES //
+shadow_ulong_t __ShadowSystem_GetNanoTime(void);
+shadow_ulong_t __ShadowSystem_GetEpochNanoTime(void);
+// METHOD SIGNATURES //
 
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>

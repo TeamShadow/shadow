@@ -50,7 +50,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -297,33 +297,17 @@ public class OutputTests {
 						"e[2][1]: 12\n" +
 						"e[2][2]: 13\n" +
 						"e[2][3]: 14\n" +
-						"e[2][4]: 15\n" +
-						"f[0,0]: 1\n" +
-						"f[0,1]: 2\n" +
-						"f[0,2]: 3\n" +
-						"f[0,3]: 4\n" +
-						"f[0,4]: 5\n" +
-						"f[1,0]: 6\n" +
-						"f[1,1]: 7\n" +
-						"f[1,2]: 8\n" +
-						"f[1,3]: 9\n" +
-						"f[1,4]: 10\n" +
-						"f[2,0]: 11\n" +
-						"f[2,1]: 12\n" +
-						"f[2,2]: 13\n" +
-						"f[2,3]: 14\n" +
-						"f[2,4]: 15\n");
+						"e[2][4]: 15\n");
 	}
 	
 
 	
-	@Test public void testArrayCastException() throws Exception {
-		args.add("shadow/test/ArrayCastExceptionTest.shadow");
+	@Test public void testArrayCast() throws Exception {
+		args.add("shadow/test/ArrayCastTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 				
-				"Passed\n" + 
-				"Passed: shadow:standard@CastException: Array dimensions do not match\n" +
-				"Passed: shadow:standard@CastException: Array dimensions do not match\n");
+				"Passed\n" +  
+				"Passed\n");
 	}
 	
 	@Test public void testArrayDefault() throws Exception {
@@ -386,8 +370,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
-				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +
-				"shadow:standard@IndexOutOfBoundsException: Indices [2, 9]\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +				
 				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
 				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
 				"shadow:standard@IndexOutOfBoundsException: Index 28\n");
@@ -558,18 +541,7 @@ public class OutputTests {
 				"Cast from String to CanEqual<String>\n" +
 				"shadow:standard@CastException: Class shadow:standard@Object does not implement interface shadow:standard@CanIterate<code>\n");
 	}
-	
-	@Test public void testCheck() throws Exception {
-		args.add("shadow/test/PrimitiveTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" +
-				"8\n");
-	}
+
 	
 	@Test public void testChild() throws Exception {
 		args.add("shadow/test/ChildTest.shadow");
@@ -675,54 +647,6 @@ public class OutputTests {
 				"dog\n" + 
 				"has\n" + 
 				"fleas\n" + 
-				"0\n" + 
-				"1\n" + 
-				"2\n" + 
-				"3\n" + 
-				"4\n" + 
-				"5\n" + 
-				"6\n" + 
-				"7\n" + 
-				"8\n" + 
-				"9\n" + 
-				"10\n" + 
-				"11\n" + 
-				"12\n" + 
-				"13\n" + 
-				"14\n" + 
-				"15\n" + 
-				"16\n" + 
-				"17\n" + 
-				"18\n" + 
-				"19\n" + 
-				"20\n" + 
-				"21\n" + 
-				"22\n" + 
-				"23\n" + 
-				"0\n" + 
-				"1\n" + 
-				"2\n" + 
-				"3\n" + 
-				"4\n" + 
-				"5\n" + 
-				"6\n" + 
-				"7\n" + 
-				"8\n" + 
-				"9\n" + 
-				"10\n" + 
-				"11\n" + 
-				"12\n" + 
-				"13\n" + 
-				"14\n" + 
-				"15\n" + 
-				"16\n" + 
-				"17\n" + 
-				"18\n" + 
-				"19\n" + 
-				"20\n" + 
-				"21\n" + 
-				"22\n" + 
-				"23\n" +
 				"20 19 18 17 16 \n" +
 				"15 14 13 12 11 \n" +
 				"10 9 8 7 6 \n" +
@@ -1154,7 +1078,25 @@ public class OutputTests {
 	@Test public void testExternals() throws Exception {
 		args.add("shadow/test/ExternalsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
-		run(new String[0], "Hello from printf!\n");
+		run(new String[0], formatOutputString(
+								"This is the result from running shadow_ToString(ref) from C!!", 
+								"This is a string created in C and printed using Shadow's Console.printLine()", 
+								"2500", 
+								"3500",
+								"shadow:test@ExternalsTest",
+								"boolean",
+								"byte",
+								"ubyte",
+								"short",
+								"ushort",
+								"int",
+								"uint",
+								"code",
+								"long",
+								"ulong",
+								"float",
+								"double"
+		));
 	}
 	
 	@Test public void testReadOnlyList() throws Exception {
@@ -1174,6 +1116,12 @@ public class OutputTests {
 				"true\n" +
 				"true\n" +
 				"true\n");
+	}
+	
+	@Test public void testFile() throws Exception {
+		args.add("shadow/test/FileTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[] { "FileTest.txt" }, formatOutputString("Hello World!"));
 	}
 	
 	/*@Test public void testMessageQueue() throws Exception {

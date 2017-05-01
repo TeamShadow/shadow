@@ -516,5 +516,11 @@ and	CanHash
 		if (digit < 10uL)
 			return cast<code>(digit + '0');
 		return cast<code>(digit - 10uL + 'a');
-	}	
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern shadowULong_GetClass() => (Class)
+	{
+		return ulong:class;
+	}
 }

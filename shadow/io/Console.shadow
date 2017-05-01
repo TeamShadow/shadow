@@ -242,4 +242,15 @@ singleton shadow:io@Console
 		
 		return this;
 	}
+	
+	// C FRAMEWORK EXTENSIONS
+	private extern _shadowConsole_PrintLine(Object value) => ()
+	{
+		Console.printLine(value);
+	}
+	
+	private extern _shadowConsole_PrintErrorLine(Object value) => ()
+	{
+		Console.printErrorLine(value);
+	}
 }
