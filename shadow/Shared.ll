@@ -32,7 +32,7 @@
 
 ; String
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*,%ulong}, %boolean }
 
 ;---------------------------
 ; Custom Method Definitions

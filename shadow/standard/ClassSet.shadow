@@ -64,7 +64,9 @@ is  Set<Class>
 		long capacity = 1L;
 		while( capacity < initialCapacity ) // Makes capacity a power of 2.
 			capacity <<= 1;	
+		Console.printLine("About to allocate");
 		table = Node:null[capacity];		
+		Console.printLine("Node array allocated");
 		this:loadFactor = loadFactor;
 		threshold = cast<long>(capacity * loadFactor);		
 	}

@@ -301,7 +301,7 @@ is  CanHash
 	public locked get readonly width() => ( int )
 	{	
 		if( isArray() ) { //actual size member is # of dimensions				
-			return pointerSize() + 4 * size;
+			return arraySize();
 		}		
 		else if( isMethod() )		
 			return 3 * pointerSize() + 4 * size;

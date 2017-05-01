@@ -9,16 +9,15 @@
 // KNOW WHAT YOU'RE DOING. USE ArrayData INSTEAD.
 typedef struct {
 	shadow_ulong_t* data;
-	shadow_int_t size;
-//	shadow_Class_t* class_ref;
-//  shadow_ulong_t size;
+	shadow_Class_t* class_ref;
+	shadow_ulong_t size;
 } shadow_PrimitiveArray_t;
 
 /**
  * This is the C representation of the Shadow array when unpacked.
  */
 typedef struct {
-	shadow_int_t size; // how many elements are in the array
+	shadow_long_t size; // how many elements are in the array
 	void* data;     // the pointer to the data, which needs to be casted
 					// to the desired data structure.
 } ArrayData;
