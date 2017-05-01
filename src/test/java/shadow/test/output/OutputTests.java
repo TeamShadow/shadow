@@ -541,18 +541,7 @@ public class OutputTests {
 				"Cast from String to CanEqual<String>\n" +
 				"shadow:standard@CastException: Class shadow:standard@Object does not implement interface shadow:standard@CanIterate<code>\n");
 	}
-	
-	@Test public void testCheck() throws Exception {
-		args.add("shadow/test/PrimitiveTest.shadow");
-		Main.run(args.toArray(new String[] { }));
-		run(new String[0],
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" + 
-				"5\n" +
-				"8\n");
-	}
+
 	
 	@Test public void testChild() throws Exception {
 		args.add("shadow/test/ChildTest.shadow");
