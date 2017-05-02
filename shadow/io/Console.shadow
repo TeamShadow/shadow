@@ -204,9 +204,6 @@ singleton shadow:io@Console
 	
 	public debugPrint(int value) => ( Console )
 	{
-		print("Debug print!");
-		printLine();
-	
 		if( value < 0 ) {
 			value *= -1;
 			print("-");
@@ -240,6 +237,7 @@ singleton shadow:io@Console
 			power /= 10;
 		}
 		
+		printLine();		
 		return this;
 	}
 	

@@ -1221,8 +1221,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			
 			TACOperand index = ctx.conditionalExpression().appendBefore(anchor);
 			Type indexType = index.getType();
-			if( indexType.isIntegral() && !indexType.isSubtype(Type.INT))
-				index = TACCast.cast(anchor, new SimpleModifiedType(Type.INT, index.getModifiers()), index);
+			if( indexType.isIntegral() && !indexType.equals(Type.LONG))
+				index = TACCast.cast(anchor, new SimpleModifiedType(Type.LONG, index.getModifiers()), index);
 				
 			if( arrayType.getBaseType() instanceof TypeParameter )
 				prefix = new TACLoad(anchor, new TACGenericArrayRef(anchor, prefix, index));

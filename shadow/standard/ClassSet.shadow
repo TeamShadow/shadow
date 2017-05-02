@@ -1,6 +1,5 @@
 import shadow:utility@Set;
 import shadow:utility@IllegalModificationException;
-import shadow:io@Console;
 
 /**
  * Class {@code ClassSet} is used to hold a collection of class objects.
@@ -59,14 +58,11 @@ is  Set<Class>
 	 * @param loadFactor maximum load factor before the map is resized
 	 */
 	public create(long initialCapacity, float loadFactor)
-	{		
-		Console.printLine("Start!");
+	{	
 		long capacity = 1L;
 		while( capacity < initialCapacity ) // Makes capacity a power of 2.
-			capacity <<= 1;	
-		Console.printLine("About to allocate");
-		table = Node:null[capacity];		
-		Console.printLine("Node array allocated");
+			capacity <<= 1;
+		table = Node:null[capacity];
 		this:loadFactor = loadFactor;
 		threshold = cast<long>(capacity * loadFactor);		
 	}
@@ -212,8 +208,7 @@ is  Set<Class>
 	 * present
 	 */
 	public add( Class value ) => (boolean success)
-	{
-		Console.printLine("Add!");
+	{		
 		( long index, long hash ) = findIndex(#value, table->longSize);
 		try
 		{			

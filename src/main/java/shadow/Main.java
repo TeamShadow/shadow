@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -210,7 +211,7 @@ public class Main {
 			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
 			
 			String optimisationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
-			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
+			final Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
 			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
@@ -222,7 +223,22 @@ public class Main {
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 				String line = main.readLine();				
-				final OutputStream out = link.getOutputStream();				
+				final OutputStream out = new OutputStream() {
+					final OutputStream stream = link.getOutputStream();
+					final OutputStream file = new FileOutputStream(new File("Main.out.ll"));
+
+					@Override
+					public void write(int b) throws IOException {
+						stream.write(b);
+						file.write(b);
+					}
+					
+					@Override
+					public void write(byte[] bytes) throws IOException {
+						stream.write(bytes);
+						file.write(bytes);
+					}
+				};
 				while (line != null) {
 					
 					

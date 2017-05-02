@@ -65,6 +65,7 @@ declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shado
 
 ;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
+;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 declare i32 @strlen(i8* nocapture)
 
@@ -87,7 +88,7 @@ declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.st
 @_genericSet = global %shadow.standard..ClassSet* null;
 @_arraySet = global %shadow.standard..ClassSet* null;
 
-define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {		
+define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {			
 	%uninitializedGenericSet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
 	%genericSet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedGenericSet, %long %genericSize) ; compiler replaces %genericSize
 	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	

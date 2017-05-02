@@ -50,19 +50,17 @@ declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
 @shadow.standard..MethodTable_class = external constant %shadow.standard..Class
 
-declare noalias i8* @calloc(i64, i64) nounwind
 declare void @free(i8*) nounwind
 declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryException_Mcreate(%shadow.standard..Object*)
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
 declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
 
-%shadow.io..Console_methods = type opaque
-%shadow.io..Console = type { %ulong, %shadow.standard..Class*, %shadow.io..Console_methods* , %boolean }
 
-declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+;%shadow.io..Console = type opaque
+;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
+;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 
 define %int @shadow.standard..Class_MarraySize(%shadow.standard..Class*) alwaysinline nounwind readnone {
@@ -76,55 +74,7 @@ define %int @shadow.standard..Class_MpointerSize(%shadow.standard..Class*) alway
 }
 
 
-define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods) {	
-	%sizeRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 8
-	%size = load %uint, %uint* %sizeRef	
-	%sizeLong = zext %uint %size to %ulong
-	
-	%memory = call noalias i8* @calloc(%ulong 1, %ulong %sizeLong) nounwind
-	%isNull = icmp eq i8* %memory, null
-	br i1 %isNull, label %_outOfMemory, label %_success
-_outOfMemory: 
-	%exception = bitcast %shadow.standard..OutOfMemoryException* @_OutOfMemoryException to %shadow.standard..Object*
-	call void @__shadow_throw(%shadow.standard..Object* %exception) noreturn
-    unreachable
-_success:
-	%object = bitcast i8* %memory to %shadow.standard..Object*
-	; set reference count
-	%countRef = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 0
-	store %ulong 1, %ulong* %countRef		
-	%object.class = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 1
-    store %shadow.standard..Class* %class, %shadow.standard..Class** %object.class
-    %object.methods = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 2
-    store %shadow.standard..Object_methods* %methods, %shadow.standard..Object_methods** %object.methods
-	
-	ret %shadow.standard..Object* %object
-}
-
-define noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %ulong %elements) {	
-	%perObject = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %class)	
-	%perObjectLong = zext %int %perObject to %ulong
-	%size = mul %ulong %perObjectLong, %elements
-	
-	; Add extra room for reference count (stored before array space)
-	%sizeWithCounter = add %ulong %size, 8	
-	%arrayAsBytes = call noalias i8* @calloc(%ulong 1, %ulong %sizeWithCounter)	
-	%isNull = icmp eq i8* %arrayAsBytes, null
-	br i1 %isNull, label %_outOfMemory, label %_success
-_outOfMemory:
-	%exception = bitcast %shadow.standard..OutOfMemoryException* @_OutOfMemoryException to %shadow.standard..Object*
-	call void @__shadow_throw(%shadow.standard..Object* %exception) noreturn
-	unreachable
-_success:
-	; store reference count of 1
-	%array = bitcast i8* %arrayAsBytes to {%ulong, %shadow.standard..Object*}*	
-	%countRef = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %array, i32 0, i32 0
-	store %ulong 1, %ulong* %countRef		
-	ret {%ulong, %shadow.standard..Object*}* %array
-}
-
 define void @__decrementRef(%shadow.standard..Object* %object) nounwind {	
-
 	%isNull = icmp eq %shadow.standard..Object* %object, null
 	br i1 %isNull, label %_exit, label %_check
 _check:
@@ -197,13 +147,13 @@ define void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.
 	%countAndArray = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 0
 	%arrayNull = icmp eq {%ulong, %shadow.standard..Object*}* %countAndArray, null
 	br i1 %arrayNull, label %_exit, label %_check	
-_check:	
+_check:		
 	%countRef = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %countAndArray, i32 0, i32 0
 	%count = load %ulong, %ulong* %countRef
 	; check if reference count is not ulong max (marks non-gc objects)  (unsigned -1 is ulong max)
 	%isGC = icmp ne %ulong %count, -1
 	br i1 %isGC, label %_checkPassed, label %_exit
-_checkPassed:
+_checkPassed:	
 	; get reference count (stored before array)
 	; decrease by one and get old value
 	%oldCount = atomicrmw sub %ulong* %countRef, %ulong 1 acquire
@@ -286,7 +236,3 @@ _freeArray:
 _exit:	
 	ret void
 }
-
-@_array0 = private unnamed_addr constant {%ulong, [20 x %byte] } {%ulong -1, [20 x %byte] c"Heap space exhausted"}
-@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, { { %ulong, %byte }*, %shadow.standard..Class*, %ulong } { { %ulong, %byte }* bitcast ({%ulong, [20 x %byte]}* @_array0 to { %ulong, %byte }* ), %shadow.standard..Class* @shadow.standard..byte_class, %ulong 20}, %boolean true }
-@_OutOfMemoryException = private constant %shadow.standard..OutOfMemoryException { %ulong -1, %shadow.standard..Class* @shadow.standard..OutOfMemoryException_class, %shadow.standard..OutOfMemoryException_methods* @shadow.standard..OutOfMemoryException_methods, %shadow.standard..String* @_string0 }
