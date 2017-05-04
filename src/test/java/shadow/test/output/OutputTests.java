@@ -56,7 +56,7 @@ public class OutputTests {
 	}
 	
 	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
-		run( programArgs, expectedOutput, "" );
+		run( programArgs, expectedOutput, "" ); 			
 	}
 	
 	private void run(String[] programArgs, String expectedOutput, String expectedError ) throws IOException, ConfigurationException, InterruptedException {
@@ -98,7 +98,9 @@ public class OutputTests {
 		String error = builder.toString();	
 		assertEquals(expectedError, error);		
 		
-		program.waitFor(); //keeps program from being deleted while running
+		//check return value to see if the program ends normally
+		//also keeps program from being deleted while running	
+		assertEquals("Program exited abnormally.", 0, program.waitFor()); 
 	}	
 
 	private String formatOutputString(CharSequence... elements)
@@ -369,11 +371,11 @@ public class OutputTests {
 		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
-				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +				
+				/*"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
+				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +*/				
+				"shadow:standard@IndexOutOfBoundsException: Index 9\n" /*+
 				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
-				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
-				"shadow:standard@IndexOutOfBoundsException: Index 28\n");
+				"shadow:standard@IndexOutOfBoundsException: Index 28\n"*/);
 	}
 	
 

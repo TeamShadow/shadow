@@ -7,6 +7,8 @@ class shadow:test@BasicTest
 	public main() => ()
 	{		
 		Console out;
+		
+		
 		out.printLine("Count it off!");
 				
 		for( int i = 0; i < 3; i += 1 ) 

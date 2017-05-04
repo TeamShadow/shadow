@@ -116,7 +116,7 @@ and	CanHash
 			}
 		}		
 		
-		this:data = freeze(temp);
+		this:data = virtualFreeze(temp);
 	}
 	
 	/**
@@ -133,9 +133,12 @@ and	CanHash
 	// Creates a String that is a copy of data known to be valid code points.
 	private create( byte[] data, boolean ascii )
 	{		
-		this:data = freeze(data);
+		this:data = virtualFreeze(data);
 		this:ascii = ascii;
 	}
+	
+	// Used to pretend that an array that will never be used elsewhere and cannot leak is actually immutable.
+	private native readonly virtualFreeze( byte[] data ) => ( immutable byte[] );	
 
 	/**
 	 * Retrieves the {@code byte} value at the given offset inside the object.
@@ -222,7 +225,7 @@ and	CanHash
 	 */
 	public substring( int start, int end ) => ( String )
 	{
-		return String:create(cast<byte[]>(data.subarray(start, end)), ascii);
+		return String:create(data.subarray(start, end), ascii);
 	}
 	
 	/**
