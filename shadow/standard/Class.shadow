@@ -280,8 +280,8 @@ is  CanHash
 
 	/**
 	 * For normal types, returns the size required for an object whose type
-	 * is given by this class.  For array types, it gives the number of
-	 * dimensions. For primitive types, it gives the size of the wrapper
+	 * is given by this class.  For array and interface types, it gives the 
+	 * width of the type. For primitive types, it gives the size of the wrapper
 	 * object, not the raw primitive type.
 	 * @return size of an object
 	 */
@@ -295,12 +295,13 @@ is  CanHash
 	 * class in an array.  For normal objects, this width is the pointer size.
 	 * For primitive types, it is the size of the raw primitive type. For
 	 * interface type, the size is twice the pointer size, accounting for
-	 * the interface class and the method table.
+	 * the interface class and the method table. For an array, it's twice the
+	 * pointer size plus the size of a ulong.	 
 	 * @return width of an object
 	 */
 	public locked get readonly width() => ( int )
 	{	
-		if( isArray() ) { //actual size member is # of dimensions				
+		if( isArray() ) { 				
 			return arraySize();
 		}		
 		else if( isMethod() )		

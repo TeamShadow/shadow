@@ -493,7 +493,7 @@ public class LLVMOutput extends AbstractOutput {
 							classOf(parentType) : null) + ", " +
 					
 					typeLiteral(flags) + ", " +			//flags
-					typeText(Type.INT, sizeof(type(moduleType, true))) + //size 
+					typeText(Type.INT, sizeof(moduleType)) + //size 
 					" }" );
 			//}
 		}
@@ -517,7 +517,7 @@ public class LLVMOutput extends AbstractOutput {
 					type(Type.CLASS) + " null, " + //parent
 
 					typeLiteral(flags) + ", " +
-					typeLiteral(-1) + //size (unknown for interfaces) 
+					typeText(Type.INT, sizeof(moduleType)) + //size 
 					" }");
 		}
 
@@ -1965,9 +1965,14 @@ public class LLVMOutput extends AbstractOutput {
 		return methodToString( method.getSignature(), name, parameters );
 	}
 
-	private static String sizeof( String type ) {
-		return "ptrtoint (" + type + " getelementptr (" + type.substring(0, type.length() - 1) + ", " + type +
-				" null, i32 1) to i32)";
+	private static String sizeof( Type type ) {
+		String name;
+		if( type instanceof ArrayType || type instanceof InterfaceType ) 
+			name = type(type) + "*";		
+		else 
+			name = type(type, true);
+		return "ptrtoint (" + name + " getelementptr (" + name.substring(0, name.length() - 1) + ", " + name +
+				" null, i32 1) to i32)";		
 	}
 
 	private static String type( ModifiedType type ) {
@@ -2337,7 +2342,7 @@ public class LLVMOutput extends AbstractOutput {
 				baseClass + ", "  +//parent
 
 				typeLiteral(ARRAY) + ", " + //flags	
-				typeText(Type.INT, sizeof(type(OBJECT_ARRAY))) + //size
+				typeText(Type.INT, sizeof(OBJECT_ARRAY)) + //size
 				" }");
 	}
 
@@ -2366,7 +2371,7 @@ public class LLVMOutput extends AbstractOutput {
 			interfaces = "{" + pointerType(CLASS_ARRAY) + " bitcast ({ %ulong, [" + interfaceList.size() + " x " +
 					type(Type.CLASS) + "]}* " + genericInterfaces(generic) + " to " + pointerType(CLASS_ARRAY) + "), " + 
 					typeText(Type.CLASS, classOf(Type.CLASS)) + ", %ulong " + literal((long)interfaceList.size()) + "}, ";
-			size = typeText(Type.INT, sizeof(type(noArguments))) + ", ";
+			size = typeText(Type.INT, sizeof(noArguments)) + ", ";
 		}
 
 		//get parent class
