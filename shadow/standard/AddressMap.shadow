@@ -25,7 +25,7 @@ locked class shadow:standard@
 	nullable Node[] table;
 	float loadFactor;
 	long threshold;
-	long modifications = 0;
+	long modifications = 0;		
 	
 	/**
 	 * Creates an empty {@code AddressMap} with a default capacity of 16

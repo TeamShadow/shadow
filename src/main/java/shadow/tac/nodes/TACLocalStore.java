@@ -5,11 +5,9 @@ import java.util.Set;
 import shadow.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ArrayType;
 
 public class TACLocalStore extends TACLocalStorage {
-	private TACOperand value;
-	private TACOperand classData; //only used for array stores
+	private TACOperand value;	
 	private boolean incrementReference;
 	private boolean decrementReference = true;
 
@@ -116,15 +114,5 @@ public class TACLocalStore extends TACLocalStorage {
 		TACLocalStore store = (TACLocalStore) other;
 		
 		return getNumber() == store.getNumber() && getVariable().equals(store.getVariable());
-	}
-	
-	public void setClassData(TACOperand classData)
-	{
-		this.classData = classData;
-	}
-	
-	public TACOperand getClassData()
-	{
-		return classData;
 	}
 }

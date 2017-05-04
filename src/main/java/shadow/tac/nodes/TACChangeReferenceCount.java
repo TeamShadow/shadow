@@ -15,21 +15,13 @@ public class TACChangeReferenceCount extends TACNode {
 	public TACChangeReferenceCount(TACNode node, TACVariable variable, boolean increment) {
 		super(node);
 		this.variable = variable;
-		this.increment = increment;
-		if( !increment && variable.getType() instanceof ArrayType ) {
-			ArrayType arrayType = (ArrayType) variable.getType();
-			classData = new TACClass(this, arrayType.getBaseType() );
-		}
+		this.increment = increment;	
 	}
 	
 	public TACChangeReferenceCount(TACNode node, TACFieldRef field, boolean increment) {
 		super(node);
 		this.field = field;
 		this.increment = increment;
-		if( !increment && field.getType() instanceof ArrayType ) {
-			ArrayType arrayType = (ArrayType) field.getType();
-			classData = new TACClass(this, arrayType.getBaseType() );
-		}
 	}	
 	
 	public boolean isField() {

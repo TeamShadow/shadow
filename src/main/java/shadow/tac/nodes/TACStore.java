@@ -14,7 +14,6 @@ public class TACStore extends TACNode
 {
 	private TACReference reference;
 	private TACOperand value;
-	private TACOperand classData; //only used for array stores
 	private boolean incrementReference = true;
 	private boolean decrementReference = true;
 
@@ -77,15 +76,5 @@ public class TACStore extends TACNode
 	public String toString()
 	{
 		return reference + " = " + value;
-	}
-	
-	public void setClassData(TACOperand classData)
-	{
-		this.classData = classData;
-	}
-	
-	public TACOperand getClassData()
-	{
-		return classData;
 	}
 }

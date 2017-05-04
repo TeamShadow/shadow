@@ -143,28 +143,28 @@ _exit:
 	ret void
 }
 
-define void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind {	
+define void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind {		
 	%countAndArray = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 0
 	%arrayNull = icmp eq {%ulong, %shadow.standard..Object*}* %countAndArray, null
 	br i1 %arrayNull, label %_exit, label %_check	
-_check:		
+_check:			
 	%countRef = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %countAndArray, i32 0, i32 0
 	%count = load %ulong, %ulong* %countRef
 	; check if reference count is not ulong max (marks non-gc objects)  (unsigned -1 is ulong max)
 	%isGC = icmp ne %ulong %count, -1
 	br i1 %isGC, label %_checkPassed, label %_exit
-_checkPassed:	
+_checkPassed:		
 	; get reference count (stored before array)
 	; decrease by one and get old value
 	%oldCount = atomicrmw sub %ulong* %countRef, %ulong 1 acquire
 	; if old value was 1, call destroy and deallocate (prevents double free in multithreaded situations)
 	%free = icmp eq %ulong %oldCount, 1
 	br i1 %free, label %_checkLength, label %_exit
-_checkLength:	
+_checkLength:		
 	%size = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 2
 	%check.length = icmp ne i64 %size, 0
 	br i1 %check.length, label %_getClass, label %_freeArray
-_getClass:	
+_getClass:		
 	; here's where things change from objects
 	%base = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 1	
 	%flagRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %base, i32 0, i32 7	
@@ -177,21 +177,21 @@ _getClass:
 	br i1 %notPrimitiveOrMethodTable, label %_checkFlag, label %_freeArray	
 
 	; see if it's an array of arrays
-_checkFlag:
+_checkFlag:	
 	%arrayData = getelementptr {%ulong, %shadow.standard..Object*}, {%ulong, %shadow.standard..Object*}* %countAndArray, i32 0, i32 1
 	%arrayFlag = and i32 %flag, 8	
 	%notArray = icmp eq i32 %arrayFlag, 0
 	br i1 %notArray, label %_checkInterface, label %_array
 	
-_checkInterface:
+_checkInterface:	
 	%interfaceFlag = and i32 %flag, 1
 	%notInterface = icmp eq i32 %interfaceFlag, 0
 	br i1 %notInterface, label %_object, label %_interface	
 	
 	; array of objects to free
 	; loop through and decrement
-_object:
-	%i.3 = phi i64 [0, %_checkInterface], [%i.4, %_object]
+_object:	
+	%i.3 = phi i64 [0, %_checkInterface], [%i.4, %_object]	
 	%element.1.ref = getelementptr inbounds %shadow.standard..Object*, %shadow.standard..Object** %arrayData, i64 %i.3	
 	%element.1 = load %shadow.standard..Object*, %shadow.standard..Object** %element.1.ref		
 	call void @__decrementRef(%shadow.standard..Object* %element.1)
@@ -200,7 +200,7 @@ _object:
 	br i1 %check.i4, label %_object, label %_freeArray
 
 	; array of arrays to free
-_array:
+_array:	
 	; width of each element in bytes	
 	%arrayElements = bitcast %shadow.standard..Object** %arrayData to {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}*
 	br label %_arrayLoop
@@ -229,10 +229,10 @@ _interfaceLoop:
 	%check.i8 = icmp ult i64 %i.8, %size
 	br i1 %check.i8, label %_interfaceLoop, label %_freeArray
 
-_freeArray:
+_freeArray:	
 	%address = bitcast %ulong* %countRef to i8*
-	tail call void @free(i8* %address) nounwind	
+	tail call void @free(i8* %address) nounwind		
 	ret void
-_exit:	
+_exit:		
 	ret void
 }

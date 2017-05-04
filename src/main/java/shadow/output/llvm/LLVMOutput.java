@@ -593,7 +593,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
 		writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		//memcopy
-		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)");
+		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)");
 		writer.write("declare void @__arrayStore({%ulong," + type(Type.OBJECT) + "}*, %ulong, " + type(Type.OBJECT) + ", " + type(Type.CLASS) + ")");
 		writer.write("declare " + type(Type.OBJECT) + " @__arrayLoad({%ulong," + type(Type.OBJECT) + "}*, %ulong, " + type(Type.CLASS) + ", " + type(Type.METHOD_TABLE) + ", %boolean)");
 		writer.write("declare void @free(i8*) nounwind");
@@ -839,8 +839,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = getelementptr " + pointerType(arrayType, false) + ", " +
 					pointerType(arrayType) + " " + temp(1) + ", i32 0, i32 1");
 			source = typeText(arrayType.getBaseType(), temp(0), true);			
-		}
-		
+		}		
 				
 		writer.write(nextTemp() + " = bitcast " + destination + " to i8*");
 		writer.write(nextTemp() + " = bitcast " + source + " to i8*");
@@ -850,11 +849,11 @@ public class LLVMOutput extends AbstractOutput {
 		if( !(destinationNode.getType() instanceof ArrayType) && !(sourceNode.getType() instanceof ArrayType) ) {
 			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //destination
 			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //source			
-			writer.write(nextTemp() + " = sub i32 " + symbol(size) + ", 8");
-			writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(2) + ", i8* " + temp(1) + ", i32 " + temp(0) + ", i32 1, i1 0)");
+			writer.write(nextTemp() + " = sub i64 " + symbol(size) + ", 8");
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(2) + ", i8* " + temp(1) + ", i64 " + temp(0) + ", i32 1, i1 0)");
 		}
 		else			
-			writer.write("call void @llvm.memcpy.p0i8.p0i8.i32(i8* " + temp(1) + ", i8* " + temp(0) + ", i32 " + symbol(size) + ", i32 1, i1 0)");		
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(1) + ", i8* " + temp(0) + ", i64 " + symbol(size) + ", i32 1, i1 0)");		
 	}
 
 	@Override
@@ -1151,10 +1150,12 @@ public class LLVMOutput extends AbstractOutput {
 				temp(1) + " to " + pointerType(node.getType()));
 		writer.write(nextTemp() + " = insertvalue " + type(node) +
 				" zeroinitializer, " + pointerType(node.getType()) + " " + temp(1) + ", 0");
-		writer.write(nextTemp() + " = insertvalue " + type(node) +
+		writer.write(nextTemp() + " = insertvalue " + type(node) + " " +
 				temp(1) + ", " + allocationClass + ", 1");
-		writer.write(nextTemp(node) + " = insertvalue " + type(node) +
-				temp(1) + ", " + typeSymbol(node.getSize()) + ", 2");
+		
+		String last = temp(0);
+		writer.write(nextTemp(node) + " = insertvalue " + type(node) + " " + 
+				last + ", " + typeSymbol(node.getSize()) + ", 2");
 	}
 	
 
@@ -1491,7 +1492,7 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write("store " + typeSymbol(node.getValue()) + ", " + type(variable.getType(), true) + "* " + name(variable));
 			else {			
 				if( variable.getType() instanceof ArrayType )
-					gcArrayStore(name(variable), (ArrayType)variable.getType(), node.getValue(), node.getClassData(), node.isIncrementReference(), node.isDecrementReference() );
+					gcArrayStore(name(variable), (ArrayType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
 				else if( variable.getType() instanceof InterfaceType )				
 					gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference()  );
 				else 
@@ -1594,7 +1595,7 @@ public class LLVMOutput extends AbstractOutput {
 
 			if( node.isGarbageCollected() ) {
 				if( arrayRef.getType() instanceof ArrayType )
-					gcArrayStore(temp(0), (ArrayType)arrayRef.getType(), node.getValue(), node.getClassData(), node.isIncrementReference(), node.isDecrementReference() );
+					gcArrayStore(temp(0), (ArrayType)arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
 				else if( arrayRef.getType() instanceof InterfaceType )					
 					gcInterfaceStore(temp(0), (InterfaceType)arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
 				//regular variable
@@ -1614,7 +1615,7 @@ public class LLVMOutput extends AbstractOutput {
 			
 			if( node.isGarbageCollected() ) {
 				if( fieldRef.getType() instanceof ArrayType )
-					gcArrayStore(temp(0), (ArrayType)fieldRef.getType(), node.getValue(), node.getClassData(), node.isIncrementReference(), node.isDecrementReference() );
+					gcArrayStore(temp(0), (ArrayType)fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
 				else if( fieldRef.getType() instanceof InterfaceType )					
 					gcInterfaceStore(temp(0), (InterfaceType)fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
 				//regular variable
@@ -1628,7 +1629,7 @@ public class LLVMOutput extends AbstractOutput {
 	}	
 	
 	//storing a whole array into an array reference, NOT storing an element into an array
-	private void gcArrayStore(String destination, ArrayType type, TACOperand value, TACOperand classData, boolean increment, boolean decrement ) throws ShadowException {
+	private void gcArrayStore(String destination, ArrayType type, TACOperand value, boolean increment, boolean decrement ) throws ShadowException {
 		if( increment ) {			
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(value) + ", 0");
 			if( !type.getBaseType().equals(Type.OBJECT) )

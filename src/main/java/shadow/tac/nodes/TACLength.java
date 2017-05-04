@@ -8,11 +8,6 @@ public class TACLength extends TACOperand
 {
 	private TACOperand array;
 	private boolean isLong;
-	
-	public TACLength(TACNode node, TACOperand arrayRef) {
-		this( node, arrayRef, false);		
-	}
-	
 
 	public TACLength(TACNode node, TACOperand arrayRef, boolean isLong) {
 		super(node);

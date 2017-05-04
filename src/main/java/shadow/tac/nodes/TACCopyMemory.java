@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.Type;
 
 /**
@@ -22,7 +23,7 @@ public class TACCopyMemory extends TACOperand
 		//checks can remove references
 		this.destination = check(destination, destination);
 		this.source = check(source, source);
-		this.size = size;
+		this.size = check(size, new SimpleModifiedType(Type.LONG));
 	}
 	
 	

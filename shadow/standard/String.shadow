@@ -34,12 +34,12 @@ and	CanHash
 	 * specify legal UTF-8 code points 
 	 */
 	public create( byte[] data )
-	{
+	{		
 		byte ascii = 0y;
 		for ( int i = 0; i < data->size and ascii >= 0y; i += 1 )		
 			ascii |= data[i];		
 		this:ascii = ascii >= 0y; //will be negative if the MSB is set
-		this:data = freeze(data);
+		this:data = freeze(data);		
 	}
 	
 	/**
@@ -132,7 +132,7 @@ and	CanHash
 	
 	// Creates a String that is a copy of data known to be valid code points.
 	private create( byte[] data, boolean ascii )
-	{
+	{		
 		this:data = freeze(data);
 		this:ascii = ascii;
 	}
@@ -239,6 +239,7 @@ and	CanHash
 			data[i] = index(i);
 		for ( int i = 0; i < other->size; i += 1 )
 			data[this->size + i] = other.index(i);
+ 
 		return String:create(data, this:ascii and other:ascii);
 	}
 	

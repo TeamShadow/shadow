@@ -181,151 +181,13 @@ public class TACMethod
 			*/
     	
     		TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
-    		TACNode start = last.getPrevious(); //cleanup nodes will be added between start and last
-    		    	
-    		while( storedVariables.size() > 0 ) {				
-				TACNode lastUpdate = null;
 				
-				//add each decrement before the first thing, making it the new last thing
-				for( TACVariable variable : storedVariables )	
-					//return doesn't get cleaned up, so that it has an extra reference count
-					if( !variable.isReturn() )				
-						lastUpdate = new TACChangeReferenceCount(last, variable, false);
+			//add each decrement before the first thing, making it the new last thing
+			for( TACVariable variable : storedVariables )	
+				//return doesn't get cleaned up, so that it has an extra reference count
+				if( !variable.isReturn() )				
+					new TACChangeReferenceCount(last, variable, false);			
 			
-				boolean changed = true;
-				storedVariables.clear();
-				
-				while( changed ) {					
-					changed = false;
-				
-					//unfortunately, some of the cleanup can require additional variables to be used
-					TACNode node = start;
-					while( node != last ) {
-						TACNode next = node.getNext();			
-						//Update changed only if newly garbage collected
-						//and creating new things that might need to be garbage collected
-						
-						if( !node.isGarbageCollected() ) { //if already GC, skip it
-							if( node instanceof TACLocalStore ) {
-								TACLocalStore store = (TACLocalStore) node;
-								TACVariable variable = store.getVariable();
-								//type that needs garbage collection will be stored in alloc'ed variable
-								if( variable.needsGarbageCollection()  ) {
-									store.setGarbageCollected(true);
-									storedVariables.add(variable);
-										
-									if( variable.getType() instanceof ArrayType && store.getClassData() == null ) {
-										ArrayType arrayType = (ArrayType) variable.getType();
-										TACClass classData = new TACClass(node, arrayType.getBaseType());
-										store.setClassData(classData.getClassData());
-										
-										changed = true;
-									}
-								}
-							}
-							else if( node instanceof TACLocalLoad ) {
-								TACLocalLoad load = (TACLocalLoad)node;
-								TACVariable variable = load.getVariable();
-								if( variable.needsGarbageCollection() )
-									load.setGarbageCollected(true);
-							}
-							else if( node instanceof TACPhi ) {
-								TACPhi phi = (TACPhi)node;
-								TACVariable variable = phi.getVariable();
-								if( variable.needsGarbageCollection() )
-									phi.setGarbageCollected(true);												
-							}
-							else if( node instanceof TACStore ) {
-								TACStore store = (TACStore) node;
-								TACReference reference = store.getReference();
-													
-								if( reference.needsGarbageCollection() ) {
-									store.setGarbageCollected(true);
-									if( reference.getType() instanceof ArrayType && store.getClassData() == null ) {
-										ArrayType arrayType = (ArrayType) reference.getType();
-										TACClass classData = new TACClass(node, arrayType.getBaseType());
-										store.setClassData(classData.getClassData());
-										
-										changed = true;
-									}
-								}
-							}											
-							else if( node instanceof TACNewArray ) {
-								TACNewArray newArray = (TACNewArray) node;
-								if( newArray.hasLocalStore() ) {
-									TACLocalStore store = newArray.getLocalStore();
-									if( store.getVariable().needsGarbageCollection( ) && !store.getVariable().isReturn() )
-										store.setIncrementReference(false);
-								}
-								else if( newArray.hasMemoryStore() )  {
-									TACStore store = newArray.getMemoryStore();
-									if( store.getReference().needsGarbageCollection())
-										store.setIncrementReference(false);
-								}
-								else {					
-									TACVariable temp = addTempLocal(newArray);							
-									//store into temporary for reference count purposes (and change next)
-									TACLocalStore store = new TACLocalStore(next, temp, (TACNewArray)node, false);
-									store.setGarbageCollected(true);
-									storedVariables.add(temp);
-									store.setClassData(newArray.getBaseClass());
-									next = store;
-									//no change here because we're pulling from an existing base class object
-								}
-							}
-							else if( node instanceof TACCall ) {
-								TACCall call = (TACCall) node;
-								call.setGarbageCollected(true); //marks the call as handled
-								if( call.hasLocalStore() ) {
-									TACLocalStore store = call.getLocalStore();
-									if( store.getVariable().needsGarbageCollection( ) && !store.getVariable().isReturn() )
-										store.setIncrementReference(false);
-								}
-								else if( call.hasMemoryStore() ) {
-									TACStore store = call.getMemoryStore();
-									if( store.getReference().needsGarbageCollection())
-										store.setIncrementReference(false);
-								}
-								else if( !call.isDelegatedCreate() ) {
-									//if method return is not saved, save it for ref counting purposes
-									//complex case because of possible multiple return values
-									//delegated create return values should not be GC'd
-									MethodSignature signature = call.getMethodRef().getSignature();
-									SequenceType returns = signature.getSignatureWithoutTypeArguments().getFullReturnTypes();
-									TACNode anchor = next;
-									if( call.getNoExceptionLabel() != null )
-										anchor = call.getNoExceptionLabel().getNext();									
-									
-									if( returns.size() == 1 ) {
-										TACVariable temp = addTempLocal(call);								
-										//store into temporary for reference count purposes (and change next)
-										if( temp.needsGarbageCollection()) {
-											TACLocalStore store = new TACLocalStore(anchor, temp, call, false);
-											store.setGarbageCollected(true);
-											storedVariables.add(temp);											
-										}
-									}
-									else if( returns.size() > 1 ) {										
-										for( int i = 0; i < signature.getReturnTypes().size(); ++i ) {
-											TACVariable temp = addTempLocal(returns.get(i));
-											//store into temporary for reference count purposes (and change next)
-											if( temp.needsGarbageCollection()) {
-												TACLocalStore store = new TACLocalStore(anchor, temp, new TACSequenceElement(anchor, call, i), false);
-												store.setGarbageCollected(true);
-												storedVariables.add(temp);
-											}
-										}
-									}
-								}
-							}
-						}
-						
-						node = node.getNext();
-					}
-				}
-				
-				start = lastUpdate;
-    		}
 			
 			/*
 			
@@ -439,15 +301,7 @@ public class TACMethod
 								parameterStores.put(variable, store);
 							else {
 								storedVariables.add(variable);
-								checkStoreAgainstParameters(store, parameterStores);
-								
-								if( variable.getType() instanceof ArrayType && store.getClassData() == null ) {
-									ArrayType arrayType = (ArrayType) variable.getType();
-									TACClass classData = new TACClass(node, arrayType.getBaseType());
-									store.setClassData(classData.getClassData());
-									
-									changed = true;
-								}
+								checkStoreAgainstParameters(store, parameterStores);								
 							}
 						}				
 					}
@@ -467,16 +321,8 @@ public class TACMethod
 						TACStore store = (TACStore) node;
 						TACReference reference = store.getReference();
 											
-						if( reference.needsGarbageCollection() ) {
+						if( reference.needsGarbageCollection() )
 							store.setGarbageCollected(true);
-							if( reference.getType() instanceof ArrayType && store.getClassData() == null ) {
-								ArrayType arrayType = (ArrayType) reference.getType();
-								TACClass classData = new TACClass(node, arrayType.getBaseType());
-								store.setClassData(classData.getClassData());
-								
-								changed = true;
-							}
-						}
 					}											
 					else if( node instanceof TACNewArray ) {
 						TACNewArray newArray = (TACNewArray) node;
@@ -498,7 +344,6 @@ public class TACMethod
 							TACLocalStore store = new TACLocalStore(next, temp, (TACNewArray)node, false);
 							store.setGarbageCollected(true);
 							storedVariables.add(temp);
-							store.setClassData(newArray.getBaseClass());
 							next = store;
 							//no change here because we're pulling from an existing base class object
 						}
@@ -599,11 +444,8 @@ public class TACMethod
 		return variable;		
 	}
 	
-	public TACVariable addLocal(ModifiedType type, String name)
-	{
+	public TACVariable addLocal(ModifiedType type, String name) {
 		TACVariable variable = new TACVariable(type, name, this);
-		Type varType =  variable.getType();
-		
 		
 		while (locals.containsKey(variable.getName()))
 			variable.rename();

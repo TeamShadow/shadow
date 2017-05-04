@@ -1280,7 +1280,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		
 		if( prefixType instanceof ArrayType && ctx.Identifier().getText().equals("size")) {
 			//optimization to avoid creating an Array object
-			TACOperand length = new TACLength(anchor, prefix);			
+			TACOperand length = new TACLength(anchor, prefix, false);			
 			prefix = length;
 		}
 		else if( prefixType instanceof ArrayType && ctx.Identifier().getText().equals("longSize")) {
@@ -1801,10 +1801,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACLabel updateLabel = block.getContinue(),
 						conditionLabel = new TACLabel(method);
 
-			//make iterator (int index)
-			iterator = method.addTempLocal(new SimpleModifiedType(Type.INT));
-			new TACLocalStore(anchor, iterator, new TACLiteral(anchor, new ShadowInteger(0)));
-			TACOperand length = new TACLength(anchor, collection);
+			//make iterator (long index)
+			iterator = method.addTempLocal(new SimpleModifiedType(Type.LONG));
+			new TACLocalStore(anchor, iterator, new TACLiteral(anchor, new ShadowInteger(0L)));
+			TACOperand length = new TACLength(anchor, collection, true);
 			new TACBranch(anchor, conditionLabel);  //init is done, jump to condition
 			
 			//body
@@ -1825,7 +1825,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			value.setContext(null); //avoid dead code removal error
 			TACLiteral one = new TACLiteral(anchor, new ShadowInteger(1));
 			one.setContext(null);
-			value = new TACBinary(anchor, value, Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+", one, false );
+			value = new TACBinary(anchor, value, Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", one, false );
 			value.setContext(null);
 			new TACLocalStore(anchor, iterator, value).setContext(null);			
 			
@@ -1834,7 +1834,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			
 			//check if iterator < array length
 			value = new TACLocalLoad(anchor, iterator);			
-			condition = new TACBinary(anchor, value, Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), "<", length, true );
+			condition = new TACBinary(anchor, value, Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
 			
 			new TACBranch(anchor, condition, bodyLabel, endLabel);		
 			endLabel.insertBefore(anchor);
@@ -2297,7 +2297,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		for( int i = 0; i < layers; i++ ) {
 			ArrayType arrayType = (ArrayType)type;
 			type = arrayType.getBaseType();
-			TACOperand length = new TACLength(anchor, oldArray);
+			TACOperand length = new TACLength(anchor, oldArray, true);
+			//TODO: fix this so that the class is retrieved from the array
 			TACClass class_ = new TACClass(anchor, type);
 			TACVariable copiedArray = method.addTempLocal(new SimpleModifiedType(arrayType));
 			new TACLocalStore(anchor, copiedArray, new TACNewArray(anchor, arrayType, class_.getClassData(), length));
@@ -2321,7 +2322,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				
 				if( type.isPrimitive() ) {
 					TACMethodRef width = new TACMethodRef(anchor, Type.CLASS.getMatchingMethod("width", new SequenceType()) );
-					TACOperand size = new TACBinary(anchor, new TACCall(anchor, width, class_.getClassData()), Type.INT.getMatchingMethod("multiply", new SequenceType(Type.INT)), "*", length);
+					TACOperand size = new TACBinary(anchor, new TACCall(anchor, width, class_.getClassData()), Type.LONG.getMatchingMethod("multiply", new SequenceType(Type.LONG)), "*", length);
 					new TACCopyMemory(anchor, new TACLocalLoad(anchor, copiedArray), oldArray, size);					
 					new TACBranch(anchor, terminate);		
 				}
@@ -2365,8 +2366,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				}
 			}
 			else {
-				counters[i] = method.addTempLocal(new SimpleModifiedType(Type.INT));
-				new TACLocalStore(anchor, counters[i], new TACLiteral(anchor, new ShadowInteger(-1)));//starting at -1 allows update and check to happen on the same label
+				counters[i] = method.addTempLocal(new SimpleModifiedType(Type.LONG));
+				new TACLocalStore(anchor, counters[i], new TACLiteral(anchor, new ShadowInteger(-1L)));//starting at -1 allows update and check to happen on the same label
 				labels[i] = new TACLabel(method);
 				
 				new TACBranch(anchor, labels[i]);
@@ -2380,8 +2381,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					terminate = labels[i - 1];
 
 				//increment counters[i] by 1
-				new TACLocalStore(anchor, counters[i], new TACBinary(anchor, new TACLocalLoad(anchor, counters[i]), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+", new TACLiteral(anchor, new ShadowInteger(1))));
-				TACOperand condition = new TACBinary(anchor, new TACLocalLoad(anchor, counters[i]), Type.INT.getMatchingMethod("compare", new SequenceType(Type.INT)), "<", length, true);
+				new TACLocalStore(anchor, counters[i], new TACBinary(anchor, new TACLocalLoad(anchor, counters[i]), Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", new TACLiteral(anchor, new ShadowInteger(1L))));
+				TACOperand condition = new TACBinary(anchor, new TACLocalLoad(anchor, counters[i]), Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true);
 				new TACBranch(anchor, condition, body, terminate);					
 				body.insertBefore(anchor);
 				
@@ -2892,7 +2893,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//make iterator (int index)
 		TACVariable iterator = method.addTempLocal(new SimpleModifiedType(Type.LONG));
 		new TACLocalStore(anchor, iterator, new TACLiteral(anchor, new ShadowInteger(0)));
-		TACOperand length = new TACLength(anchor, array);			
+		TACOperand length = new TACLength(anchor, array, true);			
 		new TACBranch(anchor, conditionLabel);  //init is done, jump to condition
 		
 		bodyLabel.insertBefore(anchor);

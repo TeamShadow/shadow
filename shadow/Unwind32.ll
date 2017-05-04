@@ -538,7 +538,7 @@ define noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.sta
 	%perObject = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %class)		
 	%elements = trunc %ulong %longElements to %uint
 	%size = mul %int %perObject, %elements
-		
+	
 	; Add extra room for reference count (stored before array space)
 	%sizeWithCounter = add %int %size, 8	
 	%arrayAsBytes = call noalias i8* @calloc(%uint 1, %uint %sizeWithCounter)	
