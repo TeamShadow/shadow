@@ -2134,6 +2134,8 @@ public class StatementChecker extends BaseChecker {
 					ctx.setType(Type.UNKNOWN);	
 				}					
 			}
+			
+			currentType.addUsedType(arrayType);
 							
 			if( ctx.arrayCreateCall() != null ) {
 				SequenceType arguments = (SequenceType) ctx.arrayCreateCall().getType();
