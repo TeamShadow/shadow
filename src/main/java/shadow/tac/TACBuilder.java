@@ -2949,7 +2949,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACNewArray alloc = new TACNewArray(anchor, type, baseClassData,
 				sizes.get(dimension));
 		if (dimension < sizes.size() - 1)
-		{
+		{	
+			ArrayType baseType = (ArrayType) type.getBaseType();
 			TACVariable index = method.addTempLocal(new SimpleModifiedType(Type.INT));
 			new TACLocalStore(anchor, index, new TACLiteral(anchor, new ShadowInteger(0)));
 			TACLabel bodyLabel = new TACLabel(method),
@@ -2958,7 +2959,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			new TACBranch(anchor, condLabel);
 			bodyLabel.insertBefore(anchor);
 			new TACStore(anchor, new TACArrayRef(anchor, alloc, new TACLocalLoad(anchor, index), false),
-					visitArrayAllocation((ArrayType)type.getBaseType(), new TACClass(anchor, (ArrayType)type.getBaseType()), sizes, dimension + 1, create, params, defaultValue));
+					visitArrayAllocation(baseType, new TACClass(anchor, baseType.getBaseType()), sizes, dimension + 1, create, params, defaultValue));
 			new TACLocalStore(anchor, index, new TACBinary(anchor, new TACLocalLoad(anchor, index), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+",
 					new TACLiteral(anchor, new ShadowInteger(1))));
 			new TACBranch(anchor, condLabel);

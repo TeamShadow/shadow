@@ -143,7 +143,7 @@ _exit:
 	ret void
 }
 
-define void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind {		
+define void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind {	
 	%countAndArray = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 0
 	%arrayNull = icmp eq {%ulong, %shadow.standard..Object*}* %countAndArray, null
 	br i1 %arrayNull, label %_exit, label %_check	
@@ -231,8 +231,8 @@ _interfaceLoop:
 
 _freeArray:	
 	%address = bitcast %ulong* %countRef to i8*
-	tail call void @free(i8* %address) nounwind		
+	tail call void @free(i8* %address) nounwind			
 	ret void
-_exit:		
+_exit:			
 	ret void
 }

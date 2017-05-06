@@ -371,11 +371,11 @@ public class OutputTests {
 		args.add("shadow/test/ArrayOutOfBoundsTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
-				/*"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
-				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +*/				
-				"shadow:standard@IndexOutOfBoundsException: Index 9\n" /*+
+				"shadow:standard@IndexOutOfBoundsException: Index 16\n" + 
+				"shadow:standard@IndexOutOfBoundsException: Index -1\n" +				
 				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
-				"shadow:standard@IndexOutOfBoundsException: Index 28\n"*/);
+				"shadow:standard@IndexOutOfBoundsException: Index 9\n" +
+				"shadow:standard@IndexOutOfBoundsException: Index 28\n");
 	}
 	
 
