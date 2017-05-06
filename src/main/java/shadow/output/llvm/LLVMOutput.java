@@ -2330,7 +2330,7 @@ public class LLVMOutput extends AbstractOutput {
 				raw(Type.CLASS) + " { " + 		
 
 				
-				type(Type.ULONG) + " " + literal(-1) + ", " + //reference count
+				type(Type.ULONG) + " " + literal(-1L) + ", " + //reference count
 				
 				typeText(Type.CLASS, classOf(Type.CLASS)) + ", " + //class
 				methodTableType(Type.CLASS) + "* " + methodTable(Type.CLASS) + ", " + //methods
@@ -2351,27 +2351,21 @@ public class LLVMOutput extends AbstractOutput {
 		List<ModifiedType> parameterList = generic.getTypeParametersIncludingOuterClasses(); 
 
 		String interfaceData;
-		String interfaces;
-		String size;
+		String interfaces;		
 		int flags = GENERIC;		
 
 		if( generic instanceof InterfaceType ) {
 			flags |= INTERFACE;
-			interfaceData = interfaces = " zeroinitializer, ";
-			size = typeLiteral(-1) + ", ";
+			interfaceData = interfaces = " zeroinitializer, ";			
 		}
-		else {
-			
-			
-			
+		else {			
 			ArrayList<InterfaceType> interfaceList = generic.getAllInterfaces();
 			interfaceData = "{" + pointerType(METHOD_TABLE_ARRAY) + " bitcast ({ %ulong, [" + interfaceList.size() + " x " +
 					type(Type.METHOD_TABLE) + "]}* " + interfaceData(noArguments) + " to " + pointerType(METHOD_TABLE_ARRAY) + "), " +
 					typeText(Type.CLASS, classOf(Type.METHOD_TABLE)) + ", %ulong " + literal((long)interfaceList.size()) + "}, ";
 			interfaces = "{" + pointerType(CLASS_ARRAY) + " bitcast ({ %ulong, [" + interfaceList.size() + " x " +
 					type(Type.CLASS) + "]}* " + genericInterfaces(generic) + " to " + pointerType(CLASS_ARRAY) + "), " + 
-					typeText(Type.CLASS, classOf(Type.CLASS)) + ", %ulong " + literal((long)interfaceList.size()) + "}, ";
-			size = typeText(Type.INT, sizeof(noArguments)) + ", ";
+					typeText(Type.CLASS, classOf(Type.CLASS)) + ", %ulong " + literal((long)interfaceList.size()) + "}, ";			
 		}
 
 		//get parent class
@@ -2405,7 +2399,7 @@ public class LLVMOutput extends AbstractOutput {
 				parentClass + ", "  +//parent
 				
 				typeLiteral(flags) + ", " + //flags							
-				size + //size
+				typeText(Type.INT, sizeof(noArguments)) + ", " + //size
 				
 				type(CLASS_ARRAY) + " {" +
 				pointerType(CLASS_ARRAY) + " bitcast ( { %ulong, [" + parameterList.size() + " x " + type(Type.CLASS) + "]}* " +

@@ -1823,7 +1823,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			//increment iterator
 			value = new TACLocalLoad(anchor, iterator);
 			value.setContext(null); //avoid dead code removal error
-			TACLiteral one = new TACLiteral(anchor, new ShadowInteger(1));
+			TACLiteral one = new TACLiteral(anchor, new ShadowInteger(1L));
 			one.setContext(null);
 			value = new TACBinary(anchor, value, Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", one, false );
 			value.setContext(null);
@@ -1833,9 +1833,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			conditionLabel.insertBefore(anchor);
 			
 			//check if iterator < array length
-			value = new TACLocalLoad(anchor, iterator);			
+			value = new TACLocalLoad(anchor, iterator);
 			condition = new TACBinary(anchor, value, Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
-			
+						
 			new TACBranch(anchor, condition, bodyLabel, endLabel);		
 			endLabel.insertBefore(anchor);
 		}
@@ -1861,7 +1861,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			
 			ctx.statement().appendBefore(anchor); //body
 						
-			new TACBranch(anchor, conditionLabel);
+			new TACBranch(anchor, conditionLabel).setContext(null);
 			conditionLabel.insertBefore(anchor);
 			
 			//check if iterator has next
