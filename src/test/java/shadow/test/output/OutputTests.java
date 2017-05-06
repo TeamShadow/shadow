@@ -59,7 +59,11 @@ public class OutputTests {
 		run( programArgs, expectedOutput, "" ); 			
 	}
 	
-	private void run(String[] programArgs, String expectedOutput, String expectedError ) throws IOException, ConfigurationException, InterruptedException {
+	private void run(String[] programArgs, String expectedOutput, String expectedError) throws IOException, ConfigurationException, InterruptedException {
+		run( programArgs, expectedOutput, expectedError, 0 ); 			
+	}
+	
+	private void run(String[] programArgs, String expectedOutput, String expectedError, int expectedReturn ) throws IOException, ConfigurationException, InterruptedException {
 		
 		// Should be initialized at this point by call to Main.run()
 		Configuration config = Configuration.getConfiguration();
@@ -100,7 +104,7 @@ public class OutputTests {
 		
 		//check return value to see if the program ends normally
 		//also keeps program from being deleted while running	
-		assertEquals("Program exited abnormally.", 0, program.waitFor()); 
+		assertEquals("Program exited abnormally.", expectedReturn, program.waitFor()); 
 	}	
 
 	private String formatOutputString(CharSequence... elements)
@@ -618,7 +622,8 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"test2 caught ExceptionB\n", 
-				"shadow:standard@Exception\n");
+				"shadow:standard@Exception\n",
+				1);
 	}
 	
 	@Test public void testForeach() throws Exception {
@@ -748,7 +753,8 @@ public class OutputTests {
 		args.add("shadow/test/InterfaceCreateTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 	"", 			
-				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n");
+				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n",
+				1);
 	}
 		
 	
@@ -897,7 +903,8 @@ public class OutputTests {
 		args.add("shadow/test/NullableWithoutCheckTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "",
-				"shadow:standard@UnexpectedNullException\n");
+				"shadow:standard@UnexpectedNullException\n",
+				1);
 	}
 	
 	@Test public void testPrimitive() throws Exception {

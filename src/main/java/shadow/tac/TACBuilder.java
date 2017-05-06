@@ -2953,13 +2953,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			ArrayType baseType = (ArrayType) type.getBaseType();
 			TACVariable index = method.addTempLocal(new SimpleModifiedType(Type.INT));
 			new TACLocalStore(anchor, index, new TACLiteral(anchor, new ShadowInteger(0)));
+			TACClass class_ = new TACClass(anchor, baseType.getBaseType());
 			TACLabel bodyLabel = new TACLabel(method),
 					condLabel = new TACLabel(method),
 					endLabel = new TACLabel(method);
 			new TACBranch(anchor, condLabel);
 			bodyLabel.insertBefore(anchor);
 			new TACStore(anchor, new TACArrayRef(anchor, alloc, new TACLocalLoad(anchor, index), false),
-					visitArrayAllocation(baseType, new TACClass(anchor, baseType.getBaseType()), sizes, dimension + 1, create, params, defaultValue));
+					visitArrayAllocation(baseType, class_, sizes, dimension + 1, create, params, defaultValue));
 			new TACLocalStore(anchor, index, new TACBinary(anchor, new TACLocalLoad(anchor, index), Type.INT.getMatchingMethod("add", new SequenceType(Type.INT)), "+",
 					new TACLiteral(anchor, new ShadowInteger(1))));
 			new TACBranch(anchor, condLabel);
