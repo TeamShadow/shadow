@@ -19,18 +19,18 @@ locked class shadow:standard@
 is  Set<Class>	
 {
 	// Default size of hash table, 16.
-	private constant int DEFAULT_INITIAL_CAPACITY = 16;
+	private constant long DEFAULT_INITIAL_CAPACITY = 16;
 	// Maximum capacity of hash table, 1073741824 buckets.
-	private constant int MAXIMUM_CAPACITY = 1 << 30;
+	private constant long MAXIMUM_CAPACITY = 1L << 30;
 	// Default maximum load factor before re-size, 0.75.
 	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	/// Gets the number of values in the set.
-	get int size = 0;
+	get long longSize = 0;
 	nullable Node[] table;
 	float loadFactor;
-	int threshold;
-	int modifications = 0;
+	long threshold;
+	long modifications = 0;
 	
 	/**
 	 * Creates an empty {@code ClassSet} with a default capacity of 16
@@ -46,7 +46,7 @@ is  Set<Class>
 	 * maximum load factor of 0.75. 
 	 * @param initialCapacity initial capacity of the set
 	 */
-	public create(int initialCapacity)
+	public create(long initialCapacity)
 	{
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);		
 	}
@@ -57,34 +57,43 @@ is  Set<Class>
 	 * @param initialCapacity initial capacity of the map
 	 * @param loadFactor maximum load factor before the map is resized
 	 */
-	public create(int initialCapacity, float loadFactor)
-	{		
-		int capacity = 1;
+	public create(long initialCapacity, float loadFactor)
+	{	
+		long capacity = 1L;
 		while( capacity < initialCapacity ) // Makes capacity a power of 2.
-			capacity <<= 1;	
-		table = Node:null[capacity];		
+			capacity <<= 1;
+		table = Node:null[capacity];
 		this:loadFactor = loadFactor;
-		threshold = cast<int>(capacity * loadFactor);		
+		threshold = cast<long>(capacity * loadFactor);		
 	}
+	
+	/*
+	 * Retrieves the number of elements held in the map, as an {@code int}.	  
+	 * @return size
+	 */
+	public get readonly size() => (int)
+	{
+		return cast<int>( longSize );
+	}	
 	
 	/*
 	 * Resizes the set so that it can hold the new capacity, which must be a
 	 * power of 2. 
 	 * @param newCapacity new capacity of the set
 	 */
-	private resize(int newCapacity) => ()
+	private resize(long newCapacity) => ()
 	{		
-		if(table->size == MAXIMUM_CAPACITY)
+		if(table->longSize == MAXIMUM_CAPACITY)
 		{
-			threshold = int:MAX;
+			threshold = long:MAX;
 			return;
 		}
 		
 		nullable Node[] newTable = Node:null[newCapacity];
-		int index;
-		int hash;		
+		long index;
+		long hash;		
 		
-		for( int i = 0; i < table->size; i += 1 )
+		for( long i = 0L; i < table->longSize; i += 1L )
 		{
 			try
 			{
@@ -101,21 +110,15 @@ is  Set<Class>
 		}
 		
 		table = newTable;
-		threshold = cast<int>(newCapacity * loadFactor);		
+		threshold = cast<long>(newCapacity * loadFactor);		
 	}
 	
 
 	private class Node
 	{
-		immutable get int hash;		
+		immutable get long hash;		
 		get Class value;
 		get set nullable Node next;
-		
-		
-		public readonly get hash() => (int) 
-		{
-			return hash;
-		}
 		
 		public readonly get value() => (Class)
 		{
@@ -127,12 +130,12 @@ is  Set<Class>
 			return next;
 		}
 
-		public create( int hash, Class value )
+		public create( long hash, Class value )
 		{
 			this(hash, value, null);
 		}
 		
-		public create( int hash, Class value, nullable Node after )
+		public create( long hash, Class value, nullable Node after )
 		{			
 			this:hash = hash;			
 			this:value = value;
@@ -146,18 +149,18 @@ is  Set<Class>
      */
     public readonly isEmpty() => (boolean empty)
     {
-        return size == 0;
+        return longSize == 0L;
     }
 	
 	/*
 	 * Finds the hash value and index for a given key based on the provided
 	 * length.
 	 */
-	private readonly findIndex( String value, int length ) => ( int index, int hash )
+	private readonly findIndex( String value, long length ) => ( long index, long hash )
 	{		
 		uint temp = value->hash;			
 		temp ^= (temp >> 20) ^ (temp >> 12);
-		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
+		long hash = cast<long>(temp ^ (temp >> 7) ^ (temp >> 4));
 		return ( hash & (length - 1), hash );	
 	}	
 
@@ -169,7 +172,7 @@ is  Set<Class>
 	 */
 	public index( Class value ) => ( boolean )
 	{
-		(int index, int hash) = findIndex( #value, table->size );
+		(long index, long hash) = findIndex( #value, table->longSize );
 		try
 		{
 			Node current = check(table[index]);
@@ -205,8 +208,8 @@ is  Set<Class>
 	 * present
 	 */
 	public add( Class value ) => (boolean success)
-	{
-		( int index, int hash ) = findIndex(#value, table->size);
+	{		
+		( long index, long hash ) = findIndex(#value, table->longSize);
 		try
 		{			
 			Node current = check(table[index]);
@@ -220,11 +223,11 @@ is  Set<Class>
 			Node node = Node:create(hash, value, table[index]);
 			table[index] = node;
 			
-			modifications += 1;
-			size += 1;
+			modifications += 1L;
+			longSize += 1L;
 			
-			if( size > threshold )
-				resize(2 * table->size);
+			if( longSize > threshold )
+				resize(2L * table->longSize);
 				
 			return true;
 		}
@@ -238,7 +241,7 @@ is  Set<Class>
 	 */
 	public remove( Class value ) => ( boolean success )
 	{	
-		( int index, int hash ) = findIndex(#value, table->size);
+		( long index, long hash ) = findIndex(#value, table->longSize);
 		try
 		{
 			nullable Node last = null;
@@ -269,7 +272,7 @@ is  Set<Class>
 	 */
 	public readonly contains( Class value ) => ( boolean found )
 	{		
-		( int index, int hash ) = findIndex(#value, table->size);
+		( long index, long hash ) = findIndex(#value, table->longSize);
 		try
 		{
 			Node current = check(table[index]);			
@@ -299,19 +302,19 @@ is  Set<Class>
 	 */
 	public clear() => ( ClassSet )
 	{
-		size = 0;
+		longSize = 0L;
 		table = Node:null[DEFAULT_INITIAL_CAPACITY];
-		threshold = cast<int>(table->size * loadFactor);
-		modifications += 1;
+		threshold = cast<long>(table->longSize * loadFactor);
+		modifications += 1L;
 		return this;
 	}
 	
 	
 	private class ClassSetIterator is Iterator<Class>
 	{
-		int index = 0;
+		long index = 0L;
 		nullable Node current;
-		int expectedModifications = modifications;
+		long expectedModifications = modifications;
 		public create()
 		{
 			current = next(null);
@@ -325,10 +328,10 @@ is  Set<Class>
 			}
 			recover{}
 		
-			while( position === null and index < table->size )
+			while( position === null and index < table->longSize )
 			{				
 				position = table[index];				
-				index += 1;					
+				index += 1L;					
 			}
 			return position; // Returns null if nothing left.			
 		}
@@ -371,7 +374,7 @@ is  Set<Class>
 	 */	  
 	public locked readonly findGeneric(String name, immutable Class[] parameters) => (nullable GenericClass)
 	{		
-		(int index, int hash) = findIndex( name, table->size );	
+		(long index, long hash) = findIndex( name, table->longSize );	
 		try
 		{
 			Node current = check(table[index]);			
@@ -380,12 +383,12 @@ is  Set<Class>
 				if( current->hash == hash )
 				{
 					GenericClass other = cast<GenericClass>(current->value);
-					if( other->parameters->size == parameters->size )
+					if( other->parameters->longSize == parameters->longSize )
 					{
-						int i;
-						for( i = 0; i < parameters->size and parameters[i] === other->parameters[i]; i += 1 )
+						long i;
+						for( i = 0L; i < parameters->longSize and parameters[i] === other->parameters[i]; i += 1L )
 							skip;
-						if( i >= parameters->size and name == other->name )
+						if( i >= parameters->longSize and name == other->name )
 							return other;
 					}
 				}
@@ -400,17 +403,16 @@ is  Set<Class>
 	
 	
 	/**
-	 * Finds an array class with the given name, base class, and number of
-	 * dimensions.  This method assumes that it will only ever be called on
+	 * Finds an array class with the given name and base class.
+	 * This method assumes that it will only ever be called on
 	 * a set containing all array classes.
 	 * @param name name of class to find
 	 * @param base class of array base type
-	 * @param dimensions number of dimensions that the array has
 	 * @return matching array class if found, {@code null} otherwise
 	 */
-	public locked readonly findArray(String name, Class base, int dimensions) => (nullable Class)
+	public locked readonly findArray(String name, Class base) => (nullable Class)
 	{
-		(int index, int hash) = findIndex( name, table->size );
+		(long index, long hash) = findIndex( name, table->longSize );
 		try
 		{
 			Node current = check(table[index]);			
@@ -419,7 +421,7 @@ is  Set<Class>
 				if( current->hash == hash )
 				{
 					Class other = current->value;					
-					if( other->size == dimensions and other->parent === base and (other->flags & Class:ARRAY) != 0)
+					if( other->parent === base and (other->flags & Class:ARRAY) != 0)
 						return other;
 				}
 				current = check(current->next);
@@ -447,13 +449,13 @@ is  Set<Class>
 	public locked addGeneric(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Class[] parameters, immutable MethodTable[] tables) => (GenericClass)
 	{
 		GenericClass newGeneric = GenericClass:create(raw, name, parent, interfaces, parameters, tables);
-		(int index, int hash) = findIndex( name, table->size );		
+		(long index, long hash) = findIndex( name, table->longSize );		
 		table[index] = Node:create(hash, newGeneric, table[index]);
-		modifications += 1;
-		size += 1;
+		modifications += 1L;
+		longSize += 1L;
 		
-		if( size > threshold )
-			resize(2 * table->size);		
+		if( longSize > threshold )
+			resize(2 * table->longSize);		
 
 		return newGeneric;			
 	}
@@ -461,9 +463,8 @@ is  Set<Class>
 	/*
 	 * Utility methods for creating generic and array classes, implemented
 	 * natively for efficiency and to avoid complexities in the type-checker.
-	 */		
-	private native getIntArrayClass() => (Class);
-	private native getIntMethodTable() => (MethodTable);
+	 */
+	private native getLongMethodTable() => (MethodTable);
 	private native getEmptyMethodTableArray() => (immutable MethodTable[]);
 	private native makeMethodTableArray(nullable readonly MethodTable object0) => (immutable MethodTable[]);
 	private native makeMethodTableArray(nullable readonly MethodTable object0, nullable readonly MethodTable object1) => (immutable MethodTable[]);
@@ -496,8 +497,8 @@ is  Set<Class>
 		{	
 			//CanIndex			
 			//immutable Object[] canIndexParameters = freeze({ getIntArrayClass(), getNull(), parameter, parameterMethods });
-			immutable Class[] canIndexParameters = makeClassArray(getIntArrayClass(), parameters[0]);
-			immutable MethodTable[] canIndexTables = makeMethodTableArray(getIntMethodTable(), methodTable);
+			immutable Class[] canIndexParameters = makeClassArray(long:class, parameters[0]);
+			immutable MethodTable[] canIndexTables = makeMethodTableArray(getLongMethodTable(), methodTable);
 			immutable MethodTable[] tables = makeMethodTableArray(methodTable);
 			//same parameters used for CanIndex and CanIndexStore 
 			Class base;
@@ -547,29 +548,28 @@ is  Set<Class>
 	}	
 
 	/**
-	 * Creates and adds a new array class with the name, base class, and
-	 * number of dimensions. This method assumes that 
-	 * {@code findArray} has already been called and failed to find the
-	 * matching class.  Likewise, it is assumed that this method will only
-	 * ever be called on a set containing all array classes.
+	 * Creates and adds a new array class with the name, and base class.
+	 * This method assumes that {@code findArray} has already been called 
+	 * and failed to find the matching class.  Likewise, it is assumed that
+	 * this method will only ever be called on a set containing all array
+	 * classes.
 	 * @param name name of class to add
-	 * @param base class of array base type
-	 * @param dimensions number of dimensions that the array has	 
+	 * @param base class of array base type	 	 
 	 * @return newly created array class
 	 */
-	locked public addArray(String name, Class base, int dimensions) => (Class)
+	locked public addArray(String name, Class base) => (Class)
 	{
 		immutable Class[] interfaces = getEmptyClassArray();
 		immutable MethodTable[] tables = getEmptyMethodTableArray();
 
-		Class newArray = Class:create(name, Class:ARRAY, dimensions, base, interfaces, tables);
-		(int index, int hash) = findIndex( name, table->size );		
+		Class newArray = Class:create(name, Class:ARRAY, base.arraySize(), base, interfaces, tables);
+		(long index, long hash) = findIndex( name, table->longSize );		
 		table[index] = Node:create(hash, newArray, table[index]);
-		modifications += 1;
-		size += 1;
+		modifications += 1L;
+		longSize += 1L;
 		
-		if( size > threshold )
-			resize(2 * table->size);
+		if( longSize > threshold )
+			resize(2L * table->longSize);
 			
 		return newArray;			
 	}

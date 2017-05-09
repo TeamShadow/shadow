@@ -3,29 +3,33 @@ import shadow:io;
 class shadow:test@FileTest
 {
 	public main( String[] args ) => ()
-	{
+	{	
 		if( args->size == 0 ) {
 			throw Exception:create("No file specified!");
 		}
 
 		try {
-			File file = File:create(args[0]);
 
+			File file = File:create(args[0]);
+		
 			try {	
 				file->exists = true;
-			} catch ( IOException ex ) {
+			} catch ( IOException ex ) {				
 				Console.printLine("catch ( " # ex # " )");
 			}
-
+			
 			readonly byte[] chars = "Hello World!"->chars;
 			file.write(chars);
 			file->size = file->position;
+			file.close();
 			
 			byte[] buffer = byte:create[chars->size];
 			file.read(buffer);
 			Console.printLine(String:create(buffer));
-			
 			file.close();
+			
+			file->exists = false;
+			
 		} catch ( IOException ex ) {
 			Console.printLine(ex);
 		}

@@ -7,13 +7,10 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACMethod;
-import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
-import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
@@ -23,6 +20,7 @@ import shadow.typecheck.type.TypeParameter;
  * Each TACNode is part of a circular doubly-linked list.
  *
  * @author Jacob Young
+ * @author Barry Wittman
  */
 public abstract class TACNode implements Iterable<TACOperand> {
     private TACNode prev, next; // the next and prev nodes in our circular linked list

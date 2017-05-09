@@ -40,6 +40,11 @@ public class ShadowInteger extends ShadowNumber {
 		this(BigInteger.valueOf(value), 4, true);		
 	}
 	
+	public ShadowInteger(long value)
+	{
+		this(BigInteger.valueOf(value), 8, true);		
+	}
+	
 	public static ShadowInteger parseNumber(String string) {
 		return parseNumber(string, false);
 	}

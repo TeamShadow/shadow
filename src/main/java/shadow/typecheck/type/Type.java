@@ -580,6 +580,10 @@ public abstract class Type implements Comparable<Type> {
 		this.equals(UINT) ||
 		this.equals(ULONG);
 	}
+	
+	final public boolean isImmutable() {
+		return getModifiers().isImmutable();
+	}
 
 	
 	public boolean canAccept( Type rightType, AssignmentKind assignmentType, List<ShadowException> errors ) 
@@ -1141,12 +1145,15 @@ public abstract class Type implements Comparable<Type> {
 			else if( type instanceof ArrayType ) {				
 				ArrayType arrayType = (ArrayType) type;
 				Type baseType = arrayType.getBaseType();
-				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
-					usedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues
-								
+				
 				addUsedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
 				//automatically does the right thing for NullableArray
+				//must do before adding to usedTypes
+				
+				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
+					usedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues								
+
 			}
 			else if( type instanceof MethodType ) {			
 				MethodType methodType = (MethodType)type;

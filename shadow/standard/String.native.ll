@@ -1,5 +1,12 @@
-; shadow.standard@Object native methods
+; shadow.standard@String native methods
+; 
+; Author:
+; Barry Wittman
 
+;-------------
+; Definitions
+;-------------
+; Primitives
 %boolean = type i1
 %byte = type i8
 %ubyte = type i8
@@ -12,6 +19,7 @@
 %ulong = type i64
 %float = type float
 %double = type double
+%void = type i8
 
 ; standard definitions
 %shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
@@ -28,26 +36,18 @@
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
 
-@shadow.standard..Object_class = external constant %shadow.standard..Class
-@shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
-@shadow.standard..Class_class = external constant %shadow.standard..Class
-@shadow.standard..String_methods = external constant %shadow.standard..String_methods
-@shadow.standard..String_class = external constant %shadow.standard..Class
+declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %arrayData) nounwind
 
-%shadow.io..Console = type opaque
-
-declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-
-
-define %shadow.standard..Class* @shadow.standard..Object_MgetClass(%shadow.standard..Object*) {
-	%2 = getelementptr %shadow.standard..Object, %shadow.standard..Object* %0, i32 0, i32 1
-	%3 = load %shadow.standard..Class*, %shadow.standard..Class** %2	
-	; No increment since classes are never GCed
-	ret %shadow.standard..Class* %3
-}
-
-define void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*) {
-	; Nothing to do since classes are never GCed, so no decrement of class
-    ret void
+;---------------------------
+; Shadow Method Definitions
+;---------------------------
+; Used to pretend that an array that will never be used elsewhere and cannot leak is actually immutable.
+; private native readonly virtualFreeze( byte[] data ) => ( immutable byte[] )
+define {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} @shadow.standard..String_MvirtualFreeze_byte_A(%shadow.standard..String* %string, {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} %data) alwaysinline nounwind readnone  {
+_entry:
+	%arrayData = extractvalue {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} %data, 0
+	; all return values are expected to have an "extra" reference count that will get decremented on the outside
+	%arrayDataAsObj = bitcast {%ulong, %byte}* %arrayData to {%ulong, %shadow.standard..Object*}*
+	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %arrayDataAsObj) nounwind
+	ret {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} %data
 }

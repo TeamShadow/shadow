@@ -3,7 +3,7 @@
  * to an out-of-bounds array element is attempted.  This exception is
  * also thrown for similar out-of-bounds accesses on {@code String}, 
  * {@code ArrayList}, and {@code LinkedList} and should be used for other
- * similar index-based containers with set {@code int} bounds.
+ * similar index-based containers with set {@code long} bounds.
  */
 exception shadow:standard@IndexOutOfBoundsException
 {
@@ -17,18 +17,8 @@ exception shadow:standard@IndexOutOfBoundsException
 	 * a particular out-of-bounds index.
 	 * @param index out-of-bounds index	  
 	 */
-	public create( int index )
+	public create( long index )
 	{
 		super("Index " # index);
-	}
-	
-	/**
-	 * Creates an {@code IndexOutOfBoundsException} with a message specifying
-	 * an array of out-of-bounds indices.	  
-	 * @param indices out-of-bounds indices
-	 */
-	public create( int[] indices )
-	{
-		super("Indices " # indices);
 	}
 }

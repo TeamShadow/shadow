@@ -22,7 +22,9 @@ immutable class shadow:io@Path
 				start = i + 1;
 			}
 		}
+		
 		components = freeze(String:create[count]);
+		
 		start = 0;
 		for ( int i = 0; i < path->size; i += 1 )
 		{
@@ -53,12 +55,15 @@ immutable class shadow:io@Path
 	 * @return path as a {@code String}
 	 */
 	public readonly toString() => ( String )
-	{
+	{		
 		if ( components->size == 0 )
 			return "";
+		
 		var string = MutableString:create(components[0]);
+	
 		for ( int i = 1; i < components->size; i += 1 )
 			string.append(this->separator).append(components[i]);
+		
 		return #string;
 	}
 }

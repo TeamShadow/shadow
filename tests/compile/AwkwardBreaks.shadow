@@ -1,4 +1,5 @@
 import shadow:io@Console;
+import shadow:utility@ArrayList;
 
 class AwkwardBreaks
 {
@@ -49,7 +50,19 @@ class AwkwardBreaks
 		do
 		{
 			out.printLine(number);
-		} while( false );		
+		} while( false );
+		
+		
+		var list = ArrayList<String>:create();
+		list.add("My");
+		list.add("dog");
+		list.add("has");
+		list.add("fleas"); 	
+		
+		foreach( String word in list ) {
+			out.printLine(word);
+			break;
+		}	
 		
 		
 		int value = 3;

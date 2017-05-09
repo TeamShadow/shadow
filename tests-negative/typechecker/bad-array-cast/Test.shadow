@@ -1,0 +1,21 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		Console out;
+				
+		try
+		{
+			int[] a = int:create[10];
+			Array<int> b = a;
+			Object[] c = cast<Object[]>(b);
+			out.printLine("Failed");
+		}
+		catch(CastException e)
+		{
+			out.printLine("Passed: " # e);		
+		}		
+	}
+}

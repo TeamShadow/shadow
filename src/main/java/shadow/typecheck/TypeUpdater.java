@@ -1284,8 +1284,8 @@ public class TypeUpdater extends BaseChecker {
 		Context child = (Context)ctx.getChild(0);  //either primitive type or class type
 		Type type = child.getType();		
 		
-		List<Integer> dimensions = getDimensions( ctx );		
-		if( dimensions.size() != 0 )
+		int dimensions = getDimensions( ctx );		
+		if( dimensions != 0 )
 			type = new ArrayType(type, dimensions, false);		
 		ctx.setType(type);
 		

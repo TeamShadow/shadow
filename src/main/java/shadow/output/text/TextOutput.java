@@ -245,9 +245,7 @@ public class TextOutput extends AbstractOutput
 	private void visitReference(StringBuilder sb, TACReference reference) throws ShadowException {
 		if( reference instanceof TACArrayRef ) {
 			TACArrayRef arrayRef = (TACArrayRef) reference;
-			inline.visit(inline.visit(sb, arrayRef.getArray()).append('['), arrayRef.getIndex(0));
-			for (int i = 1; i < arrayRef.getNumIndices(); i++)
-				inline.visit(sb.append(", "), arrayRef.getIndex(i));
+			inline.visit(inline.visit(sb, arrayRef.getArray()).append('['), arrayRef.getIndex());			
 			sb.append(']');
 		}
 		else if( reference instanceof TACFieldRef)
@@ -446,9 +444,7 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACNewArray node) throws ShadowException
 		{
 			sb.append(node.getType().getBaseType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).
-					append(":create[").append(node.getDimension(0));
-			for (int i = 1; i < node.getDimensions(); i++)
-				visit(sb.append(", "), node.getDimension(i));
+					append(":create[").append(node.getSize());			
 			sb.append(']');
 		}
 		

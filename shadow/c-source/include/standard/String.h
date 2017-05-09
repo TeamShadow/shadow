@@ -10,7 +10,7 @@ typedef void* shadow_String_t;
 
 typedef struct {
 	// The size of the chars array.
-	shadow_int_t size;
+	shadow_long_t size;
 	
 	// The array which contains size elements.
 	// Note: this array is not null terminated.

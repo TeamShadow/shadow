@@ -32,14 +32,14 @@
 
 ; String
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods*, {{ %ulong, %byte }*, [1 x %int] }, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*,%ulong}, %boolean }
 
 ;---------------------------
 ; Custom Method Definitions
 ;---------------------------
 ; String.c
-define {{ %ulong, %byte }*, [1 x %int] }* @_shadowString_GetDataArray(%shadow.standard..String*) {
+define {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }* @_shadowString_GetDataArray(%shadow.standard..String*) {
 entry:
 	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3	
-	ret {{ %ulong, %byte }*, [1 x %int] }* %array.addr
+	ret {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }* %array.addr
 }

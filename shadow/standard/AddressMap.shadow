@@ -16,16 +16,16 @@ import shadow:utility@NoSuchElementException;
 locked class shadow:standard@
 	AddressMap is Map<ulong, ulong>	
 {
-	private constant int DEFAULT_INITIAL_CAPACITY = 16;	
-	private constant int MAXIMUM_CAPACITY = 1 << 30;
+	private constant long DEFAULT_INITIAL_CAPACITY = 16L;	
+	private constant long MAXIMUM_CAPACITY = 1L << 30;
 	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	/** Gets current number of entries stored in the map. */
-	get int size = 0;
+	get long longSize = 0L;
 	nullable Node[] table;
 	float loadFactor;
-	int threshold;
-	int modifications = 0;
+	long threshold;
+	long modifications = 0;		
 	
 	/**
 	 * Creates an empty {@code AddressMap} with a default capacity of 16
@@ -41,8 +41,8 @@ locked class shadow:standard@
 	 * maximum load factor of 0.75. 
 	 * @param initialCapacity initial capacity of the map
 	 */
-	public create(int initialCapacity)
-	{
+	public create(long initialCapacity)
+	{	
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);
 	}
 	
@@ -52,34 +52,43 @@ locked class shadow:standard@
 	 * @param initialCapacity initial capacity of the map
 	 * @param loadFactor maximum load factor before the map is resized
 	 */
-	public create(int initialCapacity, float loadFactor)
-	{
-		int capacity = 1;
+	public create(long initialCapacity, float loadFactor)
+	{		
+		long capacity = 1L;
 		while( capacity < initialCapacity ) //powers of 2
 			capacity <<= 1;
 		table = Node:null[capacity];
 		this:loadFactor = loadFactor;
-		threshold = cast<int>(capacity * loadFactor);
+		threshold = cast<long>(capacity * loadFactor);
 	}
+	
+	/*
+	 * Retrieves the number of elements held in the map, as an {@code int}.	  
+	 * @return size
+	 */
+	public get readonly size() => (int)
+	{
+		return cast<int>( longSize );
+	}	
 	
 	/*
 	 * Resizes the map so that it can hold the new capacity, which must be a
 	 * power of 2. 
 	 * @param newCapacity new capacity of the map
 	 */
-	private resize(int newCapacity) => ()
+	private resize(long newCapacity) => ()
 	{		
-		if(table->size == MAXIMUM_CAPACITY)
+		if(table->longSize == MAXIMUM_CAPACITY)
 		{
-			threshold = int:MAX;
+			threshold = long:MAX;
 			return;
 		}
 		
 		nullable Node[] newTable = Node:null[newCapacity];
-		int index;
-		int hash;		
+		long index;
+		long hash;		
 		
-		for( int i = 0; i < table->size; i += 1 )
+		for( long i = 0; i < table->longSize; i += 1 )
 		{
 			try
 			{
@@ -96,13 +105,13 @@ locked class shadow:standard@
 		}
 		
 		table = newTable;
-		threshold = cast<int>(newCapacity * loadFactor);		
+		threshold = cast<long>(newCapacity * loadFactor);		
 	}
 	
 
 	private class Node
 	{
-		immutable get int hash;
+		immutable get long hash;
 		get ulong key;
 		get set ulong value;
 		get set nullable Node next = null;
@@ -117,12 +126,12 @@ locked class shadow:standard@
 			return next;
 		}
 
-		public create( int hash, ulong key, ulong value )
+		public create( long hash, ulong key, ulong value )
 		{
 			this(hash, key, value, null);
 		}
 		
-		public create( int hash, ulong key, ulong value, nullable Node after )
+		public create( long hash, ulong key, ulong value, nullable Node after )
 		{
 			this:hash = hash;
 			this:key = key;
@@ -137,19 +146,19 @@ locked class shadow:standard@
      */
     public readonly isEmpty() => (boolean empty)
     {
-        return size == 0;
+        return longSize == 0L;
     }	
 
 	/*
 	 * Finds the hash value and index for a given key based on the provided
 	 * length.
 	 */
-	private readonly findIndex( ulong key, int length ) => ( int index, int hash )
+	private readonly findIndex( ulong key, long length ) => ( long index, long hash )
 	{
-		uint temp = key->hash;
+		ulong temp = key->hash;
 		temp ^= (temp >> 20) ^ (temp >> 12);
-		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
-		return ( hash & (length - 1), hash );	
+		long hash = cast<long>(temp ^ (temp >> 7) ^ (temp >> 4));
+		return ( hash & (length - 1L), hash );	
 	}
 	
 	/**
@@ -160,7 +169,7 @@ locked class shadow:standard@
 	 */
 	public index( ulong key ) => ( nullable ulong value )
 	{
-		(int index, int hash) = findIndex( key, table->size );
+		(long index, long hash) = findIndex( key, table->longSize );
 		try
 		{
 			Node current = check(table[index]);
@@ -184,7 +193,7 @@ locked class shadow:standard@
 	 */
 	public index( ulong key, ulong value ) => ()
 	{
-		( int index, int hash ) = findIndex( key, table->size );
+		( long index, long hash ) = findIndex( key, table->longSize );
 		try
 		{
 			Node current = check(table[index]);
@@ -197,11 +206,11 @@ locked class shadow:standard@
 		recover //hit null before finding existing value
 		{
 			table[index] = Node:create(hash, key, value, table[index]);
-			modifications += 1;
-			size += 1;
+			modifications += 1L;
+			longSize += 1L;
 			
-			if( size > threshold )
-				resize(2 * table->size);
+			if( longSize > threshold )
+				resize(2 * table->longSize);
 		}
 	}
 
@@ -212,7 +221,7 @@ locked class shadow:standard@
 	 */
 	public remove( ulong key ) => ( nullable ulong value )
 	{	
-		( int index, int hash ) = findIndex( key, table->size );
+		( long index, long hash ) = findIndex( key, table->longSize );
 		try
 		{
 			nullable Node last = null;
@@ -227,7 +236,7 @@ locked class shadow:standard@
 			{
 				table[index] = current->next;
 			}
-			modifications += 1;
+			modifications += 1L;
 			return current->value;
 		}
 		recover
@@ -243,7 +252,7 @@ locked class shadow:standard@
 	 */
 	public readonly containsKey( ulong key ) => ( boolean found )
 	{		
-		( int index, int hash ) = findIndex( key, table->size );
+		( long index, long hash ) = findIndex( key, table->longSize );
 		try
 		{
 			Node current = check(table[index]);			
@@ -286,19 +295,19 @@ locked class shadow:standard@
 	 */
 	public clear() => ( AddressMap )
 	{
-		size = 0;
+		longSize = 0L;
 		table = Node:null[DEFAULT_INITIAL_CAPACITY];
-		threshold = cast<int>(table->size * loadFactor);
-		modifications += 1;
+		threshold = cast<long>(table->longSize * loadFactor);
+		modifications += 1L;
 		return this;
 	}
 	
 	
 	private class AddressMapIterator is Iterator<ulong>
 	{
-		int index = 0;
+		long index = 0;
 		nullable Node current;
-		int expectedModifications = modifications;
+		long expectedModifications = modifications;
 		public create()
 		{			
 			current = next(null);
@@ -311,10 +320,10 @@ locked class shadow:standard@
 			}
 			recover{}
 		
-			while( position === null and index < table->size )
+			while( position === null and index < table->longSize )
 			{			
 				position = table[index];				
-				index += 1;					
+				index += 1L;					
 			}
 			
 			return position; //returns null if nothing left			

@@ -42,8 +42,7 @@ class shadow:test@ArrayCreateTest
 		updater = Update:create();				
 		Inner[][] e = Inner:create[3][5]:(updater);
 		
-		updater = Update:create();		
-		Inner[,] f = Inner:create[3,5]:(updater);
+		updater = Update:create();
 		
 		for( int i = 0; i < a->size; i += 1 )
 			out.printLine("a[" # i # "]: " # a[i]);			
@@ -59,10 +58,6 @@ class shadow:test@ArrayCreateTest
 			
 		for( int i = 0; i < 3; i += 1 )
 			for( int j = 0; j < 5; j += 1 )
-				out.printLine("e[" # i # "][" # j # "]: " # e[i][j]->value);
-			
-		for( int i = 0; i < 3; i += 1 )
-			for( int j = 0; j < 5; j += 1 )
-				out.printLine("f[" # i # "," # j # "]: " # f[i,j]->value);			
+				out.printLine("e[" # i # "][" # j # "]: " # e[i][j]->value);		
 	}
 }

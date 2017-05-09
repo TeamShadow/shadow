@@ -4,6 +4,7 @@
 #include <Shadow.h>
 #include <io/File.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 
 // METHOD SIGNATURES //
