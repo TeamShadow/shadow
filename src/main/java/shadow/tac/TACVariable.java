@@ -100,7 +100,7 @@ public class TACVariable implements ModifiedType
 		
 		return !getOriginalName().equals("_exception") &&
 				!getOriginalName().equals("this") &&
-				!getMethod().getSignature().isCopy() &&
+				//!getMethod().getSignature().isCopy() &&
 				//!variable.getName().equals("return") &&
 				!(type instanceof PointerType) &&
 				//!(type instanceof ArrayType) &&

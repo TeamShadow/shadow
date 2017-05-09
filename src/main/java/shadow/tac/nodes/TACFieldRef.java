@@ -12,7 +12,7 @@ public class TACFieldRef extends TACReference
 	private int index;
 	private TACOperand prefix;
 	private ModifiedType type;
-	private String name;
+	private String name;		
 
 	public TACFieldRef(TACOperand fieldPrefix, String fieldName) {
 		this(fieldPrefix, fieldPrefix.getType().getField(fieldName),

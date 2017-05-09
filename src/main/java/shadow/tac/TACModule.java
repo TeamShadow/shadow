@@ -175,7 +175,7 @@ public class TACModule {
 				
 				//adds garbage collection and code that cleans up variables that need garbage collection
 				//at the end of the method
-				if( !method.getSignature().isCopy() )
+				//if( !method.getSignature().isCopy() )
 					method.addGarbageCollection();				
 				
 				ControlFlowGraph graph = new ControlFlowGraph(method);
