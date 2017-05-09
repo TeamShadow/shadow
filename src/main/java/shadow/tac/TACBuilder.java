@@ -2477,17 +2477,30 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExternWithoutBlock() ) {				
 			
 			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
-				setupNonGCMethod();				
+				setupGCMethod();				
 				ClassType type = (ClassType) methodSignature.getOuter();
-				method.addParameters(anchor); //address map called "addresses"				
+				method.addParameters(anchor); //address map called "addresses"
 				
-				if( type.getModifiers().isImmutable() ) {				
+				Context context = anchor.getContext();
+				anchor.setContext(null);
+				
+				if( type.getModifiers().isImmutable() ) {
+					new TACLocalStore(anchor, method.getLocal("return"), new TACLocalLoad(
+							anchor, method.getThis()));					
+					
+					visitCleanup(null, null);
+					
 					//for now, just return this
 					//after incrementing reference count
-					if( !type.isPrimitive() )
-						new TACChangeReferenceCount(anchor, method.getThis(), true);
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(
-							anchor, method.getThis()));
+					//if( !type.isPrimitive() )
+						//new TACChangeReferenceCount(anchor, method.getThis(), true);
+					
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
+					
+					anchor.setContext(context);
+					
+					new TACLabel(method).insertBefore(anchor); //unreachable label
+					
 				}			
 				else {					
 					TACOperand this_ = new TACLocalLoad(anchor, method.getThis());
@@ -2638,50 +2651,70 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 								}
 							}
 						}
-					}					
+					}
 					
 					
-					//No GC for a duplicated object, since it's "born" with a ref count of 1					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), duplicate);
+					new TACLocalStore(anchor, method.getLocal("return"), duplicate);					
 					
+					visitCleanup(null, null);
+					
+					//for now, just return this
+					//after incrementing reference count
+					//if( !type.isPrimitive() )
+						//new TACChangeReferenceCount(anchor, method.getThis(), true);
+					
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
+					
+					new TACLabel(method).insertBefore(anchor); //unreachable label
+
 					returnLabel.insertBefore(anchor);
 					
 					indexMethod = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("index", new SequenceType(Type.ULONG)) );
 					TACOperand index = new TACCall(anchor, indexMethod, map, address );
 					TACOperand existingObject = new TACLongToPointer(anchor, index, new SimpleModifiedType(type));
 					
-					//storage is used to add a reference for GC (since this is a non-GC method, it's never decremented)					
-					TACVariable variable = method.addTempLocal(duplicate);
-					new TACLocalStore(anchor, variable, existingObject );					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), existingObject);					
+					
+					new TACLocalStore(anchor, method.getLocal("return"), existingObject);					
+					
+					visitCleanup(null, null);					
+					
+					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
+										
+					new TACLabel(method).insertBefore(anchor); //unreachable label
 				}
 				
-				cleanupNonGCMethod();
+				cleanupGCMethod();
 				
 			}
 			//Gets and sets that were created by default (that's why they have a null parent)
 			else if( methodSignature.getNode().getParent() == null && (methodSignature.isGet() || methodSignature.isSet() )) { 			
-				setupNonGCMethod();		
+				setupGCMethod();		
 				
 				method.addParameters(anchor);
 				TACFieldRef field = new TACFieldRef(new TACLocalLoad(
 						anchor, method.getThis()), methodSignature.getSymbol());
 				if (methodSignature.isGet()) {
-					TACLoad load = new TACLoad(anchor, field); 
-					//add a reference count since whoever is getting this element expects it to go up by one 									
-					if( field.needsGarbageCollection() )
-						new TACChangeReferenceCount(anchor, field, true);
+					TACLoad load = new TACLoad(anchor, field);
+					new TACLocalStore(anchor, method.getLocal("return"), load);
+					
+					visitCleanup(null, null);	
+					
 					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(),	load);
+					new TACLabel(method).insertBefore(anchor); //unreachable label
 				}
 				else if (methodSignature.isSet()) {
 					TACVariable value = null;
 					for (TACVariable parameter : method.getParameters())
 						value = parameter;
 					new TACStore(anchor, field, new TACLocalLoad(anchor, value));
+					
+					visitCleanup(null, null);	
+					
 					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
+					new TACLabel(method).insertBefore(anchor); //unreachable label
 				}				
 				
-				cleanupNonGCMethod();		
+				cleanupGCMethod();		
 			}		
 			else if (methodSignature.isWrapper()) {
 				setupGCMethod();				
