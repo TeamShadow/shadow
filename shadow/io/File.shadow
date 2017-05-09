@@ -34,9 +34,6 @@ and CanClose
 	public create( Path path )
 	{
 		this:path = path;
-		
-		var mess1 = MutableString:create();
-		var mess2 = MutableString:create();
 	}
 	
 	/**

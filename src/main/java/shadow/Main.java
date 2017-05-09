@@ -223,25 +223,9 @@ public class Main {
 				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 				String line = main.readLine();				
-				final OutputStream out = new OutputStream() {
-					final OutputStream stream = link.getOutputStream();
-					final OutputStream file = new FileOutputStream(new File("Main.out.ll"));
-
-					@Override
-					public void write(int b) throws IOException {
-						stream.write(b);
-						file.write(b);
-					}
-					
-					@Override
-					public void write(byte[] bytes) throws IOException {
-						stream.write(bytes);
-						file.write(bytes);
-					}
-				};
+				final OutputStream out = link.getOutputStream();
+				
 				while (line != null) {
-					
-					
 					if(line.contains(";_INITIALIZE_CLASS_SETS_")) {						 
 						//add in all externally declared generics
 						LLVMOutput.addGenerics("%genericSet", generics, false, out);
