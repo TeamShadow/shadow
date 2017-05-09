@@ -56,11 +56,11 @@ declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
 declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
 
 
-;%shadow.io..Console = type opaque
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+%shadow.io..Console = type opaque
+declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
+declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 
 define %int @shadow.standard..Class_MarraySize(%shadow.standard..Class*) alwaysinline nounwind readnone {
@@ -74,7 +74,7 @@ define %int @shadow.standard..Class_MpointerSize(%shadow.standard..Class*) alway
 }
 
 
-define void @__decrementRef(%shadow.standard..Object* %object) nounwind {	
+define void @__decrementRef(%shadow.standard..Object* %object) nounwind {
 	%isNull = icmp eq %shadow.standard..Object* %object, null
 	br i1 %isNull, label %_exit, label %_check
 _check:
@@ -97,8 +97,20 @@ _freeLabel:
     %destroyRef = getelementptr inbounds %shadow.standard..Object_methods, %shadow.standard..Object_methods* %methods, i32 0, i32 1
     %destroy = load void (%shadow.standard..Object*)*, void (%shadow.standard..Object*)** %destroyRef
 
+
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 4444)
+
     call void %destroy(%shadow.standard..Object* %object)
 	
+	%classRef = getelementptr %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 1
+	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
+	%classAsObj = bitcast %shadow.standard..Class* %class to %shadow.standard..Object*
+	
+
+	call %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %classAsObj)
+
+	
+
 	; free	
 	%address = bitcast %shadow.standard..Object* %object to i8*
 	tail call void @free(i8* %address) nounwind
@@ -167,6 +179,7 @@ _checkLength:
 _getClass:		
 	; here's where things change from objects
 	%base = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 1	
+	%classAsObj = bitcast %shadow.standard..Class* %base to %shadow.standard..Object*
 	%flagRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %base, i32 0, i32 7	
 	%flag = load i32, i32* %flagRef
 	%primitiveFlag = and i32 %flag, 2	
@@ -230,9 +243,22 @@ _interfaceLoop:
 	br i1 %check.i8, label %_interfaceLoop, label %_freeArray
 
 _freeArray:	
+	%base1 = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array, 1	
+	%classAsObj1 = bitcast %shadow.standard..Class* %base1 to %shadow.standard..Object*
+	
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 6666)
+
+	%intSize = trunc i64 %size to i32
+
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %intSize)
+
+	call %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %classAsObj1)
+
+	
+
 	%address = bitcast %ulong* %countRef to i8*
-	tail call void @free(i8* %address) nounwind			
+	tail call void @free(i8* %address) nounwind		
 	ret void
-_exit:			
+_exit:	
 	ret void
 }

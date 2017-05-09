@@ -1,0 +1,19 @@
+import shadow:io@Console;
+
+class shadow:test@FreezeImmutableTest
+{
+	public main( String[] args ) => ()
+	{	
+		Console out;
+		String value1 = "Hello.";
+		
+		String value2 = repeat(value1);
+		
+		out.printLine(value2);
+	}
+	
+	private repeat(String value) => (String)
+	{
+		return freeze(value);	
+	}
+}

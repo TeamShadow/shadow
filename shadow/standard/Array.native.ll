@@ -85,10 +85,10 @@ declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow
 
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 
-declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
+;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 define %shadow.standard..Array* @shadow.standard..Array_Mcreate_shadow.standard..Object_A(%shadow.standard..Object* %object, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data) {
 	call %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object* %object)   
@@ -173,6 +173,10 @@ define %shadow.standard..Object* @shadow.standard..Array_Mindex_long(%shadow.sta
 	%methodTable = load %shadow.standard..MethodTable*, %shadow.standard..MethodTable** %methodTableRef
 	
 	%result = call %shadow.standard..Object* @__arrayLoad({%ulong, %shadow.standard..Object*}* %array, %ulong %index, %shadow.standard..Class* %baseClass, %shadow.standard..MethodTable* %methodTable, %boolean false)
+
+	; increment ref by one (since all methods up their return value by 1)
+	call void @__incrementRef(%shadow.standard..Object* %result) nounwind
+
 	ret %shadow.standard..Object* %result
 }
 
@@ -287,7 +291,6 @@ define void @shadow.standard..Array_Mindex_long_T(%shadow.standard..Array*, %ulo
 	%data = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %dataRef	
 	%array = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data, 0	
 	%baseClass = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %data, 1
-	
 	call void @__arrayStore({%ulong, %shadow.standard..Object*}* %array, %ulong %1, %shadow.standard..Object* %2, %shadow.standard..Class* %baseClass)
 	ret void
 }

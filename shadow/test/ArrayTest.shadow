@@ -12,13 +12,14 @@ class shadow:test@ArrayTest
 		array.index(3, 88);		
 		array.index(4, Object:create());		
 		Console.printLine(array);		
-		Array<Object> array3 = array.subarray(1, 4);		
+		Array<Object> array2 = array.subarray(1, 4);
+		Console.printLine(array2);		
 		for ( int i = 0; i < array->size; i += 1 )
 			array.index(i, i);			
-		array3.index(0, "zero");		
-		array3.index(1, "one");		
-		array3.index(2, "two");				
+		array2.index(0, "zero");		
+		array2.index(1, "one");		
+		array2.index(2, "two");				
 		Console.printLine(array);
-		Console.printLine(array3);
+		Console.printLine(array2);
 	}
 }

@@ -217,7 +217,8 @@ public class TACModule {
 				
 				//graph.addGarbageCollection();
 				method.removeUndefinedStores();
-				method.addAllocations();
+				if( method.isGarbageCollected() )
+					method.addAllocations();
 				
 				graphs.add(graph);
 			}

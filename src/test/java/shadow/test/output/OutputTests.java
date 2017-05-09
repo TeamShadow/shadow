@@ -3,6 +3,7 @@ package shadow.test.output;
 import static junit.framework.Assert.assertEquals;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -234,6 +235,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"[0, 2, four, 88, shadow:standard@Object]\n" + 
+				"[2, four, 88]\n" + 
 				"[0, 1, 2, 3, 4]\n" + 
 				"[zero, one, two]\n");			
 	}
@@ -1125,6 +1127,23 @@ public class OutputTests {
 				"true\n" +
 				"true\n" +
 				"true\n");
+	}
+	
+	@Test public void testFreezeImmutable() throws Exception {
+		args.add("shadow/test/FreezeImmutableTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Hello.\n");
+	}
+	
+	
+	@Test public void testPath() throws Exception {
+		args.add("shadow/test/PathTest.shadow");
+		
+		String path = "www" + File.separatorChar + "data" + File.separatorChar + "file.txt";
+		
+		Main.run(args.toArray(new String[] { }));
+		run(new String[] { path }, path + "\n");
 	}
 	
 	@Test public void testFile() throws Exception {

@@ -580,6 +580,10 @@ public abstract class Type implements Comparable<Type> {
 		this.equals(UINT) ||
 		this.equals(ULONG);
 	}
+	
+	final public boolean isImmutable() {
+		return getModifiers().isImmutable();
+	}
 
 	
 	public boolean canAccept( Type rightType, AssignmentKind assignmentType, List<ShadowException> errors ) 

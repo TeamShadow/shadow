@@ -1,0 +1,17 @@
+import shadow:io;
+
+class shadow:test@PathTest
+{
+	public main( String[] args ) => ()
+	{	
+			
+		Path path = Path:create(args[0]); 
+	
+		//File file = File:create(path);
+		
+		//Console.printLine(#path);
+		
+		String s = #path;
+			
+	}
+}

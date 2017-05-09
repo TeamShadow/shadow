@@ -101,11 +101,11 @@ declare void @free(i8*) nounwind
 declare void @abort() noreturn nounwind
 declare void @exit(i32) noreturn nounwind
 
-;%shadow.io..Console = type opaque
+%shadow.io..Console = type opaque
 ;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
 
 @shadow.exception.class = private unnamed_addr constant [8 x i8] c"Shadow\00\00", align 8
 define private void @shadow.exception.cleanup(%_Unwind_Reason_Code, %struct._Unwind_Exception*) {
@@ -514,10 +514,21 @@ entry:
 }
 
 define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods) {	
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 911)
 	%sizeRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 8
 	%size = load %uint, %uint* %sizeRef	
+
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %size)
+	%classAsObj = bitcast %shadow.standard..Class* %class to %shadow.standard..Object*
+	call %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %classAsObj)
 	%sizeLong = zext %uint %size to %ulong
+
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 444)
+
 	%memory = call noalias i8* @calloc(%ulong 1, %ulong %sizeLong) nounwind
+	
+	
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 555)
 	%isNull = icmp eq i8* %memory, null
 	br i1 %isNull, label %_outOfMemory, label %_success
 _outOfMemory: 

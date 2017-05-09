@@ -3,7 +3,6 @@ package shadow.tac.nodes;
 import shadow.ShadowException;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
-import shadow.typecheck.type.ArrayType;
 
 public class TACChangeReferenceCount extends TACNode {
 

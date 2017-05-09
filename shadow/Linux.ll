@@ -48,7 +48,8 @@
 %shadow.io..File_methods = type opaque
 %shadow.io..File = type { %ulong, %shadow.standard..Class*, %shadow.io..File_methods* , %long, %shadow.io..Path* }
 %shadow.io..Path_methods = type { %shadow.io..Path* (%shadow.io..Path*, %shadow.standard..AddressMap*)*, void (%shadow.io..Path*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..Path*)*, %code (%shadow.io..Path*)* }
-%shadow.io..Path = type { %ulong, %shadow.standard..Class*, %shadow.io..Path_methods* , {{%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } }
+%shadow.io..Path = type { %ulong, %shadow.standard..Class*, %shadow.io..Path_methods* , {{%ulong, %shadow.standard..String*}*, %shadow.standard..Class*,%ulong} }
+
 %shadow.standard..System = type opaque
 %shadow.io..Console = type opaque
 
@@ -58,11 +59,16 @@ declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standar
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %ulong %elements)
 
+declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+
 declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
-declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
+declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
 
-declare noalias i8* @malloc(i32) nounwind
+; saying that malloc takes an i1* is a hack to avoid having separate 32- and 64-bit code
+; pointer size matches architecture size and also size_t
+declare noalias i8* @malloc(i8*) nounwind
 declare void @free(i8*) nounwind
 
 declare i32* @__errno_location() nounwind readnone
@@ -107,60 +113,83 @@ define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
 }
 
 declare void @shadow.io..File_Mclose(%shadow.io..File*)
-define private i8* @filepath(%shadow.io..File*) {
-	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 4
-	%3 = load %shadow.io..Path*, %shadow.io..Path** %2
-	%4 = getelementptr %shadow.io..Path, %shadow.io..Path* %3, i32 0, i32 2
-	%5 = load %shadow.io..Path_methods*, %shadow.io..Path_methods** %4
-	%6 = getelementptr %shadow.io..Path_methods, %shadow.io..Path_methods* %5, i32 0, i32 3
-	%7 = load %shadow.standard..String* (%shadow.io..Path*)*, %shadow.standard..String* (%shadow.io..Path*)** %6
-	%8 = tail call %shadow.standard..String* %7(%shadow.io..Path* %3)
-	%9 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 0
-	%10 = load {%ulong, i8}*, {%ulong, i8}** %9
-	%11 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %10, i32 0, i32 1	
-	%12 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 2
-	%13 = load i64, i64* %12
-	%14 = trunc i64 %13 to i32
-	%15 = add nuw i32 %14, 1	
-	%16 = tail call noalias i8* @malloc(i32 %15)
-	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %16, i8* %11, i32 %14, i32 1, i1 0)
-	%17 = getelementptr inbounds i8, i8* %16, i32 %14
-	store i8 0, i8* %17
-	ret i8* %16
+
+define private i8* @filepath(%shadow.io..File* %file) {
+	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 8888888)
+	%pathRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 4
+	%path = load %shadow.io..Path*, %shadow.io..Path** %pathRef
+
+	%classRef = getelementptr %shadow.io..Path, %shadow.io..Path* %path, i32 0, i32 1
+	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
+	%classAsObj = bitcast %shadow.standard..Class* %class to %shadow.standard..Object*
+
+
+	call %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %classAsObj)
+
+	%methodsRef = getelementptr %shadow.io..Path, %shadow.io..Path* %path, i32 0, i32 2
+	%methods = load %shadow.io..Path_methods*, %shadow.io..Path_methods** %methodsRef
+	%toStringRef = getelementptr %shadow.io..Path_methods, %shadow.io..Path_methods* %methods, i32 0, i32 3
+	%toString = load %shadow.standard..String* (%shadow.io..Path*)*, %shadow.standard..String* (%shadow.io..Path*)** %toStringRef
+	%string = call %shadow.standard..String* %toString(%shadow.io..Path* %path)
+	%dataRef = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %string, i32 0, i32 3, i32 0
+	%data = load {%ulong, i8}*, {%ulong, i8}** %dataRef
+	%bytes = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %data, i32 0, i32 1	
+	%sizeRef = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %string, i32 0, i32 3, i32 2
+	%size = load i64, i64* %sizeRef
+	%sizeWithNull = add nuw i64 %size, 1
+	%sizeHack = inttoptr i64 %size to i8*	
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 2)
+	%cstring = call noalias i8* @malloc(i8* %sizeHack)
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 3)
+	call void @llvm.memcpy.p0i8.p0i8.i64(i8* %cstring, i8* %bytes, i64 %size, i32 1, i1 0)
+	%nullRef = getelementptr inbounds i8, i8* %cstring, i64 %size
+	store i8 0, i8* %nullRef
+	ret i8* %cstring
 }
 
-define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
-	tail call void @shadow.io..File_Mclose(%shadow.io..File* %0)
-	%3 = tail call i8* @filepath(%shadow.io..File* %0)
-	br i1 %1, label %4, label %10
-	%5 = tail call i32 (i8*, i32, ...) @open(i8* %3, i32 193, i32 420)
-	tail call void @free(i8* %3)
-	%6 = icmp sge i32 %5, 0
-	br i1 %6, label %7, label %14
-	%8 = sext i32 %5 to i64
-	%9 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
-	store i64 %8, i64* %9
+
+define void @shadow.io..File_Mexists_boolean(%shadow.io..File* %file, i1 %createOrDelete) {
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 411)
+	call void @shadow.io..File_Mclose(%shadow.io..File* %file)
+	%path = call i8* @filepath(%shadow.io..File* %file)
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 555)
+	br i1 %createOrDelete, label %_create, label %_delete
+_create:
+	%descriptor = call i32 (i8*, i32, ...) @open(i8* %path, i32 193, i32 420)
+	call void @free(i8* %path)
+	%validCreate = icmp sge i32 %descriptor, 0
+	br i1 %validCreate, label %_createSuccess, label %_error
+_createSuccess:
+	%longDescriptor = zext i32 %descriptor to i64
+	%handleRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
+	store i64 %longDescriptor, i64* %handleRef
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 111)
 	ret void
-	%11 = tail call i32 @unlink(i8* %3)
-	tail call void @free(i8* %3)
-	%12 = icmp sge i32 %11, 0
-	br i1 %12, label %13, label %14
+_delete:
+	%unlinkCode = call i32 @unlink(i8* %path)
+	call void @free(i8* %path)
+	%validDelete = icmp sge i32 %unlinkCode, 0
+	br i1 %validDelete, label %_deleteSuccess, label %_error
+_deleteSuccess:
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 222)
 	ret void
-	tail call void @throwIOException() noreturn
+_error:
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 666)
+	call void @throwIOException() noreturn
 	unreachable
 }
 define i64 @shadow.io..File_Mposition(%shadow.io..File*) {
 	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
 	%3 = load i64, i64* %2
 	%4 = trunc i64 %3 to i32
-	%5 = tail call i64 @lseek64(i32 %4, i64 0, i32 1)
+	%5 = call i64 @lseek64(i32 %4, i64 0, i32 1)
 	%6 = icmp sge i64 %5, 0
 	br i1 %6, label %7, label %8
 	ret i64 %5
 	%9 = icmp slt i64 %3, 0
 	br i1 %9, label %10, label %11
 	ret i64 0
-	tail call void @throwIOException() noreturn
+	call void @throwIOException() noreturn
 	unreachable
 }
 define void @shadow.io..File_Mposition_long(%shadow.io..File*, i64) {

@@ -2323,8 +2323,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				if( type.isPrimitive() ) {
 					TACMethodRef width = new TACMethodRef(anchor, Type.CLASS.getMatchingMethod("width", new SequenceType()) );
 					TACOperand size = new TACBinary(anchor, new TACCall(anchor, width, class_.getClassData()), Type.LONG.getMatchingMethod("multiply", new SequenceType(Type.LONG)), "*", length);
-					new TACCopyMemory(anchor, new TACLocalLoad(anchor, copiedArray), oldArray, size);					
-					new TACBranch(anchor, terminate);		
+					new TACCopyMemory(anchor, new TACLocalLoad(anchor, copiedArray), oldArray, size);
+					new TACBranch(anchor, terminate);
 				}
 				else {					
 					counters[i] = method.addTempLocal(new SimpleModifiedType(Type.LONG));
@@ -3061,9 +3061,22 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		Type type = ctx.getType();
 		
 		if( !type.getModifiers().isImmutable() ) { //if immutable, do nothing, the old one is fine
-			TACNewObject object = new TACNewObject(anchor, Type.ADDRESS_MAP );
-			TACMethodRef create = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("create", new SequenceType()) );
-			TACOperand map = new TACCall(anchor, create, object);
+
+			TACNewObject object = null;
+			TACMethodRef create = null;
+			TACOperand map = null;
+			
+			//Optimization: If copying an array whose most base type is immutable, don't bother to make an AddressMap
+			if(  type instanceof ArrayType && ((ArrayType)type).recursivelyGetBaseType().isImmutable() ) {
+				//immutable types still call copy() and take an AddressMap, but they don't use the value
+				if( !((ArrayType)type).recursivelyGetBaseType().isPrimitive() )
+					map = new TACLiteral(anchor, new ShadowNull(Type.ADDRESS_MAP));
+			}
+			else {
+				object = new TACNewObject(anchor, Type.ADDRESS_MAP );
+				create = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("create", new SequenceType()) );
+				map = new TACCall(anchor, create, object);
+			}			
 			
 			if( type instanceof ArrayType )
 				prefix = copyArray(value, map);			
