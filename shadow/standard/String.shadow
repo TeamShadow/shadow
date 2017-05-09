@@ -1,5 +1,3 @@
-import shadow:io;
-
 /**
  * Class {@code String} holds arbitrary-length sequences of UTF-8 code points
  * stored in a fixed-size array of {@code byte} values.
@@ -214,11 +212,8 @@ and	CanHash
 	 * @return substring
 	 */
 	public substring( int start ) => ( String )
-	{
-		Console.printLine("Call other substring");
-		String s = substring(start, this->size);
-		Console.printLine("Done with other substring");
-		return s;
+	{		
+		return substring(start, this->size);
 	}
 	
 	/**

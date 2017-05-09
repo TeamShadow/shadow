@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 /**
  * Class {@code MutableString} holds arbitrary-length
  * sequences of UTF-8 code points stored in a dynamic array of {@code byte}
@@ -290,22 +288,12 @@ and CanHash
 	 */
 	public readonly toString() => ( String )
 	{	
-		String thing1 = String:create();
-		Console.printLine("To string started");
 		byte[] bytes = data;
 
-		if( data->size != size ) {
-			Console.printLine("Resize with subarray");
-			bytes = data.subarray(0, size);
-		}
+		if( data->size != size )			
+			bytes = data.subarray(0, size);		
 		
-		Console.printLine("Create string");
-		Console.printLine(Object:create());		
-		String thing = String:create();
-		Console.printLine(thing);
-		String result = String:create(bytes);
-		Console.printLine("Return new string");
-		return result; 
+		return String:create(bytes);
 	}
 	
 	/**

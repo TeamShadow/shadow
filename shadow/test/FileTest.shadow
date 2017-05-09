@@ -9,28 +9,17 @@ class shadow:test@FileTest
 		}
 
 		try {
-		
-			var mess1 = MutableString:create();
-			var mess2 = MutableString:create();
-			var mess3 = MutableString:create();
-			
-		
+
 			File file = File:create(args[0]);
-			Console.printLine("Create done!");
-			
 		
 			try {	
 				file->exists = true;
-			} catch ( IOException ex ) {
-				Console.printLine("Exception!");
+			} catch ( IOException ex ) {				
 				Console.printLine("catch ( " # ex # " )");
 			}
 			
-			Console.printLine("Made file exist!");
-
 			readonly byte[] chars = "Hello World!"->chars;
 			file.write(chars);
-			Console.printLine("Wrote!");
 			file->size = file->position;
 			file.close();
 			

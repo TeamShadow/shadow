@@ -22,11 +22,9 @@ immutable class shadow:io@Path
 				start = i + 1;
 			}
 		}
-		Console.printLine("Before freeze");
-		components = freeze(String:create[count]);
-		Console.printLine("After freeze");
 		
-
+		components = freeze(String:create[count]);
+		
 		start = 0;
 		for ( int i = 0; i < path->size; i += 1 )
 		{
@@ -34,9 +32,7 @@ immutable class shadow:io@Path
 			{
 				if ( i != start )
 				{
-					String part = path.substring(start, i);
-					Console.printLine(part);
-					components[index] = part;
+					components[index] = path.substring(start, i);
 					index += 1;
 				}
 				start = i + 1;
@@ -44,9 +40,6 @@ immutable class shadow:io@Path
 		}
 		if ( index != count )		
 			components[index] = path.substring(start);
-
-		Console.printLine("End of path create");
-
 	}
 	
 	/**
@@ -62,30 +55,15 @@ immutable class shadow:io@Path
 	 * @return path as a {@code String}
 	 */
 	public readonly toString() => ( String )
-	{
-		
-	
-		Console.printLine("start path to string");
-		
-		
+	{		
 		if ( components->size == 0 )
 			return "";
-		Console.printLine("Make mutable string");
-		Console.printLine(Object:create());
 		
 		var string = MutableString:create(components[0]);
-		Console.printLine("start loop");
-		
-		Console.debugPrint(string->size);
-		for ( int i = 1; i < components->size; i += 1 ) {
-			Console.printLine("iterate");
+	
+		for ( int i = 1; i < components->size; i += 1 )
 			string.append(this->separator).append(components[i]);
-		}
-		Console.printLine("do to string");
-		Console.printLine(Object:create());
 		
-		String output = #string;
-		Console.printLine("return result");
-		return output;
+		return #string;
 	}
 }

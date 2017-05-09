@@ -59,8 +59,8 @@ declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standar
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %ulong %elements)
 
-declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
-declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
 
 declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
@@ -115,17 +115,8 @@ define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
 declare void @shadow.io..File_Mclose(%shadow.io..File*)
 
 define private i8* @filepath(%shadow.io..File* %file) {
-	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 8888888)
 	%pathRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 4
 	%path = load %shadow.io..Path*, %shadow.io..Path** %pathRef
-
-	%classRef = getelementptr %shadow.io..Path, %shadow.io..Path* %path, i32 0, i32 1
-	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
-	%classAsObj = bitcast %shadow.standard..Class* %class to %shadow.standard..Object*
-
-
-	call %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %classAsObj)
-
 	%methodsRef = getelementptr %shadow.io..Path, %shadow.io..Path* %path, i32 0, i32 2
 	%methods = load %shadow.io..Path_methods*, %shadow.io..Path_methods** %methodsRef
 	%toStringRef = getelementptr %shadow.io..Path_methods, %shadow.io..Path_methods* %methods, i32 0, i32 3
@@ -138,9 +129,7 @@ define private i8* @filepath(%shadow.io..File* %file) {
 	%size = load i64, i64* %sizeRef
 	%sizeWithNull = add nuw i64 %size, 1
 	%sizeHack = inttoptr i64 %size to i8*	
-	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 2)
 	%cstring = call noalias i8* @malloc(i8* %sizeHack)
-	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 3)
 	call void @llvm.memcpy.p0i8.p0i8.i64(i8* %cstring, i8* %bytes, i64 %size, i32 1, i1 0)
 	%nullRef = getelementptr inbounds i8, i8* %cstring, i64 %size
 	store i8 0, i8* %nullRef
@@ -149,10 +138,8 @@ define private i8* @filepath(%shadow.io..File* %file) {
 
 
 define void @shadow.io..File_Mexists_boolean(%shadow.io..File* %file, i1 %createOrDelete) {
-	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 411)
 	call void @shadow.io..File_Mclose(%shadow.io..File* %file)
 	%path = call i8* @filepath(%shadow.io..File* %file)
-	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 555)
 	br i1 %createOrDelete, label %_create, label %_delete
 _create:
 	%descriptor = call i32 (i8*, i32, ...) @open(i8* %path, i32 193, i32 420)
@@ -163,7 +150,6 @@ _createSuccess:
 	%longDescriptor = zext i32 %descriptor to i64
 	%handleRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
 	store i64 %longDescriptor, i64* %handleRef
-	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 111)
 	ret void
 _delete:
 	%unlinkCode = call i32 @unlink(i8* %path)
@@ -171,10 +157,8 @@ _delete:
 	%validDelete = icmp sge i32 %unlinkCode, 0
 	br i1 %validDelete, label %_deleteSuccess, label %_error
 _deleteSuccess:
-	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 222)
 	ret void
 _error:
-	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 666)
 	call void @throwIOException() noreturn
 	unreachable
 }

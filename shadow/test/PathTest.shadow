@@ -6,12 +6,7 @@ class shadow:test@PathTest
 	{	
 			
 		Path path = Path:create(args[0]); 
-	
-		//File file = File:create(path);
-		
-		//Console.printLine(#path);
-		
-		String s = #path;
-			
+
+		Console.printLine(#path);
 	}
 }
