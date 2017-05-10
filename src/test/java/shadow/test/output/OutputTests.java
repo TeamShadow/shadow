@@ -33,6 +33,11 @@ public class OutputTests {
 		args.add("-o");
 		args.add(executableName);
 		
+		System.out.println("Working Directory = " +
+	              System.getProperty("user.dir"));
+		
+		
+		
 		String os = System.getProperty("os.name").toLowerCase();
 		
 		args.add("-c");

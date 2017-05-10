@@ -50,8 +50,7 @@ public class TACMethod
 	private boolean landingpad;
 	private int labelCounter = 0;		//counter to keep label numbering unique
 	private int variableCounter = 0;	//counter to keep variable number unique
-	private TACNode node;
-	private boolean garbageCollected;
+	private TACNode node;	
 	
 	public TACMethod(MethodSignature methodSignature)
 	{
@@ -62,15 +61,7 @@ public class TACMethod
 		landingpad = false;			
 		enterScope();		
 	}
-	
-	public boolean isGarbageCollected() {
-		return garbageCollected;
-	}
-	
-	public void setGarbageCollected(boolean value) {
-		garbageCollected = value;
-	}
-	
+
 	public TACNode getNode()
 	{
 		return node;		
@@ -150,102 +141,13 @@ public class TACMethod
 	
 
     private void addCleanup(Set<TACVariable> storedVariables) {
-		//for( Block block : this )
-			//block.addGarbageCollection();
-				
-		//find variables that need garbage collection
-    	/*
-		List<TACVariable> cleanupVariables = new ArrayList<TACVariable>();
-		for( TACVariable variable : storedVariables )
-			if( variable.needsGarbageCollection() )
-				cleanupVariables.add(variable);
-		
-		if( cleanupVariables.size() > 0 ) {
-			//insert allocations of variables in root block
-			//right before instruction after starting label
-			TACNode next = getNode().getNext();			
-			for( TACVariable variable : cleanupVariables )
-				new TACAllocateVariable( next, variable );
+		TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
 			
-			//method has been created with built in "finally"
-		*/	
-			/*
-			
-			//create block with cleanup stuff (to decrement reference counts)
-			TACLabel cleanupLabel = new TACLabel(method);
-			//thing before root's label is actually the last instruction in the method
-			cleanupLabel.insertAfter(root.getLabel().getPrevious());
-			
-			//add phi for indirect branching
-			TACPhi phi = new TACPhi(root.getLabel(), method.addTempLocal(new SimpleModifiedType(new PointerType())));
-			*/
-    	
-    		TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
-				
-			//add each decrement before the first thing, making it the new last thing
-			for( TACVariable variable : storedVariables )	
-				//return doesn't get cleaned up, so that it has an extra reference count
-				if( !variable.isReturn() )				
-					new TACChangeReferenceCount(last, variable, false);			
-			
-			
-			/*
-			
-			new TACBranch(root.getLabel(), phi);
-			//blocks are all messed up now
-			//nodeBlocks.put(cleanupLabel, block);
-			
-			//loop through and add branches to cleanup block
-			TACLabel label = root.getLabel();
-			TACNode current = label;
-			
-			while( current !=  cleanupLabel ) {
-				if( current instanceof TACLabel )
-					label = (TACLabel)current;
-				else if( current instanceof TACResume ) {
-					//branch to the cleanup label 
-					new TACBranch(current, cleanupLabel);
-					TACLabel backLabel = new TACLabel(method);
-					backLabel.insertBefore(current);
-					phi.addPreviousStore(label, new TACLabelAddress(phi, backLabel, method) );					
-				}
-				else if( current instanceof TACReturn ) {					
-					//increment reference counts on return values so that they don't disappear
-					//when the function returns
-					TACReturn return_ = (TACReturn) current;
-					TACOperand value = return_.getReturnValue();
-					if( value instanceof TACSequence ) {
-						TACSequence sequence = (TACSequence) value;
-						for( TACOperand operand : sequence.getOperands() )
-							incrementReference(current, operand);
-					}
-					else
-						incrementReference(current, value);
-					new TACBranch(current, cleanupLabel);
-					TACLabel backLabel = new TACLabel(method);
-					backLabel.insertBefore(current);
-					phi.addPreviousStore(label, new TACLabelAddress(phi, backLabel, method) );
-				}
-				
-				current = current.getNext();
-			}
-			
-			
-		
-		}
-		*/
-		
-		//adding in reference count changes can introduce new variable loads
-		//thus, it is necessary to update the variable stores, loads, and phis
-		//then, it's necessary to propagate constants again
-		//it can also add new labels, requiring a label rebuild
-		/*
-		nodeBlocks.clear();
-		createBlocks(method, false);
-		addEdges();		
-		addPhiNodes();
-		propagateConstants();
-		*/
+		//add each decrement before the first thing, making it the new last thing
+		for( TACVariable variable : storedVariables )	
+			//return doesn't get cleaned up, so that it has an extra reference count
+			if( !variable.isReturn() )				
+				new TACChangeReferenceCount(last, variable, false);
 	}
     
     void checkStoreAgainstParameters(TACLocalStore newStore, Map<TACVariable, TACLocalStore> parameterStores) {
@@ -264,8 +166,7 @@ public class TACMethod
     	}   	
     }
     
-    void addGarbageCollection() {
-    	
+    void addGarbageCollection() {    	
     	//only stored variables needed to have their reference counts decremented at the end of the method
     	Set<TACVariable> storedVariables = new HashSet<TACVariable>();
     	
@@ -395,8 +296,8 @@ public class TACMethod
 				node = node.getNext();
 			}
 		}
-		if( garbageCollected )
-			addCleanup(storedVariables);
+		
+		addCleanup(storedVariables);
 	}
     
 	

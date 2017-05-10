@@ -175,8 +175,7 @@ public class TACModule {
 				
 				//adds garbage collection and code that cleans up variables that need garbage collection
 				//at the end of the method
-				//if( !method.getSignature().isCopy() )
-					method.addGarbageCollection();				
+				method.addGarbageCollection();				
 				
 				ControlFlowGraph graph = new ControlFlowGraph(method);
 				
@@ -213,12 +212,10 @@ public class TACModule {
 					changed = graph.removeUnreachableCode();					
 					if( changed )
 						changed = graph.propagateConstants();
-				}
-				
-				//graph.addGarbageCollection();
-				method.removeUndefinedStores();
-				if( method.isGarbageCollected() )
-					method.addAllocations();
+				}				
+
+				method.removeUndefinedStores();				
+				method.addAllocations();
 				
 				graphs.add(graph);
 			}
