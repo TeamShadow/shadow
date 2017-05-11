@@ -12,7 +12,7 @@ shadow_ulong_t __ShadowSystem_GetEpochNanoTime(void);
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
 	#define OFFSET_FROM_1601_TO_1970 116444736000000000ULL
-#elif SHADOW_MAC
+#elif defined SHADOW_MAC
 	#include <mach/clock.h>
 	#include <mach/mach.h>
 
@@ -45,18 +45,18 @@ shadow_ulong_t __ShadowSystem_GetNanoTime(void)
 			shadow_ulong_t	actual;
 			LARGE_INTEGER li;
 		} freq, counter;
-		
+
 		if(!QueryPerformanceFrequency(&freq.li)) {
 			return 0;
 		}
-		
+
 		if(!QueryPerformanceCounter(&counter.li)) {
 			return 0;
 		}
-		
+
 		return (counter.actual * 1000000000ULL / freq.actual);
 
-	#elif SHADOW_MAC
+	#elif defined SHADOW_MAC
 		return get_nano_time(SYSTEM_CLOCK);
 
 	#else
@@ -71,12 +71,12 @@ shadow_ulong_t __ShadowSystem_GetEpochNanoTime(void)
 			shadow_ulong_t actual;
 			FILETIME ft;
 		} now;
-		
+
 		GetSystemTimeAsFileTime(&now.ft);
 
 		return (now.actual - OFFSET_FROM_1601_TO_1970) * 100;
 
-	#elif SHADOW_MAC
+	#elif defined SHADOW_MAC
 		return get_nano_time(CALENDAR_CLOCK);
 
 	#else

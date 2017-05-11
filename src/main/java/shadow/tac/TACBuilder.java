@@ -2396,10 +2396,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}
 	
 	
-	private void setupGCMethod() {
+	private void setupMethod() {
 		//begin synthetic finally for gc handling
-		
-		method.setGarbageCollected(true);		
 		block = new TACBlock(method).addDone();
 		//block = new TACBlock(method); //no done needed, since nothing should come after?
 		anchor = new TACDummyNode(null, block);		
@@ -2412,18 +2410,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//synthetic catchStatements
 		block = new TACBlock(anchor, block);	
 	}
-	
-	private void setupNonGCMethod() {
-		method.setGarbageCollected(false);
-		block = new TACBlock(method);
-		anchor = new TACDummyNode(null, block);
-	}
-	
-	private void cleanupGCMethod() {		
+
+	private void cleanupMethod() {		
 		//turn off context to prevent dead code removal errors
 		Context context = anchor.getContext();
-		anchor.setContext(null);
-		
+		anchor.setContext(null);		
 		
 		//synthetic try statement
 		new TACBranch(anchor, block.getDone()).setContext(null);
@@ -2464,420 +2455,414 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		anchor.setContext(context);
 	}
 	
-	private void cleanupNonGCMethod() {
-		block = block.getParent();
+	private void visitCopyMethod(MethodSignature methodSignature) {
+		ClassType type = (ClassType) methodSignature.getOuter();
+		method.addParameters(anchor); //address map called "addresses"
+		
+		Context context = anchor.getContext();
+		anchor.setContext(null);
+		
+		if( type.getModifiers().isImmutable() ) {
+			new TACLocalStore(anchor, method.getLocal("return"), new TACLocalLoad(
+					anchor, method.getThis()));					
+			
+			visitCleanup(null, null);
+			
+			//for now, just return this
+			//after incrementing reference count
+			//if( !type.isPrimitive() )
+				//new TACChangeReferenceCount(anchor, method.getThis(), true);
+			
+			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
+			
+			anchor.setContext(context);
+			
+			new TACLabel(method).insertBefore(anchor); //unreachable label
+			
+		}			
+		else {					
+			TACOperand this_ = new TACLocalLoad(anchor, method.getThis());
+			TACOperand address = new TACPointerToLong(anchor, this_);					
+			
+			TACOperand map = new TACLocalLoad(anchor, method.getParameter("addresses"));
+			TACMethodRef indexMethod = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("containsKey", new SequenceType(Type.ULONG)) );
+			TACOperand test = new TACCall(anchor, indexMethod, map, address );
+			
+			TACLabel copyLabel = new TACLabel(method),
+					returnLabel = new TACLabel(method);
+			
+			new TACBranch(anchor, test, returnLabel, copyLabel);
+			copyLabel.insertBefore(anchor);
+			
+			//allocate a new object (which by default gets a ref count of 1)
+			TACNewObject object = new TACNewObject(anchor, type);
+			TACOperand duplicate;					
+			
+			//add it to the map of addresses
+			SequenceType arguments = new SequenceType();
+			arguments.add(new SimpleModifiedType(Type.ULONG));  //key
+			arguments.add(new SimpleModifiedType(Type.ULONG));  //value
+			indexMethod = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("index", arguments) );
+			TACOperand newAddress = new TACPointerToLong(anchor, object);					
+			new TACCall(anchor, indexMethod, map, address, newAddress);					
+			
+			if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
+				Type genericArray = type.getTypeWithoutTypeArguments();
+				
+				ArrayType objArrayType = new ArrayType(Type.OBJECT);
+				
+				//call protected create to allocate space
+				TACMethodRef create = new TACMethodRef(anchor, genericArray.getMatchingMethod("create", new SequenceType(objArrayType)));
+				TACOperand data = new TACLoad(anchor, new TACFieldRef(this_, "data" ));
+				TACOperand baseClass = new TACBaseClass(anchor, data);
+				TACOperand length = new TACLength(anchor, data, true);
+				
+				TACOperand array = new TACNewArray(anchor, objArrayType, baseClass, length);						
+				
+				duplicate = new TACCall(anchor, create, object, array); //performs cast to Array as well
+
+				TACLabel done = new TACLabel(method);
+				TACLabel body = new TACLabel(method);
+				TACLabel condition = new TACLabel(method);
+				
+				TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.LONG));
+				new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0L)));
+				new TACBranch(anchor, condition);
+				
+				//start loop
+				condition.insertBefore(anchor);
+				
+				TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
+				new TACBranch(anchor, loop, body, done);
+				body.insertBefore(anchor);
+				
+				SequenceType indexArguments = new SequenceType();
+				indexArguments.add(i);					
+				TACMethodRef indexLoad = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
+				indexArguments.add(genericArray.getTypeParameters().get(0));
+				TACMethodRef indexStore = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
+										
+				TACOperand value = new TACCall(anchor, indexLoad, this_, new TACLocalLoad(anchor, i));
+				
+				TACLabel skipLabel = new TACLabel(method);
+				TACLabel makeCopyLabel = new TACLabel(method);
+				TACOperand isNull = new TACBinary(anchor, value, new TACLiteral(anchor, new ShadowNull(value.getType())));
+				new TACBranch(anchor, isNull, skipLabel, makeCopyLabel);
+				
+				makeCopyLabel.insertBefore(anchor);
+				
+				TACMethodRef copy = new TACMethodRef(anchor, value, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+				
+				value = new TACCall(anchor, copy, copy.getPrefix(), map);
+				new TACCall(anchor, indexStore, duplicate, new TACLocalLoad(anchor, i), value);						
+				new TACBranch(anchor, skipLabel);
+				
+				skipLabel.insertBefore(anchor);						
+				
+				new TACLocalStore(anchor, i, new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", new TACLiteral(anchor, new ShadowInteger(1L)), false ));
+				new TACBranch(anchor, condition);					
+				
+				done.insertBefore(anchor);
+			}
+			else {
+				//perform a memcopy to sweep up all the primitives and immutable data (and nulls)
+				TACOperand size = new TACLoad(anchor, new TACFieldRef(object.getClassData(), "size"));
+				new TACCopyMemory(anchor, object, this_, size);
+				
+				if( type.equals(Type.OBJECT))
+					duplicate = object;
+				else
+					duplicate = TACCast.cast(anchor, new SimpleModifiedType(type), object); //casts object to type
+				
+				//copy other fields in using their copy methods
+				//arrays need special attention
+				TACMethodRef copyMethod;
+				TACOperand field;
+				TACFieldRef newField;
+				TACOperand copiedField;
+				for( Entry<String, ? extends ModifiedType> entry : type.orderAllFields() ) {
+					ModifiedType entryType = entry.getValue();
+					//only copy non-primitive types and non-singletons
+					if( !entryType.getType().isPrimitive() &&
+						!(entryType.getType() instanceof SingletonType) ) {
+						//increment ref count on immutables (which have already been copied through memcpy)
+						if( entryType.getModifiers().isImmutable() )
+							new TACChangeReferenceCount(anchor, new TACFieldRef(duplicate, entryType, entry.getKey()), true );
+						else {							
+							//get field references
+							field = new TACLoad(anchor, new TACFieldRef(this_, entryType, entry.getKey()));
+							newField = new TACFieldRef(duplicate, entryType, entry.getKey());
+							
+							TACLabel copyField = new TACLabel(method);
+							TACLabel skipField = new TACLabel(method);									
+
+							if( entryType.getType() instanceof ArrayType )
+								copiedField = copyArray(field, map);								
+							else {	
+								if( entryType.getType() instanceof InterfaceType ) {
+									//cast converts from interface to object
+									field = TACCast.cast(anchor, new SimpleModifiedType(Type.OBJECT), field);
+									copyMethod = new TACMethodRef(anchor, field, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+								}
+								else //normal object
+									copyMethod = new TACMethodRef(anchor, field, entryType.getType().getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
+								
+								TACOperand nullCondition = new TACBinary(anchor, field, new TACLiteral(anchor, new ShadowNull(field.getType())));
+								new TACBranch(anchor, nullCondition, skipField, copyField); //if null, skip
+
+								copyField.insertBefore(anchor);
+								copiedField = new TACCall(anchor, copyMethod, field, map);
+
+								if( entryType.getType() instanceof InterfaceType )
+									//and then cast back to interface
+									copiedField = TACCast.cast(anchor, newField, copiedField);																
+							}
+							
+							//store copied value
+							//should increment ref count
+							TACStore store = new TACStore(anchor, newField, copiedField);
+							//don't decrement old value, since the old field is sitting there because of memcpy
+							store.setDecrementReference(false); 
+							new TACBranch(anchor, skipField);								
+							
+							skipField.insertBefore(anchor);
+						}
+					}
+				}
+			}
+			
+			
+			new TACLocalStore(anchor, method.getLocal("return"), duplicate);					
+			
+			visitCleanup(null, null);
+			
+			//for now, just return this
+			//after incrementing reference count
+			//if( !type.isPrimitive() )
+				//new TACChangeReferenceCount(anchor, method.getThis(), true);
+			
+			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
+			
+			new TACLabel(method).insertBefore(anchor); //unreachable label
+
+			returnLabel.insertBefore(anchor);
+			
+			indexMethod = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("index", new SequenceType(Type.ULONG)) );
+			TACOperand index = new TACCall(anchor, indexMethod, map, address );
+			TACOperand existingObject = new TACLongToPointer(anchor, index, new SimpleModifiedType(type));
+			
+			
+			new TACLocalStore(anchor, method.getLocal("return"), existingObject);					
+			
+			visitCleanup(null, null);					
+			
+			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
+								
+			new TACLabel(method).insertBefore(anchor); //unreachable label
+		}
 	}
 	
+	private void visitGetOrSetMethod(MethodSignature methodSignature) {
+		method.addParameters(anchor);
+		TACFieldRef field = new TACFieldRef(new TACLocalLoad(
+				anchor, method.getThis()), methodSignature.getSymbol());
+		if (methodSignature.isGet()) {
+			TACLoad load = new TACLoad(anchor, field);
+			new TACLocalStore(anchor, method.getLocal("return"), load);
+			
+			visitCleanup(null, null);	
+			
+			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(),	load);
+			new TACLabel(method).insertBefore(anchor); //unreachable label
+		}
+		else if (methodSignature.isSet()) {
+			TACVariable value = null;
+			for (TACVariable parameter : method.getParameters())
+				value = parameter;
+			new TACStore(anchor, field, new TACLocalLoad(anchor, value));
+			
+			visitCleanup(null, null);	
+			
+			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
+			new TACLabel(method).insertBefore(anchor); //unreachable label
+		}	
+	}
 	
+	private void visitWrapperMethod(MethodSignature methodSignature) {
+		MethodSignature wrapped = methodSignature.getWrapped();
+		SequenceType fromTypes = methodSignature.getSignatureWithoutTypeArguments().getFullParameterTypes(),
+				toTypes = wrapped.getSignatureWithoutTypeArguments().getFullParameterTypes();
+		Iterator<TACVariable> fromArguments = method.addParameters(anchor, true).
+				getParameters().iterator();
+		List<TACOperand> toArguments = new ArrayList<TACOperand>(
+				toTypes.size());
+		for (int i = 0; i < toTypes.size(); i++) {
+			TACOperand argument =
+					new TACLocalLoad(anchor, fromArguments.next());
+			if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
+				argument = TACCast.cast(anchor, toTypes.get(i), argument);
+			toArguments.add(argument);				
+		}
+		
+		TACOperand value = new TACCall(anchor, new TACMethodRef(anchor,
+				wrapped), toArguments); 
+		
+		TACLabel unreachableLabel = new TACLabel(method);		
+		
+		//turn context off to avoid dead code removal errors
+		Context context = anchor.getContext();
+		anchor.setContext(null);				
+		
+		if( methodSignature.getFullReturnTypes().isEmpty() ) {
+			visitCleanup(null, null);	
+			
+			//turn context back on
+			anchor.setContext(context);					
+			
+			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), null);
+		}
+		else {
+			fromTypes = wrapped.getSignatureWithoutTypeArguments().getFullReturnTypes();
+			toTypes = methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes();
+			
+			//cast all returns and store them in appropriate variables
+			if( value.getType() instanceof SequenceType ) {						
+				TACSequence sequence = (TACSequence)value;
+				SequenceType sequenceType = (SequenceType) value.getType();
+				for( int i = 0; i < sequenceType.size(); ++i )
+					new TACLocalStore(anchor, method.getLocal("_return" + i), TACCast.cast(anchor,  toTypes.get(i), sequence.get(i)));
+			}
+			else {
+				if( !fromTypes.getType(0).isSubtype(toTypes.getType(0)) )
+					value = TACCast.cast(anchor, toTypes.get(0), value);
+				new TACLocalStore(anchor, method.getLocal("return"), value);
+			}	
+			
+			visitCleanup(null, null);
+			
+			//turn context back on
+			anchor.setContext(context);
+			
+			if( value.getType() instanceof SequenceType ) {
+				SequenceType sequenceType = (SequenceType) value.getType();
+				List<TACOperand> operands = new ArrayList<TACOperand>(sequenceType.size());
+				for( int i = 0; i < sequenceType.size(); ++i )
+					operands.add(new TACLocalLoad(anchor, method.getLocal("_return" + i)));
+				new TACReturn(anchor, toTypes, new TACSequence(anchor, operands));
+			}
+			else			
+				new TACReturn(anchor, toTypes, new TACLocalLoad(anchor, method.getLocal("return")));	
+		}
+		
+		unreachableLabel.insertBefore(anchor);
+	}
+	
+	private void visitRegularMethod(MethodSignature methodSignature) {		
+		boolean implicitCreate = false;
+		
+		method.addParameters(anchor);
+		
+		if( methodSignature.isCreate()) {
+			ShadowParser.CreateDeclarationContext declaration = (ShadowParser.CreateDeclarationContext) methodSignature.getNode();
+			implicitCreate = declaration.createBlock() == null || declaration.createBlock().explicitCreateInvocation() == null;
+			Type type = methodSignature.getOuter();
+			//TODO: Remove references to _outer
+			if (type.hasOuter()) {
+					new TACStore(anchor,
+						new TACFieldRef(new TACLocalLoad(anchor,
+								method.getThis()),
+								new SimpleModifiedType(type.getOuter()),
+								"_outer"),
+						new TACLocalLoad(anchor,
+								method.getParameter("_outer")));						
+			}
+		}
+		
+		// Call parent create if implicit create.
+		if( implicitCreate ) {
+			ClassType thisType = (ClassType)methodSignature.getOuter(),
+					superType = thisType.getExtendType();
+			if (superType != null) {
+				TACCall call;
+				if( superType.hasOuter() )
+					call = new TACCall(anchor, new TACMethodRef(anchor,
+							superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
+							method.getThis()), new TACLocalLoad(anchor, method.getParameter("_outer")));
+				else
+					call = new TACCall(anchor, new TACMethodRef(anchor,
+							superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
+							method.getThis()));
+				
+				call.setDelegatedCreate(true);
+			}
+			
+			// Walk fields in *exactly* the order they were declared since
+			// some fields depend on prior fields.
+			// This is accomplished by using a LinkedHashMap.
+			for( ShadowParser.VariableDeclaratorContext field : ((ClassType)(methodSignature.getOuter())).getFields().values() ) 
+				if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType)) {
+					visit(field);
+					field.appendBefore(anchor);
+				}
+		}				
+		
+		visit(methodSignature.getNode());
+		methodSignature.getNode().appendBefore(anchor);
+		
+		//fill in all the fields to destroy
+		if( methodSignature.isDestroy() ) {					
+			TACOperand this_ = new TACLocalLoad(anchor, method.getThis());					
+			
+			ClassType classType = (ClassType)(methodSignature.getOuter()); 
+			for( Entry<String, ? extends ModifiedType> entry : classType.sortFields() ) {
+				if( !entry.getKey().equals("_outer") ) { //TODO: deal with outer class reference count decrements						
+					TACFieldRef reference = new TACFieldRef(this_, entry.getKey());
+					if( reference.needsGarbageCollection() )
+						new TACChangeReferenceCount(anchor, reference, false);
+				}
+			}					
+			
+			//the mirror image of a create: calls parent destroy *afterwards*
+			ClassType thisType = (ClassType)methodSignature.getOuter(),
+					superType = thisType.getExtendType();
+			if( superType != null )					
+				new TACCall(anchor, new TACMethodRef(anchor,
+						superType.getMatchingMethod("destroy", new SequenceType())), new TACLocalLoad(anchor,
+						method.getThis()));
+			
+			//add explicit return					
+			TACReturn explicitReturn = new TACReturn(anchor, new SequenceType() ); 
+			//prevents an error from being recorded if this return is later removed as dead code
+			explicitReturn.setContext(null);
+			new TACLabel(method).insertBefore(anchor); //unreachable label
+		}		
+	}
+
 
 	private void visitMethod(MethodSignature methodSignature) {
 		TACNode saveTree = anchor;
 		TACMethod method = this.method = new TACMethod(methodSignature);
-		boolean implicitCreate = false;
+		
 		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExternWithoutBlock() ) {				
 			
-			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() ) {
-				setupGCMethod();				
-				ClassType type = (ClassType) methodSignature.getOuter();
-				method.addParameters(anchor); //address map called "addresses"
-				
-				Context context = anchor.getContext();
-				anchor.setContext(null);
-				
-				if( type.getModifiers().isImmutable() ) {
-					new TACLocalStore(anchor, method.getLocal("return"), new TACLocalLoad(
-							anchor, method.getThis()));					
-					
-					visitCleanup(null, null);
-					
-					//for now, just return this
-					//after incrementing reference count
-					//if( !type.isPrimitive() )
-						//new TACChangeReferenceCount(anchor, method.getThis(), true);
-					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-					
-					anchor.setContext(context);
-					
-					new TACLabel(method).insertBefore(anchor); //unreachable label
-					
-				}			
-				else {					
-					TACOperand this_ = new TACLocalLoad(anchor, method.getThis());
-					TACOperand address = new TACPointerToLong(anchor, this_);					
-					
-					TACOperand map = new TACLocalLoad(anchor, method.getParameter("addresses"));
-					TACMethodRef indexMethod = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("containsKey", new SequenceType(Type.ULONG)) );
-					TACOperand test = new TACCall(anchor, indexMethod, map, address );
-					
-					TACLabel copyLabel = new TACLabel(method),
-							returnLabel = new TACLabel(method);
-					
-					new TACBranch(anchor, test, returnLabel, copyLabel);
-					copyLabel.insertBefore(anchor);
-					
-					//allocate a new object (which by default gets a ref count of 1)
-					TACNewObject object = new TACNewObject(anchor, type);
-					TACOperand duplicate;					
-					
-					//add it to the map of addresses
-					SequenceType arguments = new SequenceType();
-					arguments.add(new SimpleModifiedType(Type.ULONG));  //key
-					arguments.add(new SimpleModifiedType(Type.ULONG));  //value
-					indexMethod = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("index", arguments) );
-					TACOperand newAddress = new TACPointerToLong(anchor, object);					
-					new TACCall(anchor, indexMethod, map, address, newAddress);					
-					
-					if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
-						Type genericArray = type.getTypeWithoutTypeArguments();
-						
-						ArrayType objArrayType = new ArrayType(Type.OBJECT);
-						
-						//call protected create to allocate space
-						TACMethodRef create = new TACMethodRef(anchor, genericArray.getMatchingMethod("create", new SequenceType(objArrayType)));
-						TACOperand data = new TACLoad(anchor, new TACFieldRef(this_, "data" ));
-						TACOperand baseClass = new TACBaseClass(anchor, data);
-						TACOperand length = new TACLength(anchor, data, true);
-						
-						TACOperand array = new TACNewArray(anchor, objArrayType, baseClass, length);						
-						
-						duplicate = new TACCall(anchor, create, object, array); //performs cast to Array as well
-
-						TACLabel done = new TACLabel(method);
-						TACLabel body = new TACLabel(method);
-						TACLabel condition = new TACLabel(method);
-						
-						TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.LONG));
-						new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0L)));
-						new TACBranch(anchor, condition);
-						
-						//start loop
-						condition.insertBefore(anchor);
-						
-						TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
-						new TACBranch(anchor, loop, body, done);
-						body.insertBefore(anchor);
-						
-						SequenceType indexArguments = new SequenceType();
-						indexArguments.add(i);					
-						TACMethodRef indexLoad = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
-						indexArguments.add(genericArray.getTypeParameters().get(0));
-						TACMethodRef indexStore = new TACMethodRef(anchor, genericArray.getMatchingMethod("index", indexArguments));
-												
-						TACOperand value = new TACCall(anchor, indexLoad, this_, new TACLocalLoad(anchor, i));
-						
-						TACLabel skipLabel = new TACLabel(method);
-						TACLabel makeCopyLabel = new TACLabel(method);
-						TACOperand isNull = new TACBinary(anchor, value, new TACLiteral(anchor, new ShadowNull(value.getType())));
-						new TACBranch(anchor, isNull, skipLabel, makeCopyLabel);
-						
-						makeCopyLabel.insertBefore(anchor);
-						
-						TACMethodRef copy = new TACMethodRef(anchor, value, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
-						
-						value = new TACCall(anchor, copy, copy.getPrefix(), map);
-						new TACCall(anchor, indexStore, duplicate, new TACLocalLoad(anchor, i), value);						
-						new TACBranch(anchor, skipLabel);
-						
-						skipLabel.insertBefore(anchor);						
-						
-						new TACLocalStore(anchor, i, new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", new TACLiteral(anchor, new ShadowInteger(1L)), false ));
-						new TACBranch(anchor, condition);					
-						
-						done.insertBefore(anchor);
-					}
-					else {
-						//perform a memcopy to sweep up all the primitives and immutable data (and nulls)
-						TACOperand size = new TACLoad(anchor, new TACFieldRef(object.getClassData(), "size"));
-						new TACCopyMemory(anchor, object, this_, size);
-						
-						if( type.equals(Type.OBJECT))
-							duplicate = object;
-						else
-							duplicate = TACCast.cast(anchor, new SimpleModifiedType(type), object); //casts object to type
-						
-						//copy other fields in using their copy methods
-						//arrays need special attention
-						TACMethodRef copyMethod;
-						TACOperand field;
-						TACFieldRef newField;
-						TACOperand copiedField;
-						for( Entry<String, ? extends ModifiedType> entry : type.orderAllFields() ) {
-							ModifiedType entryType = entry.getValue();
-							//only copy non-primitive types and non-singletons
-							if( !entryType.getType().isPrimitive() &&
-								!(entryType.getType() instanceof SingletonType) ) {
-								//increment ref count on immutables (which have already been copied through memcpy)
-								if( entryType.getModifiers().isImmutable() )
-									new TACChangeReferenceCount(anchor, new TACFieldRef(duplicate, entryType, entry.getKey()), true );
-								else {							
-									//get field references
-									field = new TACLoad(anchor, new TACFieldRef(this_, entryType, entry.getKey()));
-									newField = new TACFieldRef(duplicate, entryType, entry.getKey());
-									
-									TACLabel copyField = new TACLabel(method);
-									TACLabel skipField = new TACLabel(method);									
-
-									if( entryType.getType() instanceof ArrayType )
-										copiedField = copyArray(field, map);								
-									else {	
-										if( entryType.getType() instanceof InterfaceType ) {
-											//cast converts from interface to object
-											field = TACCast.cast(anchor, new SimpleModifiedType(Type.OBJECT), field);
-											copyMethod = new TACMethodRef(anchor, field, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
-										}
-										else //normal object
-											copyMethod = new TACMethodRef(anchor, field, entryType.getType().getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
-										
-										TACOperand nullCondition = new TACBinary(anchor, field, new TACLiteral(anchor, new ShadowNull(field.getType())));
-										new TACBranch(anchor, nullCondition, skipField, copyField); //if null, skip
-	
-										copyField.insertBefore(anchor);
-										copiedField = new TACCall(anchor, copyMethod, field, map);
-	
-										if( entryType.getType() instanceof InterfaceType )
-											//and then cast back to interface
-											copiedField = TACCast.cast(anchor, newField, copiedField);																
-									}
-									
-									//store copied value
-									//should increment ref count
-									TACStore store = new TACStore(anchor, newField, copiedField);
-									//don't decrement old value, since the old field is sitting there because of memcpy
-									store.setDecrementReference(false); 
-									new TACBranch(anchor, skipField);								
-									
-									skipField.insertBefore(anchor);
-								}
-							}
-						}
-					}
-					
-					
-					new TACLocalStore(anchor, method.getLocal("return"), duplicate);					
-					
-					visitCleanup(null, null);
-					
-					//for now, just return this
-					//after incrementing reference count
-					//if( !type.isPrimitive() )
-						//new TACChangeReferenceCount(anchor, method.getThis(), true);
-					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-					
-					new TACLabel(method).insertBefore(anchor); //unreachable label
-
-					returnLabel.insertBefore(anchor);
-					
-					indexMethod = new TACMethodRef(anchor, Type.ADDRESS_MAP.getMatchingMethod("index", new SequenceType(Type.ULONG)) );
-					TACOperand index = new TACCall(anchor, indexMethod, map, address );
-					TACOperand existingObject = new TACLongToPointer(anchor, index, new SimpleModifiedType(type));
-					
-					
-					new TACLocalStore(anchor, method.getLocal("return"), existingObject);					
-					
-					visitCleanup(null, null);					
-					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-										
-					new TACLabel(method).insertBefore(anchor); //unreachable label
-				}
-				
-				cleanupGCMethod();
-				
-			}
+			setupMethod();
+			
+			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() )
+				visitCopyMethod(methodSignature);
 			//Gets and sets that were created by default (that's why they have a null parent)
-			else if( methodSignature.getNode().getParent() == null && (methodSignature.isGet() || methodSignature.isSet() )) { 			
-				setupGCMethod();		
-				
-				method.addParameters(anchor);
-				TACFieldRef field = new TACFieldRef(new TACLocalLoad(
-						anchor, method.getThis()), methodSignature.getSymbol());
-				if (methodSignature.isGet()) {
-					TACLoad load = new TACLoad(anchor, field);
-					new TACLocalStore(anchor, method.getLocal("return"), load);
-					
-					visitCleanup(null, null);	
-					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(),	load);
-					new TACLabel(method).insertBefore(anchor); //unreachable label
-				}
-				else if (methodSignature.isSet()) {
-					TACVariable value = null;
-					for (TACVariable parameter : method.getParameters())
-						value = parameter;
-					new TACStore(anchor, field, new TACLocalLoad(anchor, value));
-					
-					visitCleanup(null, null);	
-					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
-					new TACLabel(method).insertBefore(anchor); //unreachable label
-				}				
-				
-				cleanupGCMethod();		
-			}		
-			else if (methodSignature.isWrapper()) {
-				setupGCMethod();				
-				
-				MethodSignature wrapped = methodSignature.getWrapped();
-				SequenceType fromTypes = methodSignature.getSignatureWithoutTypeArguments().getFullParameterTypes(),
-						toTypes = wrapped.getSignatureWithoutTypeArguments().getFullParameterTypes();
-				Iterator<TACVariable> fromArguments = method.addParameters(anchor, true).
-						getParameters().iterator();
-				List<TACOperand> toArguments = new ArrayList<TACOperand>(
-						toTypes.size());
-				for (int i = 0; i < toTypes.size(); i++) {
-					TACOperand argument =
-							new TACLocalLoad(anchor, fromArguments.next());
-					if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
-						argument = TACCast.cast(anchor, toTypes.get(i), argument);
-					toArguments.add(argument);				
-				}
-				
-				TACOperand value = new TACCall(anchor, new TACMethodRef(anchor,
-						wrapped), toArguments); 
-				
-				TACLabel unreachableLabel = new TACLabel(method);		
-				
-				//turn context off to avoid dead code removal errors
-				Context context = anchor.getContext();
-				anchor.setContext(null);				
-				
-				if( methodSignature.getFullReturnTypes().isEmpty() ) {
-					visitCleanup(null, null);	
-					
-					//turn context back on
-					anchor.setContext(context);					
-					
-					new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), null);
-				}
-				else {
-					fromTypes = wrapped.getSignatureWithoutTypeArguments().getFullReturnTypes();
-					toTypes = methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes();
-					
-					//cast all returns and store them in appropriate variables
-					if( value.getType() instanceof SequenceType ) {						
-						TACSequence sequence = (TACSequence)value;
-						SequenceType sequenceType = (SequenceType) value.getType();
-						for( int i = 0; i < sequenceType.size(); ++i )
-							new TACLocalStore(anchor, method.getLocal("_return" + i), TACCast.cast(anchor,  toTypes.get(i), sequence.get(i)));
-					}
-					else {
-						if( !fromTypes.getType(0).isSubtype(toTypes.getType(0)) )
-							value = TACCast.cast(anchor, toTypes.get(0), value);
-						new TACLocalStore(anchor, method.getLocal("return"), value);
-					}	
-					
-					visitCleanup(null, null);
-					
-					//turn context back on
-					anchor.setContext(context);
-					
-					if( value.getType() instanceof SequenceType ) {
-						SequenceType sequenceType = (SequenceType) value.getType();
-						List<TACOperand> operands = new ArrayList<TACOperand>(sequenceType.size());
-						for( int i = 0; i < sequenceType.size(); ++i )
-							operands.add(new TACLocalLoad(anchor, method.getLocal("_return" + i)));
-						new TACReturn(anchor, toTypes, new TACSequence(anchor, operands));
-					}
-					else			
-						new TACReturn(anchor, toTypes, new TACLocalLoad(anchor, method.getLocal("return")));	
-				}
-				
-				unreachableLabel.insertBefore(anchor);
-				
-				cleanupGCMethod();
-			}
-			else { // Regular method, create, or destroy (includes empty creates and destroys)
-				setupGCMethod();
-				
-				method.addParameters(anchor);
-				
-				if( methodSignature.isCreate()) {
-					ShadowParser.CreateDeclarationContext declaration = (ShadowParser.CreateDeclarationContext) methodSignature.getNode();
-					implicitCreate = declaration.createBlock() == null || declaration.createBlock().explicitCreateInvocation() == null;
-					Type type = methodSignature.getOuter();
-					//TODO: Remove references to _outer
-					if (type.hasOuter()) {
-							new TACStore(anchor,
-								new TACFieldRef(new TACLocalLoad(anchor,
-										method.getThis()),
-										new SimpleModifiedType(type.getOuter()),
-										"_outer"),
-								new TACLocalLoad(anchor,
-										method.getParameter("_outer")));						
-					}
-				}
-				
-				// Call parent create if implicit create.
-				if( implicitCreate ) {
-					ClassType thisType = (ClassType)methodSignature.getOuter(),
-							superType = thisType.getExtendType();
-					if (superType != null) {
-						TACCall call;
-						if( superType.hasOuter() )
-							call = new TACCall(anchor, new TACMethodRef(anchor,
-									superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
-									method.getThis()), new TACLocalLoad(anchor, method.getParameter("_outer")));
-						else
-							call = new TACCall(anchor, new TACMethodRef(anchor,
-									superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
-									method.getThis()));
-						
-						call.setDelegatedCreate(true);
-					}
-					
-					// Walk fields in *exactly* the order they were declared since
-					// some fields depend on prior fields.
-					// This is accomplished by using a LinkedHashMap.
-					for( ShadowParser.VariableDeclaratorContext field : ((ClassType)(methodSignature.getOuter())).getFields().values() ) 
-						if (!field.getModifiers().isConstant() && !(field.getType() instanceof SingletonType)) {
-							visit(field);
-							field.appendBefore(anchor);
-						}
-				}				
-				
-				visit(methodSignature.getNode());
-				methodSignature.getNode().appendBefore(anchor);
-				
-				//fill in all the fields to destroy
-				if( methodSignature.isDestroy() ) {					
-					TACOperand this_ = new TACLocalLoad(anchor, method.getThis());					
-					
-					ClassType classType = (ClassType)(methodSignature.getOuter()); 
-					for( Entry<String, ? extends ModifiedType> entry : classType.sortFields() ) {
-						if( !entry.getKey().equals("_outer") ) { //TODO: deal with outer class reference count decrements						
-							TACFieldRef reference = new TACFieldRef(this_, entry.getKey());
-							if( reference.needsGarbageCollection() )
-								new TACChangeReferenceCount(anchor, reference, false);
-						}
-					}					
-					
-					//the mirror image of a create: calls parent destroy *afterwards*
-					ClassType thisType = (ClassType)methodSignature.getOuter(),
-							superType = thisType.getExtendType();
-					if( superType != null )					
-						new TACCall(anchor, new TACMethodRef(anchor,
-								superType.getMatchingMethod("destroy", new SequenceType())), new TACLocalLoad(anchor,
-								method.getThis()));
-					
-					//add explicit return					
-					TACReturn explicitReturn = new TACReturn(anchor, new SequenceType() ); 
-					//prevents an error from being recorded if this return is later removed as dead code
-					explicitReturn.setContext(null);
-					new TACLabel(method).insertBefore(anchor); //unreachable label
-				}
-				
-				cleanupGCMethod();
-			}
+			else if( methodSignature.getNode().getParent() == null && (methodSignature.isGet() || methodSignature.isSet() ))
+				visitGetOrSetMethod(methodSignature);			
+			else if (methodSignature.isWrapper())
+				visitWrapperMethod(methodSignature);
+			else // Regular method, create, or destroy (includes empty creates and destroys)
+				visitRegularMethod(methodSignature);			
 			
-			//end regular block
-			//block = block.getParent();
-			
+			cleanupMethod();			
 			
 			anchor = anchor.remove(); //gets node before anchor (and removes dummy)
 			method.setNode(anchor.getNext()); //the node after last node is, strangely, the first node			
 		}
+		
 		moduleStack.peek().addMethod(method);
 		block = null;
 		this.method = null;
