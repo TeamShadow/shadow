@@ -72,6 +72,10 @@ declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %arrayDat
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind 
 
+
+; it's not really a long there at the end, but we need something big enough for all the possibilities
+%__primitive = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*, %long  }
+
 @_genericSet = external global %shadow.standard..ClassSet*
 
 ; aliases used by ArrayNullable
@@ -224,8 +228,9 @@ _primitive:
 	%wrapper = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methodTable.1)
 	
 	; copy primitive value into new object
-	%data = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %wrapper, i32 1
-	%dataAsBytes = bitcast %shadow.standard..Object* %data to i8*	
+	%wrapperAsPrimitive = bitcast %shadow.standard..Object* %wrapper to %__primitive*
+	%data = getelementptr inbounds %__primitive, %__primitive* %wrapperAsPrimitive, i32 0, i32 3
+	%dataAsBytes = bitcast %long* %data to i8*	
 		
 	%widthInt = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %class)	
 	%width = zext %uint %widthInt to %ulong
@@ -233,6 +238,7 @@ _primitive:
 	
 	%arrayAsBytes = bitcast %shadow.standard..Object** %arrayData to i8*
 	%primitiveElement = getelementptr inbounds i8, i8* %arrayAsBytes, %ulong %offset
+	; dangerous if we didn't get the offset into the primitive wrapper exactly right
 	call void @llvm.memcpy.p0i8.p0i8.i64(i8* %dataAsBytes, i8* %primitiveElement, %ulong %width, i32 1, i1 0)
 	ret %shadow.standard..Object* %wrapper
 
@@ -354,9 +360,11 @@ _primitive:
 	%offset = mul %ulong %index, %primitiveWidth		
 	%arrayAsBytes1 = bitcast %shadow.standard..Object** %arrayData to i8*
 	%primitiveElement = getelementptr i8, i8* %arrayAsBytes1, %ulong %offset
-	%primitiveWrapper = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 1
-	%primitiveWrapperAsBytes = bitcast %shadow.standard..Object* %primitiveWrapper to i8*
-	call void @llvm.memcpy.p0i8.p0i8.i64(i8* %primitiveElement, i8* %primitiveWrapperAsBytes, i64 %primitiveWidth, i32 1, i1 0)
+	%primitiveWrapper = bitcast %shadow.standard..Object* %object to %__primitive*	
+	%primitiveData = getelementptr inbounds %__primitive, %__primitive* %primitiveWrapper, i32 0, i32 3
+	%primitiveDataAsBytes = bitcast %long* %primitiveData to i8*
+	; dangerous if we didn't get the offset into the primitive wrapper exactly right
+	call void @llvm.memcpy.p0i8.p0i8.i64(i8* %primitiveElement, i8* %primitiveDataAsBytes, i64 %primitiveWidth, i32 1, i1 0)
 	ret void
 
 _array:	
