@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -204,18 +203,32 @@ public class Main {
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 			
 			String endian = "e"; //little Endian	
+			String mangling;
+			
+			if( config.getOs().equals("Mac") )
+				mangling = "m:o-";
+			else if( config.getOs().equals("Windows"))
+				mangling = "m:x-";
+			else if( config.getOs().equals("Linux"))
+				mangling = "m:e-";
+			else
+				mangling = "";
+			
 			String pointerAlignment = "p:" + config.getArch() + ":" + config.getArch() + ":" + config.getArch();
-			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f16:16:16-f32:32:32-f64:64:64";
+			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f16:16:16-f32:32:32-f64:64:64-f80:128";
 			String aggregateAlignment = "a:0:" + config.getArch();
 			String nativeIntegers = "n8:16:32:64";
-			String dataLayout = "-default-data-layout=" + endian + "-" + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers;
+			String stackAlignment = "S128";
+			String dataLayout = "-default-data-layout=" + endian + "-" + mangling + pointerAlignment + "-" + dataAlignment + "-" + aggregateAlignment + "-" + nativeIntegers + "-" + stackAlignment;
 			
-			String optimisationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
+			String optimizationLevel = "-O3"; // set to empty string to check for race conditions in Threads.
+
+						
 			final Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
 			//usually opt
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimisationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
+			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(), optimizationLevel, dataLayout).redirectError(Redirect.INHERIT).start();
 			//usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimisationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(), optimizationLevel)/*.redirectOutput(new File("a.s"))*/.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT).redirectError(Redirect.INHERIT).start();
 
 			try {
@@ -277,7 +290,7 @@ public class Main {
 		}
 	}
 
-	private static boolean compileCSourceFiles(Path cSourcePath, List<File> cShadowFiles, List<String> assembleCommand) throws IOException {
+	private static boolean compileCSourceFiles(Path cSourcePath, List<File> cShadowFiles, List<String> assembleCommand) throws IOException, ConfigurationException {
 		File cSourceDirectory = cSourcePath.toFile();
 		
 		// no need to compile anything if there are no c-source files
@@ -288,7 +301,19 @@ public class Main {
 		
 		// compile the files to assembly, to be ready for linkage
 		List<String> compileCommand = new ArrayList<String>();
-		compileCommand.add("gcc");
+		
+	
+		if( Configuration.getConfiguration().getOs().equals("Mac")) {
+			compileCommand.add("gcc");
+			String[] version = System.getProperty("os.version").split("\\.");
+			compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
+			//compileCommand.add("-mmacosx-version-min=10.7");
+			//compileCommand.add("-Wall");
+			compileCommand.add("-O1");
+		}
+		else
+			compileCommand.add("gcc");
+		
 		compileCommand.add("-S");
 		
 		// include directories to be in the search path of gcc
@@ -472,7 +497,7 @@ public class Main {
 			modules.add(module);
 			modules.addAll(innerClasses);
 			
-			//ToDo; not sure what libray is needed
+			//ToDo; not sure what library is needed
 			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 			
 			
