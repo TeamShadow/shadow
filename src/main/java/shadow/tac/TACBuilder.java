@@ -980,6 +980,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACLabel continueLabel = new TACLabel(method);
 		TACOperand operand = ctx.conditionalExpression().appendBefore(anchor);
 		
+		//interfaces themselves are value types
+		//so extract the object pointer inside
+		if( operand.getType() instanceof InterfaceType )
+			operand = TACCast.cast(anchor, new SimpleModifiedType(Type.OBJECT), operand);
+		
 		//if there's a recover, things will be handled there if null			
 		new TACBranch(anchor, new TACBinary(anchor, operand, new TACLiteral(anchor,
 				new ShadowNull(operand.getType()))), recover, continueLabel);

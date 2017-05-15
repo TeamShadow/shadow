@@ -1016,7 +1016,7 @@ public class LLVMOutput extends AbstractOutput {
 				break;		
 			case NULL_TO_INTERFACE:
 				writer.write(nextTemp(node) + " = insertvalue " + type(node) +
-						" zeroinitializer, " + type(Type.OBJECT) + "* null, 1");
+						" zeroinitializer, " + type(Type.OBJECT) + " null, 1");
 				break;
 			case OBJECT_TO_ARRAY:
 				writeObjectToArray(node, (ArrayType)destType, source);
