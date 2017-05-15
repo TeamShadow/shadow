@@ -9,7 +9,13 @@ class shadow:test@NullableArrayTest
 		array2[1] = "Hello";
 		array2[3] = "Goodbye";
 		
+		
 		out.printLine(array2[1]);
+		
+		String thing = check(array2[3]);
+		
+		out.printLine(thing);
+		
 		out.printLine(array2);		
 	}
 }

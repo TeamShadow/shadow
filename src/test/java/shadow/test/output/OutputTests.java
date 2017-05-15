@@ -885,8 +885,17 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"Hello\n" + 
+				"Goodbye\n" + 
 				"[null, Hello, null, Goodbye, null]\n");
-	}	
+	}
+	
+	@Test public void testNullableInterface() throws Exception {
+		args.add("shadow/test/NullableInterfaceTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Interface is null!\n" + 
+				"2783569992\n");
+	}
 	
 	@Test public void testNullablePrimitive() throws Exception {
 		args.add("shadow/test/NullablePrimitiveTest.shadow");

@@ -1,0 +1,35 @@
+import shadow:io@Console;
+
+class shadow:test@NullableInterfaceTest
+{
+	public main() => ()
+	{
+		Console out;		
+		nullable CanHash hashable = null;
+		uint value;
+	
+		try {
+			value = check(hashable).hash();
+			out.printLine(value);					
+		}		
+		recover {
+			out.printLine("Interface is null!");
+		}
+		
+		
+		hashable = "Walnuts";
+		
+		try {
+			value = check(hashable).hash();
+			out.printLine(value);
+			
+			//2783569992					
+		}		
+		recover {
+			out.printLine("Interface is null!");
+		}
+		
+		
+		
+	}
+}
