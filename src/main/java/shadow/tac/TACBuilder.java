@@ -1152,13 +1152,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		explicitSuper = false;		
 	}
 	
-	
-	@Override public Void visitQualifiedKeyword(ShadowParser.QualifiedKeywordContext ctx)
-	{ 
-		throw new UnsupportedOperationException();		
-	}
-	
-	private static Context getPrefix(ShadowParser.ScopeSpecifierContext ctx)
+	private static Context getPrefix(Context ctx)
 	{
 		ShadowParser.PrimarySuffixContext parent = (PrimarySuffixContext) ctx.getParent();
 		ShadowParser.PrimaryExpressionContext expression = (PrimaryExpressionContext) parent.getParent();
@@ -1173,31 +1167,39 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx)
 	{ 
 		visitChildren(ctx);
-		if( ctx.Identifier() == null) { //this is the :class case
-			Type type = getPrefix(ctx).getType();			
-			//Type type = prefix.getType(); //TODO: Does this work?
-			
-			boolean raw = false;
-			
-			if( ctx.typeArguments() != null  ) {
-				ShadowParser.TypeArgumentsContext arguments = ctx.typeArguments();
-				
-				try {
-					type = type.replace(type.getTypeParameters(), (SequenceType)arguments.getType());
-				}
-				catch (InstantiationException e) {}	//should not happen				
-			}
-			else if( type.isParameterized() ) //parameterized, but no type arguments given
-				raw = true;					
-			
-			prefix = new TACClass(anchor, type, raw).getClassData();
-		}
-		else if( ctx.getModifiers().isConstant() )
+		if( ctx.getModifiers().isConstant() )
 			prefix = new TACLoad(anchor, new TACConstantRef(getPrefix(ctx).getType(), ctx.Identifier().getText()));
 		else if( ctx.getType() instanceof SingletonType)
 			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType)ctx.getType()));
 		else if( !ctx.getModifiers().isTypeName() )  //doesn't do anything at this stage if it's just a type name				
 			prefix = new TACLoad(anchor, new TACFieldRef(prefix, ctx.Identifier().getText()));
+		
+		ctx.setOperand(prefix);
+		
+		return null;
+	}
+	
+	@Override public Void visitClassSpecifier(ShadowParser.ClassSpecifierContext ctx)
+	{ 
+		visitChildren(ctx);
+	
+		Type type = getPrefix(ctx).getType();			
+		//Type type = prefix.getType(); //TODO: Does this work?
+		
+		boolean raw = false;
+		
+		if( ctx.typeArguments() != null  ) {
+			ShadowParser.TypeArgumentsContext arguments = ctx.typeArguments();
+			
+			try {
+				type = type.replace(type.getTypeParameters(), (SequenceType)arguments.getType());
+			}
+			catch (InstantiationException e) {}	//should not happen				
+		}
+		else if( type.isParameterized() ) //parameterized, but no type arguments given
+			raw = true;					
+		
+		prefix = new TACClass(anchor, type, raw).getClassData();
 		
 		ctx.setOperand(prefix);
 		

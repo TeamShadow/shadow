@@ -167,7 +167,7 @@ public class TACClass extends TACOperand
 			}
 			
 			if( index == outer.getTypeParametersIncludingOuterClasses().size() )
-				throw new IllegalArgumentException("Index " + index + " equal to type parameter size " + outer.getTypeParametersIncludingOuterClasses().size());
+				throw new IllegalArgumentException("Type parameter " + classType.getTypeName() + " not present in class " + outer );
 			
 			//get class from this
 			//cast class to GenericClass
@@ -204,17 +204,9 @@ public class TACClass extends TACOperand
 				else 				
 					methodTable = new TACMethodTable(this);
 			}
-			else { //type has generics and is not defined in this file
-				if( type.encloses(outer) ) { //we're currently inside this type and can get it from class values					
-					TACOperand prefix = new TACLocalLoad(this, method.getThis());					
-					while( !type.equals(outer)) {
-						prefix = new TACLoad(this, new TACFieldRef(prefix, prefix, "_outer"));
-						outer = outer.getOuter();						
-					}					
-					classData = new TACLoad(this, new TACFieldRef(prefix, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class"));
-				}
+			else { //type has generics and is not defined in this file				
 				//construct otherwise absent array type
-				else if( type instanceof ArrayType )
+				if( type instanceof ArrayType )
 					classData = buildArrayClass((ArrayType)type);
 				//generic array classes are different from regular generics
 				else if( isGenericArray(type) )		
@@ -364,28 +356,7 @@ public class TACClass extends TACOperand
 		}
 		
 		TACOperand name = makeGenericName(type, parameterArray);
-		
-		//after making the name, array parameters must be changed to their generic versions
-		//does this do anything?
-		/*
-		i = 0;
-		for( ModifiedType argument : type.getTypeParametersIncludingOuterClasses() ) {
-			if( argument.getType() instanceof ArrayType ) {
-				ArrayType arrayType = (ArrayType) argument.getType();
-				TACClass class_ = new TACClass(this, arrayType); 
-				new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(i)), false), class_.getClassData());
-				
-				TACOperand methodTable = class_.getMethodTable();
-				if( methodTable == null )
-					methodTable = new TACLiteral(this, new ShadowNull(Type.NULL));
-				new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(i)), false), methodTable);
-				i++;
-			}
-			else
-				i++;
-		}
-		*/
-		
+			
 		TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.CLASS));		
 		
 		TACLoad classSet = new TACLoad(this, new TACGlobalRef(Type.CLASS_SET, "@_genericSet"));		

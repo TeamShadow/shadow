@@ -203,13 +203,9 @@ functionType
 	;
 	
 classOrInterfaceType
-	: (unqualifiedName '@')? classOrInterfaceTypeSuffix ( ':' classOrInterfaceTypeSuffix )*
+	: (unqualifiedName '@')? Identifier ( ':' Identifier )* typeArguments?
 	;
 	
-classOrInterfaceTypeSuffix
-	:  Identifier typeArguments?
-   	;
-
 typeArguments
 	: '<' type ( ',' type )* '>'
 	;
@@ -430,14 +426,14 @@ primaryPrefix
 	;
 
 primarySuffix
-	: qualifiedKeyword
-	| brackets
+	: brackets
 	| subscript
 	| destroy
 	| method
 	| methodCall
 	| property
 	| allocation
+	| classSpecifier
 	| scopeSpecifier
 	| '++'
 	| '--'
@@ -446,13 +442,6 @@ primarySuffix
 allocation
 	: arrayCreate
 	| create
-	;
-
-qualifiedKeyword
-	: ':' ( 'this' | 'super')	
-	// When you have inner classes, you sometimes need to know Outer:this or Inner:this
-	// same for Outer:super or Inner:super
-	// Prefix must be a type name that you're currently inside of
 	;
 
 brackets
@@ -484,8 +473,12 @@ create
 	: typeArguments? ':' 'create' '(' ( conditionalExpression ( ',' conditionalExpression)* )? ')'
 	;
 
+classSpecifier
+	: typeArguments? ':' 'class' //field, constant, or class
+	;
+
 scopeSpecifier
-	: typeArguments? ':' (Identifier | 'class') //field, constant, or class
+	: ':' Identifier //field, constant, or inner class
 	;
 	
 destroy

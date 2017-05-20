@@ -1203,62 +1203,56 @@ public class TypeUpdater extends BaseChecker {
 	{ 
 		visitChildren(ctx);
 		
-		Type type = null;
-		boolean first = true;		
+
 		
-		// Type can be complex: package@Container<T, List<String>, String, Thing<K>>:Stuff<U>
-		for( ShadowParser.ClassOrInterfaceTypeSuffixContext child : ctx.classOrInterfaceTypeSuffix() ) {
-			if( type == Type.UNKNOWN )
-				break;
+		//(unqualifiedName '@')? Identifier ( ':' Identifier )* typeArguments?
+		// Type can be complex: package@Container:Stuff<T, List<String>, String, Thing<K>>
+		// Note that all type arguments are on the last class
+		String typeName = ctx.Identifier(0).getText();
+		if( ctx.unqualifiedName() != null )
+			typeName = ctx.unqualifiedName().getText() + "@" + typeName;
+		Type type = lookupType(ctx, typeName);
+		
+		for( int i = 1; type != null && i < ctx.Identifier().size(); ++i ) {
+			typeName = ctx.Identifier(i).getText();
+
+			if( type instanceof ClassType ) 
+				type = ((ClassType)type).getInnerClass(typeName);
+			else
+				type = null;
+		}		
+
+		if(type == null) {
+			addError(ctx, Error.UNDEFINED_TYPE, "Type " + typeName +
+					" not defined in current context");			
+			type = Type.UNKNOWN;					
+		}
+		else {
+			if( !isMeta && !classIsAccessible( type, declarationType  ) )		
+				addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
+						" not accessible from current context");
 			
-			String typeName = child.Identifier().getText();
-			if( first ) {
-				if( ctx.unqualifiedName() != null )
-					typeName = ctx.unqualifiedName().getText() + "@" + typeName;
-				type = lookupType(ctx, typeName);
-				first = false;
-			}
-			else { // On later passes, get inner class from previous.
-				if( type instanceof UninstantiatedType )
-					type = ((UninstantiatedType)type).getType();
-				
-				if( type instanceof ClassType ) 
-					type = ((ClassType)type).getInnerClass(typeName);
-				else
-					type = null;
-			}			
-		
-			if(type == null) {
-				addError(ctx, Error.UNDEFINED_TYPE, "Type " + typeName +
-						" not defined in current context");			
-				type = Type.UNKNOWN;					
-			}
-			else {
-				if( !isMeta && !classIsAccessible( type, declarationType  ) )		
-					addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
-							" not accessible from current context");
-				
-				if( child.typeArguments() != null ) { // Contains type arguments.				
-					SequenceType arguments = (SequenceType) child.typeArguments().getType();						
-					if( type.isParameterized() ) {
-						if( type instanceof ClassType )						
-							type = new UninstantiatedClassType( (ClassType)type, arguments );
-						else if( type instanceof InterfaceType )
-							type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments );
-					}
-					else {
-						addError(ctx, Error.UNNECESSARY_TYPE_ARGUMENTS,
-								"Type arguments supplied for non-parameterized type " + type);
-						type = Type.UNKNOWN;
-					}										
+			if( ctx.typeArguments() != null ) { // Contains type arguments.				
+				SequenceType arguments = (SequenceType) ctx.typeArguments().getType();						
+				if( type.isParameterized() ) {
+					if( type instanceof ClassType )						
+						type = new UninstantiatedClassType( (ClassType)type, arguments );
+					else if( type instanceof InterfaceType )
+						type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments );
 				}
-				else if( type.isParameterized() ) { // Parameterized but no type arguments.
-					addError(ctx, Error.MISSING_TYPE_ARGUMENTS,
-							"Type arguments not supplied for parameterized type " + typeName);
+				else {
+					addError(ctx, Error.UNNECESSARY_TYPE_ARGUMENTS,
+							"Type arguments supplied for non-parameterized type " + type);
 					type = Type.UNKNOWN;
-				}
+				}										
+			}
+			else if( type.isParameterized() ) { // Parameterized but no type arguments.
+				addError(ctx, Error.MISSING_TYPE_ARGUMENTS,
+						"Type arguments not supplied for parameterized type " + typeName);
+				type = Type.UNKNOWN;
 			}
 		}
+		
 		// Set the type now that it has type parameters. 
 		ctx.setType(type);
 		
