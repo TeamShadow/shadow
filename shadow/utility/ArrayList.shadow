@@ -11,7 +11,7 @@ is  List<V>
 	get int size = 0;
 	
 	nullable V[] elements;
-	int modifications = 0;
+	long modifications = 0L;
 	Equate<V> equater;
 	
 	public create()
@@ -205,17 +205,24 @@ is  List<V>
 	 */
 	public readonly iterator() => (Iterator<V>)
 	{
-		return ArrayListIterator:create();
+		return ArrayListIterator<V>:create(this);
 	}
 	
 	/*
 	 * Simple iterator class uses a single index to keep track of the current
 	 * location in the list.
 	 */
-	private class ArrayListIterator is Iterator<V>
+	private class ArrayListIterator<V> is Iterator<V>
 	{
-		int index = 0;
-		int expectedModifications = modifications;
+		long index = 0L;
+		immutable long expectedModifications;
+		ArrayList<V> arrayList;
+		
+		public create(ArrayList<V> arrayList)
+		{
+			this:arrayList = arrayList;
+			expectedModifiactions = arrayList:modifications;
+		}
 		
 		private readonly checkForModifications() => ()
 		{
@@ -236,7 +243,7 @@ is  List<V>
 				throw IndexOutOfBoundsException:create();
 
 			V temp = check(elements[index]);
-			index += 1;
+			index += 1L;
 			return temp;
 		}
 	}

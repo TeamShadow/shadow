@@ -107,13 +107,20 @@ and CanIterateNullable<T>
 	 */
 	public readonly iterator() => (IteratorNullable<T>)
 	{
-		return ArrayIterator:create();
+		return ArrayIterator<T>:create(this);
 	} 
 	
-	private class ArrayIterator is IteratorNullable<T>
+	private class ArrayIterator<T> is IteratorNullable<T>
 	{
 		long position = 0;
-		long limit = longSize();
+		immutable long limit;
+		ArrayNullable<T> array;
+		
+		public create(ArrayNullable<T> array)
+		{
+			this:array = array;
+			limit = array:longSize;
+		}
 		
 		public readonly hasNext() => (boolean)
 		{	

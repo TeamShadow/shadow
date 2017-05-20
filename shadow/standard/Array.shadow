@@ -112,13 +112,20 @@ and CanIterate<T>
 	 */
 	public readonly iterator() => (Iterator<T>)
 	{
-		return ArrayIterator:create();
+		return ArrayIterator<T>:create(this);
 	} 
 	
-	private class ArrayIterator is Iterator<T>
+	private class ArrayIterator<T> is Iterator<T>
 	{
 		long position = 0;
-		long limit = longSize();
+		immutable long limit;
+		Array<T> array;
+		
+		public create(Array<T> array)
+		{
+			this:array = array;
+			limit = array:longSize;
+		}
 		
 		public readonly hasNext() => (boolean)
 		{	

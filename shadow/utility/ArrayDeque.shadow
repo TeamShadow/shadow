@@ -11,10 +11,15 @@ class shadow:utility@
 is  Deque<E>
 {
 	/// Gets size of the deque.
-	get int size = 0;
-	int start = 0;
+	get long sizeLong = 0L;
+	long start = 0L;
 	nullable E[] elements = E:null[10];
-	int modifications = 0;
+	long modifications = 0L;	
+	
+	public readonly get size() => (int)
+	{
+		return cast<int>(sizeLong);
+	}
 	
 	/**
 	 * Checks whether or not the deque is empty.
@@ -183,37 +188,44 @@ is  Deque<E>
 	 */
 	public readonly iterator() => (Iterator<E>)
 	{
-		return ArrayDequeIterator:create();
+		return ArrayDequeIterator<E>:create(this);
 	}
 	
 	/*
 	 * Simple iterator class uses a single index to keep track of the current
 	 * location in the deque.
 	 */
-	private class ArrayDequeIterator is Iterator<E>
+	private class ArrayDequeIterator<E> is Iterator<E>
 	{
 		int index = 0;
-		int expectedModifications = modifications;
+		immutable int expectedModifications;
+		ArrayDeque<E> arrayDeque;
+		
+		public create(ArrayDeque<E> arrayDeque)
+		{
+			this:arrayDeque = arrayDeque;
+			expectedModifications = arrayDeque:modifications;
+		}
 		
 		private readonly checkForModifications() => ()
 		{
-			if( expectedModifications != modifications )
+			if( expectedModifications != arrayDeque->modifications )
 				throw IllegalModificationException:create();		
 		}
 	
 		public readonly hasNext() => (boolean)
 		{
 			checkForModifications();
-			return index < size;
+			return index < arrayDeque->size;
 		}
 		
 		public next() => (E)
 		{
 			checkForModifications();
-			if( index >= size )
+			if( index >= arrayDeque->size )
 				throw NoSuchElementException:create();
 	
-			E temp = check(elements[(start + index) % elements->size]);
+			E temp = check(arrayDeque->elements[(start + index) % arrayDeque->elements->size]);
 			index += 1;
 			return temp;
 		}

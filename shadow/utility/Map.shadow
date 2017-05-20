@@ -16,10 +16,16 @@ and CanIndexNullable<K,V>
 and CanIndexStore<K, V>
 {
 	/**
-	 * Property should get the number of key-value pairs stored in the map.
+	 * Property should get the number of key-value pairs stored in the map as an {@code int}.
 	 * @return size of the map
 	 */
 	readonly get size() => ( int size );
+	
+	/**
+	 * Property should get the number of key-value pairs stored in the map as a {@code long}.
+	 * @return size of the list
+	 */
+	readonly get sizeLong() => ( long size );
 	
 	/**
 	 * Method should check whether or not the map is empty.

@@ -19,19 +19,25 @@ class shadow:utility@
 	TreeMap<K is CanCompare<K>, V is CanEqual<V>>
 is  OrderedMap<K,V>
 {
-    nullable Node root = null;  // root of the BST
+    nullable Node<K,V> root = null;  // root of the BST
     /// Gets the number of key-value pairs in the ordered map.
-    get int size = 0;			//number of key-value pairs in the map
-    int modifications = 0;		//modifications to BST, used for fail-fast iterators
+    get long sizeLong = 0L;			//number of key-value pairs in the map
+    long modifications = 0L;		//modifications to BST, used for fail-fast iterators
+    
+    public readonly get size() => (int)
+	{
+		return cast<int>(sizeLong);
+	}
+    
 
     // BST node data type
-    private locked class Node
+    private locked class Node<K,V>
     {
         get set K key;           	// key
         get set V value;         	// associated value
-        get set nullable Node left;	// left subtree
-        get set nullable Node right;// right subtree
-        get set boolean red;     	// color of parent link        
+        get set nullable Node<K,V> left;	// left subtree
+        get set nullable Node<K,V> right;// right subtree
+        get set boolean red;     	// color of parent link  
 
 		// Create a node with the given key and value
 		// key and value should ideally not be settable, but
@@ -54,7 +60,7 @@ is  OrderedMap<K,V>
     /*
      * Returns {@code true} if node is red.  Null nodes are considered black.
      */
-    private readonly isRed(nullable Node node) => (boolean)
+    private readonly isRed(nullable Node<K,V> node) => (boolean)
     {
         try
         {
@@ -105,7 +111,7 @@ is  OrderedMap<K,V>
      * Helper method to find key in the tree.
      * Iterative rather than recursive.
      */ 
-    private readonly find(nullable Node node, K key) => (nullable V) 
+    private readonly find(nullable Node<K,V> node, K key) => (nullable V) 
     {
     	try
     	{
@@ -152,11 +158,11 @@ is  OrderedMap<K,V>
      * Helper method to find a value by doing a recursive, preorder traversal
      * of the tree. Would a BFS be a better idea?
      */
-    private readonly containsValue(nullable Node node, V value) => (boolean)
+    private readonly containsValue(nullable Node<K,V> node, V value) => (boolean)
     {
     	try
     	{
-    		Node notNull = check(node);
+    		Node<K,V> notNull = check(node);
     		if( notNull->value == value )
     			return true;
     		if( containsValue(notNull->left, value) )
@@ -181,7 +187,7 @@ is  OrderedMap<K,V>
     {
         (root, ) = insert(root, key, value);         
         check(root)->red = false; // Never null after insert.         
-        modifications += 1;           
+        modifications += 1L;           
     }
     
    /**
@@ -197,7 +203,7 @@ is  OrderedMap<K,V>
     {
     	(root, nullable V oldValue) = insert(root, key, value);
     	check(root)->red = false; // Never null after insert.         
-        modifications += 1;
+        modifications += 1L;
         return oldValue;   
     }
 
@@ -205,11 +211,11 @@ is  OrderedMap<K,V>
      * Helper method for insertion, doing regular, recursive BST insertion
      * with red-black rotations and recolors afterwards, if needed.      
      */
-    private insert(nullable Node node, K key, V value) => (Node, nullable V) 
+    private insert(nullable Node<K,V> node, K key, V value) => (Node<K,V>, nullable V) 
     {
 		try
 		{
-			Node notNull = check(node);
+			Node<K,V> notNull = check(node);
 			nullable V oldValue;
 	        int compare = key.compare(notNull->key);
 	        if( compare < 0 )
@@ -231,8 +237,8 @@ is  OrderedMap<K,V>
         recover
         {
         	// Null case, create new node.
-        	size += 1;
-        	return (Node:create(key, value, true), null);
+        	size += 1L;
+        	return (Node<K,V>:create(key, value, true), null);
         }
     }
 
@@ -259,8 +265,8 @@ is  OrderedMap<K,V>
         	}
         	recover {}
         	
-        	size -= 1;	
-        	modifications += 1;
+        	size -= 1L;	
+        	modifications += 1L;
         }
         recover
         {
@@ -274,11 +280,11 @@ is  OrderedMap<K,V>
      * Helper method for deleteMin(), using recursive delete with red-black
      * balancing.    
      */
-    private deleteMin( Node node ) => ( nullable Node )
+    private deleteMin( Node<K,V> node ) => ( nullable Node<K,V> )
     { 
     	try
     	{
-    		Node leftNode = check(node->left);
+    		Node<K,V> leftNode = check(node->left);
         	if (!isRed(leftNode) and !isRed(leftNode->left))
             	node = moveRedLeft(node);
         	node->left = deleteMin(check(node->left));
@@ -310,8 +316,8 @@ is  OrderedMap<K,V>
         		check(root)->red = false;
         	}
         	recover {}	        
-	        modifications += 1;
-	        size -= 1;	       
+	        modifications += 1L;
+	        size -= 1L;	       
         }
         recover
         {
@@ -325,7 +331,7 @@ is  OrderedMap<K,V>
      * Helper method for deleteMax(), using recursive delete with red-black
      * balancing.    
      */
-    private deleteMax(Node node) => (nullable Node) 
+    private deleteMax(Node<K,V> node) => (nullable Node<K,V>) 
     { 
         if (isRed(node->left))
             node = rotateRight(node);
@@ -367,8 +373,8 @@ is  OrderedMap<K,V>
     		check(root)->red = false;
     	}
     	recover {}
-    	modifications += 1; 
-    	size -= 1;   	
+    	modifications += 1L; 
+    	size -= 1L;   	
     	return value;
     }
 
@@ -376,12 +382,12 @@ is  OrderedMap<K,V>
      * Helper method for remove(K), using recursive delete with red-black
      * balancing.    
      */
-    private remove(Node node, K key) => (nullable Node, V value)
+    private remove(Node<K,V> node, K key) => (nullable Node<K,V>, V value)
     {
     	V value;
         if (key.compare(node->key) < 0) 
         {        	
-        	Node leftNode = check(node->left);
+        	Node<K,V> leftNode = check(node->left);
             if (!isRed(leftNode) and !isRed(leftNode->left))
                 node = moveRedLeft(node);
             (node->left, value) = remove(check(node->left), key);            
@@ -397,7 +403,7 @@ is  OrderedMap<K,V>
             if( !isRed(node->right) and !isRed(check(node->right)->left ) )
                 node = moveRedRight(node);
                 
-            Node rightNode = check(node->right); // Impossible to be null.
+            Node<K,V> rightNode = check(node->right); // Impossible to be null.
             if( key.equal(node->key) )
             {
             	value = node->value;            	 
@@ -418,9 +424,9 @@ is  OrderedMap<K,V>
     /*
      * Leans a left-leaning link to the right.
      */
-    private rotateRight(Node node) => (Node)
+    private rotateRight(Node<K,V> node) => (Node<K,V>)
     {     	      
-        Node x = check(node->left);
+        Node<K,V> x = check(node->left);
         node->left = x->right;
         x->right = node;
         x->red = node->red;
@@ -431,9 +437,9 @@ is  OrderedMap<K,V>
     /*
      * Leans a right-leaning link to the left.
      */
-    private rotateLeft(Node node) => (Node)
+    private rotateLeft(Node<K,V> node) => (Node<K,V>)
     {       	    
-        Node x = check(node->right);
+        Node<K,V> x = check(node->right);
         node->right = x->left;
         x->left = node;
         x->red = node->red;
@@ -444,11 +450,11 @@ is  OrderedMap<K,V>
     /*
      * Flips the colors of a node and its two children.
      */
-    private flipColors(Node node) => ()
+    private flipColors(Node<K,V> node) => ()
     {
         node->red = !node->red;
-        Node leftNode = check(node->left);
-        Node rightNode = check(node->right);
+        Node<K,V> leftNode = check(node->left);
+        Node<K,V> rightNode = check(node->right);
         leftNode->red = !leftNode->red;
         rightNode->red = !rightNode->red;
     }
@@ -457,10 +463,10 @@ is  OrderedMap<K,V>
      * Assuming that node is red and both node->left and node->left->left
      * are black, makes node->left or one of its children red.
      */
-    private moveRedLeft(Node node) => (Node)
+    private moveRedLeft(Node<K,V> node) => (Node<K,V>)
     {
         flipColors(node);
-        Node rightNode = check(node->right);
+        Node<K,V> rightNode = check(node->right);
         if( isRed(rightNode->left) )
         { 
             node->right = rotateRight(rightNode);
@@ -474,7 +480,7 @@ is  OrderedMap<K,V>
      * Assuming that node is red and both node->right and node->right->left
      * are black, makes node->right or one of its children red.
      */
-    private moveRedRight(Node node) => (Node)
+    private moveRedRight(Node<K,V> node) => (Node<K,V>)
     {
         flipColors(node);
         if (isRed(check(node->left)->left)) 
@@ -488,7 +494,7 @@ is  OrderedMap<K,V>
     /*
      * Restores red-black tree invariant.
      */
-    private balance(Node node) => (Node)
+    private balance(Node<K,V> node) => (Node<K,V>)
     {
         if( isRed(node->right) )
         	node = rotateLeft(node);
@@ -510,7 +516,7 @@ is  OrderedMap<K,V>
     {
     	try
     	{
-    		Node notNull = check(root);
+    		Node<K,V> notNull = check(root);
     		return min(notNull)->key;
     	}
     	recover
@@ -522,7 +528,7 @@ is  OrderedMap<K,V>
     /*
      * Helper method for min(), iterative.
      */ 
-    private readonly min(Node node) => (Node)
+    private readonly min(Node<K,V> node) => (Node<K,V>)
     {    
     	try
     	{
@@ -544,7 +550,7 @@ is  OrderedMap<K,V>
     {
         try
     	{
-    		Node notNull = check(root);
+    		Node<K,V> notNull = check(root);
     		return max(notNull)->key;
     	}
     	recover
@@ -556,7 +562,7 @@ is  OrderedMap<K,V>
     /*
      * Helper method for max(), iterative.
      */ 
-    private readonly max(Node node) => (Node)
+    private readonly max(Node<K,V> node) => (Node<K,V>)
     {
         try
     	{
@@ -580,7 +586,7 @@ is  OrderedMap<K,V>
     {           
         try
         {
-        	nullable Node lowest = floor(root, key);
+        	nullable Node<K,V> lowest = floor(root, key);
         	return check(lowest)->key;        
         }
         recover
@@ -592,18 +598,18 @@ is  OrderedMap<K,V>
     /*
      * Helper method for floor(), recursive.
      */
-    private readonly floor(nullable Node node, K key) => (nullable Node)
+    private readonly floor(nullable Node<K,V> node, K key) => (nullable Node<K,V>)
     {
     	try
     	{
-    		Node notNull = check(node);
+    		Node<K,V> notNull = check(node);
     		int compare = key.compare(notNull->key);
 	        if( compare == 0 )
 	        	return node;
 	        if (compare < 0) 
 	        	return floor(notNull->left, key);
 	        
-	        nullable Node lowest = floor(notNull->right, key);
+	        nullable Node<K,V> lowest = floor(notNull->right, key);
 	        if (lowest !== null)
 	        	return lowest; 
 	        else
@@ -626,7 +632,7 @@ is  OrderedMap<K,V>
     {   
     	try
     	{
-        	nullable Node highest = ceiling(root, key);
+        	nullable Node<K,V> highest = ceiling(root, key);
         	return check(highest)->key;
        	}
         recover
@@ -638,18 +644,18 @@ is  OrderedMap<K,V>
     /*
      * Helper method for ceiling(), recursive.
      */
-    private readonly ceiling(nullable Node node, K key) => (nullable Node)
+    private readonly ceiling(nullable Node<K,V> node, K key) => (nullable Node<K,V>)
     {  
     	try
     	{
-    		Node notNull = check(node);
+    		Node<K,V> notNull = check(node);
     		int compare = key.compare(notNull->key);
 	        if( compare == 0 )
 	        	return node;
 	        if( compare > 0 )
 	        	return ceiling(notNull->right, key);
 	        	
-	        nullable Node highest = ceiling(notNull->left, key);
+	        nullable Node<K,V> highest = ceiling(notNull->left, key);
 	        if( highest !== null )
 	        	return highest; 
 	        else
@@ -691,11 +697,11 @@ is  OrderedMap<K,V>
      * Helper method for keys(K, K) that recursively adds the keys between
      * low and high in the subtree rooted at node to the queue.
      */ 
-    private readonly keys(nullable Node node, ArrayDeque<K> queue, K low, K high) => ()
+    private readonly keys(nullable Node<K,V> node, ArrayDeque<K> queue, K low, K high) => ()
     { 
         try
         { 
-        	Node notNull = check(node);
+        	Node<K,V> notNull = check(node);
 	        int compareLow = low.compare(notNull->key); 
 	        int compareHigh = high.compare(notNull->key); 
 	        if (compareLow < 0)
@@ -721,7 +727,7 @@ is  OrderedMap<K,V>
 	
 		var output = MutableString:create("{");
 		addStrings(root, output);
-		output.delete(output->size - 2, output->size); //removes last ", "				
+		output.delete(output->sizeLong - 2L, output->sizeLong); //removes last ", "				
 		output.append("}");
 		return output.toString();
 	}
@@ -730,11 +736,11 @@ is  OrderedMap<K,V>
 	 * Helper method for toString() which adds key-value pairs to a
 	 * MutableString using a recursive, in order traversal.
 	 */
-	private readonly addStrings(nullable Node node, MutableString output) => ()
+	private readonly addStrings(nullable Node<K,V> node, MutableString output) => ()
 	{
 		try
 		{
-			Node notNull = check(node);
+			Node<K,V> notNull = check(node);
 			
 			addStrings(notNull->left, output);			
 			output.append(notNull);
@@ -750,22 +756,26 @@ is  OrderedMap<K,V>
 	 */
     public readonly iterator() => (Iterator<V>)
     {
-    	return TreeMapIterator:create();
+    	return TreeMapIterator<K,V>:create(this);
     }
     
     // Iterator class for TreeMap
-    private class TreeMapIterator is Iterator<V>
+    private class TreeMapIterator<K,V> is Iterator<V>
 	{
 		// Current stack of Nodes, since this tree doesn't have parent references.
-		ArrayDeque<Node> stack = ArrayDeque<Node>:create();		 		
-		int expectedModifications = modifications;
+		ArrayDeque<Node<K,V>> stack = ArrayDeque<Node<K,V>>:create();		 		
+		immutable long expectedModifications;
+		TreeMap<K,V> treeMap;
 		
 		// Go all the way to left when creating iterator.
-		public create()
+		public create(TreeMap<K,V> treeMap)
 		{			
+			this:treeMap = treeMap;
+			expectedModifications = treeMap:modifications;
+		
 			try
 			{
-				Node current = check(root);				
+				Node current = check(treeMap:root);				
 				while( true )
 				{					
 					stack.addLast(current);
@@ -778,14 +788,14 @@ is  OrderedMap<K,V>
 
 		private readonly checkForModifications() => ()
 		{
-			if ( modifications != expectedModifications )
+			if ( treeMap:modifications != expectedModifications )
 				throw IllegalModificationException:create();
 		}
 
 		public readonly hasNext() => ( boolean )
 		{
 			checkForModifications();
-			return stack->size != 0;
+			return stack->sizeLong != 0L;
 		}
 
 		// Determines next value through successor relationship
@@ -797,7 +807,7 @@ is  OrderedMap<K,V>
 				throw NoSuchElementException:create();
 			
 			// Get node from the stack and its value.	
-			Node current = stack.getLast();
+			Node<K,V> current = stack.getLast();
 			V value = current->value;
 			
 			// Add leftmost node of right subtree, if present
@@ -824,7 +834,7 @@ is  OrderedMap<K,V>
 				{
 					current = stack.removeLast();
 				}
-				while( stack->size > 0 and current === stack.getLast()->right );
+				while( stack->sizeLong > 0L and current === stack.getLast()->right );
 			}			
 			
 			return value;

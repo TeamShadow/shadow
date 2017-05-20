@@ -15,10 +15,16 @@ and CanIndex<E, boolean>
 and CanIndexStore<E, boolean>
 {
 	/**
-	 * Property should get the number of elements stored in the set.
+	 * Property should get the number of elements stored in the set as an {@code int}.
 	 * @return size of the set
 	 */
 	readonly get size() => ( int size );
+	
+	/**
+	 * Property should get the number of elements stored in the set as a {@code long}.
+	 * @return size of the set
+	 */
+	readonly get sizeLong() => ( long size );
 	
 	/**
 	 * Method should check whether or not the set map is empty.

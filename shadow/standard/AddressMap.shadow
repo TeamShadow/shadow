@@ -286,7 +286,7 @@ locked class shadow:standard@
 	 */
 	public readonly iterator() => ( Iterator<ulong> )
 	{
-		return AddressMapIterator:create();
+		return AddressMapIterator:create(this);
 	}
 	
 	/**
@@ -307,10 +307,11 @@ locked class shadow:standard@
 	{
 		long index = 0;
 		nullable Node current;
-		long expectedModifications = modifications;
-		public create()
+		immutable long expectedModifications;
+		public create(AddressMap addressMap)
 		{			
 			current = next(null);
+			expectedModifications = addressMap:modifications;			
 		}
 		public next( nullable Node position ) => ( nullable Node )
 		{	

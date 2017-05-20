@@ -9,11 +9,10 @@ is Equate<T>
 
 	public create()
 	{
-		if((T:class).isSubtype(CanEqual<T>:class)) {
-			comparer = canEqualComparer:create();
-		} else {
-			comparer = referenceComparer:create();
-		}
+		if((T:class).isSubtype(CanEqual<T>:class))
+			comparer = CanEqualComparer<T>:create();
+		else
+			comparer = ReferenceComparer<T>:create();
 	}
 	
 	public readonly equal(T a, T b) => (boolean)
@@ -21,7 +20,7 @@ is Equate<T>
 		return comparer.equal(a, b);
 	}
 	
-	private class canEqualComparer is Equate<T>
+	private class CanEqualComparer<T> is Equate<T>
 	{
 		public readonly equal(T a, T b) => (boolean)
 		{
@@ -29,7 +28,7 @@ is Equate<T>
 		}
 	}
 	
-	private class referenceComparer is Equate<T>
+	private class ReferenceComparer<T> is Equate<T>
 	{
 		public readonly equal(T a, T b) => (boolean)
 		{
