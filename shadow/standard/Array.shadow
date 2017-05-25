@@ -43,7 +43,7 @@ and CanIterate<T>
 	 * Gets the size of the array (total number of elements) as a {@code long}.
 	 * @return size of array
 	 */
-	public readonly native get longSize() => ( long );	
+	public readonly native get sizeLong() => ( long );	
 
 	/* 
 	// Copy implementation based off the following code:
@@ -124,7 +124,7 @@ and CanIterate<T>
 		public create(Array<T> array)
 		{
 			this:array = array;
-			limit = array:longSize;
+			limit = array->longSize;
 		}
 		
 		public readonly hasNext() => (boolean)

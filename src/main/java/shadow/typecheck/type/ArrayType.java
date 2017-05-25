@@ -158,6 +158,18 @@ public class ArrayType extends ClassType
 		return nullable;
 	}
 	
+	public ArrayType instantiate() throws InstantiationException {
+		if( recursivelyGetBaseType() instanceof UninstantiatedType ) {			
+			if( baseType instanceof UninstantiatedType )
+				return new ArrayType(((UninstantiatedType)baseType).instantiate(), nullable);
+			//must be an array of arrays
+			else
+				return new ArrayType(((ArrayType)baseType).instantiate(), nullable);				
+		}
+		else
+			return this;
+	}
+	
 	@Override
 	public boolean isRecursivelyParameterized() {
 		return baseType.isRecursivelyParameterized();
@@ -173,7 +185,7 @@ public class ArrayType extends ClassType
 		if( baseType instanceof TypeParameter )
 			return true;
 		
-		if( baseType.isParameterizedIncludingOuterClasses() && !baseType.isFullyInstantiated() )
+		if( baseType.isParameterized() && !baseType.isFullyInstantiated() )
 			return true;
 		
 		if( baseType instanceof ArrayType )

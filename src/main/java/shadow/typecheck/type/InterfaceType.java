@@ -141,7 +141,7 @@ public class InterfaceType extends Type
 	@Override
 	public InterfaceType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {		
 		if( isRecursivelyParameterized() ) {					
-			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
 				return (InterfaceType)cached;
 			
@@ -149,10 +149,10 @@ public class InterfaceType extends Type
 			replaced.setPackage(getPackage());
 			
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;			
-			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
+			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 			
 			for( InterfaceType _interface : getInterfaces() )
-				replaced.addInterface(_interface.replace(values, replacements));		
+				replaced.addInterface(_interface.replace(values, replacements));
 			
 			//only constant non-parameterized fields in an interface
 			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
@@ -181,21 +181,26 @@ public class InterfaceType extends Type
 		return this;
 	}
 	
+	int counter = 0;
+	
 	@Override
 	public InterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
 		if( isRecursivelyParameterized() ) {	
-			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
 				return (InterfaceType)cached;
+			
+			
+			counter++;
 			
 			InterfaceType replaced = new InterfaceType(getTypeName(), getModifiers(), getDocumentation());
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
-			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
+			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 						
 			for( InterfaceType _interface : getInterfaces() )
-				replaced.addInterface(_interface.partiallyReplace(values, replacements));		
+				replaced.addInterface(_interface.partiallyReplace(values, replacements));
 						
 			//only constant non-parameterized fields in an interface
 			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
@@ -218,7 +223,7 @@ public class InterfaceType extends Type
 					Type parameter = modifiedParameter.getType();
 					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
 				}
-			
+			counter--;
 			return replaced;
 		}
 		

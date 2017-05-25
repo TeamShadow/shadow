@@ -255,6 +255,10 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 				type = ((UninstantiatedType)type).instantiate();
 				types.set(i, new SimpleModifiedType(type, types.get(i).getModifiers()));
 			}
+			else if( type instanceof ArrayType && ((ArrayType)type).recursivelyGetBaseType() instanceof UninstantiatedType ) {
+				type = ((ArrayType)type).instantiate();
+				types.set(i, new SimpleModifiedType(type, types.get(i).getModifiers()));
+			}
 		}
 	}
 		

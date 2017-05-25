@@ -10,14 +10,9 @@ and Deque<V>
 	/// Gets size of the list.
 	get long sizeLong = 0L;
 	
-	Node<V> header = Node<V>:create();
+	Node<V> header = Node<V>:create(this);
 	long modifications = 0L;
 	Equate<V> equater;
-	
-	public readonly get size() => (int)
-	{
-		return cast<int>(sizeLong);
-	}
 	
 	public create()
 	{
@@ -27,6 +22,11 @@ and Deque<V>
 	public create(Equate<V> equater)
 	{
 		this:equater = equater;
+	}
+	
+	public readonly get size() => (int)
+	{
+		return cast<int>(sizeLong);
 	}
 
 	private class Node<V>
@@ -62,8 +62,8 @@ and Deque<V>
 		public delete() => ()
 		{
 			( prev:next, next:prev ) = ( next, prev );
-			sizeLong -= 1L;
-			modifications += 1L;
+			linkedList:sizeLong -= 1L;
+			linkedList:modifications += 1L;
 		}
 	}
 	
@@ -150,7 +150,7 @@ and Deque<V>
 	 */
 	public index( long index, V value ) => ()
 	{
-		if ( index == size )
+		if ( index == sizeLong )
 			add(value);
 		else
 			findIndex(index)->value = value;
@@ -164,7 +164,7 @@ and Deque<V>
 	 */
 	public add( V value ) => ( LinkedList<V> )
 	{
-		Node:create(value, header);
+		Node<V>:create(this, value, header);
 		return this;
 	}
 	
@@ -177,9 +177,8 @@ and Deque<V>
 	public remove( V value ) => ( boolean success )
 	{
 		try
-		{
-			nullable Node node;
-			(, node) = findNode(value);
+		{			 
+			(, nullable var node) = findNode(value);
 			check(node).delete();
 			return true;
 		}
@@ -196,9 +195,9 @@ and Deque<V>
 	 * @return element being removed
 	 * @throws IndexOutOfBoundsException if an illegal index is specified
 	 */	
-	public delete( int index ) => ( V value )
+	public delete( long index ) => ( V value )
 	{
-		Node node = findIndex(index);
+		var node = findIndex(index);
 		V value = check(node->value);
 		node.delete();
 		return value;
@@ -210,9 +209,9 @@ and Deque<V>
 	 * @param value element to search for
 	 * @return index of element or -1 if not found
 	 */
-	public readonly indexOf( V value ) => ( int index )
+	public readonly indexOf( V value ) => ( long index )
 	{		
-		(int index, ) = findNode(value);
+		(long index, ) = findNode(value);
 		return index;
 	}
 	
@@ -244,7 +243,7 @@ and Deque<V>
 	 */
 	public readonly iterator() => ( Iterator<V> )
 	{
-		return LinkedListIterator:create();
+		return LinkedListIterator<V>:create(this);
 	}
 	
 	/**
@@ -255,8 +254,8 @@ and Deque<V>
 	 */
 	public addFirst( V element ) => ( LinkedList<V> )
 	{
-		Node node = findIndex( 0 );
-		Node:create( element, node );
+		var node = findIndex( 0 );
+		Node<V>:create(this, element, node );
 		return this;
 	}
 	
@@ -279,9 +278,9 @@ and Deque<V>
 	 */
 	public readonly getFirst() => (V element )
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			throw NoSuchElementException:create(); 
-		return index(0);
+		return index(0L);
 	}
 	
 	/**
@@ -292,7 +291,7 @@ and Deque<V>
 	 */
 	public readonly getLast() => (V element )
 	{
-		return index(size - 1);
+		return index(sizeLong - 1L);
 	}
 	
 	/**
@@ -303,9 +302,9 @@ and Deque<V>
 	 */
 	public removeFirst() => (V element )
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			throw NoSuchElementException:create();
-		return delete(0);
+		return delete(0L);
 	}
 	
 	/**
@@ -316,9 +315,9 @@ and Deque<V>
 	 */
 	public removeLast() => ( V element )
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			throw NoSuchElementException:create();
-		return delete(size - 1);
+		return delete(sizeLong - 1L);
 	}	
 	
 	/**
@@ -356,20 +355,20 @@ and Deque<V>
 		public create(LinkedList<V> linkedList)
 		{
 			this:linkedList = linkedList;
-			current = header->next;
+			current = linkedList:header->next;
 			expectedModifications = linkedList:modifications;
 		}
 
 		private readonly checkForModifications() => ()
 		{
-			if ( modifications != expectedModifications )
+			if ( linkedList:modifications != expectedModifications )
 				throw IllegalModificationException:create();
 		}
 		
 		public readonly hasNext() => ( boolean )
 		{
 			checkForModifications();
-			return current !== header;
+			return current !== linkedList:header;
 		}
 		
 		public next() => ( V value )

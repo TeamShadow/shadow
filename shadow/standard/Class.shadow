@@ -333,7 +333,7 @@ is  CanHash
 	 * Finds a hash value for the current class, based on its name.	 
 	 * @return hash value	 
 	 */	
-	public locked get readonly hash() => ( uint )
+	public locked get readonly hash() => ( ulong )
 	{
 		return toString().hash();
 	}

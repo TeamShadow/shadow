@@ -27,7 +27,7 @@ is  Deque<E>
 	 */
 	public readonly isEmpty() => ( boolean )
 	{
-		return size == 0;
+		return sizeLong == 0L;
 	}	
 	
 	// Doubles the size of the backing array.	
@@ -37,7 +37,7 @@ is  Deque<E>
 		for( int i = 0; i < elements->size; i += 1 )
 			temp[i] = elements[(start + i) % elements->size];
 		elements = temp;
-		start = 0;	
+		start = 0L;	
 	}
 
 	/**
@@ -50,17 +50,17 @@ is  Deque<E>
 	 */
 	public addFirst( E element ) => ( ArrayDeque<E> )
 	{
-		if( elements->size == size )
+		if( elements->sizeLong == sizeLong )
 			grow();
 			
-		start -= 1;
-		if( start < 0 )
-			start = elements->size - 1;
+		start -= 1L;
+		if( start < 0L )
+			start = elements->sizeLong - 1L;
 			
 		elements[start] = element;
-		size += 1;
+		sizeLong += 1L;
 				
-		modifications += 1; 
+		modifications += 1L; 
 		return this;
 	}
 	
@@ -74,13 +74,13 @@ is  Deque<E>
 	 */
 	public addLast( E element ) => ( ArrayDeque<E> )
 	{
-		if( elements->size == size )
+		if( elements->sizeLong == sizeLong )
 			grow();
 					
-		elements[(start + size) % elements->size] = element;
-		size += 1;
+		elements[(start + sizeLong) % elements->sizeLong] = element;
+		sizeLong += 1L;
 				
-		modifications += 1; 
+		modifications += 1L; 
 		return this;
 	}
 	
@@ -92,7 +92,7 @@ is  Deque<E>
 	 */
 	public readonly getFirst() => (E element)
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			throw NoSuchElementException:create();		
 
 		return check(elements[start]);		
@@ -106,10 +106,10 @@ is  Deque<E>
 	 */	
 	public readonly getLast() => (E element)
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			throw NoSuchElementException:create();
 
-		return check(elements[(start + size - 1) % elements->size]);
+		return check(elements[(start + sizeLong - 1) % elements->sizeLong]);
 	}
 	
 	
@@ -121,13 +121,13 @@ is  Deque<E>
 	 */
 	public removeFirst() => (E element)
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			throw NoSuchElementException:create();
 		
 		E temp = check(elements[start]); 
-		start = (start + 1) % elements->size;
-		size -= 1;
-		modifications += 1;			
+		start = (start + 1L) % elements->sizeLong;
+		sizeLong -= 1L;
+		modifications += 1L;			
 		return temp;
 	}
 	
@@ -139,12 +139,12 @@ is  Deque<E>
 	 */
 	public removeLast() => ( E element )
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			throw NoSuchElementException:create();
 	
-		E temp = check(elements[(start + size - 1) % elements->size]);
-		size -= 1;
-		modifications += 1;			
+		E temp = check(elements[(start + sizeLong - 1L) % elements->sizeLong]);
+		sizeLong -= 1L;
+		modifications += 1L;			
 		return temp;
 	}
 	
@@ -155,8 +155,8 @@ is  Deque<E>
 	 */	
 	public clear() => ( ArrayDeque<E> )
 	{
-		size = 0;
-		modifications += 1;
+		sizeLong = 0L;
+		modifications += 1L;
 		return this;
 	}
 		
@@ -197,8 +197,8 @@ is  Deque<E>
 	 */
 	private class ArrayDequeIterator<E> is Iterator<E>
 	{
-		int index = 0;
-		immutable int expectedModifications;
+		long index = 0;
+		immutable long expectedModifications;
 		ArrayDeque<E> arrayDeque;
 		
 		public create(ArrayDeque<E> arrayDeque)
@@ -209,7 +209,7 @@ is  Deque<E>
 		
 		private readonly checkForModifications() => ()
 		{
-			if( expectedModifications != arrayDeque->modifications )
+			if( expectedModifications != arrayDeque:modifications )
 				throw IllegalModificationException:create();		
 		}
 	
@@ -222,11 +222,11 @@ is  Deque<E>
 		public next() => (E)
 		{
 			checkForModifications();
-			if( index >= arrayDeque->size )
+			if( index >= arrayDeque->sizeLong )
 				throw NoSuchElementException:create();
 	
-			E temp = check(arrayDeque->elements[(start + index) % arrayDeque->elements->size]);
-			index += 1;
+			E temp = check(arrayDeque:elements[(arrayDeque:start + index) % arrayDeque:elements->sizeLong]);
+			index += 1L;
 			return temp;
 		}
 	}

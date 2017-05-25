@@ -28,6 +28,7 @@ import shadow.parse.ShadowParser.TypeContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.UninstantiatedType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
@@ -1118,7 +1119,7 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitClassOrInterfaceType(ShadowParser.ClassOrInterfaceTypeContext ctx)
 	{ 
-		if( ctx.getType() != null ) // Optimization if type already determined.
+		if( ctx.getType() != null && !(ctx.getType() instanceof UninstantiatedType) ) // Optimization if type already determined.
 			return null;
 			
 		visitChildren(ctx);

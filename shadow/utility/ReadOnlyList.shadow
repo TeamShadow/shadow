@@ -42,7 +42,7 @@ is	List<T>
 		return list.iterator();
 	}
 	
-	public readonly index(int key) => (T)
+	public readonly index(long key) => (T)
 	{
 		return list.index(key);
 	}
@@ -52,7 +52,7 @@ is	List<T>
 		throw InvalidOperationException:create(ERROR);
 	}
 	
-	public delete(int index) => (T)
+	public delete(long index) => (T)
 	{
 		throw InvalidOperationException:create(ERROR);
 	}

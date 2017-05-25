@@ -48,7 +48,7 @@ and CanIterateNullable<T>
 	 * Gets the size of the array (total number of elements) as a {@code long}.
 	 * @return size of array
 	 */
-	public readonly native get longSize() => ( long );	
+	public readonly native get sizeLong() => ( long );	
 	
 	/**
 	 * Copy a subarray from the given array, starting at {@code start} and going
@@ -119,7 +119,7 @@ and CanIterateNullable<T>
 		public create(ArrayNullable<T> array)
 		{
 			this:array = array;
-			limit = array:longSize;
+			limit = array->sizeLong;
 		}
 		
 		public readonly hasNext() => (boolean)
@@ -132,7 +132,7 @@ and CanIterateNullable<T>
 			if( position >= limit )
 				throw IndexOutOfBoundsException:create();
 			
-			nullable T value = index( position );			
+			nullable T value = array.index( position );			
 			position += 1L;			
 			
 			return value;  

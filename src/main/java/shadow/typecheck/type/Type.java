@@ -133,38 +133,76 @@ public abstract class Type implements Comparable<Type> {
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
 		public Type instantiatedType;
-		public List<TypeArgumentCache> children;
+		public List<TypeArgumentCache> children;		
+		
+		public String toString() {
+			return instantiatedType.toString();
+		}
+		
 	}
 	
-	public Type getInstantiation( List<ModifiedType> typeArguments  ) {
-		return getInstantiation(instantiatedTypes, typeArguments, 0 );
+	public Type getInstantiation( Type type, List<ModifiedType> values, List<ModifiedType> replacements  ) {
+		if( type.isParameterized() ) {
+			List<ModifiedType> typeReplacements = new ArrayList<ModifiedType>();
+			SequenceType typeParameters = type.getTypeParameters();
+			
+			for( ModifiedType parameter : typeParameters ) 
+				for( int i = 0; i < values.size(); ++i ) {
+					if( values.get(i).getType().equals(parameter.getType()) ) {						
+						typeReplacements.add(replacements.get(i));
+					}							
+				}
+			
+			return getInstantiation(instantiatedTypes, typeParameters, typeReplacements, 0, 0 );
+		}		
+		
+		return type;
 	}
 	
 	public Type getTypeWithoutTypeArguments() {		
 		return typeWithoutTypeArguments;
 	}
 	
-	private static Type getInstantiation(TypeArgumentCache types, List<ModifiedType> typeArguments, int index  )
+	private static Type getInstantiation(TypeArgumentCache types, SequenceType typeParameters, List<ModifiedType> typeArguments, int parameterIndex, int argumentIndex )
 	{
-		if( index == typeArguments.size() )
+		if( parameterIndex == typeParameters.size() )
 			return types.instantiatedType;
 		
 		if( types.children == null )
-			return null;
+			return null;		
 		
-		ModifiedType argument = typeArguments.get(index);
+		ModifiedType argument;
+		if( typeParameters.getType(parameterIndex) instanceof TypeParameter )			
+			argument = typeArguments.get(argumentIndex++);
+		else
+			argument = typeParameters.get(parameterIndex);
+		
 		for( TypeArgumentCache child : types.children )		
-			if( child.argument != null && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
-				return getInstantiation( child, typeArguments, index + 1 );
+			if( child.argument != null  && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
+				return getInstantiation( child, typeParameters, typeArguments, parameterIndex + 1, argumentIndex );
 
 		return null;
 	}
 	
-	public void addInstantiation( List<ModifiedType> typeArguments, Type type  )
+	public void addInstantiation( Type type, List<ModifiedType> values, List<ModifiedType> replacements, Type newType  )
 	{
-		addInstantiation(instantiatedTypes, typeArguments, 0, type );
+		
+		List<ModifiedType> typeReplacements = new ArrayList<ModifiedType>();
+		SequenceType typeParameters = type.getTypeParameters();
+		
+		for( ModifiedType parameter : typeParameters ) 
+			for( int i = 0; i < values.size(); ++i ) {
+				if( values.get(i).getType().equals(parameter.getType()) ) {						
+					typeReplacements.add(replacements.get(i));
+				}							
+			}
+		
+		addInstantiation(instantiatedTypes, typeParameters, typeReplacements, 0, 0, newType );
+		
+		//addInstantiation(instantiatedTypes, typeArguments, 0, type );
 	}
 	
+	/*
 	private static void addInstantiation(TypeArgumentCache types, List<ModifiedType> typeArguments, int index, Type type  )
 	{		
 		if( index == typeArguments.size() )		
@@ -187,7 +225,36 @@ public abstract class Type implements Comparable<Type> {
 			types.children.add(newChild);
 			addInstantiation( newChild, typeArguments, index + 1, type );
 		}
-	}	
+	}
+	*/
+	
+	
+	private static void addInstantiation(TypeArgumentCache types, SequenceType typeParameters, List<ModifiedType> typeArguments, int parameterIndex, int argumentIndex, Type type )
+	{
+		if( parameterIndex == typeParameters.size() )
+			types.instantiatedType = type;
+		else {		
+			if( types.children == null )
+				types.children = new ArrayList<TypeArgumentCache>();	
+		
+			ModifiedType argument;
+			if( typeParameters.getType(parameterIndex) instanceof TypeParameter )			
+				argument = typeArguments.get(argumentIndex++);
+			else
+				argument = typeParameters.get(parameterIndex);
+		
+			for( TypeArgumentCache child : types.children )		
+				if( child.argument != null  && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))  {
+					addInstantiation( child, typeParameters, typeArguments, parameterIndex + 1, argumentIndex, type );
+					return;
+				}
+
+			TypeArgumentCache newChild = new TypeArgumentCache();
+			newChild.argument = argument;
+			types.children.add(newChild);
+			addInstantiation( newChild, typeParameters, typeArguments, parameterIndex + 1, argumentIndex, type );
+		}
+	}
 	
 	//used to clear out types between runs of the JUnit tests
 	//otherwise, types can become mixed between two different runs of the type checker
@@ -327,9 +394,9 @@ public abstract class Type implements Comparable<Type> {
 				builder.append(typeName);
 		}
 		else if( (options & MANGLE) != 0  )
-			builder.append(getOuter().toString(options)).append('.').append(mangle(typeName));
+			builder.append(getOuter().toString(options & ~TYPE_PARAMETERS)).append('.').append(mangle(typeName));
 		else
-			builder.append(getOuter().toString(options)).append(':').append(typeName);
+			builder.append(getOuter().toString(options & ~TYPE_PARAMETERS)).append(':').append(typeName);
 			
 		if( isParameterized() && (options & TYPE_PARAMETERS) != 0 ) {		
 			if( (options & MANGLE) != 0  )
@@ -369,23 +436,14 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	//separate from equals() because we need certain different types to be equivalent in hash tables
-	public boolean equals(Type type)
-	{
-		if( type != null )
-		{
+	public boolean equals(Type type) {
+		if( type != null ) {
 			if( type == this )
 				return true;
 			
-			if( getPackage() == type.getPackage() && type.getTypeName().equals(getTypeName()) )
-			{				
-				if( isParameterizedIncludingOuterClasses() )
-				{
-					if( isParameterized() && !type.typeParameters.matches(typeParameters) )
-						return false;
-					
-					if( hasOuter() )
-						return getOuter().equals(type.getOuter());
-				}
+			if( getPackage() == type.getPackage() && type.getTypeName().equals(getTypeName()) ) {				
+				if( isParameterized() && !type.typeParameters.matches(typeParameters) )
+					return false;
 					
 				return true;
 			}	
@@ -793,9 +851,8 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	//Must have type parameters AND have them all filled in	
-	public boolean isFullyInstantiated()
-	{
-		if( !isParameterizedIncludingOuterClasses() )
+	public boolean isFullyInstantiated() {
+		if( !isParameterized() )
 			return false;
 		
 		if( parameterized )
@@ -804,40 +861,13 @@ public abstract class Type implements Comparable<Type> {
 				if( parameterType instanceof TypeParameter )
 					return false;
 				
-				if( parameterType.isParameterizedIncludingOuterClasses() && !parameterType.isFullyInstantiated() )
+				if( parameterType.isParameterized() && !parameterType.isFullyInstantiated() )
 					return false;
-			}
-		
-		if( hasOuter() )			
-			return getOuter().isFullyInstantiated();
+			}		
 				
 		return true;		
 	}
-	
-	public List<ModifiedType> getTypeParametersIncludingOuterClasses()
-	{
-		List<ModifiedType> list = new ArrayList<ModifiedType>();
-		
-		if( hasOuter() )
-			list.addAll( outer.getTypeParametersIncludingOuterClasses() );
-		
-		if( isParameterized() )
-			list.addAll( getTypeParameters() );
-		
-		return list;
-	}
-	
-	public boolean isParameterizedIncludingOuterClasses()
-	{
-		if( isParameterized() )
-			return true;
-		
-		if( hasOuter() )
-			return getOuter().isParameterizedIncludingOuterClasses();
-		
-		return false;		
-	}	
-	
+
 	public boolean isRecursivelyParameterized()
 	{
 		return isParameterized();	
@@ -1166,16 +1196,16 @@ public abstract class Type implements Comparable<Type> {
 			else if( (type instanceof ClassType) || (type instanceof InterfaceType )) {		
 				usedTypes.add(type);
 				
-				if( type.isParameterizedIncludingOuterClasses() ) {				
+				if( type.isParameterized() ) {				
 					usedTypes.add(type.typeWithoutTypeArguments);
 					
 					if( !type.isFullyInstantiated() )
 						partiallyInstantiatedGenerics.add(type);
 													
-					for( ModifiedType typeParameter : type.getTypeParametersIncludingOuterClasses() ) {						
+					for( ModifiedType typeParameter : type.getTypeParameters() ) {						
 						Type parameterType = typeParameter.getType();
 						addUsedType( parameterType );
-						if( (parameterType instanceof ArrayType) && (parameterType.isFullyInstantiated() || !parameterType.isParameterizedIncludingOuterClasses() ) )
+						if( (parameterType instanceof ArrayType) && (parameterType.isFullyInstantiated() || !parameterType.isParameterized() ) )
 							usedTypes.add(typeParameter.getType()); //directly add array type parameter
 					}
 				}		

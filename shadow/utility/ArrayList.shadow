@@ -8,7 +8,7 @@ class shadow:utility@
 is  List<V>
 {
 	/// Gets size of the list.
-	get int size = 0;
+	get long sizeLong = 0;
 	
 	nullable V[] elements;
 	long modifications = 0L;
@@ -30,13 +30,18 @@ is  List<V>
 		this:equater = equater;
 	}
 	
+	public readonly get size() => (int)
+	{
+		return cast<int>(sizeLong);
+	}
+	
 	/**
 	 * Checks whether or not the list is empty.
 	 * @return {@code true} if the list is empty
 	 */
 	public readonly isEmpty() => ( boolean )
 	{
-		return size == 0;
+		return sizeLong == 0L;
 	}
 	
 	/**
@@ -47,9 +52,9 @@ is  List<V>
 	 * @return element
 	 * @throws IndexOutOfBoundsException if an illegal index is specified
 	 */
-	public readonly index(int index) => (V element)
+	public readonly index(long index) => (V element)
 	{
-		if( index < 0 or index >= size )
+		if( index < 0L or index >= sizeLong )
 			throw IndexOutOfBoundsException:create();
 		
 		return check(elements[index]);		
@@ -64,26 +69,26 @@ is  List<V>
 	 * @param value value of element	 
 	 * @throws IndexOutOfBoundsException if an illegal index is specified
 	 */
-	public index(int index, V value) => ()
+	public index(long index, V value) => ()
 	{
-		if( index < 0 or index > size )
+		if( index < 0L or index > sizeLong )
 			throw IndexOutOfBoundsException:create();
 			
-		if( index == size )
+		if( index == sizeLong )
 		{
-			if( size >= elements->size )
+			if( sizeLong >= elements->sizeLong )
 				grow();
-			size += 1;		
+			sizeLong += 1L;		
 		}			
 		elements[index] = value;
-		modifications += 1;	
+		modifications += 1L;	
 	}
 	
 	// Doubles the size of the backing array.
 	private grow() => ()
 	{
-		nullable V[] temp = V:null[elements->size * 2];
-		for( int i = 0; i < elements->size; i += 1 )
+		nullable var temp = V:null[elements->sizeLong * 2L];
+		for( long i = 0; i < elements->sizeLong; i += 1L )
 			temp[i] = elements[i];
 		elements = temp;	
 	}
@@ -98,7 +103,7 @@ is  List<V>
 	 */
 	public add(V value) => ( ArrayList<V> )
 	{
-		index( size, value );
+		index( sizeLong, value );
 		return this;
 	}
 	
@@ -109,8 +114,8 @@ is  List<V>
 	 */		
 	public clear() => (ArrayList<V>)
 	{
-		size = 0;
-		modifications += 1;
+		sizeLong = 0L;
+		modifications += 1L;
 		return this;
 	}
 	
@@ -121,7 +126,7 @@ is  List<V>
 	 */
 	public readonly contains(V value) => (boolean found)
 	{				
-		return indexOf(value) != -1;
+		return indexOf(value) != -1L;
 	}
 	
 	/**
@@ -130,15 +135,15 @@ is  List<V>
 	 * @param value element to search for
 	 * @return index of element or -1 if not found
 	 */
-	public readonly indexOf(V value) => (int index)
+	public readonly indexOf(V value) => (long index)
 	{	
-		for(int i = 0; i < size; i += 1) {
+		for(long i = 0; i < sizeLong; i += 1L) {
 			if(equater.equal(value, check(elements[i]))) {
 				return i;
 			}
 		}
 
-		return -1;
+		return -1L;
 	}
 	
 	/**
@@ -148,16 +153,16 @@ is  List<V>
 	 * @return element being removed
 	 * @throws IndexOutOfBoundsException if an illegal index is specified
 	 */
-	public delete(int index) => (V value)
+	public delete(long index) => (V value)
 	{
-		if(index < 0 or index >= size)
+		if(index < 0L or index >= sizeLong)
 			throw IndexOutOfBoundsException:create();
 
 		V temp = check(elements[index]);
-		for(int i = index; i < size - 1; i += 1)
+		for(long i = index; i < sizeLong - 1L; i += 1L)
 			elements[i] = elements[i + 1];
-		size -= 1;
-		modifications += 1;
+		sizeLong -= 1L;
+		modifications += 1L;
 		return temp;
 	}
 	
@@ -169,8 +174,8 @@ is  List<V>
 	 */	
 	public remove(V value) => (boolean success)
 	{
-		int index = indexOf(value);
-		if(index == -1)
+		long index = indexOf(value);
+		if(index == -1L)
 			return false;
 
 		delete(index);
@@ -221,28 +226,28 @@ is  List<V>
 		public create(ArrayList<V> arrayList)
 		{
 			this:arrayList = arrayList;
-			expectedModifiactions = arrayList:modifications;
+			expectedModifications = arrayList:modifications;
 		}
 		
 		private readonly checkForModifications() => ()
 		{
-			if(expectedModifications != modifications)
+			if(expectedModifications != arrayList:modifications)
 				throw IllegalModificationException:create();		
 		}
 	
 		public readonly hasNext() => (boolean)
 		{
 			checkForModifications();
-			return index < size;
+			return index < arrayList:sizeLong;
 		}
 		
 		public next() => (V)
 		{
 			checkForModifications();
-			if( index >= size )
+			if( index >= arrayList:sizeLong )
 				throw IndexOutOfBoundsException:create();
 
-			V temp = check(elements[index]);
+			V temp = check(arrayList:elements[index]);
 			index += 1L;
 			return temp;
 		}

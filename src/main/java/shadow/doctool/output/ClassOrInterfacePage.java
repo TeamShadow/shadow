@@ -637,7 +637,7 @@ public class ClassOrInterfacePage extends Page
 			writeCrossLink(arrayType.getBaseType(), options, out);
 			out.add("[]");
 		}
-		else if( to.isParameterizedIncludingOuterClasses() && linkableTypes.contains(to.getTypeWithoutTypeArguments()) && (options & Type.TYPE_PARAMETERS) != 0) {
+		else if( to.isParameterized() && linkableTypes.contains(to.getTypeWithoutTypeArguments()) && (options & Type.TYPE_PARAMETERS) != 0) {
 			Type current = to;
 			ArrayDeque<Type> types = new ArrayDeque<Type>();
 			types.push(current);

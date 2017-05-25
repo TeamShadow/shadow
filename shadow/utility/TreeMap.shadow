@@ -31,7 +31,7 @@ is  OrderedMap<K,V>
     
 
     // BST node data type
-    private locked class Node<K,V>
+    private locked class Node<K is CanCompare<K>, V is CanEqual<V>>
     {
         get set K key;           	// key
         get set V value;         	// associated value
@@ -79,8 +79,8 @@ is  OrderedMap<K,V>
     public clear() => ( TreeMap<K,V> )
     {
     	root = null;
-    	size = 0;
-    	modifications += 1;
+    	sizeLong = 0L;
+    	modifications += 1L;
     	return this;
     }
 
@@ -117,7 +117,7 @@ is  OrderedMap<K,V>
     	{
 	        while( true )
 	        {
-	        	Node notNull = check(node); // If node is ever null, jump out.	        	
+	        	var notNull = check(node); // If node is ever null, jump out.	        	
 	            int compare = key.compare(notNull->key);
 	            if( compare < 0 )
 	            	node = notNull->left;
@@ -237,7 +237,7 @@ is  OrderedMap<K,V>
         recover
         {
         	// Null case, create new node.
-        	size += 1L;
+        	sizeLong += 1L;
         	return (Node<K,V>:create(key, value, true), null);
         }
     }
@@ -253,7 +253,7 @@ is  OrderedMap<K,V>
     {
 		try
 		{
-			Node notNull = check(root);
+			var notNull = check(root);
 	        // If both children of root are black, set root to red.
 	        if (!isRed(notNull->left) and !isRed(notNull->right))
 	            notNull->red = true;
@@ -265,7 +265,7 @@ is  OrderedMap<K,V>
         	}
         	recover {}
         	
-        	size -= 1L;	
+        	sizeLong -= 1L;	
         	modifications += 1L;
         }
         recover
@@ -284,7 +284,7 @@ is  OrderedMap<K,V>
     { 
     	try
     	{
-    		Node<K,V> leftNode = check(node->left);
+    		var leftNode = check(node->left);
         	if (!isRed(leftNode) and !isRed(leftNode->left))
             	node = moveRedLeft(node);
         	node->left = deleteMin(check(node->left));
@@ -305,7 +305,7 @@ is  OrderedMap<K,V>
     {    
     	try
     	{
-    		Node notNull = check(root);
+    		var notNull = check(root);
 	        // If both children of root are black, set root to red.
 	        if (!isRed(notNull->left) and !isRed(notNull->right))
 	            notNull->red = true;
@@ -317,7 +317,7 @@ is  OrderedMap<K,V>
         	}
         	recover {}	        
 	        modifications += 1L;
-	        size -= 1L;	       
+	        sizeLong -= 1L;	       
         }
         recover
         {
@@ -338,7 +338,7 @@ is  OrderedMap<K,V>
             
         try
         {
-        	Node rightNode = check(node->right);
+        	var rightNode = check(node->right);
         	if (!isRed(rightNode) and !isRed(rightNode->left))
             	node = moveRedRight(node);
         	node->right = deleteMax(check(node->right));
@@ -361,7 +361,7 @@ is  OrderedMap<K,V>
         if( !containsKey(key) )
         	return null;
         	
-       	Node notNull = check(root); // Can't be null if contains key.
+       	var notNull = check(root); // Can't be null if contains key.
 
         // If both children of root are black, set root to red.
         if (!isRed(notNull->left) and !isRed(notNull->right))        
@@ -374,7 +374,7 @@ is  OrderedMap<K,V>
     	}
     	recover {}
     	modifications += 1L; 
-    	size -= 1L;   	
+    	sizeLong -= 1L;   	
     	return value;
     }
 
@@ -387,7 +387,7 @@ is  OrderedMap<K,V>
     	V value;
         if (key.compare(node->key) < 0) 
         {        	
-        	Node<K,V> leftNode = check(node->left);
+        	var leftNode = check(node->left);
             if (!isRed(leftNode) and !isRed(leftNode->left))
                 node = moveRedLeft(node);
             (node->left, value) = remove(check(node->left), key);            
@@ -403,11 +403,11 @@ is  OrderedMap<K,V>
             if( !isRed(node->right) and !isRed(check(node->right)->left ) )
                 node = moveRedRight(node);
                 
-            Node<K,V> rightNode = check(node->right); // Impossible to be null.
+            var rightNode = check(node->right); // Impossible to be null.
             if( key.equal(node->key) )
             {
             	value = node->value;            	 
-                Node x = min(rightNode);
+                var x = min(rightNode);
                 node->key = x->key;
                 node->value = x->value;
                 node->right = deleteMin(rightNode);                                
@@ -426,7 +426,7 @@ is  OrderedMap<K,V>
      */
     private rotateRight(Node<K,V> node) => (Node<K,V>)
     {     	      
-        Node<K,V> x = check(node->left);
+        var x = check(node->left);
         node->left = x->right;
         x->right = node;
         x->red = node->red;
@@ -439,7 +439,7 @@ is  OrderedMap<K,V>
      */
     private rotateLeft(Node<K,V> node) => (Node<K,V>)
     {       	    
-        Node<K,V> x = check(node->right);
+        var x = check(node->right);
         node->right = x->left;
         x->left = node;
         x->red = node->red;
@@ -453,8 +453,8 @@ is  OrderedMap<K,V>
     private flipColors(Node<K,V> node) => ()
     {
         node->red = !node->red;
-        Node<K,V> leftNode = check(node->left);
-        Node<K,V> rightNode = check(node->right);
+        var leftNode = check(node->left);
+        var rightNode = check(node->right);
         leftNode->red = !leftNode->red;
         rightNode->red = !rightNode->red;
     }
@@ -466,7 +466,7 @@ is  OrderedMap<K,V>
     private moveRedLeft(Node<K,V> node) => (Node<K,V>)
     {
         flipColors(node);
-        Node<K,V> rightNode = check(node->right);
+        var rightNode = check(node->right);
         if( isRed(rightNode->left) )
         { 
             node->right = rotateRight(rightNode);
@@ -516,7 +516,7 @@ is  OrderedMap<K,V>
     {
     	try
     	{
-    		Node<K,V> notNull = check(root);
+    		var notNull = check(root);
     		return min(notNull)->key;
     	}
     	recover
@@ -550,7 +550,7 @@ is  OrderedMap<K,V>
     {
         try
     	{
-    		Node<K,V> notNull = check(root);
+    		var notNull = check(root);
     		return max(notNull)->key;
     	}
     	recover
@@ -586,7 +586,7 @@ is  OrderedMap<K,V>
     {           
         try
         {
-        	nullable Node<K,V> lowest = floor(root, key);
+        	nullable var lowest = floor(root, key);
         	return check(lowest)->key;        
         }
         recover
@@ -602,7 +602,7 @@ is  OrderedMap<K,V>
     {
     	try
     	{
-    		Node<K,V> notNull = check(node);
+    		var notNull = check(node);
     		int compare = key.compare(notNull->key);
 	        if( compare == 0 )
 	        	return node;
@@ -632,7 +632,7 @@ is  OrderedMap<K,V>
     {   
     	try
     	{
-        	nullable Node<K,V> highest = ceiling(root, key);
+        	nullable var highest = ceiling(root, key);
         	return check(highest)->key;
        	}
         recover
@@ -648,14 +648,14 @@ is  OrderedMap<K,V>
     {  
     	try
     	{
-    		Node<K,V> notNull = check(node);
+    		var notNull = check(node);
     		int compare = key.compare(notNull->key);
 	        if( compare == 0 )
 	        	return node;
 	        if( compare > 0 )
 	        	return ceiling(notNull->right, key);
 	        	
-	        nullable Node<K,V> highest = ceiling(notNull->left, key);
+	        nullable var highest = ceiling(notNull->left, key);
 	        if( highest !== null )
 	        	return highest; 
 	        else
@@ -688,7 +688,7 @@ is  OrderedMap<K,V>
      */
     public readonly keys(K low, K high) => (ArrayDeque<K>)
     {
-    	ArrayDeque<K> queue = ArrayDeque<K>:create();        
+    	var queue = ArrayDeque<K>:create();        
         keys(root, queue, low, high);
         return queue;
     } 
@@ -701,7 +701,7 @@ is  OrderedMap<K,V>
     { 
         try
         { 
-        	Node<K,V> notNull = check(node);
+        	var notNull = check(node);
 	        int compareLow = low.compare(notNull->key); 
 	        int compareHigh = high.compare(notNull->key); 
 	        if (compareLow < 0)
@@ -722,7 +722,7 @@ is  OrderedMap<K,V>
 	 */
     public readonly toString() => (String)
 	{
-		if( size == 0 )
+		if( sizeLong == 0L )
 			return "{}";	
 	
 		var output = MutableString:create("{");
@@ -740,7 +740,7 @@ is  OrderedMap<K,V>
 	{
 		try
 		{
-			Node<K,V> notNull = check(node);
+			var notNull = check(node);
 			
 			addStrings(notNull->left, output);			
 			output.append(notNull);
@@ -760,7 +760,7 @@ is  OrderedMap<K,V>
     }
     
     // Iterator class for TreeMap
-    private class TreeMapIterator<K,V> is Iterator<V>
+    private class TreeMapIterator<K is CanCompare<K>, V is CanEqual<V>> is Iterator<V>
 	{
 		// Current stack of Nodes, since this tree doesn't have parent references.
 		ArrayDeque<Node<K,V>> stack = ArrayDeque<Node<K,V>>:create();		 		
@@ -775,7 +775,7 @@ is  OrderedMap<K,V>
 		
 			try
 			{
-				Node current = check(treeMap:root);				
+				var current = check(treeMap:root);				
 				while( true )
 				{					
 					stack.addLast(current);
@@ -803,11 +803,11 @@ is  OrderedMap<K,V>
 		{
 			checkForModifications();
 			
-			if( stack->size == 0 )
+			if( stack->sizeLong == 0L )
 				throw NoSuchElementException:create();
 			
 			// Get node from the stack and its value.	
-			Node<K,V> current = stack.getLast();
+			var current = stack.getLast();
 			V value = current->value;
 			
 			// Add leftmost node of right subtree, if present
