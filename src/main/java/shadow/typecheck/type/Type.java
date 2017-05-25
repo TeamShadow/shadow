@@ -184,9 +184,7 @@ public abstract class Type implements Comparable<Type> {
 		return null;
 	}
 	
-	public void addInstantiation( Type type, List<ModifiedType> values, List<ModifiedType> replacements, Type newType  )
-	{
-		
+	public void addInstantiation( Type type, List<ModifiedType> values, List<ModifiedType> replacements, Type newType  ) {		
 		List<ModifiedType> typeReplacements = new ArrayList<ModifiedType>();
 		SequenceType typeParameters = type.getTypeParameters();
 		
@@ -198,39 +196,9 @@ public abstract class Type implements Comparable<Type> {
 			}
 		
 		addInstantiation(instantiatedTypes, typeParameters, typeReplacements, 0, 0, newType );
-		
-		//addInstantiation(instantiatedTypes, typeArguments, 0, type );
-	}
+	}	
 	
-	/*
-	private static void addInstantiation(TypeArgumentCache types, List<ModifiedType> typeArguments, int index, Type type  )
-	{		
-		if( index == typeArguments.size() )		
-			types.instantiatedType = type;			
-		else
-		{		
-			if( types.children == null )
-				types.children = new ArrayList<TypeArgumentCache>();
-			
-			ModifiedType argument = typeArguments.get(index);
-			for( TypeArgumentCache child : types.children )		
-				if( child.argument != null && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers()))
-				{
-					addInstantiation( child, typeArguments, index + 1, type );
-					return;
-				}
-			
-			TypeArgumentCache newChild = new TypeArgumentCache();
-			newChild.argument = argument;
-			types.children.add(newChild);
-			addInstantiation( newChild, typeArguments, index + 1, type );
-		}
-	}
-	*/
-	
-	
-	private static void addInstantiation(TypeArgumentCache types, SequenceType typeParameters, List<ModifiedType> typeArguments, int parameterIndex, int argumentIndex, Type type )
-	{
+	private static void addInstantiation(TypeArgumentCache types, SequenceType typeParameters, List<ModifiedType> typeArguments, int parameterIndex, int argumentIndex, Type type ) {
 		if( parameterIndex == typeParameters.size() )
 			types.instantiatedType = type;
 		else {		
@@ -314,32 +282,27 @@ public abstract class Type implements Comparable<Type> {
 	 * Constructors
 	 */
 	
-	public Type(String typeName) 
-	{
+	public Type(String typeName)  {
 		this(typeName, new Modifiers());
 	}
 	
-	public Type(String typeName, Modifiers modifiers) 
-	{
+	public Type(String typeName, Modifiers modifiers) {
 		this(typeName, modifiers, null);
 	}
 	
 	public Type(String typeName, Modifiers modifiers,
-			Documentation documentation)
-	{
+			Documentation documentation) {
 		this(typeName, modifiers, documentation, null);
 	}
 
 	public Type(String typeName, Modifiers modifiers, 
-			Documentation documentation, Type outer) 
-	{
+			Documentation documentation, Type outer)  {
 		this(typeName, modifiers, documentation, outer,
 				(outer == null ? null : outer._package));
 	}
 	
 	public Type(String typeName, Modifiers modifiers, 
-			Documentation documentation, Type outer, Package _package)
-	{
+			Documentation documentation, Type outer, Package _package) {
 		this.typeName = typeName;
 		this.modifiers = modifiers;
 		this.documentation = documentation;

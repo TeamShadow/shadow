@@ -124,7 +124,7 @@ and CanIterate<T>
 		public create(Array<T> array)
 		{
 			this:array = array;
-			limit = array->longSize;
+			limit = array->sizeLong;
 		}
 		
 		public readonly hasNext() => (boolean)
@@ -136,7 +136,7 @@ and CanIterate<T>
 		{			
 			if( position >= limit )
 				throw IndexOutOfBoundsException:create();			
-			T value = index( position );						
+			T value = array.index( position );						
 			position += 1L;			
 			
 			return value;  

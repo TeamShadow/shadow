@@ -1290,7 +1290,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACOperand length = new TACLength(anchor, prefix, false);			
 			prefix = length;
 		}
-		else if( prefixType instanceof ArrayType && ctx.Identifier().getText().equals("longSize")) {
+		else if( prefixType instanceof ArrayType && ctx.Identifier().getText().equals("sizeLong")) {
 			//optimization to avoid creating an Array object
 			TACOperand length = new TACLength(anchor, prefix, true);			
 			prefix = length;
@@ -1302,9 +1302,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			if( !isStore ) {
 				MethodSignature signature = propertyType.getGetter();
 				methodCall(signature, ctx, new ArrayList<Context>()); //no parameters to add					
-			}
-			//else					//it should already be in the tree, right?
-				//tree.append(prefix); //append the prefix for future use				
+			}				
 		}
 		
 		ctx.setOperand(prefix);

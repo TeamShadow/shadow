@@ -295,35 +295,12 @@ public class ClassType extends Type {
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
-			
-			//BLEH
-			
-			//only give the things that are used!!!
-			//do the same for interfaces!
-			
+
 			replaced.setExtendType(getExtendType().replace(values, replacements));			
 			
-			
-			
-			for( InterfaceType _interface : getInterfaces() ) {
-				
-				/*
-				List<ModifiedType> interfaceValues = new ArrayList<ModifiedType>();
-				List<ModifiedType> interfaceReplacements = new ArrayList<ModifiedType>();
-				
-				if( _interface.isParameterized() ) {
-					SequenceType parameters = _interface.getTypeParameters();
-					for( int i = 0; i < values.size(); ++i ) {
-						if( values.get(i).getType().equals(parameters.getType(i))) {
-							interfaceValues.add(values.get(i));
-							interfaceReplacements.add(replacements.get(i));
-						}							
-					}
-				}
-				*/				
-				
+			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.replace(values, replacements));
-			}
+			
 			
 			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields();
 			for( String name : fields.keySet() ) {
