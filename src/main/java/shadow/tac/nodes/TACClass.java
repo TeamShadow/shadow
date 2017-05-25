@@ -1,8 +1,6 @@
 package shadow.tac.nodes;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 
 import shadow.ShadowException;
@@ -277,61 +275,17 @@ public class TACClass extends TACOperand
 		if( type.isFullyInstantiated() )
 			name = new TACLiteral(this, new ShadowString(type.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)));
 		else {
-			//put all outer types into a stack, with the outermost at the top
-			//the goal is to avoid creating outer classes 
-			Deque<Type> types = new ArrayDeque<Type>();
-			types.push(type);
-			
-			while( types.peek().hasOuter() )
-				types.push(types.peek().getOuter() );			
-			
 			SequenceType parameters;
 			TACOperand baseName;
 			TACMethodRef makeName;			
-			Type current = types.pop();
-			int start = 0;
-			int end = current.getTypeParameters().size();
-			TACOperand startValue = new TACLiteral(this, new ShadowInteger(start));
-			TACOperand endValue = new TACLiteral(this, new ShadowInteger(end));
-			
-			//first get outermost type
-			if( current.isFullyInstantiated() )
-				name = new TACLiteral(this, new ShadowString(current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)));
-			else {				
-				baseName = new TACLiteral(this, new ShadowString(current.toString(Type.PACKAGES) ));
-				
-				parameters = new SequenceType();
-				parameters.add(baseName);
-				parameters.add(parameterArray);
-				parameters.add(startValue);
-				parameters.add(endValue);
-				makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
-				name = new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue);
-			}		
-			
-			while( !types.isEmpty() ) {
-				current = types.pop();
-				baseName = new TACLiteral(this, new ShadowString(":" + current.getTypeName()));
-				
-				if( current.isParameterized() ) {
-					end = start + current.getTypeParameters().size();
-					startValue = new TACLiteral(this, new ShadowInteger(start));
-					endValue = new TACLiteral(this, new ShadowInteger(end));
 					
-					parameters = new SequenceType();
-					parameters.add(baseName);
-					parameters.add(parameterArray);
-					parameters.add(startValue);
-					parameters.add(endValue);
-					makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
-					name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue));
-				}
-				else {
-					end = start;
-					name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, baseName);
-				}
-				start = end;
-			}	
+			baseName = new TACLiteral(this, new ShadowString(type.toString(Type.PACKAGES) ));
+			
+			parameters = new SequenceType();
+			parameters.add(baseName);
+			parameters.add(parameterArray);
+			makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
+			name = new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray);			
 		}
 		
 		return name;
@@ -458,10 +412,6 @@ public class TACClass extends TACOperand
 	public TACOperand getClassData()
 	{
 		return classData;
-	}
-	
-	public boolean isRaw() {
-		return isRaw;
 	}
 	
 	public TACOperand getMethodTable()

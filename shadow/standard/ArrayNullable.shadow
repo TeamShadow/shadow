@@ -42,7 +42,10 @@ and CanIterateNullable<T>
 	 * Gets the size of the array (total number of elements) as an {@code int}.
 	 * @return size of array
 	 */
-	public readonly native get size() => ( int );
+	public readonly get size() => ( int )
+	{
+		return cast<int>(sizeLong());
+	}
 	
 	/**
 	 * Gets the size of the array (total number of elements) as a {@code long}.
@@ -84,7 +87,7 @@ and CanIterateNullable<T>
 	 */
 	public readonly toString() => ( String )
 	{
-		if ( this->size == 0 )
+		if ( this->sizeLong == 0L )
 			return "[]";
 		
 		MutableString string = MutableString:create("[");
@@ -130,7 +133,7 @@ and CanIterateNullable<T>
 		public next() => (nullable T)
 		{
 			if( position >= limit )
-				throw IndexOutOfBoundsException:create();
+				throw IndexOutOfBoundsException:create(position);
 			
 			nullable T value = array.index( position );			
 			position += 1L;			

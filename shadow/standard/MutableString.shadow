@@ -45,8 +45,8 @@ and CanHash
 	public create( nullable Object initialValue )
 	{
 		String value = #initialValue;
-		data = byte:create[value->sizeLong];	
-		append(value);
+		data = byte:create[value->sizeLong];			
+		append(value);			
 	}
 	
 	/**
@@ -71,10 +71,9 @@ and CanHash
 	 */
 	public ensureCapacity( long size ) => ( MutableString )
 	{
-		if ( this->capacity < sizeLong )
-		{
-			sizeLong = sizeLong.max( this->capacity * 2L );
-			byte[] data = byte:create[sizeLong];
+		if ( this->capacity < size ) {
+			size = size.max( this->capacity * 2L );
+			byte[] data = byte:create[size];
 			for ( long i = 0; i < this->sizeLong; i += 1L )
 				data[i] = this:data[i];
 			this:data = data;

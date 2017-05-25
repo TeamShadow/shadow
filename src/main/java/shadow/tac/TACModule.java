@@ -1,8 +1,5 @@
 package shadow.tac;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,28 +20,13 @@ import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.analysis.CallGraph;
 import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.analysis.ControlFlowGraph.StorageData;
-import shadow.tac.nodes.TACAllocateVariable;
-import shadow.tac.nodes.TACCall;
-import shadow.tac.nodes.TACChangeReferenceCount;
-import shadow.tac.nodes.TACClass;
-import shadow.tac.nodes.TACLocalLoad;
-import shadow.tac.nodes.TACLocalStore;
-import shadow.tac.nodes.TACNewArray;
-import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACParameter;
-import shadow.tac.nodes.TACPhi;
-import shadow.tac.nodes.TACReference;
-import shadow.tac.nodes.TACSequenceElement;
-import shadow.tac.nodes.TACStore;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
-import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.Type;
 
 /**

@@ -512,7 +512,7 @@ is  Set<Class>
 			else
 				base = CanIndex:class;
 				
-			canIndexName = base.makeName(#base, canIndexParameters, 0, 2);
+			canIndexName = base.makeName(#base, canIndexParameters);
 			nullable GenericClass canIndex = findGeneric(canIndexName, canIndexParameters);
 			if( canIndex === null )
 				canIndex = addGeneric(base, canIndexName, null, getEmptyClassArray(), canIndexParameters, canIndexTables);
@@ -524,7 +524,7 @@ is  Set<Class>
 			else
 				base = CanIndexStore:class;
 
-			canIndexStoreName = base.makeName(#base, canIndexParameters, 0, 2);
+			canIndexStoreName = base.makeName(#base, canIndexParameters);
 			nullable GenericClass canIndexStore = findGeneric(canIndexStoreName, canIndexParameters);
 			if( canIndexStore === null )
 				canIndexStore = addGeneric(base, canIndexStoreName, null, getEmptyClassArray(), canIndexParameters, canIndexTables);
@@ -535,7 +535,7 @@ is  Set<Class>
 				base = CanIterateNullable:class;
 			else
 				base = CanIterate:class;
-			canIterateName = base.makeName(#base, parameters, 0, 1);
+			canIterateName = base.makeName(#base, parameters);
 			
 			nullable GenericClass canIterate = findGeneric(canIterateName, parameters);
 			if( canIterate === null )			

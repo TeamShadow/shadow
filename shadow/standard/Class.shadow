@@ -348,26 +348,19 @@ is  CanHash
 	 *
 	 * @seeDoc shadow:standard@ClassSet
 	 */	
-	public locked readonly makeName(String baseName, readonly Class[] parameters, int start, int end) => (String)
-	{		
-		if( start < end )
-		{					
-			var name = MutableString:create(baseName);
-			boolean first = true;
-			
-			name.append('<');
-			for( int i = start; i < end; i += 1 )
-			{
-				if( first )
-					first = false;
-				else
-					name.append(",");
-				name.append(#parameters[i]);
-			}
-			
-			name.append('>');
-			return #name;
-		}
-		return baseName;
+	public locked readonly makeName(String baseName, readonly Class[] parameters) => (String)
+	{			
+		var name = MutableString:create(baseName);
+		boolean first = true;
+		name.append('<');
+		for( int i = 0; i < parameters->size; i += 1 ) {
+			if( first )
+				first = false;
+			else
+				name.append(",");			
+			name.append(#parameters[i]);			
+		}		
+		name.append('>');
+		return #name;		
 	}
 }

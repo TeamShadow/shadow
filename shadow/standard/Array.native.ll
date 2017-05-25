@@ -66,7 +66,7 @@ declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutO
 
 declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
-declare %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A_int_int(%shadow.standard..Class*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %int, %int)
+declare %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A(%shadow.standard..Class*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong })
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %arrayData) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
@@ -82,8 +82,7 @@ declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow
 @shadow.standard..ArrayNullable_Mcreate_shadow.standard..Object_A = alias %shadow.standard..Array* (%shadow.standard..Object*, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}), %shadow.standard..Array* (%shadow.standard..Object*, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong})* @shadow.standard..Array_Mcreate_shadow.standard..Object_A
 @shadow.standard..ArrayNullable_Mcreate_long = alias %shadow.standard..Array* (%shadow.standard..Object*, %long), %shadow.standard..Array* (%shadow.standard..Object*, %long)* @shadow.standard..Array_Mcreate_long
 @shadow.standard..ArrayNullable_Mdestroy = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array_Mdestroy
-@shadow.standard..ArrayNullable_Msize = alias %int(%shadow.standard..Array*), %int(%shadow.standard..Array*)* @shadow.standard..Array_Msize
-@shadow.standard..ArrayNullable_MlongSize = alias %long(%shadow.standard..Array*), %long(%shadow.standard..Array*)* @shadow.standard..Array_MlongSize
+@shadow.standard..ArrayNullable_MsizeLong = alias %long(%shadow.standard..Array*), %long(%shadow.standard..Array*)* @shadow.standard..Array_MsizeLong
 @shadow.standard..ArrayNullable_Msubarray_long_long = alias %shadow.standard..Array* (%shadow.standard..Array*, %long, %long), %shadow.standard..Array* (%shadow.standard..Array*, %long, %long)* @shadow.standard..Array_Msubarray_long_long
 @shadow.standard..ArrayNullable_Mindex_long_T = alias void (%shadow.standard..Array*, %long, %shadow.standard..Object*), void (%shadow.standard..Array*, %long, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_long_T
 
@@ -274,7 +273,7 @@ _name:
 	%uninitializedParameters2 = insertvalue {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong } %uninitializedParameters1, %shadow.standard..Class* @shadow.standard..Class_class, 1
 	%initializedParameters = insertvalue {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong } %uninitializedParameters2, %ulong 1, 2
 
-	%className = call %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A_int_int(%shadow.standard..Class* %class, %shadow.standard..String* %arrayName, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong } %initializedParameters, %int 0, %int 1)
+	%className = call %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A(%shadow.standard..Class* %class, %shadow.standard..String* %arrayName, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong } %initializedParameters)
 	%classSet = load %shadow.standard..ClassSet*, %shadow.standard..ClassSet** @_genericSet
 	%arrayClass = call %shadow.standard..GenericClass* @shadow.standard..ClassSet_MgetGenericArray_shadow.standard..String_shadow.standard..Class_A_shadow.standard..MethodTable_boolean(%shadow.standard..ClassSet* %classSet, %shadow.standard..String* %className, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong } %initializedParameters, %shadow.standard..MethodTable* %methods, %boolean %nullable)
 	%arrayClassAsClass = bitcast %shadow.standard..GenericClass* %arrayClass to %shadow.standard..Class*
@@ -527,15 +526,9 @@ throw:
 	unreachable
 }
 
-define %long @shadow.standard..Array_MlongSize(%shadow.standard..Array*) alwaysinline nounwind {
+define %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array*) alwaysinline nounwind {
     %2 = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %0, i32 0, i32 3
     %3 = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %2
     %4 = extractvalue {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %3, 2
     ret %long %4
-}
-
-define %int @shadow.standard..Array_Msize(%shadow.standard..Array*) alwaysinline nounwind {
-    %2 = call %long @shadow.standard..Array_MlongSize(%shadow.standard..Array* %0)
-    %3 = trunc %long %2 to %int
-    ret %int %3
 }
