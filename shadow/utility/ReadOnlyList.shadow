@@ -17,7 +17,12 @@ is	List<T>
 		return list->size;
 	}
 	
-	public readonly indexOf(T element) => (int)
+	public readonly get sizeLong() => (long)
+	{
+		return list->sizeLong;
+	}
+	
+	public readonly indexOf(T element) => (long)
 	{
 		return list.indexOf(element);
 	}
@@ -37,7 +42,7 @@ is	List<T>
 		return list.iterator();
 	}
 	
-	public readonly index(int key) => (T)
+	public readonly index(long key) => (T)
 	{
 		return list.index(key);
 	}
@@ -47,7 +52,7 @@ is	List<T>
 		throw InvalidOperationException:create(ERROR);
 	}
 	
-	public delete(int index) => (T)
+	public delete(long index) => (T)
 	{
 		throw InvalidOperationException:create(ERROR);
 	}
@@ -62,7 +67,7 @@ is	List<T>
 		throw InvalidOperationException:create(ERROR);
 	}
 	
-	public index(int key, T value) => ()
+	public index(long key, T value) => ()
 	{
 		throw InvalidOperationException:create(ERROR);
 	}

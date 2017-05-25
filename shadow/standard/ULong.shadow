@@ -448,9 +448,9 @@ and	CanHash
 	 * Finds a hash value for the current value.	 
 	 * @return hash value	 
 	 */
-	public get hash() => (uint)
+	public get hash() => (ulong)
 	{
-		return cast<uint>(this) ^ cast<uint>(this >> 32);
+		return this;
 	}
 
 	/** 

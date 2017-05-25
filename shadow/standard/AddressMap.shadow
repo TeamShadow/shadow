@@ -21,7 +21,7 @@ locked class shadow:standard@
 	private constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	/** Gets current number of entries stored in the map. */
-	get long longSize = 0L;
+	get long sizeLong = 0L;
 	nullable Node[] table;
 	float loadFactor;
 	long threshold;
@@ -68,7 +68,7 @@ locked class shadow:standard@
 	 */
 	public get readonly size() => (int)
 	{
-		return cast<int>( longSize );
+		return cast<int>( sizeLong );
 	}	
 	
 	/*
@@ -78,7 +78,7 @@ locked class shadow:standard@
 	 */
 	private resize(long newCapacity) => ()
 	{		
-		if(table->longSize == MAXIMUM_CAPACITY)
+		if(table->sizeLong == MAXIMUM_CAPACITY)
 		{
 			threshold = long:MAX;
 			return;
@@ -88,7 +88,7 @@ locked class shadow:standard@
 		long index;
 		long hash;		
 		
-		for( long i = 0; i < table->longSize; i += 1 )
+		for( long i = 0; i < table->sizeLong; i += 1 )
 		{
 			try
 			{
@@ -146,7 +146,7 @@ locked class shadow:standard@
      */
     public readonly isEmpty() => (boolean empty)
     {
-        return longSize == 0L;
+        return sizeLong == 0L;
     }	
 
 	/*
@@ -169,7 +169,7 @@ locked class shadow:standard@
 	 */
 	public index( ulong key ) => ( nullable ulong value )
 	{
-		(long index, long hash) = findIndex( key, table->longSize );
+		(long index, long hash) = findIndex( key, table->sizeLong );
 		try
 		{
 			Node current = check(table[index]);
@@ -193,7 +193,7 @@ locked class shadow:standard@
 	 */
 	public index( ulong key, ulong value ) => ()
 	{
-		( long index, long hash ) = findIndex( key, table->longSize );
+		( long index, long hash ) = findIndex( key, table->sizeLong );
 		try
 		{
 			Node current = check(table[index]);
@@ -207,10 +207,10 @@ locked class shadow:standard@
 		{
 			table[index] = Node:create(hash, key, value, table[index]);
 			modifications += 1L;
-			longSize += 1L;
+			sizeLong += 1L;
 			
-			if( longSize > threshold )
-				resize(2 * table->longSize);
+			if( sizeLong > threshold )
+				resize(2 * table->sizeLong);
 		}
 	}
 
@@ -221,7 +221,7 @@ locked class shadow:standard@
 	 */
 	public remove( ulong key ) => ( nullable ulong value )
 	{	
-		( long index, long hash ) = findIndex( key, table->longSize );
+		( long index, long hash ) = findIndex( key, table->sizeLong );
 		try
 		{
 			nullable Node last = null;
@@ -252,7 +252,7 @@ locked class shadow:standard@
 	 */
 	public readonly containsKey( ulong key ) => ( boolean found )
 	{		
-		( long index, long hash ) = findIndex( key, table->longSize );
+		( long index, long hash ) = findIndex( key, table->sizeLong );
 		try
 		{
 			Node current = check(table[index]);			
@@ -286,7 +286,7 @@ locked class shadow:standard@
 	 */
 	public readonly iterator() => ( Iterator<ulong> )
 	{
-		return AddressMapIterator:create();
+		return AddressMapIterator:create(this);
 	}
 	
 	/**
@@ -295,9 +295,9 @@ locked class shadow:standard@
 	 */
 	public clear() => ( AddressMap )
 	{
-		longSize = 0L;
+		sizeLong = 0L;
 		table = Node:null[DEFAULT_INITIAL_CAPACITY];
-		threshold = cast<long>(table->longSize * loadFactor);
+		threshold = cast<long>(table->sizeLong * loadFactor);
 		modifications += 1L;
 		return this;
 	}
@@ -307,10 +307,14 @@ locked class shadow:standard@
 	{
 		long index = 0;
 		nullable Node current;
-		long expectedModifications = modifications;
-		public create()
-		{			
+		immutable long expectedModifications;
+		AddressMap addressMap;
+		
+		public create(AddressMap addressMap)
+		{	
+			this:addressMap = addressMap;
 			current = next(null);
+			expectedModifications = addressMap:modifications;			
 		}
 		public next( nullable Node position ) => ( nullable Node )
 		{	
@@ -320,9 +324,9 @@ locked class shadow:standard@
 			}
 			recover{}
 		
-			while( position === null and index < table->longSize )
+			while( position === null and index < addressMap:table->sizeLong )
 			{			
-				position = table[index];				
+				position = addressMap:table[index];				
 				index += 1L;					
 			}
 			
@@ -331,7 +335,7 @@ locked class shadow:standard@
 
 		private readonly checkForModifications() => ()
 		{
-			if ( modifications != expectedModifications )
+			if ( addressMap:modifications != expectedModifications )
 				throw IllegalModificationException:create();
 		}
 

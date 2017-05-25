@@ -146,7 +146,7 @@ and	CanHash
 	 * @return {@code byte} value
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public index( int location ) => ( byte )
+	public index( long location ) => ( byte )
 	{		
 		return data[location];
 	}
@@ -188,7 +188,7 @@ and	CanHash
 	}
 	
 	/**
-	 * Gets the number of {@code byte} values stored in the object.	 
+	 * Gets the number of {@code byte} values stored in the object as an {@code int}.	 
 	 * @return number of bytes	 
 	 */
 	public get size() => ( int )
@@ -197,12 +197,21 @@ and	CanHash
 	}
 	
 	/**
+	 * Gets the number of {@code byte} values stored in the object as a {@code long}.	 
+	 * @return number of bytes	 
+	 */
+	public get sizeLong() => ( long )
+	{
+		return data->sizeLong;
+	}
+	
+	/**
 	 * Returns {@code true} if the {@code String} has length zero.	 
 	 * @return {@code true} if the length is zero	 
 	 */
 	public isEmpty() => ( boolean )
 	{
-		return this->size == 0;
+		return this->sizeLong == 0L;
 	}
 
 	/**
@@ -237,11 +246,11 @@ and	CanHash
 	 */
 	public concatenate( String other ) => ( String )
 	{
-		byte[] data = byte:create[this->size + other->size];
-		for ( int i = 0; i < this->size; i += 1 )
+		byte[] data = byte:create[this->sizeLong + other->sizeLong];
+		for ( long i = 0; i < this->sizeLong; i += 1L )
 			data[i] = index(i);
-		for ( int i = 0; i < other->size; i += 1 )
-			data[this->size + i] = other.index(i);
+		for ( long i = 0; i < other->sizeLong; i += 1L )
+			data[this->sizeLong + i] = other.index(i);
  
 		return String:create(data, this:ascii and other:ascii);
 	}
@@ -267,7 +276,7 @@ and	CanHash
 	 */
 	public toLowerCase() => ( String )
 	{	
-		StringIterator iterator = StringIterator:create(); 
+		StringIterator iterator = StringIterator:create(this); 
 		MutableString string = MutableString:create();
 		while ( iterator.hasNext() )
 			string.append(iterator.next().toLowerCase());
@@ -282,7 +291,7 @@ and	CanHash
 	 */
 	public toUpperCase() => ( String )
 	{		
-		StringIterator iterator = StringIterator:create();
+		StringIterator iterator = StringIterator:create(this);
 		MutableString string = MutableString:create();
 		while ( iterator.hasNext() )
 			string.append(iterator.next().toLowerCase());
@@ -333,20 +342,19 @@ and	CanHash
 	 */
 	public iterator() => ( Iterator<code> )
 	{
-		return StringIterator:create();
+		return StringIterator:create(this);
 	}
 	
 	/** 
 	 * Finds a hash value for the current object.	 
 	 * @return hash value	 
 	 */
-	public get hash() => ( uint )
+	public get hash() => ( ulong )
 	{		
-		uint value = 0u;
-		for( int i = 0; i < data->size; i += 1 )
-		{
+		ulong value = 0uL;
+		for( long i = 0; i < data->sizeLong; i += 1L ) {
 			value *= 31u;
-			value += cast<uint>( data[i] );
+			value += cast<ulong>( data[i] );
 		}
 		
 		return value;
@@ -597,16 +605,22 @@ and	CanHash
 
 	private class StringIterator is Iterator<code>
 	{
-		int index = 0;
+		long index = 0L;
+		String string;
+		
+		public create(String string)
+		{
+			this:string = string;
+		} 
 
 		public readonly hasNext() => ( boolean )
 		{
-			return index < data->size;
+			return index < string:data->sizeLong;
 		}
 
 		public next() => ( code )
 		{
-			int value = data[index];
+			int value = string:data[index];
 			if ( value < 0 )
 			{
 				int bytes = 0;
@@ -619,13 +633,13 @@ and	CanHash
 				value &= ~mask;
 				while ( bytes > 0 )
 				{
-					index += 1;
+					index += 1L;
 					value <<= 6;
-					value |= data[index] & 0b00111111y;
+					value |= string:data[index] & 0b00111111y;
 					bytes -= 1;
 				}
 			}
-			index += 1;
+			index += 1L;
 			return cast<code>(value);
 		}
 	}

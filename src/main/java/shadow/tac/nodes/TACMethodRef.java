@@ -3,7 +3,6 @@ package shadow.tac.nodes;
 import shadow.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
@@ -39,16 +38,8 @@ public class TACMethodRef extends TACOperand
 				Type genericArray = arrayType.convertToGeneric();
 				prefix = check(prefixNode, new SimpleModifiedType(genericArray));
 			}
-			else {
-				//inner class issues
-				while(  prefixNode.getType() instanceof ClassType &&
-						!prefixNode.getType().isSubtype(sig.getOuter()) && 
-						 prefixNode.getType().hasOuter()	) //not here, look in outer classes					
-					prefixNode = new TACLoad(this, new TACFieldRef(prefixNode, new SimpleModifiedType(prefixNode.getType().getOuter()), "_outer"));
-								
-				prefix = check(prefixNode,
-						new SimpleModifiedType(sig.getOuter()));
-			}
+			else
+				prefix = check(prefixNode, new SimpleModifiedType(sig.getOuter()));		
 		}
 		signature = sig;
 	}

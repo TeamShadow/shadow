@@ -92,12 +92,7 @@ public class ClassType extends Type {
 	
 	public MethodSignature recursivelyGetIndistinguishableMethod(MethodSignature signature) {		
 		if( containsIndistinguishableMethod(signature) )
-			return super.getIndistinguishableMethod(signature);
-		
-		//recursively check outer
-		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsIndistinguishableMethod(signature) )		
-			return ((ClassType)getOuter()).recursivelyGetIndistinguishableMethod(signature) ;
-		
+			return super.getIndistinguishableMethod(signature);		
 
 		if( getExtendType() == null )
 			return null;
@@ -110,11 +105,6 @@ public class ClassType extends Type {
 		if( containsIndistinguishableMethod(signature) )
 			return true;
 		
-		//recursively check outer
-		Type outer = getOuter();
-		if( outer != null && outer instanceof ClassType && ((ClassType)outer).recursivelyContainsIndistinguishableMethod(signature) )		
-			return true;
-		
 		//recursively check parents
 		if( getExtendType() != null )
 			return getExtendType().recursivelyContainsIndistinguishableMethod(signature);	
@@ -125,10 +115,7 @@ public class ClassType extends Type {
 	public boolean recursivelyContainsField(String fieldName) {
 		if( containsField(fieldName) )
 			return true;
-				
-		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsField(fieldName) )		
-			return true;
-		
+
 		if( getExtendType() == null )
 			return false;
 		
@@ -138,10 +125,7 @@ public class ClassType extends Type {
 	public boolean recursivelyContainsMethod(String symbol) {
 		if( containsMethod(symbol) )
 			return true;
-				
-		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsMethod(symbol) )		
-			return true;
-		
+
 		if( getExtendType() == null )
 			return false;		
 		
@@ -171,10 +155,7 @@ public class ClassType extends Type {
 	public Context recursivelyGetField(String fieldName) {
 		if( containsField(fieldName) )
 			return getField(fieldName);
-		
-		if( getOuter() != null && getOuter() instanceof ClassType && ((ClassType)getOuter()).recursivelyContainsField(fieldName) )		
-			return ((ClassType)getOuter()).recursivelyGetField(fieldName);
-		
+
 		if( getExtendType() == null )
 			return null;
 				
@@ -262,22 +243,6 @@ public class ClassType extends Type {
 			}
 		});
 		
-		if (getOuter() != null)
-			set.add(new Entry<String, ModifiedType>() {
-				@Override
-				public String getKey() {
-					return "_outer";
-				}
-				@Override
-				public ModifiedType getValue() {
-					return new SimpleModifiedType(getOuter());
-				}
-				@Override
-				public ModifiedType setValue(ModifiedType value){
-					throw new UnsupportedOperationException();
-				}
-			});
-		
 		//constants live in the class
 		//singletons don't need references stored
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
@@ -304,7 +269,7 @@ public class ClassType extends Type {
 	@Override
 	public ClassType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {	
 		if( isRecursivelyParameterized() ) {	
-			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
 				return (ClassType)cached;
 			
@@ -313,12 +278,13 @@ public class ClassType extends Type {
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
-			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
-			
+			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
+
 			replaced.setExtendType(getExtendType().replace(values, replacements));			
 			
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.replace(values, replacements));
+			
 			
 			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields();
 			for( String name : fields.keySet() ) {
@@ -332,11 +298,7 @@ public class ClassType extends Type {
 				for( MethodSignature signature : signatures ) {
 					MethodSignature replacedSignature = signature.replace(values, replacements);
 					replaced.addMethod(replacedSignature);					
-				}			
-			
-			Map<String, ClassType> inners = getInnerClasses();			
-			for( String name : inners.keySet() )		
-				replaced.addInnerClass(name, inners.get(name).replace(values, replacements));
+				}
 			
 			if( isParameterized() )
 				for( ModifiedType modifiedParameter : getTypeParameters() )	{
@@ -353,7 +315,7 @@ public class ClassType extends Type {
 	@Override
 	public ClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
 		if( isRecursivelyParameterized() ) {	
-			Type cached = typeWithoutTypeArguments.getInstantiation(replacements);
+			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
 				return (ClassType)cached;
 			
@@ -362,7 +324,7 @@ public class ClassType extends Type {
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
-			typeWithoutTypeArguments.addInstantiation(replacements, replaced);
+			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 			
 			replaced.setExtendType(getExtendType().partiallyReplace(values, replacements));			
 			
@@ -398,12 +360,7 @@ public class ClassType extends Type {
 					MethodSignature replacedSignature = signature.partiallyReplace(values, replacements);
 					replaced.addMethod(replacedSignature);
 					signature.getNode().setSignature(replacedSignature);
-				}			
-			
-			Map<String, ClassType> inners = getInnerClasses();
-			
-			for( String name : inners.keySet() )		
-				replaced.addInnerClass(name, inners.get(name).partiallyReplace(values, replacements));
+				}
 			
 			if( isParameterized() )
 				for( ModifiedType modifiedParameter : getTypeParameters() )	{
@@ -431,8 +388,11 @@ public class ClassType extends Type {
 		
 		for( String name : fields.keySet() ) {
 			ShadowParser.VariableDeclaratorContext field = fields.get(name);
-			if( field.getType() instanceof UninstantiatedType )
-				field.setType( ((UninstantiatedType)field.getType()).instantiate() );
+			Type type = field.getType();
+			if( type instanceof UninstantiatedType )
+				field.setType( ((UninstantiatedType)type).instantiate() );
+			else if( type instanceof ArrayType )
+				field.setType( ((ArrayType)type).instantiate() );
 		}	
 		
 		for( List<MethodSignature> signatures : getMethodMap().values() )
@@ -502,7 +462,7 @@ public class ClassType extends Type {
 	}
 	
 	public boolean isRecursivelyParameterized() {
-		if( isParameterizedIncludingOuterClasses() )
+		if( isParameterized() )
 			return true;
 		
 		if( extendType == null )
@@ -662,11 +622,10 @@ public class ClassType extends Type {
 		//necessary?  perhaps code can be written to compute the size
 		//TODO: try to take this back to constants only				
 		newLine = false;
-		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() )		
-			if( !field.getKey().equals("_outer")  ) {
-				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
-				newLine = true;
-			}
+		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() ) {
+			out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
+			newLine = true;
+		}
 		
 		if( newLine )
 			out.println();		

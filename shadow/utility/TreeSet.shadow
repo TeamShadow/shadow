@@ -107,12 +107,21 @@ is  OrderedSet<V>
 	}
 	
 	/**
-	 * Gets the number of objects in the ordered set.
+	 * Gets the number of objects in the ordered set as an {@code int}.
 	 * @return size of ordered set
 	 */
 	public readonly get size() => (int size)
 	{
 		return map.size();	
+	}
+	
+	/**
+	 * Gets the number of objects in the ordered set as a {@code long}.
+	 * @return size of ordered set
+	 */
+	public readonly get sizeLong() => (long size)
+	{
+		return map.sizeLong();	
 	}
 	
 	/**

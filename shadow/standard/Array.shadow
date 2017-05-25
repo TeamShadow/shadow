@@ -37,13 +37,16 @@ and CanIterate<T>
 	 * Gets the size of the array (total number of elements) as an {@code int}.
 	 * @return size of array
 	 */
-	public readonly native get size() => ( int );
+	public readonly get size() => ( int )
+	{
+		return cast<int>(sizeLong());
+	}
 	
 	/**
 	 * Gets the size of the array (total number of elements) as a {@code long}.
 	 * @return size of array
 	 */
-	public readonly native get longSize() => ( long );	
+	public readonly native get sizeLong() => ( long );	
 
 	/* 
 	// Copy implementation based off the following code:
@@ -89,11 +92,12 @@ and CanIterate<T>
 	 */
 	public readonly toString() => ( String )
 	{
-		if ( this->size == 0 )
+		if ( this->sizeLong == 0L )
 			return "[]";
 
 		MutableString string = MutableString:create("[");
-		boolean first = true;
+		boolean first = true;		
+		
 		foreach( T value in this )
 		{
 			if ( first )
@@ -103,6 +107,7 @@ and CanIterate<T>
 				
 			string.append( #value );
 		}
+		
 		return string.append("]").toString();
 	}
 	
@@ -111,14 +116,21 @@ and CanIterate<T>
 	 * @return iterator
 	 */
 	public readonly iterator() => (Iterator<T>)
-	{
-		return ArrayIterator:create();
+	{		
+		return ArrayIterator<T>:create(this);
 	} 
 	
-	private class ArrayIterator is Iterator<T>
+	private class ArrayIterator<T> is Iterator<T>
 	{
-		long position = 0;
-		long limit = longSize();
+		long position = 0L;
+		immutable long limit;
+		Array<T> array;
+		
+		public create(Array<T> array)
+		{			
+			this:array = array;
+			limit = array->sizeLong;
+		}
 		
 		public readonly hasNext() => (boolean)
 		{	
@@ -126,10 +138,11 @@ and CanIterate<T>
 		}
 		
 		public next() => (T)
-		{			
+		{		
+			
 			if( position >= limit )
-				throw IndexOutOfBoundsException:create();			
-			T value = index( position );						
+				throw IndexOutOfBoundsException:create(position);			
+			T value = array.index( position );						
 			position += 1L;			
 			
 			return value;  

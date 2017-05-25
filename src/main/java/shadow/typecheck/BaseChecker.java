@@ -33,7 +33,6 @@ import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PropertyType;
@@ -347,31 +346,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 		checkSubstitution( left, right, assignmentType, SubstitutionKind.ASSIGNMENT, errors );
 		return errors;		
 	}
-	
-	
-	/**
-	 * Tries to find a type defined by the current method.
-	 * Since methods can be defined inside of methods, it checks the stack of current methods.
-	 * @param name		name of the type
-	 * @return			type found or <code>null</code> if not found
-	 */
-	protected final Type lookupTypeFromCurrentMethod( Context ctx, String name ) {		
-		for( Context method : currentMethod ) {
-			MethodType methodType = (MethodType)(method.getType());
-			if( methodType.isParameterized() ) {
-				for( ModifiedType modifiedType : methodType.getTypeParameters() ) {
-					Type type = modifiedType.getType();
-					if( type instanceof TypeParameter ) {
-						TypeParameter typeParameter = (TypeParameter) type;						
-						if( typeParameter.getTypeName().equals(name))
-							return typeParameter;
-					}
-				}
-			}			
-		}
-		return lookupTypeStartingAt( ctx, name, declarationType );
-	}
-	
+
 	/**
 	 * Tries to find a type within a particular outer type, but the outer type is just a guess.
 	 * This method is used when starting from a specific point (as in when looking through
@@ -387,29 +362,36 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 			int atSign = name.indexOf('@');
 			return lookupType(ctx, name.substring(atSign + 1 ), name.substring(0, atSign) );
 		}
-		else if( outer != null ) { // Start with outer type			
-			Type current = outer;			
-			while( current != null) {			
-				// Check type parameters of outer class
-				if( current.isParameterized() )
-					for( ModifiedType modifiedParameter : current.getTypeParameters() ) {
-						Type parameter = modifiedParameter.getType();
-						
-						if( parameter instanceof TypeParameter ) {
-							TypeParameter typeParameter = (TypeParameter) parameter;
-							if( typeParameter.getTypeName().equals(name) )
-								return typeParameter;
-						}
-					}				
-
+		else if( outer != null ) { // Check type parameters of outer type			
+				
+			// First check type parameters of outer class
+			// Note that only the parameters of the current outer class are visible
+			if( outer.isParameterized() )
+				for( ModifiedType modifiedParameter : outer.getTypeParameters() ) {
+					Type parameter = modifiedParameter.getType();
+					
+					if( parameter instanceof TypeParameter ) {
+						TypeParameter typeParameter = (TypeParameter) parameter;
+						if( typeParameter.getTypeName().equals(name) )
+							return typeParameter;
+					}
+				}	
+	
+			Type current = outer;
+			while( current != null ) {			
+				// Then check inner classes
 				if( current instanceof ClassType )
 					type = ((ClassType)current).getInnerClass(name);
 				
 				if( type != null )
 					return type;
-					
-				current = current.getOuter();
-			}
+			
+				// Then check outer class itself
+				if( current.getTypeName().equals(name) )
+					return current;
+				
+				current = current.getOuter();					
+			}		
 		
 			// Walk up the tree of package from the starting point
 			Package p = outer.getPackage();		
@@ -418,11 +400,9 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 				if( type != null )
 					return type;
 				p = p.getParent();
-			}			
-		}
+			}		
 		
-		// If still not found, try all the packages and types that the outer class imported
-		if( outer != null )
+			// If still not found, try all the packages and types that the outer class imported
 			for( Object item : outer.getImportedItems() ) {
 				type = null;
 				
@@ -439,6 +419,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 				if( type != null )
 					return type;			
 			}
+		}
 		
 		return null;	
 	}
@@ -465,7 +446,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 				return null;
 		}
 		else
-			return lookupTypeFromCurrentMethod( ctx, name );
+			return lookupTypeStartingAt( ctx, name, declarationType );
 	}
 	
 	/**

@@ -27,6 +27,11 @@ import shadow.ShadowExceptionFactory;
  */
 public class ParseException extends ShadowException {
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 862626267585320354L;
+
+	/**
 	 *  Constants for each kind of supported error, with default error messages.
 	 *  Listing all supported errors increases consistency.
 	 */

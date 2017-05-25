@@ -56,7 +56,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -894,7 +894,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"Interface is null!\n" + 
-				"2783569992\n");
+				"80092981320\n");
 	}
 	
 	@Test public void testNullablePrimitive() throws Exception {

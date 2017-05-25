@@ -54,15 +54,15 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	
 	
 	@Override
-	public ClassType instantiate() throws InstantiationException
-	{		
-		for( int i = 0; i < typeArguments.size(); i++ )
-		{
-			ModifiedType argument = typeArguments.get(i);
-			if( argument.getType() instanceof UninstantiatedType )
-			{
+	public ClassType instantiate() throws InstantiationException {		
+		for( ModifiedType argument : typeArguments ) {			
+			if( argument.getType() instanceof UninstantiatedType ) {
 				UninstantiatedType uninstantiatedArgument = (UninstantiatedType) argument.getType();
 				argument.setType(uninstantiatedArgument.instantiate());
+			}
+			else if( argument.getType() instanceof ArrayType ) {
+				ArrayType arrayArgument = (ArrayType) argument.getType();
+				argument.setType(arrayArgument.instantiate());
 			}
 		}
 		

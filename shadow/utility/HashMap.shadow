@@ -17,18 +17,23 @@ class shadow:utility@
 is  Map<K,V>
 {
 	/// Default number of rows a hash table starts with, 16.	
-	protected constant int DEFAULT_INITIAL_CAPACITY = 16;
+	protected constant long DEFAULT_INITIAL_CAPACITY = 16L;
 	/// Maximum rows the hash table can have, 1073741824.
-	protected constant int MAXIMUM_CAPACITY = 1 << 30;
+	protected constant long MAXIMUM_CAPACITY = 1L << 30;
 	/// Default load factor before the hash table is resized, 0.75.
 	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	/// Gets the number of key-value pairs in the map.
-	get int size = 0;
-	nullable Node[] table;
+	get long sizeLong = 0L;
+	nullable Node<K,V>[] table;
 	float loadFactor;
-	int threshold;
-	int modifications = 0;
+	long threshold;
+	long modifications = 0L;
+	
+	public readonly get size() => (int)
+	{
+		return cast<int>(sizeLong);
+	}
 	
 	/**
 	 * Creates an empty {@code HashMap} with a default capacity of 16
@@ -45,7 +50,7 @@ is  Map<K,V>
 	 * @param initialCapacity initial capacity of the map
 	 * @param loadFactor maximum load factor before the map is resized
 	 */
-	public create(int initialCapacity)
+	public create(long initialCapacity)
 	{
 		this(initialCapacity, DEFAULT_LOAD_FACTOR);
 	}
@@ -59,14 +64,14 @@ is  Map<K,V>
 	 * @param loadFactor maximum load factor (buckets / keys) before all
 	 * key-value pairs are re-hashed
 	 */
-	public create(int initialCapacity, float loadFactor)
+	public create(long initialCapacity, float loadFactor)
 	{
-		int capacity = 1;
+		long capacity = 1L;
 		while( capacity < initialCapacity and capacity < MAXIMUM_CAPACITY)
 			capacity <<= 1;
-		table = Node:null[capacity];
+		table = Node<K,V>:null[capacity];
 		this:loadFactor = loadFactor;
-		threshold = cast<int>(capacity * loadFactor);
+		threshold = cast<long>(capacity * loadFactor);
 	}
 	
 	/*
@@ -74,51 +79,51 @@ is  Map<K,V>
 	 * power of 2. 
 	 * @param newCapacity new capacity of the map
 	 */
-	protected resize(int newCapacity) => ()
+	protected resize(long newCapacity) => ()
 	{		
-		if(table->size == MAXIMUM_CAPACITY)
+		if(table->sizeLong == MAXIMUM_CAPACITY)
 		{
-			threshold = int:MAX;
+			threshold = long:MAX;
 			return;
 		}
 		
-		nullable Node[] newTable = Node:null[newCapacity];
-		int index;
-		int hash;		
+		nullable var newTable = Node<K,V>:null[newCapacity];
+		long index;
+		long hash;		
 		
-		for( int i = 0; i < table->size; i += 1 )
+		for( long i = 0L; i < table->sizeLong; i += 1L )
 		{
 			if( table[i] !== null )
 			{ 
-				nullable Node next = table[i];
+				nullable var next = table[i];
 				while( next !== null )
 				{
-					Node node = check(next);
+					var node = check(next);
 					(index, hash) = findIndex( node->key, newCapacity );				
-					newTable[index] = Node:create(hash, node->key, node->value, newTable[index]);
+					newTable[index] = Node<K,V>:create(hash, node->key, node->value, newTable[index]);
 					next = node->next;
 				}
 			}
 		}
 		
 		table = newTable;
-		threshold = cast<int>(newCapacity * loadFactor);		
+		threshold = cast<long>(newCapacity * loadFactor);		
 	}
 	
 	// Node for the linked-lists in each bucket.	
-	private class Node
+	private class Node<K,V>
 	{
-		immutable get int hash;
+		immutable get long hash;
 		get K key;
 		get set V value;
-		get set nullable Node next = null;
+		get set nullable Node<K,V> next = null;
 
-		public create( int initialHash, K initialKey, V initialValue )
+		public create( long initialHash, K initialKey, V initialValue )
 		{
 			this( initialHash, initialKey, initialValue, null);
 		}
 		
-		public create( int initialHash, K initialKey, V initialValue, nullable Node after )
+		public create( long initialHash, K initialKey, V initialValue, nullable Node<K,V> after )
 		{
 			hash = initialHash;
 			key = initialKey;
@@ -136,12 +141,12 @@ is  Map<K,V>
 	 * Finds the hash value and index for a given key based on the provided
 	 * length.
 	 */
-	private readonly findIndex( K key, int length ) => ( int index, int hash )
+	private readonly findIndex( K key, long length ) => ( long index, long hash )
 	{
-		uint temp = key->hash;
+		ulong temp = key->hash;
 		temp ^= (temp >> 20) ^ (temp >> 12);
-		int hash = cast<int>(temp ^ (temp >> 7) ^ (temp >> 4));
-		return ( hash & (length - 1), hash );	
+		long hash = cast<long>(temp ^ (temp >> 7) ^ (temp >> 4));
+		return ( hash & (length - 1L), hash );	
 	}
 	
 	/**
@@ -150,7 +155,7 @@ is  Map<K,V>
      */
     public readonly isEmpty() => (boolean empty)
     {
-        return size == 0;
+        return sizeLong == 0L;
     }	
 
 	/**
@@ -164,7 +169,7 @@ is  Map<K,V>
 	{		
 		try
 		{
-			nullable Node node = findKey(key);
+			nullable var node = findKey(key);
 			return check(node)->value;
 		}
 		recover
@@ -197,10 +202,10 @@ is  Map<K,V>
 	 */ 
 	public add( K key, V value ) => ( nullable V existing )
 	{	
-		( int index, int hash ) = findIndex(key, table->size);
+		( long index, long hash ) = findIndex(key, table->sizeLong);
 		try
 		{
-			Node current = check(table[index]);
+			var current = check(table[index]);
 			while ( current->hash != hash and current->key != key )
 				current = check(current->next);
 			V existing = current->value;
@@ -209,11 +214,11 @@ is  Map<K,V>
 		}
 		recover
 		{
-			table[index] = Node:create(hash, key, value, table[index]);
-			modifications += 1;
-			size += 1;			
-			if( size > threshold )
-				resize(2 * table->size);			
+			table[index] = Node<K,V>:create(hash, key, value, table[index]);
+			modifications += 1L;
+			sizeLong += 1L;			
+			if( sizeLong > threshold )
+				resize(2L * table->sizeLong);			
 			return null;
 		}
 	}
@@ -221,12 +226,12 @@ is  Map<K,V>
 	/*
 	 * Finds Node associated with a key or null if not found.	 
 	 */ 
-	private readonly findKey( K key ) => ( nullable Node )
+	private readonly findKey( K key ) => ( nullable Node<K,V> )
 	{
-		( int index, int hash ) = findIndex(key, table->size);
+		( long index, long hash ) = findIndex(key, table->sizeLong);
 		try
 		{
-			Node current = check(table[index]);
+			var current = check(table[index]);
 			while ( current->hash != hash and current->key != key )
 				current = check(current->next);
 			return current;
@@ -245,11 +250,11 @@ is  Map<K,V>
 	 */
 	public remove( K key ) => ( nullable V removed )
 	{	
-		( int index, int hash ) = findIndex(key, table->size);
+		( long index, long hash ) = findIndex(key, table->size);
 		try
 		{
-			nullable Node last = null;
-			Node current = check(table[index]);
+			nullable Node<K,V> last = null;
+			var current = check(table[index]);
 			while ( current->hash != hash and current->key != key )
 				( last, current ) = ( current, check(current->next) );				
 			V removed = current->value;
@@ -261,7 +266,7 @@ is  Map<K,V>
 			{
 				table[index] = current->next;
 			}
-			modifications += 1;
+			modifications += 1L;
 			return removed;
 		}
 		recover
@@ -303,7 +308,7 @@ is  Map<K,V>
 	 */
 	public readonly iterator() => ( Iterator<V> )
 	{
-		return HashMapIterator:create();
+		return HashMapIterator<K,V>:create(this);
 	}
 	
 	/**
@@ -312,10 +317,10 @@ is  Map<K,V>
 	 */
 	public clear() => ( HashMap<K,V> )
 	{
-		size = 0;
-		table = Node:null[DEFAULT_INITIAL_CAPACITY];
-		threshold = cast<int>(table->size * loadFactor);
-		modifications += 1;
+		sizeLong = 0L;
+		table = Node<K,V>:null[DEFAULT_INITIAL_CAPACITY];
+		threshold = cast<long>(table->sizeLong * loadFactor);
+		modifications += 1L;
 		return this;
 	}
 	
@@ -328,9 +333,9 @@ is  Map<K,V>
 	{
 		var output = MutableString:create("{");
 		boolean first = true;
-		for( int i = 0; i < table->size; i += 1 )
+		for( long i = 0L; i < table->sizeLong; i += 1L )
 		{
-			nullable Node node = table[i];
+			nullable var node = table[i];
 			while( node !== null )
 			{
 				if( first )
@@ -350,16 +355,20 @@ is  Map<K,V>
 	 * Iterator that walks over the hash table and through the linked list at
 	 * each index.
 	 */
-	private locked class HashMapIterator is Iterator<V>
+	private locked class HashMapIterator<K is CanHash and CanEqual<K>, V is CanEqual<V>> is Iterator<V>
 	{
-		int index = 0;
-		nullable Node current;
-		int expectedModifications = modifications;
-		public create()
+		long index = 0L;
+		nullable Node<K,V> current;
+		immutable long expectedModifications;
+		HashMap<K,V> hashMap;
+		
+		public create(HashMap<K,V> hashMap)
 		{
+			this:hashMap = hashMap;
+			expectedModifications = hashMap:modifications;
 			current = next(null);
 		}
-		private next( nullable Node position ) => ( nullable Node )
+		private next( nullable Node<K,V> position ) => ( nullable Node<K,V> )
 		{		
 			try
 			{				
@@ -367,10 +376,10 @@ is  Map<K,V>
 			}
 			recover{}
 		
-			while( position === null and index < table->size )
+			while( position === null and index < hashMap:table->sizeLong )
 			{				
-				position = table[index];				
-				index += 1;					
+				position = hashMap:table[index];				
+				index += 1L;					
 			}
 			
 			return position; //returns null if nothing left			
@@ -378,7 +387,7 @@ is  Map<K,V>
 
 		private readonly checkForModifications() => ()
 		{
-			if ( modifications != expectedModifications )
+			if ( hashMap:modifications != expectedModifications )
 				throw IllegalModificationException:create();
 		}
 

@@ -8,13 +8,13 @@
  */
 locked class shadow:standard@
 	MutableString
-is  CanIndex<int, byte>
-and CanIndexStore<int, byte>
+is  CanIndex<long, byte>
+and CanIndexStore<long, byte>
 and CanCompare<MutableString>
 and CanHash
 {
 	/// Number of {@code byte} values stored as part of the string. 
-	get int size = 0;
+	get long sizeLong = 0L;
 	byte[] data;
 	
 	/**
@@ -23,7 +23,7 @@ and CanHash
 	 */
 	public create()
 	{
-		this(10);
+		this(10L);
 	}
 	
 	/**
@@ -31,7 +31,7 @@ and CanHash
 	 * capacity to hold the specified number of bytes worth of code points.
 	 * @param capacity initial storage capacity in bytes  
 	 */
-	public create( int capacity )
+	public create( long capacity )
 	{
 		data = byte:create[capacity];
 	}
@@ -45,9 +45,19 @@ and CanHash
 	public create( nullable Object initialValue )
 	{
 		String value = #initialValue;
-		data = byte:create[value->size];	
-		append(value);
+		data = byte:create[value->sizeLong];			
+		append(value);			
 	}
+	
+	/**
+	 * Gets the number of {@code byte} values stored as part of the string as an {@code int}.	 
+	 * @return number of bytes	 
+	 */
+	public get size() => ( int )
+	{
+		return cast<int>(sizeLong);
+	}
+	
 	
 	/**
 	 * Guarantees that there is enough space in the {@code MutableString} to
@@ -59,13 +69,12 @@ and CanHash
 	 * able to hold  
 	 * @return current {@code MutableString} object, possibly resized 
 	 */
-	public ensureCapacity( int size ) => ( MutableString )
+	public ensureCapacity( long size ) => ( MutableString )
 	{
-		if ( this->capacity < size )
-		{
-			size = size.max( this->capacity * 2 );
+		if ( this->capacity < size ) {
+			size = size.max( this->capacity * 2L );
 			byte[] data = byte:create[size];
-			for ( int i = 0; i < this->size; i += 1 )
+			for ( long i = 0; i < this->sizeLong; i += 1L )
 				data[i] = this:data[i];
 			this:data = data;
 		}
@@ -76,9 +85,9 @@ and CanHash
 	 * Retrieves the current capacity of the {@code MutableString} in bytes.	   
 	 * @return current capacity in bytes 
 	 */
-	public readonly get capacity() => ( int )
+	public readonly get capacity() => ( long )
 	{
-		return data->size;
+		return data->sizeLong;
 	}
 
 	/**
@@ -87,7 +96,7 @@ and CanHash
 	 * @return {@code byte} value
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public readonly index( int index ) => ( byte value )
+	public readonly index( long index ) => ( byte value )
 	{
 		return data[index];
 	}
@@ -99,7 +108,7 @@ and CanHash
 	 * @param value value to store	 
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public index( int index, byte value ) => ()
+	public index( long index, byte value ) => ()
 	{
 		data[index] = value;
 	}
@@ -111,13 +120,13 @@ and CanHash
 	 * @param value value to store	 
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public insert( int index, byte value ) => (MutableString)
+	public insert( long index, byte value ) => (MutableString)
 	{
-		ensureCapacity( size + 1 );
-		for( int i = size; i >= index + 1; i -= 1 )
-			data[i] = data[i - 1];		
+		ensureCapacity( sizeLong + 1 );
+		for( long i = sizeLong; i >= index + 1L; i -= 1L )
+			data[i] = data[i - 1L];		
 		data[index] = value;
-		size += 1;
+		sizeLong += 1L;
 		return this;			
 	}
 	
@@ -130,15 +139,15 @@ and CanHash
 	 * @return {@code MutableString} object after insertion	 
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public insert( int index, nullable Object value ) => (MutableString)
+	public insert( long index, nullable Object value ) => (MutableString)
 	{
 		String string = #value;
-		ensureCapacity( size + string->size );
-		for( int i = size + string->size - 1; i >= index + string->size; i -= 1 )
-			data[i] = data[i - string->size];
-		for( int i = 0; i < string->size; i += 1 )
+		ensureCapacity( sizeLong + string->sizeLong );
+		for( long i = sizeLong + string->sizeLong - 1L; i >= index + string->sizeLong; i -= 1L )
+			data[i] = data[i - string->sizeLong];
+		for( long i = 0L; i < string->sizeLong; i += 1L )
 			data[i + index] = string.index(i);
-		size += string->size;
+		sizeLong += string->sizeLong;
 		return this;			
 	}
 	
@@ -149,20 +158,16 @@ and CanHash
 	 * @return {@code MutableString} object after deletion 	 
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public delete(int index) => (MutableString)
+	public delete(long index) => (MutableString)
 	{
 		try
 		{
-			return delete(index, index + 1);
-			
-			//goto end
+			return delete(index, index + 1L);
 		}
 		catch(IllegalArgumentException e)
 		{
 			throw IndexOutOfBoundsException:create(index);
 		}
-		
-		//label end
 	}
 	
 	/**
@@ -174,18 +179,18 @@ and CanHash
 	 * @return {@code MutableString} object after deletion 	 
 	 * @throws IllegalArgumentException if either of the offsets is illegal
 	 */
-	public delete(int start, int end) => (MutableString)
+	public delete(long start, long end) => (MutableString)
 	{
-		if ( start < 0 or start >= size )
+		if ( start < 0L or start >= sizeLong )
 			throw IllegalArgumentException:create("Invalid start index");
 			
-		if( end < start or end > size )
+		if( end < start or end > sizeLong )
 			throw IllegalArgumentException:create("Invalid end index");
 			
-		for( int i = start; i < size - (end - start); i += 1 )
+		for( long i = start; i < sizeLong - (end - start); i += 1L )
 			data[i] = data[i + (end - start)];
 		
-		size -= end - start;
+		sizeLong -= end - start;
 		
 		return this;
 	}
@@ -198,9 +203,9 @@ and CanHash
 	 */	
 	public append( byte value ) => ( MutableString )
 	{		
-		ensureCapacity( size + 1 );		
-		data[size] = value;
-		size += 1;
+		ensureCapacity( sizeLong + 1L );		
+		data[sizeLong] = value;
+		sizeLong += 1L;
 		return this;
 	}
 	
@@ -213,9 +218,9 @@ and CanHash
 	public append( nullable Object value ) => ( MutableString )
 	{		
 		String string = #value;		
-		ensureCapacity( size + string->size );
-		for ( int i = 0; i < string->size; i += 1, size += 1 )
-			data[size] = string.index(i);
+		ensureCapacity( sizeLong + string->sizeLong );
+		for ( long i = 0L; i < string->sizeLong; i += 1L, sizeLong += 1L )
+			data[sizeLong] = string.index(i);
 		return this;
 	}
 	
@@ -227,7 +232,7 @@ and CanHash
 	 */
 	public prepend( byte value ) => ( MutableString )
 	{		
-		return insert( 0, value );
+		return insert( 0L, value );
 	}
 	
 	/**
@@ -239,12 +244,12 @@ and CanHash
 	public prepend( nullable Object value ) => ( MutableString )
 	{
 		String string = #value;
-		ensureCapacity( size + string->size );
-		for ( int i = 0; i < size; i += 1 )		
-			data[i + string->size] = data[i];
-		for( int i = 0; i < string->size; i += 1 )
+		ensureCapacity( sizeLong + string->sizeLong );
+		for ( long i = 0L; i < sizeLong; i += 1L )		
+			data[i + string->sizeLong] = data[i];
+		for( long i = 0L; i < string->sizeLong; i += 1L )
 			data[i] = string.index(i);
-		size += string->size;
+		sizeLong += string->sizeLong;
 		return this;
 	}
 	
@@ -256,8 +261,8 @@ and CanHash
 	 */	
 	public reverse() => ( MutableString )
 	{
-		for ( int left = 0, right = size - 1; left < right;
-				left += 1, right -= 1 )
+		for ( long left = 0, right = sizeLong - 1L; left < right;
+				left += 1L, right -= 1L )
 			( data[left], data[right] ) = ( data[right], data[left] );
 		return this;
 	}
@@ -270,12 +275,12 @@ and CanHash
 	 * @return substring 	 
 	 * @throws IllegalArgumentException if either of the offsets is illegal	 
 	 */	
-	public readonly substring(int start, int end) => (String)
+	public readonly substring(long start, long end) => (String)
 	{
-		if ( start < 0 or start >= size )
+		if ( start < 0L or start >= sizeLong )
 			throw IllegalArgumentException:create("Invalid start index");
 			
-		if( end < start or end > size )
+		if( end < start or end > sizeLong )
 			throw IllegalArgumentException:create("Invalid end index");
 	
 		return String:create(cast<byte[]>(data.subarray(start, end)));	
@@ -290,8 +295,8 @@ and CanHash
 	{	
 		byte[] bytes = data;
 
-		if( data->size != size )			
-			bytes = data.subarray(0, size);		
+		if( data->sizeLong != sizeLong )			
+			bytes = data.subarray(0L, sizeLong);		
 		
 		return String:create(bytes);
 	}
@@ -304,7 +309,7 @@ and CanHash
 	 */
 	public equal( MutableString other ) => ( boolean )
 	{
-		return this->size == other->size and compare(other) == 0;
+		return sizeLong == other:sizeLong and compare(other) == 0;
 	}
 	
 	/**
@@ -317,17 +322,17 @@ and CanHash
 	 */
 	public compare( MutableString other ) => ( int )
 	{
-		for ( int i = 0; i < this->size and i < other->size; i += 1 )
+		for ( long i = 0L; i < sizeLong and i < other:sizeLong; i += 1L )
 			if ( data[i] != other:data[i] )
 				return data[i].compare(other:data[i]);
-		return this->size.compare(other->size);
+		return sizeLong.compare(other:sizeLong);
 	}
 	
 	/** 
 	 * Finds a hash value for the current object.	 
 	 * @return hash value	 
 	 */
-	public get hash() => ( uint )
+	public get hash() => ( ulong )
 	{
 		return (#this)->hash;
 	}

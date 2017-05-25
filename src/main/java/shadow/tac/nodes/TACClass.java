@@ -1,8 +1,6 @@
 package shadow.tac.nodes;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 
 import shadow.ShadowException;
@@ -53,7 +51,7 @@ public class TACClass extends TACOperand
 
 		@Override
 		public Type getType() {
-			if( type.isParameterizedIncludingOuterClasses() && !isRaw )
+			if( type.isParameterized() && !isRaw )
 					return Type.GENERIC_CLASS;
 			
 			return Type.CLASS;
@@ -160,14 +158,14 @@ public class TACClass extends TACOperand
 			//generic methods are being removed from Shadow			
 			Type outer = classType.getOuter();	
 			int index = 0;				
-			for( ModifiedType parameter : outer.getTypeParametersIncludingOuterClasses()  ) {
+			for( ModifiedType parameter : outer.getTypeParameters()  ) {
 				if( parameter.getType().getTypeName().equals(classType.getTypeName()) )
 					break;
 				index++;
 			}
 			
-			if( index == outer.getTypeParametersIncludingOuterClasses().size() )
-				throw new IllegalArgumentException("Index " + index + " equal to type parameter size " + outer.getTypeParametersIncludingOuterClasses().size());
+			if( index == outer.getTypeParameters().size() )
+				throw new IllegalArgumentException("Type parameter " + classType.getTypeName() + " not present in class " + outer );
 			
 			//get class from this
 			//cast class to GenericClass
@@ -191,8 +189,8 @@ public class TACClass extends TACOperand
 			Type outer = signature.getOuter();
 			
 			
-			if( (!type.isParameterizedIncludingOuterClasses() && !(type instanceof ArrayType) ) || //non-generics
-				(!type.isParameterizedIncludingOuterClasses() && outer.getUsedTypes().contains(type) ) || //must in this situation be an array type
+			if( (!type.isParameterized() && !(type instanceof ArrayType) ) || //non-generics
+				(!type.isParameterized() && outer.getUsedTypes().contains(type) ) || //must in this situation be an array type
 				(outer.getUsedTypes().contains(type) && type.isFullyInstantiated()) || //fully parameterized generics defined in the file
 				raw ) {
 				
@@ -204,17 +202,9 @@ public class TACClass extends TACOperand
 				else 				
 					methodTable = new TACMethodTable(this);
 			}
-			else { //type has generics and is not defined in this file
-				if( type.encloses(outer) ) { //we're currently inside this type and can get it from class values					
-					TACOperand prefix = new TACLocalLoad(this, method.getThis());					
-					while( !type.equals(outer)) {
-						prefix = new TACLoad(this, new TACFieldRef(prefix, prefix, "_outer"));
-						outer = outer.getOuter();						
-					}					
-					classData = new TACLoad(this, new TACFieldRef(prefix, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class"));
-				}
+			else { //type has generics and is not defined in this file				
 				//construct otherwise absent array type
-				else if( type instanceof ArrayType )
+				if( type instanceof ArrayType )
 					classData = buildArrayClass((ArrayType)type);
 				//generic array classes are different from regular generics
 				else if( isGenericArray(type) )		
@@ -285,61 +275,17 @@ public class TACClass extends TACOperand
 		if( type.isFullyInstantiated() )
 			name = new TACLiteral(this, new ShadowString(type.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)));
 		else {
-			//put all outer types into a stack, with the outermost at the top
-			//the goal is to avoid creating outer classes 
-			Deque<Type> types = new ArrayDeque<Type>();
-			types.push(type);
-			
-			while( types.peek().hasOuter() )
-				types.push(types.peek().getOuter() );			
-			
 			SequenceType parameters;
 			TACOperand baseName;
 			TACMethodRef makeName;			
-			Type current = types.pop();
-			int start = 0;
-			int end = current.getTypeParametersIncludingOuterClasses().size();
-			TACOperand startValue = new TACLiteral(this, new ShadowInteger(start));
-			TACOperand endValue = new TACLiteral(this, new ShadowInteger(end));
-			
-			//first get outermost type
-			if( current.isFullyInstantiated() )
-				name = new TACLiteral(this, new ShadowString(current.toString(Type.PACKAGES | Type.TYPE_PARAMETERS)));
-			else {				
-				baseName = new TACLiteral(this, new ShadowString(current.toString(Type.PACKAGES) ));
-				
-				parameters = new SequenceType();
-				parameters.add(baseName);
-				parameters.add(parameterArray);
-				parameters.add(startValue);
-				parameters.add(endValue);
-				makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
-				name = new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue);
-			}		
-			
-			while( !types.isEmpty() ) {
-				current = types.pop();
-				baseName = new TACLiteral(this, new ShadowString(":" + current.getTypeName()));
-				
-				if( current.isParameterized() ) {
-					end = start + current.getTypeParameters().size();
-					startValue = new TACLiteral(this, new ShadowInteger(start));
-					endValue = new TACLiteral(this, new ShadowInteger(end));
 					
-					parameters = new SequenceType();
-					parameters.add(baseName);
-					parameters.add(parameterArray);
-					parameters.add(startValue);
-					parameters.add(endValue);
-					makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
-					name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray, startValue, endValue));
-				}
-				else {
-					end = start;
-					name = new TACCall(this, new TACMethodRef(this, Type.STRING.getMethods("concatenate").get(0)), name, baseName);
-				}
-				start = end;
-			}	
+			baseName = new TACLiteral(this, new ShadowString(type.toString(Type.PACKAGES) ));
+			
+			parameters = new SequenceType();
+			parameters.add(baseName);
+			parameters.add(parameterArray);
+			makeName = new TACMethodRef(this, Type.CLASS.getMatchingMethod("makeName", parameters));
+			name = new TACCall(this, makeName, new TACLiteral(this, new ShadowNull(Type.CLASS)), baseName, parameterArray);			
 		}
 		
 		return name;
@@ -348,11 +294,11 @@ public class TACClass extends TACOperand
 	private TACOperand buildGenericClass(Type type) {
 		TACMethod method = getMethod();		
 		
-		TACNewArray parameterArray = new TACNewArray(this, new ArrayType(Type.CLASS), new TACClass(this, Type.CLASS), new TACLiteral(this, new ShadowInteger(type.getTypeParametersIncludingOuterClasses().size())));
-		TACNewArray methodArray = new TACNewArray(this, new ArrayType(Type.METHOD_TABLE), new TACClass(this, Type.METHOD_TABLE), new TACLiteral(this, new ShadowInteger(type.getTypeParametersIncludingOuterClasses().size())));
+		TACNewArray parameterArray = new TACNewArray(this, new ArrayType(Type.CLASS), new TACClass(this, Type.CLASS), new TACLiteral(this, new ShadowInteger(type.getTypeParameters().size())));
+		TACNewArray methodArray = new TACNewArray(this, new ArrayType(Type.METHOD_TABLE), new TACClass(this, Type.METHOD_TABLE), new TACLiteral(this, new ShadowInteger(type.getTypeParameters().size())));
 		
 		int i = 0;
-		for( ModifiedType argument : type.getTypeParametersIncludingOuterClasses() ) {	
+		for( ModifiedType argument : type.getTypeParameters() ) {	
 			TACClass class_ = new TACClass(this, argument.getType()); 
 			new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(i)), false), class_.getClassData());
 			
@@ -364,28 +310,7 @@ public class TACClass extends TACOperand
 		}
 		
 		TACOperand name = makeGenericName(type, parameterArray);
-		
-		//after making the name, array parameters must be changed to their generic versions
-		//does this do anything?
-		/*
-		i = 0;
-		for( ModifiedType argument : type.getTypeParametersIncludingOuterClasses() ) {
-			if( argument.getType() instanceof ArrayType ) {
-				ArrayType arrayType = (ArrayType) argument.getType();
-				TACClass class_ = new TACClass(this, arrayType); 
-				new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(i)), false), class_.getClassData());
-				
-				TACOperand methodTable = class_.getMethodTable();
-				if( methodTable == null )
-					methodTable = new TACLiteral(this, new ShadowNull(Type.NULL));
-				new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(i)), false), methodTable);
-				i++;
-			}
-			else
-				i++;
-		}
-		*/
-		
+			
 		TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.CLASS));		
 		
 		TACLoad classSet = new TACLoad(this, new TACGlobalRef(Type.CLASS_SET, "@_genericSet"));		
@@ -447,10 +372,10 @@ public class TACClass extends TACOperand
 	}
 	
 	private TACOperand buildGenericArrayClass(Type type) {		
-		TACNewArray parameterArray = new TACNewArray(this, new ArrayType(Type.CLASS), new TACClass(this, Type.CLASS), new TACLiteral(this, new ShadowInteger(type.getTypeParametersIncludingOuterClasses().size())));
+		TACNewArray parameterArray = new TACNewArray(this, new ArrayType(Type.CLASS), new TACClass(this, Type.CLASS), new TACLiteral(this, new ShadowInteger(type.getTypeParameters().size())));
 		
 		//store type parameters
-		Type base = type.getTypeParametersIncludingOuterClasses().get(0).getType();	
+		Type base = type.getTypeParameters().get(0).getType();	
 		TACClass class_ = new TACClass(this, base); 
 		new TACStore(this, new TACArrayRef(this, parameterArray, new TACLiteral(this, new ShadowInteger(0)), false), class_.getClassData());
 		
@@ -487,10 +412,6 @@ public class TACClass extends TACOperand
 	public TACOperand getClassData()
 	{
 		return classData;
-	}
-	
-	public boolean isRaw() {
-		return isRaw;
 	}
 	
 	public TACOperand getMethodTable()

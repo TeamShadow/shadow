@@ -6,14 +6,21 @@
 interface shadow:utility@
 	List<E>
 is	CanIterate<E>
-and CanIndex<int, E>
-and CanIndexStore<int, E>
+and CanIndex<long, E>
+and CanIndexStore<long, E>
 {
 	/**
-	 * Property should get the number of elements in the list.
+	 * Property should get the number of elements in the list as an {@code int}.
 	 * @return size of the list
 	 */
 	readonly get size() => ( int size );
+	
+	/**
+	 * Property should get the number of elements in the list as a {@code long}.
+	 * @return size of the list
+	 */
+	readonly get sizeLong() => ( long size );
+
 	
 	/**
 	 * Method should return the index of the first matching element or -1 if
@@ -21,7 +28,7 @@ and CanIndexStore<int, E>
 	 * @param element element to search for
 	 * @return index of element
 	 */
-	readonly indexOf(E element) => ( int index );
+	readonly indexOf(E element) => ( long index );
 	
 	/**
 	 * Method should check whether the list contains a matching element.
@@ -48,7 +55,7 @@ and CanIndexStore<int, E>
 	 * @param index location of element to delete
 	 * @return deleted element
 	 */
-	delete(int index) => ( E element );
+	delete(long index) => ( E element );
 	
 	/**
 	 * Method should remove the first element that matches the given element.

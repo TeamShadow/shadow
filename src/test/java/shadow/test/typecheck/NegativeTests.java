@@ -467,6 +467,5 @@ public class NegativeTests {
 	@Test public void testChainOfCallsBeforeFieldInitialization() throws Exception {
 		args.add("tests-negative/typechecker/chain-of-calls-before-field-initialization/Test.shadow");
 		enforce(Error.UNINITIALIZED_FIELD);			
-	}
-	
+	}	
 }

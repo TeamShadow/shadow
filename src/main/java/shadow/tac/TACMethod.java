@@ -86,20 +86,11 @@ public class TACMethod
 		if( prefixType.isPrimitive() && (signature.isCreate() || isWrapped ) )
 			modifiedType.getModifiers().addModifier(Modifiers.NULLABLE);
 		
-		if (signature.isCreate() ) {
+		if (signature.isCreate() )
 			new TACLocalStore(node, addParameter(modifiedType, "this"), TACCast.cast(node, modifiedType, new TACParameter(node, new SimpleModifiedType(Type.OBJECT), parameter++)));
-			if( prefixType.hasOuter()) {
-				modifiedType = new SimpleModifiedType(prefixType.getOuter());
-				if( prefixType.getOuter().isPrimitive() && (signature.isCreate() || isWrapped ) )
-					modifiedType.getModifiers().addModifier(Modifiers.NULLABLE);
-				
-				new TACLocalStore(node, addParameter(modifiedType, "_outer"), new TACParameter(node, modifiedType, parameter++));				
-			}
-		}
-		else if(!signature.isExternWithoutBlock()) {
+		else if(!signature.isExternWithoutBlock())
 			new TACLocalStore(node, addParameter(modifiedType, "this"), new TACParameter(node, modifiedType, parameter++));
-		}
-		
+			
 		MethodType type = signature.getMethodType();		
 		if( isWrapped )
 			type = signature.getSignatureWithoutTypeArguments().getMethodType();

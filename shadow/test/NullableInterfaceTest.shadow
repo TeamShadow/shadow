@@ -6,7 +6,7 @@ class shadow:test@NullableInterfaceTest
 	{
 		Console out;		
 		nullable CanHash hashable = null;
-		uint value;
+		ulong value;
 	
 		try {
 			value = check(hashable).hash();
@@ -23,7 +23,7 @@ class shadow:test@NullableInterfaceTest
 			value = check(hashable).hash();
 			out.printLine(value);
 			
-			//2783569992					
+			//80092981320					
 		}		
 		recover {
 			out.printLine("Interface is null!");

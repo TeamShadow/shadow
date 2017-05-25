@@ -19,7 +19,6 @@ import shadow.doctool.DocumentationException;
 import shadow.parse.ParseException.Error;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
 import shadow.parse.ShadowParser.CompilationUnitContext;
-import shadow.parse.ShadowParser.GeneralIdentifierContext;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Modifiers;

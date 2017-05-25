@@ -28,6 +28,7 @@ import shadow.parse.ShadowParser.TypeContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.UninstantiatedType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
@@ -1118,90 +1119,75 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitClassOrInterfaceType(ShadowParser.ClassOrInterfaceTypeContext ctx)
 	{ 
-		if( ctx.getType() != null ) // Optimization if type already determined.
+		if( ctx.getType() != null && !(ctx.getType() instanceof UninstantiatedType) ) // Optimization if type already determined.
 			return null;
 			
 		visitChildren(ctx);
 			
-		Type type = null;
-		boolean first = true;
+		String typeName = ctx.Identifier(0).getText();
+		if( ctx.unqualifiedName() != null )
+			typeName = ctx.unqualifiedName().getText() + "@" + typeName;
+		Type type = lookupType(ctx, typeName);
 		
-		// Type can be complex: package@Container<T, List<String>, String, Thing<K>>:Stuff<U>
-		for( ShadowParser.ClassOrInterfaceTypeSuffixContext child : ctx.classOrInterfaceTypeSuffix() ) {
-			if( type == Type.UNKNOWN )
-				break;
+		for( int i = 1; type != null && i < ctx.Identifier().size(); ++i ) {
+			typeName = ctx.Identifier(i).getText();
 			
-			String typeName = child.Identifier().getText();
-			if( first ) {
-				if( ctx.unqualifiedName() != null )
-					typeName = ctx.unqualifiedName().getText() + "@" + typeName;
-				type = lookupType(child, typeName);
-				first = false;
-			}
-			else { // On later passes, get inner class from previous.				
-				if( type instanceof ClassType ) 
-					type = ((ClassType)type).getInnerClass(typeName);
-				else
-					type = null;
-			}
-	
-			if(type == null) {
-				addError(child, Error.UNDEFINED_TYPE, "Type " + typeName +
-						" not defined in this context");			
-				type = Type.UNKNOWN;					
-			}
-			else {
-				if( !classIsAccessible( type, currentType ) )		
-					addError(child, Error.ILLEGAL_ACCESS, "Type " + type +
-							" not accessible from this context", type);
-				
-				if( child.typeArguments() != null ) { // Contains type arguments.					
-					SequenceType arguments = (SequenceType) child.typeArguments().getType();						
-					if( type.isParameterized() ) {		
-						SequenceType parameters = type.getTypeParameters();
-						if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER ) ) {
-							try {
-								type = type.replace(parameters, arguments);
-							}
-							catch (InstantiationException e) {
-								addError(child.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " +
-										arguments.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) +
-										" do not match type parameters " +
-										parameters.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) );
-								type = Type.UNKNOWN;
-							}
-						}
-						else {						
-							addError(child.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " +
-									arguments.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) +
-									" do not match type parameters " +
-									parameters.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) );
-							type = Type.UNKNOWN;
-						}
+			if( type instanceof ClassType ) 
+				type = ((ClassType)type).getInnerClass(typeName);
+			else
+				type = null;
+		}
+		
+		if( !classIsAccessible( type, currentType ) )		
+			addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
+					" not accessible from this context", type);
+		
+		if( ctx.typeArguments() != null ) { // Contains type arguments.					
+			SequenceType arguments = (SequenceType) ctx.typeArguments().getType();						
+			if( type.isParameterized() ) {		
+				SequenceType parameters = type.getTypeParameters();
+				if( parameters.canAccept(arguments, SubstitutionKind.TYPE_PARAMETER ) ) {
+					try {
+						type = type.replace(parameters, arguments);
 					}
-					else {
-						addError(child.typeArguments(), Error.UNNECESSARY_TYPE_ARGUMENTS,
-								"Type arguments supplied for non-parameterized type " + type,
-								type );
+					catch (InstantiationException e) {
+						addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " +
+								arguments.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) +
+								" do not match type parameters " +
+								parameters.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) );
 						type = Type.UNKNOWN;
-					}										
+					}
 				}
-				else if( type.isParameterized() ) { // Parameterized but no parameters!
-					addError(child, Error.MISSING_TYPE_ARGUMENTS,
-							"Type arguments are not supplied for parameterized type " +
-							child.Identifier().getText());
+				else {						
+					addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " +
+							arguments.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) +
+							" do not match type parameters " +
+							parameters.toString( Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS ) );
 					type = Type.UNKNOWN;
 				}
-				
-				// After updating type parameters
-				if( currentType instanceof ClassType )
-					currentType.addUsedType(type);
 			}
+			else {
+				addError(ctx.typeArguments(), Error.UNNECESSARY_TYPE_ARGUMENTS,
+						"Type arguments supplied for non-parameterized type " + type,
+						type );
+				type = Type.UNKNOWN;
+			}										
 		}
+		else if( type.isParameterized() ) { // Parameterized but no parameters!
+			addError(ctx, Error.MISSING_TYPE_ARGUMENTS,
+					"Type arguments are not supplied for parameterized type " +
+					type);
+			type = Type.UNKNOWN;
+		}
+		
+		// After updating type parameters
+		if( currentType instanceof ClassType )
+			currentType.addUsedType(type);
+	
 
 		// Set the type now that it has been fully initialized.
 		ctx.setType( type );
-		return null;
+		return null;	
 	}
 	
 	@Override public Void visitArguments(ShadowParser.ArgumentsContext ctx)
@@ -1893,57 +1879,6 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}
 	
-	@Override public Void visitQualifiedKeyword(ShadowParser.QualifiedKeywordContext ctx)
-	{ 
-		visitChildren(ctx);
-		
-		ctx.setType(Type.UNKNOWN); //start with unknown, set if found
-		String kind = ctx.getText(); 
-					
-		if( curPrefix.getFirst().getModifiers().isTypeName()) {	
-			Type prefixType = curPrefix.getFirst().getType();
-			
-			if( kind.equals(":this") ) {					
-				if( prefixType.encloses( currentType )  ) {
-					ctx.setType(prefixType);						
-					if( prefixType.getModifiers().isImmutable() )
-						ctx.addModifiers(Modifiers.IMMUTABLE);
-					else if( prefixType.getModifiers().isReadonly() )
-						ctx.addModifiers(Modifiers.READONLY);
-				}
-				else				
-					addError(curPrefix.getFirst(), Error.INVALID_SELF_REFERENCE, "Prefix of " + kind + " is not the current class or an enclosing class");
-			}
-			else if( kind.equals(":super") ) {
-				if( currentType.encloses( prefixType )  ) {						
-					if( (prefixType instanceof ClassType) && ((ClassType)prefixType).getExtendType() != null ) {
-						ctx.setType(((ClassType)prefixType).getExtendType());
-						if( prefixType.getModifiers().isImmutable() )
-							ctx.addModifiers(Modifiers.IMMUTABLE);
-						else if( prefixType.getModifiers().isReadonly() )
-							ctx.addModifiers(Modifiers.READONLY);
-					}
-					else
-						addError(ctx, Error.INVALID_SELF_REFERENCE, "Type " + prefixType + " does not have a super class", prefixType);
-				}
-				else				
-					addError(curPrefix.getFirst(), Error.INVALID_SELF_REFERENCE, "Prefix of qualified super is not the current class or an enclosing class");
-			}			
-			
-			Modifiers methodModifiers = null;
-			if(!currentMethod.isEmpty() )
-				methodModifiers = currentMethod.getFirst().getModifiers();
-			
-			//in this case, depends only on current method (creates are exempt)
-			if( methodModifiers != null && (methodModifiers.isImmutable() || methodModifiers.isReadonly()) )
-				ctx.getModifiers().upgradeToTemporaryReadonly();
-		}
-		else
-			addError(curPrefix.getFirst(), Error.NOT_TYPE, "Prefix of " + kind + " is not a type name");
-		
-		return null;
-	}
-	
 	@Override public Void visitBrackets(ShadowParser.BracketsContext ctx)
 	{ 
 		visitChildren(ctx);
@@ -2322,8 +2257,45 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}
 	
-	@Override public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx)
-	{ 
+	@Override public Void visitClassSpecifier(ShadowParser.ClassSpecifierContext ctx)
+	{
+		visitChildren(ctx);
+		
+		//always part of a suffix, thus always has a prefix			
+		ModifiedType prefixNode = curPrefix.getFirst();
+		boolean isTypeName = prefixNode.getModifiers().isTypeName();
+		Type prefixType = prefixNode.getType();
+			
+		if( isTypeName ) {
+			if( ctx.typeArguments() != null ) { //has type arguments											
+				ShadowParser.TypeArgumentsContext arguments = ctx.typeArguments();
+				SequenceType parameterTypes = prefixType.getTypeParameters();
+				SequenceType argumentTypes = (SequenceType) arguments.getType();
+				
+				if( !prefixType.isParameterized() )
+					addError(ctx.typeArguments(), Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + argumentTypes + " supplied for non-parameterized type " + prefixType, prefixType);
+				else if( !parameterTypes.canAccept(argumentTypes, SubstitutionKind.TYPE_PARAMETER) )
+					addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
+				else {
+					try {
+						currentType.addUsedType(prefixType.replace(parameterTypes, argumentTypes));
+					}
+					catch(InstantiationException e) {
+						addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
+					}
+				}
+			}					
+		}
+		else
+			addError(ctx, Error.NOT_TYPE, "class specifier requires type name for access" );
+		
+		ctx.setType( Type.CLASS );
+		ctx.addModifiers(Modifiers.IMMUTABLE);	
+		
+		return null;
+	}
+	
+	@Override public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx) { 
 		visitChildren(ctx);
 		
 		//always part of a suffix, thus always has a prefix			
@@ -2331,42 +2303,12 @@ public class StatementChecker extends BaseChecker {
 		prefixNode = resolveType( prefixNode );
 		Type prefixType = prefixNode.getType();
 		boolean isTypeName = prefixNode.getModifiers().isTypeName();
-		String name = ctx.Identifier() == null ? "class" : ctx.Identifier().getText();
+		String name =  ctx.Identifier().getText();
 		
-		if( name.equals("class") ) {	
-			if( isTypeName ) {
-				if( ctx.typeArguments() != null ) { //has type arguments											
-					ShadowParser.TypeArgumentsContext arguments = ctx.typeArguments();
-					SequenceType parameterTypes = prefixType.getTypeParameters();
-					SequenceType argumentTypes = (SequenceType) arguments.getType();
-					
-					if( !prefixType.isParameterized() )
-						addError(ctx.typeArguments(), Error.UNNECESSARY_TYPE_ARGUMENTS, "Type arguments " + argumentTypes + " supplied for non-parameterized type " + prefixType, prefixType);
-					else if( !parameterTypes.canAccept(argumentTypes, SubstitutionKind.TYPE_PARAMETER) )
-						addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
-					else {
-						try {
-							currentType.addUsedType(prefixType.replace(parameterTypes, argumentTypes));
-						}
-						catch(InstantiationException e) {
-							addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
-						}
-					}
-				}					
-			}
-			else
-				addError(ctx, Error.NOT_TYPE, "class specifier requires type name for access" );
-			
-			ctx.setType( Type.CLASS );
-			ctx.addModifiers(Modifiers.IMMUTABLE);	
-		}			
-		else if( prefixType.containsField( name ) ) {
+		if( prefixType.containsField( name ) ) {
 			Context field = prefixType.getField(name);
 			
-			if( ctx.typeArguments() != null ) { //has type arguments			
-				addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Type arguments should not be used for field access");
-			}
-			else if( !fieldIsAccessible( field, currentType )) {
+			if( !fieldIsAccessible( field, currentType )) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
 			}					
 			else if( field.getModifiers().isConstant() && !isTypeName ) {

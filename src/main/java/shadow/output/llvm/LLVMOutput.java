@@ -195,7 +195,7 @@ public class LLVMOutput extends AbstractOutput {
 		for (Type type : moduleType.getUsedTypes()) {			
 			//write type and method table declarations (even for current types!)
 			if(type != null && !(type instanceof ArrayType)  ) {	
-				if( !type.isParameterizedIncludingOuterClasses() ) {
+				if( !type.isParameterized() ) {
 					writeTypeDefinition(type);
 
 					//external stuff for types outside of this file
@@ -236,7 +236,7 @@ public class LLVMOutput extends AbstractOutput {
 
 		for (Type type : moduleType.getMentionedTypes()) {
 			if(type != null && !(type instanceof ArrayType) && !moduleType.getUsedTypes().contains(type)  ) {	
-				if( !type.isParameterizedIncludingOuterClasses() ) {
+				if( !type.isParameterized() ) {
 					writeTypeDeclaration(type);
 
 					//external stuff for types outside of this file
@@ -436,7 +436,7 @@ public class LLVMOutput extends AbstractOutput {
 			}
 			writer.write(interfaceData.append("]}").toString());
 
-			if( !moduleType.isParameterizedIncludingOuterClasses() )	
+			if( !moduleType.isParameterized() )	
 				writer.write(interfaceClasses.append("]}").toString());
 		}
 
@@ -478,7 +478,7 @@ public class LLVMOutput extends AbstractOutput {
 					"}, " + 
 					type(CLASS_ARRAY) + //interfaces 
 
-					( moduleType.isParameterizedIncludingOuterClasses() ?							
+					( moduleType.isParameterized() ?							
 							" zeroinitializer, " :		
 
 								" {" + pointerType(CLASS_ARRAY) + " " + 
@@ -527,7 +527,7 @@ public class LLVMOutput extends AbstractOutput {
 
 		writer.write();
 
-		if( moduleType.isParameterizedIncludingOuterClasses() )
+		if( moduleType.isParameterized() )
 			unparameterizedGenerics.add(moduleType.getTypeWithoutTypeArguments());		
 
 		//recursively do inner classes
@@ -2348,7 +2348,7 @@ public class LLVMOutput extends AbstractOutput {
 
 	private void writeGenericClass(Type generic) throws ShadowException {				
 		Type noArguments = generic.getTypeWithoutTypeArguments();
-		List<ModifiedType> parameterList = generic.getTypeParametersIncludingOuterClasses(); 
+		List<ModifiedType> parameterList = generic.getTypeParameters(); 
 
 		String interfaceData;
 		String interfaces;		
@@ -2440,7 +2440,7 @@ public class LLVMOutput extends AbstractOutput {
 		}				
 
 		//write definitions of type parameters
-		List<ModifiedType> parameterList = generic.getTypeParametersIncludingOuterClasses();
+		List<ModifiedType> parameterList = generic.getTypeParameters();
 		StringBuilder parameters = new StringBuilder("{ %ulong -1, ["  + parameterList.size() + " x " + type(Type.CLASS) + "] [");
 		StringBuilder tables = new StringBuilder("{ %ulong -1, ["  + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "] [");
 		first = true;
