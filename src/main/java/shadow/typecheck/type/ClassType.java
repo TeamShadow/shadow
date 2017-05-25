@@ -243,22 +243,6 @@ public class ClassType extends Type {
 			}
 		});
 		
-		if (getOuter() != null)
-			set.add(new Entry<String, ModifiedType>() {
-				@Override
-				public String getKey() {
-					return "_outer";
-				}
-				@Override
-				public ModifiedType getValue() {
-					return new SimpleModifiedType(getOuter());
-				}
-				@Override
-				public ModifiedType setValue(ModifiedType value){
-					throw new UnsupportedOperationException();
-				}
-			});
-		
 		//constants live in the class
 		//singletons don't need references stored
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
@@ -638,11 +622,10 @@ public class ClassType extends Type {
 		//necessary?  perhaps code can be written to compute the size
 		//TODO: try to take this back to constants only				
 		newLine = false;
-		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() )		
-			if( !field.getKey().equals("_outer")  ) {
-				out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
-				newLine = true;
-			}
+		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() ) {
+			out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
+			newLine = true;
+		}
 		
 		if( newLine )
 			out.println();		

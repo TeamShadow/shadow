@@ -3,8 +3,6 @@ package shadow.tac.nodes;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.PointerType;
-import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
 public class TACFieldRef extends TACReference
@@ -37,12 +35,11 @@ public class TACFieldRef extends TACReference
 						
 			int value = prefixType.getFieldIndex(fieldName); 
 			if( value < 0 )
-				throw new IllegalArgumentException("Field " + fieldName + " not found in type " + prefixType);
-			
-			// _outer is a member for inner classes, but it is made available through normal field lookup
+				throw new IllegalArgumentException("Field " + fieldName + " not found in type " + prefixType);			
+
 			index = value + 3;
 		}
-		prefix = fieldPrefix;//check(fieldPrefix, fieldPrefix);
+		prefix = fieldPrefix;
 		type = fieldType;
 		name = fieldName;
 	}
@@ -83,14 +80,5 @@ public class TACFieldRef extends TACReference
 	public String toString()
 	{
 		return prefix.toString() + ':' + name;
-	}
-	
-	@Override
-	 public boolean needsGarbageCollection() {	
-		//maybe some outer class references will get garbage collected, but not yet
-		if( name.equals("_outer") )
-			return false;
-		
-		return super.needsGarbageCollection();
 	}
 }

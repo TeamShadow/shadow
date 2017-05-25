@@ -66,19 +66,10 @@ public class TACParameter extends TACOperand {
 	}
 	
 	@Override
-	public String toString() {
-		int offset = 1;
+	public String toString() {		
 		if( number == 0 )
-			return "this";
-		
-		MethodSignature signature = getMethod().getSignature(); 
-		
-		if( signature.isCreate() && signature.getOuter().hasOuter()  ) {
-			offset++;
-			if( number == 1 )
-				return "_outer";
-		}
-		
-		return signature.getParameterNames().get(number - offset);
+			return "this";		
+		MethodSignature signature = getMethod().getSignature();		
+		return signature.getParameterNames().get(number - 1);
 	}
 }

@@ -359,11 +359,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		params.add(new TACLocalLoad(anchor, method.getThis()));
 		
-		if( (!isSuper && thisType.hasOuter()) || (isSuper && thisType.getExtendType().hasOuter()) ) {
-			TACVariable outer = method.getParameter("_outer");
-			params.add(new TACLocalLoad(anchor, outer));
-		}
-		
 		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression())			 
 			params.add(child.appendBefore(anchor));
 		
@@ -1091,13 +1086,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					}
 					else { //field					
 						ModifiedType thisRef = method.getThis();
-						TACOperand op = new TACLocalLoad(anchor, (TACVariable)thisRef);
-						//make chain of this:_outer references until field is found
-						while (!op.getType().containsField(name)) {								
-							op = new TACLoad(anchor, new TACFieldRef(op,
-									new SimpleModifiedType(op.getType().
-											getOuter()), "_outer"));
-						}							
+						TACOperand op = new TACLocalLoad(anchor, (TACVariable)thisRef);													
 						prefix = new TACLoad(anchor, new TACFieldRef(op, name));
 					}
 				}
@@ -1109,19 +1098,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}
 
 	private void methodCall(MethodSignature signature, Context node, List<? extends Context> list) {
-		if (prefix == null) {			
+		if (prefix == null)
 			prefix = new TACLocalLoad(anchor, method.getThis());
-			
-			//for outer class method calls
-			Type prefixType = prefix.getType().getTypeWithoutTypeArguments();
-			Type methodOuter = signature.getOuter().getTypeWithoutTypeArguments();
-			
-			while( !prefixType.isSubtype(methodOuter) ) {			
-				prefix = new TACLoad(anchor, new TACFieldRef(prefix, new SimpleModifiedType(prefixType.getOuter()),
-					"_outer"));
-				prefixType = prefixType.getOuter();				
-			}
-		}
 		
 		TACMethodRef methodRef = new TACMethodRef(anchor,
 				prefix,				
@@ -1376,25 +1354,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private TACOperand callCreate(MethodSignature signature, List<TACOperand> params, Type prefixType) {
 		TACOperand object = new TACNewObject(anchor, prefixType);					
 				
-		params.add(0, object); //put object in front of other things
-		
-		//have to pass a reference to outer classes into constructor
-		if( !(prefixType instanceof TypeParameter) && prefixType.hasOuter() ) {				
-			Type methodOuter = prefixType.getOuter().getTypeWithoutTypeArguments();
-			
-			if( prefix != null && prefix.getType().isSubtype(methodOuter) )
-				params.add(1, prefix); //after object, before args
-			else {					
-				 TACOperand outer = new TACLocalLoad(anchor, method.getThis());
-				 Type outerType = outer.getType().getTypeWithoutTypeArguments();					 
-				 while( !outerType.isSubtype(methodOuter) ) {
-					outer = new TACLoad(anchor, new TACFieldRef(outer, new SimpleModifiedType(outerType.getOuter()),
-							"_outer"));						
-					outerType = outerType.getOuter();				
-				 }					 
-				 params.add(1, outer); //after object, before args
-			}
-		}		
+		params.add(0, object); //put object in front of other things	
 
 		TACMethodRef methodRef;		
 		if( signature.getOuter() instanceof InterfaceType )
@@ -2770,17 +2730,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		if( methodSignature.isCreate()) {
 			ShadowParser.CreateDeclarationContext declaration = (ShadowParser.CreateDeclarationContext) methodSignature.getNode();
 			implicitCreate = declaration.createBlock() == null || declaration.createBlock().explicitCreateInvocation() == null;
-			Type type = methodSignature.getOuter();
-			//TODO: Remove references to _outer
-			if (type.hasOuter()) {
-					new TACStore(anchor,
-						new TACFieldRef(new TACLocalLoad(anchor,
-								method.getThis()),
-								new SimpleModifiedType(type.getOuter()),
-								"_outer"),
-						new TACLocalLoad(anchor,
-								method.getParameter("_outer")));						
-			}
 		}
 		
 		// Call parent create if implicit create.
@@ -2788,13 +2737,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			ClassType thisType = (ClassType)methodSignature.getOuter(),
 					superType = thisType.getExtendType();
 			if (superType != null) {
-				TACCall call;
-				if( superType.hasOuter() )
-					call = new TACCall(anchor, new TACMethodRef(anchor,
-							superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
-							method.getThis()), new TACLocalLoad(anchor, method.getParameter("_outer")));
-				else
-					call = new TACCall(anchor, new TACMethodRef(anchor,
+				TACCall call = new TACCall(anchor, new TACMethodRef(anchor,
 							superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
 							method.getThis()));
 				
@@ -2819,12 +2762,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACOperand this_ = new TACLocalLoad(anchor, method.getThis());					
 			
 			ClassType classType = (ClassType)(methodSignature.getOuter()); 
-			for( Entry<String, ? extends ModifiedType> entry : classType.sortFields() ) {
-				if( !entry.getKey().equals("_outer") ) { //TODO: deal with outer class reference count decrements						
-					TACFieldRef reference = new TACFieldRef(this_, entry.getKey());
-					if( reference.needsGarbageCollection() )
-						new TACChangeReferenceCount(anchor, reference, false);
-				}
+			for( Entry<String, ? extends ModifiedType> entry : classType.sortFields() ) {										
+				TACFieldRef reference = new TACFieldRef(this_, entry.getKey());
+				if( reference.needsGarbageCollection() )
+					new TACChangeReferenceCount(anchor, reference, false);				
 			}					
 			
 			//the mirror image of a create: calls parent destroy *afterwards*

@@ -853,8 +853,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					if( load.getReference() instanceof TACFieldRef ) {
 						TACFieldRef field = (TACFieldRef) load.getReference();
 						//we don't care about nullables or primitives
-						//class and _outer are special cases, guaranteed to be initialized
-						if( operandIsThis(field.getPrefix(), type) && !stores.contains(field.getName()) && !field.getName().equals("class") && !field.getName().equals("_outer") && needsInitialization(field)  )
+						//class is a special case, guaranteed to be initialized
+						if( operandIsThis(field.getPrefix(), type) && !stores.contains(field.getName()) && !field.getName().equals("class") && needsInitialization(field)  )
 							addError(node.getContext(), Error.UNINITIALIZED_FIELD, "Field " + field.getName() + " may have been used without being initialized" );
 					}
 				}
@@ -968,8 +968,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				TACLoad load = (TACLoad)node;
 				if( load.getReference() instanceof TACFieldRef ) {
 					TACFieldRef field = (TACFieldRef) load.getReference();				
-					//class and _outer are special cases, guaranteed to be initialized
-					if( operandIsThis(field.getPrefix(), type) && !field.getName().equals("class") && !field.getName().equals("_outer") ) {
+					//class is a special case, guaranteed to be initialized
+					if( operandIsThis(field.getPrefix(), type) && !field.getName().equals("class") ) {
 						if( needsInitialization(field) ) {
 							if( !stores.contains(field.getName()) )							
 								loadsBeforeStores.add(field.getName());							
@@ -1033,15 +1033,6 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							return true;
 					}
 				}
-			}
-			else { //an outer type				
-				if( op instanceof TACLoad ) {
-					TACLoad load = (TACLoad) op;
-					if( load.getReference() instanceof TACFieldRef ) {
-						TACFieldRef field = (TACFieldRef) load.getReference();
-						return field.getName().equals("_outer") && field.getType().equals(type);
-					}
-				}				
 			}
 			
 			return false;
