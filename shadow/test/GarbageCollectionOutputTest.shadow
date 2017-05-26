@@ -1,0 +1,26 @@
+import shadow:io@Console;
+
+class shadow:test@GarbageCollectionOutputTest
+{
+	NoisyDestroy a = NoisyDestroy:create("A");
+
+	public main(String[] args) => ()
+	{
+		var b = NoisyDestroy:create("B");
+		
+		useObject(b);
+		var d = getObject();						
+	}
+	
+	public useObject(NoisyDestroy b) => ()
+	{
+		var c = NoisyDestroy:create("C");
+		Console.printLine("Name: " # b->string);		
+		Console.printLine("Name: " # c->string);
+	} 
+	
+	public getObject() => (NoisyDestroy)
+	{
+		return NoisyDestroy:create("D");	
+	}		
+}

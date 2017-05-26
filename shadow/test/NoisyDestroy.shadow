@@ -1,0 +1,16 @@
+import shadow:io@Console;
+
+class shadow:test@NoisyDestroy
+{
+	get String string;
+
+	public create(String string)
+	{
+		this:string = string;	
+	}		
+	
+	public destroy
+	{
+		Console.printLine(string);		
+	}
+}

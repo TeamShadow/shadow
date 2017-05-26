@@ -1,16 +1,28 @@
+import shadow:io@Console;
+
 class shadow:test@GarbageCollectionTest
 {
 	public main(String[] args) => ()
 	{
+		Console.printLine("Starting");
+	
 		String value1 = "Death";
 		String value2 = "Taxes";
+		
+		Console.printLine("Swap");
 		
 		(value1, value2) = (value2, value1);
 		
 		String value3;
 		String value4;
 		
-		(value3, value4) = thing();		
+		Console.printLine("Method 1");
+		
+		(value3, value4) = thing();	
+		
+		Console.printLine("Method 2");
+		
+		primitive();	
 	}
 	
 	public thing() => (String, String)
@@ -18,4 +30,9 @@ class shadow:test@GarbageCollectionTest
 		return ("Help", "Me");
 	}
 	
+	public primitive() => ()
+	{
+		Object o = 7;
+		Console.printLine(o);		
+	}	
 }

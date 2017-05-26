@@ -133,9 +133,11 @@ public class TypeParameter extends Type {
 	public String toString(int options) {
 		StringBuilder builder = new StringBuilder();
 		
-		if((options & MANGLE) != 0 )
-			//builder.append(classBound.toString(options & ~PARAMETER_BOUNDS));
-			builder.append("T"); //always use T to maintain compatibility
+		if((options & MANGLE) != 0 ) {
+			builder.append("T" + mangle(getTypeName()));
+			//T is added in cases someone used A as a type parameter
+			//A is used in mangling to mark arrays
+		}
 		else {
 			builder.append(getTypeName());			
 			if((options & PARAMETER_BOUNDS) != 0 ) {			

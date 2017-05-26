@@ -26,6 +26,9 @@ public class TACTests {
 		args.add("-o");
 		args.add(executableName);
 		
+		System.out.println("Working Directory = " +
+	              System.getProperty("user.dir"));		
+		
 		String os = System.getProperty("os.name").toLowerCase();
 		
 		args.add("-c");
@@ -42,7 +45,7 @@ public class TACTests {
 		
 		// To to remove the unit test executable
 		try {
-			Files.delete(executable);
+			Files.delete(executable);			
 		}
 		catch(Exception e) {}
 	}
@@ -119,5 +122,11 @@ public class TACTests {
 		args.add("shadow/test/StringTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		// can't test without more predictable floating point output
+	}
+	
+	@Test public void testHello() throws Exception {
+		args.add("shadow/test/HelloTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		// CAN test, but it's useful to have a testable executable lying around TAC tests
 	}	
 }

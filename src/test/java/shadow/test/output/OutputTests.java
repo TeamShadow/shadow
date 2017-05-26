@@ -1150,6 +1150,26 @@ public class OutputTests {
 				"Hello.\n");
 	}
 	
+	@Test public void testGenericMangling() throws Exception {
+		args.add("shadow/test/GenericManglingTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Method 1\n" + 
+				"Method 2\n");
+	}
+	
+	@Test public void testGarbageCollectionOutput() throws Exception {
+		args.add("shadow/test/GarbageCollectionOutputTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Name: B\n" + 
+				"Name: C\n" + 
+				"C\n" + 
+				"B\n" + 
+				"D\n" + 
+				"A\n");
+	}
+	
 	
 	@Test public void testPath() throws Exception {
 		args.add("shadow/test/PathTest.shadow");
@@ -1165,6 +1185,13 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[] { "FileTest.txt" }, formatOutputString("Hello World!"));
 	}
+	
+	@Test public void testHello() throws Exception {
+		args.add("shadow/test/HelloTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Hello, world!\n");
+	}	
 	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");

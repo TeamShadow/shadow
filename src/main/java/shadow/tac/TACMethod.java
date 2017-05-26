@@ -218,9 +218,8 @@ public class TACMethod
 						TACNewArray newArray = (TACNewArray) node;
 						if( newArray.hasLocalStore() ) {
 							TACLocalStore store = newArray.getLocalStore();
-							//most local stores should not be incremented, since they are returned with an existing increment
-							//however, values that are going to be returned do need to be incremented, to survive the end of method decrement
-							if( store.getVariable().needsGarbageCollection( ) && !store.getVariable().isReturn()  )
+							//local stores should not be incremented, since they are returned with an existing increment
+							if( store.getVariable().needsGarbageCollection( ) )
 								store.setIncrementReference(false);
 						}
 						else if( newArray.hasMemoryStore() )  {
@@ -243,9 +242,8 @@ public class TACMethod
 						call.setGarbageCollected(true);  //marks the call as handled
 						if( call.hasLocalStore() ) {
 							TACLocalStore store = call.getLocalStore();
-							//most local stores should not be incremented, since they are returned with an existing increment
-							//however, values that are going to be returned do need to be incremented, to survive the end of method decrement
-							if( store.getVariable().needsGarbageCollection( ) && !store.getVariable().isReturn() )
+							//local stores should not be incremented, since they are returned with an existing increment
+							if( store.getVariable().needsGarbageCollection( ))
 								store.setIncrementReference(false);
 						}
 						else if( call.hasMemoryStore() ) {
@@ -439,6 +437,8 @@ public class TACMethod
 	//these cause problems for garbage collection, since it tries
 	//to increment the reference count on undef, crashing the program.
 	//This method removes all undefined stores.
+	//This method is also an ideal place to turn off decrementing for
+	//variables that are null	
 	public void removeUndefinedStores() {
 		TACNode start = this.node;
 		TACNode node = start;
@@ -446,6 +446,14 @@ public class TACMethod
 		do {
 			if( node instanceof TACLocalStore ) {
 				TACLocalStore store = (TACLocalStore)node;
+				//Small optimization here:
+				//If a GC variable had no previous store, 
+				//then this must be the "first" store to it,
+				//and there's no need to decrement the old contents.
+				//Note that there will be stores of null added in later for most of these.
+				if( store.isGarbageCollected() && store.getPreviousStore() == null )
+					store.setDecrementReference(false);
+				
 				if( store.getValue() instanceof TACLiteral ) {
 					TACLiteral literal = (TACLiteral) store.getValue();
 					if( literal.getValue() instanceof ShadowUndefined )

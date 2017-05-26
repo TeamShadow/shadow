@@ -220,20 +220,26 @@ public abstract class ShadowValue implements ModifiedType {
                 BigInteger value1 = ((ShadowInteger) first).getValue();
                 BigInteger value2 = ((ShadowInteger) second).getValue();
                 return value1.equals(value2);
-            } else if (first instanceof ShadowFloat) {
+            }
+            else if (first instanceof ShadowFloat) {
                 float value1 = ((ShadowFloat) first).getValue();
                 float value2 = ((ShadowFloat) second).getValue();
                 return value1 == value2;
-            } else if (first instanceof ShadowDouble) {
+            }
+            else if (first instanceof ShadowDouble) {
                 double value1 = ((ShadowDouble) first).getValue();
                 double value2 = ((ShadowDouble) second).getValue();
                 return value1 == value2;
-            } else if (first instanceof ShadowString) {
+            }
+            else if (first instanceof ShadowString) {
                 String value1 = ((ShadowString) first).getValue();
                 String value2 = ((ShadowString) second).getValue();
                 return value1.equals(value2);
-            } else if ( first instanceof ShadowUndefined )
+            } 
+            else if ( first instanceof ShadowUndefined )
             	return second instanceof ShadowUndefined;
+            else if( first instanceof ShadowNull )
+            	return second instanceof ShadowNull;
         }
 
         return false;
@@ -258,15 +264,18 @@ public abstract class ShadowValue implements ModifiedType {
                 BigInteger value1 = ((ShadowInteger) first).getValue();
                 BigInteger value2 = ((ShadowInteger) second).getValue();
                 return value1.compareTo(value2);
-            } else if (first instanceof ShadowFloat) {
+            } 
+            else if (first instanceof ShadowFloat) {
                 float value1 = ((ShadowFloat) first).getValue();
                 float value2 = ((ShadowFloat) second).getValue();
                 return Float.compare(value1, value2);
-            } else if (first instanceof ShadowDouble) {
+            }
+            else if (first instanceof ShadowDouble) {
                 double value1 = ((ShadowDouble) first).getValue();
                 double value2 = ((ShadowDouble) second).getValue();
                 return Double.compare(value1, value2);
-            } else if (first instanceof ShadowString) {
+            }
+            else if (first instanceof ShadowString) {
                 String value1 = ((ShadowString) first).getValue();
                 String value2 = ((ShadowString) second).getValue();
                 return value1.compareTo(value2);
