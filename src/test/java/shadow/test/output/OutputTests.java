@@ -1150,6 +1150,14 @@ public class OutputTests {
 				"Hello.\n");
 	}
 	
+	@Test public void testGenericMangling() throws Exception {
+		args.add("shadow/test/GenericManglingTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Method 1\n" + 
+				"Method 2\n");
+	}
+	
 	
 	@Test public void testPath() throws Exception {
 		args.add("shadow/test/PathTest.shadow");

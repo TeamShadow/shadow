@@ -1,0 +1,29 @@
+import shadow:io@Console;
+
+class shadow:test@GenericManglingTest
+{
+	public main(String[] args) => ()
+	{
+		var inner = Inner<String,Object>:create();
+		
+		String s = "Howdy";
+		Object o = Object:create();
+		
+		inner.method(s, o);
+		inner.method(o, s);	
+	}
+	
+	
+	private class Inner<U,V>
+	{
+		public method(U value1, V value2) => ()
+		{
+			Console.printLine("Method 1");		
+		}
+		
+		public method(V value1, U value2) => ()
+		{
+			Console.printLine("Method 2");		
+		}	
+	}	
+}

@@ -84,7 +84,7 @@ declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow
 @shadow.standard..ArrayNullable_Mdestroy = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array_Mdestroy
 @shadow.standard..ArrayNullable_MsizeLong = alias %long(%shadow.standard..Array*), %long(%shadow.standard..Array*)* @shadow.standard..Array_MsizeLong
 @shadow.standard..ArrayNullable_Msubarray_long_long = alias %shadow.standard..Array* (%shadow.standard..Array*, %long, %long), %shadow.standard..Array* (%shadow.standard..Array*, %long, %long)* @shadow.standard..Array_Msubarray_long_long
-@shadow.standard..ArrayNullable_Mindex_long_T = alias void (%shadow.standard..Array*, %long, %shadow.standard..Object*), void (%shadow.standard..Array*, %long, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_long_T
+@shadow.standard..ArrayNullable_Mindex_long_TT = alias void (%shadow.standard..Array*, %long, %shadow.standard..Object*), void (%shadow.standard..Array*, %long, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_long_TT
 
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 
@@ -291,7 +291,7 @@ _name:
 	ret %shadow.standard..Object* %arrayWrapper
 }
 
-define void @shadow.standard..Array_Mindex_long_T(%shadow.standard..Array*, %ulong, %shadow.standard..Object*) {
+define void @shadow.standard..Array_Mindex_long_TT(%shadow.standard..Array*, %ulong, %shadow.standard..Object*) {
 	; get array data
 	%dataRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %0, i32 0, i32 3
 	%data = load {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}, {{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong}* %dataRef
