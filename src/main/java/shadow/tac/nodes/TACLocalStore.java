@@ -10,6 +10,7 @@ public class TACLocalStore extends TACLocalStorage {
 	private TACOperand value;	
 	private boolean incrementReference;
 	private boolean decrementReference = true;
+	private TACOperand previousStore;
 
 	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op)
 	{
@@ -114,5 +115,15 @@ public class TACLocalStore extends TACLocalStorage {
 		TACLocalStore store = (TACLocalStore) other;
 		
 		return getNumber() == store.getNumber() && getVariable().equals(store.getVariable());
+	}
+	
+	public void setPreviousStore(TACOperand store)
+	{	
+		previousStore = store;
+	}
+	
+	public TACOperand getPreviousStore()
+	{
+		return previousStore;		
 	}
 }

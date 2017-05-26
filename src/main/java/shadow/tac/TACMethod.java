@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import shadow.ShadowException;
+import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
 import shadow.tac.nodes.TACAllocateVariable;
@@ -25,6 +26,7 @@ import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;
@@ -437,6 +439,8 @@ public class TACMethod
 	//these cause problems for garbage collection, since it tries
 	//to increment the reference count on undef, crashing the program.
 	//This method removes all undefined stores.
+	//This method is also an ideal place to turn off decrementing for
+	//variables that are null	
 	public void removeUndefinedStores() {
 		TACNode start = this.node;
 		TACNode node = start;
@@ -444,6 +448,14 @@ public class TACMethod
 		do {
 			if( node instanceof TACLocalStore ) {
 				TACLocalStore store = (TACLocalStore)node;
+				//Small optimization here:
+				//If a GC variable had no previous store, 
+				//then this must be the "first" store to it,
+				//and there's no need to decrement the old contents.
+				//Note that there will be stores of null added in later for most of these.
+				if( store.isGarbageCollected() && store.getPreviousStore() == null )
+					store.setDecrementReference(false);
+				
 				if( store.getValue() instanceof TACLiteral ) {
 					TACLiteral literal = (TACLiteral) store.getValue();
 					if( literal.getValue() instanceof ShadowUndefined )

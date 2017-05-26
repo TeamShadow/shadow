@@ -1184,7 +1184,15 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			for( TACNode node : this )	{		
 				if( node instanceof TACLocalStorage ) {  //both TACLocalStore and TACPhiStore
 					TACLocalStorage store = (TACLocalStorage)node;
-					predecessors.put(store.getVariable(), store);	
+					TACVariable variable = store.getVariable();
+					
+					//Useful to know the previous store before this store
+					//primarily for the case of GC: no need to decrement something that was never assigned 
+					if( node instanceof TACLocalStore )
+						if( predecessors.get(variable) != null )
+							((TACLocalStore)node).setPreviousStore(predecessors.get(variable));
+										
+					predecessors.put(variable, store);
 				}
 				else if( node instanceof TACLocalLoad ) {
 					TACLocalLoad load = (TACLocalLoad)node;					
