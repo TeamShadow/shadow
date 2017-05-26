@@ -218,9 +218,8 @@ public class TACMethod
 						TACNewArray newArray = (TACNewArray) node;
 						if( newArray.hasLocalStore() ) {
 							TACLocalStore store = newArray.getLocalStore();
-							//most local stores should not be incremented, since they are returned with an existing increment
-							//however, values that are going to be returned do need to be incremented, to survive the end of method decrement
-							if( store.getVariable().needsGarbageCollection( ) && !store.getVariable().isReturn()  )
+							//local stores should not be incremented, since they are returned with an existing increment
+							if( store.getVariable().needsGarbageCollection( ) )
 								store.setIncrementReference(false);
 						}
 						else if( newArray.hasMemoryStore() )  {
@@ -243,9 +242,8 @@ public class TACMethod
 						call.setGarbageCollected(true);  //marks the call as handled
 						if( call.hasLocalStore() ) {
 							TACLocalStore store = call.getLocalStore();
-							//most local stores should not be incremented, since they are returned with an existing increment
-							//however, values that are going to be returned do need to be incremented, to survive the end of method decrement
-							if( store.getVariable().needsGarbageCollection( ) && !store.getVariable().isReturn() )
+							//local stores should not be incremented, since they are returned with an existing increment
+							if( store.getVariable().needsGarbageCollection( ))
 								store.setIncrementReference(false);
 						}
 						else if( call.hasMemoryStore() ) {

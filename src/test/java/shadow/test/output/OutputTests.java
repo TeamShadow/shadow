@@ -1158,6 +1158,18 @@ public class OutputTests {
 				"Method 2\n");
 	}
 	
+	@Test public void testGarbageCollectionOutput() throws Exception {
+		args.add("shadow/test/GarbageCollectionOutputTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Name: B\n" + 
+				"Name: C\n" + 
+				"C\n" + 
+				"B\n" + 
+				"D\n" + 
+				"A\n");
+	}
+	
 	
 	@Test public void testPath() throws Exception {
 		args.add("shadow/test/PathTest.shadow");
