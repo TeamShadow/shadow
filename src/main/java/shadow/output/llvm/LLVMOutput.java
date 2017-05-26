@@ -1209,8 +1209,7 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACAllocateVariable node) throws ShadowException { 
 		TACVariable local = node.getVariable();
-		writer.write(name(local) + " = alloca " + type(local));
-		writer.write("store " + type(local) + " " + literal(new ShadowNull(local.getType())) + ", " + typeText(local, name(local), true));
+		writer.write(name(local) + " = alloca " + type(local));		
 	}
 	
 	@Override
