@@ -1186,6 +1186,13 @@ public class OutputTests {
 		run(new String[] { "FileTest.txt" }, formatOutputString("Hello World!"));
 	}
 	
+	@Test public void testHello() throws Exception {
+		args.add("shadow/test/HelloTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Hello, world!\n");
+	}	
+	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");
 		Main.run(args.toArray(new String[] { }));

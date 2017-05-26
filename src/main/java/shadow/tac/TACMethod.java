@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import shadow.ShadowException;
-import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
 import shadow.tac.nodes.TACAllocateVariable;
@@ -26,7 +25,6 @@ import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;

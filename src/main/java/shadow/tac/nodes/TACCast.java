@@ -6,6 +6,7 @@ import java.util.Set;
 
 import shadow.ShadowException;
 import shadow.interpreter.ShadowValue;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -54,7 +55,7 @@ public class TACCast extends TACUpdate
 		SEQUENCE
 	}
 	
-	public static TACCast cast(TACNode node, ModifiedType destination, TACOperand op)
+	public static TACOperand cast(TACNode node, ModifiedType destination, TACOperand op)
 	{
 		return cast(node, destination, op, false);
 	}
@@ -63,7 +64,7 @@ public class TACCast extends TACUpdate
 	static int levels = 0;
 	
 	@SuppressWarnings("incomplete-switch")
-	public static TACCast cast(TACNode node, ModifiedType destination, TACOperand op, boolean check)
+	public static TACOperand cast(TACNode node, ModifiedType destination, TACOperand op, boolean check)
 	{		
 		levels++;
 		try
@@ -152,12 +153,15 @@ public class TACCast extends TACUpdate
 				case INTERFACE:
 					intermediate = new SimpleModifiedType(inType, new Modifiers(destination.getModifiers().getModifiers() | Modifiers.NULLABLE)); 
 					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), Kind.OBJECT_TO_INTERFACE, check);
-				case OBJECT:
+				case OBJECT:					
+					TACVariable temp = node.getMethod().addTempLocal(destination);							
+					//store into temporary for reference count purposes										
 					intermediate = new SimpleModifiedType(inType, new Modifiers(Modifiers.NULLABLE));
 					if( needsCast(intermediate, destination)  )
-						return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), Kind.OBJECT_TO_OBJECT, check);
+						new TACLocalStore(node, temp, new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), Kind.OBJECT_TO_OBJECT, check), false);
 					else
-						return new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false );
+						new TACLocalStore(node, temp, new TACCast(node, intermediate, op, Kind.PRIMITIVE_TO_OBJECT, false ), false);
+					return new TACLocalLoad(node, temp);
 				case PRIMITIVE:
 					return new TACCast(node, destination, op, Kind.PRIMITIVE_TO_PRIMITIVE, false );
 				case SEQUENCE:
