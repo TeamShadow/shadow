@@ -12,13 +12,12 @@ public class ArrayType extends ClassType
 	@Override
 	public int getWidth()
 	{
-		return 2 * OBJECT.getWidth() + ULONG.getWidth();
+		return 6;
 		//not necessarily the actual width, just a value that helps sort the fields
 		//references have a "width" of 6, which covers either 4 or 8 byte pointers
-		// arrays first
-		// then interfaces
+		// interfaces first
 		// then longs and ulongs
-		// then regular references 
+		// then regular references and arrays
 		// then smaller primitives
 	}
 	

@@ -2326,6 +2326,11 @@ public class LLVMOutput extends AbstractOutput {
 
 		arrayClasses.add("@" + withGenerics(type,  "_class"));
 
+		//
+		// ABSOLUTELY CRUCIAL THAT THIS IS UPDATED
+		// These must contain the information that Array<T> used to contain
+		//
+		
 		writer.write("@" + withGenerics(type,  "_class") + " = linkonce unnamed_addr constant  %" +
 				raw(Type.CLASS) + " { " + 		
 

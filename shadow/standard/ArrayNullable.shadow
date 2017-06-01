@@ -20,14 +20,14 @@ is  CanIndexNullable<long,T>
 and CanIndexStoreNullable<long,T>
 and CanIterateNullable<T>
 {	
-	Object[] data; //not actually objects, but can be treated as such except for arrays, interfaces, and primitives
+	long size;
 	
 	/**
 	 * Creates an {@code ArrayNullable<T>} wrapper for the given array.	 
 	 * This method is called internally by the compiler and is only {@code protected}
 	 * because it allows other classes to see the method.
 	 */
-	protected native create( Object[] data );
+	private native create();
 		
 	/**
 	 * Creates an {@code Array<T>} object with the given size.
@@ -37,6 +37,9 @@ and CanIterateNullable<T>
 	//protected native create( long size );
 	
 	public native destroy;
+	
+	public native isNullable() => (boolean);
+	
 	
 	/**
 	 * Gets the size of the array (total number of elements) as an {@code int}.
