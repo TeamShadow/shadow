@@ -435,8 +435,7 @@ public class ClassType extends Type {
 			return isSubtype(((TypeParameter)t).getClassBound());
 		
 		if( t instanceof ArrayType ) {
-			ArrayType arrayType = (ArrayType) t;
-			return isSubtype(arrayType.convertToGeneric());
+			return false;
 		}
 		
 		if( t.isNumerical() && isNumerical() )

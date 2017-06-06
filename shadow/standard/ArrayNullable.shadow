@@ -1,13 +1,9 @@
 /**
- * Class {@code ArrayNullable<T>} is used as a wrapper for nullable array objects
- * when they must be treated as objects.
+ * Class {@code ArrayNullable<T>} is used to house the methods for nullable
+ * array objects.
  *
- * The object keeps a reference to normal array memory as well as additional
- * dimension information needed to access the array safely. 
- *
- * Most of the use of {@code NullableArray<T>} is handled by the compiler.
- * Users should avoid using the {@code NullableArray<T>} type explicitly 
- * unless absolutely necessary. 
+ * The use of {@code NullableArray<T>} is handled by the compiler.
+ * Users should avoid using the {@code NullableArray<T>} type explicitly.
  * 
  * In this implementation, most methods of {@code NullableArray<T>} are implemented
  * as aliases to the parallel method in {@code Array<T>}, since the mechanics

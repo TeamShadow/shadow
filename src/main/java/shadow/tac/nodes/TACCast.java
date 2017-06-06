@@ -30,10 +30,8 @@ public class TACCast extends TACUpdate
 	
 	public enum Kind
 	{
-		ARRAY_TO_OBJECT,
 		INTERFACE_TO_OBJECT,
 		ITEM_TO_SEQUENCE,
-		NULL_TO_ARRAY,
 		NULL_TO_INTERFACE,
 		OBJECT_TO_ARRAY,
 		OBJECT_TO_INTERFACE,
@@ -82,16 +80,10 @@ public class TACCast extends TACUpdate
 			switch( in ) {
 			case ARRAY:			
 				switch( out ) {
-				case INTERFACE:
-					intermediate = new SimpleModifiedType(((ArrayType)inType).convertToGeneric());
-					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check ), Kind.OBJECT_TO_INTERFACE, check);
+				case INTERFACE:					
+					return new TACCast(node, destination, op, Kind.OBJECT_TO_INTERFACE, check);
 				case OBJECT:
-					intermediate = new SimpleModifiedType(((ArrayType)inType).convertToGeneric());
-					//the "same" types, no object cast needed
-					if( needsCast(intermediate, destination)  )
-						return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check ), Kind.OBJECT_TO_OBJECT, check);
-					else
-						return new TACCast(node, intermediate, op, Kind.ARRAY_TO_OBJECT, check );
+					return new TACCast(node, destination, op, Kind.OBJECT_TO_OBJECT, check);
 				case SEQUENCE:
 					return new TACCast(node, destination, op, Kind.ITEM_TO_SEQUENCE, check);				
 				}			
@@ -100,8 +92,7 @@ public class TACCast extends TACUpdate
 			case INTERFACE:
 				switch( out ) {
 				case ARRAY:
-					intermediate = new SimpleModifiedType(((ArrayType)outType).convertToGeneric());
-					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, check ), Kind.OBJECT_TO_ARRAY, check);
+					return new TACCast(node, destination, op, Kind.INTERFACE_TO_OBJECT, check);
 				case INTERFACE:
 					intermediate = new SimpleModifiedType(Type.OBJECT);
 					return new TACCast(node, destination, new TACCast(node, intermediate, op, Kind.INTERFACE_TO_OBJECT, false ), Kind.OBJECT_TO_INTERFACE, check);
@@ -123,7 +114,7 @@ public class TACCast extends TACUpdate
 			case NULL:
 				switch( out ) {
 				case ARRAY:
-					return new TACCast(node, destination, op, Kind.NULL_TO_ARRAY, check);
+					throw new IllegalArgumentException("Cannot cast a null to an array");
 				case INTERFACE:
 					return new TACCast(node, destination, op, Kind.NULL_TO_INTERFACE, check);				
 				case OBJECT:
@@ -246,19 +237,15 @@ public class TACCast extends TACUpdate
 		operands.add(op);
 		
 		switch( kind ) {
-		case ARRAY_TO_OBJECT:
-			//only changes to generic form of array
-			//additional casts are needed to go to another object type
-			ArrayType arrayType = (ArrayType) op.getType();			
-			operands.add(new TACClass(this, arrayType.convertToGeneric()));			
-			break;
 		case ITEM_TO_SEQUENCE:
 			destinationSequence = (SequenceType)type;
 			modifiedType = destinationSequence.get(0); 
 			if( needsCast(modifiedType, op) )
 				operands.set(0, cast(this, modifiedType, op, check));			
 			break;			
-		case OBJECT_TO_ARRAY: //do nothing now?			
+		case OBJECT_TO_ARRAY:	
+			if( check )
+				objectToArrayCheck(op);
 			break;
 		case OBJECT_TO_INTERFACE:
 			operands.add(getInterfaceData(op, type));
@@ -319,6 +306,58 @@ public class TACCast extends TACUpdate
 			return true;
 		
 		return !type1.isSubtype(type2) || !type2.isSubtype(type1);
+	}
+	
+	private void objectToArrayCheck(TACOperand op) {
+		//get class from object
+		TACMethodRef methodRef = new TACMethodRef(this, op,
+				Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));						
+		
+		TACOperand operandClass = new TACCall(this, methodRef, methodRef.getPrefix());
+		TACOperand destinationClass = new TACClass(this, type).getClassData();
+				
+		TACOperand result = new TACBinary(this, operandClass, destinationClass);
+		TACLabel throwLabel = new TACLabel(getMethod());
+		TACLabel checkNullLabel = new TACLabel(getMethod());
+		TACLabel doneLabel = new TACLabel(getMethod());
+		
+		new TACBranch(this, result, checkNullLabel, throwLabel);
+		
+		checkNullLabel.insertBefore(this);
+		
+		TACOperand asArray = new TACCast(this, new SimpleModifiedType(type, modifiers), op, Kind.OBJECT_TO_OBJECT, false );
+		ArrayType arrayType = (ArrayType) type;
+		
+		if( arrayType.isNullable() )
+			methodRef = new TACMethodRef(this, asArray,
+				Type.ARRAY_NULLABLE.getMatchingMethod("isNullable", new SequenceType()));
+		else
+			methodRef = new TACMethodRef(this, asArray,
+				Type.ARRAY.getMatchingMethod("isNullable", new SequenceType()));
+		
+		result = new TACCall(this, methodRef, methodRef.getPrefix());
+		
+		if( arrayType.isNullable() )
+			new TACBranch(this, result, doneLabel, throwLabel);
+		else
+			new TACBranch(this, result, throwLabel, doneLabel);
+				
+		throwLabel.insertBefore(this);
+		
+		TACOperand object = new TACNewObject(this, Type.CAST_EXCEPTION);
+		SequenceType params = new SequenceType();			
+		params.add(operandClass);
+		params.add(destinationClass);
+		
+		MethodSignature signature;
+		signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
+					
+		methodRef = new TACMethodRef(this, signature);			
+		TACCall exception = new TACCall(this, methodRef, object, operandClass, destinationClass);
+					
+		new TACThrow(this, exception);						
+		
+		doneLabel.insertBefore(this);	//done label
 	}
 	
 	private void objectToObjectCheck(TACOperand op) {
@@ -397,7 +436,7 @@ public class TACCast extends TACUpdate
 		StringBuffer sb = new StringBuffer("cast<" + getModifiers() + getType() + '>');
 		sb.append('(');
 		int length = operands.size();
-		if( kind == Kind.ARRAY_TO_OBJECT || kind == Kind.OBJECT_TO_INTERFACE ) //extra ops
+		if( kind == Kind.OBJECT_TO_INTERFACE ) //extra ops
 			length--;		
 		for( int i = 0; i < length; ++i ) {
 			sb.append(operands.get(i).toString());

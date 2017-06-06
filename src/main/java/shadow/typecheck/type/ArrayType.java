@@ -97,7 +97,10 @@ public class ArrayType extends ClassType
 	
 	@Override
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<ShadowException> errors ) {		
-		return convertToGeneric().getMatchingMethod(methodName, arguments, typeArguments, errors);		
+		if( nullable )
+			return Type.ARRAY_NULLABLE.getMatchingMethod(methodName, arguments, typeArguments, errors);
+		else
+			return Type.ARRAY.getMatchingMethod(methodName, arguments, typeArguments, errors);
 	}
 	
 	@Override
@@ -122,7 +125,8 @@ public class ArrayType extends ClassType
 		}
 		
 		//check generic version
-		return convertToGeneric().isSubtype(t);
+		//return convertToGeneric().isSubtype(t);
+		return false;
 	}
 	
 	@Override
@@ -131,6 +135,7 @@ public class ArrayType extends ClassType
 		return new ArrayType( baseType.replace(values, replacements), nullable);		
 	}
 		
+	/*
 	public ClassType convertToGeneric() {
 		Type base = baseType;				
 		
@@ -145,6 +150,7 @@ public class ArrayType extends ClassType
 				
 		return null; //shouldn't happen
 	}
+	*/
 	
 	public ArrayType convertToNullable() {
 		if( nullable )

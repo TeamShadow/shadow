@@ -1,13 +1,8 @@
 /**
- * Class {@code Array<T>} is used as a wrapper for array objects when
- * they must be treated as objects.
+ * Class {@code Array<T>} is used to house methods for array objects.
  *
- * The object keeps a reference to normal array memory as well as additional
- * dimension information needed to access the array safely. 
- *
- * Most of the use of {@code Array<T>} is handled by the compiler.
- * Users should avoid using the {@code Array<T>} type explicitly 
- * unless absolutely necessary.
+ * The use of {@code Array<T>} is handled by the compiler.
+ * Users should avoid using the {@code Array<T>} type explicitly.
  */
 abstract locked class shadow:standard@
 	Array<T>

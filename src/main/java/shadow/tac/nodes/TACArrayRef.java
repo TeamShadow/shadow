@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
+import shadow.tac.TACBuilder;
 import shadow.tac.TACMethod;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.MethodSignature;
@@ -38,7 +39,7 @@ public class TACArrayRef extends TACReference
 			
 			//by casting to unsigned, we don't need to do a negative check
 			TACOperand unsignedLength = TACCast.cast(node, new SimpleModifiedType(Type.ULONG), index);
-			TACOperand unsignedBound = TACCast.cast(node, new SimpleModifiedType(Type.ULONG), new TACLength(node, array, true));				 
+			TACOperand unsignedBound = TACCast.cast(node, new SimpleModifiedType(Type.ULONG), TACBuilder.arraySize(node, array, true));				 
 			TACOperand condition = new TACBinary(node, unsignedLength, Type.ULONG.getMatchingMethod("compare", new SequenceType(Type.ULONG)), "<", unsignedBound, true);
 							
 			TACLabel done = new TACLabel(method);

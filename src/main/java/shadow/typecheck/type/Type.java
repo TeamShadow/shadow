@@ -126,9 +126,8 @@ public abstract class Type implements Comparable<Type> {
 	public static final int PACKAGES =  1;
 	public static final int TYPE_PARAMETERS =  2;
 	public static final int PARAMETER_BOUNDS =  4;
-	public static final int CONVERT_ARRAYS =  8;
-	public static final int MANGLE =  16;
-	public static final int MANGLE_EXTERN = 32;
+	public static final int MANGLE =  8;
+	public static final int MANGLE_EXTERN = 16;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
@@ -316,7 +315,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	public final String getHashName() {	
 		if( hashName == null )
-			hashName = toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.MANGLE | Type.CONVERT_ARRAYS);
+			hashName = toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.MANGLE);
 		
 		return hashName;
 	}
@@ -1139,13 +1138,16 @@ public abstract class Type implements Comparable<Type> {
 				ArrayType arrayType = (ArrayType) type;
 				Type baseType = arrayType.getBaseType();
 				
-				addUsedType(arrayType.convertToGeneric());
+				usedTypes.add(type);
+				//addUsedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
 				//automatically does the right thing for NullableArray
 				//must do before adding to usedTypes
 				
-				if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
-					usedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues								
+				addUsedType(baseType);
+				
+				//if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
+					//usedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues								
 
 			}
 			else if( type instanceof MethodType ) {			
@@ -1173,7 +1175,9 @@ public abstract class Type implements Comparable<Type> {
 					}
 				}		
 				
-				//add reference to outer types					
+				//add reference to outer types	
+				//necessary now that we have "static" inner types
+				//with explicit references to outer types?
 				Type outer = getOuter();
 				while( outer != null ) {
 					outer.addUsedType(type);

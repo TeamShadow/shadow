@@ -106,6 +106,7 @@ declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 @shadow.standard..ArrayNullable_MsizeLong = alias %long(%shadow.standard..Array*), %long(%shadow.standard..Array*)* @shadow.standard..Array_MsizeLong
 @shadow.standard..ArrayNullable_Msubarray_long_long = alias %shadow.standard..Array* (%shadow.standard..Array*, %long, %long), %shadow.standard..Array* (%shadow.standard..Array*, %long, %long)* @shadow.standard..Array_Msubarray_long_long
 @shadow.standard..ArrayNullable_Mindex_long_TT = alias void (%shadow.standard..Array*, %long, %shadow.standard..Object*), void (%shadow.standard..Array*, %long, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_long_TT
+@shadow.standard..ArrayNullable_Mindex_long = alias %shadow.standard..Object* (%shadow.standard..Array*, %long), %shadow.standard..Object* (%shadow.standard..Array*, %long)* @shadow.standard..Array_Mindex_long
 
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 

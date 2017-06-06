@@ -44,11 +44,9 @@ import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDummyNode;
 import shadow.tac.nodes.TACFieldRef;
-import shadow.tac.nodes.TACGenericArrayRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
-import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
@@ -399,6 +397,26 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		method.addLocal(ctx, ctx.Identifier().getText());
 		
 		return null;
+	}
+	
+	public static TACOperand arraySize(TACNode anchor, TACOperand array, boolean isLong){
+		ArrayType arrayType = (ArrayType)array.getType();
+		Type type;
+		if( arrayType.isNullable() )
+			type = Type.ARRAY_NULLABLE;
+		else
+			type = Type.ARRAY;
+		
+		MethodSignature signature;
+		if( isLong )
+			signature = type.getMatchingMethod("sizeLong", new SequenceType());
+		else
+			signature = type.getMatchingMethod("size", new SequenceType());
+		
+		List<TACOperand> params = new ArrayList<TACOperand>();
+		params.add(array);
+		
+		return new TACCall(anchor, new TACMethodRef(anchor, signature), params);
 	}
 		
 	private void doAssignment(TACOperand left, Context leftAST, TACOperand right, String operation, Context node )
@@ -795,11 +813,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		
 		if( ctx.type() != null ) {						
 			Type comparisonType = ctx.type().getType();
-			
-			if( comparisonType instanceof ArrayType ) {
-				ArrayType arrayType = (ArrayType) comparisonType;
-				comparisonType = arrayType.convertToGeneric();
-			}
 			
 			TACOperand comparisonClass = new TACClass(anchor, comparisonType).getClassData();
 
@@ -1209,9 +1222,22 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			if( indexType.isIntegral() && !indexType.equals(Type.LONG))
 				index = TACCast.cast(anchor, new SimpleModifiedType(Type.LONG, index.getModifiers()), index);
 				
-			if( arrayType.getBaseType() instanceof TypeParameter )
-				prefix = new TACLoad(anchor, new TACGenericArrayRef(anchor, prefix, index));
-			else
+			if( arrayType.getBaseType() instanceof TypeParameter ) {
+				if( !isStore ) {
+					Type type;				
+					if( arrayType.isNullable() )
+						type = Type.ARRAY_NULLABLE;
+					else
+						type = Type.ARRAY;
+					MethodSignature signature = type.getMatchingMethod("index", new SequenceType(Type.LONG));
+					methodCall(signature, ctx, Collections.singletonList(ctx.conditionalExpression()));
+				}
+				else {
+					//simply append everything (of which there is only one)
+					ctx.conditionalExpression().appendBefore(anchor);
+				}
+			}
+			else //TODO: In this case, don't we need to check for legal indexes?
 				prefix = new TACLoad(anchor, new TACArrayRef(anchor, prefix, index));
 		}				
 		else if( ctx.getType() instanceof SubscriptType ) {					
@@ -1260,28 +1286,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		ShadowParser.PrimarySuffixContext suffix = (PrimarySuffixContext) ctx.getParent();
 		ShadowParser.PrimaryExpressionContext expression = (ShadowParser.PrimaryExpressionContext)suffix.getParent(); 
 		boolean isStore = isLHS(expression) && suffix == getSuffix(expression);
-		//prefix should never be null			
-		Type prefixType = resolveType(prefix.getType());
-		
-		if( prefixType instanceof ArrayType && ctx.Identifier().getText().equals("size")) {
-			//optimization to avoid creating an Array object
-			TACOperand length = new TACLength(anchor, prefix, false);			
-			prefix = length;
-		}
-		else if( prefixType instanceof ArrayType && ctx.Identifier().getText().equals("sizeLong")) {
-			//optimization to avoid creating an Array object
-			TACOperand length = new TACLength(anchor, prefix, true);			
-			prefix = length;
-		}		
-		else {
-			PropertyType propertyType = (PropertyType) ctx.getType();
-			//only do the straight loads
-			//stores (and +='s) are handled in ASTExpression
-			if( !isStore ) {
-				MethodSignature signature = propertyType.getGetter();
-				methodCall(signature, ctx, new ArrayList<Context>()); //no parameters to add					
-			}				
-		}
+				
+		PropertyType propertyType = (PropertyType) ctx.getType();
+		//only do the straight loads
+		//stores (and +='s) are handled in ASTExpression
+		if( !isStore ) {
+			MethodSignature signature = propertyType.getGetter();
+			methodCall(signature, ctx, new ArrayList<Context>()); //no parameters to add					
+		}	
 		
 		ctx.setOperand(prefix);
 		
@@ -1761,15 +1773,15 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACLabel bodyLabel = new TACLabel(method),				
 				endLabel = block.getBreak();
 		
-		//optimization for arrays
-		if( type instanceof ArrayType ) {
+		//optimization for (non-generic) arrays
+		if( type instanceof ArrayType && !(((ArrayType)type).getBaseType() instanceof TypeParameter) ) {
 			TACLabel updateLabel = block.getContinue(),
 						conditionLabel = new TACLabel(method);
 
 			//make iterator (long index)
 			iterator = method.addTempLocal(new SimpleModifiedType(Type.LONG));
 			new TACLocalStore(anchor, iterator, new TACLiteral(anchor, new ShadowInteger(0L)));
-			TACOperand length = new TACLength(anchor, collection, true);
+			TACOperand length = arraySize(anchor, collection, true);
 			new TACBranch(anchor, conditionLabel);  //init is done, jump to condition
 			
 			//body
@@ -2259,10 +2271,15 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACOperand oldArray = array;
 		TACVariable previousArray = null;
 		
+		
+		TACOperand arrayClass = new TACClass(anchor, type, true).getClassData();
+		TACMethodRef sizeMethod = new TACMethodRef(anchor, Type.CLASS.getMatchingMethod("size", new SequenceType()) );
+		TACOperand arrayOverhead = new TACCall(anchor, sizeMethod, arrayClass);
+		
 		for( int i = 0; i < layers; i++ ) {
 			ArrayType arrayType = (ArrayType)type;
 			type = arrayType.getBaseType();
-			TACOperand length = new TACLength(anchor, oldArray, true);
+			TACOperand length = arraySize(anchor, oldArray, true);
 			//TODO: fix this so that the class is retrieved from the array
 			TACClass class_ = new TACClass(anchor, type);
 			TACVariable copiedArray = method.addTempLocal(new SimpleModifiedType(arrayType));
@@ -2278,6 +2295,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			
 			previousArray = copiedArray;
 			
+		
 			if( i == layers - 1 ) { //last layer is either objects or primitives, not more arrays
 				TACLabel terminate;					
 				if( i == 0 )
@@ -2288,6 +2306,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				if( type.isPrimitive() ) {
 					TACMethodRef width = new TACMethodRef(anchor, Type.CLASS.getMatchingMethod("width", new SequenceType()) );
 					TACOperand size = new TACBinary(anchor, new TACCall(anchor, width, class_.getClassData()), Type.LONG.getMatchingMethod("multiply", new SequenceType(Type.LONG)), "*", length);
+					size = new TACBinary(anchor, size, Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", arrayOverhead);
 					new TACCopyMemory(anchor, new TACLocalLoad(anchor, copiedArray), oldArray, size);
 					new TACBranch(anchor, terminate);
 				}
@@ -2480,7 +2499,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				TACMethodRef create = new TACMethodRef(anchor, genericArray.getMatchingMethod("create", new SequenceType(objArrayType)));
 				TACOperand data = new TACLoad(anchor, new TACFieldRef(this_, "data" ));
 				TACOperand baseClass = new TACBaseClass(anchor, data);
-				TACOperand length = new TACLength(anchor, data, true);
+				TACOperand length = arraySize(anchor, data, true);
 				
 				TACOperand array = new TACNewArray(anchor, objArrayType, baseClass, length);						
 				
@@ -2857,7 +2876,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//make iterator (int index)
 		TACVariable iterator = method.addTempLocal(new SimpleModifiedType(Type.LONG));
 		new TACLocalStore(anchor, iterator, new TACLiteral(anchor, new ShadowInteger(0)));
-		TACOperand length = new TACLength(anchor, array, true);			
+		TACOperand length = arraySize(anchor, array, true);			
 		new TACBranch(anchor, conditionLabel);  //init is done, jump to condition
 		
 		bodyLabel.insertBefore(anchor);
