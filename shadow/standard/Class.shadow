@@ -269,6 +269,7 @@ is  CanHash
 	 */
 	public locked native readonly pointerSize() => ( int );
 	
+	
 	/**
 	 * For normal types, returns the size required for an object whose type
 	 * is given by this class.  For array and interface types, it gives the 

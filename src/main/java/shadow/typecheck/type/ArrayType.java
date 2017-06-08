@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import shadow.ShadowException;
@@ -70,7 +71,7 @@ public class ArrayType extends ClassType
 			if( baseType.isPrimitive() )
 				return baseType.getTypeName() + "_A";
 			else
-				return baseType.toString(options & ~CONVERT_ARRAYS) + "_A";
+				return baseType.toString(options) + "_A";
 		}
 		
 		return baseType.toString(options) + "[]";
@@ -97,10 +98,12 @@ public class ArrayType extends ClassType
 	
 	@Override
 	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<ShadowException> errors ) {		
-		if( nullable )
-			return Type.ARRAY_NULLABLE.getMatchingMethod(methodName, arguments, typeArguments, errors);
-		else
-			return Type.ARRAY.getMatchingMethod(methodName, arguments, typeArguments, errors);
+		return convertToGeneric().getMatchingMethod(methodName, arguments, typeArguments, errors);		
+	}
+	
+	@Override
+	public List<MethodSignature> getAllMethods(String methodName) {
+		return getExtendType().getAllMethods(methodName);
 	}
 	
 	@Override
@@ -125,8 +128,7 @@ public class ArrayType extends ClassType
 		}
 		
 		//check generic version
-		//return convertToGeneric().isSubtype(t);
-		return false;
+		return convertToGeneric().isSubtype(t);		
 	}
 	
 	@Override
@@ -135,7 +137,7 @@ public class ArrayType extends ClassType
 		return new ArrayType( baseType.replace(values, replacements), nullable);		
 	}
 		
-	/*
+	
 	public ClassType convertToGeneric() {
 		Type base = baseType;				
 		
@@ -149,8 +151,7 @@ public class ArrayType extends ClassType
 		{}		
 				
 		return null; //shouldn't happen
-	}
-	*/
+	}	
 	
 	public ArrayType convertToNullable() {
 		if( nullable )

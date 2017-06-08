@@ -16,6 +16,7 @@ and CanIterate<T>
 	 * Arrays are created internally by the compiler. 
 	 * This method is private to prevent a user from creating
 	 * an {@code Array<T>} object explicitly.
+	 * @unused
 	 */
 	private native create();
 	

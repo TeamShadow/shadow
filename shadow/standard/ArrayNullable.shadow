@@ -22,6 +22,7 @@ and CanIterateNullable<T>
 	 * Creates an {@code ArrayNullable<T>} wrapper for the given array.	 
 	 * This method is called internally by the compiler and is only {@code protected}
 	 * because it allows other classes to see the method.
+	 * @unused
 	 */
 	private native create();
 		

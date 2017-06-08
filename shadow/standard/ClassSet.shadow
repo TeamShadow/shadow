@@ -566,7 +566,7 @@ is  Set<Class>
 		immutable Class[] interfaces = getEmptyClassArray();
 		immutable MethodTable[] tables = getEmptyMethodTableArray();
 
-		Class newArray = Class:create(name, Class:ARRAY, base.arraySize(), base, interfaces, tables);
+		Class newArray = Class:create(name, Class:ARRAY, Array:class->size, base, interfaces, tables);
 		(long index, long hash) = findIndex( name, table->sizeLong );		
 		table[index] = Node:create(hash, newArray, table[index]);
 		modifications += 1L;

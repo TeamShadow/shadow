@@ -17,21 +17,21 @@ import shadow.typecheck.type.Type;
 public class TACNewArray extends TACOperand
 {
 	private ArrayType type;
-	private TACOperand base;	
+	private TACOperand class_;	
 	private TACOperand size;
 
-	public TACNewArray(TACNode node, ArrayType arrayType, TACOperand baseClass,
+	public TACNewArray(TACNode node, ArrayType arrayType, TACOperand class_,
 			TACOperand size) {
 		super(node);
 		type = arrayType;
 		if( arrayType.isNullable() )
 			getModifiers().addModifier(Modifiers.NULLABLE);
-		base = check(baseClass, new SimpleModifiedType(Type.CLASS));
+		this.class_ = check(class_, new SimpleModifiedType(Type.CLASS));
 		this.size = check(size, new SimpleModifiedType(Type.LONG));
 	}
 
-	public TACOperand getBaseClass() {
-		return base;
+	public TACOperand getAllocationClass() {
+		return class_;
 	}
 	public Type getBaseType() {
 		return getType().getBaseType();

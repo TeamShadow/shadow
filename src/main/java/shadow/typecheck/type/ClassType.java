@@ -434,20 +434,17 @@ public class ClassType extends Type {
 		if( t instanceof TypeParameter )
 			return isSubtype(((TypeParameter)t).getClassBound());
 		
-		if( t instanceof ArrayType ) {
-			return false;
-		}
+		if( t instanceof ArrayType )
+			return isSubtype(((ArrayType)t).convertToGeneric());		
 		
 		if( t.isNumerical() && isNumerical() )
-			return isNumericalSubtype(t);
+			return isNumericalSubtype(t);		
 		else if( t instanceof ClassType )			
 			return isDescendentOf(t);
 		else if( t instanceof InterfaceType )
 			return hasInterface((InterfaceType)t);
 		else
-			return false;		
-		//note that a ClassType is never the subtype of a TypeParameter
-		//also, Object[] is a subtype of Array<Object>, but Array<Object> is not a subtype of Object[]
+			return false;
 	}
 	
 	public Set<Type> getAllReferencedTypes() {
@@ -651,14 +648,4 @@ public class ClassType extends Type {
 			//printGenerics( out, indent );				
 		out.println(linePrefix + "}");	
 	}
-	
-	@Override
-	public String toString(int options) {
-		if( ((options & MANGLE) != 0) && ((options & CONVERT_ARRAYS) != 0) &&
-			Type.ARRAY != null && Type.ARRAY_NULLABLE != null && //not a typical situation, but causes problems when types are still being collected
-			(Type.ARRAY.encloses(this) || Type.ARRAY_NULLABLE.encloses(this)) )
-			return super.toString(options & ~CONVERT_ARRAYS);
-		
-		return super.toString(options);		
-	}	
 }
