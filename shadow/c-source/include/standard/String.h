@@ -4,9 +4,23 @@
 #ifndef SHADOW_STRING_H
 #define SHADOW_STRING_H
 
-#include <Shadow.h>
+#include <standard/ULong.h>
+#include <standard/Long.h>
+#include <standard/Byte.h>
+#include <standard/Boolean.h>
+#include <standard/MethodTable.h>
+#include <standard/Array.h>
 
-typedef void* shadow_String_t;
+struct shadow_Class_t;
+
+typedef struct
+{
+	shadow_ulong_t ref_count;
+	struct shadow_Class_t* class_ref;
+	shadow_MethodTable_t* methods;
+	shadow_Array_t* data;
+	shadow_boolean_t ascii;
+} shadow_String_t;
 
 typedef struct {
 	// The size of the chars array.

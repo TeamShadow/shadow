@@ -12,21 +12,26 @@
 %ulong = type i64
 %float = type float
 %double = type double
+%size_t = type i8*
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
+%shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*,%ulong}, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , %shadow.standard..Array*, %boolean }
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
+%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %long }
 
 %shadow.standard..Exception_methods = type opaque
 %shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
@@ -39,7 +44,7 @@
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
-@shadow.standard..byte_class = external constant %shadow.standard..Class
+@byte_A_class = external constant %shadow.standard..Class
 @shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.io..IOException_class = external constant %shadow.standard..Class
@@ -55,13 +60,14 @@
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object*, %shadow.standard..String*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object*)
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
+declare %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) alwaysinline nounwind
 
 
 declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
-declare void @llvm.memcpy.p0i8.p0i8.i32(i8*, i8*, i32, i32, i1)
+declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
 
-declare noalias i8* @malloc(i32) nounwind
+declare noalias i8* @malloc(%size_t nocapture) nounwind
 declare void @free(i8*) nounwind
 
 declare x86_stdcallcc i8* @GetStdHandle(i32)
@@ -97,31 +103,32 @@ define private void @throwIOException() noreturn {
     unreachable	
 }
 
-define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) {
+define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) alwaysinline {
 	ret i32 92
 }
 
 declare void @shadow.io..File_Mclose(%shadow.io..File*)
-define private i8* @filepath(%shadow.io..File*) {
-	%2 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 4
-	%3 = load %shadow.io..Path*, %shadow.io..Path** %2
-	%4 = getelementptr %shadow.io..Path, %shadow.io..Path* %3, i32 0, i32 2
-	%5 = load %shadow.io..Path_methods*, %shadow.io..Path_methods** %4
-	%6 = getelementptr %shadow.io..Path_methods, %shadow.io..Path_methods* %5, i32 0, i32 3
-	%7 = load %shadow.standard..String* (%shadow.io..Path*)*, %shadow.standard..String* (%shadow.io..Path*)** %6
-	%8 = tail call %shadow.standard..String* %7(%shadow.io..Path* %3)
-	%9 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 0
-	%10 = load {%ulong, i8}*, {%ulong, i8}** %9
-	%11 = getelementptr inbounds {%ulong, i8}, {%ulong, i8}* %10, i32 0, i32 1	
-	%12 = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %8, i32 0, i32 3, i32 2
-	%13 = load i64, i64* %12
-	%14 = trunc i64 %13 to i32
-	%15 = add nuw i32 %14, 1	
-	%16 = tail call noalias i8* @malloc(i32 %15)
-	call void @llvm.memcpy.p0i8.p0i8.i32(i8* %16, i8* %11, i32 %14, i32 1, i1 0)
-	%17 = getelementptr inbounds i8, i8* %16, i32 %14
-	store i8 0, i8* %17
-	ret i8* %16
+
+define private i8* @filepath(%shadow.io..File* %file) {
+	%pathRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 4
+	%path = load %shadow.io..Path*, %shadow.io..Path** %pathRef
+	%methodsRef = getelementptr %shadow.io..Path, %shadow.io..Path* %path, i32 0, i32 2
+	%methods = load %shadow.io..Path_methods*, %shadow.io..Path_methods** %methodsRef
+	%toStringRef = getelementptr %shadow.io..Path_methods, %shadow.io..Path_methods* %methods, i32 0, i32 3
+	%toString = load %shadow.standard..String* (%shadow.io..Path*)*, %shadow.standard..String* (%shadow.io..Path*)** %toStringRef
+	%string = tail call %shadow.standard..String* %toString(%shadow.io..Path* %path)
+	%arrayRef = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %string, i32 0, i32 3
+	%array = load %shadow.standard..Array*, %shadow.standard..Array** %arrayRef
+	%data = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 1		
+	%bytes = bitcast %shadow.standard..Array* %data to i8*
+	%size = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) nounwind
+	%sizeWithNull = add nuw i64 %size, 1
+	%sizeHack = inttoptr i64 %size to %size_t	
+	%cstring = tail call noalias i8* @malloc(%size_t %sizeHack)
+	call void @llvm.memcpy.p0i8.p0i8.i64(i8* %cstring, i8* %bytes, i64 %size, i32 1, i1 0)
+	%nullRef = getelementptr inbounds i8, i8* %cstring, i64 %size
+	store i8 0, i8* %nullRef
+	ret i8* %cstring
 }
 
 define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
@@ -193,16 +200,16 @@ define void @shadow.io..File_Msize_long(%shadow.io..File*, i64) {
 	%11 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 %10, i64* null, i32 0)
 	ret void
 }
-define i32 @shadow.io..File_Mread_byte_A(%shadow.io..File* %file, { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array) {
+define %long @shadow.io..File_Mread_byte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
 _entry:
 	%bytesReadRef = alloca i32
 	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
 	%descriptorAsLong = load i64, i64* %descriptorRef
 	%handle = inttoptr i64 %descriptorAsLong to i8*
-	%bufferWithRef = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 0
-	%buffer = getelementptr {%ulong, i8}, {%ulong, i8}* %bufferWithRef, i32 0, i32 1
-	%longLength = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 2
-	%length = trunc %ulong %longLength to %int	
+	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
+	%buffer = bitcast %shadow.standard..Array* %data to i8*
+	%longLength = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) nounwind
+	%length = trunc %long %longLength to %int
 	br label %_read
 _read:
 	%realHandle = phi i8* [ %handle, %_entry ], [ %newHandle, %_open ]
@@ -211,7 +218,8 @@ _read:
 	br i1 %checkError, label %_success, label %_error
 _success:
 	%bytesRead = load i32, i32* %bytesReadRef
-	ret i32 %bytesRead
+	%readAsLong = sext i32 %bytesRead to %long
+	ret %long %readAsLong
 _error:
 	%error = tail call i32 @GetLastError()	
 	; ERROR_ACCESS_DENIED = 5, ERROR_INVALID_HANDLE = 6	
@@ -240,17 +248,17 @@ _throw:
 	unreachable
 }
 
-define i32 @shadow.io..File_Mwrite_byte_A(%shadow.io..File* %file, { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array) {
+define %long @shadow.io..File_Mwrite_byte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
 _entry:
 	%bytesWrittenRef = alloca i32
 	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
 	%descriptorAsLong = load i64, i64* %descriptorRef
 	%handle = inttoptr i64 %descriptorAsLong to i8*
-	%bufferWithRef = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 0
-	%buffer = getelementptr {%ulong, i8}, {%ulong, i8}* %bufferWithRef, i32 0, i32 1
-	%longLength = extractvalue { {%ulong, i8}*, %shadow.standard..Class*, %ulong } %array, 2
-	%length = trunc %ulong %longLength to %int
-	br label %_write
+	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
+	%buffer = bitcast %shadow.standard..Array* %data to i8*
+	%longLength = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) nounwind
+	%length = trunc %long %longLength to %int
+	br label %_write	
 _write:
 	%realHandle = phi i8* [ %handle, %_entry ], [ %newHandle, %_open ]
 	%result = call x86_stdcallcc i32 @WriteFile(i8* %realHandle, i8* %buffer, i32 %length, i32* %bytesWrittenRef, i8* null)
@@ -258,7 +266,8 @@ _write:
 	br i1 %checkError, label %_success, label %_error
 _success:
 	%bytesWritten = load i32, i32* %bytesWrittenRef
-	ret i32 %bytesWritten
+	%writtenAsLong = sext i32 %bytesWritten to %long
+	ret %long %writtenAsLong	
 _error:
 	%error = tail call i32 @GetLastError()	
 	; ERROR_ACCESS_DENIED = 5, ERROR_INVALID_HANDLE = 6	

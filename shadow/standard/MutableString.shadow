@@ -296,8 +296,8 @@ and CanHash
 		byte[] bytes = data;
 
 		if( data->sizeLong != sizeLong )			
-			bytes = data.subarray(0L, sizeLong);		
-		
+			bytes = data.subarray(0L, sizeLong);
+				
 		return String:create(bytes);
 	}
 	

@@ -186,6 +186,14 @@ public class TypeUpdater extends BaseChecker {
 			// String
 			type.addUsedType(Type.STRING);
 			
+			//byte array
+			type.addUsedType(new ArrayType(Type.BYTE));
+			
+			//method table array
+			type.addUsedType(new ArrayType(Type.METHOD_TABLE));
+			
+			type.addUsedType(new ArrayType(Type.CLASS));
+			
 			type.addUsedType(Type.SHADOW_POINTER);
 			
 			// Adding the self adds parents and interfaces and methods

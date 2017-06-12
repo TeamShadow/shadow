@@ -19,15 +19,14 @@
 %ulong = type i64
 %float = type float
 %double = type double
-%void = type i8
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
+%shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
 %shadow.standard..String = type opaque
@@ -35,19 +34,21 @@
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type opaque
+%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable = type opaque
 
-declare void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %arrayData) nounwind
+declare void @__incrementRef(%shadow.standard..Object*) nounwind
 
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
 ; Used to pretend that an array that will never be used elsewhere and cannot leak is actually immutable.
 ; private native readonly virtualFreeze( byte[] data ) => ( immutable byte[] )
-define {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} @shadow.standard..String_MvirtualFreeze_byte_A(%shadow.standard..String* %string, {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} %data) alwaysinline nounwind readnone  {
-_entry:
-	%arrayData = extractvalue {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} %data, 0
-	; all return values are expected to have an "extra" reference count that will get decremented on the outside
-	%arrayDataAsObj = bitcast {%ulong, %byte}* %arrayData to {%ulong, %shadow.standard..Object*}*
-	call void @__incrementRefArray({%ulong, %shadow.standard..Object*}* %arrayDataAsObj) nounwind
-	ret {{%ulong, %byte}*, %shadow.standard..Class*,%ulong} %data
+define %shadow.standard..Array* @shadow.standard..String_MvirtualFreeze_byte_A(%shadow.standard..String* %string, %shadow.standard..Array* %data) alwaysinline nounwind readnone  {
+_entry:	
+	%asObject = bitcast %shadow.standard..Array* %data to %shadow.standard..Object*
+	call void @__incrementRef(%shadow.standard..Object* %asObject) nounwind	
+	ret %shadow.standard..Array* %data
 }

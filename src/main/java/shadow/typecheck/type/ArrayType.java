@@ -1,6 +1,5 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import shadow.ShadowException;
@@ -68,10 +67,11 @@ public class ArrayType extends ClassType
 	@Override
 	public String toString(int options) {
 		if( (options & MANGLE) != 0 ) {
-			if( baseType.isPrimitive() )
-				return baseType.getTypeName() + "_A";
+			String baseName = baseType.isPrimitive() ? baseType.getTypeName() : baseType.toString(options);    
+			if( nullable )
+				return  baseName + "_NA";
 			else
-				return baseType.toString(options) + "_A";
+				return  baseName + "_A";
 		}
 		
 		return baseType.toString(options) + "[]";

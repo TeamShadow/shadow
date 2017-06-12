@@ -19,13 +19,13 @@
 #include <standard/Float.h>
 #include <standard/Double.h>
 
-// 
-#include <PrimitiveArray.h>
 
 // standard library
 #include <standard/Object.h>
 #include <standard/Class.h>
 #include <standard/String.h>
+#include <standard/MethodTable.h>
+#include <standard/Array.h>
 #include <natives/Pointer.h>
 
 #endif

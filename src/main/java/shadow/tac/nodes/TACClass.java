@@ -51,7 +51,7 @@ public class TACClass extends TACOperand
 
 		@Override
 		public Type getType() {
-			if( type.isParameterized() && !isRaw )
+			if( type instanceof ArrayType || (type.isParameterized() && !isRaw) )
 					return Type.GENERIC_CLASS;
 			
 			return Type.CLASS;
@@ -103,7 +103,7 @@ public class TACClass extends TACOperand
 			if( type instanceof InterfaceType )
 				return Type.METHOD_TABLE;
 			else if( type instanceof ArrayType )
-				return new MethodTableType(((ArrayType)type).recursivelyGetBaseType());
+				return new MethodTableType(((ArrayType)type).convertToGeneric());
 			else
 				return new MethodTableType(type);
 		}
@@ -240,7 +240,7 @@ public class TACClass extends TACOperand
 		}
 
 		TACMethod method = getMethod();
-		TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.CLASS));		
+		TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.GENERIC_CLASS));		
 		
 		TACLoad classSet = new TACLoad(this, new TACGlobalRef(Type.CLASS_SET, "@_arraySet"));
 		
@@ -293,9 +293,12 @@ public class TACClass extends TACOperand
 	
 	private TACOperand buildGenericClass(Type type) {
 		TACMethod method = getMethod();		
+
+		ArrayType classArray = new ArrayType(Type.CLASS);
+		ArrayType methodTableArray = new ArrayType(Type.METHOD_TABLE);
 		
-		TACNewArray parameterArray = new TACNewArray(this, new ArrayType(Type.CLASS), new TACClass(this, Type.CLASS), new TACLiteral(this, new ShadowInteger(type.getTypeParameters().size())));
-		TACNewArray methodArray = new TACNewArray(this, new ArrayType(Type.METHOD_TABLE), new TACClass(this, Type.METHOD_TABLE), new TACLiteral(this, new ShadowInteger(type.getTypeParameters().size())));
+		TACNewArray parameterArray = new TACNewArray(this, classArray, new TACClass(this, classArray), new TACLiteral(this, new ShadowInteger(type.getTypeParameters().size())));
+		TACNewArray methodArray = new TACNewArray(this, methodTableArray, new TACClass(this, methodTableArray), new TACLiteral(this, new ShadowInteger(type.getTypeParameters().size())));
 		
 		int i = 0;
 		for( ModifiedType argument : type.getTypeParameters() ) {	
@@ -346,8 +349,8 @@ public class TACClass extends TACOperand
 		if( type instanceof InterfaceType ) //no interfaces inside of interfaces
 			interfaces = new ArrayList<InterfaceType>();
 		else		
-			interfaces = type.getAllInterfaces();
-		TACNewArray interfaceArray = new TACNewArray(this, new ArrayType(Type.CLASS), new TACClass(this, Type.CLASS), new TACLiteral(this, new ShadowInteger(interfaces.size())));			
+			interfaces = type.getAllInterfaces();		
+		TACNewArray interfaceArray = new TACNewArray(this, classArray, new TACClass(this, classArray), new TACLiteral(this, new ShadowInteger(interfaces.size())));			
 		for( i = 0; i < interfaces.size(); ++i )
 			new TACStore(this, new TACArrayRef(this, interfaceArray, new TACLiteral(this, new ShadowInteger(i)), false), new TACClass(this, interfaces.get(i)).getClassData());
 

@@ -230,9 +230,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//either the list of initializers or conditional expressions will be empty
 		sizes.add(new TACLiteral(anchor, new ShadowInteger(ctx.arrayInitializer().size() + ctx.conditionalExpression().size())));
 		ArrayType arrayType = (ArrayType)ctx.getType();
-		TACClass baseClass = new TACClass(anchor, arrayType.getBaseType());
+		TACClass arrayClass = new TACClass(anchor, arrayType);
 		//allocate array
-		prefix = visitArrayAllocation(arrayType, baseClass, sizes);
+		prefix = visitArrayAllocation(arrayType, arrayClass, sizes);
 		
 		List<? extends Context> list;		
 		if( !ctx.arrayInitializer().isEmpty() )
@@ -1325,9 +1325,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		ShadowParser.ArrayDimensionsContext dimensions = ctx.arrayDimensions();
 		dimensions.appendBefore(anchor);		
 			
-		ArrayType arrayType = (ArrayType)ctx.getType();
-		Type type = arrayType.getBaseType();
-		TACClass baseClass = new TACClass(anchor, type);		
+		ArrayType arrayType = (ArrayType)ctx.getType();		
+		TACClass arrayClass = new TACClass(anchor, arrayType);		
 		List<TACOperand> indices = new ArrayList<TACOperand>(dimensions.conditionalExpression().size());
 		for( ShadowParser.ConditionalExpressionContext dimension : dimensions.conditionalExpression() )
 			indices.add(dimension.getOperand());
@@ -1340,14 +1339,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				for( ShadowParser.ConditionalExpressionContext child : ctx.arrayCreateCall().conditionalExpression() )
 					arguments.add(child.getOperand());
 			}
-			prefix = visitArrayAllocation(arrayType, baseClass, indices, create, arguments);
+			prefix = visitArrayAllocation(arrayType, arrayClass, indices, create, arguments);
 		}
 		else if( ctx.arrayDefault() != null ) {
 			TACOperand value = ctx.arrayDefault().appendBefore(anchor);
-			prefix = visitArrayAllocation(arrayType, baseClass, indices, value);
+			prefix = visitArrayAllocation(arrayType, arrayClass, indices, value);
 		}
 		else //nullable array only
-			prefix = visitArrayAllocation(arrayType, baseClass, indices);
+			prefix = visitArrayAllocation(arrayType, arrayClass, indices);
 		
 		ctx.setOperand(prefix);
 		
@@ -2336,7 +2335,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				Type genericArray = type.getTypeWithoutTypeArguments();
 				boolean isNullable = type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE);				
 
-				TACOperand arrayClass = new TACLoad(anchor, new TACFieldRef(this_, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class"));
+				TACOperand arrayClass = TACCast.cast(anchor, new SimpleModifiedType(Type.GENERIC_CLASS, new Modifiers(Modifiers.IMMUTABLE)), new TACLoad(anchor, new TACFieldRef(this_, new SimpleModifiedType(Type.CLASS, new Modifiers(Modifiers.IMMUTABLE)), "class")));
 				TACOperand length = arraySize(anchor, this_, true);
 
 				//allocate a new array (which by default gets a ref count of 1)
@@ -2754,36 +2753,36 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		endLabel.insertBefore(anchor);
 	}
 	
-	private TACOperand visitArrayAllocation(ArrayType type, TACClass baseClass,
+	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes, MethodSignature create, List<TACOperand> params)
 	{
-		return visitArrayAllocation(type, baseClass, sizes, 0, create, params, null);
+		return visitArrayAllocation(type, arrayClass, sizes, 0, create, params, null);
 	}
 	
-	private TACOperand visitArrayAllocation(ArrayType type, TACClass baseClass,
+	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes, TACOperand defaultValue)
 	{
-		return visitArrayAllocation(type, baseClass, sizes, 0, null, null, defaultValue);
+		return visitArrayAllocation(type, arrayClass, sizes, 0, null, null, defaultValue);
 	}
 	
-	private TACOperand visitArrayAllocation(ArrayType type, TACClass baseClass,
+	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes)
 	{
-		return visitArrayAllocation(type, baseClass, sizes, 0, null, null, null);
+		return visitArrayAllocation(type, arrayClass, sizes, 0, null, null, null);
 	}
 	
-	private TACOperand visitArrayAllocation(ArrayType type, TACClass baseClass,
+	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes, int dimension, MethodSignature create, List<TACOperand> params, TACOperand defaultValue)
 	{
-		TACOperand baseClassData = baseClass.getClassData();
-		TACNewArray alloc = new TACNewArray(anchor, type, baseClassData,
+		TACOperand arrayClassData = arrayClass.getClassData();
+		TACNewArray alloc = new TACNewArray(anchor, type, arrayClassData,
 				sizes.get(dimension));
 		if (dimension < sizes.size() - 1)
 		{	
 			ArrayType baseType = (ArrayType) type.getBaseType();
 			TACVariable index = method.addTempLocal(new SimpleModifiedType(Type.INT));
 			new TACLocalStore(anchor, index, new TACLiteral(anchor, new ShadowInteger(0)));
-			TACClass class_ = new TACClass(anchor, baseType.getBaseType());
+			TACClass class_ = new TACClass(anchor, baseType);
 			TACLabel bodyLabel = new TACLabel(method),
 					condLabel = new TACLabel(method),
 					endLabel = new TACLabel(method);

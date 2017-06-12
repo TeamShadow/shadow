@@ -1139,7 +1139,7 @@ public abstract class Type implements Comparable<Type> {
 				Type baseType = arrayType.getBaseType();
 				
 				usedTypes.add(type);
-				//addUsedType(arrayType.convertToGeneric());
+				addUsedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
 				//automatically does the right thing for NullableArray
 				//must do before adding to usedTypes

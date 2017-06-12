@@ -19,13 +19,17 @@
 %shadow.standard..Class_methods = type opaque
 %shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String = type opaque
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
+%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %long }
 
 %shadow.standard..ClassSet_methods = type opaque
 %shadow.standard..ClassSet = type opaque
@@ -39,11 +43,6 @@
 
 @shadow.standard..IndexOutOfBoundsException_class = external constant %shadow.standard..Class
 @shadow.standard..IndexOutOfBoundsException_methods = external constant %shadow.standard..IndexOutOfBoundsException_methods
-
-%shadow.standard..Array_methods = type opaque
-%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long }
-%shadow.standard..ArrayNullable_methods = type opaque
-%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods*, %long }
 
 @shadow.standard..Object_class = external constant %shadow.standard..Class
 @shadow.standard..Array_class = external constant %shadow.standard..Class
@@ -65,18 +64,18 @@
 @shadow.standard..ulong_methods = external constant %shadow.standard..Object_methods
 @shadow.standard..ushort_methods = external constant %shadow.standard..Object_methods
 
-@shadow.standard..byte_class = external constant %shadow.standard..Class
-@shadow.standard..int_class = external constant %shadow.standard..Class
-@shadow.standard..double_class = external constant %shadow.standard..Class
-@shadow.standard..long_class = external constant %shadow.standard..Class
-@shadow.standard..boolean_class = external constant %shadow.standard..Class
-@shadow.standard..float_class = external constant %shadow.standard..Class
-@shadow.standard..code_class = external constant %shadow.standard..Class
-@shadow.standard..short_class = external constant %shadow.standard..Class
-@shadow.standard..ubyte_class = external constant %shadow.standard..Class
-@shadow.standard..uint_class = external constant %shadow.standard..Class
-@shadow.standard..ulong_class = external constant %shadow.standard..Class
-@shadow.standard..ushort_class = external constant %shadow.standard..Class
+@byte_class = external constant %shadow.standard..Class
+@int_class = external constant %shadow.standard..Class
+@double_class = external constant %shadow.standard..Class
+@long_class = external constant %shadow.standard..Class
+@boolean_class = external constant %shadow.standard..Class
+@float_class = external constant %shadow.standard..Class
+@code_class = external constant %shadow.standard..Class
+@short_class = external constant %shadow.standard..Class
+@ubyte_class = external constant %shadow.standard..Class
+@uint_class = external constant %shadow.standard..Class
+@ulong_class = external constant %shadow.standard..Class
+@ushort_class = external constant %shadow.standard..Class
 
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %longElements, %boolean %nullable)
@@ -108,6 +107,10 @@ declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 @shadow.standard..ArrayNullable_Mindex_long_TT = alias void (%shadow.standard..Array*, %long, %shadow.standard..Object*), void (%shadow.standard..Array*, %long, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_long_TT
 @shadow.standard..ArrayNullable_Mindex_long = alias %shadow.standard..Object* (%shadow.standard..Array*, %long), %shadow.standard..Object* (%shadow.standard..Array*, %long)* @shadow.standard..Array_Mindex_long
 
+; alias used by C code
+@__destroyArray = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array_Mdestroy
+
+
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 
 ;%shadow.io..Console = type opaque
@@ -122,12 +125,13 @@ define %shadow.standard..Array* @shadow.standard..Array_Mcreate(%shadow.standard
 	ret %shadow.standard..Array* %array
 }
 
-define void @shadow.standard..Array_Mdestroy(%shadow.standard..Array* %array) {
+define void @shadow.standard..Array_Mdestroy(%shadow.standard..Array* %array) {	
 	%size = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array)
 	%classRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 1
 	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
+	
 	%baseClassRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 6
-	%baseClass = load %shadow.standard..Class*, %shadow.standard..Class** %classRef	
+	%baseClass = load %shadow.standard..Class*, %shadow.standard..Class** %baseClassRef	
 
 	%flagRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %baseClass, i32 0, i32 7	
 	%flag = load i32, i32* %flagRef
@@ -138,7 +142,7 @@ define void @shadow.standard..Array_Mdestroy(%shadow.standard..Array* %array) {
 	; if primitive or method table elements, no elements to decrement
 	br i1 %notPrimitiveOrMethodTable, label %_checkInterface, label %_exit	
 
-_checkInterface:
+_checkInterface:	
 	; skip past array meta data
 	%arrayOffset = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
 	%arrayData = bitcast %shadow.standard..Array* %arrayOffset to %shadow.standard..Object**	
@@ -174,7 +178,7 @@ _exit:
 	ret void
 }
 
-define %shadow.standard..Object* @shadow.standard..Array_Mindex_long(%shadow.standard..Array* %array, %ulong %index ) {
+define %shadow.standard..Object* @shadow.standard..Array_Mindex_long(%shadow.standard..Array* %array, %ulong %index ) {	
 	%size = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array)
 	%inRange = icmp ult %long %index, %size
 	br i1 %inRange, label %_inRange, label %_throw
@@ -233,37 +237,37 @@ _returnObject:
 	; check byte first for method table
 	; this order is based on assumed likelihood of type (byte first because of Strings)
 _checkByte:	
-	%isByte = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..byte_class
+	%isByte = icmp eq %shadow.standard..Class* %baseClass, @byte_class
 	br i1 %isByte, label %_foundPrimitive, label %_checkInt
 _checkInt:
-	%isInt = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..int_class
+	%isInt = icmp eq %shadow.standard..Class* %baseClass, @int_class
 	br i1 %isInt, label %_foundPrimitive, label %_checkDouble
 _checkDouble:
-	%isDouble = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..double_class
+	%isDouble = icmp eq %shadow.standard..Class* %baseClass, @double_class
 	br i1 %isDouble, label %_foundPrimitive, label %_checkLong
 _checkLong:
-	%isLong = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..long_class
+	%isLong = icmp eq %shadow.standard..Class* %baseClass, @long_class
 	br i1 %isLong, label %_foundPrimitive, label %_checkBoolean
 _checkBoolean:
-	%isBoolean = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..boolean_class
+	%isBoolean = icmp eq %shadow.standard..Class* %baseClass, @boolean_class
 	br i1 %isBoolean, label %_foundPrimitive, label %_checkFloat
 _checkFloat:
-	%isFloat = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..float_class
+	%isFloat = icmp eq %shadow.standard..Class* %baseClass, @float_class
 	br i1 %isFloat, label %_foundPrimitive, label %_checkCode
 _checkCode:
-	%isCode = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..code_class
+	%isCode = icmp eq %shadow.standard..Class* %baseClass, @code_class
 	br i1 %isCode, label %_foundPrimitive, label %_checkShort
 _checkShort:	
-	%isShort = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..short_class	
+	%isShort = icmp eq %shadow.standard..Class* %baseClass, @short_class	
 	br i1 %isShort, label %_foundPrimitive, label %_checkUByte
 _checkUByte:	
-	%isUByte = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..ubyte_class
+	%isUByte = icmp eq %shadow.standard..Class* %baseClass, @ubyte_class
 	br i1 %isUByte, label %_foundPrimitive, label %_checkUInt
 _checkUInt:
-	%isUInt = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..uint_class
+	%isUInt = icmp eq %shadow.standard..Class* %baseClass, @uint_class
 	br i1 %isUInt, label %_foundPrimitive, label %_checkULong
 _checkULong:
-	%isULong = icmp eq %shadow.standard..Class* %baseClass, @shadow.standard..ulong_class
+	%isULong = icmp eq %shadow.standard..Class* %baseClass, @ulong_class
 	br i1 %isULong, label %_foundPrimitive, label %_checkUShort
 _checkUShort:
 	br label %_foundPrimitive
@@ -295,7 +299,7 @@ _throw:
 
 ; %shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long }
 
-define void @shadow.standard..Array_Mindex_long_TT(%shadow.standard..Array* %array, %ulong %index, %shadow.standard..Object* %object) {
+define void @shadow.standard..Array_Mindex_long_TT(%shadow.standard..Array* %array, %ulong %index, %shadow.standard..Object* %object) {	
 	%size = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array)
 	%inRange = icmp ult %long %index, %size
 	br i1 %inRange, label %_inRange, label %_throw
@@ -387,6 +391,7 @@ _firstLessThanSecond:
 	; get class from original Array<T>
 	%classRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 1
 	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
+
 	; get difference between indexes
 	%difference = sub %long %second, %first
 	%isNull = call %boolean @shadow.standard..Array_MisNullable(%shadow.standard..Array* %array)
@@ -427,7 +432,7 @@ _firstLessThanSecond:
 	%notPrimitiveOrMethodTable = and i1 %notPrimitive, %notMethodTable	
 	br i1 %notPrimitiveOrMethodTable, label %_incrementArray, label %_done
 	
-_incrementArray:
+_incrementArray:	
 	%interfaceFlag = and i32 %flag, 1
 	%isInterface = icmp ne i32 %interfaceFlag, 0
 	br i1 %isInterface, label %_loopStartInterface, label %_loopStartObj
@@ -472,21 +477,17 @@ _throw:
 	unreachable
 }
 
-; %shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long }
 define %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) alwaysinline nounwind {
     %sizeRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
-    %size = load %long, %long* %sizeRef
-	; 2^63 - 1, used to remove MSB (which marks null or not)
-    %trueSize = and %long %size, 9223372036854775807
-    ret %long %trueSize
+    %size = load %long, %long* %sizeRef	    
+    ret %long %size
 }
 
 define %boolean @shadow.standard..Array_MisNullable(%shadow.standard..Array* %array) alwaysinline nounwind {
-    %sizeRef = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
-    %size = load %long, %long* %sizeRef
-	; 2^63, used to test if MSB is 1
-    %msb = and %long %size, 9223372036854775808
-	%isNull = icmp ne %long %msb, 0
-    ret %boolean %isNull
+	%methodsRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 2
+	%methods = load %shadow.standard..Array_methods*, %shadow.standard..Array_methods** %methodsRef
+	; methods will be @shadow.standard..ArrayNullable_methods if nullable
+	%isNull = icmp ne %shadow.standard..Array_methods* %methods, @shadow.standard..Array_methods
+	ret %boolean %isNull
 }
 

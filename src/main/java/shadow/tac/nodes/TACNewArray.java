@@ -26,7 +26,7 @@ public class TACNewArray extends TACOperand
 		type = arrayType;
 		if( arrayType.isNullable() )
 			getModifiers().addModifier(Modifiers.NULLABLE);
-		this.class_ = check(class_, new SimpleModifiedType(Type.CLASS));
+		this.class_ = check(class_, new SimpleModifiedType(Type.GENERIC_CLASS));
 		this.size = check(size, new SimpleModifiedType(Type.LONG));
 	}
 

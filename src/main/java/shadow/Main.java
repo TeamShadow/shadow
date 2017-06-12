@@ -241,15 +241,15 @@ public class Main {
 				while (line != null) {
 					if(line.contains(";_INITIALIZE_CLASS_SETS_")) {						 
 						//add in all externally declared generics
-						LLVMOutput.addGenerics("%genericSet", generics, false, out);
-						LLVMOutput.addGenerics("%arraySet", arrays, true, out);		
+						LLVMOutput.addGenerics("%genericSet", generics, out);
+						LLVMOutput.addGenerics("%arraySet", arrays, out);		
 					}
 					else {					
 						if( line.contains("@main")) { //declare externally defined generics
 							for( String generic : generics )
 								out.write(LLVMOutput.declareGeneric(generic).getBytes());
 							for( String array : arrays )
-								out.write(LLVMOutput.declareArray(array).getBytes());	
+								out.write(LLVMOutput.declareGeneric(array).getBytes());	
 							
 							out.write(System.lineSeparator().getBytes());
 						}
@@ -327,7 +327,7 @@ public class Main {
 		 *   	list. All those files are compiled in one gcc run, and the corresponding .s files are generated
 		 *   	next to the .c files, with the same name.
 		 *   2. The cFiles list contains all the .c files found while generating LLVM for .shadow files. Each `.c`
-		 *   	file is compiled using a gcc run. So, if there are 100 .c files, we will run gcc a 100 times.
+		 *   	file is compiled using a gcc run. So, if there are 100 .c files, we will run gcc 100 times.
 		 */
 		
 		// we create a new compileCommand list to compile only the core .c files, we use the original compileCommand
