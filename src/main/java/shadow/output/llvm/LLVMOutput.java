@@ -172,7 +172,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("%float = type float");
 		writer.write("%double = type double");		
 	}
-	private Set<Type> writeTypes() throws ShadowException {
+	private Set<Type> writeUsedTypes() throws ShadowException {
 		writePrimitiveTypes();
 
 		Type moduleType = module.getType();
@@ -198,9 +198,16 @@ public class LLVMOutput extends AbstractOutput {
 			
 			if( type.isParameterized() && !(type instanceof ArrayType) )
 				writeUnparameterizedGeneric(type, definedGenerics);
-		}	
-		
+		}			
 
+		writer.write();
+		
+		return definedGenerics;
+	}
+	
+	private void writeMentionedTypes(Set<Type> definedGenerics) throws ShadowException {
+		Type moduleType = module.getType();
+		
 		for (Type type : moduleType.getMentionedTypes()) {
 			if(type != null && !(type instanceof ArrayType) && !moduleType.getUsedTypes().contains(type)  ) {	
 				if( !type.isParameterized() ) {
@@ -218,11 +225,9 @@ public class LLVMOutput extends AbstractOutput {
 						writeTypeDeclaration(unparameterizedType);
 				}
 			}
-		}
+		}		
 
 		writer.write();
-		
-		return definedGenerics;
 	}
 
 	private void writeTypeDeclaration(Type type) throws ShadowException {
@@ -579,10 +584,13 @@ public class LLVMOutput extends AbstractOutput {
 		this.module = module;
 		
 		//write all regular types including (non-generic) class objects and method tables
-		Set<Type> definedGenerics = writeTypes();
+		Set<Type> definedGenerics = writeUsedTypes();
 		
 		//write generic and array classes
-		 writeGenericClasses(definedGenerics);		
+		writeGenericClasses(definedGenerics);
+		 
+		//write types that are mentioned but whose internals are never used, allowing them to be written as opaque
+		writeMentionedTypes(definedGenerics);
 
 		// Methods for exception handling
 		writer.write("declare i32 @__shadow_personality_v0(...)");

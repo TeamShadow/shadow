@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-typedef void* shadow_ExternalsTest_t;
+typedef shadow_Object_t shadow_ExternalsTest_t;
 
 void __shadowExternalTest_PrintfToString(shadow_ExternalsTest_t* ref)
 {
@@ -38,8 +38,12 @@ void __shadowExternalTest_CreateString()
 	// this method is equivalent to Console.printLine(Object)
 	shadowConsole_PrintLine(string);
 	
-	// free the String we created
-	shadowString_Free(string);
+	// Decrement the reference count on the String we created (freeing it)
+	__decrementRef((shadow_Object_t*) string);
+	
+	// Instead, we could have simply freed the string, but decrementing allows
+	// the possibility that some other object kept a reference to the string
+	//shadowString_Free(string);
 }
 
 

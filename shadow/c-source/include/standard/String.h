@@ -11,12 +11,12 @@
 #include <standard/MethodTable.h>
 #include <standard/Array.h>
 
-struct shadow_Class_t;
+typedef struct shadow_Class_t shadow_Class_t;
 
 typedef struct
 {
 	shadow_ulong_t ref_count;
-	struct shadow_Class_t* class_ref;
+	shadow_Class_t* class_ref;
 	shadow_MethodTable_t* methods;
 	shadow_Array_t* data;
 	shadow_boolean_t ascii;

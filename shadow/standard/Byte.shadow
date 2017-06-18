@@ -933,4 +933,9 @@ and	CanHash
 	{
 		return byte[]:class;
 	}
+	
+	private extern shadowByte_GetClass() => (Class)
+	{
+		return byte:class;
+	}
 }

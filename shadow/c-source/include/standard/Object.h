@@ -20,4 +20,7 @@ shadow_Object_t;
 shadow_String_t* shadowObject_ToString(shadow_Object_t* ref);
 shadow_Class_t* shadowObject_GetClass(shadow_Object_t* ref);
 
+void __decrementRef(shadow_Object_t* object);
+void __incrementRef(shadow_Object_t* %object);
+
 #endif

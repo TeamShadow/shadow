@@ -7,7 +7,7 @@ class shadow:utility@
 is  List<V>
 and Deque<V>
 {
-	/// Gets size of the list.
+	/// Gets size of the list as a {@code long}.
 	get long sizeLong = 0L;
 	
 	Node<V> header = Node<V>:create(this);
@@ -24,6 +24,7 @@ and Deque<V>
 		this:equater = equater;
 	}
 	
+	/// Gets size of the list as an {@code int}.
 	public readonly get size() => (int)
 	{
 		return cast<int>(sizeLong);
