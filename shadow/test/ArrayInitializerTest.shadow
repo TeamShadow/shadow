@@ -15,8 +15,10 @@ class shadow:test@ArrayInitializerTest
 		
 		letters[4] = 'y';	
 		complex[1][0] = 12;
-				
-		out.printLine(values);
+		
+			
+		out.printLine(values);		
+		
 		out.printLine(words);				
 		out.printLine(complex);
 		out.printLine(letters);
@@ -27,6 +29,6 @@ class shadow:test@ArrayInitializerTest
 		String[] more = {"cranberry", "jamboplexy", "in", "place"};		 
 		asObject[1] = more;
 		
-		out.printLine(alsoComplex);
+		out.printLine(alsoComplex);		
 	}
 }

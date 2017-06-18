@@ -929,6 +929,11 @@ and	CanHash
 	}
 
 	// C FRAMEWORK EXTENSIONS
+	private extern shadowByteArray_GetClass() => (Class)
+	{
+		return byte[]:class;
+	}
+	
 	private extern shadowByte_GetClass() => (Class)
 	{
 		return byte:class;

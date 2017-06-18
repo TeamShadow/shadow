@@ -184,7 +184,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS | (isExtern() ? Type.MANGLE_EXTERN : 0)));
 		
 		if (isWrapper())
-			sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS | Type.CONVERT_ARRAYS));
+			sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
 		
 		return sb.toString();
 	}
@@ -220,7 +220,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public MethodSignature partiallyReplace(List<ModifiedType> values,
-			List<ModifiedType> replacements) {		
+			List<ModifiedType> replacements) throws InstantiationException {		
 		MethodSignature replaced = new MethodSignature(type.partiallyReplace(values, replacements), symbol, outer.partiallyReplace(values, replacements), node);
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		return replaced;

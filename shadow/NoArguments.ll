@@ -14,19 +14,22 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
+%shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
 %shadow.standard..Iterator_methods = type opaque
-%shadow.standard..String_methods = type opaque
 %shadow.standard..String = type opaque
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type opaque
+%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable = type opaque
 
 %shadow.standard..Exception_methods = type opaque
 %shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
@@ -35,20 +38,11 @@
 
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
-@shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
 @shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
-
-%shadow.standard..ClassSet = type opaque
-%shadow.standard..ClassSet_methods = type opaque
-
-@shadow.standard..ClassSet_methods = external constant %shadow.standard..ClassSet_methods
-@shadow.standard..ClassSet_class = external constant %shadow.standard..Class
-declare %boolean @shadow.standard..ClassSet_Madd_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*)
-declare %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* returned, %long)
 
 %shadow.io..Console_methods = type opaque
 @shadow.io..Console_methods = external constant %shadow.io..Console_methods
@@ -80,22 +74,11 @@ declare i32 @__shadow_personality_v0(...)
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
-declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind 
 
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
-declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %ulong %elements)
+declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %longElements, %boolean %nullable)
 
-@_genericSet = global %shadow.standard..ClassSet* null;
-@_arraySet = global %shadow.standard..ClassSet* null;
-
-define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {			
-	%uninitializedGenericSet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%genericSet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedGenericSet, %long %genericSize) ; compiler replaces %genericSize
-	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	
-	%uninitializedArraySet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedArraySet, %long %arraySize) ; compiler replaces %arraySize 
-	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet	
-	;_INITIALIZE_CLASS_SETS_
+define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {				
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
 	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance		

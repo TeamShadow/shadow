@@ -14,31 +14,27 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
+%shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
 %shadow.standard..Iterator_methods = type opaque
-%shadow.standard..String_methods = type opaque
 %shadow.standard..String = type opaque
 %shadow.standard..AddressMap_methods = type opaque
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
-
-@shadow.standard..Object_class = external constant %shadow.standard..Class
-@shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
-@shadow.standard..Class_class = external constant %shadow.standard..Class
-@shadow.standard..String_methods = external constant %shadow.standard..String_methods
-@shadow.standard..String_class = external constant %shadow.standard..Class
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type opaque
+%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable = type opaque
 
 %shadow.io..Console = type opaque
 
 declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-
+declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
 
 define %shadow.standard..Class* @shadow.standard..Object_MgetClass(%shadow.standard..Object*) {
 	%2 = getelementptr %shadow.standard..Object, %shadow.standard..Object* %0, i32 0, i32 1

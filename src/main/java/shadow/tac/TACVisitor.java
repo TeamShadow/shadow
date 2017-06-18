@@ -2,7 +2,6 @@ package shadow.tac;
 
 import shadow.ShadowException;
 import shadow.tac.nodes.TACAllocateVariable;
-import shadow.tac.nodes.TACBaseClass;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -16,7 +15,6 @@ import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
-import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
@@ -39,8 +37,7 @@ import shadow.tac.nodes.TACUnary;
 
 public interface TACVisitor
 {	
-	public abstract void visit(TACAllocateVariable node) throws ShadowException;
-	public abstract void visit(TACBaseClass node) throws ShadowException;
+	public abstract void visit(TACAllocateVariable node) throws ShadowException;	
 	public abstract void visit(TACBinary node) throws ShadowException;	
 	public abstract void visit(TACBlock node) throws ShadowException;
 	public abstract void visit(TACBranch node) throws ShadowException;
@@ -53,8 +50,7 @@ public interface TACVisitor
 	public abstract void visit(TACChangeReferenceCount node) throws ShadowException;
 	public abstract void visit(TACLabel node) throws ShadowException;	
 	public abstract void visit(TACLabelAddress node) throws ShadowException;
-	public abstract void visit(TACLandingpad node) throws ShadowException;
-	public abstract void visit(TACLength node) throws ShadowException;
+	public abstract void visit(TACLandingpad node) throws ShadowException;	
 	public abstract void visit(TACLiteral node) throws ShadowException;
 	public abstract void visit(TACLoad node) throws ShadowException;
 	public abstract void visit(TACLocalLoad node) throws ShadowException;

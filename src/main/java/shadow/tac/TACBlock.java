@@ -278,11 +278,6 @@ public class TACBlock
 			throw new IllegalStateException("Cleanup label already added.");
 		cleanupLabel = new TACLabel(method);		
 		cleanupPhi = new TACPhi(null, method.addTempLocal(new SimpleModifiedType(new PointerType())));
-		
-		//inserts the phi after the label
-		//cleanupLabel.clear();
-		//cleanupPhi.clear();
-		//cleanupPhi.insertAfter(cleanupLabel);		
 		return this;
 	}
 }

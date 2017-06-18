@@ -1,6 +1,8 @@
 package shadow.typecheck.type;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import shadow.ShadowException;
 
@@ -12,13 +14,12 @@ public class ArrayType extends ClassType
 	@Override
 	public int getWidth()
 	{
-		return 2 * OBJECT.getWidth() + ULONG.getWidth();
+		return 6;
 		//not necessarily the actual width, just a value that helps sort the fields
 		//references have a "width" of 6, which covers either 4 or 8 byte pointers
-		// arrays first
-		// then interfaces
+		// interfaces first
 		// then longs and ulongs
-		// then regular references 
+		// then regular references and arrays
 		// then smaller primitives
 	}
 	
@@ -68,10 +69,11 @@ public class ArrayType extends ClassType
 	@Override
 	public String toString(int options) {
 		if( (options & MANGLE) != 0 ) {
-			if( baseType.isPrimitive() )
-				return baseType.getTypeName() + "_A";
+			String baseName = baseType.isPrimitive() ? baseType.getTypeName() : baseType.toString(options);    
+			if( nullable )
+				return  baseName + "_NA";
 			else
-				return baseType.toString(options & ~CONVERT_ARRAYS) + "_A";
+				return  baseName + "_A";
 		}
 		
 		return baseType.toString(options) + "[]";
@@ -102,6 +104,11 @@ public class ArrayType extends ClassType
 	}
 	
 	@Override
+	public List<MethodSignature> getAllMethods(String methodName) {
+		return getExtendType().getAllMethods(methodName);
+	}
+	
+	@Override
 	public boolean isSubtype(Type t) {		
 		if( t == UNKNOWN )
 			return false;
@@ -123,7 +130,7 @@ public class ArrayType extends ClassType
 		}
 		
 		//check generic version
-		return convertToGeneric().isSubtype(t);
+		return convertToGeneric().isSubtype(t);		
 	}
 	
 	@Override
@@ -132,6 +139,7 @@ public class ArrayType extends ClassType
 		return new ArrayType( baseType.replace(values, replacements), nullable);		
 	}
 		
+	
 	public ClassType convertToGeneric() {
 		Type base = baseType;				
 		
@@ -145,7 +153,7 @@ public class ArrayType extends ClassType
 		{}		
 				
 		return null; //shouldn't happen
-	}
+	}	
 	
 	public ArrayType convertToNullable() {
 		if( nullable )
@@ -193,4 +201,16 @@ public class ArrayType extends ClassType
 		
 		return false;		
 	}
+	
+	@Override
+	protected boolean onlyUsesTypeParametersFrom(Type type) {
+		return convertToGeneric().onlyUsesTypeParametersFrom(type);
+	}
+	
+	// Returns true if this uses no parameters or only these parameters
+	@Override
+	protected boolean onlyUsesTheseParameters(Set<TypeParameter> parameters) {
+		return convertToGeneric().onlyUsesTheseParameters(parameters);
+	}
+	
 }

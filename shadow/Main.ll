@@ -12,14 +12,15 @@
 %ulong = type i64
 %float = type float
 %double = type double
+%size_t = type i8*
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
+%shadow.standard..Object_methods = type opaque
 %shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
 %shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
 %shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*,%ulong}, {{%ulong, %shadow.standard..MethodTable*}*, %shadow.standard..Class*,%ulong} }
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
 %shadow.standard..Iterator_methods = type opaque
 %shadow.standard..String_methods = type opaque
 %shadow.standard..String = type opaque
@@ -27,6 +28,10 @@
 %shadow.standard..AddressMap = type opaque
 %shadow.standard..MethodTable_methods = type opaque
 %shadow.standard..MethodTable = type opaque
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
+%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %long }
 
 %shadow.standard..Exception_methods = type opaque
 %shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
@@ -37,19 +42,12 @@
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
-@shadow.standard..byte_class = external constant %shadow.standard..Class
 @shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
-
-%shadow.standard..ClassSet = type opaque
-%shadow.standard..ClassSet_methods = type opaque
-
-@shadow.standard..ClassSet_methods = external constant %shadow.standard..ClassSet_methods
-@shadow.standard..ClassSet_class = external constant %shadow.standard..Class
-declare %boolean @shadow.standard..ClassSet_Madd_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*)
-declare %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* returned, %long)
+@byte_A_class = external constant %shadow.standard..GenericClass
+@shadow.standard..String_A_class = external constant %shadow.standard..GenericClass
 
 %shadow.io..Console_methods = type opaque
 @shadow.io..Console_methods = external constant %shadow.io..Console_methods
@@ -62,62 +60,50 @@ declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..Ob
 declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 declare %shadow.io..Console* @shadow.io..Console_MprintErrorLine(%shadow.io..Console*)
 declare %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object*, { {%ulong, i8}*, %shadow.standard..Class*, %ulong })
+declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object*, %shadow.standard..Array*)
 
 ;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
 
-declare i32 @strlen(i8* nocapture)
-declare i8* @strncpy(i8*, i8* nocapture, i32)
+declare %size_t @strlen(i8* nocapture)
+declare i8* @strncpy(i8*, i8* nocapture, %size_t)
 
 %shadow.test..Test = type opaque
 %shadow.test..Test_methods = type opaque
 @shadow.test..Test_methods = external constant %shadow.test..Test_methods
 @shadow.test..Test_class = external constant %shadow.standard..Class
 declare %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object*)
-declare void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test*, { {%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong })
+declare void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test*, %shadow.standard..Array*)
 
 declare i32 @__shadow_personality_v0(...)
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
-declare void @__decrementRefArray({{%ulong, %shadow.standard..Object*}*, %shadow.standard..Class*, %ulong} %array) nounwind 
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
-declare noalias {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* %class, %ulong %elements)
-
-@_genericSet = global %shadow.standard..ClassSet* null
-@_arraySet = global %shadow.standard..ClassSet* null
+declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* %class, %ulong %longElements, %boolean %nullable)
 
 define i32 @main(i32 %argc, i8** %argv) personality i32 (...)* @__shadow_personality_v0 {
-_start:
-	%uninitializedGenericSet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%genericSet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedGenericSet, %long %genericSize) ; %genericSize is replaced by compiler
-	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	
-	%uninitializedArraySet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedArraySet, %long %arraySize) ; %arraySize is replaced by compiler
-	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet		
-	;_INITIALIZE_CLASS_SETS_	
+_start:	
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
 	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
 	%countInt = sub i32 %argc, 1	
 	%count = zext %int %countInt to %long
-	%array = call {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..String_class, %long %count)
-	%stringRef = bitcast {%ulong, %shadow.standard..Object*}* %array to {%ulong, %shadow.standard..String*}*	
-	%stringArray = getelementptr {%ulong, %shadow.standard..String*}, {%ulong, %shadow.standard..String*}* %stringRef, i32 0, i32 1
+	%array = call %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* @shadow.standard..String_A_class, %long %count, %boolean false)
+	%stringRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
+	%stringArray = bitcast %shadow.standard..Array* %stringRef to %shadow.standard..String**
 	br label %_loopTest
 _loopBody:
 	%allocatedString = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))	
-	%length = call i32 @strlen(i8* nocapture %nextArg)	
-	%longLength = zext %int %length to %ulong
-	%allocatedArray = call {%ulong, %shadow.standard..Object*}* @__allocateArray(%shadow.standard..Class* @shadow.standard..byte_class, i64 %longLength)	
-	%byteArray = bitcast {%ulong, %shadow.standard..Object*}* %allocatedArray to {%ulong, %byte}*
-	%bytes = getelementptr {%ulong, %byte}, {%ulong, %byte}* %byteArray, i32 0, i32 1
-	call i8* @strncpy(i8* %bytes, i8* nocapture %nextArg, i32 %length)	
-	%argAsArray1 = insertvalue { {%ulong, %byte}*, %shadow.standard..Class*, %ulong } undef, {%ulong, %byte}* %byteArray, 0	
-	%argAsArray2 = insertvalue { {%ulong, %byte}*, %shadow.standard..Class*, %ulong } %argAsArray1, %shadow.standard..Class* @shadow.standard..byte_class, 1		
-	%argAsArray3 = insertvalue { {%ulong, %byte}*, %shadow.standard..Class*, %ulong } %argAsArray2, %ulong %longLength, 2	
-	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %allocatedString, { {%ulong, %byte}*, %shadow.standard..Class*, %ulong } %argAsArray3)
+	%length = call %size_t @strlen(i8* nocapture %nextArg)	
+	%longLength = ptrtoint %size_t %length to %ulong
+	%allocatedArray = call %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* @byte_A_class, %long %longLength, %boolean false)	
+	%byteArray = getelementptr %shadow.standard..Array, %shadow.standard..Array* %allocatedArray, i32 1
+	%bytes = bitcast %shadow.standard..Array* %byteArray to i8*
+	call i8* @strncpy(i8* %bytes, i8* nocapture %nextArg, %size_t %length)	
+	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %allocatedString, %shadow.standard..Array* %allocatedArray)
+	%byteArrayAsObj = bitcast %shadow.standard..Array* %byteArray to %shadow.standard..Object*
+	call void @__decrementRef(%shadow.standard..Object* %byteArrayAsObj) nounwind
 	store %shadow.standard..String* %string, %shadow.standard..String** %stringPhi
 	%nextString = getelementptr %shadow.standard..String*, %shadow.standard..String** %stringPhi, i32 1
 	br label %_loopTest
@@ -131,13 +117,12 @@ _loopTest:
 _loopEnd:	
 	%object = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.test..Test_class, %shadow.standard..Object_methods* bitcast(%shadow.test..Test_methods* @shadow.test..Test_methods to %shadow.standard..Object_methods*))		
 	%initialized = call %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object* %object)
-	%args1 = insertvalue { {%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } undef, {%ulong, %shadow.standard..String*}* %stringRef, 0
-	%args2 = insertvalue { {%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } %args1, %shadow.standard..Class* @shadow.standard..String_class, 1
-	%args3 = insertvalue { {%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } %args2, %ulong %count, 2
-	invoke void @callMain(%shadow.test..Test* %initialized, { {%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } %args3)
+	invoke void @callMain(%shadow.test..Test* %initialized, %shadow.standard..Array* %array)
 			to label %_success unwind label %_exception
 _success:		
 	call void @__decrementRef(%shadow.standard..Object* %object) nounwind
+	%arrayAsObj = bitcast %shadow.standard..Array* %array to %shadow.standard..Object*
+	call void @__decrementRef(%shadow.standard..Object* %arrayAsObj) nounwind
 	ret i32 0
 _exception:
 	%caught = landingpad { i8*, i32 }
@@ -153,10 +138,10 @@ _exception:
 %shadow.standard..Thread = type opaque
 declare %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
 declare void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread*)
-define void @callMain(%shadow.test..Test* %initialized, { {%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } %args) {
+define void @callMain(%shadow.test..Test* %initialized, %shadow.standard..Array* %args) {
 entry:
 	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
-	call void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test* %initialized, { {%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } %args)
+	call void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test* %initialized, %shadow.standard..Array* %args)
 	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* %mainThread)
 	
 	ret void

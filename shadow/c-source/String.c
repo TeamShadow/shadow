@@ -1,15 +1,13 @@
 /**
- * Author: Claude Abounegm
+ * Authors: Claude Abounegm and Barry Wittman
  */
-#include <Shadow.h>
+#include <standard/String.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 
 // METHOD SIGNATURES //
-shadow_PrimitiveArray_t* _shadowString_GetDataArray(const shadow_String_t*);
-shadow_boolean_t _shadowString_IsAscii(const shadow_String_t*);
-shadow_String_t* _shadowString_CreateBytes(const shadow_String_t*, shadow_PrimitiveArray_t);
+shadow_String_t* _shadowString_CreateBytes(const shadow_String_t*, shadow_Array_t*);
 // METHOD SIGNATURES //
 
 
@@ -19,8 +17,8 @@ StringData* shadowString_GetData(const shadow_String_t* instance, StringData* st
 		str = malloc(sizeof(StringData));
 	}
 	
-	shadowArray_GetData(_shadowString_GetDataArray(instance), (ArrayData*)str);
-	str->ascii = _shadowString_IsAscii(instance);
+	shadowArray_GetData(instance->data, (ArrayData*)str);
+	str->ascii = instance->ascii;
 	
 	return str;
 }
@@ -47,19 +45,19 @@ shadow_String_t* shadowString_Create(const char* c_str)
 	shadow_byte_t* chars;
 
 	// create the array then copy the c_str to chars without the null terminator
-	shadow_PrimitiveArray_t* array = shadowArray_Create(length, shadowByte_GetClass(), (void**)&chars);
+	shadow_Array_t* array = shadowArray_Create(length, shadowByteArray_GetClass(), false, (void**)&chars);
 	memcpy(chars, c_str, length);
 	
 	// we then need to create the actual Shadow String, but Shadow deals with arrays
 	// as structs and not as pointers, so we need to dereference it first.
-	return _shadowString_CreateBytes(NULL, *array);
+	return _shadowString_CreateBytes(NULL, array);
 }
 
 void shadowString_Free(shadow_String_t* instance)
 {
 	// free the data array
-	//shadowArray_Free(_shadowString_GetDataArray(instance));
+	shadowArray_Free(instance->data);
 	
 	// free the string reference
-	//free(instance);
+	free(instance);
 }

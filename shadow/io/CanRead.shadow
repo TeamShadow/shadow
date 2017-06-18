@@ -10,5 +10,5 @@ interface shadow:io@CanRead
 	 * @param buffer array of {@code byte} values to read data into
 	 * @return number of {@code byte} values successfully read 
 	 */
-	read( byte[] buffer ) => ( int );
+	read( byte[] buffer ) => ( long );
 }

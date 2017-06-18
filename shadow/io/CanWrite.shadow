@@ -10,5 +10,5 @@ interface shadow:io@CanWrite
 	 * @param buffer array of {@code byte} values to write data from
 	 * @return number of {@code byte} values successfully written 
 	 */
-	write( byte[] buffer ) => ( int );
+	write( byte[] buffer ) => ( long );
 }

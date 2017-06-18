@@ -50,7 +50,6 @@ class shadow:test@ArrayOutOfBoundsTest
 			out.printLine(e);
 		}
 		
-		
 		try {			
 			int[][] temp = int[]:create[4];						
 			temp[2][9] = 5; //not actually a null pointer in Shadow, since the arrays are structs holding null pointers and zero lengths
@@ -72,6 +71,6 @@ class shadow:test@ArrayOutOfBoundsTest
 		}
 		catch(Exception e) {		
 			out.printLine( e );
-		}		
+		}
 	}
 }

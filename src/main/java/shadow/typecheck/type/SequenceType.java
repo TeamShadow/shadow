@@ -159,14 +159,8 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			Modifiers modifiers = modifiedType.getModifiers();
 			
 			if( (options & MANGLE) != 0 ) {
-				if( type instanceof ArrayType) { //only convert the first layer
-					if( (options & CONVERT_ARRAYS) != 0 )
-						builder.append(((ArrayType)type).convertToGeneric().toString(options & ~CONVERT_ARRAYS));
-					else
-						builder.append(type.toString(options));
-				}
 				//raw primitive types
-				else if( type.isPrimitive() && !modifiers.isNullable()  )
+				if( type.isPrimitive() && !modifiers.isNullable()  )
 					builder.append(type.getTypeName());
 				else
 					builder.append(type.toString(options));
@@ -208,7 +202,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	@Override
 	public SequenceType replace(List<ModifiedType> values, List<ModifiedType> replacements) throws InstantiationException
 	{		
-		SequenceType temp = new SequenceType();
+ 		SequenceType temp = new SequenceType();
 		
 		for( int i = 0; i < types.size(); i++ )
 		{
@@ -227,7 +221,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	
 	
 	@Override
-	public SequenceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements)
+	public SequenceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements) throws InstantiationException
 	{		
 		SequenceType temp = new SequenceType();
 		

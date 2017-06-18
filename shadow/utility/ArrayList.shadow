@@ -19,12 +19,12 @@ is  List<V>
 		this(10);
 	}
 	
-	public create(int initialCapacity)
+	public create(long initialCapacity)
 	{
 		this(initialCapacity, DefaultEqualizer<V>:create());
 	}
 	
-	public create(int initialCapacity, Equate<V> equater)
+	public create(long initialCapacity, Equate<V> equater)
 	{				
 		this:elements = V:null[initialCapacity];	
 		this:equater = equater;
@@ -78,15 +78,16 @@ is  List<V>
 		{
 			if( sizeLong >= elements->sizeLong )
 				grow();
-			sizeLong += 1L;		
+			sizeLong += 1L;			
 		}			
-		elements[index] = value;
-		modifications += 1L;	
+
+		elements[index] = value;	
+		modifications += 1L;
 	}
 	
 	// Doubles the size of the backing array.
 	private grow() => ()
-	{
+	{		
 		nullable var temp = V:null[elements->sizeLong * 2L];
 		for( long i = 0; i < elements->sizeLong; i += 1L )
 			temp[i] = elements[i];
@@ -191,8 +192,7 @@ is  List<V>
 	{
 		MutableString string = MutableString:create("[");
 		boolean first = true;
-		foreach(V value in this)
-		{
+		foreach(V value in this) {
 			if(first)
 				first = false;
 			else

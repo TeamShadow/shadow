@@ -193,7 +193,7 @@ public class MethodType extends ClassType {
 	}
 	
 	@Override
-	public MethodType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements )
+	public MethodType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{	
 		MethodType replaced = new MethodType(super.getOuter(), getModifiers(), getDocumentation());	
 		

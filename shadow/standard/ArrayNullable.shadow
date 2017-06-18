@@ -1,13 +1,9 @@
 /**
- * Class {@code ArrayNullable<T>} is used as a wrapper for nullable array objects
- * when they must be treated as objects.
+ * Class {@code ArrayNullable<T>} is used to house the methods for nullable
+ * array objects.
  *
- * The object keeps a reference to normal array memory as well as additional
- * dimension information needed to access the array safely. 
- *
- * Most of the use of {@code NullableArray<T>} is handled by the compiler.
- * Users should avoid using the {@code NullableArray<T>} type explicitly 
- * unless absolutely necessary. 
+ * The use of {@code NullableArray<T>} is handled by the compiler.
+ * Users should avoid using the {@code NullableArray<T>} type explicitly.
  * 
  * In this implementation, most methods of {@code NullableArray<T>} are implemented
  * as aliases to the parallel method in {@code Array<T>}, since the mechanics
@@ -20,14 +16,15 @@ is  CanIndexNullable<long,T>
 and CanIndexStoreNullable<long,T>
 and CanIterateNullable<T>
 {	
-	Object[] data; //not actually objects, but can be treated as such except for arrays, interfaces, and primitives
+	get long sizeLong;
 	
 	/**
 	 * Creates an {@code ArrayNullable<T>} wrapper for the given array.	 
 	 * This method is called internally by the compiler and is only {@code protected}
 	 * because it allows other classes to see the method.
+	 * @unused
 	 */
-	protected native create( Object[] data );
+	private native create();
 		
 	/**
 	 * Creates an {@code Array<T>} object with the given size.
@@ -38,21 +35,18 @@ and CanIterateNullable<T>
 	
 	public native destroy;
 	
+	public native isNullable() => (boolean);
+	
+	
 	/**
 	 * Gets the size of the array (total number of elements) as an {@code int}.
 	 * @return size of array
 	 */
 	public readonly get size() => ( int )
 	{
-		return cast<int>(sizeLong());
+		return cast<int>(sizeLong);
 	}
-	
-	/**
-	 * Gets the size of the array (total number of elements) as a {@code long}.
-	 * @return size of array
-	 */
-	public readonly native get sizeLong() => ( long );	
-	
+
 	/**
 	 * Copy a subarray from the given array, starting at {@code start} and going
 	 * up to but not including index {@code end}.
@@ -70,7 +64,7 @@ and CanIterateNullable<T>
 	 * @param index	location to read from, as a {@code long}	 
 	 * @return value at given location
 	 */	
-	public readonly native index( long index ) => (T);
+	public readonly native index( long index ) => (nullable T);
 
 	
 	/**

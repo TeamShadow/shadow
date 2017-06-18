@@ -225,20 +225,6 @@ public class TypeCollector extends BaseChecker {
 				standardDependencies.add(name);
 			}
 		}
-		
-		/* Add io imports (necessary for console programs). */
-		//necessary?
-		/*
-		Path io = config.getSystemImport().resolve("shadow").resolve("io");
-		if( !Files.exists(io) )
-			throw new ConfigurationException("Invalid path to shadow:io: " + canonicalize(io));
-				
-		for( Path file :  Files.newDirectoryStream(io, "*.shadow")  ) {
-			String name = stripExtension(canonicalize(file));			
-			uncheckedFiles.add(name);
-			standardDependencies.add(name);
-		}
-		*/
 
 		/* As long as there are unchecked files, remove one and process it. */
 		while( !uncheckedFiles.isEmpty() ) {			
@@ -502,8 +488,7 @@ public class TypeCollector extends BaseChecker {
 				case "CanIterate":		Type.CAN_ITERATE = (InterfaceType) type; break;
 				case "CanIterateNullable":	Type.CAN_ITERATE_NULLABLE = (InterfaceType) type; break;
 				case "CastException":	Type.CAST_EXCEPTION = (ExceptionType) type; break;
-				case "Class":			Type.CLASS = (ClassType) type; break;				
-				case "ClassSet":		Type.CLASS_SET = (ClassType) type; break;
+				case "Class":			Type.CLASS = (ClassType) type; break;
 				case "boolean":			Type.BOOLEAN = (ClassType)type; break;
 				case "byte":			Type.BYTE = (ClassType)type; break;
 				case "code":			Type.CODE = (ClassType)type; break;

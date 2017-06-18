@@ -173,7 +173,7 @@ public class PropertyType extends Type
 	
 	@Override
 	public PropertyType partiallyReplace(List<ModifiedType> values,
-			List<ModifiedType> replacements) {
+			List<ModifiedType> replacements) throws InstantiationException {
 		
 		MethodSignature replacedGetter = null;		
 		UnboundMethodType replacedMethod = getMethod().partiallyReplace(values, replacements);

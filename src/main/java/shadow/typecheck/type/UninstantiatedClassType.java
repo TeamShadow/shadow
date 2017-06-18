@@ -73,7 +73,7 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	}
 	
 	@Override
-	public UninstantiatedClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements )
+	public UninstantiatedClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
 		return new UninstantiatedClassType( type, typeArguments.partiallyReplace(values, replacements) );
 	}

@@ -5,10 +5,7 @@
 #define SHADOW_BOOLEAN_H
 
 #include <stdbool.h>
-#include <standard/Class.h>
 
-typedef bool shadow_boolean_t;
-
-shadow_Class_t* shadowBoolean_GetClass();
+typedef unsigned char shadow_boolean_t;
 
 #endif

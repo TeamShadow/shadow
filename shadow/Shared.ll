@@ -22,7 +22,6 @@
 %ulong = type i64
 %float = type float
 %double = type double
-%void = type i8
 
 ; Class
 %shadow.standard..Class = type opaque
@@ -30,16 +29,22 @@
 ; Pointer
 %shadow.natives..Pointer = type opaque
 
+; Array
+%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
+
+
 ; String
 %shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , {{%ulong, %byte}*, %shadow.standard..Class*,%ulong}, %boolean }
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , %shadow.standard..Array*, %boolean }
 
 ;---------------------------
 ; Custom Method Definitions
 ;---------------------------
 ; String.c
-define {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }* @_shadowString_GetDataArray(%shadow.standard..String*) {
+define %shadow.standard..Array* @_shadowString_GetDataArray(%shadow.standard..String*) {
 entry:
-	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3	
-	ret {{%ulong, %byte}*, %shadow.standard..Class*, %ulong }* %array.addr
+	%array.addr = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %0, i32 0, i32 3
+	%array = load %shadow.standard..Array*, %shadow.standard..Array** %array.addr
+	ret %shadow.standard..Array* %array
 }

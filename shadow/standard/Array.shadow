@@ -1,13 +1,8 @@
 /**
- * Class {@code Array<T>} is used as a wrapper for array objects when
- * they must be treated as objects.
+ * Class {@code Array<T>} is used to house methods for array objects.
  *
- * The object keeps a reference to normal array memory as well as additional
- * dimension information needed to access the array safely. 
- *
- * Most of the use of {@code Array<T>} is handled by the compiler.
- * Users should avoid using the {@code Array<T>} type explicitly 
- * unless absolutely necessary.
+ * The use of {@code Array<T>} is handled by the compiler.
+ * Users should avoid using the {@code Array<T>} type explicitly.
  */
 abstract locked class shadow:standard@
 	Array<T>
@@ -15,23 +10,23 @@ is CanIndex<long,T>
 and CanIndexStore<long,T>
 and CanIterate<T>
 {
-	Object[] data; //not actually objects, but can be treated as such except for arrays, interfaces, and primitives
+	get long sizeLong;
 	
 	/**
-	 * Creates an {@code Array<T>} wrapper for the given array. 
-	 * This method is called internally by the compiler and is only {@code protected}
-	 * because it allows other classes to see the method.
+	 * Arrays are created internally by the compiler. 
+	 * This method is private to prevent a user from creating
+	 * an {@code Array<T>} object explicitly.
+	 * @unused
 	 */
-	protected native create( Object[] data );
-	
-	/**
-	 * Creates an {@code Array<T>} object with the given size.
-	 * This method is called internally by the compiler and is only {@code protected}
-	 * because it allows other classes to see the method.
-	 */
-	//protected native create( long size );
+	private native create();
 	
 	public native destroy;
+	
+	/**
+	 * Gets the size of the array (total number of elements) as a {@code long}.
+	 * @return size of array
+	 */
+	public readonly native isNullable() => ( boolean );	
 
 	/**
 	 * Gets the size of the array (total number of elements) as an {@code int}.
@@ -39,14 +34,8 @@ and CanIterate<T>
 	 */
 	public readonly get size() => ( int )
 	{
-		return cast<int>(sizeLong());
+		return cast<int>(sizeLong);
 	}
-	
-	/**
-	 * Gets the size of the array (total number of elements) as a {@code long}.
-	 * @return size of array
-	 */
-	public readonly native get sizeLong() => ( long );	
 
 	/* 
 	// Copy implementation based off the following code:

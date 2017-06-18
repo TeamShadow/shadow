@@ -18,6 +18,7 @@ import shadow.parse.ShadowParser;
 public class ClassType extends Type {
 	private ClassType extendType;	
 	private HashMap<String, ClassType> innerClasses;
+	private SequenceType dependencyList;
 	
 	public ClassType(String typeName, ClassType parent) {
 		this(typeName, new Modifiers(), null, null);
@@ -277,6 +278,7 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter());
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+			replaced.innerClasses = innerClasses;
 			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 
@@ -312,8 +314,13 @@ public class ClassType extends Type {
 		return this;
 	}
 	
+	
+	/* The key difference between partial replacement and regular replacement
+	 * is that partial replacement doesn't replace the field types.  Instead,
+	 * it gives them UninstantiatedTypes which can be instantiated later. 
+	 */	
 	@Override
-	public ClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
+	public ClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
@@ -323,6 +330,7 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter() );
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+			replaced.innerClasses = innerClasses;
 			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 			
@@ -434,21 +442,17 @@ public class ClassType extends Type {
 		if( t instanceof TypeParameter )
 			return isSubtype(((TypeParameter)t).getClassBound());
 		
-		if( t instanceof ArrayType ) {
-			ArrayType arrayType = (ArrayType) t;
-			return isSubtype(arrayType.convertToGeneric());
-		}
+		if( t instanceof ArrayType )
+			return isSubtype(((ArrayType)t).convertToGeneric());		
 		
 		if( t.isNumerical() && isNumerical() )
-			return isNumericalSubtype(t);
+			return isNumericalSubtype(t);		
 		else if( t instanceof ClassType )			
 			return isDescendentOf(t);
 		else if( t instanceof InterfaceType )
 			return hasInterface((InterfaceType)t);
 		else
-			return false;		
-		//note that a ClassType is never the subtype of a TypeParameter
-		//also, Object[] is a subtype of Array<Object>, but Array<Object> is not a subtype of Object[]
+			return false;
 	}
 	
 	public Set<Type> getAllReferencedTypes() {
@@ -547,6 +551,35 @@ public class ClassType extends Type {
 		return (ClassType)super.getTypeWithoutTypeArguments();
 	}
 	
+	public boolean hasDependencyList() {
+		return getTypeWithoutTypeArguments().dependencyList != null;
+	}
+	
+	
+	// Should only be called on type without type arguments
+	public void addDependency(ModifiedType type) {
+		if( dependencyList == null )
+			dependencyList = new SequenceType();
+		
+		dependencyList.add(type);
+	}
+	
+	public SequenceType getDependencyList() {
+		if( dependencyList == null && hasDependencyList() ) {
+			try {
+				dependencyList = getTypeWithoutTypeArguments().dependencyList.replace(getTypeWithoutTypeArguments().getTypeParameters(), getTypeParameters());
+			} catch (InstantiationException e) {
+				//shouldn't happen
+				throw new IllegalArgumentException();
+			}
+		}		
+		
+		return dependencyList;
+	}
+	
+	public void setDependencyList(SequenceType dependencyList) {
+		this.dependencyList = dependencyList;
+	}
 
 	public void printMetaFile(PrintWriter out, String linePrefix ) {
 		printMetaFile(out, linePrefix, "class");	
@@ -574,6 +607,9 @@ public class ClassType extends Type {
 			name = toString(TYPE_PARAMETERS | PARAMETER_BOUNDS);
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
+		
+		if( hasDependencyList() )
+			out.print(getDependencyList().toString(" : <", ">", PACKAGES | TYPE_PARAMETERS));			
 		
 		//extend type
 		Type extendType = getExtendType();
@@ -652,14 +688,4 @@ public class ClassType extends Type {
 			//printGenerics( out, indent );				
 		out.println(linePrefix + "}");	
 	}
-	
-	@Override
-	public String toString(int options) {
-		if( ((options & MANGLE) != 0) && ((options & CONVERT_ARRAYS) != 0) &&
-			Type.ARRAY != null && Type.ARRAY_NULLABLE != null && //not a typical situation, but causes problems when types are still being collected
-			(Type.ARRAY.encloses(this) || Type.ARRAY_NULLABLE.encloses(this)) )
-			return super.toString(options & ~CONVERT_ARRAYS);
-		
-		return super.toString(options);		
-	}	
 }

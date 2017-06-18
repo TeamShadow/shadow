@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-typedef void* shadow_ExternalsTest_t;
+typedef shadow_Object_t shadow_ExternalsTest_t;
 
 void __shadowExternalTest_PrintfToString(shadow_ExternalsTest_t* ref)
 {
@@ -36,10 +36,14 @@ void __shadowExternalTest_CreateString()
 	shadow_String_t* string = shadowString_Create("This is a string created in C and printed using Shadow's Console.printLine()");
 
 	// this method is equivalent to Console.printLine(Object)
-	shadowConsole_PrintLine(string);
+	shadowConsole_PrintLine((shadow_Object_t*)string);
 	
-	// free the String we created
-	shadowString_Free(string);
+	// Decrement the reference count on the String we created (freeing it)
+	__decrementRef((shadow_Object_t*) string);
+	
+	// Instead, we could have simply freed the string, but decrementing allows
+	// the possibility that some other object kept a reference to the string
+	//shadowString_Free(string);
 }
 
 
@@ -72,19 +76,19 @@ void __shadowExternalTest_PrintPointerData(shadow_ExternalsTest_t* instance, sha
 void __shadowExternalTest_PrintClasses(shadow_ExternalsTest_t* instance)
 {
 	// object class
-	shadowConsole_PrintLine(shadowObject_GetClass(instance));
+	shadowConsole_PrintLine((shadow_Object_t*)shadowObject_GetClass(instance));
 	
 	// primitives
-	shadowConsole_PrintLine(shadowBoolean_GetClass());
-	shadowConsole_PrintLine(shadowByte_GetClass());
-	shadowConsole_PrintLine(shadowUByte_GetClass());
-	shadowConsole_PrintLine(shadowShort_GetClass());
-	shadowConsole_PrintLine(shadowUShort_GetClass());
-	shadowConsole_PrintLine(shadowInt_GetClass());
-	shadowConsole_PrintLine(shadowUInt_GetClass());
-	shadowConsole_PrintLine(shadowCode_GetClass());
-	shadowConsole_PrintLine(shadowLong_GetClass());
-	shadowConsole_PrintLine(shadowULong_GetClass());
-	shadowConsole_PrintLine(shadowFloat_GetClass());
-	shadowConsole_PrintLine(shadowDouble_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowBoolean_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowByte_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowUByte_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowShort_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowUShort_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowInt_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowUInt_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowCode_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowLong_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowULong_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowFloat_GetClass());
+	shadowConsole_PrintLine((shadow_Object_t*)shadowDouble_GetClass());
 }

@@ -2,7 +2,6 @@ package shadow.tac;
 
 import shadow.ShadowException;
 import shadow.tac.nodes.TACAllocateVariable;
-import shadow.tac.nodes.TACBaseClass;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
@@ -16,7 +15,6 @@ import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLandingpad;
-import shadow.tac.nodes.TACLength;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
@@ -64,8 +62,6 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACAllocateVariable node) throws ShadowException { }
 	@Override
-	public void visit(TACBaseClass node) throws ShadowException { }	
-	@Override
 	public void visit(TACBinary node) throws ShadowException { }	
 	@Override
 	public void visit(TACBlock node) throws ShadowException { }
@@ -91,8 +87,6 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	public void visit(TACLabelAddress node) throws ShadowException { }
 	@Override
 	public void visit(TACLandingpad node) throws ShadowException { }
-	@Override
-	public void visit(TACLength node) throws ShadowException { }
 	@Override
 	public void visit(TACLiteral node) throws ShadowException { }
 	@Override

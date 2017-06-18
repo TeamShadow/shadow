@@ -1,0 +1,9 @@
+import shadow:utility@ArrayList;
+
+class Test<T> : < ArrayList<T> >
+{
+	public speak() => (String)
+	{
+		return "Hello!";
+	}
+}

@@ -8,6 +8,7 @@ import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -199,8 +200,14 @@ public abstract class TACNode implements Iterable<TACOperand> {
 
         operand = operand.checkVirtual(type, this); // puts in casts where needed
         
-        final Type operandType = operand.getType();
-        final Type typeType = type.getType();
+        Type operandType = operand.getType();
+        Type typeType = type.getType();
+        
+        if( operandType instanceof ArrayType )
+        	operandType = ((ArrayType)operandType).convertToGeneric();
+        
+        if( typeType instanceof ArrayType )
+        	typeType = ((ArrayType)typeType).convertToGeneric();        
 
         if( operandType.equals(typeType) || 
           ( operandType instanceof TypeParameter && typeType instanceof TypeParameter))
@@ -210,9 +217,9 @@ public abstract class TACNode implements Iterable<TACOperand> {
                typeType instanceof SequenceType &&
                ((SequenceType) operandType).matches(((SequenceType) typeType))) { // replace with subtype? no!
             return operand;
-        } else if ((operandType instanceof SequenceType) != (typeType instanceof SequenceType)) {
-            throw new IllegalArgumentException(operandType + " and " + typeType + " are not both sequence types");
         }
+        else if ((operandType instanceof SequenceType) != (typeType instanceof SequenceType))
+            throw new IllegalArgumentException(operandType + " and " + typeType + " are not both sequence types");        
 
         final shadow.typecheck.Package operandPackage = operandType.getPackage();
         final shadow.typecheck.Package typePackage = typeType.getPackage();
@@ -220,7 +227,7 @@ public abstract class TACNode implements Iterable<TACOperand> {
         if (operandPackage != null &&
                typePackage != null &&
                operandPackage.equals(typePackage) &&
-               operand.getType().getTypeName().equals(type.getType().getTypeName()))
+               operandType.getTypeName().equals(typeType.getTypeName()))
             return operand;
 
         throw new IllegalArgumentException("Check of operand " + operand + " of type " + operandType + " and " + type + " of type " + typeType + " couldn't be resolved!");
