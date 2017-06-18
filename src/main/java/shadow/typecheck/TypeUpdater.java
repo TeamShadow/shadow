@@ -164,8 +164,7 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.ADDRESS_MAP);
 			
 			// Class management
-			type.addUsedType(Type.CLASS);
-			type.addUsedType(Type.CLASS_SET);
+			type.addUsedType(Type.CLASS);			
 			type.addUsedType(Type.GENERIC_CLASS);
 			
 			// Array wrapper classes
@@ -197,7 +196,22 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.SHADOW_POINTER);
 			
 			// Adding the self adds parents and interfaces and methods
-			type.addUsedType(type); 
+			type.addUsedType(type);			
+			
+			// Add all primitive types (since their Object versions might be used in casts)
+			type.addUsedType(Type.BOOLEAN);
+			type.addUsedType(Type.BYTE);
+			type.addUsedType(Type.CODE);
+			type.addUsedType(Type.DOUBLE);
+			type.addUsedType(Type.FLOAT);	
+			type.addUsedType(Type.INT);
+			type.addUsedType(Type.LONG);
+			type.addUsedType(Type.SHORT);			
+			type.addUsedType(Type.UBYTE);
+			type.addUsedType(Type.UINT);
+			type.addUsedType(Type.ULONG);
+			type.addUsedType(Type.USHORT);			
+			
 			
 			/* Update imports for meta files, since they won't have statement checking.
 			 * Note that imports in meta files have been optimized to include only the
@@ -365,14 +379,6 @@ public class TypeUpdater extends BaseChecker {
 				Context dependencyNode = uninstantiatedNodes.get( dependency.getTypeWithoutTypeArguments() );
 				if( dependencyNode != null )
 					graph.addEdge(dependencyNode, declarationNode);
-				/*
-				if( dependencyNode == null )
-					addError(declarationNode, Error.INVALID_DEPENDENCY, "Type " +
-							declarationNode.getType() + " is dependent on unavailable type " +
-							dependency, dependency);
-				else
-					graph.addEdge(dependencyNode, declarationNode);
-				*/
 			}
 		
 		/* Update parameters based on topological sort of type parameter dependencies. */
@@ -1266,6 +1272,28 @@ public class TypeUpdater extends BaseChecker {
 		
 		return null;
 	}
+	
+	@Override public Void visitDependencyList(ShadowParser.DependencyListContext ctx)
+	{
+		if( !isMeta )		
+			addError(ctx, Error.INVALID_STRUCTURE, "Dependency list is only permitted in .meta files");
+				
+		visitChildren(ctx);		
+		
+		//add dependency list to current class
+		SequenceType sequence = new SequenceType();
+		for( ShadowParser.TypeContext type : ctx.type() )
+			sequence.add(type);		
+		ctx.setType(sequence);
+		
+		if( declarationType instanceof ClassType )
+			((ClassType)declarationType).setDependencyList(sequence);
+		else
+			addError(ctx, Error.INVALID_STRUCTURE, "Only a class type can have a dependency list");		
+		
+		return null;		
+	}
+	
 	
 	@Override public Void visitTypeArguments(ShadowParser.TypeArgumentsContext ctx)
 	{

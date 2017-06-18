@@ -467,5 +467,15 @@ public class NegativeTests {
 	@Test public void testChainOfCallsBeforeFieldInitialization() throws Exception {
 		args.add("tests-negative/typechecker/chain-of-calls-before-field-initialization/Test.shadow");
 		enforce(Error.UNINITIALIZED_FIELD);			
-	}	
+	}
+	
+	@Test public void testDependencyListInRegularFile() throws Exception {
+		args.add("tests-negative/typechecker/dependency-list-in-regular-file/Test.shadow");
+		enforce(Error.INVALID_STRUCTURE);			
+	}
+	
+	@Test public void testClassWithoutTypeArguments() throws Exception {
+		args.add("tests-negative/typechecker/class-without-type-arguments/Test.shadow");
+		enforce(Error.MISSING_TYPE_ARGUMENTS);			
+	}
 }

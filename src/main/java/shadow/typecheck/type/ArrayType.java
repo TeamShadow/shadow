@@ -1,6 +1,8 @@
 package shadow.typecheck.type;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import shadow.ShadowException;
 
@@ -199,4 +201,16 @@ public class ArrayType extends ClassType
 		
 		return false;		
 	}
+	
+	@Override
+	protected boolean onlyUsesTypeParametersFrom(Type type) {
+		return convertToGeneric().onlyUsesTypeParametersFrom(type);
+	}
+	
+	// Returns true if this uses no parameters or only these parameters
+	@Override
+	protected boolean onlyUsesTheseParameters(Set<TypeParameter> parameters) {
+		return convertToGeneric().onlyUsesTheseParameters(parameters);
+	}
+	
 }

@@ -18,6 +18,7 @@ import shadow.parse.ShadowParser;
 public class ClassType extends Type {
 	private ClassType extendType;	
 	private HashMap<String, ClassType> innerClasses;
+	private SequenceType dependencyList;
 	
 	public ClassType(String typeName, ClassType parent) {
 		this(typeName, new Modifiers(), null, null);
@@ -277,6 +278,7 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter());
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+			replaced.innerClasses = innerClasses;
 			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 
@@ -312,8 +314,13 @@ public class ClassType extends Type {
 		return this;
 	}
 	
+	
+	/* The key difference between partial replacement and regular replacement
+	 * is that partial replacement doesn't replace the field types.  Instead,
+	 * it gives them UninstantiatedTypes which can be instantiated later. 
+	 */	
 	@Override
-	public ClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
+	public ClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
@@ -323,6 +330,7 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter() );
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
+			replaced.innerClasses = innerClasses;
 			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 			
@@ -543,6 +551,35 @@ public class ClassType extends Type {
 		return (ClassType)super.getTypeWithoutTypeArguments();
 	}
 	
+	public boolean hasDependencyList() {
+		return getTypeWithoutTypeArguments().dependencyList != null;
+	}
+	
+	
+	// Should only be called on type without type arguments
+	public void addDependency(ModifiedType type) {
+		if( dependencyList == null )
+			dependencyList = new SequenceType();
+		
+		dependencyList.add(type);
+	}
+	
+	public SequenceType getDependencyList() {
+		if( dependencyList == null && hasDependencyList() ) {
+			try {
+				dependencyList = getTypeWithoutTypeArguments().dependencyList.replace(getTypeWithoutTypeArguments().getTypeParameters(), getTypeParameters());
+			} catch (InstantiationException e) {
+				//shouldn't happen
+				throw new IllegalArgumentException();
+			}
+		}		
+		
+		return dependencyList;
+	}
+	
+	public void setDependencyList(SequenceType dependencyList) {
+		this.dependencyList = dependencyList;
+	}
 
 	public void printMetaFile(PrintWriter out, String linePrefix ) {
 		printMetaFile(out, linePrefix, "class");	
@@ -570,6 +607,9 @@ public class ClassType extends Type {
 			name = toString(TYPE_PARAMETERS | PARAMETER_BOUNDS);
 			out.print(name.substring(name.lastIndexOf(':') + 1));
 		}
+		
+		if( hasDependencyList() )
+			out.print(getDependencyList().toString(" : <", ">", PACKAGES | TYPE_PARAMETERS));			
 		
 		//extend type
 		Type extendType = getExtendType();

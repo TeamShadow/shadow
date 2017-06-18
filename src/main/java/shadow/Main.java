@@ -159,11 +159,8 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 
-		Set<String> generics = new HashSet<String>();
-		Set<String> arrays = new HashSet<String>();
-		
 		List<File> cFiles = new ArrayList<>();
-		generateLLVM(cFiles, linkCommand, generics, arrays);
+		generateLLVM(cFiles, linkCommand);
 
 		if (!currentJob.isCheckOnly() && !currentJob.isNoLink()) {			
 			// Check LLVM version using lexical comparison
@@ -239,29 +236,8 @@ public class Main {
 				final OutputStream out = link.getOutputStream();
 				
 				while (line != null) {
-					if(line.contains(";_INITIALIZE_CLASS_SETS_")) {						 
-						//add in all externally declared generics
-						LLVMOutput.addGenerics("%genericSet", generics, out);
-						LLVMOutput.addGenerics("%arraySet", arrays, out);		
-					}
-					else {					
-						if( line.contains("@main")) { //declare externally defined generics
-							for( String generic : generics )
-								out.write(LLVMOutput.declareGeneric(generic).getBytes());
-							for( String array : arrays )
-								out.write(LLVMOutput.declareGeneric(array).getBytes());	
-							
-							out.write(System.lineSeparator().getBytes());
-						}
-						else if( line.trim().startsWith("%genericSet"))
-							line = line.replace("%genericSize", "" + generics.size()*2);
-						else if( line.trim().startsWith("%arraySet"))
-							line = line.replace("%arraySize", "" + arrays.size()*2);										
-						
-						line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
-						out.write(line.getBytes());
-					}
-					
+					line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
+					out.write(line.getBytes());
 					line = main.readLine();
 				}
 
@@ -395,7 +371,7 @@ public class Main {
 	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
 	 */
-	private static void generateLLVM(List<File> cFiles, List<String> linkCommand, Set<String> generics, Set<String> arrays) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {
+	private static void generateLLVM(List<File> cFiles, List<String> linkCommand) throws IOException, ShadowException, ParseException, ConfigurationException, TypeCheckException, CompileException {
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = BaseChecker.stripExtension(TypeCollector.canonicalize(mainFile)); 
 
@@ -439,8 +415,7 @@ public class Main {
 					//if the LLVM didn't exist, the full .shadow file would have been used				
 					if( file.toString().endsWith(".meta") ) {
 						logger.info("Using pre-existing LLVM code for " + name);
-						addToLink(node.getType(), file, linkCommand);
-						LLVMOutput.readGenericAndArrayClasses( llvmFile, generics, arrays );
+						addToLink(node.getType(), file, linkCommand);						
 					}
 					else {
 						logger.info("Generating LLVM code for " + name);
@@ -468,11 +443,7 @@ public class Main {
 							throw new CompileException("Failed to generate " + llvmFile);
 	
 						if( Files.exists(nativeFile) )
-							linkCommand.add(TypeCollector.canonicalize(nativeFile));						
-						
-						//it's important to add generics after generating the LLVM, since more are found
-						generics.addAll(output.getGenericClasses());						
-						arrays.addAll(output.getArrayClasses());
+							linkCommand.add(TypeCollector.canonicalize(nativeFile));
 					}
 				}				
 			}
@@ -525,21 +496,19 @@ public class Main {
 				class_.checkFieldInitialization(reporter, graphs);
 				
 				//give warnings if fields are never used
-				Type type = class_.getType();
-				//feels ugly, but Array and ArrayNullable have a data field used only by native methods
-				if( !type.equals(Type.ARRAY) && !type.equals(Type.ARRAY_NULLABLE)) {
-					Set<String> usedFields = allUsedFields.get(type);
-					for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
-						if( !entry.getValue().getModifiers().isConstant() 
-								&& !usedFields.contains(entry.getKey()) 
-								&& entry.getValue().getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
-						  ) {
-							reporter.addWarning(entry.getValue(), 
-									TypeCheckException.Error.UNUSED_FIELD, 
-									"Field " + entry.getKey() + " is never used");
-						}
+				Type type = class_.getType();				
+				Set<String> usedFields = allUsedFields.get(type);
+				for( Entry<String, VariableDeclaratorContext> entry  : type.getFields().entrySet() ) {
+					if( !entry.getValue().getModifiers().isConstant() 
+							&& !usedFields.contains(entry.getKey()) 
+							&& entry.getValue().getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
+					  ) {
+						reporter.addWarning(entry.getValue(), 
+								TypeCheckException.Error.UNUSED_FIELD, 
+								"Field " + entry.getKey() + " is never used");
 					}
 				}
+				
 				
 				//give warnings if private methods are never used
 				for( List<MethodSignature> signatures : type.getMethodMap().values() ) {

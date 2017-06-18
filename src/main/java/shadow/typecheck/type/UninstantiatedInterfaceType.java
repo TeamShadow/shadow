@@ -85,7 +85,7 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 	}
 	
 	@Override
-	public UninstantiatedInterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements )
+	public UninstantiatedInterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
 		return new UninstantiatedInterfaceType( type, typeArguments.partiallyReplace(values, replacements) );
 	}

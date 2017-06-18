@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -28,7 +29,6 @@ import shadow.parse.ShadowParser.TypeContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.UninstantiatedType;
 import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
@@ -45,6 +45,7 @@ import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
+import shadow.typecheck.type.UninstantiatedType;
 
 public class StatementChecker extends BaseChecker {
 	/* Stack for current prefix (needed for arbitrarily long chains of expressions). */
@@ -83,6 +84,13 @@ public class StatementChecker extends BaseChecker {
 		}
 		
 		visitChildren(ctx);
+		
+		if( currentType instanceof ClassType && currentType.isParameterized() ) {
+			ClassType classType = (ClassType) currentType;			
+			Set<Type> partiallyInstantiated = currentType.getPartiallyInstantiatedClasses();
+			for( Type type : partiallyInstantiated )
+				classType.addDependency(new SimpleModifiedType(type));				
+		}
 		
 		currentType = currentType.getOuter();
 		return null;
@@ -407,14 +415,14 @@ public class StatementChecker extends BaseChecker {
 		visitChildren(ctx); 
 	
 		Context child = (Context)ctx.getChild(0);  //either primitive type or class type
-		Type type = child.getType();		
-				
+		Type type = child.getType();	
+								
 		int dimensions = getDimensions( ctx );
 		if( dimensions != 0 )
 			type = new ArrayType(type, dimensions, false);
 		
 		ctx.setType(type);
-		currentType.addUsedType(type);
+		
 		
 		ctx.addModifiers(Modifiers.TYPE_NAME);
 		
@@ -1908,14 +1916,14 @@ public class StatementChecker extends BaseChecker {
 		prefixNode = resolveType( prefixNode );
 		Type prefixType = prefixNode.getType();
 		
-		if( prefixType instanceof ArrayType ) {
+		if( prefixType instanceof ArrayType  && !(((ArrayType)prefixType).getBaseType() instanceof TypeParameter) ) {
 			ArrayType arrayType = (ArrayType)prefixType;
 			
 			ShadowParser.ConditionalExpressionContext child = ctx.conditionalExpression();
 			Type childType = child.getType();
 			
-			if( !childType.isIntegral() ) {
-				addError(child, Error.INVALID_SUBSCRIPT, "Subscript type " + childType + " is invalid, integral type required", childType);
+			if( !childType.isSubtype(Type.LONG) ) {
+				addError(child, Error.INVALID_SUBSCRIPT, "Subscript type " + childType + " is invalid, must be subtype of " + Type.LONG, childType);
 				ctx.setType(Type.UNKNOWN);
 				return null;
 			}			
@@ -1947,7 +1955,7 @@ public class StatementChecker extends BaseChecker {
 		}						
 		else if( prefixType.hasUninstantiatedInterface(Type.CAN_INDEX) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_NULLABLE) ||
 				 prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE) || prefixType.hasUninstantiatedInterface(Type.CAN_INDEX_STORE_NULLABLE)) {
-			
+
 			SequenceType arguments = new SequenceType();
 			ShadowParser.ConditionalExpressionContext child = ctx.conditionalExpression();
 			arguments.add(child);
@@ -2014,6 +2022,8 @@ public class StatementChecker extends BaseChecker {
 		SequenceType typeArguments = null;
 		int nullOrCreateLocation = 1;
 		
+		ctx.prefixType = prefixType;
+		
 		boolean nullable = false;
 		
 		if( ctx.typeArguments() != null ) {
@@ -2071,6 +2081,7 @@ public class StatementChecker extends BaseChecker {
 			}
 			
 			currentType.addUsedType(arrayType);
+			currentType.addPartiallyInstantiatedClass(arrayType);											
 							
 			if( ctx.arrayCreateCall() != null ) {
 				SequenceType arguments = (SequenceType) ctx.arrayCreateCall().getType();
@@ -2232,6 +2243,7 @@ public class StatementChecker extends BaseChecker {
 						//the raw type has already been added
 						
 						currentType.addUsedType(prefixType);
+						currentType.addPartiallyInstantiatedClass(prefixType);
 					}
 					catch (InstantiationException e) {
 						addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + typeArguments + " do match type parameters " + prefixType.getTypeParameters());					
@@ -2278,13 +2290,18 @@ public class StatementChecker extends BaseChecker {
 					addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
 				else {
 					try {
-						currentType.addUsedType(prefixType.replace(parameterTypes, argumentTypes));
+						Type replacedType = prefixType.replace(parameterTypes, argumentTypes);
+						
+						currentType.addUsedType(replacedType);
+						currentType.addPartiallyInstantiatedClass(replacedType);
 					}
 					catch(InstantiationException e) {
 						addError(ctx.typeArguments(), Error.INVALID_TYPE_ARGUMENTS, "Supplied type arguments " + argumentTypes + " do not match type parameters " + parameterTypes );
 					}
 				}
-			}					
+			}
+			else if( prefixType.isParameterized() )				
+				addError(ctx, Error.MISSING_TYPE_ARGUMENTS, "Type arguments not supplied for parameterized type " + prefixType);
 		}
 		else
 			addError(ctx, Error.NOT_TYPE, "class specifier requires type name for access" );
@@ -2638,6 +2655,7 @@ public class StatementChecker extends BaseChecker {
 		
 		ctx.setType(arrayType);
 		currentType.addUsedType(arrayType);
+		currentType.addPartiallyInstantiatedClass(arrayType);
 		
 		return null;
 	}
@@ -2835,6 +2853,7 @@ public class StatementChecker extends BaseChecker {
 		}
 		
 		ctx.setType(type);
+		currentType.addUsedType(type);
 		
 		return null;
 	}

@@ -45,7 +45,7 @@ public class TACTests {
 		
 		// To to remove the unit test executable
 		try {
-			Files.delete(executable);			
+			//Files.delete(executable);			
 		}
 		catch(Exception e) {}
 	}

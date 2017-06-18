@@ -144,6 +144,8 @@ public class InterfaceType extends Type
 			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
 				return (InterfaceType)cached;
+						
+			counter++;
 			
 			InterfaceType replaced = new InterfaceType(getTypeName(), getModifiers(), getDocumentation());
 			replaced.setPackage(getPackage());
@@ -175,18 +177,23 @@ public class InterfaceType extends Type
 				replaced.addTypeParameter(new SimpleModifiedType(parameter.replace(values, replacements), modifiedParameter.getModifiers() ));
 			}
 			
+			counter--;
+			
 			return replaced;
 		}		
 		
 		return this;
 	}
 	
+	
+	private static int counter = 0; 
+	
 	@Override
-	public InterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) {	
+	public InterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException {	
 		if( isRecursivelyParameterized() ) {	
 			Type cached = typeWithoutTypeArguments.getInstantiation(this, values, replacements);
 			if( cached != null )
-				return (InterfaceType)cached;			
+				return (InterfaceType)cached;
 			
 			InterfaceType replaced = new InterfaceType(getTypeName(), getModifiers(), getDocumentation());
 			replaced.setPackage(getPackage());
@@ -218,6 +225,7 @@ public class InterfaceType extends Type
 					Type parameter = modifiedParameter.getType();
 					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
 				}			
+			
 			return replaced;
 		}
 		

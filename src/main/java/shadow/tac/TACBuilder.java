@@ -1169,10 +1169,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	{ 
 		visitChildren(ctx);
 	
-		Type type = getPrefix(ctx).getType();			
-		//Type type = prefix.getType(); //TODO: Does this work?
-		
-		boolean raw = false;
+		Type type = getPrefix(ctx).getType();
 		
 		if( ctx.typeArguments() != null  ) {
 			ShadowParser.TypeArgumentsContext arguments = ctx.typeArguments();
@@ -1181,11 +1178,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				type = type.replace(type.getTypeParameters(), (SequenceType)arguments.getType());
 			}
 			catch (InstantiationException e) {}	//should not happen				
-		}
-		else if( type.isParameterized() ) //parameterized, but no type arguments given
-			raw = true;					
+		}			
 		
-		prefix = new TACClass(anchor, type, raw).getClassData();
+		prefix = new TACClass(anchor, type).getClassData();
 		
 		ctx.setOperand(prefix);
 		
@@ -1209,33 +1204,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		boolean isStore = isLHS(expression) && suffix == getSuffix(expression);
 		Type prefixType = resolveType(prefix.getType());
 		
-		if( prefixType instanceof ArrayType ) {
-			ArrayType arrayType = (ArrayType) prefixType;
-			
+		if( prefixType instanceof ArrayType && !(((ArrayType)prefixType).getBaseType() instanceof TypeParameter) ) {
 			TACOperand index = ctx.conditionalExpression().appendBefore(anchor);
 			Type indexType = index.getType();
-			if( indexType.isIntegral() && !indexType.equals(Type.LONG))
-				index = TACCast.cast(anchor, new SimpleModifiedType(Type.LONG, index.getModifiers()), index);
-				
-			if( arrayType.getBaseType() instanceof TypeParameter ) {
-				if( !isStore ) {
-					Type type = arrayType.convertToGeneric();				
-					MethodSignature signature = type.getMatchingMethod("index", new SequenceType(Type.LONG));
-					methodCall(signature, ctx, Collections.singletonList(ctx.conditionalExpression()));
-				}
-				else {
-					//simply append everything (of which there is only one)
-					ctx.conditionalExpression().appendBefore(anchor);
-				}
-			}
-			else //TODO: In this case, don't we need to check for legal indexes?
-				prefix = new TACLoad(anchor, new TACArrayRef(anchor, prefix, index));
+			if( !indexType.equals(Type.LONG))
+				index = TACCast.cast(anchor, new SimpleModifiedType(Type.LONG, index.getModifiers()), index);				
+	
+			prefix = new TACLoad(anchor, new TACArrayRef(anchor, prefix, index));			
 		}				
 		else if( ctx.getType() instanceof SubscriptType ) {					
 			SubscriptType subscriptType = (SubscriptType) ctx.getType();
 			//only do the straight loads
 			//stores (and +='s) are handled in ASTExpression
 			//only one conditionalExpression is possible
+			//Arrays of type parameters (T[]) are handled here as well, since it's easy to use index() methods
 			if( !isStore ) {
 				MethodSignature signature = subscriptType.getGetter();
 				methodCall(signature, ctx, Collections.singletonList(ctx.conditionalExpression())); //handles appending					
@@ -1345,7 +1327,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACOperand value = ctx.arrayDefault().appendBefore(anchor);
 			prefix = visitArrayAllocation(arrayType, arrayClass, indices, value);
 		}
-		else //nullable array only
+		//fills ragged arrays like int[]:create[5] with arrays of size 0
+		else if( ctx.prefixType instanceof ArrayType ) {
+			ArrayType baseType = (ArrayType) ctx.prefixType;
+			TACClass baseClass = new TACClass(anchor, baseType);
+			TACOperand newArray = new TACNewArray(anchor, baseType, baseClass, new TACLiteral(anchor, new ShadowInteger(0L)));
+			//For GC reasons, we need to save this value, then load it
+			//Otherwise, each store of the new array will not be incremented in order to avoid double-incrementing a freshly allocated array
+			TACVariable temporary = method.addTempLocal(newArray);	
+			new TACLocalStore(anchor, temporary, newArray);
+			TACOperand value = new TACLocalLoad(anchor, temporary);			
+			prefix = visitArrayAllocation(arrayType, arrayClass, indices, value);
+		}			
+		else			
+			//nullable array only
 			prefix = visitArrayAllocation(arrayType, arrayClass, indices);
 		
 		ctx.setOperand(prefix);
@@ -2518,24 +2513,44 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}	
 	}
 	
+	//Anything that's a pure TypeParameter in the unparameterized version will be kept, since primitives and interfaces need special casting into TypeParameters
+	private static SequenceType keepTypeParameters(SequenceType withArguments, SequenceType withoutArguments) {
+		SequenceType result = new SequenceType();
+		
+		for( int i = 0; i < withArguments.size(); ++i ) {
+			if( withoutArguments.getType(i) instanceof TypeParameter )
+				result.add(withoutArguments.get(i));
+			else
+				result.add(withArguments.get(i));
+		}
+		
+		return result;
+	}
+	
 	private void visitWrapperMethod(MethodSignature methodSignature) {
+		// Do nothing for primitive wrappers for destroys
+		if( methodSignature.isDestroy() && methodSignature.getOuter().isPrimitive() ) {
+			//add explicit return					
+			TACReturn explicitReturn = new TACReturn(anchor, new SequenceType() ); 
+			//prevents an error from being recorded if this return is later removed as dead code
+			explicitReturn.setContext(null);
+			new TACLabel(method).insertBefore(anchor); //unreachable label
+		}		
+		
 		MethodSignature wrapped = methodSignature.getWrapped();
-		SequenceType fromTypes = methodSignature.getSignatureWithoutTypeArguments().getFullParameterTypes(),
-				toTypes = wrapped.getSignatureWithoutTypeArguments().getFullParameterTypes();
-		Iterator<TACVariable> fromArguments = method.addParameters(anchor, true).
-				getParameters().iterator();
-		List<TACOperand> toArguments = new ArrayList<TACOperand>(
-				toTypes.size());
+		SequenceType fromTypes = keepTypeParameters(methodSignature.getFullParameterTypes(),methodSignature.getSignatureWithoutTypeArguments().getFullParameterTypes());
+		SequenceType toTypes = keepTypeParameters(wrapped.getFullParameterTypes(), wrapped.getSignatureWithoutTypeArguments().getFullParameterTypes());
+		Iterator<TACVariable> fromArguments = method.addParameters(anchor, true).getParameters().iterator();
+		List<TACOperand> toArguments = new ArrayList<TACOperand>(toTypes.size());
+		
 		for (int i = 0; i < toTypes.size(); i++) {
-			TACOperand argument =
-					new TACLocalLoad(anchor, fromArguments.next());
+			TACOperand argument = new TACLocalLoad(anchor, fromArguments.next());
 			if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
 				argument = TACCast.cast(anchor, toTypes.get(i), argument);
 			toArguments.add(argument);				
 		}
 		
-		TACOperand value = new TACCall(anchor, new TACMethodRef(anchor,
-				wrapped), toArguments); 
+		TACOperand value = new TACCall(anchor, new TACMethodRef(anchor,wrapped), toArguments); 
 		
 		TACLabel unreachableLabel = new TACLabel(method);		
 		
@@ -2552,8 +2567,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), null);
 		}
 		else {
-			fromTypes = wrapped.getSignatureWithoutTypeArguments().getFullReturnTypes();
-			toTypes = methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes();
+			fromTypes = keepTypeParameters(wrapped.getFullReturnTypes(), wrapped.getSignatureWithoutTypeArguments().getFullReturnTypes());
+			toTypes = keepTypeParameters(methodSignature.getFullReturnTypes(),methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
 			
 			//cast all returns and store them in appropriate variables
 			if( value.getType() instanceof SequenceType ) {						
@@ -2623,23 +2638,26 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		methodSignature.getNode().appendBefore(anchor);
 		
 		//fill in all the fields to destroy
-		if( methodSignature.isDestroy() ) {					
-			TACOperand this_ = new TACLocalLoad(anchor, method.getThis());					
+		if( methodSignature.isDestroy() ) {
 			
-			ClassType classType = (ClassType)(methodSignature.getOuter()); 
-			for( Entry<String, ? extends ModifiedType> entry : classType.sortFields() ) {										
-				TACFieldRef reference = new TACFieldRef(this_, entry.getKey());
-				if( reference.needsGarbageCollection() )
-					new TACChangeReferenceCount(anchor, reference, false);				
-			}					
-			
-			//the mirror image of a create: calls parent destroy *afterwards*
-			ClassType thisType = (ClassType)methodSignature.getOuter(),
-					superType = thisType.getExtendType();
-			if( superType != null )					
-				new TACCall(anchor, new TACMethodRef(anchor,
-						superType.getMatchingMethod("destroy", new SequenceType())), new TACLocalLoad(anchor,
-						method.getThis()));
+			if( !methodSignature.getOuter().isPrimitive() ) {			
+				TACOperand this_ = new TACLocalLoad(anchor, method.getThis());					
+				
+				ClassType classType = (ClassType)(methodSignature.getOuter()); 
+				for( Entry<String, ? extends ModifiedType> entry : classType.sortFields() ) {										
+					TACFieldRef reference = new TACFieldRef(this_, entry.getKey());
+					if( reference.needsGarbageCollection() )
+						new TACChangeReferenceCount(anchor, reference, false);				
+				}					
+				
+				//the mirror image of a create: calls parent destroy *afterwards*
+				ClassType thisType = (ClassType)methodSignature.getOuter(),
+						superType = thisType.getExtendType();
+				if( superType != null )					
+					new TACCall(anchor, new TACMethodRef(anchor,
+							superType.getMatchingMethod("destroy", new SequenceType())), new TACLocalLoad(anchor,
+							method.getThis()));
+			}
 			
 			//add explicit return					
 			TACReturn explicitReturn = new TACReturn(anchor, new SequenceType() ); 

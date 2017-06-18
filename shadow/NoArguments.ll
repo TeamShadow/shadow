@@ -44,14 +44,6 @@
 @shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
 
-%shadow.standard..ClassSet = type opaque
-%shadow.standard..ClassSet_methods = type opaque
-
-@shadow.standard..ClassSet_methods = external constant %shadow.standard..ClassSet_methods
-@shadow.standard..ClassSet_class = external constant %shadow.standard..Class
-declare %boolean @shadow.standard..ClassSet_Madd_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*)
-declare %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* returned, %long)
-
 %shadow.io..Console_methods = type opaque
 @shadow.io..Console_methods = external constant %shadow.io..Console_methods
 @shadow.io..Console_class = external constant %shadow.standard..Class
@@ -86,17 +78,7 @@ declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %longElements, %boolean %nullable)
 
-@_genericSet = global %shadow.standard..ClassSet* null;
-@_arraySet = global %shadow.standard..ClassSet* null;
-
-define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {			
-	%uninitializedGenericSet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%genericSet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedGenericSet, %long %genericSize) ; compiler replaces %genericSize
-	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	
-	%uninitializedArraySet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedArraySet, %long %arraySize) ; compiler replaces %arraySize 
-	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet	
-	;_INITIALIZE_CLASS_SETS_
+define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {				
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
 	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance		

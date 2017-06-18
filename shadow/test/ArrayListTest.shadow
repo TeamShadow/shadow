@@ -5,16 +5,17 @@ import shadow:io@Console;
 class shadow:test@ArrayListTest
 {
 	public main( String[] args ) => ()
-	{
-		ArrayList<String> list = ArrayList<String>:create();
+	{		
 		Console out;
+		
+		ArrayList<String> list = ArrayList<String>:create();
 		
 		for ( int i = 0; i < args->size; i += 1 )
 			list.add(args[i]);		
 					
 		for ( int i = 1; i < args->size; i += 3 )
 			out.printLine(list.remove(args[i]));
-					
+			
 		out.printLine(list.remove(""));
 		
 		for ( int i = 0; i < list->size; i += 1 )
@@ -31,6 +32,5 @@ class shadow:test@ArrayListTest
 		list2.delete(0);	
 		
 		out.printLine(list2);
-						
 	}
 }

@@ -46,14 +46,8 @@
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
-
-%shadow.standard..ClassSet = type opaque
-%shadow.standard..ClassSet_methods = type opaque
-
-@shadow.standard..ClassSet_methods = external constant %shadow.standard..ClassSet_methods
-@shadow.standard..ClassSet_class = external constant %shadow.standard..Class
-declare %boolean @shadow.standard..ClassSet_Madd_shadow.standard..Class(%shadow.standard..ClassSet*, %shadow.standard..Class*)
-declare %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* returned, %long)
+@byte_A_class = external constant %shadow.standard..GenericClass
+@shadow.standard..String_A_class = external constant %shadow.standard..GenericClass
 
 %shadow.io..Console_methods = type opaque
 @shadow.io..Console_methods = external constant %shadow.io..Console_methods
@@ -88,19 +82,8 @@ declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* %class, %ulong %longElements, %boolean %nullable)
 
-
-@_genericSet = global %shadow.standard..ClassSet* null
-@_arraySet = global %shadow.standard..ClassSet* null
-
 define i32 @main(i32 %argc, i8** %argv) personality i32 (...)* @__shadow_personality_v0 {
-_start:
-	%uninitializedGenericSet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%genericSet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedGenericSet, %long %genericSize) ; %genericSize is replaced by compiler
-	store %shadow.standard..ClassSet* %genericSet, %shadow.standard..ClassSet** @_genericSet	
-	%uninitializedArraySet = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..ClassSet_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..ClassSet_methods* @shadow.standard..ClassSet_methods to %shadow.standard..Object_methods*))		
-	%arraySet = call %shadow.standard..ClassSet* @shadow.standard..ClassSet_Mcreate_long(%shadow.standard..Object* %uninitializedArraySet, %long %arraySize) ; %arraySize is replaced by compiler
-	store %shadow.standard..ClassSet* %arraySet, %shadow.standard..ClassSet** @_arraySet		
-	;_INITIALIZE_CLASS_SETS_	
+_start:	
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
 	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance	
@@ -119,6 +102,8 @@ _loopBody:
 	%bytes = bitcast %shadow.standard..Array* %byteArray to i8*
 	call i8* @strncpy(i8* %bytes, i8* nocapture %nextArg, %size_t %length)	
 	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %allocatedString, %shadow.standard..Array* %allocatedArray)
+	%byteArrayAsObj = bitcast %shadow.standard..Array* %byteArray to %shadow.standard..Object*
+	call void @__decrementRef(%shadow.standard..Object* %byteArrayAsObj) nounwind
 	store %shadow.standard..String* %string, %shadow.standard..String** %stringPhi
 	%nextString = getelementptr %shadow.standard..String*, %shadow.standard..String** %stringPhi, i32 1
 	br label %_loopTest
@@ -136,6 +121,8 @@ _loopEnd:
 			to label %_success unwind label %_exception
 _success:		
 	call void @__decrementRef(%shadow.standard..Object* %object) nounwind
+	%arrayAsObj = bitcast %shadow.standard..Array* %array to %shadow.standard..Object*
+	call void @__decrementRef(%shadow.standard..Object* %arrayAsObj) nounwind
 	ret i32 0
 _exception:
 	%caught = landingpad { i8*, i32 }

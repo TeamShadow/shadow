@@ -57,6 +57,8 @@ declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
 
 declare i1 @shadow.standard..Class_MisSubtype_shadow.standard..Class(%shadow.standard..Class*, %shadow.standard..Class*)
 
+declare %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) nounwind alwaysinline
+
 ; _URC_NO_REASON = 0
 ; _URC_FOREIGN_EXCEPTION_CAUGHT = 1
 ; _URC_FATAL_PHASE2_ERROR = 2
@@ -543,8 +545,8 @@ _success:
 	ret %shadow.standard..Object* %object
 }
 define noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* %class, %ulong %longElements, %boolean %nullable) {	
-	%baseClassRef =  getelementptr inbounds %shadow.standard..GenericClass, %shadow.standard..GenericClass* %class, i32 0, i32 6
-	%baseClass =  load %shadow.standard..Class*, %shadow.standard..Class** %baseClassRef	
+	%classAsClass =  bitcast %shadow.standard..GenericClass* %class to %shadow.standard..Class*
+	%baseClass =  call %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %classAsClass)
 	%perObject = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %baseClass)		
 	%elements = trunc %ulong %longElements to %uint
 	%size = mul %int %perObject, %elements

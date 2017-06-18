@@ -15,6 +15,7 @@ import java.util.Set;
 import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
+import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
@@ -439,7 +440,7 @@ public class TACMethod
 	//This method removes all undefined stores.
 	//This method is also an ideal place to turn off decrementing for
 	//variables that are null	
-	public void removeUndefinedStores() {
+	public void removeUndefinedStores(ControlFlowGraph graph) {
 		TACNode start = this.node;
 		TACNode node = start;
 		
@@ -451,7 +452,7 @@ public class TACMethod
 				//then this must be the "first" store to it,
 				//and there's no need to decrement the old contents.
 				//Note that there will be stores of null added in later for most of these.
-				if( store.isGarbageCollected() && store.getPreviousStore() == null )
+				if( store.isGarbageCollected() && store.getPreviousStore() == null && !graph.isInCycle(node) )
 					store.setDecrementReference(false);
 				
 				if( store.getValue() instanceof TACLiteral ) {

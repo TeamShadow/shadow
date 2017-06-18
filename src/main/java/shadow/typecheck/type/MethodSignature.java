@@ -220,7 +220,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public MethodSignature partiallyReplace(List<ModifiedType> values,
-			List<ModifiedType> replacements) {		
+			List<ModifiedType> replacements) throws InstantiationException {		
 		MethodSignature replaced = new MethodSignature(type.partiallyReplace(values, replacements), symbol, outer.partiallyReplace(values, replacements), node);
 		replaced.signatureWithoutTypeArguments = signatureWithoutTypeArguments;
 		return replaced;

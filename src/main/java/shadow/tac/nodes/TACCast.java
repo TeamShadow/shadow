@@ -326,14 +326,10 @@ public class TACCast extends TACUpdate
 		checkNullLabel.insertBefore(this);
 		
 		TACOperand asArray = new TACCast(this, new SimpleModifiedType(type, modifiers), op, Kind.OBJECT_TO_OBJECT, false );
-		ArrayType arrayType = (ArrayType) type;
+		ArrayType arrayType = (ArrayType) type;		
 		
-		if( arrayType.isNullable() )
-			methodRef = new TACMethodRef(this, asArray,
-				Type.ARRAY_NULLABLE.getMatchingMethod("isNullable", new SequenceType()));
-		else
-			methodRef = new TACMethodRef(this, asArray,
-				Type.ARRAY.getMatchingMethod("isNullable", new SequenceType()));
+		methodRef = new TACMethodRef(this, asArray,
+				arrayType.convertToGeneric().getMatchingMethod("isNullable", new SequenceType()));		
 		
 		result = new TACCall(this, methodRef, methodRef.getPrefix());
 		

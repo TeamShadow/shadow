@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.ArrayList;
 import shadow.doctool.DocumentationBuilder;
 import shadow.doctool.Documentation;
+import shadow.typecheck.type.Type;
 }
 
 //@lexer::members{ public static DocumentationBuilder docBuilder = null; }
@@ -72,7 +73,7 @@ modifier throws ParseException
 classOrInterfaceDeclaration
 	:
 	('class' | 'singleton' | 'exception'| 'interface' )
-	( unqualifiedName '@' )? Identifier typeParameters? VersionLiteral? isList?
+	( unqualifiedName '@' )? Identifier typeParameters? dependencyList? VersionLiteral? isList?
 	classOrInterfaceBody
 	;
 	
@@ -92,6 +93,10 @@ enumBody
 	
 enumConstant
 	: Identifier arguments? classOrInterfaceBody?
+	;
+	
+dependencyList
+	: ':' '<' type( ',' type )* '>'
 	;
 	
 typeParameters
@@ -449,6 +454,7 @@ brackets
 	;
 	
 arrayCreate
+locals [Type prefixType]
 	: typeArguments? ':' ('create' | 'null' ) arrayDimensions
   	( arrayCreateCall | arrayDefault )?
 	;

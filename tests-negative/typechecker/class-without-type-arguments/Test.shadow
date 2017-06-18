@@ -1,0 +1,11 @@
+import shadow:io@Console;
+import shadow:utility@ArrayList;
+
+class Test
+{	
+	public main() => ()
+	{
+		Class object = ArrayList:class;
+		Console.printLine(object);
+	}
+}

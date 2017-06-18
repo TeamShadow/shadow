@@ -1,8 +1,10 @@
 package shadow.tac.analysis;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1335,8 +1337,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		 * stating that the code is unreachable. Generating the TAC sometimes
 		 * creates "junk" branches and labels that can't be reached. 
 		 */
-		private void removeNode(TACNode node)
-		{
+		private void removeNode(TACNode node) {
 			//Labels and label addresses are not counted as errors
 			//Any node without a context is structural stuff added to form legal LLVM
 			if( !(node instanceof TACLabel) && !(node instanceof TACLabelAddress) &&
@@ -1401,13 +1402,11 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			return unwinds;
 		}	
 		
-		public int branches()
-		{
+		public int branches() {
 			return outgoing.size();
 		}
 		
-		private class NodeIterator implements Iterator<TACNode>
-		{
+		private class NodeIterator implements Iterator<TACNode> {
 			private boolean done = false;
 			private TACNode current = label;
 
@@ -1453,8 +1452,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		}
 
 
-		public void addCallEdges(CallGraph calls, Type type)
-		{
+		public void addCallEdges(CallGraph calls, Type type) {
 			for( TACNode node : this ) {
 				if( node instanceof TACCall ) {
 					TACCall call = (TACCall)node;
@@ -1466,124 +1464,6 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}				
 			}		
 		}
-
-		//First, remove all stores to unused locals
-		//Then, update all used local stores and loads to
-		//regular stores and loads, if they are Object types
-		//Remove phi nodes for such variables as well
-		/*
-		public void addGarbageCollection() {
-			TACNode node = label;
-			
-			//might be wise not to use iterator here since removal is involved
-			while( node != lastNode ) {
-				TACNode next = node.getNext();
-				
-				if( node instanceof TACLocalStore ) {
-					TACLocalStore store = (TACLocalStore) node;
-					TACVariable variable = store.getVariable();
-					if( getMethod().getUsedLocals().contains(variable )) {
-						//type that needs garbage collection will be stored in alloc'ed variable
-						if( needsGarbageCollection(variable) ) {
-							store.setGarbageCollected(true);
-							
-							if( variable.getType() instanceof ArrayType && store.getClassData() == null ) {
-								ArrayType arrayType = (ArrayType) variable.getType();
-								TACClass classData = new TACClass(node, arrayType.getBaseType());
-								store.setClassData(classData.getClassData());
-							}
-						}
-					}
-					else
-						node.remove();
-				}
-				else if( node instanceof TACLocalLoad ) {
-					TACLocalLoad load = (TACLocalLoad)node;
-					TACVariable variable = load.getVariable();
-					//type that needs garbage collection will be loaded from alloc'ed variable
-					if( needsGarbageCollection(variable) )
-						load.setGarbageCollected(true);
-				}
-				else if( node instanceof TACPhi ) {
-					TACPhi phi = (TACPhi)node;
-					TACVariable variable = phi.getVariable();					
-					if( getMethod().getUsedLocals().contains(variable )) {
-						if( needsGarbageCollection(variable) )
-							phi.setGarbageCollected(true);
-					}
-					else
-						node.remove();								
-				}
-				else if( node instanceof TACStore ) {
-					TACStore store = (TACStore) node;
-					TACReference reference = store.getReference();
-					if( needsGarbageCollection(reference) ) {
-						store.setGarbageCollected(true);
-						if( reference.getType() instanceof ArrayType && store.getClassData() == null ) {
-							ArrayType arrayType = (ArrayType) reference.getType();
-							TACClass classData = new TACClass(node, arrayType.getBaseType());
-							store.setClassData(classData);
-						}
-					}
-				}											
-				else if( node instanceof TACNewArray ) {
-					TACNewArray newArray = (TACNewArray) node;
-					if( !newArray.hasLocalStore() && !newArray.hasMemoryStore() ) {					
-						TACVariable temp = getMethod().addTempLocal(newArray);
-						getMethod().getUsedLocals().add(temp);
-						//store into temporary for reference count purposes (and change next)
-						TACLocalStore store = new TACLocalStore(next, temp, (TACNewArray)node, false);
-						store.setGarbageCollected(true);
-						store.setClassData(newArray.getBaseClass());
-						next = store;
-					}
-				}
-				else if( node instanceof TACCall ) {
-					TACCall call = (TACCall) node;
-					if( call.hasLocalStore() ) {
-						TACLocalStore store = call.getLocalStore();
-						if( needsGarbageCollection(store.getVariable() ) )
-							store.setIncrementReference(false);
-					}
-					else if( call.hasMemoryStore() ) {
-						TACStore store = call.getMemoryStore();
-						if( needsGarbageCollection(store.getReference()))
-							store.setIncrementReference(false);
-					}
-					else {
-						//if method return is not saved, save it for ref counting purposes
-						//complex case because of possible multiple return values
-						MethodSignature signature = call.getMethodRef().getSignature();
-						SequenceType returns = signature.getFullReturnTypes();						
-						if( returns.size() == 1 ) {
-							TACVariable temp = getMethod().addTempLocal(call);
-							getMethod().getUsedLocals().add(temp);
-							//store into temporary for reference count purposes (and change next)
-							TACLocalStore store = new TACLocalStore(next, temp, call, false);
-							if( needsGarbageCollection(temp))
-								store.setGarbageCollected(true);			
-							next = store;
-						}
-						else if( returns.size() > 1 ) {
-							TACNode firstStore = null;
-							for( int i = 0; i < signature.getReturnTypes().size(); ++i ) {
-								TACVariable temp = getMethod().addTempLocal(returns.get(0));
-								getMethod().getUsedLocals().add(temp);
-								//store into temporary for reference count purposes (and change next)
-								TACLocalStore store = new TACLocalStore(next, temp, new TACSequenceElement(next, call, i), false);
-								if( needsGarbageCollection(temp))
-									store.setGarbageCollected(true);															
-								if( i == 0 )
-									firstStore = store;
-							}
-							next = firstStore;
-						}
-					}
-				}				
-				
-				node = next;
-			}				
-		}*/
 	}
 	
 	
@@ -1657,19 +1537,32 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		}
 		
 	}
-	
-	//increments reference count on variable associated with value, if such variable exists
-	/*private static void incrementReference(TACNode anchor, TACOperand value ) {
-		if( value instanceof TACLocalLoad ) {
-			TACLocalLoad load = (TACLocalLoad) value;
-			new TACChangeReferenceCount(anchor, load.getVariable(), true);
-		}
-		else if( value instanceof TACLocalStorage ) {
-			TACLocalStorage storage = (TACLocalStorage) value;
-			new TACChangeReferenceCount(anchor, storage.getVariable(), true);
-		}
-	}*/
-	
-	
 
+	//uses a BFS to see if a node is contained in a cycle
+	public boolean isInCycle(TACNode node) {
+				
+		while( !(node instanceof TACLabel) )
+			node = node.getPrevious();
+		
+		TACLabel label = (TACLabel)node;
+		Block startingBlock = nodeBlocks.get(label);
+		
+		Set<Block> visited = new HashSet<Block>();
+		Deque<Block> queue = new ArrayDeque<Block>();
+		queue.addLast(startingBlock);
+		
+		while( !queue.isEmpty() ) {
+			Block block = queue.removeFirst();
+			visited.add(block);
+			
+			for( Block child : block.outgoing) {
+				if( child == startingBlock )
+					return true;
+				else if( !visited.contains(child) )
+					queue.addLast(child);				
+			}
+		}		
+
+		return false;
+	}
 }

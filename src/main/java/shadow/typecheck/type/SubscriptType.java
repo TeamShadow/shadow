@@ -89,7 +89,7 @@ public class SubscriptType extends PropertyType
 	
 	@Override
 	public SubscriptType partiallyReplace(List<ModifiedType> values,
-			List<ModifiedType> replacements) {		
+			List<ModifiedType> replacements) throws InstantiationException {		
 		
 		ModifiedType replacedIndex = new SimpleModifiedType(index.getType().partiallyReplace(values, replacements), index.getModifiers());
 		UnboundMethodType replacedMethod = getMethod().partiallyReplace(values, replacements);

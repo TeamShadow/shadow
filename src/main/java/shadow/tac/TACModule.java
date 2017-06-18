@@ -196,7 +196,7 @@ public class TACModule {
 						changed = graph.propagateConstants();
 				}				
 
-				method.removeUndefinedStores();				
+				method.removeUndefinedStores(graph);				
 				method.addAllocations();
 				
 				graphs.add(graph);

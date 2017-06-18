@@ -10,7 +10,7 @@ is CanIndex<long,T>
 and CanIndexStore<long,T>
 and CanIterate<T>
 {
-	long size;
+	get long sizeLong;
 	
 	/**
 	 * Arrays are created internally by the compiler. 
@@ -34,14 +34,8 @@ and CanIterate<T>
 	 */
 	public readonly get size() => ( int )
 	{
-		return cast<int>(sizeLong());
+		return cast<int>(sizeLong);
 	}
-	
-	/**
-	 * Gets the size of the array (total number of elements) as a {@code long}.
-	 * @return size of array
-	 */
-	public readonly native get sizeLong() => ( long );	
 
 	/* 
 	// Copy implementation based off the following code:

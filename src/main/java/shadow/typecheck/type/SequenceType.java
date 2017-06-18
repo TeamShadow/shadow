@@ -202,7 +202,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	@Override
 	public SequenceType replace(List<ModifiedType> values, List<ModifiedType> replacements) throws InstantiationException
 	{		
-		SequenceType temp = new SequenceType();
+ 		SequenceType temp = new SequenceType();
 		
 		for( int i = 0; i < types.size(); i++ )
 		{
@@ -221,7 +221,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 	
 	
 	@Override
-	public SequenceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements)
+	public SequenceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements) throws InstantiationException
 	{		
 		SequenceType temp = new SequenceType();
 		
