@@ -20,10 +20,15 @@ import org.junit.runners.Suite;
 
 import junit.framework.TestCase;
 import shadow.test.doctool.DocumentationTests;
+import shadow.test.output.OutputTests;
+import shadow.test.output.TACTests;
+import shadow.test.typecheck.StandardLibraryTests;
+import shadow.test.typecheck.TypeCheckerTests;
+import shadow.test.typecheck.UtilityTests;
+import shadow.test.typecheck.WarningTests;
 
 @RunWith(Suite.class)
-//@Suite.SuiteClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
-@Suite.SuiteClasses({DocumentationTests.class})
+@Suite.SuiteClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
 public class AllTests extends TestCase {
 
 	@AfterClass
