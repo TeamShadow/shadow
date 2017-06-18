@@ -8,18 +8,18 @@
 #include <standard/Int.h>
 #include <standard/MethodTable.h>
 
-typedef struct shadow_Array_t shadow_Array_t;
-typedef struct shadow_String_t shadow_String_t;
+struct shadow_Array_t;
+struct shadow_String_t;
 
 typedef struct shadow_Class_t
 {
 	shadow_ulong_t ref_count;
-	shadow_Class_t* class_ref;
+	struct shadow_Class_t* class_ref;
 	shadow_MethodTable_t* methods;
-	shadow_Array_t* interfaceTables;
-	shadow_Array_t* interfaceClasses;
-	shadow_String_t* name;
-	shadow_Class_t* parent;
+	struct shadow_Array_t* interfaceTables;
+	struct shadow_Array_t* interfaceClasses;
+	struct shadow_String_t* name;
+	struct shadow_Class_t* parent;
 	shadow_int_t flags;
 	shadow_int_t size;	
 }

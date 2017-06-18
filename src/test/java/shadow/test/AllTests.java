@@ -3,9 +3,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineEvent.Type;
 import javax.sound.sampled.LineListener;
@@ -26,7 +28,8 @@ import shadow.test.typecheck.UtilityTests;
 import shadow.test.typecheck.WarningTests;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
+//@Suite.SuiteClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
+@Suite.SuiteClasses({DocumentationTests.class})
 public class AllTests extends TestCase {
 
 	@AfterClass
@@ -58,8 +61,10 @@ public class AllTests extends TestCase {
 	  }
 	  AudioListener listener = new AudioListener();
 	  AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(clipFile);
+	  AudioFormat format = audioInputStream.getFormat();
+	  DataLine.Info info = new DataLine.Info(Clip.class, format);
 	  try {
-	    Clip clip = AudioSystem.getClip();
+	    Clip clip = (Clip)AudioSystem.getLine(info);
 	    clip.addLineListener(listener);
 	    clip.open(audioInputStream);
 	    try {
