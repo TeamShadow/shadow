@@ -1172,8 +1172,11 @@ public class OutputTests {
 				"Name: B\n" + 
 				"Name: C\n" + 
 				"C\n" + 
+				"Name: E\n" +
+				"F\n" +
 				"B\n" + 
-				"D\n" + 
+				"D\n" +
+				"E\n" +
 				"A\n");
 	}
 	

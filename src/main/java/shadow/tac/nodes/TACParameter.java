@@ -11,11 +11,20 @@ public class TACParameter extends TACOperand {
 	
 	private ModifiedType type;
 	private final int number;
+	private boolean increment = false;
 
 	public TACParameter(TACNode node, ModifiedType type, int number) {
 		super(node);	
 		this.type = type;
 		this.number = number;		
+	}
+	
+	public boolean isIncrement() {
+		return increment;
+	}
+	
+	public void setIncrement(boolean value) {
+		increment = value;
 	}
 	
 	public int getNumber() {

@@ -1303,10 +1303,12 @@ public class LLVMOutput extends AbstractOutput {
 		if( node.isGarbageCollected() ) {
 			TACVariable variable = node.getVariable();
 			
-			//initial parameter stores are always straight stores, never decrements
-			//sometimes they are incremented, but that's handled by a separate TACChangeReferenceCount
-			if( node.getValue() instanceof TACParameter )
-				writer.write("store " + typeSymbol(node.getValue()) + ", " + type(variable.getType(), true) + "* " + name(variable));
+			//initial parameter stores never have decrements
+			//sometimes they are incremented, if a value is later stored into the same parameter name
+			if( node.getValue() instanceof TACParameter ) {
+				TACParameter parameter = (TACParameter) node.getValue();
+				gcObjectStore( name(variable), variable.getType(), node.getValue(), parameter.isIncrement(), false );				
+			}	
 			else if( variable.getType() instanceof InterfaceType )				
 				gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference()  );
 			else 

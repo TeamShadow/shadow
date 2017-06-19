@@ -1174,6 +1174,30 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastStores));
 			return phi;
 		}	
+		
+		
+		
+		//uses a BFS to see if a variable had a previous assignment
+		public boolean hasPreviousStore(TACVariable variable, Map<Block, Map<TACVariable, TACLocalStorage>> lastStores) {					
+			Set<Block> visited = new HashSet<Block>();
+			Deque<Block> queue = new ArrayDeque<Block>();
+			queue.addLast(this); //start with current block
+			
+			while( !queue.isEmpty() ) {
+				Block block = queue.removeFirst();
+				visited.add(block);
+				
+				for( Block parent : block.incoming) {
+					if( lastStores.get(parent).containsKey(variable) )
+						return true;
+					else if( !visited.contains(parent) )
+						queue.addLast(parent);				
+				}
+			}		
+
+			return false;
+		}
+		
 
 		/*
 		 * Adds phi nodes as needed to the current block based on the last
@@ -1188,11 +1212,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACLocalStorage store = (TACLocalStorage)node;
 					TACVariable variable = store.getVariable();
 					
-					//Useful to know the previous store before this store
+					//Useful to know if there was a previous store
 					//primarily for the case of GC: no need to decrement something that was never assigned 
-					if( node instanceof TACLocalStore )
-						if( predecessors.get(variable) != null )
-							((TACLocalStore)node).setPreviousStore(predecessors.get(variable));
+					if( node instanceof TACLocalStore ) {
+						TACLocalStore localStore = (TACLocalStore) node;
+						if( predecessors.get(variable) != null || hasPreviousStore(variable, lastStores) )
+							localStore.setPreviousStore(true);
+					}
 										
 					predecessors.put(variable, store);
 				}
@@ -1534,35 +1560,6 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			}
 			
 			return changed;
-		}
-		
-	}
-
-	//uses a BFS to see if a node is contained in a cycle
-	public boolean isInCycle(TACNode node) {
-				
-		while( !(node instanceof TACLabel) )
-			node = node.getPrevious();
-		
-		TACLabel label = (TACLabel)node;
-		Block startingBlock = nodeBlocks.get(label);
-		
-		Set<Block> visited = new HashSet<Block>();
-		Deque<Block> queue = new ArrayDeque<Block>();
-		queue.addLast(startingBlock);
-		
-		while( !queue.isEmpty() ) {
-			Block block = queue.removeFirst();
-			visited.add(block);
-			
-			for( Block child : block.outgoing) {
-				if( child == startingBlock )
-					return true;
-				else if( !visited.contains(child) )
-					queue.addLast(child);				
-			}
 		}		
-
-		return false;
 	}
 }

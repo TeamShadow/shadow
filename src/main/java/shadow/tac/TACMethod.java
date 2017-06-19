@@ -140,22 +140,6 @@ public class TACMethod
 				new TACChangeReferenceCount(last, variable, false);
 	}
     
-    void checkStoreAgainstParameters(TACLocalStore newStore, Map<TACVariable, TACLocalStore> parameterStores) {
-    	
-    	TACVariable variable = newStore.getVariable();
-    	TACLocalStore parameterStore = parameterStores.get(variable);
-    	if( parameterStore != null ) {
-    		//since parameter will actually be changed, it needs an increased reference count
-    		//otherwise, it might drop to zero even though it is being used in methods that
-    		//are currently on the stack
-    		//put the reference increment right after the initial store 
-    		new TACChangeReferenceCount(parameterStore.getNext(), variable, true);
-    		
-    		//then, remove the parameter from the list of parameters that are not later overwritten
-    		parameterStores.remove(variable);    		
-    	}   	
-    }
-    
     void addGarbageCollection() {    	
     	//only stored variables needed to have their reference counts decremented at the end of the method
     	Set<TACVariable> storedVariables = new HashSet<TACVariable>();
@@ -165,7 +149,7 @@ public class TACMethod
 	    //keep track of all the initial parameter stores
 	    //if a method parameter is never stored again (which is the typical case), 
 	    //then we will neither need to increment it nor clean it up
-	    Map<TACVariable, TACLocalStore> parameterStores = new HashMap<TACVariable, TACLocalStore>();
+	    Map<TACVariable, TACParameter> parameterStores = new HashMap<TACVariable, TACParameter>();
 		
 		//fix this!  Run stores in a separate loop, after arrays and calls?
 		boolean changed = true;
@@ -189,10 +173,15 @@ public class TACMethod
 							
 							//this optimization works because the initial parameter stores come first in a method
 							if( store.getValue() instanceof TACParameter )
-								parameterStores.put(variable, store);
+								parameterStores.put(variable, (TACParameter)store.getValue());
 							else {
 								storedVariables.add(variable);
-								checkStoreAgainstParameters(store, parameterStores);								
+								//a parameter's value is being changed
+								if( parameterStores.containsKey(variable) ) {
+									TACParameter parameter = parameterStores.get(variable);
+									parameter.setIncrement(true);
+									parameterStores.remove(variable);
+								}																
 							}
 						}				
 					}
@@ -452,7 +441,7 @@ public class TACMethod
 				//then this must be the "first" store to it,
 				//and there's no need to decrement the old contents.
 				//Note that there will be stores of null added in later for most of these.
-				if( store.isGarbageCollected() && store.getPreviousStore() == null && !graph.isInCycle(node) )
+				if( store.isGarbageCollected() && !store.hasPreviousStore() )
 					store.setDecrementReference(false);
 				
 				if( store.getValue() instanceof TACLiteral ) {

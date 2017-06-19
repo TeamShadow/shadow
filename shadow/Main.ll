@@ -122,7 +122,10 @@ _loopEnd:
 _success:		
 	call void @__decrementRef(%shadow.standard..Object* %object) nounwind
 	%arrayAsObj = bitcast %shadow.standard..Array* %array to %shadow.standard..Object*
-	call void @__decrementRef(%shadow.standard..Object* %arrayAsObj) nounwind
+	call void @__decrementRef(%shadow.standard..Object* %arrayAsObj) nounwind	
+	store %shadow.io..Console* null, %shadow.io..Console** @shadow.io..Console_instance		
+	%consoleAsObj = bitcast %shadow.io..Console* %console to %shadow.standard..Object*
+    call void @__decrementRef(%shadow.standard..Object* %consoleAsObj) nounwind
 	ret i32 0
 _exception:
 	%caught = landingpad { i8*, i32 }
@@ -143,6 +146,9 @@ entry:
 	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
 	call void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test* %initialized, %shadow.standard..Array* %args)
 	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* %mainThread)
+	
+	%threadAsObj = bitcast %shadow.standard..Thread* %mainThread to %shadow.standard..Object*
+	call void @__decrementRef(%shadow.standard..Object* %threadAsObj) nounwind	
 	
 	ret void
 }
