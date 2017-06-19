@@ -336,7 +336,12 @@ public class OutputTests {
 						"b[1]: 42\n" +
 						"b[2]: 42\n" +
 						"b[3]: 42\n" +
-						"b[4]: 42\n");
+						"b[4]: 42\n" +
+						"c[0]: shadow:standard@Object\n" +
+						"c[1]: shadow:standard@Object\n" +
+						"c[2]: shadow:standard@Object\n" +
+						"c[3]: shadow:standard@Object\n" +
+						"c[4]: shadow:standard@Object\n");
 	}
 	
 
@@ -1097,7 +1102,9 @@ public class OutputTests {
 							"true\n" + 
 							"true\n" +
 							"true\n" +
-							"false\n");
+							"false\n" + 
+							"5\n" + 
+							"7\n");
 	}
 	
 	@Test public void testExternals() throws Exception {

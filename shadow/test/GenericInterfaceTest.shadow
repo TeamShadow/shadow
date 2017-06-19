@@ -10,5 +10,15 @@ class shadow:test@GenericInterfaceTest
 		Console.printLine(CanEqual<int>:class.isInterface());
 		Console.printLine(CanRun:class.isInterface());
 		Console.printLine(Thread:class.isInterface());
+		
+		var list = ArrayList<int>:create();
+		var readonlyList = ReadOnlyList<int>:create(list);
+		
+		list.add(5);
+		list.add(7);
+		
+		foreach(int value in readonlyList) {
+			Console.printLine(value);
+		}	
 	}
 }

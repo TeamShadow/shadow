@@ -2983,7 +2983,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	public Void visitArrayDefault(ArrayDefaultContext ctx) 
 	{
 		visitChildren(ctx);		
-		ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
+		//For GC reasons, we need to save this value, then load it
+		//Otherwise, each store of a new value might not be incremented in order to avoid double-incrementing a freshly allocated object		
+		TACOperand defaultValue = ctx.conditionalExpression().appendBefore(anchor);
+		TACVariable temporary = method.addTempLocal(defaultValue);	
+		new TACLocalStore(anchor, temporary, defaultValue);
+		TACOperand value = new TACLocalLoad(anchor, temporary);
+		ctx.setOperand(value);
 		
 		return null;
 	}
