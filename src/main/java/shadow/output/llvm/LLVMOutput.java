@@ -744,6 +744,7 @@ public class LLVMOutput extends AbstractOutput {
 			SequenceType parameters = signature.getSignatureWithoutTypeArguments().getFullParameterTypes();
 			tempCounter = parameters.size();
 			writer.write("define " + methodToString(method) +
+					(signature.getNode().getParent() == null && (signature.isGet() || signature.isSet() ) ? " alwaysinline " : "") +
 					(signature.isWrapper() ? " unnamed_addr" : "" ) +
 					(method.hasLandingpad() ? " personality i32 (...)* @__shadow_personality_v0 {" : " {"  ));
 			writer.indent();
