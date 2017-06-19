@@ -8,7 +8,7 @@ is  List<V>
 and Deque<V>
 {
 	/// Gets size of the list as a {@code long}.
-	get long sizeLong = 0L;
+	get long sizeLong = 0L;	
 	
 	Node<V> header = Node<V>:create(this);
 	long modifications = 0L;

@@ -466,11 +466,9 @@ public class Main {
 			List<TACModule> innerClasses = module.getAllInnerClasses();
 			List<TACModule> modules = new ArrayList<TACModule>(innerClasses.size() + 1);
 			modules.add(module);
-			modules.addAll(innerClasses);
-			
-			//ToDo; not sure what library is needed
-			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
-			
+			modules.addAll(innerClasses);			
+
+			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);			
 			
 			List<ControlFlowGraph> graphs = module.optimizeTAC(reporter, checkOnly);
 			

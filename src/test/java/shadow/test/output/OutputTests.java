@@ -56,7 +56,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}

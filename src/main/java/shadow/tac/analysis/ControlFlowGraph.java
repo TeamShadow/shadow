@@ -18,6 +18,7 @@ import java.util.TreeSet;
 
 import shadow.Loggers;
 import shadow.interpreter.ShadowBoolean;
+import shadow.interpreter.ShadowNull;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
@@ -83,7 +84,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		//a method can only directly use fields in its class and outer classes
 		Type type = method.getSignature().getOuter();
 		while( type != null ) {
-			usedFields.put(type, new HashSet<String>());
+			usedFields.put(type.getTypeWithoutTypeArguments(), new HashSet<String>());
 			type = type.getOuter();
 		}
 		
@@ -228,9 +229,15 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				TACReference ref = load.getReference();
 				if( ref instanceof TACFieldRef ) {
 					TACFieldRef field = (TACFieldRef) ref;
-					Set<String> fields = usedFields.get(field.getPrefixType());
+					Type prefixType = field.getPrefixType().getTypeWithoutTypeArguments();
+					Set<String> fields = usedFields.get(prefixType);
 					if( fields != null )
 						fields.add(field.getName());
+					else {
+						fields = new HashSet<String>();
+						fields.add(field.getName());
+						usedFields.put(prefixType, fields);
+					}
 				}
 			}
 			//record private method usage, for warnings
@@ -1216,8 +1223,14 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					//primarily for the case of GC: no need to decrement something that was never assigned 
 					if( node instanceof TACLocalStore ) {
 						TACLocalStore localStore = (TACLocalStore) node;
-						if( predecessors.get(variable) != null || hasPreviousStore(variable, lastStores) )
+						if( predecessors.get(variable) != null ) {
+							TACOperand value = predecessors.get(variable).getValue();
+							if( !(value instanceof TACLiteral) || !(((TACLiteral)value).getValue() instanceof ShadowNull) )
+								localStore.setPreviousStore(true);
+						}
+						else if( hasPreviousStore(variable, lastStores) )
 							localStore.setPreviousStore(true);
+						
 					}
 										
 					predecessors.put(variable, store);
