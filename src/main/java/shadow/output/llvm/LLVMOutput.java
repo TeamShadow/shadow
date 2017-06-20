@@ -2080,6 +2080,7 @@ public class LLVMOutput extends AbstractOutput {
 
 	private void writeGenericClass(Type generic) throws ShadowException {				
 		Type genericAsObject;
+		
 		if( generic instanceof ArrayType )
 			genericAsObject = ((ArrayType)generic).convertToGeneric();
 		else
@@ -2090,7 +2091,7 @@ public class LLVMOutput extends AbstractOutput {
 
 		String interfaceData;
 		String interfaces;		
-		int flags = GENERIC;		
+		int flags = GENERIC;	
 		
 
 		if( generic instanceof InterfaceType ) {

@@ -647,7 +647,7 @@ public class ClassType extends Type {
 			Modifiers modifiers = field.getValue().getModifiers(); 
 			if( modifiers.isConstant() && (modifiers.isPublic() || modifiers.isProtected())) {
 				String visibility = modifiers.isPublic() ? "public" : "protected";
-				out.println(indent + visibility + " constant " + field.getValue().getType() + " " + field.getKey() + ";");
+				out.println(indent + visibility + " constant " + field.getValue().getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE) + " " + field.getKey() + ";");
 				newLine = true;				
 			}
 		}
@@ -659,7 +659,7 @@ public class ClassType extends Type {
 		//TODO: try to take this back to constants only				
 		newLine = false;
 		for( Map.Entry<String, ? extends ModifiedType> field : sortFields() ) {
-			out.println(indent + field.getValue().getModifiers() + field.getValue().getType() + " " + field.getKey() + ";");
+			out.println(indent + field.getValue().getModifiers() + field.getValue().getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE) + " " + field.getKey() + ";");
 			newLine = true;
 		}
 		

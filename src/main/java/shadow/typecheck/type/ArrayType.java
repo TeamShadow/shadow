@@ -1,6 +1,5 @@
 package shadow.typecheck.type;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -76,7 +75,8 @@ public class ArrayType extends ClassType
 				return  baseName + "_A";
 		}
 		
-		return baseType.toString(options) + "[]";
+		boolean printNullable = nullable && (options & NO_NULLABLE) == 0 && !(baseType instanceof ArrayType);
+		return (printNullable ? "nullable " : "" ) + baseType.toString(options) + "[]";
 	}
 	
 	@Override

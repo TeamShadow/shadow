@@ -128,6 +128,7 @@ public abstract class Type implements Comparable<Type> {
 	public static final int PARAMETER_BOUNDS =  4;
 	public static final int MANGLE =  8;
 	public static final int MANGLE_EXTERN = 16;
+	public static final int NO_NULLABLE = 32;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;

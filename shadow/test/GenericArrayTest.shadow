@@ -28,7 +28,7 @@ class shadow:test@GenericArrayTest
 		
 		int[] array4 = cast<int[]>(intArray);	
 		
-		nullable String[] array5 = cast<String[]>(otherArray);
+		nullable String[] array5 = cast<nullable String[]>(otherArray);
 		out.printLine(stringArray);
 		out.printLine(array4);			
 		out.printLine(array5);

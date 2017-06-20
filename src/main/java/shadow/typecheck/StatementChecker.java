@@ -1390,12 +1390,15 @@ public class StatementChecker extends BaseChecker {
 		Type t2 = expression.getType();  //expression
 		
 		ctx.addModifiers(expression.getModifiers());
-		ctx.getModifiers().removeModifier(Modifiers.ASSIGNABLE);			
+		ctx.getModifiers().removeModifier(Modifiers.ASSIGNABLE);
 		
-		//special case because there is no way to cast to nullable Object[]
-		if( t1 instanceof ArrayType && t2.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
-			t1 = ((ArrayType)t1).convertToNullable();
-			ctx.addModifiers(Modifiers.NULLABLE);
+		if( ctx.getChild(2).getText().equals("nullable") ) {
+			if( t1 instanceof ArrayType ) {
+				t1 = ((ArrayType)t1).convertToNullable();
+				ctx.addModifiers(Modifiers.NULLABLE);
+			}
+			else
+				addError(ctx, Error.INVALID_CAST, "Can only specify nullable for array types in casts");
 		}
 		
 		if( t1 instanceof MethodType && t2 instanceof UnboundMethodType ) { //casting methods

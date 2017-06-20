@@ -320,7 +320,10 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 				
 				"Passed\n" +  
-				"Passed\n");
+				"Passed: shadow:standard@CastException: Type int[] is not a subtype of short[]\n" + 
+				"Passed: shadow:standard@CastException: Type nullable shadow:standard@Object[] is not a subtype of shadow:standard@Object[]\n" +
+				"Passed: shadow:standard@CastException: Type shadow:standard@String[] is not a subtype of nullable shadow:standard@String[]\n");
+
 	}
 	
 	@Test public void testArrayDefault() throws Exception {

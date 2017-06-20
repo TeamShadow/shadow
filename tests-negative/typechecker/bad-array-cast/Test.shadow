@@ -8,9 +8,8 @@ class Test
 				
 		try
 		{
-			int[] a = int:create[10];
-			Array<int> b = a;
-			Object[] c = cast<Object[]>(b);
+			int[] a = int:create[10];			
+			Object[] b = cast<Object[]>(a);
 			out.printLine("Failed");
 		}
 		catch(CastException e)

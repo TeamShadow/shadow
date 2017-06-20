@@ -1,0 +1,14 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		Console out;
+		String stuff = "hello";
+		Object things = stuff;
+		nullable String items = cast<nullable String>(things);
+		
+		Console.printLine(items);
+	}
+}

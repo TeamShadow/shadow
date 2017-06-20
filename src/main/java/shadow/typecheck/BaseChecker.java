@@ -270,19 +270,8 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 						"Right hand side with nullable object value cannot be assigned to nullable array left hand side without a check",
 						rightType, leftType);
 		}
-		else if( rightArray ) {
-			if( leftType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) &&
-					!rightModifiers.isNullable() )
-				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
-						"Right hand side with non-nullable array type cannot be assigned to nullable left hand side",
-						rightType, leftType);
-			else if( !leftType.getTypeWithoutTypeArguments().equals( Type.ARRAY_NULLABLE ) &&
-					rightModifiers.isNullable() )
-				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
-						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
-						rightType, leftType );
-		}
-		else { // No arrays (easy case)			
+		//We actually skipped the case where the right array is nullable, since a nullable array isn't the same as a nullable reference
+		else if( !rightArray && !leftArray ) { // No arrays (easy case)			
 			if( !leftModifiers.isNullable() && rightModifiers.isNullable() ) {
 				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with nullable value cannot be assigned to non-nullable left hand side",
