@@ -84,46 +84,21 @@ is  CanHash
 	/**
 	 * Creates a new {@code Class} object with the given name, flags, size,
 	 * parent, interfaces, and interface method tables.  This method should
-	 * only be called by {@code GenericClass} and {@code ClassSet}.  It is
-	 * left {@code public} to avoid complication in {@code ClassSet}.
+	 * only be called by {@code GenericClass}.
 	 * @param name name of the class
 	 * @param flags flags specifying the kind of type
 	 * @param size size required for an object whose type is given by this class
 	 * @param parent parent class
 	 * @param interfaces interface classes supported by this class
 	 * @param data method tables associated with each interface
-	 *
-	 * @seeDoc shadow:standard@ClassSet	 	  
 	 */
-	public create(String name, int flags, int size, immutable nullable Class parent, immutable Class[] interfaces, immutable MethodTable[] interfaceTables) 
+	protected create(String name, int flags, int size, immutable nullable Class parent, immutable Class[] interfaces, immutable MethodTable[] interfaceTables) 
 	{	
 		this:parent = parent;
 		this:flags = flags;
 		this:size = size;
 		this:interfaces = interfaces;
-		this:interfaceTables = interfaceTables;
-		/*
-		if( (flags & METHOD) != 0 ) // Not yet used
-		{
-			MutableString methodType = MutableString:create("(");
-			for( int i = 0; i < size; i += 1 )
-			{
-				if( i > 0 )
-					methodType.append(", ");
-				methodType.append(#data[i]);			
-			}
-			methodType.append(") => (");
-			for( int i = size; i < data->size; i += 1 )
-			{
-				if( i > size )
-					methodType.append(", ");
-				methodType.append(#data[i]);			
-			}
-			methodType.append(")");
-			this:name = methodType.toString();		
-		}
-		else
-		*/		
+		this:interfaceTables = interfaceTables;		
 		this:name = name;
 	}
 	
@@ -324,31 +299,5 @@ is  CanHash
 	public locked get readonly hash() => ( ulong )
 	{
 		return toString().hash();
-	}
-	
-	/** 
-	 * Constructs a name for a class given the base name, a (possibly empty)
-	 * list of type parameters and method tables, and starting and ending
-	 * indexes in the list.  This method should only be called by
-	 * {@code ClassSet} or in compiler generated code and is left
-	 * {@code public} to avoid complication.   
-	 * @return name	
-	 *
-	 * @seeDoc shadow:standard@ClassSet
-	 */	
-	public locked readonly makeName(String baseName, readonly Class[] parameters) => (String)
-	{			
-		var name = MutableString:create(baseName);
-		boolean first = true;
-		name.append('<');
-		for( int i = 0; i < parameters->size; i += 1 ) {
-			if( first )
-				first = false;
-			else
-				name.append(",");			
-			name.append(#parameters[i]);			
-		}		
-		name.append('>');
-		return #name;		
 	}
 }

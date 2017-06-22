@@ -1,8 +1,8 @@
 /**
  * {@code GenericClass} objects are used to hold the type information for all
- * Shadow objects that have a parameterized type. Thic class adds the extra
- * functionality to {@code Class} objects needed to handle type-casts and
- * allocations for objects with paramterized types.
+ * Shadow objects that have a parameterized type, including arrays. This
+ * class adds the extra functionality to {@code Class} objects needed to
+ * handle type-casts and allocations for objects with paramterized types.
  */
 immutable class shadow:standard@
 	GenericClass is Class
@@ -12,27 +12,9 @@ immutable class shadow:standard@
 	MethodTable[] tables;   //method tables for each class 
 	
 	/**
-	 * Creates a new {@code GenericClass} object with the given raw
-	 * (unparameterized) type, name, parent, interfaces, and type parameters.
-	 * This method should only be called by {@code ClassSet}.  It is
-	 * left {@code public} to avoid complication in {@code ClassSet}.
-	 * @param raw raw (unparameterized) version of the class
-	 * @param name name of the class
-	 * @param parent parent class
-	 * @param interfaces interface classes supported by this class
-	 * @param parameters array of type parameters
-	 * @param parameters array of associated method tables
-	 *
-	 * @seeDoc shadow:standard@ClassSet	 	  
-	 */
-	public create(Class raw, String name, nullable Class parent, immutable Class[] interfaces, immutable Class[] parameters, immutable MethodTable[] tables )
-	{
-		this(name, raw->flags | Class:GENERIC, raw->size, parent, interfaces, raw->interfaceTables, parameters, tables);		
-	}
-	
-	/**
 	 * Creates a new {@code GenericClass} object with the given name, flags,
-	 * size, parent, interfaces, interface method tables, and type parameters.	 
+	 * size, parent, interfaces, interface method tables, and type parameters.
+	 * This method is never expected to be called.	 
 	 * @param name name of the class
 	 * @param flags flags specifying the kind of type
 	 * @param size size required for an object whose type is given by this class

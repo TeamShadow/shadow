@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
+import org.antlr.v4.runtime.tree.ParseTree;
+
 import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationException;
@@ -348,7 +350,7 @@ public class ClassOrInterfacePage extends Page
 					out.closeLine();
 					out.open("td");
 						out.open("code");
-							writeNodeName(constant, true, out);
+							writeIdentifier(constant, true, out);
 						out.close();
 						if (constant.hasDocumentation())
 							writeInlineTags(constant.getDocumentation().getSummary(), out);
@@ -434,13 +436,15 @@ public class ClassOrInterfacePage extends Page
 	{
 		out.openTab("div", new Attribute("class", "detail"));
 		
-		out.fullLine("h4", constant.toString(),
-				new Attribute("id", constant.toString()));
+		String identifier = getIdentifier(constant);
+		
+		out.fullLine("h4", identifier,
+				new Attribute("id", identifier));
 		
 		out.open("code");
 		out.add(constant.getModifiers().toString().trim() + " ");
 		writeCrossLink(constant.getType(), Type.TYPE_PARAMETERS, out);
-		out.add(" "	+ constant.toString());
+		out.add(" "	+ identifier);
 		out.closeLine();
 		
 		// Documentation text
@@ -503,13 +507,22 @@ public class ClassOrInterfacePage extends Page
 		out.closeUntab();
 	}
 	
-	private void writeNodeName(Context node, boolean linkToDetail,
+	private static String getIdentifier(Context node)
+	{
+		ParseTree identifier = node.children.get(0);
+		return identifier.getText();
+	}
+	
+	
+	private void writeIdentifier(Context node, boolean linkToDetail,
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
+		String identifier = getIdentifier(node);
+		
 		if (linkToDetail)
-			writeLink("#" + node.toString(), node.toString(), out);
+			writeLink("#" + identifier, identifier, out);
 		else
-			out.add(node.toString());
+			out.add(identifier);
 	}
 	
 	private void writeMethodName(MethodSignature method, boolean linkToDetail,

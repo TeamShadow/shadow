@@ -78,7 +78,7 @@ public class ErrorReporter {
 	 * @param exception			exception for error	
 	 */
 	public void addWarning(ShadowException exception) {
-		if( Main.getJob().treatWarningsAsErrors() )
+		if( Main.getJob() != null && Main.getJob().treatWarningsAsErrors() )
 			addError(exception);
 		else if( exception != null )
 			warningList.add(exception);
