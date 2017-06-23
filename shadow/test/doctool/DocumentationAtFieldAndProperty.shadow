@@ -21,6 +21,7 @@ class shadow:test:doctool@
 	/**
 	 * This property sets the current value.
 	 * @param data the number to set the crucial value
+	 * @seeDoc default@Example
 	 */
 	public set value(int data) => ()
 	{

@@ -248,12 +248,18 @@ public abstract class Page
 
 	protected static String getRelativePath(Package from, Package to, String file)
 	{
-		Path start = Paths.get(from.getPath());
-		Path target = Paths.get(to.getPath());
+				
+		Path toPath = Paths.get("/").resolve(Paths.get(to.getPath()));
 		
-		Path result = start.relativize(target);
+		// For some reason, Path.relativize() will only work from the directory
+		// above the start file
+		Path fromPath = Paths.get(from.getPath()).getParent();
+		if (fromPath == null)
+			fromPath = Paths.get("/");
+		else
+			fromPath = Paths.get("/").resolve(fromPath);
 		
-		return result.resolve(file).toString();
+		return fromPath.relativize(toPath).resolve(file).toString();	
 	}
 	
 	protected static String getRelativePath(Package from, Package to)
