@@ -1448,9 +1448,12 @@ public abstract class Type implements Comparable<Type> {
 		return (documentation != null);
 	}
 	
-	public Documentation getDocumentation()
-	{
+	public Documentation getDocumentation() {
 		return documentation;
+	}
+	
+	public void setDocumentation(Documentation documentation) {
+		this.documentation = documentation;
 	}
 
 	public static SequenceType getExceptionType() {

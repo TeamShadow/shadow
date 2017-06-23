@@ -286,12 +286,18 @@ public class TypeUpdater extends BaseChecker {
 					int setterCount = 0;
 					int getterCollision = 0;
 					int setterCollision = 0;
+					MethodSignature lastGet = null;
+					MethodSignature lastSet = null;
 					
 					for( MethodSignature signature : methods) {
-						if( signature.getModifiers().isGet() )
+						if( signature.getModifiers().isGet() ) {
+							lastGet = signature;
 							getterCount++;
-						else if( signature.getModifiers().isSet() )
+						}
+						else if( signature.getModifiers().isSet() ) {
+							lastSet = signature;
 							setterCount++;
+						}
 						else if( signature.getParameterTypes().isEmpty() )
 							getterCollision++;
 						else if( signature.getParameterTypes().size() == 1 && field.getValue().getType().equals(signature.getParameterTypes().get(0).getType())  )
@@ -310,7 +316,7 @@ public class TypeUpdater extends BaseChecker {
 							methodNode.addModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);
 							if( classType.getModifiers().isLocked() )
 								methodNode.getModifiers().addModifier(Modifiers.LOCKED);
-							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), node.getDocumentation());
 							methodNode.setType(methodType);
 							Modifiers modifiers = new Modifiers(fieldModifiers);
 							modifiers.removeModifier(Modifiers.GET);
@@ -325,6 +331,9 @@ public class TypeUpdater extends BaseChecker {
 							classType.addMethod(signature);
 						}								
 					}
+					// add in documentation from field
+					else if( fieldModifiers.isGet() && getterCount == 1 && node.hasDocumentation() )
+						lastGet.getMethodType().setDocumentation(node.getDocumentation().combineWith(lastGet.getDocumentation()));
 					
 					if( fieldModifiers.isSet() && setterCount == 0 ) {
 						if( setterCollision > 0 )								
@@ -336,7 +345,7 @@ public class TypeUpdater extends BaseChecker {
 							if( classType.getModifiers().isLocked() )
 								methodNode.getModifiers().addModifier(Modifiers.LOCKED);
 							//methodNode.setImage(field.getKey());								
-							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), methodNode.getDocumentation());
+							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), node.getDocumentation());
 							methodNode.setType(methodType);
 							Modifiers modifiers = new Modifiers(fieldModifiers);
 							//is it even possible to have an immutable or readonly set?
@@ -358,6 +367,10 @@ public class TypeUpdater extends BaseChecker {
 							classType.addMethod(signature);
 						}								
 					}
+					// add in documentation from field
+					else if( fieldModifiers.isSet() && setterCount == 1 && node.hasDocumentation() )
+						lastSet.getMethodType().setDocumentation(node.getDocumentation().combineWith(lastSet.getDocumentation()));
+					
 				}						
 			}
 		}				

@@ -115,6 +115,15 @@ public abstract class Page
 					case ITALICS:
 						out.full("i", tag.getArg(0));
 						break;
+					case SUBSCRIPT:
+						out.full("sub", tag.getArg(0));
+						break;
+					case SUPERSCRIPT:
+						out.full("sup", tag.getArg(0));
+						break;
+					case UNDERLINE:
+						out.full("u", tag.getArg(0));
+						break;
 					case LINK_DOC:
 						Path link = master.linkByName(this, tag.getArg(0));
 						if (link != null) {
@@ -132,7 +141,9 @@ public abstract class Page
 						break;
 					case PLAIN_TEXT:
 						out.add(tag.getArg(0));
-						break;
+						break;				
+				default:
+					break;
 				}
 			}
 			out.closeLine();
@@ -181,7 +192,10 @@ public abstract class Page
 			HtmlWriter out) throws DocumentationException, ShadowException
 	{
 		if (authorTags.size() > 0) {
-			out.fullLine("h5", "Authors");
+			int authors = 0;
+			for (List<String> tag : authorTags)
+				authors += tag.size();
+			out.fullLine("h5", authors == 1 ? "Author" : "Authors" );
 			out.openTab("div", new Attribute("class", "blocktagcontent"));
 			for (List<String> tag : authorTags) {
 				for (String author : tag) {					
@@ -244,6 +258,7 @@ public abstract class Page
 	
 	protected static String getRelativePath(Package from, Package to)
 	{
+		
 		return getRelativePath(from, to, PackagePage.PAGE_NAME + EXTENSION);
 	}
 	
