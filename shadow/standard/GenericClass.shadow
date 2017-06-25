@@ -30,4 +30,38 @@ immutable class shadow:standard@
 		this:parameters = parameters;
 		this:tables = tables;	
 	}
+	
+	
+	/**
+	 * Returns the name of the current class.	 
+	 * @return name of the class
+	 */
+	public readonly toString() => ( String )
+	{
+		if( isArray() ) {
+			Class base = parameters[0];
+			if( base.isArray() )
+				return #base # "[]";
+			else
+			//for arrays, name contains either "" or "nullable ", depending
+			//on whether or not the array type is nullable
+				return this->name # base # "[]";
+		}			
+		else {
+			var string = MutableString:create( this->name );
+			string.append("<");
+			//It seems like a bug that we're looking at the size of tables
+			//but are then pulling from parameters.
+			//Tables gives the total number of type parameters, but
+			//parameters may have additional class objects after the
+			//type parameters.
+			for( int i = 0; i < tables->size; i += 1 ) {
+				if( i > 0 )
+					string.append(",");				
+				string.append(#parameters[i]);				
+			}
+			string.append(">");
+			return #string;
+		}  
+	}
 }

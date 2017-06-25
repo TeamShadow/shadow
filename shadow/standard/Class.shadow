@@ -231,7 +231,7 @@ is  CanHash
 	 * Returns the name of the current class.	 
 	 * @return name of the class
 	 */
-	public locked readonly toString() => ( String )
+	public readonly toString() => ( String )
 	{
 		return name;
 	}

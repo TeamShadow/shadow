@@ -2127,6 +2127,15 @@ public class LLVMOutput extends AbstractOutput {
 		}
 
 		genericClasses.add(classOf(generic));
+		
+		String name;
+		//As an optimization for arrays, store no name, since the full name can be retrieved base class
+		if( generic instanceof ArrayType ) {
+			name = ((ArrayType)generic).isNullable() ? "nullable " : "";
+			flags |= ARRAY;
+		}
+		else
+			name = generic.toString(Type.PACKAGES);
 
 		writer.write(classOf(generic) + " = linkonce unnamed_addr constant  %" +
 				raw(Type.GENERIC_CLASS) + " { " + 
@@ -2140,7 +2149,7 @@ public class LLVMOutput extends AbstractOutput {
 
 				typeText(Type.ARRAY, interfaces) + //interfaces
 				
-				typeLiteral(generic.toString()) + ", " + //name 
+				typeLiteral(name) + ", " + //name 
 				parentClass + ", "  +//parent
 				
 				typeLiteral(flags) + ", " + //flags							
