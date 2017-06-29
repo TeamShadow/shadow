@@ -37,6 +37,7 @@ public class Configuration {
 	private static final Logger logger = Loggers.SHADOW;
 	
 	private Path configFile;
+	private String dataLayout;
 	
 	// Configuration fields
 	private int arch;
@@ -457,5 +458,38 @@ public class Configuration {
 			return "LLVM installation not found!"; 
 		}
 	}
+	
+	public String getOptimizationLevel() {
+		return "-O3"; // set to empty string to check for
+		// race conditions in Threads.
+	}
+	
+	//Update this for other architectures?
+	public String getDataLayout() {		
+		if( dataLayout == null ) {
+			String endian = "e"; // little Endian
+			String mangling;
+	
+			if (getOs().equals("Mac"))
+				mangling = "m:o-";
+			else if (getOs().equals("Windows"))
+				mangling = "m:x-";
+			else if (getOs().equals("Linux"))
+				mangling = "m:e-";
+			else
+				mangling = "";
+	
+			String pointerAlignment = "p:" + getArch() + ":" + getArch() + ":" + getArch();
+			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f16:16:16-f32:32:32-f64:64:64-f80:128";
+			String aggregateAlignment = "a:0:" + getArch();
+			String nativeIntegers = "n8:16:32:64";
+			String stackAlignment = "S128";
+			dataLayout = "-default-data-layout=" + endian + "-" + mangling + pointerAlignment + "-" + dataAlignment
+					+ "-" + aggregateAlignment + "-" + nativeIntegers + "-" + stackAlignment;
+		}
+
+		return dataLayout;
+	}
+	
 }
  

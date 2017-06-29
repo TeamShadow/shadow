@@ -28,6 +28,7 @@
 	            <include>**/*.meta</include>	            
 	            <include>**/*.ll</include>
 	            <include>**/*.s</include>
+	            <include>**/*.bc</include>
 	          </includes>
 	          <excludes>
 	            <exclude>**/*.native.ll</exclude>

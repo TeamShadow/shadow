@@ -28,6 +28,7 @@ public class Arguments {
 	public static final String RECOMPILE		= "f";
 	public static final String INFORMATION		= "i";
 	public static final String WARNING			= "w";
+	public static final String READABLE			= "r";
 	
 	// Recognized long arguments
 	private static final String CONFIG_LONG 	= "config";
@@ -39,6 +40,7 @@ public class Arguments {
 	private static final String RECOMPILE_LONG  = "force-recompile";
 	private static final String INFORMATION_LONG	= "information";
 	private static final String WARNING_LONG	= "warning";
+	public static final String READABLE_LONG	= "human-readable";
 	
 	private CommandLine commandLine;
 	
@@ -133,6 +135,7 @@ public class Arguments {
 		options.addOption(new Option(RECOMPILE, RECOMPILE_LONG, false, "Recompile all source files, even if unnecessary"));
 		options.addOption(new Option(HELP, HELP_LONG, false, "Display command line options and exit"));
 		options.addOption(new Option(INFORMATION, INFORMATION_LONG, false, "Display information about the compiler and exit"));
+		options.addOption(new Option(READABLE, READABLE_LONG, false, "Generate human-readable IR code"));
 		
 		return options;
 	}

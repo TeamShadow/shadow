@@ -48,7 +48,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-f");
+		//args.add("-r");
 	}
 	
 	@After

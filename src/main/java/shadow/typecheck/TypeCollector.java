@@ -237,7 +237,7 @@ public class TypeCollector extends BaseChecker {
 			// compile/recompile source files, or rely on existing binaries/IR.
 			if( Files.exists(canonicalFile) ) {											
 				Path meta = Paths.get(canonical + ".meta");
-				Path llvm = Paths.get(canonical + ".ll");
+				Path llvm = Paths.get(canonical + ".bc");
 				
 				// If source compilation was not requested and the binaries exist
 				// that are newer than the source, use those binaries.

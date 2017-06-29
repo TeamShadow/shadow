@@ -3,6 +3,7 @@ package shadow.output.llvm;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.file.Path;
@@ -31,7 +32,6 @@ import shadow.interpreter.ShadowUndefined;
 import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
-import shadow.output.TabbedLineWriter;
 import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACConstant;
@@ -109,19 +109,9 @@ public class LLVMOutput extends AbstractOutput {
 	public LLVMOutput(Path file) throws ShadowException {
 		super(file);
 	}
-
-	//used to do an LLVM check pass for debugging
-	public LLVMOutput(boolean mode) throws ShadowException {
-		if (!mode) {
-			try {
-				process = new ProcessBuilder("opt", "-S", "-O3").start();
-			}
-			catch (IOException ex) {
-				throw new CompileException(ex.getLocalizedMessage());
-			}
-			writer = new TabbedLineWriter(process.getOutputStream());
-		}
-		writer.setLineNumbers(mode);
+	
+	public LLVMOutput(OutputStream stream) throws ShadowException {
+		super(stream);
 	}
 
 	private String temp(int offset)

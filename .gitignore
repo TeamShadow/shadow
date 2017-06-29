@@ -1,5 +1,6 @@
 bin/
 *.meta
+*.bc
 *.ll
 *.s
 !*.native.ll
