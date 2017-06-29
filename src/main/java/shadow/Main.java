@@ -176,16 +176,6 @@ public class Main {
 				throw new CompileException("FAILED TO COMPILE");
 			}
 
-			// any output after this point is important, avoid getting it mixed
-			// in with previous output
-			/*
-			System.out.flush();
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException ex) {
-			}
-			*/
-
 			logger.info("Building for target \"" + config.getTarget() + "\"");
 			Path mainLL;
 
@@ -421,7 +411,7 @@ public class Main {
 
 					String className = typeToFileName(type);
 					Path cFile = file.getParent().resolve(className + ".c").normalize();
-					if (Files.exists(cFile))
+					if( Files.exists(cFile) )
 						cFiles.add(cFile.toFile());
 					
 					
@@ -467,16 +457,29 @@ public class Main {
 
 	private static String optimizeLLVMFile(String LLVMFile) throws CompileException {
 		String path = BaseChecker.stripExtension(LLVMFile);
-		String bitcodeFile = TypeCollector.canonicalize(Paths.get(path + ".bc"));
+		Path bitcodePath = Paths.get(path + ".bc");
+		String bitcodeFile = TypeCollector.canonicalize(bitcodePath); 
+		
+		boolean success = false;
 
 		try {
 			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o=" + bitcodeFile)
+					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
 							.redirectError(Redirect.INHERIT).start();
 			if (optimize.waitFor() != 0)
 				throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
-		} catch (IOException | InterruptedException e) {
+			
+			success = true;			
+		} 
+		catch (IOException | InterruptedException e) {
 			throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
+		}
+		finally {
+			if( !success ) {
+				try {
+					Files.deleteIfExists(bitcodePath);
+				} catch (IOException e) {}
+			}
 		}
 
 		return bitcodeFile;
@@ -489,63 +492,43 @@ public class Main {
 		boolean success = false;
 
 		try {
-			final Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-					config.getOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
-							.redirectError(Redirect.INHERIT).start();
+			Process optimize = null;
 			LLVMOutput output = null;
 			OutputStream out = null;
 			
-			if( currentJob.isHumanReadable() ) {
-				out = new OutputStream() {
-					final OutputStream stream = optimize.getOutputStream();
-					final OutputStream file = new FileOutputStream(new File(path + ".ll"));
-
-					@Override
-					public void write(int b) throws IOException {
-						stream.write(b);
-						file.write(b);
-					}
-					
-					@Override
-					public void write(byte[] bytes) throws IOException {
-						stream.write(bytes);
-						file.write(bytes);
-					}
-					
-					@Override
-					public void flush() throws IOException {
-						stream.flush();
-						file.flush();
-					}
-					
-					@Override
-					public void close() throws IOException {
-						stream.close();
-						file.close();
-					}
-				};
-			}
-			else
+			if( currentJob.isHumanReadable() )
+				out = new FileOutputStream(new File(path + ".ll"));
+			else {
+				optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
+						config.getOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
+								.redirectError(Redirect.INHERIT).start();
 				out = optimize.getOutputStream();
+			}
 			
 			try {
+				// Generate LLVM
 				output = new LLVMOutput(out);
 				output.build(module);
 			} catch (ShadowException e) {
-				logger.error(shadowFile + " FAILED TO COMPILE");				
+				logger.error("FAILED TO COMPILE " + shadowFile);				
 				throw new CompileException(e.getMessage());
 			}
 			finally {
 				if( output != null )
 					output.close();
 			}
-
-			if (optimize.waitFor() != 0)
+			
+			if( currentJob.isHumanReadable() ) {
+				success = true;
+				return optimizeLLVMFile(path + ".ll");
+			}
+			else if (optimize.waitFor() != 0)
 				throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
 			
 			success = true;
 			
-		} catch (IOException | InterruptedException e) {
+		} 
+		catch (IOException | InterruptedException e) {
 			throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
 		}
 		finally {
