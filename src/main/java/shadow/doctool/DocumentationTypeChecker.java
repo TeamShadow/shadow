@@ -26,6 +26,7 @@ import java.util.TreeSet;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
+import shadow.Main;
 import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
@@ -78,7 +79,7 @@ public class DocumentationTypeChecker {
 		// Maps file names to nodes.
 		Map<String, Context> fileTable = collector.getFileTable();
 		for( Path file : files ) {
-			Context node = fileTable.get( BaseChecker.stripExtension( TypeCollector.canonicalize(file) ) );
+			Context node = fileTable.get( BaseChecker.stripExtension( Main.canonicalize(file) ) );
 			if( node != null )
 				types.add( node.getType() );
 		}

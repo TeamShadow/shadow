@@ -30,6 +30,7 @@ import java.util.TreeSet;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
+import shadow.Main;
 import shadow.parse.Context;
 import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
@@ -87,7 +88,7 @@ public class TypeChecker {
 				/* Check all statements for type safety and other features */
 				checker.check(node);				
 				/* As an optimization, print .meta file for the .shadow file being checked. */
-				printMetaFile( node, BaseChecker.stripExtension( TypeCollector.canonicalize(nodeFile) ) );
+				printMetaFile( node, BaseChecker.stripExtension( Main.canonicalize(nodeFile) ) );
 			}
 		}
 		

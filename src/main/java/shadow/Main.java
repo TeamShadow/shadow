@@ -1,15 +1,13 @@
 package shadow;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,7 +19,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.logging.log4j.Logger;
 
 import shadow.doctool.tag.TagManager.BlockTagType;
@@ -36,7 +33,6 @@ import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
-import shadow.typecheck.TypeCollector;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.InterfaceType;
 import shadow.typecheck.type.MethodSignature;
@@ -159,10 +155,10 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 
-		List<String> linkCommand = new ArrayList<String>();
+		List<String> linkCommand = new ArrayList<>();
 		linkCommand.add(config.getLlvmLink()); // usually llvm-link
 		linkCommand.add("-");
-		List<File> cFiles = new ArrayList<>();
+		List<Path> cFiles = new ArrayList<>();
 
 		generateLLVM(cFiles, linkCommand);
 
@@ -187,10 +183,7 @@ public class Main {
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 
-			final Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();
-			// usually opt
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-					config.getOptimizationLevel(), config.getDataLayout()).redirectError(Redirect.INHERIT).start();
+			final Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
 			// usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel())
@@ -199,8 +192,7 @@ public class Main {
 					.redirectError(Redirect.INHERIT).start();
 
 			try {
-				new Pipe(link.getInputStream(), optimize.getOutputStream()).start();
-				new Pipe(optimize.getInputStream(), compile.getOutputStream()).start();
+				new Pipe(link.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 				String line = main.readLine();
 				final OutputStream out = link.getOutputStream();
@@ -222,12 +214,7 @@ public class Main {
 				if (link.waitFor() != 0)
 					throw new CompileException("FAILED TO LINK");
 				logger.info("LLVM link finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
-				
-				sectionStart = System.currentTimeMillis();
-				if (optimize.waitFor() != 0)
-					throw new CompileException("FAILED TO OPTIMIZE");
-				logger.info("LLVM optimization finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
-				
+			
 				sectionStart = System.currentTimeMillis();
 				if (compile.waitFor() != 0)
 					throw new CompileException("FAILED TO COMPILE");
@@ -240,8 +227,7 @@ public class Main {
 				
 			} catch (InterruptedException ex) {
 			} finally {
-				link.destroy();
-				optimize.destroy();
+				link.destroy();				
 				compile.destroy();
 				assemble.destroy();
 			}
@@ -250,12 +236,11 @@ public class Main {
 		}
 	}
 
-	private static boolean compileCSourceFiles(Path cSourcePath, List<File> cShadowFiles, List<String> assembleCommand)
+	private static boolean compileCSourceFiles(Path cSourcePath, List<Path> cShadowFiles, List<String> assembleCommand)
 			throws IOException, ConfigurationException {
-		File cSourceDirectory = cSourcePath.toFile();
-
+		
 		// no need to compile anything if there are no c-source files
-		if (!cSourceDirectory.exists()) {
+		if( !Files.exists(cSourcePath) ) {
 			logger.error("The c-source directory was not found and is necessary for the Shadow runtime.");
 			return false;
 		}
@@ -267,11 +252,12 @@ public class Main {
 			compileCommand.add("gcc");
 			String[] version = System.getProperty("os.version").split("\\.");
 			compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
-			// compileCommand.add("-mmacosx-version-min=10.7");
-			// compileCommand.add("-Wall");
-			compileCommand.add("-O1");
+			// compileCommand.add("-Wall");			
 		} else
 			compileCommand.add("gcc");
+		
+		compileCommand.add("-O3");
+		
 
 		compileCommand.add("-S");
 
@@ -298,29 +284,32 @@ public class Main {
 		// later on for the separate .c files.
 		List<String> coreCompileCommand = new ArrayList<>(compileCommand);
 
-		// the filter to only find .c files in the `c-source` folder.
-		for (File cFile : cSourceDirectory.listFiles((FileFilter) new WildcardFileFilter("*.c"))) {
-			if (shouldCompileCFile(cFile, assembleCommand)) {
-				coreCompileCommand.add(cFile.getCanonicalPath());
+		// the filter to only find .c files in the `c-source` folder.		
+		try (DirectoryStream<Path> paths = Files.newDirectoryStream(cSourcePath, "*.c")) {
+			for (Path cFile : paths) {
+				if (shouldCompileCFile(cFile, assembleCommand)) {
+					coreCompileCommand.add(canonicalize(cFile));
+				}				
 			}
-		}
+		}		
+		
 		// if any files were to be compiled, we run the compiler, otherwise, we
 		// skip.
 		if (coreCompileCommand.size() > compileCommand.size()) {
-			if (!runCCompiler(coreCompileCommand, cSourceDirectory)) {
+			if (!runCCompiler(coreCompileCommand, cSourcePath)) {
 				return false;
 			}
 		}
 
 		compileCommand.add(null);
 		// we compile each Shadow c file on its own
-		for (File cFile : cShadowFiles) {
+		for (Path cFile : cShadowFiles) {
 			// checks if the files should be compiled, and add the .s file path
 			// to the assembleCommand
 			// list whether or not the file needs to be compiled.
 			if (shouldCompileCFile(cFile, assembleCommand)) {
-				compileCommand.set(compileCommand.size() - 1, cFile.getCanonicalPath());
-				if (!runCCompiler(compileCommand, cFile.getParentFile())) {
+				compileCommand.set(compileCommand.size() - 1, canonicalize(cFile));
+				if (!runCCompiler(compileCommand, cFile.getParent())) {
 					return false;
 				}
 			}
@@ -329,9 +318,9 @@ public class Main {
 		return true;
 	}
 
-	private static boolean runCCompiler(List<String> compileCommand, File cSourceDirectory) throws IOException {
+	private static boolean runCCompiler(List<String> compileCommand, Path cSourceDirectory) throws IOException {
 		try {
-			return new ProcessBuilder(compileCommand).directory(cSourceDirectory).redirectError(Redirect.INHERIT)
+			return new ProcessBuilder(compileCommand).directory(cSourceDirectory.toFile()).redirectError(Redirect.INHERIT)
 					.start().waitFor() == 0;
 		} catch (InterruptedException e) {
 		}
@@ -339,17 +328,17 @@ public class Main {
 		return false;
 	}
 
-	public static boolean shouldCompileCFile(File currentFile, List<String> assembleCommand) throws IOException {
-		Path assemblyPath = Paths.get(BaseChecker.stripExtension(currentFile.getAbsolutePath()) + ".s").normalize();
-		assembleCommand.add(assemblyPath.toFile().getAbsolutePath());
+	public static boolean shouldCompileCFile(Path currentFile, List<String> assembleCommand) throws IOException {
+		Path assemblyPath = Paths.get(BaseChecker.stripExtension(currentFile.toString()) + ".s").normalize();
+		assembleCommand.add(assemblyPath.toAbsolutePath().toString());
 
 		if (currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath)
-				.compareTo(Files.getLastModifiedTime(currentFile.toPath())) < 0) {
-			logger.info("Generating Assembly code for " + currentFile.getName());
+				.compareTo(Files.getLastModifiedTime(currentFile)) < 0) {
+			logger.info("Generating Assembly code for " + currentFile);
 			return true;
 		}
 
-		logger.info("Using pre-existing Assembly code for " + currentFile.getName());
+		logger.info("Using pre-existing Assembly code for " + currentFile);
 		return false;
 	}
 
@@ -359,22 +348,22 @@ public class Main {
 	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
 	 */
-	private static void generateLLVM(List<File> cFiles, List<String> linkCommand) throws IOException, ShadowException,
+	private static void generateLLVM(List<Path> cFiles, List<String> linkCommand) throws IOException, ShadowException,
 			ParseException, ConfigurationException, TypeCheckException, CompileException {
 
-		Path system = config.getSystemImport();
+		Path shadow = config.getSystemImport().resolve("shadow");
 
 		// Add architecture-dependent exception handling code
-		linkCommand.add(optimizeLLVMFile(Paths.get("shadow", "Unwind" + config.getArch() + ".ll"), system));
+		linkCommand.add(optimizeLLVMFile(shadow.resolve("Unwind" + config.getArch() + ".ll")));
 
 		// Add platform-specific system code
-		linkCommand.add(optimizeLLVMFile(Paths.get("shadow", config.getOs() + ".ll"), system));
+		linkCommand.add(optimizeLLVMFile(shadow.resolve(config.getOs() + ".ll")));
 
 		// Add shared code
-		linkCommand.add(optimizeLLVMFile(Paths.get("shadow", "Shared.ll"), system));
+		linkCommand.add(optimizeLLVMFile(shadow.resolve("Shared.ll")));
 
 		Path mainFile = currentJob.getMainFile();
-		String mainFileName = BaseChecker.stripExtension(TypeCollector.canonicalize(mainFile));
+		String mainFileName = BaseChecker.stripExtension(canonicalize(mainFile));
 
 		try {
 			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
@@ -392,7 +381,7 @@ public class Main {
 						optimizeTAC(new TACBuilder().build(node), true);
 				} else {
 					String name = BaseChecker.stripExtension(file.getFileName().toString());
-					String path = BaseChecker.stripExtension(TypeCollector.canonicalize(file));
+					String path = BaseChecker.stripExtension(canonicalize(file));
 
 					Type type = node.getType();
 
@@ -412,7 +401,7 @@ public class Main {
 					String className = typeToFileName(type);
 					Path cFile = file.getParent().resolve(className + ".c").normalize();
 					if( Files.exists(cFile) )
-						cFiles.add(cFile.toFile());
+						cFiles.add(cFile);
 					
 					
 					Path bitcodeFile = file.getParent().resolve(className + ".bc");
@@ -425,9 +414,9 @@ public class Main {
 					if (file.toString().endsWith(".meta")) {
 						logger.info("Using pre-existing LLVM code for " + name);
 						if (Files.exists(bitcodeFile))
-							linkCommand.add(TypeCollector.canonicalize(bitcodeFile));
+							linkCommand.add(canonicalize(bitcodeFile));
 						else if( Files.exists(llvmFile) )
-							linkCommand.add(optimizeLLVMFile(TypeCollector.canonicalize(llvmFile)));
+							linkCommand.add(optimizeLLVMFile(llvmFile));
 						else
 							throw new CompileException("File not found: " + bitcodeFile);
 					}
@@ -435,13 +424,13 @@ public class Main {
 						logger.info("Generating LLVM code for " + name);
 						// gets top level class
 						TACModule module = optimizeTAC(new TACBuilder().build(node), false);
-						linkCommand.add(optimizeShadowFile(TypeCollector.canonicalize(file), module));						
+						linkCommand.add(optimizeShadowFile(file, module));						
 					}
 					
 					if( Files.exists(nativeBitcodeFile))
-						linkCommand.add(TypeCollector.canonicalize(nativeBitcodeFile));
+						linkCommand.add(canonicalize(nativeBitcodeFile));
 					else if( Files.exists(nativeFile) )
-						linkCommand.add(optimizeLLVMFile(TypeCollector.canonicalize(nativeFile)));					
+						linkCommand.add(optimizeLLVMFile(nativeFile));					
 				}
 			}
 		} catch (TypeCheckException e) {
@@ -450,15 +439,11 @@ public class Main {
 		}
 	}
 
-	private static String optimizeLLVMFile(Path path, Path system) throws CompileException {
-		path = system.resolve(path);
-		return optimizeLLVMFile(path.toString());
-	}
-
-	private static String optimizeLLVMFile(String LLVMFile) throws CompileException {
+	private static String optimizeLLVMFile(Path LLVMPath) throws CompileException {
+		String LLVMFile = canonicalize(LLVMPath);
 		String path = BaseChecker.stripExtension(LLVMFile);
 		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = TypeCollector.canonicalize(bitcodePath); 
+		String bitcodeFile = canonicalize(bitcodePath); 
 		
 		boolean success = false;
 
@@ -466,7 +451,7 @@ public class Main {
 			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
 							.redirectError(Redirect.INHERIT).start();
-			if (optimize.waitFor() != 0)
+			if( optimize.waitFor() != 0 )
 				throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
 			
 			success = true;			
@@ -485,10 +470,11 @@ public class Main {
 		return bitcodeFile;
 	}
 
-	private static String optimizeShadowFile(String shadowFile, TACModule module) throws CompileException {
-		final String path = BaseChecker.stripExtension(shadowFile);
+	private static String optimizeShadowFile(Path shadowPath, TACModule module) throws CompileException {
+		String shadowFile = canonicalize(shadowPath);
+		String path = BaseChecker.stripExtension(shadowFile);
 		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = TypeCollector.canonicalize(bitcodePath); 
+		String bitcodeFile = canonicalize(bitcodePath); 
 		boolean success = false;
 
 		try {
@@ -497,7 +483,7 @@ public class Main {
 			OutputStream out = null;
 			
 			if( currentJob.isHumanReadable() )
-				out = new FileOutputStream(new File(path + ".ll"));
+				out = Files.newOutputStream(Paths.get(path + ".ll"));
 			else {
 				optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
 						config.getOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
@@ -520,7 +506,7 @@ public class Main {
 			
 			if( currentJob.isHumanReadable() ) {
 				success = true;
-				return optimizeLLVMFile(path + ".ll");
+				return optimizeLLVMFile(Paths.get(path + ".ll"));
 			}
 			else if (optimize.waitFor() != 0)
 				throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
@@ -673,4 +659,11 @@ public class Main {
 	public static Job getJob() {
 		return currentJob;
 	}
+	
+	
+	public static String canonicalize(Path path)
+	{
+		return path.toAbsolutePath().normalize().toString();
+	}
+	
 }
