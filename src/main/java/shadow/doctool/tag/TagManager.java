@@ -117,6 +117,9 @@ public class TagManager
 		CODE("code"),
 		BOLD("bold"),
 		ITALICS("italics"),
+		UNDERLINE("underline"),
+		SUPERSCRIPT("superscript"),
+		SUBSCRIPT("subscript"),
 		LINK_URL("linkUrl", new ArgDescriptionParser(1, true)), // TODO: Support mouseover text
 		LINK_DOC("linkDoc", new ArgDescriptionParser(1, true)), // TODO: Support mouseover text
 		

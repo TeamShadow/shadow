@@ -24,7 +24,7 @@ is  Map<K,V>
 	protected constant float DEFAULT_LOAD_FACTOR = 0.75f;
 	
 	/// Gets the number of key-value pairs in the map.
-	get long sizeLong = 0L;
+	locked get long sizeLong = 0L;
 	nullable Node<K,V>[] table;
 	float loadFactor;
 	long threshold;

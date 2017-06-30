@@ -1,8 +1,7 @@
 package shadow.output.llvm;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.file.Path;
@@ -31,7 +30,6 @@ import shadow.interpreter.ShadowUndefined;
 import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
-import shadow.output.TabbedLineWriter;
 import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACConstant;
@@ -91,8 +89,7 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public class LLVMOutput extends AbstractOutput {
-	private Process process = null;
+public class LLVMOutput extends AbstractOutput {	
 	private int tempCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();	
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
@@ -109,19 +106,9 @@ public class LLVMOutput extends AbstractOutput {
 	public LLVMOutput(Path file) throws ShadowException {
 		super(file);
 	}
-
-	//used to do an LLVM check pass for debugging
-	public LLVMOutput(boolean mode) throws ShadowException {
-		if (!mode) {
-			try {
-				process = new ProcessBuilder("opt", "-S", "-O3").start();
-			}
-			catch (IOException ex) {
-				throw new CompileException(ex.getLocalizedMessage());
-			}
-			writer = new TabbedLineWriter(process.getOutputStream());
-		}
-		writer.setLineNumbers(mode);
+	
+	public LLVMOutput(OutputStream stream) throws ShadowException {
+		super(stream);
 	}
 
 	private String temp(int offset)
@@ -691,40 +678,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write();
 
 		writeStringLiterals();
-
-		if (process != null)
-			try {
-				String line;
-				BufferedReader reader;
-				process.getOutputStream().close();
-
-				reader = new BufferedReader(new InputStreamReader(
-						process.getInputStream()));
-				while ((line = reader.readLine()) != null)
-					System.out.println(line);
-				reader.close();
-
-				try {
-					Thread.sleep(11); //why is this 11?
-				}
-				catch (InterruptedException ex)	{}
-
-				reader = new BufferedReader(new InputStreamReader(
-						process.getErrorStream()));
-				while ((line = reader.readLine()) != null)
-					System.err.println(line);
-				reader.close();
-
-				try {
-					process.waitFor();
-				} catch (InterruptedException ex) { }
-				int exit = process.exitValue();
-				if (exit != 0)
-					System.exit(exit);
-			}
-		catch (IOException ex) {
-			throw new CompileException( ex.getLocalizedMessage() );
-		}
 	}
 
 
@@ -744,6 +697,7 @@ public class LLVMOutput extends AbstractOutput {
 			SequenceType parameters = signature.getSignatureWithoutTypeArguments().getFullParameterTypes();
 			tempCounter = parameters.size();
 			writer.write("define " + methodToString(method) +
+					(signature.getNode().getParent() == null && (signature.isGet() || signature.isSet() ) ? " alwaysinline " : "") +
 					(signature.isWrapper() ? " unnamed_addr" : "" ) +
 					(method.hasLandingpad() ? " personality i32 (...)* @__shadow_personality_v0 {" : " {"  ));
 			writer.indent();
@@ -790,18 +744,43 @@ public class LLVMOutput extends AbstractOutput {
 		TACOperand destinationNode = node.getDestination();
 		TACOperand sourceNode = node.getSource();
 		TACOperand size = node.getSize();
-	
-		String destination = typeSymbol(destinationNode);
-		String source = typeSymbol(sourceNode);
-				
-		writer.write(nextTemp() + " = bitcast " + destination + " to i8*");
-		writer.write(nextTemp() + " = bitcast " + source + " to i8*");
 		
-		//objects and arrays (used in copy() and freeze()) have an 8 byte reference count that should *not* be copied
-		writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //destination
-		writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //source			
-		writer.write(nextTemp() + " = sub i64 " + symbol(size) + ", 8");
-		writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(2) + ", i8* " + temp(1) + ", i64 " + temp(0) + ", i32 1, i1 0)");				
+		if( node.isArray() ) {			
+			Type destinationArrayType = destinationNode.getType();
+			if( destinationArrayType instanceof ArrayType )
+				destinationArrayType = ((ArrayType)destinationArrayType).convertToGeneric();
+			
+			Type sourceArrayType = sourceNode.getType();
+			if( sourceArrayType instanceof ArrayType )
+				sourceArrayType = ((ArrayType)sourceArrayType).convertToGeneric();
+			
+			writer.write(nextTemp() + " = getelementptr inbounds %" +			
+					raw(destinationArrayType) + ", " + typeSymbol(destinationNode) + ", " + typeLiteral(1));
+			
+			writer.write(nextTemp() + " = getelementptr inbounds %" +			
+					raw(sourceArrayType) + ", " + typeSymbol(sourceNode) + ", " + typeLiteral(1));
+
+			//destination
+			writer.write(nextTemp() + " = bitcast " + typeText(destinationArrayType, temp(2)) + " to i8*");
+			
+			//source
+			writer.write(nextTemp() + " = bitcast " + typeText(sourceArrayType, temp(2)) + " to i8*");
+			
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(1) + ", i8* " + temp(0) + ", " + typeSymbol(size) + ", i32 1, i1 0)");
+		}
+		else {
+			String destination = typeSymbol(destinationNode);
+			String source = typeSymbol(sourceNode);
+					
+			writer.write(nextTemp() + " = bitcast " + destination + " to i8*");
+			writer.write(nextTemp() + " = bitcast " + source + " to i8*");
+			
+			//objects and arrays (used in copy() and freeze()) have an 8 byte reference count that should *not* be copied
+			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //destination
+			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //source			
+			writer.write(nextTemp() + " = sub i64 " + symbol(size) + ", 8");
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(2) + ", i8* " + temp(1) + ", i64 " + temp(0) + ", i32 1, i1 0)");
+		}
 	}
 
 	@Override
@@ -1302,10 +1281,12 @@ public class LLVMOutput extends AbstractOutput {
 		if( node.isGarbageCollected() ) {
 			TACVariable variable = node.getVariable();
 			
-			//initial parameter stores are always straight stores, never decrements
-			//sometimes they are incremented, but that's handled by a separate TACChangeReferenceCount
-			if( node.getValue() instanceof TACParameter )
-				writer.write("store " + typeSymbol(node.getValue()) + ", " + type(variable.getType(), true) + "* " + name(variable));
+			//initial parameter stores never have decrements
+			//sometimes they are incremented, if a value is later stored into the same parameter name
+			if( node.getValue() instanceof TACParameter ) {
+				TACParameter parameter = (TACParameter) node.getValue();
+				gcObjectStore( name(variable), variable.getType(), node.getValue(), parameter.isIncrement(), false );				
+			}	
 			else if( variable.getType() instanceof InterfaceType )				
 				gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference()  );
 			else 
@@ -1338,8 +1319,11 @@ public class LLVMOutput extends AbstractOutput {
 		}
 		else if( reference instanceof TACFieldRef ) {			
 			TACFieldRef fieldRef = (TACFieldRef) reference;
+			Type prefixType = fieldRef.getPrefix().getType();
+			if( prefixType instanceof ArrayType )
+				prefixType = ((ArrayType)prefixType).convertToGeneric();
 			writer.write(nextTemp() + " = getelementptr inbounds " +
-					"%" + raw(fieldRef.getPrefix().getType()) + ", " + 
+					"%" + raw(prefixType) + ", " + 
 					typeSymbol(fieldRef.getPrefix()) + ", i32 0, i32 " +
 					(fieldRef.getIndex()));
 			back1 = temp(0);
@@ -2077,6 +2061,7 @@ public class LLVMOutput extends AbstractOutput {
 
 	private void writeGenericClass(Type generic) throws ShadowException {				
 		Type genericAsObject;
+		
 		if( generic instanceof ArrayType )
 			genericAsObject = ((ArrayType)generic).convertToGeneric();
 		else
@@ -2087,7 +2072,7 @@ public class LLVMOutput extends AbstractOutput {
 
 		String interfaceData;
 		String interfaces;		
-		int flags = GENERIC;		
+		int flags = GENERIC;	
 		
 
 		if( generic instanceof InterfaceType ) {
@@ -2123,6 +2108,15 @@ public class LLVMOutput extends AbstractOutput {
 		}
 
 		genericClasses.add(classOf(generic));
+		
+		String name;
+		//As an optimization for arrays, store no name, since the full name can be retrieved base class
+		if( generic instanceof ArrayType ) {
+			name = ((ArrayType)generic).isNullable() ? "nullable " : "";
+			flags |= ARRAY;
+		}
+		else
+			name = generic.toString(Type.PACKAGES);
 
 		writer.write(classOf(generic) + " = linkonce unnamed_addr constant  %" +
 				raw(Type.GENERIC_CLASS) + " { " + 
@@ -2136,7 +2130,7 @@ public class LLVMOutput extends AbstractOutput {
 
 				typeText(Type.ARRAY, interfaces) + //interfaces
 				
-				typeLiteral(generic.toString()) + ", " + //name 
+				typeLiteral(name) + ", " + //name 
 				parentClass + ", "  +//parent
 				
 				typeLiteral(flags) + ", " + //flags							

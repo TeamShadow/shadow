@@ -1,15 +1,17 @@
 package shadow.typecheck.type;
 
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
 import shadow.ShadowException;
+import shadow.parse.ShadowParser;
 
 public class ArrayType extends ClassType
 {	
 	private final Type baseType;
 	private final boolean nullable;
+	private ClassType genericVersion = null;
 	
 	@Override
 	public int getWidth()
@@ -49,11 +51,9 @@ public class ArrayType extends ClassType
 	}
 	
 	public ArrayType(Type baseType, int dimensions, boolean nullable ) {
-		super( getLowestBase(baseType).getTypeName(), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getDocumentation(), baseType.getOuter() );		
-		if( nullable )		
-			setExtendType(Type.ARRAY_NULLABLE);
-		else
-			setExtendType(Type.ARRAY);	
+		super( getLowestBase(baseType).getTypeName(), new Modifiers(baseType.getModifiers().getModifiers() & ~Modifiers.IMMUTABLE), baseType.getDocumentation(), baseType.getOuter() );
+
+		setExtendType(Type.OBJECT);
 		
 		if( dimensions == 1 )
 			this.baseType = baseType;
@@ -76,7 +76,8 @@ public class ArrayType extends ClassType
 				return  baseName + "_A";
 		}
 		
-		return baseType.toString(options) + "[]";
+		boolean printNullable = nullable && (options & NO_NULLABLE) == 0 && !(baseType instanceof ArrayType);
+		return (printNullable ? "nullable " : "" ) + baseType.toString(options) + "[]";
 	}
 	
 	@Override
@@ -105,8 +106,35 @@ public class ArrayType extends ClassType
 	
 	@Override
 	public List<MethodSignature> getAllMethods(String methodName) {
-		return getExtendType().getAllMethods(methodName);
+		return convertToGeneric().getAllMethods(methodName);
 	}
+	
+	@Override
+	public boolean containsField(String fieldName) {
+		return convertToGeneric().containsField(fieldName);
+	}
+	
+	@Override
+	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
+		return convertToGeneric().getField(fieldName);
+	}
+	
+	@Override
+	public LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> getFields() {
+		return convertToGeneric().getFields();
+	}
+	
+	@Override
+	public boolean hasInterface(InterfaceType type)
+	{
+		return convertToGeneric().hasInterface(type);
+	}
+	
+	@Override
+	public boolean hasUninstantiatedInterface(InterfaceType type)
+	{
+		return convertToGeneric().hasUninstantiatedInterface(type);
+	}	
 	
 	@Override
 	public boolean isSubtype(Type t) {		
@@ -141,18 +169,21 @@ public class ArrayType extends ClassType
 		
 	
 	public ClassType convertToGeneric() {
-		Type base = baseType;				
 		
-		try {
-			if( nullable )
-				return Type.ARRAY_NULLABLE.replace(Type.ARRAY_NULLABLE.getTypeParameters(), new SequenceType(base));
-			else
-				return Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));
+		if( genericVersion == null ) {
+			Type base = baseType;				
+			
+			try {
+				if( nullable )
+					genericVersion = Type.ARRAY_NULLABLE.replace(Type.ARRAY_NULLABLE.getTypeParameters(), new SequenceType(base));
+				else
+					genericVersion = Type.ARRAY.replace(Type.ARRAY.getTypeParameters(), new SequenceType(base));
+			}
+			catch(InstantiationException e)
+			{}		
 		}
-		catch(InstantiationException e)
-		{}		
 				
-		return null; //shouldn't happen
+		return genericVersion; //shouldn't be null if instantiation succeeded
 	}	
 	
 	public ArrayType convertToNullable() {
@@ -181,8 +212,7 @@ public class ArrayType extends ClassType
 	@Override
 	public boolean isRecursivelyParameterized() {
 		return baseType.isRecursivelyParameterized();
-	}
-	
+	}	
 
 	@Override
 	public boolean isFullyInstantiated() {
@@ -211,6 +241,5 @@ public class ArrayType extends ClassType
 	@Override
 	protected boolean onlyUsesTheseParameters(Set<TypeParameter> parameters) {
 		return convertToGeneric().onlyUsesTheseParameters(parameters);
-	}
-	
+	}	
 }

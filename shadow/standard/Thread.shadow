@@ -214,8 +214,6 @@ is CanIndex<int, Thread>
 	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
-	* 
-	* @seeDoc shadow:standard@Mailbox
 	*/
 	protected [Object] $receiveFirst(Class expectedType) => (Object, Thread)
 	{
@@ -232,8 +230,6 @@ is CanIndex<int, Thread>
 	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
-	* 
-	* @seeDoc shadow:standard@Mailbox
 	*/
 	protected [Object] $receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
@@ -252,8 +248,6 @@ is CanIndex<int, Thread>
 	* 
 	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
 	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
-	*
-	* @seeDoc shadow:standard@Mailbox
 	*/
 	protected sendTo(Object data) => ()
 	{
@@ -368,7 +362,7 @@ is CanIndex<int, Thread>
 		return this;
 	}
 	
-	// A Runner which performs no operations. A null runner would had been prefered
+	// A Runner which performs no operations. A null runner would had been preferred
 	// but Shadow does not currenly support nullable interfaces, so until then, this is
 	// the most elegant solution.
 	private class NopRunner

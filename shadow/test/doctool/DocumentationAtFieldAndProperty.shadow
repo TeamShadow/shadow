@@ -1,0 +1,30 @@
+import shadow:io@Console;
+
+class shadow:test:doctool@
+	DocumentationAtFieldAndProperty
+{
+	/// The value field in this class is crucial. 
+	/// @author Zeke Fenster
+	/// @seeUrl http://www.google.com
+	get set int value;
+
+	/**
+	 * This property returns the current value.
+	 * @return crucial value as {@code int}
+	 * @seeDoc int
+	 */
+	public get value() => (int)
+	{
+		return value;	
+	}
+	
+	/**
+	 * This property sets the current value.
+	 * @param data the number to set the crucial value
+	 * @seeDoc default@Example
+	 */
+	public set value(int data) => ()
+	{
+		value = data;	
+	}		
+}

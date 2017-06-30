@@ -1,5 +1,6 @@
 package shadow.tac.nodes;
 
+import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -32,6 +33,8 @@ public class TACFieldRef extends TACReference
 			//1 is class
 			//2 is methods
 			ClassType prefixType = (ClassType)fieldPrefix.getType();
+			if( prefixType instanceof ArrayType )
+				prefixType = ((ArrayType)prefixType).convertToGeneric();
 						
 			int value = prefixType.getFieldIndex(fieldName); 
 			if( value < 0 )

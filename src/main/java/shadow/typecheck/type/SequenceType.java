@@ -167,7 +167,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 			}
 			else if( type != null ) {
 				builder.append(modifiers.toString());
-				builder.append(type.toString(options));
+				builder.append(type.toString(options | NO_NULLABLE ));
 			}
 		}		
 		

@@ -36,6 +36,7 @@ import java.util.TreeSet;
 import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
+import shadow.Main;
 import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
@@ -74,11 +75,7 @@ public class TypeCollector extends BaseChecker {
 	private Path currentFile;
 	private Type mainType = null;
 	private String currentName = "";	
-	
-	public static String canonicalize(Path path)
-	{
-		return path.toAbsolutePath().normalize().toString();
-	}
+
 	
 	/**
 	 * Creates a new <code>TypeCollector</code> with the given tree of packages. 
@@ -214,13 +211,13 @@ public class TypeCollector extends BaseChecker {
 		/* Add standard imports. */		
 		Path standard = config.getSystemImport().resolve("shadow").resolve("standard");
 		if( !Files.exists(standard) )
-			throw new ConfigurationException("Invalid path to shadow:standard: " + canonicalize(standard));
+			throw new ConfigurationException("Invalid path to shadow:standard: " + Main.canonicalize(standard));
 		
 		TreeSet<String> standardDependencies = new TreeSet<String>(); 
 		
 		try (DirectoryStream<Path> p = Files.newDirectoryStream(standard, "*.shadow")) {
 			for (Path file : p) {
-				String name = stripExtension(canonicalize(file));
+				String name = stripExtension(Main.canonicalize(file));
 				uncheckedFiles.add(name);
 				standardDependencies.add(name);
 			}
@@ -237,7 +234,7 @@ public class TypeCollector extends BaseChecker {
 			// compile/recompile source files, or rely on existing binaries/IR.
 			if( Files.exists(canonicalFile) ) {											
 				Path meta = Paths.get(canonical + ".meta");
-				Path llvm = Paths.get(canonical + ".ll");
+				Path llvm = Paths.get(canonical + ".bc");
 				
 				// If source compilation was not requested and the binaries exist
 				// that are newer than the source, use those binaries.

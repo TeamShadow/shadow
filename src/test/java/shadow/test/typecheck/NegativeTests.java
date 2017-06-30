@@ -478,4 +478,9 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/class-without-type-arguments/Test.shadow");
 		enforce(Error.MISSING_TYPE_ARGUMENTS);			
 	}
+	
+	@Test public void testNonArrayNullableCast() throws Exception {
+		args.add("tests-negative/typechecker/non-array-nullable-cast/Test.shadow");
+		enforce(Error.INVALID_CAST);		
+	}	
 }

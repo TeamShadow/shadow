@@ -128,6 +128,7 @@ public abstract class Type implements Comparable<Type> {
 	public static final int PARAMETER_BOUNDS =  4;
 	public static final int MANGLE =  8;
 	public static final int MANGLE_EXTERN = 16;
+	public static final int NO_NULLABLE = 32;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
@@ -1447,9 +1448,12 @@ public abstract class Type implements Comparable<Type> {
 		return (documentation != null);
 	}
 	
-	public Documentation getDocumentation()
-	{
+	public Documentation getDocumentation() {
 		return documentation;
+	}
+	
+	public void setDocumentation(Documentation documentation) {
+		this.documentation = documentation;
 	}
 
 	public static SequenceType getExceptionType() {

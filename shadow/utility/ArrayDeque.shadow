@@ -11,7 +11,7 @@ class shadow:utility@
 is  Deque<E>
 {
 	/// Gets size of the deque.
-	get long sizeLong = 0L;
+	locked get long sizeLong = 0L;
 	long start = 0L;
 	nullable E[] elements = E:null[10];
 	long modifications = 0L;	

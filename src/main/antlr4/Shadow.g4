@@ -369,7 +369,7 @@ inlineMethodDefinition
 	;
 	
 castExpression
-	: 'cast' '<' type '>' '(' conditionalExpression ')'
+	: 'cast' '<' 'nullable'? type '>' '(' conditionalExpression ')'
  	;
 
 checkExpression

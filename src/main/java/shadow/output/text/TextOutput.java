@@ -61,10 +61,6 @@ public class TextOutput extends AbstractOutput
 	{
 		super(out);
 	}
-	public TextOutput(boolean mode) throws ShadowException
-	{
-		writer.setLineNumbers(mode);
-	}
 
 	@Override
 	public void walk(TACNode nodes) throws ShadowException

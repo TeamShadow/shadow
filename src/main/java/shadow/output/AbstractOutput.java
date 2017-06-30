@@ -1,5 +1,6 @@
 package shadow.output;
 
+import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.file.Path;
 
@@ -17,9 +18,9 @@ public abstract class AbstractOutput extends TACAbstractVisitor
 	{
 		writer = out;
 	}
-	public AbstractOutput() throws ShadowException
+	public AbstractOutput(OutputStream stream) throws ShadowException
 	{
-		this(new TabbedLineWriter(System.out));
+		this(new TabbedLineWriter(stream));
 	}
 	public AbstractOutput(Writer out) throws ShadowException
 	{

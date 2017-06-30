@@ -36,8 +36,6 @@ public class OutputTests {
 		System.out.println("Working Directory = " +
 	              System.getProperty("user.dir"));
 		
-		
-		
 		String os = System.getProperty("os.name").toLowerCase();
 		
 		args.add("-c");
@@ -48,7 +46,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-f");
+		//args.add("-r");
 	}
 	
 	@After
@@ -56,7 +54,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -111,6 +109,7 @@ public class OutputTests {
 		//check return value to see if the program ends normally
 		//also keeps program from being deleted while running	
 		assertEquals("Program exited abnormally.", expectedReturn, program.waitFor()); 
+		program.destroy();
 	}	
 
 	private String formatOutputString(CharSequence... elements)
@@ -320,7 +319,10 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 				
 				"Passed\n" +  
-				"Passed\n");
+				"Passed: shadow:standard@CastException: Type int[] is not a subtype of short[]\n" + 
+				"Passed: shadow:standard@CastException: Type nullable shadow:standard@Object[] is not a subtype of shadow:standard@Object[]\n" +
+				"Passed: shadow:standard@CastException: Type shadow:standard@String[] is not a subtype of nullable shadow:standard@String[]\n");
+
 	}
 	
 	@Test public void testArrayDefault() throws Exception {
@@ -336,7 +338,12 @@ public class OutputTests {
 						"b[1]: 42\n" +
 						"b[2]: 42\n" +
 						"b[3]: 42\n" +
-						"b[4]: 42\n");
+						"b[4]: 42\n" +
+						"c[0]: shadow:standard@Object\n" +
+						"c[1]: shadow:standard@Object\n" +
+						"c[2]: shadow:standard@Object\n" +
+						"c[3]: shadow:standard@Object\n" +
+						"c[4]: shadow:standard@Object\n");
 	}
 	
 
@@ -1097,7 +1104,9 @@ public class OutputTests {
 							"true\n" + 
 							"true\n" +
 							"true\n" +
-							"false\n");
+							"false\n" + 
+							"5\n" + 
+							"7\n");
 	}
 	
 	@Test public void testExternals() throws Exception {
@@ -1165,8 +1174,11 @@ public class OutputTests {
 				"Name: B\n" + 
 				"Name: C\n" + 
 				"C\n" + 
+				"Name: E\n" +
+				"F\n" +
 				"B\n" + 
-				"D\n" + 
+				"D\n" +
+				"E\n" +
 				"A\n");
 	}
 	
@@ -1191,7 +1203,22 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"Hello, world!\n");
-	}	
+	}
+	
+	
+	@Test public void testArrayCopy() throws Exception {
+		args.add("shadow/test/ArrayCopyTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0], 
+				"[Millipede, Bumptious, Camelquote, Anthracite]\n" + 
+				"[1, 5, 13, 25, 41]\n" +
+				"0\n" +
+				"0\n" + 
+				"[Panamanian, Bumptious, Camelquote, Dutchess]\n" + 
+				"[1, 7, 13, 19, 41]\n" +
+				"90\n" +
+				"0\n");		
+	}
 	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");

@@ -8,7 +8,7 @@ class shadow:utility@
 is  List<V>
 {
 	/// Gets size of the list.
-	get long sizeLong = 0;
+	locked get long sizeLong = 0;
 	
 	nullable V[] elements;
 	long modifications = 0L;

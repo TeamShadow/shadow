@@ -10,6 +10,10 @@ is CanIndex<long,T>
 and CanIndexStore<long,T>
 and CanIterate<T>
 {
+	/**
+	 * Gets the size of the array (total number of elements) as a {@code long}.
+	 * @return size of array
+	 */
 	get long sizeLong;
 	
 	/**
@@ -23,8 +27,8 @@ and CanIterate<T>
 	public native destroy;
 	
 	/**
-	 * Gets the size of the array (total number of elements) as a {@code long}.
-	 * @return size of array
+	 * Retrieves whether or not array is nullable.
+	 * @return whether array is nullable
 	 */
 	public readonly native isNullable() => ( boolean );	
 

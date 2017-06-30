@@ -20,10 +20,11 @@ class shadow:utility@
 is  OrderedMap<K,V>
 {
     nullable Node<K,V> root = null;  // root of the BST
-    /// Gets the number of key-value pairs in the ordered map.
-    get long sizeLong = 0L;			//number of key-value pairs in the map
+    /// Gets the number of key-value pairs in the ordered map as a {@code long}.
+    locked get long sizeLong = 0L;	//number of key-value pairs in the map
     long modifications = 0L;		//modifications to BST, used for fail-fast iterators
     
+    /// Gets the number of key-value pairs in the ordered map as an {@code int}.
     public readonly get size() => (int)
 	{
 		return cast<int>(sizeLong);

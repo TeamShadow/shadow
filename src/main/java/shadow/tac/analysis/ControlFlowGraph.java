@@ -18,6 +18,7 @@ import java.util.TreeSet;
 
 import shadow.Loggers;
 import shadow.interpreter.ShadowBoolean;
+import shadow.interpreter.ShadowNull;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
@@ -83,7 +84,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		//a method can only directly use fields in its class and outer classes
 		Type type = method.getSignature().getOuter();
 		while( type != null ) {
-			usedFields.put(type, new HashSet<String>());
+			usedFields.put(type.getTypeWithoutTypeArguments(), new HashSet<String>());
 			type = type.getOuter();
 		}
 		
@@ -228,9 +229,15 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				TACReference ref = load.getReference();
 				if( ref instanceof TACFieldRef ) {
 					TACFieldRef field = (TACFieldRef) ref;
-					Set<String> fields = usedFields.get(field.getPrefixType());
+					Type prefixType = field.getPrefixType().getTypeWithoutTypeArguments();
+					Set<String> fields = usedFields.get(prefixType);
 					if( fields != null )
 						fields.add(field.getName());
+					else {
+						fields = new HashSet<String>();
+						fields.add(field.getName());
+						usedFields.put(prefixType, fields);
+					}
 				}
 			}
 			//record private method usage, for warnings
@@ -1174,6 +1181,30 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastStores));
 			return phi;
 		}	
+		
+		
+		
+		//uses a BFS to see if a variable had a previous assignment
+		public boolean hasPreviousStore(TACVariable variable, Map<Block, Map<TACVariable, TACLocalStorage>> lastStores) {					
+			Set<Block> visited = new HashSet<Block>();
+			Deque<Block> queue = new ArrayDeque<Block>();
+			queue.addLast(this); //start with current block
+			
+			while( !queue.isEmpty() ) {
+				Block block = queue.removeFirst();
+				visited.add(block);
+				
+				for( Block parent : block.incoming) {
+					if( lastStores.get(parent).containsKey(variable) )
+						return true;
+					else if( !visited.contains(parent) )
+						queue.addLast(parent);				
+				}
+			}		
+
+			return false;
+		}
+		
 
 		/*
 		 * Adds phi nodes as needed to the current block based on the last
@@ -1188,11 +1219,19 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACLocalStorage store = (TACLocalStorage)node;
 					TACVariable variable = store.getVariable();
 					
-					//Useful to know the previous store before this store
+					//Useful to know if there was a previous store
 					//primarily for the case of GC: no need to decrement something that was never assigned 
-					if( node instanceof TACLocalStore )
-						if( predecessors.get(variable) != null )
-							((TACLocalStore)node).setPreviousStore(predecessors.get(variable));
+					if( node instanceof TACLocalStore ) {
+						TACLocalStore localStore = (TACLocalStore) node;
+						if( predecessors.get(variable) != null ) {
+							TACOperand value = predecessors.get(variable).getValue();
+							if( !(value instanceof TACLiteral) || !(((TACLiteral)value).getValue() instanceof ShadowNull) )
+								localStore.setPreviousStore(true);
+						}
+						else if( hasPreviousStore(variable, lastStores) )
+							localStore.setPreviousStore(true);
+						
+					}
 										
 					predecessors.put(variable, store);
 				}
@@ -1534,35 +1573,6 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			}
 			
 			return changed;
-		}
-		
-	}
-
-	//uses a BFS to see if a node is contained in a cycle
-	public boolean isInCycle(TACNode node) {
-				
-		while( !(node instanceof TACLabel) )
-			node = node.getPrevious();
-		
-		TACLabel label = (TACLabel)node;
-		Block startingBlock = nodeBlocks.get(label);
-		
-		Set<Block> visited = new HashSet<Block>();
-		Deque<Block> queue = new ArrayDeque<Block>();
-		queue.addLast(startingBlock);
-		
-		while( !queue.isEmpty() ) {
-			Block block = queue.removeFirst();
-			visited.add(block);
-			
-			for( Block child : block.outgoing) {
-				if( child == startingBlock )
-					return true;
-				else if( !visited.contains(child) )
-					queue.addLast(child);				
-			}
 		}		
-
-		return false;
 	}
 }

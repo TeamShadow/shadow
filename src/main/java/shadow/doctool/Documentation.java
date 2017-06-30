@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,6 +62,15 @@ public class Documentation
 			}
 		}
 	}
+	
+	// Used only for merging
+	private Documentation() 
+	{
+		inlineTags = new ArrayList<InlineTag>();
+		blockTags = new HashMap<BlockTagType, List<List<String>>>();
+		summaryTags = new ArrayList<InlineTag>();
+	}
+	
 	
 	/** 
 	 * Parses the inline tags and plain text content of a documentation
@@ -183,4 +193,44 @@ public class Documentation
 		blockTags.clear();
 		summaryTags.clear();
 	}
+	
+	/**
+	 * Creates a new Documentation object by combing the tags from other with
+	 * the tags from the current Documentation object.  Tags from the current
+	 * object will appear before tags from the other object. Neither of the
+	 * original Documentation objects will be changed.
+	 * @param other
+	 * @return merged Documentation object
+	 */	
+	public Documentation combineWith(Documentation other) {
+		
+		Documentation combined = new Documentation();
+		combined.inlineTags.addAll(inlineTags);
+		//Put a space between the tags
+		if( !inlineTags.isEmpty() && !other.inlineTags.isEmpty())
+			combined.inlineTags.add(new InlineTag(InlineTagType.PLAIN_TEXT, Collections.singletonList(" ")));
+		combined.inlineTags.addAll(other.inlineTags);
+		combined.summaryTags.addAll(summaryTags);
+		//Put a space between the tags
+		if( !summaryTags.isEmpty() && !other.summaryTags.isEmpty())
+			combined.summaryTags.add(new InlineTag(InlineTagType.PLAIN_TEXT, Collections.singletonList(" ")));
+		combined.summaryTags.addAll(other.summaryTags);
+		
+		for( Entry<BlockTagType, List<List<String>>> entry : blockTags.entrySet() ) {
+			List<List<String>> combinedList = new ArrayList<List<String>>(entry.getValue());
+			combined.blockTags.put(entry.getKey(), combinedList);
+		}
+		
+		for( Entry<BlockTagType, List<List<String>>> entry : other.blockTags.entrySet() ) {
+			if( combined.blockTags.containsKey(entry.getKey()) )
+				combined.blockTags.get(entry.getKey()).addAll(entry.getValue());
+			else {
+				List<List<String>> combinedList = new ArrayList<List<String>>(entry.getValue());
+				combined.blockTags.put(entry.getKey(), combinedList);
+			}
+		}
+		
+		return combined;
+	}
+	
 }

@@ -27,6 +27,7 @@ public class Job {
 	private boolean verbose = false; // Print extra compilation info
 	private boolean forceRecompile = false; // Recompile all source files, even if unneeded
 	private boolean warningsAsErrors = false; //Treat warnings as errors
+	private boolean humanReadable = false;
 	
 	public Job(Arguments compilerArgs) throws FileNotFoundException {
 		
@@ -35,6 +36,7 @@ public class Job {
 		noLink = compilerArgs.hasOption(Arguments.NO_LINK);
 		verbose = compilerArgs.hasOption(Arguments.VERBOSE);
 		forceRecompile = compilerArgs.hasOption(Arguments.RECOMPILE);
+		humanReadable = compilerArgs.hasOption(Arguments.READABLE);
 		
 		// Locate main source file if not help or information only
 		if( !compilerArgs.hasOption(Arguments.INFORMATION) && !compilerArgs.hasOption(Arguments.HELP)) {
@@ -93,6 +95,10 @@ public class Job {
 	public boolean isForceRecompile() {
 		
 		return forceRecompile;
+	}
+	
+	public boolean isHumanReadable() {
+		return humanReadable;
 	}
 	
 	public Path getMainFile() {

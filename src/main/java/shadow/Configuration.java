@@ -37,6 +37,7 @@ public class Configuration {
 	private static final Logger logger = Loggers.SHADOW;
 	
 	private Path configFile;
+	private String dataLayout;
 	
 	// Configuration fields
 	private int arch;
@@ -389,8 +390,9 @@ public class Configuration {
 		
 		// Calling 'llc -version' for current target information
 		// Note: Most of the LLVM tools also have this option
+		Process process = null;
 		try {
-			Process process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -412,11 +414,16 @@ public class Configuration {
 		catch(IOException e) {
 			throw new ConfigurationException("LLVM installation not found!"); 
 		}
+		finally {
+			if( process != null )
+				process.destroy();
+		}
 	}
 	
 	public static String getLLVMVersion() {
+		Process process = null;
 		try {
-			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -431,9 +438,12 @@ public class Configuration {
 			if( matcher.find() )
 				return matcher.group(2);
 		}
-		catch(IOException e) {			 
+		catch(IOException | ConfigurationException  e) {			 
+			
 		}
-		catch (ConfigurationException e) {		
+		finally {	
+			if( process != null )
+				process.destroy();
 		}
 		
 		return "";
@@ -442,8 +452,9 @@ public class Configuration {
 	public static String getLLVMInformation() {
 		// Calling 'llc -version' for LLVM information
 		// Note: Most of the LLVM tools also have this option
+		Process process = null;
 		try {		
-			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String information = "";
@@ -456,6 +467,43 @@ public class Configuration {
 		catch(IOException | ConfigurationException e) {
 			return "LLVM installation not found!"; 
 		}
+		finally {	
+			if( process != null )
+				process.destroy();
+		}
 	}
+	
+	public String getOptimizationLevel() {
+		return "-O3"; // set to empty string to check for
+		// race conditions in Threads.
+	}
+	
+	//Update this for other architectures?
+	public String getDataLayout() {		
+		if( dataLayout == null ) {
+			String endian = "e"; // little Endian
+			String mangling;
+	
+			if (getOs().equals("Mac"))
+				mangling = "m:o-";
+			else if (getOs().equals("Windows"))
+				mangling = "m:x-";
+			else if (getOs().equals("Linux"))
+				mangling = "m:e-";
+			else
+				mangling = "";
+	
+			String pointerAlignment = "p:" + getArch() + ":" + getArch() + ":" + getArch();
+			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f16:16:16-f32:32:32-f64:64:64-f80:128";
+			String aggregateAlignment = "a:0:" + getArch();
+			String nativeIntegers = "n8:16:32:64";
+			String stackAlignment = "S128";
+			dataLayout = "-default-data-layout=" + endian + "-" + mangling + pointerAlignment + "-" + dataAlignment
+					+ "-" + aggregateAlignment + "-" + nativeIntegers + "-" + stackAlignment;
+		}
+
+		return dataLayout;
+	}
+	
 }
  

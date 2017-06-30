@@ -88,6 +88,9 @@ define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {
 			to label %_success unwind label %_exception
 _success:	
 	call void @__decrementRef(%shadow.standard..Object* %object) nounwind
+	store %shadow.io..Console* null, %shadow.io..Console** @shadow.io..Console_instance		
+	%consoleAsObj = bitcast %shadow.io..Console* %console to %shadow.standard..Object*
+    call void @__decrementRef(%shadow.standard..Object* %consoleAsObj) nounwind
 	ret i32 0
 _exception:
 	%caught = landingpad { i8*, i32 }
@@ -108,6 +111,9 @@ entry:
 	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
 	call void @shadow.test..Test_Mmain(%shadow.test..Test* %initialized)
 	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* %mainThread)
+	
+	%threadAsObj = bitcast %shadow.standard..Thread* %mainThread to %shadow.standard..Object*
+	call void @__decrementRef(%shadow.standard..Object* %threadAsObj) nounwind	
 	
 	ret void
 }
