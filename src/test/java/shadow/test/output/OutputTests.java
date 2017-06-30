@@ -46,7 +46,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-r");
+		args.add("-r");
 	}
 	
 	@After
@@ -54,7 +54,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -1202,7 +1202,22 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"Hello, world!\n");
-	}	
+	}
+	
+	
+	@Test public void testArrayCopy() throws Exception {
+		args.add("shadow/test/ArrayCopyTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0], 
+				"[Millipede, Bumptious, Camelquote, Anthracite]\n" + 
+				"[1, 5, 13, 25, 41]\n" +
+				"0\n" +
+				"0\n" + 
+				"[Panamanian, Bumptious, Camelquote, Dutchess]\n" + 
+				"[1, 7, 13, 19, 41]\n" +
+				"90\n" +
+				"0\n");		
+	}
 	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");

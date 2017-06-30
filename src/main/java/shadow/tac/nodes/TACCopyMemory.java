@@ -13,19 +13,28 @@ import shadow.typecheck.type.Type;
 
 public class TACCopyMemory extends TACOperand
 {		
-	TACOperand destination;
-	TACOperand source;
-	TACOperand size;
+	private TACOperand destination;
+	private TACOperand source;
+	private TACOperand size;
+	private boolean isArray;
 	
-	public TACCopyMemory(TACNode node, TACOperand destination, TACOperand source, TACOperand size)
+	public TACCopyMemory(TACNode node, TACOperand destination, TACOperand source, TACOperand size) {
+		this(node, destination, source, size, false);
+	}
+		
+	public TACCopyMemory(TACNode node, TACOperand destination, TACOperand source, TACOperand size, boolean isArray)
 	{
 		super(node);				
 		//checks can remove references
 		this.destination = check(destination, destination);
 		this.source = check(source, source);
 		this.size = check(size, new SimpleModifiedType(Type.LONG));
+		this.isArray = isArray;
 	}
 	
+	public boolean isArray() {
+		return isArray;
+	}	
 	
 	@Override
 	public Type getType() {

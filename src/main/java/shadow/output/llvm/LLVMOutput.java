@@ -781,18 +781,43 @@ public class LLVMOutput extends AbstractOutput {
 		TACOperand destinationNode = node.getDestination();
 		TACOperand sourceNode = node.getSource();
 		TACOperand size = node.getSize();
-	
-		String destination = typeSymbol(destinationNode);
-		String source = typeSymbol(sourceNode);
-				
-		writer.write(nextTemp() + " = bitcast " + destination + " to i8*");
-		writer.write(nextTemp() + " = bitcast " + source + " to i8*");
 		
-		//objects and arrays (used in copy() and freeze()) have an 8 byte reference count that should *not* be copied
-		writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //destination
-		writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //source			
-		writer.write(nextTemp() + " = sub i64 " + symbol(size) + ", 8");
-		writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(2) + ", i8* " + temp(1) + ", i64 " + temp(0) + ", i32 1, i1 0)");				
+		if( node.isArray() ) {			
+			Type destinationArrayType = destinationNode.getType();
+			if( destinationArrayType instanceof ArrayType )
+				destinationArrayType = ((ArrayType)destinationArrayType).convertToGeneric();
+			
+			Type sourceArrayType = sourceNode.getType();
+			if( sourceArrayType instanceof ArrayType )
+				sourceArrayType = ((ArrayType)sourceArrayType).convertToGeneric();
+			
+			writer.write(nextTemp() + " = getelementptr inbounds %" +			
+					raw(destinationArrayType) + ", " + typeSymbol(destinationNode) + ", " + typeLiteral(1));
+			
+			writer.write(nextTemp() + " = getelementptr inbounds %" +			
+					raw(sourceArrayType) + ", " + typeSymbol(sourceNode) + ", " + typeLiteral(1));
+
+			//destination
+			writer.write(nextTemp() + " = bitcast " + typeText(destinationArrayType, temp(2)) + " to i8*");
+			
+			//source
+			writer.write(nextTemp() + " = bitcast " + typeText(sourceArrayType, temp(2)) + " to i8*");
+			
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(1) + ", i8* " + temp(0) + ", " + typeSymbol(size) + ", i32 1, i1 0)");
+		}
+		else {
+			String destination = typeSymbol(destinationNode);
+			String source = typeSymbol(sourceNode);
+					
+			writer.write(nextTemp() + " = bitcast " + destination + " to i8*");
+			writer.write(nextTemp() + " = bitcast " + source + " to i8*");
+			
+			//objects and arrays (used in copy() and freeze()) have an 8 byte reference count that should *not* be copied
+			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //destination
+			writer.write(nextTemp() + " = getelementptr i8, i8* " + temp(2) + ", i32 8"); //source			
+			writer.write(nextTemp() + " = sub i64 " + symbol(size) + ", 8");
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(2) + ", i8* " + temp(1) + ", i64 " + temp(0) + ", i32 1, i1 0)");
+		}
 	}
 
 	@Override

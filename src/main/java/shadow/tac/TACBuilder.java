@@ -96,8 +96,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();
 	
 	public TACModule build(Context node) {		
-		//anchor = new TACTree(); //no block
-		
 		method = null;
 		prefix = null;
 		explicitSuper = false;
@@ -207,8 +205,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					new TACStore(anchor, ref, ctx.conditionalExpression().appendBefore(anchor));
 				//Note that default values are now removed for regular types
 				//Defaults for nullables and ArrayTypes are unnecessary, since calloc is used to allocate objects
-				//else if( ctx.getModifiers().isNullable() || ctx.getType() instanceof ArrayType )
-					//new TACStore(anchor, ref, getDefaultValue(ctx));
 			}
 			else {
 				TACVariable var = method.addLocal(ctx, name);
@@ -439,7 +435,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				methodRef = new TACMethodRef(anchor,
 						left, //prefix
 						signature);
-				//TODO: Might need signature without type arguments?
 				parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)					
 				TACOperand result = new TACCall(anchor, methodRef, parameters);					
 				
@@ -464,7 +459,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			methodRef = new TACMethodRef(anchor,
 					left, //prefix
 					signature);
-			//TODO: Might need signature without type arguments?
 			parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)
 			new TACCall(anchor, methodRef, parameters);
 		}			
@@ -2294,15 +2288,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		anchor.setContext(null);
 		
 		if( type.getModifiers().isImmutable() ) {
-			new TACLocalStore(anchor, method.getLocal("return"), new TACLocalLoad(
-					anchor, method.getThis()));					
+			//local store includes increase of reference count
+			new TACLocalStore(anchor, method.getLocal("return"), new TACLocalLoad(anchor, method.getThis()));					
 			
 			visitCleanup(null, null);
-			
-			//for now, just return this
-			//after incrementing reference count
-			//if( !type.isPrimitive() )
-				//new TACChangeReferenceCount(anchor, method.getThis(), true);
 			
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
 			
@@ -2323,9 +2312,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					returnLabel = new TACLabel(method);
 			
 			new TACBranch(anchor, test, returnLabel, copyLabel);
-			copyLabel.insertBefore(anchor);
-			
-			//TODO: Make this more efficient by testing for arrays of primitive types
+			copyLabel.insertBefore(anchor);			
+
 			if( type.getTypeWithoutTypeArguments().equals(Type.ARRAY) || type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE) ) {
 				Type genericArray = type.getTypeWithoutTypeArguments();
 				boolean isNullable = type.getTypeWithoutTypeArguments().equals(Type.ARRAY_NULLABLE);				
@@ -2334,16 +2322,41 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				TACOperand length = arraySize(anchor, this_, true);
 
 				//allocate a new array (which by default gets a ref count of 1)
-				TACOperand array = new TACNewArray(anchor, new ArrayType(genericArray.getTypeParameters().get(0).getType(), isNullable), arrayClass, length);						
+				TACOperand array = new TACNewArray(anchor, new ArrayType(genericArray.getTypeParameters().get(0).getType(), isNullable), arrayClass, length);
+				
+				
+				TACOperand classArray = new TACLoad(anchor, new TACFieldRef(arrayClass, new SimpleModifiedType(new ArrayType(Type.CLASS), new Modifiers(Modifiers.IMMUTABLE)), "parameters"));
+				TACOperand baseClass = new TACLoad(anchor, new TACArrayRef(anchor, classArray, new TACLiteral(anchor, new ShadowInteger(0L)), false));
+
+				TACLabel primitive = new TACLabel(method);
+				TACLabel startLoop = new TACLabel(method);
 				TACLabel done = new TACLabel(method);
 				TACLabel body = new TACLabel(method);
 				TACLabel condition = new TACLabel(method);
 				
-				TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.LONG));
-				new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0L)));
-				new TACBranch(anchor, condition);
+				
+				TACMethodRef isPrimitive = new TACMethodRef(anchor, baseClass, Type.CLASS.getMatchingMethod("isPrimitive", new SequenceType()));
+				TACOperand checkPrimitive = new TACCall(anchor, isPrimitive, isPrimitive.getPrefix());
+				new TACBranch(anchor, checkPrimitive, primitive, startLoop);	
+				
+				//if primitive
+				primitive.insertBefore(anchor);				
+				
+				TACMethodRef getWidth = new TACMethodRef(anchor, baseClass, Type.CLASS.getMatchingMethod("width", new SequenceType()));
+				TACOperand width = new TACCall(anchor, getWidth, getWidth.getPrefix());
+				TACOperand sizeInBytes = new TACBinary(anchor, length, Type.LONG.getMatchingMethod("multiply", new SequenceType(Type.LONG)), "*", width);  
+				
+				new TACCopyMemory(anchor, array, this_,  sizeInBytes, true );			
+				
+				new TACBranch(anchor, done);				
 				
 				//start loop
+				startLoop.insertBefore(anchor);
+				
+				TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.LONG));
+				new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0L)));
+				new TACBranch(anchor, condition);				
+
 				condition.insertBefore(anchor);
 				
 				TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
