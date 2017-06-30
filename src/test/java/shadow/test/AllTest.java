@@ -29,11 +29,11 @@ import shadow.test.typecheck.WarningTests;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
-public class AllTests extends TestCase {
+public class AllTest extends TestCase {
 
 	@AfterClass
     public static void ringBell() {
-		ClassLoader classLoader = AllTests.class.getClassLoader();
+		ClassLoader classLoader = AllTest.class.getClassLoader();
         File file;
 		try {
 			file = new File( URLDecoder.decode( classLoader.getResource("chime.wav").getFile(), "UTF-8" ) );

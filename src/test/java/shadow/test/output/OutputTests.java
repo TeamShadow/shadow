@@ -109,6 +109,7 @@ public class OutputTests {
 		//check return value to see if the program ends normally
 		//also keeps program from being deleted while running	
 		assertEquals("Program exited abnormally.", expectedReturn, program.waitFor()); 
+		program.destroy();
 	}	
 
 	private String formatOutputString(CharSequence... elements)
