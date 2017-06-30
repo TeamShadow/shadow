@@ -183,7 +183,7 @@ public class Main {
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 
-			final Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
+			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
 			// usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel())
@@ -446,9 +446,10 @@ public class Main {
 		String bitcodeFile = canonicalize(bitcodePath); 
 		
 		boolean success = false;
+		Process optimize = null;
 
 		try {
-			Process optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
+			optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
 							.redirectError(Redirect.INHERIT).start();
 			if( optimize.waitFor() != 0 )
@@ -465,6 +466,9 @@ public class Main {
 					Files.deleteIfExists(bitcodePath);
 				} catch (IOException e) {}
 			}
+			
+			if( optimize != null )
+				optimize.destroy();
 		}
 
 		return bitcodeFile;
@@ -476,9 +480,9 @@ public class Main {
 		Path bitcodePath = Paths.get(path + ".bc");
 		String bitcodeFile = canonicalize(bitcodePath); 
 		boolean success = false;
+		Process optimize = null;
 
-		try {
-			Process optimize = null;
+		try {			
 			LLVMOutput output = null;
 			OutputStream out = null;
 			
@@ -523,6 +527,10 @@ public class Main {
 					Files.deleteIfExists(bitcodePath);
 				} catch (IOException e) {}
 			}
+			
+			if( optimize != null )
+				optimize.destroy();
+			
 		}
 
 		return bitcodeFile;

@@ -390,8 +390,9 @@ public class Configuration {
 		
 		// Calling 'llc -version' for current target information
 		// Note: Most of the LLVM tools also have this option
+		Process process = null;
 		try {
-			Process process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -413,11 +414,16 @@ public class Configuration {
 		catch(IOException e) {
 			throw new ConfigurationException("LLVM installation not found!"); 
 		}
+		finally {
+			if( process != null )
+				process.destroy();
+		}
 	}
 	
 	public static String getLLVMVersion() {
+		Process process = null;
 		try {
-			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -432,9 +438,12 @@ public class Configuration {
 			if( matcher.find() )
 				return matcher.group(2);
 		}
-		catch(IOException e) {			 
+		catch(IOException | ConfigurationException  e) {			 
+			
 		}
-		catch (ConfigurationException e) {		
+		finally {	
+			if( process != null )
+				process.destroy();
 		}
 		
 		return "";
@@ -443,8 +452,9 @@ public class Configuration {
 	public static String getLLVMInformation() {
 		// Calling 'llc -version' for LLVM information
 		// Note: Most of the LLVM tools also have this option
+		Process process = null;
 		try {		
-			Process process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String information = "";
@@ -456,6 +466,10 @@ public class Configuration {
 		}
 		catch(IOException | ConfigurationException e) {
 			return "LLVM installation not found!"; 
+		}
+		finally {	
+			if( process != null )
+				process.destroy();
 		}
 	}
 	

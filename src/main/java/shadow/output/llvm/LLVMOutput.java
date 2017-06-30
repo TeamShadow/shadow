@@ -1,8 +1,6 @@
 package shadow.output.llvm;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -91,8 +89,7 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public class LLVMOutput extends AbstractOutput {
-	private Process process = null;
+public class LLVMOutput extends AbstractOutput {	
 	private int tempCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();	
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
@@ -681,40 +678,6 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write();
 
 		writeStringLiterals();
-
-		if (process != null)
-			try {
-				String line;
-				BufferedReader reader;
-				process.getOutputStream().close();
-
-				reader = new BufferedReader(new InputStreamReader(
-						process.getInputStream()));
-				while ((line = reader.readLine()) != null)
-					System.out.println(line);
-				reader.close();
-
-				try {
-					Thread.sleep(11); //why is this 11?
-				}
-				catch (InterruptedException ex)	{}
-
-				reader = new BufferedReader(new InputStreamReader(
-						process.getErrorStream()));
-				while ((line = reader.readLine()) != null)
-					System.err.println(line);
-				reader.close();
-
-				try {
-					process.waitFor();
-				} catch (InterruptedException ex) { }
-				int exit = process.exitValue();
-				if (exit != 0)
-					System.exit(exit);
-			}
-		catch (IOException ex) {
-			throw new CompileException( ex.getLocalizedMessage() );
-		}
 	}
 
 
