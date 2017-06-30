@@ -15,8 +15,7 @@ class shadow:utility@
 	TreeSet<V is CanCompare<V>>
 is  OrderedSet<V>
 {
-	TreeMap<V,V> map;	
-
+	TreeMap<V,V> map;
 
 	/**
 	 * Creates an empty {@code TreeSet<V>}.

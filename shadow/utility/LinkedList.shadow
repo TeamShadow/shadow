@@ -8,9 +8,9 @@ is  List<V>
 and Deque<V>
 {
 	/// Gets size of the list as a {@code long}.
-	get long sizeLong = 0L;	
+	locked get long sizeLong = 0L;	
 	
-	Node<V> header = Node<V>:create(this);
+	Node<V> header = Node<V>:create();
 	long modifications = 0L;
 	Equate<V> equater;
 	
@@ -24,6 +24,11 @@ and Deque<V>
 		this:equater = equater;
 	}
 	
+	public destroy
+	{
+		clear();	
+	}
+	
 	/// Gets size of the list as an {@code int}.
 	public readonly get size() => (int)
 	{
@@ -32,39 +37,25 @@ and Deque<V>
 
 	private class Node<V>
 	{
-		get Node<V> prev = this, next = this;
-		get set nullable V value = null;
-		LinkedList<V> linkedList;
+		locked get Node<V> prev = this, next = this;
+		locked get set nullable V value = null;
 		
-		public create(LinkedList<V> linkedList)
-		{ 
-			this:linkedList = linkedList;	
-		}
-		public create(LinkedList<V> linkedList,  V initialValue, Node<V> after )
+		public create()
 		{
-			this:linkedList = linkedList;
+		}
+		public create(V initialValue, Node<V> after )
+		{
 			( after:prev:next, prev,       next,  after:prev ) =
 			( this,            after:prev, after, this       );
-			value = initialValue;
-			linkedList:sizeLong += 1L;
-			linkedList:modifications += 1L;
+			value = initialValue;			
 		}
 		public set value( V initialValue ) => ()
 		{
-			value = initialValue;
-			linkedList:modifications += 1L;
-		}
-		public clear() => ()
-		{
-			( prev, next ) = ( this, this );
-			linkedList:sizeLong = 0L;
-			linkedList:modifications += 1L;
+			value = initialValue;			
 		}
 		public delete() => ()
 		{
-			( prev:next, next:prev ) = ( next, prev );
-			linkedList:sizeLong -= 1L;
-			linkedList:modifications += 1L;
+			( prev:next, next:prev ) = ( next, prev );			
 		}
 	}
 	
@@ -153,8 +144,10 @@ and Deque<V>
 	{
 		if ( index == sizeLong )
 			add(value);
-		else
-			findIndex(index)->value = value;
+		else {
+			findIndex(index)->value = value;			
+			modifications += 1L;
+		}
 	}
 
 	/**
@@ -165,7 +158,9 @@ and Deque<V>
 	 */
 	public add( V value ) => ( LinkedList<V> )
 	{
-		Node<V>:create(this, value, header);
+		Node<V>:create(value, header);
+		sizeLong += 1L;
+		modifications += 1L;
 		return this;
 	}
 	
@@ -181,6 +176,8 @@ and Deque<V>
 		{			 
 			(, nullable var node) = findNode(value);
 			check(node).delete();
+			sizeLong -= 1L;
+			modifications += 1L;
 			return true;
 		}
 		recover
@@ -201,6 +198,8 @@ and Deque<V>
 		var node = findIndex(index);
 		V value = check(node->value);
 		node.delete();
+		sizeLong -= 1L;
+		modifications += 1L;
 		return value;
 	}
 	
@@ -234,7 +233,8 @@ and Deque<V>
 	 */	
 	public clear() => ( LinkedList<V> )
 	{
-		header.clear();
+		while( sizeLong > 0L )
+			delete( 0L );
 		return this;
 	}
 
@@ -256,7 +256,9 @@ and Deque<V>
 	public addFirst( V element ) => ( LinkedList<V> )
 	{
 		var node = findIndex( 0 );
-		Node<V>:create(this, element, node );
+		Node<V>:create( element, node );
+		sizeLong += 1L;
+		modifications += 1L;
 		return this;
 	}
 	
