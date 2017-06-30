@@ -46,7 +46,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		args.add("-r");
+		//args.add("-r");
 	}
 	
 	@After
@@ -54,7 +54,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}

@@ -1,8 +1,8 @@
 class shadow:test@Property
 {
-	get set int x;
+	locked get set int x;
 	get double y;
-	set String z;
+	locked set String z;
 	
 	set get int strange1;
 	get set int strange2;

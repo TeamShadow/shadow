@@ -1356,8 +1356,11 @@ public class LLVMOutput extends AbstractOutput {
 		}
 		else if( reference instanceof TACFieldRef ) {			
 			TACFieldRef fieldRef = (TACFieldRef) reference;
+			Type prefixType = fieldRef.getPrefix().getType();
+			if( prefixType instanceof ArrayType )
+				prefixType = ((ArrayType)prefixType).convertToGeneric();
 			writer.write(nextTemp() + " = getelementptr inbounds " +
-					"%" + raw(fieldRef.getPrefix().getType()) + ", " + 
+					"%" + raw(prefixType) + ", " + 
 					typeSymbol(fieldRef.getPrefix()) + ", i32 0, i32 " +
 					(fieldRef.getIndex()));
 			back1 = temp(0);

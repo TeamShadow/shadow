@@ -314,7 +314,7 @@ public class TypeUpdater extends BaseChecker {
 							methodNode.start = methodNode.stop = makeDummyToken(declaration);
 							// Default get is readonly.
 							methodNode.addModifiers(Modifiers.PUBLIC | Modifiers.GET  | Modifiers.READONLY);
-							if( classType.getModifiers().isLocked() )
+							if( classType.getModifiers().isLocked() || fieldModifiers.isLocked() )
 								methodNode.getModifiers().addModifier(Modifiers.LOCKED);
 							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), node.getDocumentation());
 							methodNode.setType(methodType);
@@ -323,7 +323,8 @@ public class TypeUpdater extends BaseChecker {
 							modifiers.removeModifier(Modifiers.FIELD);
 							if( modifiers.isSet() )
 								modifiers.removeModifier(Modifiers.SET);
-															
+							if( modifiers.isLocked() )
+								modifiers.removeModifier(Modifiers.LOCKED);															
 							SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers); 
 							methodType.addReturn(modifiedType);
 							MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);								
@@ -342,7 +343,7 @@ public class TypeUpdater extends BaseChecker {
 							ShadowParser.MethodDeclarationContext methodNode = new ShadowParser.MethodDeclarationContext(null, -1);
 							methodNode.start = methodNode.stop = makeDummyToken(declaration);
 							methodNode.addModifiers(Modifiers.PUBLIC | Modifiers.SET);
-							if( classType.getModifiers().isLocked() )
+							if( classType.getModifiers().isLocked() || fieldModifiers.isLocked() )
 								methodNode.getModifiers().addModifier(Modifiers.LOCKED);
 							//methodNode.setImage(field.getKey());								
 							MethodType methodType = new MethodType(classType, methodNode.getModifiers(), node.getDocumentation());
@@ -359,7 +360,9 @@ public class TypeUpdater extends BaseChecker {
 							if( modifiers.isGet() )
 								modifiers.removeModifier(Modifiers.GET);
 							if( modifiers.isWeak() )
-								modifiers.removeModifier(Modifiers.WEAK);								
+								modifiers.removeModifier(Modifiers.WEAK);
+							if( modifiers.isLocked() )
+								modifiers.removeModifier(Modifiers.LOCKED);
 							SimpleModifiedType modifiedType = new SimpleModifiedType(field.getValue().getType(), modifiers);									
 							methodType.addParameter("value", modifiedType );									
 							MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType, methodNode);

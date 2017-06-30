@@ -231,7 +231,17 @@ public class ClassType extends Type {
 		if ( getExtendType() != null )
 			getExtendType().recursivelyOrderAllFields(fieldList);		
 		fieldList.addAll(sortFields());
+	}	
+
+	@Override
+	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
+		ShadowParser.VariableDeclaratorContext field = super.getField(fieldName);
+		if( field == null && getExtendType() != null )
+			return getExtendType().getField(fieldName);
+		else
+			return field;
 	}
+	
 	
 	public Set<Entry<String, ? extends ModifiedType>> sortFields() {
 		Set<Entry<String, ? extends ModifiedType>> set = new TreeSet<Entry<String, ? extends ModifiedType>>(new Comparator<Entry<String, ? extends ModifiedType>>() {

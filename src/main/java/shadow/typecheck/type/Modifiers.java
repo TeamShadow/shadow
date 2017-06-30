@@ -317,7 +317,7 @@ public final class Modifiers
 
 	public List<ShadowException> checkFieldModifiers(Context ctx) 
 	{
-		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE | PUBLIC | PRIVATE | PROTECTED), "A field", ctx);
+		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE | PUBLIC | PRIVATE | PROTECTED | LOCKED ), "A field", ctx);
 		if( isReadonly() && isImmutable() )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both readonly and immutable", ctx));
 		if( isSet() && isImmutable() )
@@ -335,7 +335,10 @@ public final class Modifiers
 				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked protected", ctx));
 			else if( isPrivate() )
 				exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "Only a constant field can be marked private", ctx));
-		}
+		}		
+		if( isLocked() && !isSet() && !isGet() )
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field can only be marked locked if it is also marked get or set", ctx));
+		
 		return exceptions;
 	}
 

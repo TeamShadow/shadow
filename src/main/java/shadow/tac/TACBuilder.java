@@ -431,12 +431,18 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			}
 						
 			if (!operation.isEmpty() ) {				
-				signature = propertyType.getGetter();	
-				methodRef = new TACMethodRef(anchor,
-						left, //prefix
-						signature);
-				parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)					
-				TACOperand result = new TACCall(anchor, methodRef, parameters);					
+				signature = propertyType.getGetter();
+				TACOperand result = null;
+				//optimize gets that are generated (and locked)
+				if( signature.getNode().getParent() == null  && signature.getModifiers().isLocked() )
+					result = new TACLoad(anchor, new TACFieldRef(left, signature.getSymbol()) );
+				else {
+					methodRef = new TACMethodRef(anchor,
+							left, //prefix
+							signature);
+					parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)					
+					result = new TACCall(anchor, methodRef, parameters);					
+				}
 				
 				//signature for other operation
 				signature = node.getOperations().get(0);
@@ -456,11 +462,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			parameters.add(right); //value to store (possibly updated by code above)
 			
 			signature = propertyType.getSetter();	
-			methodRef = new TACMethodRef(anchor,
-					left, //prefix
-					signature);
-			parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)
-			new TACCall(anchor, methodRef, parameters);
+			//optimize sets that are generated (and locked)
+			if( signature.getNode().getParent() == null  && signature.getModifiers().isLocked() )
+				new TACStore(anchor, new TACFieldRef(left, signature.getSymbol()), right);
+			else {
+				methodRef = new TACMethodRef(anchor,
+						left, //prefix
+						signature);
+				parameters.set(0, methodRef.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)
+				new TACCall(anchor, methodRef, parameters);
+			}
 		}			
 		else if( left instanceof TACLoad ){ //memory operation: field, array, etc.	
 			TACReference var = ((TACLoad)left).getReference();
@@ -1259,7 +1270,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//stores (and +='s) are handled in ASTExpression
 		if( !isStore ) {
 			MethodSignature signature = propertyType.getGetter();
-			methodCall(signature, ctx, new ArrayList<Context>()); //no parameters to add					
+			//automatically generated get can be optimized to load
+			if( signature.getNode().getParent() == null  && signature.getModifiers().isLocked() )
+				prefix = new TACLoad(anchor, new TACFieldRef(prefix, signature.getSymbol()) );
+			else			
+				methodCall(signature, ctx, new ArrayList<Context>()); //no parameters to add					
 		}	
 		
 		ctx.setOperand(prefix);
