@@ -828,7 +828,7 @@ public class TypeUpdater extends BaseChecker {
 		} 
 		
 		if(!signature.isExtern() && signature.getSymbol().startsWith("_")) {
-  			addError(node, Error.INVALID_METHODIDENTIFIER, Error.INVALID_METHODIDENTIFIER.getMessage());
+  			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
   		}
 		
 		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {

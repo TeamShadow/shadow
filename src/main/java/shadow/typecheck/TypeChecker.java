@@ -45,6 +45,7 @@ public class TypeChecker {
 	 * Typechecks a main file and all files that it depends on.
 	 * @param file 				the main file to compile
 	 * @param useSourceFiles 	whether the source files should be recompiled
+	 * @param reporter			object used to report errors
 	 * 
 	 * @return nodes list of AST nodes for the classes to be compile
 	 * @throws ShadowException
@@ -53,8 +54,7 @@ public class TypeChecker {
 	 * @throws ConfigurationException 
 	 */
 	public static List<Context> typeCheck(Path file, boolean useSourceFiles, ErrorReporter reporter)
-			throws ShadowException, IOException, ConfigurationException {	
-		
+			throws ShadowException, IOException, ConfigurationException {
 		Type.clearTypes();		
 		Package packageTree = new Package(); // Root of all packages, storing all types
 		
