@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -29,38 +31,45 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	private int checkedIndex = -1;
 	private DocumentationBuilder docBuilder;
 
-	public ParseChecker(ErrorReporter reporter) 
-	{
+	public ParseChecker(ErrorReporter reporter) {
 		super(reporter);
 	}
 	
-	public Context getCompilationUnit(Path path) throws IOException, ShadowException
-	{			
+	public Context getCompilationUnit(Path path) throws IOException, ShadowException {
+		CharStream stream = CharStreams.fromPath(path.toAbsolutePath());		
+		return getCompilationUnit(stream);
+	}
+	
+	public Context getCompilationUnit(String data, String source) throws IOException, ShadowException {
+		CharStream stream = CharStreams.fromString(data, source);		
+		return getCompilationUnit(stream);
+	}
+	
+	private Context getCompilationUnit(CharStream stream) throws IOException, ShadowException {	
 		ParseErrorListener listener = new ParseErrorListener(getErrorReporter());
-		
-		PathStream stream = new PathStream(path);
 		
 		ShadowLexer lexer = new ShadowLexer(stream);
 		lexer.removeErrorListeners();
 				
-		tokens = new CommonTokenStream(lexer);
-		docBuilder = new DocumentationBuilder();
+		tokens = new CommonTokenStream(lexer);		
+		docBuilder = new DocumentationBuilder();		
 		checkedIndex = -1;
 		
 		Context context = null;
 		
-		ShadowParser parser = new ShadowParser(tokens);
+		ShadowParser parser = new ShadowParser(tokens);		
 		
 		//two-step parsing uses simpler parser unless there's an error
 		parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
 		parser.removeErrorListeners();
 		parser.setErrorHandler(new BailErrorStrategy());
 		
+		
 		try {
 			context = parser.compilationUnit();
 		}
 		catch(ParseCancellationException e) {
-			tokens.reset();
+			tokens.seek(0);
 			parser.reset();
 			lexer.addErrorListener(listener);
 			parser.addErrorListener(listener);	

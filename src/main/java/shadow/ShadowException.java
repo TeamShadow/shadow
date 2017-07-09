@@ -21,18 +21,8 @@ public abstract class ShadowException extends Exception {
 	public ShadowException(String message, Context context) {
 		super(message);
 		this.context = context;
-	}
-	
-	/**
-	 * Gets path where error happened.
-	 * @return			path
-	 */
-	public Path getPath() {
-		if( context != null )
-			return context.getPath();
-		return null;
-	}
-	
+	}	
+
 	/**
 	 * Gets starting line where error happened.
 	 * @return			line

@@ -1,6 +1,7 @@
 package shadow.parse;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,25 +85,12 @@ public class Context extends ParserRuleContext implements ModifiedType {
 	{
 		if( getStart() != null ) {
 			CharStream stream = getStart().getInputStream();
-			if( stream instanceof PathStream )
-				return ((PathStream)stream).getPath();					
+			return Paths.get(stream.getSourceName());			
 		}
 		
 		return null;
 	}
-	
-	public String getSource()
-	{
-		if( getStart() != null ) {
-			CharStream stream = getStart().getInputStream();
-			if( stream instanceof PathStream )
-				return ((PathStream)stream).getPath().toString();		
-		
-			return stream.getSourceName();
-		}
-		
-		return null;
-	}
+
 	
 	public void setType(Type type) 
 	{

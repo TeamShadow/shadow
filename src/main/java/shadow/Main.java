@@ -334,11 +334,11 @@ public class Main {
 
 		if (currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath)
 				.compareTo(Files.getLastModifiedTime(currentFile)) < 0) {
-			logger.info("Generating Assembly code for " + currentFile);
+			logger.info("Generating Assembly code for " + currentFile.getFileName());
 			return true;
 		}
 
-		logger.info("Using pre-existing Assembly code for " + currentFile);
+		logger.info("Using pre-existing Assembly code for " + currentFile.getFileName());
 		return false;
 	}
 

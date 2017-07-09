@@ -198,12 +198,12 @@ public class TypeCollector extends BaseChecker {
         }
         else if (hasMain) {
             // Assume the main file is the first and only file.
-            main = stripExtension(files.get(0).toAbsolutePath().normalize().toString());
+            main = stripExtension(Main.canonicalize(files.get(0)));
             uncheckedFiles.add(main);
         }
         else {
             for (Path file : files) {
-            	String path = stripExtension(file.toAbsolutePath().normalize().toString());
+            	String path = stripExtension(Main.canonicalize(file));
             	uncheckedFiles.add(path);
             }
         }   
