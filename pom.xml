@@ -89,7 +89,7 @@
       <plugin>
       	<groupId>org.antlr</groupId>
       	<artifactId>antlr4-maven-plugin</artifactId>
-      	<version>4.5.3</version>
+      	<version>4.7</version>
       	 <executions>
           <execution>
             <goals>
@@ -119,7 +119,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.antlr</groupId>
                     <artifactId>antlr4-maven-plugin</artifactId>
-                    <versionRange>[4.5.3,)</versionRange>
+                    <versionRange>[4.7,)</versionRange>
                     <goals>
                       <goal>antlr4</goal>
                     </goals>

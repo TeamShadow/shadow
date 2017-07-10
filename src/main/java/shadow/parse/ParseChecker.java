@@ -40,8 +40,8 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		return getCompilationUnit(stream);
 	}
 	
-	public Context getCompilationUnit(String data, String source) throws IOException, ShadowException {
-		CharStream stream = CharStreams.fromString(data, source);		
+	public Context getCompilationUnit(String source, Path path) throws IOException, ShadowException {
+		CharStream stream = CharStreams.fromString(source, path.toString());		
 		return getCompilationUnit(stream);
 	}
 	

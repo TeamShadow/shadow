@@ -378,7 +378,7 @@ public class Main {
 					// no need to check interfaces or .meta files (no code in
 					// either case)
 					if (!file.toString().endsWith(".meta"))
-						optimizeTAC(new TACBuilder().build(node), true);
+						optimizeTAC(new TACBuilder().build(node), reporter, true);
 				} else {
 					String name = BaseChecker.stripExtension(file.getFileName().toString());
 					String path = BaseChecker.stripExtension(canonicalize(file));
@@ -422,8 +422,8 @@ public class Main {
 					}
 					else {
 						logger.info("Generating LLVM code for " + name);
-						// gets top level class
-						TACModule module = optimizeTAC(new TACBuilder().build(node), false);
+						// gets top level class						
+						TACModule module = optimizeTAC(new TACBuilder().build(node), reporter, false);
 						linkCommand.add(optimizeShadowFile(file, module));						
 					}
 					
@@ -433,6 +433,9 @@ public class Main {
 						linkCommand.add(optimizeLLVMFile(nativeFile));					
 				}
 			}
+			
+			reporter.printAndReportErrors();			
+			
 		} catch (TypeCheckException e) {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");
 			throw e;
@@ -540,7 +543,7 @@ public class Main {
 	 * This method contains all the Shadow-specific TAC optimization, including
 	 * constant propagation, control flow analysis, and data flow analysis.
 	 */
-	private static TACModule optimizeTAC(TACModule module, boolean checkOnly)
+	public static TACModule optimizeTAC(TACModule module, ErrorReporter reporter, boolean checkOnly)
 			throws ShadowException, TypeCheckException {
 
 		if (!(module.getType() instanceof InterfaceType)) {
@@ -548,8 +551,6 @@ public class Main {
 			List<TACModule> modules = new ArrayList<TACModule>(innerClasses.size() + 1);
 			modules.add(module);
 			modules.addAll(innerClasses);
-
-			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
 			List<ControlFlowGraph> graphs = module.optimizeTAC(reporter, checkOnly);
 
@@ -599,8 +600,6 @@ public class Main {
 					}
 				}
 			}
-
-			reporter.printAndReportErrors();
 		}
 
 		return module;

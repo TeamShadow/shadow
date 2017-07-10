@@ -91,7 +91,7 @@ public class ErrorReporter {
 	 * @param message			message explaining warning
 	 */
 	public void addWarning(Context ctx, ShadowExceptionFactory warning, String message) {
-		if( Main.getJob().treatWarningsAsErrors() )
+		if( Main.getJob() != null && Main.getJob().treatWarningsAsErrors() )
 			addError(ctx, warning, message);
 		else if( ctx != null )
 			warningList.add(warning.generateException(message, ctx));
