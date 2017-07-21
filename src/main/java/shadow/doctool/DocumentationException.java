@@ -8,7 +8,7 @@ public class DocumentationException extends ShadowException
 {
 	public DocumentationException(String message)
 	{
-		super(message);		
+		super(message, null);		
 	}
 
 	@Override

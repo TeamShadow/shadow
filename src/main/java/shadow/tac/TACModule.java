@@ -14,6 +14,7 @@ import java.util.TreeSet;
 
 import shadow.ShadowException;
 import shadow.output.text.TextOutput;
+import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.CreateDeclarationContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
@@ -271,8 +272,13 @@ public class TACModule {
 				reporter.addAll(graph); //adds any errors found when getting initialized fields
 				if( !create.getModifiers().isPrivate() ) {
 					for( String field : fieldsToCheck )
-						if( !initialized.contains(field) )
-							reporter.addError(create.getNode(), Error.UNINITIALIZED_FIELD, "Non-nullable field " + field + " may not be initialized by a create");
+						if( !initialized.contains(field) ) {							
+							Context node = create.getNode();
+							if( node.getParent() == null ) //dummy node, meaning that the create was automatically constructed
+								node = type.getField(field);
+							
+							reporter.addError(node, Error.UNINITIALIZED_FIELD, "Non-nullable field " + field + " might not be initialized by a create");
+						}
 				}
 				initializedFields.put(create, initialized);
 				priorThisStores.put(create, thisStores);

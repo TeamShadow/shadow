@@ -111,9 +111,7 @@ public class TypeCollector extends BaseChecker {
      * Calls <code>collectTypes</code> with one main file.
      * @param mainFile			main file to be type-checked or compiled
      * @return					map from types to nodes
-     * @throws ParseException
      * @throws ShadowException
-     * @throws TypeCheckException
      * @throws IOException
      * @throws ConfigurationException
      */
@@ -129,14 +127,12 @@ public class TypeCollector extends BaseChecker {
      * @param source			the complete source code to check
      * @param mainFile			main file to be type-checked or compiled
      * @return					map from types to nodes
-     * @throws ParseException
      * @throws ShadowException
-     * @throws TypeCheckException
      * @throws IOException
      * @throws ConfigurationException
      */
     public Map<Type, Context> collectTypes( String source, Path mainFile )
-    		throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
+    		throws ShadowException, IOException, ConfigurationException {
         List<Path> initialFiles = new ArrayList<Path>();
         mainFile = mainFile.toAbsolutePath().normalize();
         initialFiles.add( mainFile );
@@ -151,14 +147,12 @@ public class TypeCollector extends BaseChecker {
      * This proxy method is usually called for documentation or type-checking only.
      * @param files				files to be type-checked
      * @return					map from types to nodes
-     * @throws ParseException
      * @throws ShadowException
-     * @throws TypeCheckException
      * @throws IOException
      * @throws ConfigurationException
      */
     public Map<Type, Context> collectTypes( List<Path> files )
-    		throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
+    		throws ShadowException, IOException, ConfigurationException {
         return collectTypes( files, new HashMap<Path, String>(), false );
     }
    
@@ -286,7 +280,8 @@ public class TypeCollector extends BaseChecker {
 		    if( source != null  )
 		    	node = checker.getCompilationUnit(source, currentFile);
 		    else
-		    	node = checker.getCompilationUnit(currentFile);
+		    	node = checker.getCompilationUnit(currentFile); 
+		    checker.printAndReportErrors();		    
 
 		    // Make another collector to walk the current file. 
 			TypeCollector collector = new TypeCollector( new Package(), getErrorReporter(), useSourceFiles );
@@ -738,8 +733,9 @@ public class TypeCollector extends BaseChecker {
 		Type type = createType(ctx, ctx.getModifiers(), ctx.getDocumentation(), "enum", packageName, ctx.Identifier().getText() );
 		
 		visitChildren(ctx);
-		
-		typeTable.put(type.getTypeWithoutTypeArguments(), ctx );		
+		type = type.getTypeWithoutTypeArguments(); //necessary?
+		typeTable.put(type, ctx);
+		((Context)ctx.getParent()).setType(type);		
 		return null;
 	}
 	

@@ -14,7 +14,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
-import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
 import shadow.doctool.DocumentationException;
@@ -35,17 +34,17 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		super(reporter);
 	}
 	
-	public Context getCompilationUnit(Path path) throws IOException, ShadowException {
+	public CompilationUnitContext getCompilationUnit(Path path) throws IOException {
 		CharStream stream = CharStreams.fromPath(path.toAbsolutePath());		
 		return getCompilationUnit(stream);
 	}
 	
-	public Context getCompilationUnit(String source, Path path) throws IOException, ShadowException {
+	public CompilationUnitContext getCompilationUnit(String source, Path path) throws IOException {
 		CharStream stream = CharStreams.fromString(source, path.toString());		
 		return getCompilationUnit(stream);
 	}
 	
-	private Context getCompilationUnit(CharStream stream) throws IOException, ShadowException {	
+	private CompilationUnitContext getCompilationUnit(CharStream stream) throws IOException {	
 		ParseErrorListener listener = new ParseErrorListener(getErrorReporter());
 		
 		ShadowLexer lexer = new ShadowLexer(stream);
@@ -55,7 +54,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		docBuilder = new DocumentationBuilder();		
 		checkedIndex = -1;
 		
-		Context context = null;
+		CompilationUnitContext context = null;
 		
 		ShadowParser parser = new ShadowParser(tokens);		
 		
@@ -83,7 +82,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		if( getErrorReporter().getErrorList().size() == 0)
 			visit(context);
 
-		printAndReportErrors();
 		return context;
 	}
 	
@@ -265,11 +263,11 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		String symbol = declarator.generalIdentifier().getText();
 		
 		if(symbol.startsWith("$") && modifiers.isPublic()) {
-			addError(ctx, Error.ILLEGAL_MODIFIER, "Class externs cannot be public.");			
+			addError(ctx.methodDeclarator(), Error.ILLEGAL_MODIFIER, "Class externs cannot be public");			
 		}
 		
 		if(!declarator.type().isEmpty() && (!symbol.startsWith("$") || (symbol.startsWith("$") && modifiers.isExtern()))) {
-			addError(ctx, Error.SYNTAX_ERROR, "Only class extern methods starting with $ can contain a list of allowed extern classes.");
+			addError(ctx.methodDeclarator(), Error.SYNTAX_ERROR, "Only class extern methods starting with $ can contain a list of allowed extern classes");
 		}
 		
 		return visitChildren(ctx);		

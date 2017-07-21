@@ -389,16 +389,6 @@ public class NegativeTests {
 		enforce(Error.INVALID_CREATE);			
 	}
 	
-	@Test public void testNonInnerClassExtendsInnerClass() throws Exception {
-		args.add("tests-negative/typechecker/non-inner-class-extends-inner-class/Test.shadow");
-		enforce(Error.INVALID_PARENT);			
-	}
-	
-	@Test public void testInnerClassExtendsInnerClassWithIncompatibleOuterClass() throws Exception {
-		args.add("tests-negative/typechecker/inner-class-extends-inner-class-with-incompatible-outer-class/Test.shadow");
-		enforce(Error.INVALID_PARENT);			
-	}
-	
 	@Test public void testMethodDoesNotReturn() throws Exception {
 		args.add("tests-negative/typechecker/method-does-not-return/Test.shadow");
 		enforce(Error.NOT_ALL_PATHS_RETURN);			

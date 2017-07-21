@@ -281,8 +281,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						if( type instanceof Context ) {						
 							Context declaration = (Context) type;
 							//we don't add warnings for formal parameters: method parameters and catch parameters
-							if( !(declaration instanceof ShadowParser.FormalParameterContext) )
+							if( !(declaration instanceof ShadowParser.FormalParameterContext) ) {								
+								if( declaration instanceof ShadowParser.VariableDeclaratorContext)
+									declaration = ((ShadowParser.VariableDeclaratorContext)declaration).generalIdentifier();
+								
 								addWarning( declaration, Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
+							}
 						}
 						else
 							addWarning( method.getSignature().getNode(), Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");

@@ -14,13 +14,12 @@ public abstract class ShadowException extends Exception {
 	private final Context context;
 
 	public ShadowException(String message) {
-		super(message);		
-		context = null;
+		this(message, null);
 	}
 	
 	public ShadowException(String message, Context context) {
 		super(message);
-		this.context = context;
+		this.context = context;		
 	}	
 
 	/**

@@ -122,7 +122,7 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 	 * @param message		explanatory error message
 	 */
 	public TypeCheckException( Error kind, String message ) {
-		super( message);
+		super( message );
 		error = kind;		
 	}
 	

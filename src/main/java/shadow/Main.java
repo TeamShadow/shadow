@@ -25,6 +25,7 @@ import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
+import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
@@ -49,7 +50,7 @@ import shadow.typecheck.type.Type;
 public class Main {
 
 	// Version of the Shadow compiler
-	public static final String VERSION = "0.7a";
+	public static final String VERSION = "0.75";
 	public static final String MINIMUM_LLVM_VERSION = "3.8";
 
 	// These are the error codes returned by the compiler
@@ -543,8 +544,7 @@ public class Main {
 	 * This method contains all the Shadow-specific TAC optimization, including
 	 * constant propagation, control flow analysis, and data flow analysis.
 	 */
-	public static TACModule optimizeTAC(TACModule module, ErrorReporter reporter, boolean checkOnly)
-			throws ShadowException, TypeCheckException {
+	public static TACModule optimizeTAC(TACModule module, ErrorReporter reporter, boolean checkOnly) {
 
 		if (!(module.getType() instanceof InterfaceType)) {
 			List<TACModule> innerClasses = module.getAllInnerClasses();
@@ -558,17 +558,19 @@ public class Main {
 			Map<Type, Set<String>> allUsedFields = new HashMap<Type, Set<String>>();
 			Set<MethodSignature> allUsedPrivateMethods = new HashSet<MethodSignature>();
 			for (ControlFlowGraph graph : graphs) {
-				Map<Type, Set<String>> usedFields = graph.getUsedFields();
-				for (Entry<Type, Set<String>> entry : usedFields.entrySet()) {
-					Set<String> fields = allUsedFields.get(entry.getKey());
-					if (fields == null) {
-						fields = new HashSet<String>();
-						allUsedFields.put(entry.getKey(), fields);
+				if( !graph.getMethod().getSignature().isCopy() && !graph.getMethod().getSignature().isDestroy() ) {				
+					Map<Type, Set<String>> usedFields = graph.getUsedFields();
+					for (Entry<Type, Set<String>> entry : usedFields.entrySet()) {
+						Set<String> fields = allUsedFields.get(entry.getKey());
+						if (fields == null) {
+							fields = new HashSet<String>();
+							allUsedFields.put(entry.getKey(), fields);
+						}
+						fields.addAll(entry.getValue());
 					}
-					fields.addAll(entry.getValue());
+	
+					allUsedPrivateMethods.addAll(graph.getUsedPrivateMethods());
 				}
-
-				allUsedPrivateMethods.addAll(graph.getUsedPrivateMethods());
 			}
 
 			for (TACModule class_ : modules) {
@@ -581,7 +583,7 @@ public class Main {
 				for (Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()) {
 					if (!entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey())
 							&& entry.getValue().getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()) {
-						reporter.addWarning(entry.getValue(), TypeCheckException.Error.UNUSED_FIELD,
+						reporter.addWarning(entry.getValue().generalIdentifier(), TypeCheckException.Error.UNUSED_FIELD,
 								"Field " + entry.getKey() + " is never used");
 					}
 				}
@@ -592,8 +594,17 @@ public class Main {
 						if (signature.getModifiers().isPrivate()
 								&& !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments())
 								&& !signature.getSymbol().startsWith("$") && !signature.isExtern()
-								&& signature.getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()) {
-							reporter.addWarning(signature.getNode(), TypeCheckException.Error.UNUSED_METHOD,
+								&& signature.getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
+								&& !signature.isDestroy()) {
+							
+							Context node = signature.getNode();
+							if( node instanceof ShadowParser.MethodDeclarationContext)
+								node = ((ShadowParser.MethodDeclarationContext)node).methodDeclarator();
+							else if( node instanceof ShadowParser.CreateDeclarationContext )
+								node = ((ShadowParser.CreateDeclarationContext)node).createDeclarator();
+							
+							
+							reporter.addWarning(node, TypeCheckException.Error.UNUSED_METHOD,
 									"Private method " + signature.getSymbol() + signature.getMethodType()
 											+ " is never used");
 						}

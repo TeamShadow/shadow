@@ -366,9 +366,9 @@ public class ClassType extends Type {
 					}
 					
 					if( field.getType() instanceof InterfaceType )
-						field.setType( new UninstantiatedInterfaceType( (InterfaceType)field.getType(), typeArguments ));
+						field.setType( new UninstantiatedInterfaceType( (InterfaceType)field.getType(), typeArguments, null ));
 					else
-						field.setType( new UninstantiatedClassType( (ClassType)field.getType(), typeArguments ));
+						field.setType( new UninstantiatedClassType( (ClassType)field.getType(), typeArguments, null ));
 				}
 				replaced.addField(name, field );
 			}

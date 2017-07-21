@@ -32,6 +32,7 @@ import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
 import shadow.parse.Context;
+import shadow.parse.ParseException;
 import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;

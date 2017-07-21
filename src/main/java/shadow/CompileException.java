@@ -5,7 +5,7 @@ public class CompileException extends ShadowException
 {
 	public CompileException(String message) 
 	{
-		super(message);
+		super(message, null);
 	}
 
 	@Override

@@ -1,8 +1,0 @@
-class Test is Outer:Inner
-{
-	public method() => (int)
-	{
-		int a = 6;
-		return a;
-	}
-}

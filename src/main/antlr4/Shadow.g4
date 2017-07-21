@@ -359,7 +359,7 @@ unaryExpression
 	: '#' unaryExpression
 	| '~' unaryExpression
 	| '!' unaryExpression
-	| '-'unaryExpression
+	| '-' unaryExpression
 	| inlineMethodDefinition
 	| primaryExpression	
 	;

@@ -2,27 +2,30 @@ package shadow.typecheck.type;
 
 import java.util.List;
 
+import shadow.parse.ShadowParser.TypeArgumentsContext;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class UninstantiatedClassType extends ClassType implements UninstantiatedType {
 	private final ClassType type;
-	private final SequenceType typeArguments;	
+	private final SequenceType typeArguments;
+	private final TypeArgumentsContext context;
 	
 	public SequenceType getTypeArguments()
 	{
 		return typeArguments;
 	}
 	
-	public UninstantiatedClassType(ClassType type, SequenceType typeArguments )
+	public UninstantiatedClassType(ClassType type, SequenceType typeArguments, TypeArgumentsContext context )
 	{
-		this(type, typeArguments, type.getOuter() );		
+		this(type, typeArguments, context, type.getOuter() );		
 	}
 	
-	public UninstantiatedClassType(ClassType type, SequenceType typeArguments, Type outer )
+	public UninstantiatedClassType(ClassType type, SequenceType typeArguments, TypeArgumentsContext context, Type outer )
 	{
 		super(type.getTypeName(), type.getModifiers(), type.getDocumentation(), outer);		
 		this.type = type;
 		this.typeArguments = typeArguments;
+		this.context = context;
 	}
 	
 	public ClassType getType()
@@ -30,7 +33,9 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		return type;
 	}
 	
-	
+	public TypeArgumentsContext getContext() {
+		return context;
+	}
 
 	//doesn't update members and methods
 	@Override
@@ -47,7 +52,7 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		}
 		
 		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
-			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
+			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters(), context);
 		
 		return type.partiallyReplace(type.getTypeParameters(), typeArguments);
 	}
@@ -67,7 +72,7 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 		}
 		
 		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
-			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
+			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters(), context);
 		
 		return type.replace(type.getTypeParameters(), typeArguments);
 	}
@@ -75,13 +80,13 @@ public class UninstantiatedClassType extends ClassType implements Uninstantiated
 	@Override
 	public UninstantiatedClassType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
-		return new UninstantiatedClassType( type, typeArguments.partiallyReplace(values, replacements) );
+		return new UninstantiatedClassType( type, typeArguments.partiallyReplace(values, replacements), context );
 	}
 	
 	@Override
 	public ClassType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
-		return new UninstantiatedClassType( type, typeArguments.replace(values, replacements) ).instantiate();
+		return new UninstantiatedClassType( type, typeArguments.replace(values, replacements), context ).instantiate();
 	}
 	
 	
