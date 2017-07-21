@@ -260,7 +260,7 @@ public class TypeCollector extends BaseChecker {
 				// that are newer than the source, use those binaries.
 				if( !useSourceFiles &&
 					!mustRecompile.contains(canonical) &&
-					source != null &&
+					source == null &&
 					Files.exists(meta) && Files.getLastModifiedTime(meta).compareTo(Files.getLastModifiedTime(canonicalFile)) >= 0 &&
 					Files.exists(llvm) && Files.getLastModifiedTime(llvm).compareTo(Files.getLastModifiedTime(meta)) >= 0)
 					canonicalFile = meta;				

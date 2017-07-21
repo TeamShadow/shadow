@@ -50,7 +50,7 @@ import shadow.typecheck.type.Type;
 public class Main {
 
 	// Version of the Shadow compiler
-	public static final String VERSION = "0.75";
+	public static final String VERSION = "0.7.5";
 	public static final String MINIMUM_LLVM_VERSION = "3.8";
 
 	// These are the error codes returned by the compiler
@@ -412,7 +412,7 @@ public class Main {
 
 					// if the LLVM bitcode didn't exist, the full .shadow file would
 					// have been used
-					if (file.toString().endsWith(".meta")) {
+					if( file.toString().endsWith(".meta") ) {
 						logger.info("Using pre-existing LLVM code for " + name);
 						if (Files.exists(bitcodeFile))
 							linkCommand.add(canonicalize(bitcodeFile));
