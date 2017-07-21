@@ -6,8 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.JarURLConnection;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -351,23 +353,17 @@ public class Configuration {
 	/** Gets the directory within which the compiler is currently running */
 	public static Path getRunningDirectory() throws ConfigurationException {		
 		try {
-			URL path = Main.class.getProtectionDomain().getCodeSource().getLocation();
-			
-			// This is used to remove the "jar:" from the path when called through reflection. 
-			if(path.toString().startsWith("jar:file")) {
-				path = ((JarURLConnection) path.openConnection()).getJarFileURL();
-				return Paths.get(path.getPath()).getParent().toAbsolutePath();
-			}
-			
-			return Paths.get(path.toURI()).getParent().toAbsolutePath();
+			URL url = Main.class.getProtectionDomain().getCodeSource().getLocation();
+			URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(),
+                    url.getPort(), url.getPath(), url.getQuery(), 
+                    url.getRef());
+			return Paths.get(uri).getParent().toAbsolutePath();
 		}
 		catch( SecurityException e ) {
 			throw new ConfigurationException("Insufficient permissions to access the running directory");
-		}
-		catch (IOException e) {
-			throw new ConfigurationException(e.toString());
-		} catch (URISyntaxException e) {
-			throw new ConfigurationException(e.toString());
+		} 
+		catch (URISyntaxException e) {
+			throw new ConfigurationException(e.getLocalizedMessage());
 		}
 	}
 	

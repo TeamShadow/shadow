@@ -144,8 +144,11 @@ public class TypeUpdater extends BaseChecker {
 				Type type = declarationNode.getType();				
 				type.updateFieldsAndMethods();				
 			}
-			catch(InstantiationException e) {							
-				addError(declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+			catch(InstantiationException e) {	
+				Context node = e.getContext();
+				if( node == null )
+					node = declarationNode;				
+				addError(node, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 			}
 		}		
 	}
@@ -227,12 +230,21 @@ public class TypeUpdater extends BaseChecker {
 	}
 	
 	//We want a token from the same file, for error reporting purposes
-	private static Token makeDummyToken(Context node)
-	{		
-		CommonToken token = new CommonToken(node.getStart());
-		//since the token is for a made-up create or property, it has no location in the file
-		token.setLine(-1);
-		token.setCharPositionInLine(-1);
+	private static Token makeDummyToken(Context node) {	
+		CommonToken token;		
+		
+		if( node instanceof ShadowParser.ClassOrInterfaceDeclarationContext )
+			token = new CommonToken(((ShadowParser.ClassOrInterfaceDeclarationContext)node).Identifier().getSymbol()); 
+		else if( node instanceof ShadowParser.EnumDeclarationContext )
+			token = new CommonToken(((ShadowParser.EnumDeclarationContext)node).Identifier().getSymbol());
+		else {
+			token = new CommonToken(node.getStart());
+			//since the token is for a made-up create or property, it has no location in the file
+			token.setLine(-1);
+			token.setCharPositionInLine(-1);
+			token.setStartIndex(0);
+			token.setStopIndex(0);
+		}
 		
 		return token;		
 	}
@@ -489,12 +501,12 @@ public class TypeUpdater extends BaseChecker {
 						classType.setExtendType( parent );										
 					} 
 					catch (InstantiationException e) {
-						addError( declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+						Context node = e.getContext();
+						if( node == null )
+							node = declarationNode;	
+						addError( node, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 					}
 				}
-				
-				if( parent != null && parent.hasOuter() && (!type.hasOuter() || !type.getOuter().isSubtype(parent.getOuter() ) ) )
-					addError( declarationNode, Error.INVALID_PARENT, "Type " + type + " cannot have type " + parent + " as a parent since they have incompatible outer classes" );				
 			}			
 			
 			/* Update interfaces */
@@ -639,7 +651,10 @@ public class TypeUpdater extends BaseChecker {
 					typeParameter.updateFieldsAndMethods();
 				}
 				catch( InstantiationException e ) {
-					addError( declarationNode, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
+					Context node = e.getContext();
+					if( node == null )
+						node = declarationNode;	
+					addError( node, Error.INVALID_TYPE_ARGUMENTS, e.getMessage() );
 				}
 			}
 		}
@@ -828,7 +843,7 @@ public class TypeUpdater extends BaseChecker {
 		} 
 		
 		if(!signature.isExtern() && signature.getSymbol().startsWith("_")) {
-  			addError(node, Error.INVALID_METHODIDENTIFIER, Error.INVALID_METHODIDENTIFIER.getMessage());
+  			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
   		}
 		
 		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
@@ -1266,9 +1281,9 @@ public class TypeUpdater extends BaseChecker {
 				SequenceType arguments = (SequenceType) ctx.typeArguments().getType();						
 				if( type.isParameterized() ) {
 					if( type instanceof ClassType )						
-						type = new UninstantiatedClassType( (ClassType)type, arguments );
+						type = new UninstantiatedClassType( (ClassType)type, arguments, ctx.typeArguments() );
 					else if( type instanceof InterfaceType )
-						type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments );
+						type = new UninstantiatedInterfaceType( (InterfaceType)type, arguments, ctx.typeArguments() );
 				}
 				else {
 					addError(ctx, Error.UNNECESSARY_TYPE_ARGUMENTS,

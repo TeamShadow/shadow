@@ -73,7 +73,7 @@ public class ParseException extends ShadowException {
 	private final int columnStart;
 	private final int columnEnd;
 	private final int startCharacter;
-	private final int stopCharacter;
+	private final int stopCharacter;	
 	
 	/**
 	 * Creates a <code>ParseException</code> with a specified kind of error and a message.
@@ -86,10 +86,9 @@ public class ParseException extends ShadowException {
 		lineStart = lineEnd = line;
 		columnStart = columnEnd = column;
 		this.startCharacter = startCharacter;
-		this.stopCharacter = stopCharacter;
-		
+		this.stopCharacter = stopCharacter;		
 	}
-	
+
 	/**
 	 * Creates a <code>ParseException</code> with a specified kind of error and a message
 	 * at a particular location in a file.
@@ -105,8 +104,8 @@ public class ParseException extends ShadowException {
 		columnStart = context.getStart().getCharPositionInLine();
 		columnEnd = context.getStop().getCharPositionInLine();
 		startCharacter = context.start.getStartIndex();
-		stopCharacter = context.stop.getStopIndex();
-	}		
+		stopCharacter = context.stop.getStopIndex();		
+	}
 	
 	/**
 	 * Gets kind of error.

@@ -2,12 +2,14 @@ package shadow.typecheck.type;
 
 import java.util.List;
 
+import shadow.parse.ShadowParser.TypeArgumentsContext;
 import shadow.typecheck.BaseChecker.SubstitutionKind;
 
 public class UninstantiatedInterfaceType extends InterfaceType implements UninstantiatedType 
 {	
 	private final InterfaceType type;
 	private final SequenceType typeArguments;
+	private final TypeArgumentsContext context;
 	
 	public SequenceType getTypeArguments()
 	{
@@ -19,16 +21,21 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 		return type;
 	}
 	
-	public UninstantiatedInterfaceType(InterfaceType type, SequenceType typeArguments)
+	public UninstantiatedInterfaceType(InterfaceType type, SequenceType typeArguments, TypeArgumentsContext context)
 	{
 		super(type.getTypeName(), type.getModifiers(), type.getDocumentation());		
 		this.type = type;
 		this.typeArguments = typeArguments;
+		this.context = context;
 	}
 	
 	@Override
 	public String toString(int options) {
 		return type.toString() + typeArguments.toString(" [", "]", options);
+	}
+	
+	public TypeArgumentsContext getContext() {
+		return context;
 	}
 	
 	@Override
@@ -59,7 +66,7 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 		}		
 		
 		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
-			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
+			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters(), context);
 		
 		return type.replace(type.getTypeParameters(), typeArguments);
 	}
@@ -79,7 +86,7 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 		}
 		
 		if( !type.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) )
-			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters());
+			throw new InstantiationException( "Supplied type arguments " + typeArguments + " do not match type parameters " + type.getTypeParameters(), context);
 		
 		return type.partiallyReplace(type.getTypeParameters(), typeArguments);
 	}
@@ -87,13 +94,13 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
 	@Override
 	public UninstantiatedInterfaceType partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
-		return new UninstantiatedInterfaceType( type, typeArguments.partiallyReplace(values, replacements) );
+		return new UninstantiatedInterfaceType( type, typeArguments.partiallyReplace(values, replacements), context );
 	}
 	
 	@Override
 	public InterfaceType replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException
 	{
-		return new UninstantiatedInterfaceType( type, typeArguments.replace(values, replacements) ).instantiate();
+		return new UninstantiatedInterfaceType( type, typeArguments.replace(values, replacements), context ).instantiate();
 	}
 	
 	@Override

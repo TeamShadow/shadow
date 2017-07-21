@@ -32,6 +32,7 @@ import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
 import shadow.parse.Context;
+import shadow.parse.ParseException;
 import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
@@ -45,6 +46,7 @@ public class TypeChecker {
 	 * Typechecks a main file and all files that it depends on.
 	 * @param file 				the main file to compile
 	 * @param useSourceFiles 	whether the source files should be recompiled
+	 * @param reporter			object used to report errors
 	 * 
 	 * @return nodes list of AST nodes for the classes to be compile
 	 * @throws ShadowException
@@ -53,8 +55,7 @@ public class TypeChecker {
 	 * @throws ConfigurationException 
 	 */
 	public static List<Context> typeCheck(Path file, boolean useSourceFiles, ErrorReporter reporter)
-			throws ShadowException, IOException, ConfigurationException {	
-		
+			throws ShadowException, IOException, ConfigurationException {
 		Type.clearTypes();		
 		Package packageTree = new Package(); // Root of all packages, storing all types
 		
@@ -117,6 +118,47 @@ public class TypeChecker {
 		
 		return neededNodes;
 	}
+	
+	/**
+	 * Typechecks the source code of a particular file.
+	 * @param source			the complete source code to check
+	 * @param file 				the location of the source code
+	 * @param reporter			object used to report errors
+	 *
+	 * @throws ShadowException
+	 * @throws ParseException 
+	 * @throws IOException 
+	 * @throws ConfigurationException 
+	 */
+	public static Context typeCheck(String source, Path file, ErrorReporter reporter)
+			throws ShadowException, IOException, ConfigurationException {
+		Type.clearTypes();		
+		Package packageTree = new Package(); // Root of all packages, storing all types
+		
+		/* Collector looks over all files and creates types for everything needed. */
+		TypeCollector collector = new TypeCollector( packageTree, reporter, false );
+		
+		/* Its return value maps all the types to the nodes that need compiling. */		
+		Map<Type, Context> nodeTable = collector.collectTypes( source, file );
+		Type mainType = collector.getMainType();
+		
+		/* Updates types, adding:
+		 *  Fields and methods
+		 *  Type parameters (including necessary instantiations)
+		 *  All types with type parameters (except for declarations) are UninitializedTypes
+		 *  Extends and implements lists
+		 */
+		TypeUpdater updater = new TypeUpdater(packageTree, reporter);
+		nodeTable = updater.update( nodeTable );
+				
+		/* Do type-checking of statements, i.e., actual code. */
+		StatementChecker checker = new StatementChecker( packageTree, reporter );
+		Context mainNode = nodeTable.get(mainType); 
+		checker.check(mainNode);
+		
+		return mainNode;
+	}
+	
 	
 	/*
 	 * Prints a .meta file version of a given node, similar to a header file in C/C++.

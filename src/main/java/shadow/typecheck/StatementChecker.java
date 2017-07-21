@@ -1146,6 +1146,12 @@ public class StatementChecker extends BaseChecker {
 				type = null;
 		}
 		
+		if( type == null ) {
+			ctx.setType(Type.UNKNOWN);
+			addError(ctx, Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");
+			return null;
+		}
+		
 		if( !classIsAccessible( type, currentType ) )		
 			addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
 					" not accessible from this context", type);

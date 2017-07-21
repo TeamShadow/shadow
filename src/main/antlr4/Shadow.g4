@@ -359,7 +359,7 @@ unaryExpression
 	: '#' unaryExpression
 	| '~' unaryExpression
 	| '!' unaryExpression
-	| '-'unaryExpression
+	| '-' unaryExpression
 	| inlineMethodDefinition
 	| primaryExpression	
 	;
@@ -736,7 +736,6 @@ CHECK		: 'check';
 CLASS		: 'class';
 CODE		: 'code';
 COPY		: 'copy';
-SPAWN		: 'spawn';
 CREATE		: 'create';
 CONSTANT	: 'constant';
 CONTINUE	: 'continue';
@@ -747,6 +746,7 @@ DOUBLE		: 'double';
 ELSE		: 'else';
 ENUM		: 'enum';
 EXCEPTION	: 'exception';
+EXTERN		: 'extern';
 FINALLY		: 'finally';
 FLOAT		: 'float';
 FOR			: 'for';
@@ -771,10 +771,12 @@ PUBLIC		: 'public';
 READONLY	: 'readonly';
 RECOVER		: 'recover';
 RETURN		: 'return';
+SEND		: 'send';
 SET			: 'set';
 SHORT		: 'short';
 SINGLETON	: 'singleton';
 SKIP_		: 'skip';
+SPAWN		: 'spawn';
 SUPER		: 'super';
 SWITCH		: 'switch';
 THIS		: 'this';
@@ -788,8 +790,6 @@ VAR			: 'var';
 WEAK		: 'weak';
 WHILE		: 'while';
 XOR			: 'xor';
-EXTERN		: 'extern';
-SEND		: 'send';
 //RECEIVE		: 'receive';
 
 // Literals

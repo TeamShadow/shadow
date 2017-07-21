@@ -111,9 +111,7 @@ public class TypeCollector extends BaseChecker {
      * Calls <code>collectTypes</code> with one main file.
      * @param mainFile			main file to be type-checked or compiled
      * @return					map from types to nodes
-     * @throws ParseException
      * @throws ShadowException
-     * @throws TypeCheckException
      * @throws IOException
      * @throws ConfigurationException
      */
@@ -121,35 +119,53 @@ public class TypeCollector extends BaseChecker {
     		throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
         List<Path> initialFiles = new ArrayList<Path>();
         initialFiles.add( mainFile );
-        return collectTypes( initialFiles, true );
+        return collectTypes( initialFiles, new HashMap<Path, String>(), true );
     }
+    
+    /** 
+     * Calls <code>collectTypes</code> with one main file, whose source is given in source 
+     * @param source			the complete source code to check
+     * @param mainFile			main file to be type-checked or compiled
+     * @return					map from types to nodes
+     * @throws ShadowException
+     * @throws IOException
+     * @throws ConfigurationException
+     */
+    public Map<Type, Context> collectTypes( String source, Path mainFile )
+    		throws ShadowException, IOException, ConfigurationException {
+        List<Path> initialFiles = new ArrayList<Path>();
+        mainFile = mainFile.toAbsolutePath().normalize();
+        initialFiles.add( mainFile );
+        Map<Path,String> activeFiles = new HashMap<Path, String>();
+        activeFiles.put(mainFile, source);
+        return collectTypes( initialFiles, activeFiles, true );
+    }
+    
    
     /** 
      * Calls <code>collectTypes</code> with multiple, non-main files.
      * This proxy method is usually called for documentation or type-checking only.
      * @param files				files to be type-checked
      * @return					map from types to nodes
-     * @throws ParseException
      * @throws ShadowException
-     * @throws TypeCheckException
      * @throws IOException
      * @throws ConfigurationException
      */
     public Map<Type, Context> collectTypes( List<Path> files )
-    		throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
-        return collectTypes( files, false );
+    		throws ShadowException, IOException, ConfigurationException {
+        return collectTypes( files, new HashMap<Path, String>(), false );
     }
    
     /*
      * Calls the full <code>collectTypes</code> and might call it a second time
      * if needed to determine what should be recompiled.
      */
-    private Map<Type, Context> collectTypes( List<Path> files, boolean hasMain ) throws ShadowException, IOException, ConfigurationException {
+    private Map<Type, Context> collectTypes( List<Path> files, Map<Path,String> activeFiles, boolean hasMain ) throws ShadowException, IOException, ConfigurationException {
         Set<String> mustRecompile = new HashSet<String>();
         Map<String, TreeSet<String>> dependencies = new HashMap<String, TreeSet<String>>();
         
         // Initial type collection
-        collectTypes( files, hasMain, mustRecompile, dependencies );
+        collectTypes( files, hasMain, activeFiles, mustRecompile, dependencies );
         
         // Files needing recompilation may trigger other files to get recompiled.
         // Figure out which ones and redo the whole type collection process.
@@ -171,7 +187,7 @@ public class TypeCollector extends BaseChecker {
         	clear(); // Clears out all internal representations and types.
         	
         	// Collect types again with updated recompilation requirements.
-        	collectTypes( files, hasMain, mustRecompile, null );
+        	collectTypes( files, hasMain, activeFiles, mustRecompile, null );
 		}        
 		
         // Check packages for errors.
@@ -185,8 +201,11 @@ public class TypeCollector extends BaseChecker {
     
     /*
      * Does actual collection of types based on a list of files. 
+     * The map activeFiles contains the (perhaps updated) source of files 
+     * that might not be saved into files yet.  Usually, this information
+     * comes from a file being edited in an IDE.
      */
-    private void collectTypes(List<Path> files, boolean hasMain,
+    private void collectTypes(List<Path> files, boolean hasMain, Map<Path,String> activeFiles,
     		Set<String> mustRecompile, Map<String,TreeSet<String>> dependencies)
     		throws ShadowException, IOException, ConfigurationException {
         // Create and fill the initial set of files to be checked.
@@ -198,12 +217,12 @@ public class TypeCollector extends BaseChecker {
         }
         else if (hasMain) {
             // Assume the main file is the first and only file.
-            main = stripExtension(files.get(0).toAbsolutePath().normalize().toString());
+            main = stripExtension(Main.canonicalize(files.get(0)));
             uncheckedFiles.add(main);
         }
         else {
             for (Path file : files) {
-            	String path = stripExtension(file.toAbsolutePath().normalize().toString());
+            	String path = stripExtension(Main.canonicalize(file));
             	uncheckedFiles.add(path);
             }
         }   
@@ -229,6 +248,7 @@ public class TypeCollector extends BaseChecker {
 			uncheckedFiles.remove(canonical);	
 			
 			Path canonicalFile = Paths.get(canonical + ".shadow");
+			String source = activeFiles.get(canonicalFile);
 			
 			// Depending on the circumstances, the compiler may choose to either
 			// compile/recompile source files, or rely on existing binaries/IR.
@@ -240,6 +260,7 @@ public class TypeCollector extends BaseChecker {
 				// that are newer than the source, use those binaries.
 				if( !useSourceFiles &&
 					!mustRecompile.contains(canonical) &&
+					source == null &&
 					Files.exists(meta) && Files.getLastModifiedTime(meta).compareTo(Files.getLastModifiedTime(canonicalFile)) >= 0 &&
 					Files.exists(llvm) && Files.getLastModifiedTime(llvm).compareTo(Files.getLastModifiedTime(meta)) >= 0)
 					canonicalFile = meta;				
@@ -253,7 +274,14 @@ public class TypeCollector extends BaseChecker {
 		    
 		    //Use the semantic checker to parse the file
 		    ParseChecker checker = new ParseChecker(new ErrorReporter(Loggers.PARSER));
-		    Context node = checker.getCompilationUnit(currentFile);
+		    Context node;
+		    //if there's an updated source, use that
+		    //otherwise, read from the file
+		    if( source != null  )
+		    	node = checker.getCompilationUnit(source, currentFile);
+		    else
+		    	node = checker.getCompilationUnit(currentFile); 
+		    checker.printAndReportErrors();		    
 
 		    // Make another collector to walk the current file. 
 			TypeCollector collector = new TypeCollector( new Package(), getErrorReporter(), useSourceFiles );
@@ -705,8 +733,9 @@ public class TypeCollector extends BaseChecker {
 		Type type = createType(ctx, ctx.getModifiers(), ctx.getDocumentation(), "enum", packageName, ctx.Identifier().getText() );
 		
 		visitChildren(ctx);
-		
-		typeTable.put(type.getTypeWithoutTypeArguments(), ctx );		
+		type = type.getTypeWithoutTypeArguments(); //necessary?
+		typeTable.put(type, ctx);
+		((Context)ctx.getParent()).setType(type);		
 		return null;
 	}
 	

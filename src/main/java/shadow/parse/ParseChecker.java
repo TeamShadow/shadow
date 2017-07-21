@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -12,7 +14,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
-import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
 import shadow.doctool.DocumentationException;
@@ -29,38 +30,45 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	private int checkedIndex = -1;
 	private DocumentationBuilder docBuilder;
 
-	public ParseChecker(ErrorReporter reporter) 
-	{
+	public ParseChecker(ErrorReporter reporter) {
 		super(reporter);
 	}
 	
-	public Context getCompilationUnit(Path path) throws IOException, ShadowException
-	{			
+	public CompilationUnitContext getCompilationUnit(Path path) throws IOException {
+		CharStream stream = CharStreams.fromPath(path.toAbsolutePath());		
+		return getCompilationUnit(stream);
+	}
+	
+	public CompilationUnitContext getCompilationUnit(String source, Path path) throws IOException {
+		CharStream stream = CharStreams.fromString(source, path.toString());		
+		return getCompilationUnit(stream);
+	}
+	
+	private CompilationUnitContext getCompilationUnit(CharStream stream) throws IOException {	
 		ParseErrorListener listener = new ParseErrorListener(getErrorReporter());
-		
-		PathStream stream = new PathStream(path);
 		
 		ShadowLexer lexer = new ShadowLexer(stream);
 		lexer.removeErrorListeners();
 				
-		tokens = new CommonTokenStream(lexer);
-		docBuilder = new DocumentationBuilder();
+		tokens = new CommonTokenStream(lexer);		
+		docBuilder = new DocumentationBuilder();		
 		checkedIndex = -1;
 		
-		Context context = null;
+		CompilationUnitContext context = null;
 		
-		ShadowParser parser = new ShadowParser(tokens);
+		ShadowParser parser = new ShadowParser(tokens);		
 		
 		//two-step parsing uses simpler parser unless there's an error
 		parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
 		parser.removeErrorListeners();
 		parser.setErrorHandler(new BailErrorStrategy());
 		
+		
 		try {
 			context = parser.compilationUnit();
 		}
 		catch(ParseCancellationException e) {
-			tokens.reset();
+			tokens.seek(0);
 			parser.reset();
 			lexer.addErrorListener(listener);
 			parser.addErrorListener(listener);	
@@ -74,7 +82,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		if( getErrorReporter().getErrorList().size() == 0)
 			visit(context);
 
-		printAndReportErrors();
 		return context;
 	}
 	
@@ -256,11 +263,11 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		String symbol = declarator.generalIdentifier().getText();
 		
 		if(symbol.startsWith("$") && modifiers.isPublic()) {
-			addError(ctx, Error.ILLEGAL_MODIFIER, "Class externs cannot be public.");			
+			addError(ctx.methodDeclarator(), Error.ILLEGAL_MODIFIER, "Class externs cannot be public");			
 		}
 		
 		if(!declarator.type().isEmpty() && (!symbol.startsWith("$") || (symbol.startsWith("$") && modifiers.isExtern()))) {
-			addError(ctx, Error.SYNTAX_ERROR, "Only class extern methods starting with $ can contain a list of allowed extern classes.");
+			addError(ctx.methodDeclarator(), Error.SYNTAX_ERROR, "Only class extern methods starting with $ can contain a list of allowed extern classes");
 		}
 		
 		return visitChildren(ctx);		

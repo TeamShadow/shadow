@@ -9,6 +9,7 @@ import shadow.Main;
 import shadow.ShadowException;
 import shadow.ShadowExceptionFactory;
 import shadow.parse.Context;
+import shadow.parse.ParseException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
@@ -60,8 +61,8 @@ public class ErrorReporter {
 		if( containsUnknown(errorTypes) )
 			return; // Don't add error if it has an unknown type in it.
 			
-		if( ctx != null ) 
-			errorList.add(error.generateException(message, ctx ));	
+		if( ctx != null ) 			
+			errorList.add(error.generateException(message, ctx));		
 	}
 	
 	/**
@@ -69,8 +70,8 @@ public class ErrorReporter {
 	 * @param exception			exception for error	
 	 */
 	public void addError(ShadowException exception) {
-		if( exception != null ) 
-			errorList.add(exception);	
+		if( exception != null )			
+			errorList.add(exception);		
 	}
 	
 	/**
@@ -80,8 +81,9 @@ public class ErrorReporter {
 	public void addWarning(ShadowException exception) {
 		if( Main.getJob() != null && Main.getJob().treatWarningsAsErrors() )
 			addError(exception);
-		else if( exception != null )
+		else if( exception != null )			
 			warningList.add(exception);
+		
 	}
 	
 	/**
@@ -91,10 +93,10 @@ public class ErrorReporter {
 	 * @param message			message explaining warning
 	 */
 	public void addWarning(Context ctx, ShadowExceptionFactory warning, String message) {
-		if( Main.getJob().treatWarningsAsErrors() )
+		if( Main.getJob() != null && Main.getJob().treatWarningsAsErrors() )
 			addError(ctx, warning, message);
-		else if( ctx != null )
-			warningList.add(warning.generateException(message, ctx));
+		else if( ctx != null )	
+			warningList.add(warning.generateException(message, ctx));		
 	}
 	
 	/**
