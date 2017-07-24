@@ -388,7 +388,7 @@ public class Configuration {
 		// Note: Most of the LLVM tools also have this option
 		Process process = null;
 		try {
-			process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(Main.quoteString(getLlc()), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -419,7 +419,7 @@ public class Configuration {
 	public static String getLLVMVersion() {
 		Process process = null;
 		try {
-			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(Main.quoteString(getConfiguration().getLlc()), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -450,7 +450,7 @@ public class Configuration {
 		// Note: Most of the LLVM tools also have this option
 		Process process = null;
 		try {		
-			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(Main.quoteString(getConfiguration().getLlc()), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String information = "";

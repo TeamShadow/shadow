@@ -62,6 +62,8 @@ public class Main {
 	public static final int COMMAND_LINE_ERROR = -5;
 	public static final int CONFIGURATION_ERROR = -6;
 
+	public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
+
 	private static final Logger logger = Loggers.SHADOW;
 	private static Configuration config;
 	private static Job currentJob;
@@ -122,7 +124,7 @@ public class Main {
 	}
 
 	public static void run(String[] args) throws FileNotFoundException, ParseException, ShadowException, IOException,
-			org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
+	org.apache.commons.cli.ParseException, ConfigurationException, TypeCheckException, CompileException {
 
 		// Detect and establish the current settings and arguments
 		Arguments compilerArgs = new Arguments(args);
@@ -186,9 +188,9 @@ public class Main {
 
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
 			// usually llc
-			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
+			Process compile = new ProcessBuilder(quoteString(config.getLlc()), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel())
-							/* .redirectOutput(new File("a.s")) */.redirectError(Redirect.INHERIT).start();
+					/* .redirectOutput(new File("a.s")) */.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT)
 					.redirectError(Redirect.INHERIT).start();
 
@@ -210,22 +212,22 @@ public class Main {
 					link.getOutputStream().close();
 				} catch (IOException ex) {
 				}
-				
+
 				long sectionStart = System.currentTimeMillis();
 				if (link.waitFor() != 0)
 					throw new CompileException("FAILED TO LINK");
 				logger.info("LLVM link finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
-			
+
 				sectionStart = System.currentTimeMillis();
 				if (compile.waitFor() != 0)
 					throw new CompileException("FAILED TO COMPILE");
 				logger.info("LLVM compilation finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
-				
+
 				sectionStart = System.currentTimeMillis();
 				if (assemble.waitFor() != 0)
 					throw new CompileException("FAILED TO ASSEMBLE");
 				logger.info("Assembly finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
-				
+
 			} catch (InterruptedException ex) {
 			} finally {
 				link.destroy();				
@@ -239,7 +241,7 @@ public class Main {
 
 	private static boolean compileCSourceFiles(Path cSourcePath, List<Path> cShadowFiles, List<String> assembleCommand)
 			throws IOException, ConfigurationException {
-		
+
 		// no need to compile anything if there are no c-source files
 		if( !Files.exists(cSourcePath) ) {
 			logger.error("The c-source directory was not found and is necessary for the Shadow runtime.");
@@ -256,9 +258,9 @@ public class Main {
 			// compileCommand.add("-Wall");			
 		} else
 			compileCommand.add("gcc");
-		
+
 		compileCommand.add("-O3");
-		
+
 
 		compileCommand.add("-S");
 
@@ -267,7 +269,7 @@ public class Main {
 		compileCommand.add("-I"
 				+ cSourcePath.resolve(Paths.get("include", "platform", config.getOs())).toFile().getCanonicalPath());
 		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include", "platform", "Arch" + config.getArch()))
-				.toFile().getCanonicalPath());
+		.toFile().getCanonicalPath());
 
 		/*
 		 * The compiling of the C files is done in two stages: 1. We traverse
@@ -293,7 +295,7 @@ public class Main {
 				}				
 			}
 		}		
-		
+
 		// if any files were to be compiled, we run the compiler, otherwise, we
 		// skip.
 		if (coreCompileCommand.size() > compileCommand.size()) {
@@ -350,7 +352,7 @@ public class Main {
 	 * or building a new one
 	 */
 	private static void generateLLVM(List<Path> cFiles, List<String> linkCommand) throws IOException, ShadowException,
-			ParseException, ConfigurationException, TypeCheckException, CompileException {
+	ParseException, ConfigurationException, TypeCheckException, CompileException {
 
 		Path shadow = config.getSystemImport().resolve("shadow");
 
@@ -403,8 +405,8 @@ public class Main {
 					Path cFile = file.getParent().resolve(className + ".c").normalize();
 					if( Files.exists(cFile) )
 						cFiles.add(cFile);
-					
-					
+
+
 					Path bitcodeFile = file.getParent().resolve(className + ".bc");
 					Path llvmFile = file.getParent().resolve(className + ".ll");
 					Path nativeFile = file.getParent().resolve(className + ".native.ll");
@@ -427,38 +429,64 @@ public class Main {
 						TACModule module = optimizeTAC(new TACBuilder().build(node), reporter, false);
 						linkCommand.add(optimizeShadowFile(file, module));						
 					}
-					
+
 					if( Files.exists(nativeBitcodeFile))
 						linkCommand.add(canonicalize(nativeBitcodeFile));
 					else if( Files.exists(nativeFile) )
 						linkCommand.add(optimizeLLVMFile(nativeFile));					
 				}
 			}
-			
+
 			reporter.printAndReportErrors();			
-			
+
 		} catch (TypeCheckException e) {
 			logger.error(mainFile + " FAILED TO TYPE CHECK");
 			throw e;
 		}
 	}
 
+	//Windows does not need arguments with whitespace to be quoted, but other platforms do
+	public static String quoteString( String argument ) {		
+		if( IS_WINDOWS )
+			return argument;
+		else if( argument.indexOf(' ') >= 0 || argument.indexOf('\t') >= 0) {
+			StringBuilder sb = new StringBuilder();		 
+			if( argument.charAt(0) != '"' ) {
+				sb.append('"');
+				sb.append(argument);
+				if (argument.endsWith("\\"))
+					sb.append("\\");				
+				sb.append('"');
+			} 
+			/* The argument has already been quoted. */
+			else if (argument.endsWith("\""))				
+				sb.append(argument);
+			/* Unmatched quote for the argument. */
+			else 				
+				throw new IllegalArgumentException();			
+
+			return sb.toString();
+		} 
+		else
+			return argument;
+	}
+
 	private static String optimizeLLVMFile(Path LLVMPath) throws CompileException {
-		String LLVMFile = canonicalize(LLVMPath);
+		String LLVMFile = quoteString(canonicalize(LLVMPath));
 		String path = BaseChecker.stripExtension(LLVMFile);
 		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = canonicalize(bitcodePath); 
-		
+		String bitcodeFile = quoteString(canonicalize(bitcodePath)); 
+
 		boolean success = false;
 		Process optimize = null;
 
 		try {
-			optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
+			optimize = new ProcessBuilder(quoteString(config.getOpt()), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
-							.redirectError(Redirect.INHERIT).start();
+					.redirectError(Redirect.INHERIT).start();
 			if( optimize.waitFor() != 0 )
 				throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
-			
+
 			success = true;			
 		} 
 		catch (IOException | InterruptedException e) {
@@ -470,7 +498,7 @@ public class Main {
 					Files.deleteIfExists(bitcodePath);
 				} catch (IOException e) {}
 			}
-			
+
 			if( optimize != null )
 				optimize.destroy();
 		}
@@ -479,26 +507,26 @@ public class Main {
 	}
 
 	private static String optimizeShadowFile(Path shadowPath, TACModule module) throws CompileException {
-		String shadowFile = canonicalize(shadowPath);
+		String shadowFile = quoteString(canonicalize(shadowPath));
 		String path = BaseChecker.stripExtension(shadowFile);
 		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = canonicalize(bitcodePath); 
+		String bitcodeFile = quoteString(canonicalize(bitcodePath)); 
 		boolean success = false;
 		Process optimize = null;
 
 		try {			
 			LLVMOutput output = null;
 			OutputStream out = null;
-			
+
 			if( currentJob.isHumanReadable() )
 				out = Files.newOutputStream(Paths.get(path + ".ll"));
 			else {
-				optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
+				optimize = new ProcessBuilder(quoteString(config.getOpt()), "-mtriple", config.getTarget(),
 						config.getOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
-								.redirectError(Redirect.INHERIT).start();
+						.redirectError(Redirect.INHERIT).start();
 				out = optimize.getOutputStream();
 			}
-			
+
 			try {
 				// Generate LLVM
 				output = new LLVMOutput(out);
@@ -511,16 +539,16 @@ public class Main {
 				if( output != null )
 					output.close();
 			}
-			
+
 			if( currentJob.isHumanReadable() ) {
 				success = true;
 				return optimizeLLVMFile(Paths.get(path + ".ll"));
 			}
 			else if (optimize.waitFor() != 0)
 				throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
-			
+
 			success = true;
-			
+
 		} 
 		catch (IOException | InterruptedException e) {
 			throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
@@ -531,10 +559,10 @@ public class Main {
 					Files.deleteIfExists(bitcodePath);
 				} catch (IOException e) {}
 			}
-			
+
 			if( optimize != null )
 				optimize.destroy();
-			
+
 		}
 
 		return bitcodeFile;
@@ -568,7 +596,7 @@ public class Main {
 						}
 						fields.addAll(entry.getValue());
 					}
-	
+
 					allUsedPrivateMethods.addAll(graph.getUsedPrivateMethods());
 				}
 			}
@@ -596,17 +624,17 @@ public class Main {
 								&& !signature.getSymbol().startsWith("$") && !signature.isExtern()
 								&& signature.getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
 								&& !signature.isDestroy()) {
-							
+
 							Context node = signature.getNode();
 							if( node instanceof ShadowParser.MethodDeclarationContext)
 								node = ((ShadowParser.MethodDeclarationContext)node).methodDeclarator();
 							else if( node instanceof ShadowParser.CreateDeclarationContext )
 								node = ((ShadowParser.CreateDeclarationContext)node).createDeclarator();
-							
-							
+
+
 							reporter.addWarning(node, TypeCheckException.Error.UNUSED_METHOD,
 									"Private method " + signature.getSymbol() + signature.getMethodType()
-											+ " is never used");
+									+ " is never used");
 						}
 					}
 				}
@@ -677,11 +705,11 @@ public class Main {
 	public static Job getJob() {
 		return currentJob;
 	}
-	
-	
+
+
 	public static String canonicalize(Path path)
 	{
 		return path.toAbsolutePath().normalize().toString();
 	}
-	
+
 }
