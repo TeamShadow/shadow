@@ -62,8 +62,6 @@ public class Main {
 	public static final int COMMAND_LINE_ERROR = -5;
 	public static final int CONFIGURATION_ERROR = -6;
 
-	public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
-
 	private static final Logger logger = Loggers.SHADOW;
 	private static Configuration config;
 	private static Job currentJob;
@@ -188,7 +186,7 @@ public class Main {
 
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
 			// usually llc
-			Process compile = new ProcessBuilder(quoteString(config.getLlc()), "-mtriple", config.getTarget(),
+			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel())
 					/* .redirectOutput(new File("a.s")) */.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT)
@@ -445,43 +443,17 @@ public class Main {
 		}
 	}
 
-	//Windows does not need arguments with whitespace to be quoted, but other platforms do
-	public static String quoteString( String argument ) {		
-		if( IS_WINDOWS )
-			return argument;
-		else if( argument.indexOf(' ') >= 0 || argument.indexOf('\t') >= 0) {
-			StringBuilder sb = new StringBuilder();		 
-			if( argument.charAt(0) != '"' ) {
-				sb.append('"');
-				sb.append(argument);
-				if (argument.endsWith("\\"))
-					sb.append("\\");				
-				sb.append('"');
-			} 
-			/* The argument has already been quoted. */
-			else if (argument.endsWith("\""))				
-				sb.append(argument);
-			/* Unmatched quote for the argument. */
-			else 				
-				throw new IllegalArgumentException();			
-
-			return sb.toString();
-		} 
-		else
-			return argument;
-	}
-
 	private static String optimizeLLVMFile(Path LLVMPath) throws CompileException {
-		String LLVMFile = quoteString(canonicalize(LLVMPath));
+		String LLVMFile = canonicalize(LLVMPath);
 		String path = BaseChecker.stripExtension(LLVMFile);
 		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = quoteString(canonicalize(bitcodePath)); 
+		String bitcodeFile = canonicalize(bitcodePath); 
 
 		boolean success = false;
 		Process optimize = null;
 
 		try {
-			optimize = new ProcessBuilder(quoteString(config.getOpt()), "-mtriple", config.getTarget(),
+			optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
 					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
 					.redirectError(Redirect.INHERIT).start();
 			if( optimize.waitFor() != 0 )
@@ -507,10 +479,10 @@ public class Main {
 	}
 
 	private static String optimizeShadowFile(Path shadowPath, TACModule module) throws CompileException {
-		String shadowFile = quoteString(canonicalize(shadowPath));
+		String shadowFile = canonicalize(shadowPath);
 		String path = BaseChecker.stripExtension(shadowFile);
 		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = quoteString(canonicalize(bitcodePath)); 
+		String bitcodeFile = canonicalize(bitcodePath); 
 		boolean success = false;
 		Process optimize = null;
 
@@ -521,7 +493,7 @@ public class Main {
 			if( currentJob.isHumanReadable() )
 				out = Files.newOutputStream(Paths.get(path + ".ll"));
 			else {
-				optimize = new ProcessBuilder(quoteString(config.getOpt()), "-mtriple", config.getTarget(),
+				optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
 						config.getOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
 						.redirectError(Redirect.INHERIT).start();
 				out = optimize.getOutputStream();

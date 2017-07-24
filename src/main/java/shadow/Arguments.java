@@ -2,12 +2,11 @@ package shadow;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.logging.log4j.Level;
 
 
@@ -17,7 +16,7 @@ import org.apache.logging.log4j.Level;
  * Recognized options are also defined within.
  */
 public class Arguments {
-	
+
 	// Recognized single-character arguments 
 	public static final String CONFIG 			= "c";
 	public static final String TYPECHECK		= "t";
@@ -29,7 +28,7 @@ public class Arguments {
 	public static final String INFORMATION		= "i";
 	public static final String WARNING			= "w";
 	public static final String READABLE			= "r";
-	
+
 	// Recognized long arguments
 	private static final String CONFIG_LONG 	= "config";
 	private static final String TYPECHECK_LONG	= "typecheck";
@@ -41,21 +40,21 @@ public class Arguments {
 	private static final String INFORMATION_LONG	= "information";
 	private static final String WARNING_LONG	= "warning";
 	public static final String READABLE_LONG	= "human-readable";
-	
+
 	private CommandLine commandLine;
-	
+
 	private static final Options compilerOptions = createOptions();
-	
+
 	public Arguments(String[] args) throws ParseException, ConfigurationException {
-		
+
 		// Parse the command line arguments
-		CommandLineParser parser = new PosixParser();
+		CommandLineParser parser = new DefaultParser();
 		commandLine = parser.parse(compilerOptions, args);
-		
+
 		// Increase logging level if VERBOSE is set
 		if( hasOption(VERBOSE) )
 			Loggers.setAllToLevel(Level.INFO);
-		
+
 		// Don't throw argument exceptions if help or information was requested
 		if (commandLine.hasOption(HELP) || commandLine.hasOption(INFORMATION))
 			return;		
@@ -68,7 +67,7 @@ public class Arguments {
 		else if( !commandLine.getArgs()[0].endsWith(".shadow") )
 			throw new ConfigurationException("Source files must end in \".shadow\"");
 	}
-	
+
 
 	public boolean hasOption(String option) {		
 		return commandLine.hasOption(option);
@@ -80,49 +79,49 @@ public class Arguments {
 		else
 			return null;
 	}
-	
+
 	public String getConfigFileArg() {		
 		return commandLine.getOptionValue(CONFIG);
 	}
-	
+
 	public String getOutputFileArg() {		
 		return commandLine.getOptionValue(OUTPUT);
 	}
-	
+
 	public String getWarningFlag() {
 		return commandLine.getOptionValue(WARNING);
 	}
-	
+
 	public static Options getOptions() {		
 		return compilerOptions;
 	}
-	
+
 	/** Create an Options object for parsing the command line. */
 	private static Options createOptions() {
 		Options options = new Options();
-		
-		// Build/add options with arguments
-		@SuppressWarnings("static-access")
-		Option configOption = OptionBuilder.withLongOpt(CONFIG_LONG)
-										   .hasArg()
-										   .withArgName("config.xml")
-										   .withDescription("Specify optional configuration file\nIf shadow.xml exists, it will be checked")
-										   .create(CONFIG);
-		
-		@SuppressWarnings("static-access")
-		Option outputOption = OptionBuilder.withLongOpt(OUTPUT_LONG)
-											.hasArg()
-											.withArgName("file")
-										    .withDescription("Place output into <file>")										    
-										    .create(OUTPUT);
-		
-		
-		@SuppressWarnings("static-access")
-		Option warningOption = OptionBuilder.withLongOpt(WARNING_LONG)
-											.hasArg()
-											.withArgName("flag")
-										    .withDescription("Specify warning flags")										    
-										    .create(WARNING);
+
+		// Build/add options with arguments		
+		Option configOption = Option.builder(CONFIG)
+				.longOpt(CONFIG_LONG)
+				.hasArg()
+				.argName("config.xml")
+				.desc("Specify optional configuration file\nIf shadow.xml exists, it will be checked")
+				.build();
+
+
+		Option outputOption = Option.builder(OUTPUT)
+				.longOpt(OUTPUT_LONG)
+				.hasArg()
+				.argName("file")
+				.desc("Place output into <file>")										    
+				.build();
+
+		Option warningOption = Option.builder(WARNING)
+				.longOpt(WARNING_LONG)
+				.hasArg()
+				.argName("flag")
+				.desc("Specify warning flags")										    
+				.build	();
 
 		options.addOption(configOption);
 		options.addOption(outputOption);
@@ -136,14 +135,14 @@ public class Arguments {
 		options.addOption(new Option(HELP, HELP_LONG, false, "Display command line options and exit"));
 		options.addOption(new Option(INFORMATION, INFORMATION_LONG, false, "Display information about the compiler and exit"));
 		options.addOption(new Option(READABLE, READABLE_LONG, false, "Generate human-readable IR code"));
-		
+
 		return options;
 	}
-	
+
 	public static void printHelp() {
 		new HelpFormatter().printHelp("shadowc <mainSource.shadow> [-o <output>] [-c <config.xml>]", Arguments.getOptions());
 	}
-	
+
 	public static void printInformation() {
 		System.out.println("Shadow Information:");
 		System.out.println("  shadowc version " + Main.VERSION);

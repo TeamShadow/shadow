@@ -5,11 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.JarURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -388,7 +386,7 @@ public class Configuration {
 		// Note: Most of the LLVM tools also have this option
 		Process process = null;
 		try {
-			process = new ProcessBuilder(Main.quoteString(getLlc()), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -419,7 +417,7 @@ public class Configuration {
 	public static String getLLVMVersion() {
 		Process process = null;
 		try {
-			process = new ProcessBuilder(Main.quoteString(getConfiguration().getLlc()), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String versionOutput = "";
@@ -450,7 +448,7 @@ public class Configuration {
 		// Note: Most of the LLVM tools also have this option
 		Process process = null;
 		try {		
-			process = new ProcessBuilder(Main.quoteString(getConfiguration().getLlc()), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	
 			String information = "";
