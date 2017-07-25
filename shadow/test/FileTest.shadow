@@ -9,7 +9,6 @@ class shadow:test@FileTest
 		}
 
 		try {
-
 			File file = File:create(args[0]);
 			
 			try {	
@@ -17,7 +16,7 @@ class shadow:test@FileTest
 			} catch ( IOException ex ) {				
 				Console.printLine("catch ( " # ex # " )");
 			}
-									
+								
 			readonly byte[] chars = "Hello World!"->chars;
 			file.write(chars);
 						

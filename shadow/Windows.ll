@@ -55,13 +55,19 @@
 %shadow.io..Path_methods = type { %shadow.io..Path* (%shadow.io..Path*, %shadow.standard..AddressMap*)*, void (%shadow.io..Path*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.io..Path*)*, %code (%shadow.io..Path*)* }
 %shadow.io..Path = type { %ulong, %shadow.standard..Class*, %shadow.io..Path_methods* , {{%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } }
 %shadow.standard..System = type opaque
-%shadow.io..Console = type opaque
 
+declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object*, %shadow.standard..Array*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object*, %shadow.standard..String*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object*)
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
+declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %longElements, %boolean %nullable)
 declare %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) alwaysinline nounwind
 
+;%shadow.io..Console = type opaque
+;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
+;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
@@ -92,19 +98,51 @@ declare x86_stdcallcc i32 @DeleteFileA(i8*)
 declare x86_stdcallcc i32 @CloseHandle(i8*)
 
 declare x86_stdcallcc i32 @MultiByteToWideChar(i32, i32, i8*, i32, i16*, i32)
+declare x86_stdcallcc i32 @FormatMessageA(i32, i8*, i32, i32, i8**, i32, i8*)
+
+declare i8* @strncpy(i8*, i8* nocapture, %size_t) nounwind
 
 ; one day update this method to use the @FormatMessage() function
 define private void @throwIOException() noreturn {
-	%1 = tail call x86_stdcallcc i32 @GetLastError()
-	%2 = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
-	%3 = call %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object* %2)
-	%4 = bitcast %shadow.io..IOException* %3 to %shadow.standard..Object*
-	call void @__shadow_throw(%shadow.standard..Object* %4) noreturn
+	%buffer = alloca i8, i32 1024
+	%pointer = alloca i8*
+	store i8* %buffer, i8** %pointer
+	%error = tail call x86_stdcallcc i32 @GetLastError()
+	; FORMAT_MESSAGE_FROM_SYSTEM = 0x1000
+	; FORMAT_MESSAGE_IGNORE_INSERTS = 0x0200
+	; combined is 0x1200 = 4608
+	%characters = tail call x86_stdcallcc i32 @FormatMessageA( i32 4608, i8* null, i32 %error, i32 0, i8** %pointer, i32 1024, i8* null)
+	%length = inttoptr i32 %characters to %size_t
+	%lengthLong = ptrtoint %size_t %length to %ulong	
+	%array = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* @byte_A_class, %ulong %lengthLong, %boolean false) nounwind
+	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
+	%dataAsChars = bitcast %shadow.standard..Array* %data to i8*
+	call i8* @strncpy(i8* %dataAsChars, i8* nocapture %buffer, %size_t %length) nounwind
+	%stringAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))
+	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)	
+	%exceptionAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
+	%exception = call %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object* %exceptionAsObj, %shadow.standard..String* %string)
+	call void @__shadow_throw(%shadow.standard..Object* %exceptionAsObj) noreturn
     unreachable	
 }
 
 define i32 @shadow.io..Path_Mseparator(%shadow.io..Path*) alwaysinline {
 	ret i32 92
+}
+
+define private i1 @handleIsLegal(i8* %handle) alwaysinline { 
+	%pointer = getelementptr i8*, i8** null, i32 1
+	%size = ptrtoint i8** %pointer to i32
+	%is8Bytes = icmp eq i32 %size, 8
+	br i1 %is8Bytes, label %_bits64, label %_bits32
+_bits64:
+	%asLong = ptrtoint i8* %handle to i64
+	%valid64 = icmp sge i64 %asLong, 0
+	ret i1 %valid64
+_bits32:
+	%asInt = ptrtoint i8* %handle to i32
+	%valid32 = icmp sge i32 %asInt, 0
+	ret i1 %valid32
 }
 
 declare void @shadow.io..File_Mclose(%shadow.io..File*)
@@ -131,23 +169,28 @@ define private i8* @filepath(%shadow.io..File* %file) {
 	ret i8* %cstring
 }
 
-define void @shadow.io..File_Mexists_boolean(%shadow.io..File*, i1) {
-	tail call void @shadow.io..File_Mclose(%shadow.io..File* %0)
-	%3 = tail call i8* @filepath(%shadow.io..File* %0)
-	br i1 %1, label %4, label %10
-	%5 = tail call x86_stdcallcc i8* @CreateFileA(i8* %3, i32 shl (i32 1, i32 30), i32 7, i8* null, i32 1, i32 128, i8* null)
-	tail call void @free(i8* %3)
-	%6 = ptrtoint i8* %5 to i64
-	%7 = icmp sge i64 %6, 0
-	br i1 %7, label %8, label %14
-	%9 = getelementptr inbounds %shadow.io..File, %shadow.io..File* %0, i32 0, i32 3
-	store i64 %6, i64* %9
+define void @shadow.io..File_Mexists_boolean(%shadow.io..File* %file, i1 %createOrDelete ) {
+	tail call void @shadow.io..File_Mclose(%shadow.io..File* %file)
+	%path = tail call i8* @filepath(%shadow.io..File* %file)
+	br i1 %createOrDelete, label %_create, label %_delete
+_create:
+	%handle = tail call x86_stdcallcc i8* @CreateFileA(i8* %path, i32 shl (i32 1, i32 30), i32 7, i8* null, i32 1, i32 128, i8* null)
+	tail call void @free(i8* %path)	
+	%checkValid = call i1 @handleIsLegal(i8* %handle)	
+	br i1 %checkValid, label %_createSuccess, label %_error
+_createSuccess:	
+	%handleAsLong = ptrtoint i8* %handle to i64
+	%handleRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
+	store i64 %handleAsLong, i64* %handleRef
 	ret void
-	%11 = tail call x86_stdcallcc i32 @DeleteFileA(i8* %3)
-	tail call void @free(i8* %3)
-	%12 = icmp ne i32 %11, 0
-	br i1 %12, label %13, label %14
+_delete:
+	%deleteCode = tail call x86_stdcallcc i32 @DeleteFileA(i8* %path)
+	tail call void @free(i8* %path)
+	%validDelete = icmp ne i32 %deleteCode, 0
+	br i1 %validDelete, label %_deleteSuccess, label %_error
+_deleteSuccess:
 	ret void
+_error:
 	tail call void @throwIOException() noreturn
 	unreachable
 }
@@ -228,7 +271,8 @@ _error:
 	%deniedOrInvalid = or i1 %denied, %invalid
 	br i1 %deniedOrInvalid, label %_checkIfOpen, label %_throw
 _checkIfOpen:
-	%open = icmp sge i64 %descriptorAsLong, 0
+	%descriptorCheck = ptrtoint i8* %realHandle to i64
+	%open = icmp sge i64 %descriptorCheck, 0
 	br i1 %open, label %_close, label %_open
 _close:
 	tail call void @shadow.io..File_Mclose(%shadow.io..File* %file)
@@ -237,13 +281,14 @@ _open:
 	; GENERIC_READ = 0x80000000, GENERIC_READ | GENERIC_WRITE = 0xC0000000
 	%access = phi i32 [ shl (i32 1, i32 31), %_checkIfOpen ], [ shl (i32 3, i32 30), %_close ]
 	%path = tail call i8* @filepath(%shadow.io..File* %file)
-	%newHandle = tail call x86_stdcallcc i8* @CreateFileA(i8* %path, i32 %access, i32 7, i8* null, i32 3, i32 0, i8* null)
+	%newHandle = tail call x86_stdcallcc i8* @CreateFileA(i8* %path, i32 %access, i32 7, i8* null, i32 3, i32 128, i8* null)
 	tail call void @free(i8* %path)
 	%handleAsLong = ptrtoint i8* %newHandle to i64
-	store i64 %handleAsLong, i64* %descriptorRef
-	%checkValid = icmp sge i64 %handleAsLong, 0
+	%handleRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
+	store i64 %handleAsLong, i64* %handleRef
+	%checkValid = call i1 @handleIsLegal(i8* %newHandle)
 	br i1 %checkValid, label %_read, label %_throw
-_throw:
+_throw:	
 	tail call void @throwIOException() noreturn
 	unreachable
 }
@@ -289,7 +334,7 @@ _open:
 	tail call void @free(i8* %path)
 	%handleAsLong = ptrtoint i8* %newHandle to i64
 	store i64 %handleAsLong, i64* %descriptorRef
-	%checkValid = icmp sge i64 %handleAsLong, 0
+	%checkValid = call i1 @handleIsLegal(i8* %newHandle)
 	br i1 %checkValid, label %_write, label %_throw
 _throw:
 	tail call void @throwIOException() noreturn
