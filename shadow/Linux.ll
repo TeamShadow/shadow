@@ -78,7 +78,7 @@ declare noalias i8* @malloc(%size_t nocapture) nounwind
 declare void @free(i8*) nounwind
 
 declare i32* @__errno_location() nounwind readnone
-declare i32 @strerror_r(i32, i8*, i32) nounwind
+declare i8* @strerror_r(i32, i8*, i32) nounwind
 declare %size_t @strlen(i8*) nounwind readonly
 declare i8* @strncpy(i8*, i8* nocapture, %size_t) nounwind
 declare i32 @access(i8* nocapture, i32)
@@ -96,13 +96,13 @@ define private void @throwIOException() noreturn {
 	%buffer = alloca i8, i32 256
 	%errorRef = tail call i32* @__errno_location() nounwind readnone
 	%error = load i32, i32* %errorRef
-	call i32 @strerror_r(i32 %error, i8* %buffer, i32 256) nounwind
-	%length = tail call %size_t @strlen(i8* %buffer)
+	%message = call i8* @strerror_r(i32 %error, i8* %buffer, i32 256) nounwind
+	%length = tail call %size_t @strlen(i8* %message)
 	%lengthLong = ptrtoint %size_t %length to %ulong
 	%array = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* @byte_A_class, %ulong %lengthLong, %boolean false) nounwind
 	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
 	%dataAsChars = bitcast %shadow.standard..Array* %data to i8*
-	call i8* @strncpy(i8* %dataAsChars, i8* nocapture %buffer, %size_t %length) nounwind
+	call i8* @strncpy(i8* %dataAsChars, i8* nocapture %message, %size_t %length) nounwind
 	%stringAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))
 	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)
 	%exceptionAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
