@@ -75,12 +75,13 @@ public class OutputTests {
 		Path fullExecutable = config.getSystemImport().resolve(executable);
 		
 		List<String> programCommand = new ArrayList<String>();
-		programCommand.add(fullExecutable.toAbsolutePath().toString());
+		programCommand.add(Main.canonicalize(fullExecutable));
 		
 		for (String arg : programArgs)
 			programCommand.add(arg);
 		
-		Process program = new ProcessBuilder(programCommand).start();
+		//set working directory as parent of executable, in case executable makes any files
+		Process program = new ProcessBuilder(programCommand).directory(fullExecutable.getParent().toFile()).start();
 		
 		//regular output
 		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));

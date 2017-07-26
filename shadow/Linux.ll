@@ -102,9 +102,9 @@ define private void @throwIOException() noreturn {
 	%array = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* @byte_A_class, %ulong %lengthLong, %boolean false) nounwind
 	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
 	%dataAsChars = bitcast %shadow.standard..Array* %data to i8*
-	call i8* @strncpy(i8* %dataAsChars, i8* nocapture %buffer, %size_t %length) nounwind
+	call i8* @strncpy(i8* %dataAsChars, i8* nocapture %message, %size_t %length) nounwind
 	%stringAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))
-	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)	
+	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)
 	%exceptionAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
 	%exception = call %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object* %exceptionAsObj, %shadow.standard..String* %string)
 	call void @__shadow_throw(%shadow.standard..Object* %exceptionAsObj) noreturn
@@ -127,11 +127,11 @@ define private i8* @filepath(%shadow.io..File* %file) {
 	%string = call %shadow.standard..String* %toString(%shadow.io..Path* %path)
 	%arrayRef = getelementptr inbounds %shadow.standard..String, %shadow.standard..String* %string, i32 0, i32 3
 	%array = load %shadow.standard..Array*, %shadow.standard..Array** %arrayRef
-	%data = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 1		
+	%data = getelementptr inbounds %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
 	%bytes = bitcast %shadow.standard..Array* %data to i8*
 	%size = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) nounwind
 	%sizeWithNull = add nuw i64 %size, 1
-	%sizeHack = inttoptr i64 %size to %size_t	
+	%sizeHack = inttoptr i64 %size to %size_t
 	%cstring = tail call noalias i8* @malloc(%size_t %sizeHack)
 	call void @llvm.memcpy.p0i8.p0i8.i64(i8* %cstring, i8* %bytes, i64 %size, i32 1, i1 0)
 	%nullRef = getelementptr inbounds i8, i8* %cstring, i64 %size
@@ -139,13 +139,13 @@ define private i8* @filepath(%shadow.io..File* %file) {
 	ret i8* %cstring
 }
 
-
 define void @shadow.io..File_Mexists_boolean(%shadow.io..File* %file, i1 %createOrDelete) {
 	call void @shadow.io..File_Mclose(%shadow.io..File* %file)
 	%path = call i8* @filepath(%shadow.io..File* %file)
 	br i1 %createOrDelete, label %_create, label %_delete
 _create:
-	%descriptor = call i32 (i8*, i32, ...) @open(i8* %path, i32 193, i32 420)
+  ; O_CREAT | O_RDWR = 66, then permissions 664 is 436 in decimal
+	%descriptor = call i32 (i8*, i32, ...) @open(i8* %path, i32 66, i32 436)
 	call void @free(i8* %path)
 	%validCreate = icmp sge i32 %descriptor, 0
 	br i1 %validCreate, label %_createSuccess, label %_error
@@ -241,7 +241,7 @@ _error:
 	br i1 %checkIfBad, label %_checkIfOpen, label %_throw
 _checkIfOpen:
 	; if already open, must be for writing, close and then open again for reading and writing
-	%open = icmp sge i64 %descriptorAsLong, 0
+	%open = icmp sge i32 %realDescriptor, 0
 	br i1 %open, label %_close, label %_open
 _close:
 	tail call void @shadow.io..File_Mclose(%shadow.io..File* %file)
@@ -270,10 +270,10 @@ _entry:
 	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
 	%buffer = bitcast %shadow.standard..Array* %data to i8*
 	%longLength = call %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array) nounwind
-	%length = inttoptr %ulong %longLength to %size_t			
+	%length = inttoptr %ulong %longLength to %size_t
 	br label %_write
-_write:	
-	%realDescriptor = phi i32 [ %descriptor, %_entry ], [ %newDescriptor, %_open ]
+_write:
+	%realDescriptor = phi i32 [ %descriptor, %_entry ], [ %newDescriptor, %_updateDescriptor ]
 	%resultHack = tail call %size_t @write(i32 %realDescriptor, i8* %buffer, %size_t %length)
 	%result = ptrtoint %size_t %resultHack to %long
 	%checkError = icmp sge %long %result, 0
@@ -288,16 +288,20 @@ _error:
 	br i1 %checkIfBad, label %_checkIfOpen, label %_throw
 _checkIfOpen:
 	; if already open, must be for writing, close and then open again for reading and writing
-	%open = icmp sge i64 %descriptorAsLong, 0
-	br i1 %open, label %_close, label %_open
-_close:
-	tail call void @shadow.io..File_Mclose(%shadow.io..File* %file)
-	br label %_open	
-_open:
-	; 1 = O_WRONLY, 2 = O_RDWR
-	%mode = phi i32 [ 1, %_checkIfOpen ], [ 2, %_close ]
+	%open = icmp sge i32 %realDescriptor, 0
 	%path = tail call i8* @filepath(%shadow.io..File* %file)
-	%newDescriptor = tail call i32 (i8*, i32, ...) @open(i8* %path, i32 %mode)
+	br i1 %open, label %_reopen, label %_open
+_reopen:
+	tail call void @shadow.io..File_Mclose(%shadow.io..File* %file)
+	; 2 = O_RDWR
+	%newDescriptor1 = tail call i32 (i8*, i32, ...) @open(i8* %path, i32 2)
+	br label %_updateDescriptor
+_open:
+	; 1 = O_WRONLY, must combine with 64 to create, then permissions 664 is 436 in decimal
+	%newDescriptor2 = tail call i32 (i8*, i32, ...) @open(i8* %path, i32 65, i32 436)
+	br label %_updateDescriptor
+_updateDescriptor:
+	%newDescriptor = phi i32 [ %newDescriptor1, %_reopen ], [ %newDescriptor2, %_open]
 	tail call void @free(i8* %path)
 	%newDescriptorAsLong = sext i32 %newDescriptor to i64
 	store i64 %newDescriptorAsLong, i64* %descriptorRef
