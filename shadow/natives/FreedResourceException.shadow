@@ -4,8 +4,6 @@
  *
  * @author Claude Abounegm
  * @seeDoc shadow:natives@Pointer
- * @seeDoc shadow:natives@Mutex
- * @seeDoc shadow:natives@Signaler
  */
 exception shadow:natives@
 	FreedResourceException
