@@ -8,17 +8,17 @@
  */
 singleton shadow:io@Console
 {
-	@(ImportAssembly)
+	[ImportAssembly]
 	private readonly __ShadowConsole_Initialize() => ();
 	
-	@(ImportAssembly)
+	[ImportAssembly]
 	private readonly __ShadowConsole_Print(String str) => ();
-	@(ImportAssembly)
+	[ImportAssembly]
 	private readonly __ShadowConsole_PrintLine() => ();
 	
-	@(ImportAssembly)
+	[ImportAssembly]
 	private readonly __ShadowConsole_PrintError(String str) => ();
-	@(ImportAssembly)
+	[ImportAssembly]
 	private readonly __ShadowConsole_PrintErrorLine() => ();
 	
 	boolean wasLF = false;
@@ -110,7 +110,7 @@ singleton shadow:io@Console
 	 * @return next byte
 	 * @return {@code true} if the end of the file was reached 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public readByte() => (byte, boolean eof);
 
 	/**
@@ -248,13 +248,13 @@ singleton shadow:io@Console
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	@(ExportAssembly)
+	[ExportAssembly]
 	private _shadowConsole_PrintLine(Object value) => ()
 	{
 		Console.printLine(value);
 	}
 	
-	@(ExportAssembly)
+	[ExportAssembly]
 	private _shadowConsole_PrintErrorLine(Object value) => ()
 	{
 		Console.printErrorLine(value);

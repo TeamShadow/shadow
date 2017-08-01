@@ -22,17 +22,17 @@ and CanIterate<T>
 	 * an {@code Array<T>} object explicitly.
 	 * @unused
 	 */
-	@(ImportNative)
+	[ImportNative]
 	private create();
 	
-	@(ImportNative)
+	[ImportNative]
 	public destroy;
 	
 	/**
 	 * Retrieves whether or not array is nullable.
 	 * @return whether array is nullable
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public readonly isNullable() => ( boolean );	
 
 	/**
@@ -65,7 +65,7 @@ and CanIterate<T>
 	 * @param end	index after last index in subarray
 	 * @return {@code Array<T>} object containing the subarray
 	 */	
-	@(ImportNative)
+	[ImportNative]
 	public readonly subarray( long start, long end ) => ( Array<T> );
 	
 	/**
@@ -73,7 +73,7 @@ and CanIterate<T>
 	 * @param index	location to read from, as a {@code long}	 
 	 * @return value at given location
 	 */	
-	@(ImportNative)
+	[ImportNative]
 	public readonly index( long index ) => (T);
 
 	
@@ -82,7 +82,7 @@ and CanIterate<T>
 	 * @param index	location to store at	 
 	 * @param value value to be stored
 	 */	
-	@(ImportNative)
+	[ImportNative]
 	public index( long index, T value ) => ();
 
 	/**

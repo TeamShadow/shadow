@@ -544,7 +544,7 @@ public class TypeCollector extends BaseChecker {
 				
 				case "Decorator": Type.DECORATOR = (InterfaceType)type; break;
 				case "MethodDecorator": Type.METHOD_DECORATOR = (InterfaceType)type; break;
-				case "CompilerMetaDecorator": Type.COMPILER_META_DECORATOR = (InterfaceType)type; break;
+				case "CompilerDecorator": Type.COMPILER_DECORATOR = (InterfaceType)type; break;
 				
 				case "ImportNative": Type.IMPORT_NATIVE = (ClassType)type; break;
 				case "ImportAssembly": Type.IMPORT_ASSEMBLY = (ClassType)type; break;

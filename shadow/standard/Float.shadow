@@ -51,7 +51,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code byte}. 	 
 	 * @return {@code byte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toByte() => (byte);
 	
 	/** 
@@ -59,7 +59,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code ubyte}. 	 
 	 * @return {@code ubyte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUByte() => (ubyte);
 	
 	/** 
@@ -67,7 +67,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code short}. 	 
 	 * @return {@code short} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toShort() => (short);
 	
 	/** 
@@ -75,7 +75,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code ushort}. 	 
 	 * @return {@code ushort} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUShort() => (ushort);
 	
 	/** 
@@ -83,7 +83,7 @@ and	CanHash
 	 * if the value is too large to be contained in an {@code int}. 	 
 	 * @return {@code int} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toInt() => (int);
 	
 	/** 
@@ -91,7 +91,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code uint}. 	 
 	 * @return {@code uint} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUInt() => (uint);
 	
 	/** 
@@ -99,7 +99,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code long}. 	 
 	 * @return {@code long} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toLong() => (long);
 	
 	/** 
@@ -107,7 +107,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code ulong}. 	 
 	 * @return {@code ulong} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toULong() => (ulong);
 	
 	/** 
@@ -115,7 +115,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code code}. 	 
 	 * @return {@code code} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toCode() => (code);
 	
 	/** 
@@ -123,14 +123,14 @@ and	CanHash
 	 * no change. 	 
 	 * @return {@code float} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code double}. 	 
 	 * @return {@code double} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toDouble() => (double);
 
 	// Method for CanAdd<float>
@@ -139,7 +139,7 @@ and	CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public add(float other) => (float);
 	
 	// Method for CanSubtract<float>
@@ -148,7 +148,7 @@ and	CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public subtract(float other) => (float);
 	
 	// Method for CanMultiply<float>
@@ -157,7 +157,7 @@ and	CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public multiply(float other) => (float);
 	
 	// Method for CanDivide<float>
@@ -166,7 +166,7 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public divide(float other) => (float);
 	
 	// Method for CanModulus<float>
@@ -175,7 +175,7 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public modulus(float other) => (float);
 	
 	// Method for CanCompare<float>
@@ -186,7 +186,7 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
-	@(ImportNative)
+	[ImportNative]
 	public compare(float other) => (int);
 	
 	// Method for CanEqual<float>
@@ -196,7 +196,7 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public equal(float other) => (boolean);
 
 	// Method for CanAdd<double>
@@ -269,7 +269,7 @@ and	CanHash
 	 * Finds the square root of the value.
 	 * @return square root	 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public squareRoot() => (float);
 	
 	/** 
@@ -277,7 +277,7 @@ and	CanHash
 	 * @param exponent power to raise by	 
 	 * @return number after exponentiation
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public power(int value) => (float);
 	
 	/** 
@@ -285,42 +285,42 @@ and	CanHash
 	 * @param exponent power to raise by	 
 	 * @return number after exponentiation
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public power(float value) => (float);
 	
 	/** 
 	 * Finds the sine of the current value.	 	 
 	 * @return sine of the value
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public sin() => (float);
 	
 	/** 
 	 * Finds the cosine of the current value.	 	 
 	 * @return cosine of the value
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public cos() => (float);
 	
 	/** 
 	 * Finds the natural logarithm of the current value.	 	 
 	 * @return natural logarithm of the value
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public logBaseE() => (float);
 	
 	/** 
 	 * Finds the logarithm base 2 of the current value.	 	 
 	 * @return logarithm base 2 of the value
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public logBase2() => (float);
 	
 	/** 
 	 * Finds the logarithm base 10 of the current value.	 	 
 	 * @return logarithm base 10 of the value
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public logBase10() => (float);
 	
 	/** 
@@ -331,7 +331,7 @@ and	CanHash
 	 * @param addend value to add 	 
 	 * @return result
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public multiplyAdd(float multiplicand, float addend) => (float);
 	
 	/** 
@@ -339,7 +339,7 @@ and	CanHash
 	 * less than or equal to the current value.	 	
 	 * @return floor of the current value
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public floor() => (float);
 	
 	/** 
@@ -347,7 +347,7 @@ and	CanHash
 	 * greater than or equal to the current value.	 	
 	 * @return ceiling of the current value
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public ceiling() => (float);
 	
 	/** 
@@ -409,7 +409,7 @@ and	CanHash
 	 * Negates the value.
 	 * @return negated value	 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public negate() => (float);
 	
 	/** 
@@ -417,7 +417,7 @@ and	CanHash
 	 * {@code float} value, as a {@code uint}.
 	 * @return  bit representation of {@code float} value
 	 */ 
-	@(ImportNative)
+	[ImportNative]
 	public get raw() => (uint);
 	
 	/** 
@@ -460,7 +460,7 @@ and	CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	@(ExportAssembly)
+	[ExportAssembly]
 	private shadowFloat_GetClass() => (Class)
 	{
 		return float:class;

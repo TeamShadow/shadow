@@ -1,4 +1,4 @@
 locked class shadow:standard@
-	ImportNative is CompilerMetaDecorator {
+	ImportNative is CompilerDecorator {
 		private create() {}
 }

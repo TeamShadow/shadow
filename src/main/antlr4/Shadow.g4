@@ -385,7 +385,7 @@ spawnRunnerCreateCall
 	;
 
 decoratorExpression
-	: '@(' type (',' type)? ')'
+	: '[' type (',' type)? ']'
 	;
 
 /*receiveExpression

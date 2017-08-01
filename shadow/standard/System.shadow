@@ -4,9 +4,9 @@
  */
 immutable singleton shadow:standard@System
 {
-	@(ImportAssembly)
+	[ImportAssembly]
 	private readonly __ShadowSystem_GetEpochNanoTime() => (long);
-	@(ImportAssembly)
+	[ImportAssembly]
 	private readonly __ShadowSystem_GetNanoTime() => (long);
 	
 	/**

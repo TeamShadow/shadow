@@ -5,14 +5,14 @@
  */
 class shadow:standard@Object
 {
-	@(ImportNative)
+	[ImportNative]
 	public destroy;
 	
 	/**
 	 * Retrieves the {@code Class} object associated with any given object.
 	 * @return {@code Class} of the current object
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public readonly locked getClass() => ( Class );
 
 	/** 
@@ -28,13 +28,13 @@ class shadow:standard@Object
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	@(ExportAssembly)
+	[ExportAssembly]
 	private shadowObject_GetClass() => (Class)
 	{
 		return this.getClass();
 	}
 	
-	@(ExportAssembly)
+	[ExportAssembly]
 	private shadowObject_ToString() => (String)
 	{
 		return #this;

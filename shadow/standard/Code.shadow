@@ -14,7 +14,7 @@ and CanHash
 	 * Returns the bitwise complement of the {@code code} value.
 	 * @return bitwise complement 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitComplement() => (code);
 	
 	/** 
@@ -23,7 +23,7 @@ and CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitShiftLeft(uint amount) => (code);
 	
 	/** 
@@ -32,7 +32,7 @@ and CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitShiftRight(uint amount) => (code);
 	
 	/** 
@@ -41,7 +41,7 @@ and CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitRotateLeft(uint amount) => (code);
 	
 	/** 
@@ -50,7 +50,7 @@ and CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitRotateRight(uint amount) => (code);
 	
 	/** 
@@ -108,7 +108,7 @@ and CanHash
 	 * if the value is too large to be contained in a {@code byte}. 	 
 	 * @return {@code byte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toByte() => (byte);
 	
 	/** 
@@ -116,7 +116,7 @@ and CanHash
 	 * if the value is too large to be contained in a {@code ubyte}. 	 
 	 * @return {@code ubyte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUByte() => (ubyte);
 	
 	/** 
@@ -124,7 +124,7 @@ and CanHash
 	 * if the value is too large to be contained in a {@code short}. 	 
 	 * @return {@code short} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toShort() => (short);
 	
 	/** 
@@ -132,7 +132,7 @@ and CanHash
 	 * if the value is too large to be contained in a {@code ushort}. 	 
 	 * @return {@code ushort} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUShort() => (ushort);
 	
 	/** 
@@ -140,7 +140,7 @@ and CanHash
 	 * if the value is larger than {@code int:MAX_VALUE}. 	 
 	 * @return {@code int} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toInt() => (int);
 	
 	/** 
@@ -148,21 +148,21 @@ and CanHash
 	 * underlying change in the data. 	 
 	 * @return {@code uint} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUInt() => (uint);
 	
 	/** 
 	 * Converts the {@code code} value to a {@code long}. 	 
 	 * @return {@code long} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toLong() => (long);
 	
 	/** 
 	 * Converts the {@code code} value to a {@code ulong}. 	 
 	 * @return {@code ulong} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toULong() => (ulong);
 	
 	/** 
@@ -170,21 +170,21 @@ and CanHash
 	 * no change. 	 
 	 * @return {@code code} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toCode() => (code);
 	
 	/** 
 	 * Converts the {@code code} value to a {@code float}. 	 
 	 * @return {@code float} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code code} value to a {@code double}. 	 
 	 * @return {@code double} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toDouble() => (double);
 	
 	// Methods for Integer<code>
@@ -194,7 +194,7 @@ and CanHash
 	 * @param other value to bitwise OR with
 	 * @return result of bitwise OR 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitOr(code other) => (code);
 	
 	/** 
@@ -202,7 +202,7 @@ and CanHash
 	 * @param other value to bitwise XOR with
 	 * @return result of bitwise XOR 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitXor(code other) => (code);
 	
 	/** 
@@ -210,7 +210,7 @@ and CanHash
 	 * @param other value to bitwise AND with
 	 * @return result of bitwise AND 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitAnd(code other) => (code);
 
 	// Method for CanAdd<code>
@@ -219,7 +219,7 @@ and CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public add(code other) => (code);
 	
 	// Method for  CanSubtract<code>	
@@ -228,7 +228,7 @@ and CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public subtract(code other) => (code);
 	
 	// Method for  CanMultiply<code>	
@@ -237,7 +237,7 @@ and CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public multiply(code other) => (code);
 		
 	// Method for  CanDivide<code>
@@ -246,7 +246,7 @@ and CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public divide(code other) => (code);
 	
 	// Method for  CanModulus<code>
@@ -255,7 +255,7 @@ and CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public modulus(code other) => (code);
 	
 	// Method for  CanCompare<code>
@@ -266,7 +266,7 @@ and CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
-	@(ImportNative)
+	[ImportNative]
 	public compare(code other) => (int);
 	
 	// Method for  CanEqual<code>
@@ -276,7 +276,7 @@ and CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public equal(code other) => (boolean);
 
 	// Method for CanHash
@@ -330,7 +330,7 @@ and CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	@(ExportAssembly)
+	[ExportAssembly]
 	private shadowCode_GetClass() => (Class)
 	{
 		return code:class;

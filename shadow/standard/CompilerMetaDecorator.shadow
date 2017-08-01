@@ -1,3 +1,0 @@
-interface shadow:standard@
-	CompilerMetaDecorator is MethodDecorator {
-}

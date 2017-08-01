@@ -1,4 +1,4 @@
 locked class shadow:standard@
-	ImportAssembly is CompilerMetaDecorator {
+	ImportAssembly is CompilerDecorator {
 		private create() {}
 }

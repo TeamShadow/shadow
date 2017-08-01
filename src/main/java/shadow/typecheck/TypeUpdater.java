@@ -220,7 +220,7 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.USHORT);
 			
 			type.addUsedType(Type.DECORATOR);
-			type.addUsedType(Type.COMPILER_META_DECORATOR);
+			type.addUsedType(Type.COMPILER_DECORATOR);
 			type.addUsedType(Type.METHOD_DECORATOR);
 			type.addUsedType(Type.IMPORT_ASSEMBLY);
 			type.addUsedType(Type.IMPORT_METHOD);

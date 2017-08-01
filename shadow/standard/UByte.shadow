@@ -26,7 +26,7 @@ and	CanHash
 	 * Returns the bitwise complement of the {@code ubyte} value.
 	 * @return bitwise complement 
 	 */ 
-	@(ImportNative)
+	[ImportNative]
 	public bitComplement() => (ubyte);
 	
 	/** 
@@ -35,7 +35,7 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitShiftLeft(uint amount) => (ubyte);
 	
 	/** 
@@ -44,7 +44,7 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitShiftRight(uint amount) => (ubyte);
 	
 	/** 
@@ -53,7 +53,7 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitRotateLeft(uint amount) => (ubyte);
 	
 	/** 
@@ -62,7 +62,7 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitRotateRight(uint amount) => (ubyte);
 	
 	/** 
@@ -121,7 +121,7 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code byte}. 	 
 	 * @return {@code byte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toByte() => (byte);
 	
 	/** 
@@ -129,70 +129,70 @@ and	CanHash
 	 * no change.	 
 	 * @return {@code ubyte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUByte() => (ubyte);
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code short}.	 
 	 * @return {@code short} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toShort() => (short);
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code ushort}.	 
 	 * @return {@code ushort} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUShort() => (ushort);
 	
 	/** 
 	 * Converts the {@code ubyte} value to an {@code int}.	 
 	 * @return {@code int} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toInt() => (int);
 	
 	/** 
 	 * Converts the {@code ubyte} value to an {@code uint}.	 
 	 * @return {@code uint} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUInt() => (uint);
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code long}.	 
 	 * @return {@code long} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toLong() => (long);
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code ulong}.	 
 	 * @return {@code ulong} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toULong() => (ulong);
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code code}.	 
 	 * @return {@code code} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toCode() => (code);
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code float}.	 
 	 * @return {@code float} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code ubyte} value to a {@code double}.	 
 	 * @return {@code double} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toDouble() => (double);
 
 	// Methods for Integer<ubyte>
@@ -202,7 +202,7 @@ and	CanHash
 	 * @param other value to bitwise OR with
 	 * @return result of bitwise OR 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitOr(ubyte other) => (ubyte);
 	
 	/** 
@@ -210,7 +210,7 @@ and	CanHash
 	 * @param other value to bitwise XOR with
 	 * @return result of bitwise XOR 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitXor(ubyte other) => (ubyte);
 	
 	/** 
@@ -218,7 +218,7 @@ and	CanHash
 	 * @param other value to bitwise AND with
 	 * @return result of bitwise AND
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitAnd(ubyte other) => (ubyte);
 
 	// Method for CanAdd<byte>	
@@ -227,7 +227,7 @@ and	CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public add(ubyte other) => (ubyte);
 	
 	// Method for CanSubtract<ubyte>	
@@ -236,7 +236,7 @@ and	CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public subtract(ubyte other) => (ubyte);
 	
 	// Method for CanMultiply<ubyte>
@@ -245,7 +245,7 @@ and	CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public multiply(ubyte other) => (ubyte);
 	
 	// Method for CanDivide<ubyte>	
@@ -254,7 +254,7 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public divide(ubyte other) => (ubyte);
 	
 	// Method for CanModulus<ubyte>
@@ -263,7 +263,7 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public modulus(ubyte other) => (ubyte);
 	
 	// Method for CanCompare<ubyte>
@@ -274,7 +274,7 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public compare(ubyte other) => (int);
 	
 	// Method for CanEqual<ubyte>
@@ -284,7 +284,7 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public equal(ubyte other) => (boolean);
 
 	// Methods for Integer<ushort>
@@ -1252,7 +1252,7 @@ and	CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	@(ExportAssembly)
+	[ExportAssembly]
 	private shadowUByte_GetClass() => (Class)
 	{
 		return ubyte:class;

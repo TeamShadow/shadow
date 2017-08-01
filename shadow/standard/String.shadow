@@ -139,7 +139,7 @@ and	CanHash
 	}
 	
 	// Used to pretend that an array that will never be used elsewhere and cannot leak is actually immutable.
-	@(ImportNative)
+	[ImportNative]
 	private readonly virtualFreeze( byte[] data ) => ( immutable byte[] );	
 
 	/**
@@ -647,7 +647,7 @@ and	CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	@(ExportAssembly)
+	[ExportAssembly]
 	private _shadowString_CreateBytes(byte[] data) => (String)
 	{
 		return String:create(data);

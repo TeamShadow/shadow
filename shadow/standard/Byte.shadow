@@ -24,7 +24,7 @@ and	CanHash
 	 * Returns the bitwise complement of the {@code byte} value.
 	 * @return bitwise complement 
 	 */ 
-	@(ImportNative)
+	[ImportNative]
 	public bitComplement() => (byte);
 	
 	/** 
@@ -33,7 +33,7 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitShiftLeft(uint amount) => (byte);
 	
 	/** 
@@ -42,7 +42,7 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitShiftRight(uint amount) => (byte);
 	
 	/** 
@@ -51,7 +51,7 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitRotateLeft(uint amount) => (byte);
 	
 	/** 
@@ -60,7 +60,7 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitRotateRight(uint amount) => (byte);
 	
 	/** 
@@ -119,7 +119,7 @@ and	CanHash
 	 * no change.	 
 	 * @return {@code byte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toByte() => (byte);
 	
 	/** 
@@ -127,14 +127,14 @@ and	CanHash
 	 * in the case of a negative value.	 
 	 * @return {@code ubyte} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUByte() => (ubyte);
 	
 	/** 
 	 * Converts the {@code byte} value to a {@code short}.	 
 	 * @return {@code short} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toShort() => (short);
 	
 	/** 
@@ -142,14 +142,14 @@ and	CanHash
 	 * in the case of a negative value.	 
 	 * @return {@code ushort} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUShort() => (ushort);
 	
 	/** 
 	 * Converts the {@code byte} value to an {@code int}.	 
 	 * @return {@code int} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toInt() => (int);
 	
 	/** 
@@ -157,14 +157,14 @@ and	CanHash
 	 * in the case of a negative value.	 
 	 * @return {@code uint} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toUInt() => (uint);
 	
 	/** 
 	 * Converts the {@code byte} value to a {@code long}.	 
 	 * @return {@code long} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toLong() => (long);
 	
 	/** 
@@ -172,7 +172,7 @@ and	CanHash
 	 * in the case of a negative value.	 
 	 * @return {@code ulong} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toULong() => (ulong);
 	
 	/** 
@@ -180,21 +180,21 @@ and	CanHash
 	 * in the case of a negative value.	 
 	 * @return {@code code} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toCode() => (code);
 	
 	/** 
 	 * Converts the {@code byte} value to a {@code float}.	 
 	 * @return {@code float} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code byte} value to a {@code double}.	 
 	 * @return {@code double} value 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public toDouble() => (double);
 
 	// Methods for Integer<byte>
@@ -204,7 +204,7 @@ and	CanHash
 	 * @param other value to bitwise OR with
 	 * @return result of bitwise OR 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitOr(byte other) => (byte);
 	
 	/** 
@@ -212,7 +212,7 @@ and	CanHash
 	 * @param other value to bitwise XOR with
 	 * @return result of bitwise XOR 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitXor(byte other) => (byte);
 	
 	/** 
@@ -220,7 +220,7 @@ and	CanHash
 	 * @param other value to bitwise AND with
 	 * @return result of bitwise AND
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public bitAnd(byte other) => (byte);
 	
 	// Method for CanAdd<byte>	
@@ -229,7 +229,7 @@ and	CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public add(byte other) => (byte);
 	
 	// Method for CanSubtract<byte>	
@@ -238,7 +238,7 @@ and	CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public subtract(byte other) => (byte);
 	
 	// Method for CanMultiply<byte>
@@ -247,7 +247,7 @@ and	CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public multiply(byte other) => (byte);
 	
 	// Method for CanDivide<byte>	
@@ -256,7 +256,7 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public divide(byte other) => (byte);
 	
 	// Method for CanModulus<byte>
@@ -265,7 +265,7 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public modulus(byte other) => (byte);
 	
 	// Method for CanCompare<byte>
@@ -276,7 +276,7 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
-	@(ImportNative)
+	[ImportNative]
 	public compare(byte other) => (int);
 	
 	// Method for CanEqual<byte>
@@ -286,7 +286,7 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public equal(byte other) => (boolean);
 
 	// Methods for Integer<short>
@@ -790,7 +790,7 @@ and	CanHash
 	 * Negates the value.
 	 * @return negated value	 
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public negate() => (byte);	
 	
 	/** 
@@ -871,7 +871,7 @@ and	CanHash
 	 * Counts the number of 1 bits in the binary representation of the number.	 	 
 	 * @return total 1 bits
 	 */	 
-	@(ImportNative)
+	[ImportNative]
 	public ones() => (short);
 	
 	/** 
@@ -879,7 +879,7 @@ and	CanHash
 	 * most significant bits. 	 
 	 * @return leading 0 bits
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public leadingZeroes() => (short);
 	
 	/** 
@@ -887,7 +887,7 @@ and	CanHash
 	 * least significant bits. 	 
 	 * @return trailing 0 bits
 	 */
-	@(ImportNative)
+	[ImportNative]
 	public trailingZeroes() => (short);	
 		
 
@@ -959,13 +959,13 @@ and	CanHash
 	}
 
 	// C FRAMEWORK EXTENSIONS
-	@(ExportAssembly)
+	[ExportAssembly]
 	private shadowByteArray_GetClass() => (Class)
 	{
 		return byte[]:class;
 	}
 	
-	@(ExportAssembly)
+	[ExportAssembly]
 	private shadowByte_GetClass() => (Class)
 	{
 		return byte:class;

@@ -128,16 +128,17 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_RUN = null;
 	public static InterfaceType DECORATOR = null;
 	public static InterfaceType METHOD_DECORATOR = null;
-	public static InterfaceType COMPILER_META_DECORATOR = null;
+	public static InterfaceType COMPILER_DECORATOR = null;
 	
 	//constants used for options in toString()
+	private static int bits = 0;
 	public static final int NO_OPTIONS = 0;
-	public static final int PACKAGES =  1;
-	public static final int TYPE_PARAMETERS =  2;
-	public static final int PARAMETER_BOUNDS =  4;
-	public static final int MANGLE =  8;
-	public static final int MANGLE_IMPORT_METHOD = 16;
-	public static final int NO_NULLABLE = 32;
+	public static final int PACKAGES =  1 << bits++;
+	public static final int TYPE_PARAMETERS = 1 << bits++;
+	public static final int PARAMETER_BOUNDS = 1 << bits++;
+	public static final int MANGLE = 1 << bits++;
+	public static final int MANGLE_IMPORT_METHOD = 1 << bits++;
+	public static final int NO_NULLABLE = 1 << bits++;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
@@ -304,7 +305,7 @@ public abstract class Type implements Comparable<Type> {
 		
 		DECORATOR = null;
 		METHOD_DECORATOR = null;
-		COMPILER_META_DECORATOR = null;
+		COMPILER_DECORATOR = null;
 		IMPORT_NATIVE = null;
 		IMPORT_ASSEMBLY = null;
 		IMPORT_METHOD = null;
