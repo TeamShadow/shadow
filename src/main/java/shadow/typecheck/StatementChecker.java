@@ -21,6 +21,7 @@ import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ConditionalExpressionContext;
+import shadow.parse.ShadowParser.DecoratorExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
@@ -131,7 +132,11 @@ public class StatementChecker extends BaseChecker {
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
 			currentType.addUsedType(modifiedType.getType());
 		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
+		if(signature.isImportMethod()) {
+			if(signature.getModifiers().isPublic()) {
+				addError(node, Error.INVALID_MODIFIER, "Method imports cannot be public.");
+			}
+			
 			SequenceType params = signature.getParameterTypes();
 			Type parentClass = params.get(0).getType();
 			
@@ -370,7 +375,7 @@ public class StatementChecker extends BaseChecker {
 			boolean explicitCreate = ctx.createBlock() != null && ctx.createBlock().explicitCreateInvocation() != null;
 			
 			if( parentType != null ) {
-				if( !explicitCreate && !ctx.getModifiers().isNative() ) { 
+				if( !explicitCreate && !ctx.getSignature().isImport() ) { 
 					//only worry if there is no explicit invocation
 					//explicit invocations are handled separately
 					//for native creates, we have to trust the author of the native code
@@ -2998,6 +3003,20 @@ public class StatementChecker extends BaseChecker {
 			} else {
 				ctx.setSignature(sendSignature);
 				ctx.setType(sendSignature.getReturnTypes()); // void
+			}
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public Void visitDecoratorExpression(DecoratorExpressionContext ctx) {
+		visitChildren(ctx);
+		
+		for(TypeContext t : ctx.type()) {
+			Type actualType = resolveType(t).getType();
+			if(!actualType.hasInterface(Type.METHOD_DECORATOR) || !(actualType instanceof ClassType)) {
+				addError(ctx, Error.INVALID_TYPE, "A method decorator must be a class that derives from the MethodDecorator interface.");
 			}
 		}
 		

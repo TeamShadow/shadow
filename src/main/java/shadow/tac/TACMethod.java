@@ -89,7 +89,7 @@ public class TACMethod
 		
 		if (signature.isCreate() )
 			new TACLocalStore(node, addParameter(modifiedType, "this"), TACCast.cast(node, modifiedType, new TACParameter(node, new SimpleModifiedType(Type.OBJECT), parameter++)));
-		else if(!signature.isExternWithoutBlock())
+		else if(!signature.isImport())
 			new TACLocalStore(node, addParameter(modifiedType, "this"), new TACParameter(node, modifiedType, parameter++));
 			
 		MethodType type = signature.getMethodType();		

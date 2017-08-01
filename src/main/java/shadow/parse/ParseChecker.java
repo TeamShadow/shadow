@@ -20,7 +20,6 @@ import shadow.doctool.DocumentationException;
 import shadow.parse.ParseException.Error;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
 import shadow.parse.ShadowParser.CompilationUnitContext;
-import shadow.parse.ShadowParser.MethodDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Modifiers;
 
@@ -99,8 +98,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 				case "private":  newModifier = ctx.addModifiers(Modifiers.PRIVATE); break;
 				case "abstract":  newModifier = ctx.addModifiers(Modifiers.ABSTRACT); break;
 				case "readonly":  newModifier = ctx.addModifiers(Modifiers.READONLY); break;
-				case "native":  newModifier = ctx.addModifiers(Modifiers.NATIVE); break;
-				case "extern":	newModifier = ctx.addModifiers(Modifiers.EXTERN); break;
 				case "weak":  newModifier = ctx.addModifiers(Modifiers.WEAK); break;
 				case "immutable": newModifier = ctx.addModifiers(Modifiers.IMMUTABLE); break;
 				case "nullable":  newModifier = ctx.addModifiers(Modifiers.NULLABLE); break;
@@ -112,7 +109,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			
 			if( !newModifier )				
 				addError(modifier, Error.REPEATED_MODIFIERS, "Repeated modifer " + modifier.getText());
-		}		
+		}
 		
 		return null;
 	}
@@ -258,17 +255,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		Modifiers modifiers = mods.getModifiers();
 		ctx.addModifiers(modifiers);
 		addErrors(mods, modifiers.checkMethodModifiers(ctx));
-		
-		MethodDeclaratorContext declarator = ctx.methodDeclarator();
-		String symbol = declarator.generalIdentifier().getText();
-		
-		if(symbol.startsWith("$") && modifiers.isPublic()) {
-			addError(ctx.methodDeclarator(), Error.ILLEGAL_MODIFIER, "Class externs cannot be public");			
-		}
-		
-		if(!declarator.type().isEmpty() && (!symbol.startsWith("$") || (symbol.startsWith("$") && modifiers.isExtern()))) {
-			addError(ctx.methodDeclarator(), Error.SYNTAX_ERROR, "Only class extern methods starting with $ can contain a list of allowed extern classes");
-		}
 		
 		return visitChildren(ctx);		
 	}

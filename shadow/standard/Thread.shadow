@@ -14,14 +14,17 @@ locked class shadow:standard@
 is CanIndex<int, Thread>
 {
 	/// @unused
-	private readonly native spawnThread() => (Pointer);
-	private readonly native get staticNextId() => (int);
+	@(ImportNative)
+	private readonly spawnThread() => (Pointer);
+	@(ImportNative)
+	private readonly get staticNextId() => (int);
 
 	/// Gets the Shadow-specific thread ID.
 	get int id;
 	
 	/// Gets the main thread, which is the root of all threads.
-	public readonly native get main() => (Thread);
+	@(ImportNative)
+	public readonly get main() => (Thread);
 	
 	/**
 	* Gets the {@code Thread} which spawned this thread. The Main thread does not
@@ -180,7 +183,8 @@ is CanIndex<int, Thread>
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
-	private [CurrentThread] $interrupting() => (boolean)
+	@(ExportMethod)
+	private [CurrentThread] interrupting() => (boolean)
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -190,7 +194,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private [CurrentThread] $sleep(TimeSpan timeout) => ()
+	@(ExportMethod)
+	private [CurrentThread] sleep(TimeSpan timeout) => ()
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -200,7 +205,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	private [CurrentThread] $sleep(int millisecondsTimeout) => ()
+	@(ExportMethod)
+	private [CurrentThread] sleep(int millisecondsTimeout) => ()
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -215,7 +221,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	*/
-	protected [Object] $receiveFirst(Class expectedType) => (Object, Thread)
+	@(ExportMethod)
+	protected [Object] receiveFirst(Class expectedType) => (Object, Thread)
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -231,7 +238,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	*/
-	protected [Object] $receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	@(ExportMethod)
+	protected [Object] receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -352,14 +360,6 @@ is CanIndex<int, Thread>
 	private readonly createMainNative() => (Thread) 
 	{
 		return Thread:create("Thread#main", NopRunner:create()); 
-	}
-	
-	/// {Thread:this} does not work right now to get the outer reference, so we use this
-	/// workaround instead.
-	/// @unused
-	private readonly instance() => (Thread)
-	{
-		return this;
 	}
 	
 	// A Runner which performs no operations. A null runner would had been preferred

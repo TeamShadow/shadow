@@ -4,8 +4,10 @@
  */
 immutable singleton shadow:standard@System
 {
-	private readonly extern __ShadowSystem_GetEpochNanoTime() => (long);
-	private readonly extern __ShadowSystem_GetNanoTime() => (long);
+	@(ImportAssembly)
+	private readonly __ShadowSystem_GetEpochNanoTime() => (long);
+	@(ImportAssembly)
+	private readonly __ShadowSystem_GetNanoTime() => (long);
 	
 	/**
 	 * Returns the number of nanoseconds elapsed since the Unix Epoch,

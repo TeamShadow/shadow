@@ -31,7 +31,11 @@ import org.antlr.v4.runtime.Token;
 import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
+import shadow.parse.ShadowParser.DecoratorExpressionContext;
+import shadow.parse.ShadowParser.MethodDeclarationContext;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
+import shadow.parse.ShadowParser.TypeContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
 import shadow.typecheck.TypeCheckException.Error;
@@ -196,7 +200,7 @@ public class TypeUpdater extends BaseChecker {
 			
 			type.addUsedType(new ArrayType(Type.CLASS));
 			
-			type.addUsedType(Type.SHADOW_POINTER);
+			type.addUsedType(Type.POINTER);
 			
 			// Adding the self adds parents and interfaces and methods
 			type.addUsedType(type);			
@@ -213,8 +217,14 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.UBYTE);
 			type.addUsedType(Type.UINT);
 			type.addUsedType(Type.ULONG);
-			type.addUsedType(Type.USHORT);			
+			type.addUsedType(Type.USHORT);
 			
+			type.addUsedType(Type.DECORATOR);
+			type.addUsedType(Type.COMPILER_META_DECORATOR);
+			type.addUsedType(Type.METHOD_DECORATOR);
+			type.addUsedType(Type.IMPORT_ASSEMBLY);
+			type.addUsedType(Type.IMPORT_METHOD);
+			type.addUsedType(Type.IMPORT_NATIVE);
 			
 			/* Update imports for meta files, since they won't have statement checking.
 			 * Note that imports in meta files have been optimized to include only the
@@ -755,6 +765,59 @@ public class TypeUpdater extends BaseChecker {
 			return;
 		}
 		
+		if(node.getParent() instanceof ClassOrInterfaceBodyDeclarationContext) {
+			DecoratorExpressionContext decorators = ((ClassOrInterfaceBodyDeclarationContext)node.getParent()).decoratorExpression();
+			
+			if(decorators != null) {
+				Type importExportType = null;
+				
+				for(TypeContext t : decorators.type()) {
+					Type actualType = t.getType();
+					String typeName = actualType.getTypeName().toLowerCase();
+					
+					if(importExportType != null && (typeName.startsWith("import") || typeName.startsWith("export"))) {
+						addError(node, Error.INVALID_TYPE, "Only one import or export decorator can be present on a method at all times.");
+					} else {
+						importExportType = actualType;
+					}
+				}
+				
+				if(importExportType != null) {
+					if (importExportType == Type.IMPORT_NATIVE) {
+						signature.setImportType(MethodSignature.IMPORT_NATIVE);
+					} else if (importExportType == Type.IMPORT_ASSEMBLY) {
+						signature.setImportType(MethodSignature.IMPORT_ASSEMBLY);
+					} else if (importExportType == Type.IMPORT_METHOD) {
+						signature.setImportType(MethodSignature.IMPORT_METHOD);
+					} else if (importExportType == Type.EXPORT_ASSEMBLY) {
+						signature.setExportType(MethodSignature.EXPORT_ASSEMBLY);
+					} else if (importExportType == Type.EXPORT_METHOD) {
+						signature.setExportType(MethodSignature.EXPORT_METHOD);
+					}
+				}
+			}
+		}
+		
+		if(!signature.isImportAssembly() && !signature.isExportAssembly() && signature.getSymbol().startsWith("_")) {
+  			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
+  		}
+		
+		if(signature.isImportMethod()) {
+			if(signature.getParameterTypes().size() == 0) {
+				addError(node, Error.INVALID_ARGUMENTS, "The first parameter of a method import needs to be the class where the method originally lives.");
+			} else if(!signature.getModifiers().isPrivate()) {
+				addError(node, Error.INVALID_MODIFIER, "A method import should be private.");
+			}
+		}
+		
+		if(node instanceof MethodDeclarationContext) {
+			MethodDeclaratorContext declarator = ((MethodDeclarationContext)node).methodDeclarator();
+			
+			if(!declarator.type().isEmpty() && !signature.isExportMethod()) {
+				addError(node, Error.INVALID_METHOD, "Methods listing allowable export classes need to be marked with ExportMethod decorator.");
+			}
+		}
+		
 		boolean hasBlock = signature.hasBlock();
 		
 		/* Check to see if the method has a body or not (and if it should). */
@@ -763,10 +826,10 @@ public class TypeUpdater extends BaseChecker {
 				addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must not define a body in a meta file");
 			
 			if( !isMeta ) {					
-				if( !hasBlock && !signature.isAbstract() && !signature.isNative() && !signature.isExternWithoutBlock() )
+				if( !hasBlock && !signature.isAbstract() && !signature.isImport() )
 					addError(node, Error.INVALID_STRUCTURE, "Method " + signature + " must define a body");
 				
-				if( hasBlock && (signature.isAbstract() || signature.isNative() ) )
+				if( hasBlock && (signature.isAbstract() || signature.isImport() ) )
 					addError(node, Error.INVALID_STRUCTURE, (signature.isAbstract() ? "Abstract" : "Native") + " method " + signature + " must not define a body");
 				
 				/* Check to see if the method's parameters and return types are the
@@ -841,18 +904,6 @@ public class TypeUpdater extends BaseChecker {
 				addError(node, Error.INVALID_MODIFIER,
 						"Methods marked with get cannot have any parameters");
 		} 
-		
-		if(!signature.isExtern() && signature.getSymbol().startsWith("_")) {
-  			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
-  		}
-		
-		if(signature.isExtern() && signature.getSymbol().startsWith("$")) {
-			if(signature.getParameterTypes().size() == 0) {
-				addError(node, Error.INVALID_ARGUMENTS, "To extern a method from another class, the first parameter of this method should be the class which contains the method being externed.");
-			} else if(!signature.getModifiers().isPrivate()) {
-				addError(node, Error.INVALID_MODIFIER, "An externed method from another class should be private.");
-			}
-		}
 
 		// Add return types
 		if( node instanceof ShadowParser.MethodDeclaratorContext ) {
@@ -869,7 +920,7 @@ public class TypeUpdater extends BaseChecker {
 				if( signature.getReturnTypes().size() != 1 )
 					addError(node, Error.INVALID_MODIFIER,
 							"Methods marked with get must have exactly one return value");
-			}			
+			}
 		}	
 	}
 	

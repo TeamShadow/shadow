@@ -154,7 +154,7 @@ public class TACModule {
 			MethodSignature signature = method.getSignature();
 
 			//don't bother with unimplemented methods
-			if( !signature.getModifiers().isAbstract() && !signature.getModifiers().isNative() && !signature.isExternWithoutBlock() ) {			
+			if( !signature.getModifiers().isAbstract() && !signature.isImport() ) {			
 				
 				//adds garbage collection and code that cleans up variables that need garbage collection
 				//at the end of the method
@@ -218,7 +218,7 @@ public class TACModule {
 					MethodSignature signature = explicitCreate.getSignature(); 
 					//calling this rather than super
 					//we can't put a dependency on a native method, since it doesn't have a control flow graph
-					if( explicitCreate.getChild(0).getText().equals("this") && !signature.isNative() && !signature.isExternWithoutBlock() )						
+					if( explicitCreate.getChild(0).getText().equals("this") && !signature.isImport() )						
 						creates.addEdge(signature, create); //method depends on other signature
 				}
 			}

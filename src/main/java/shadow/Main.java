@@ -593,7 +593,8 @@ public class Main {
 					for (MethodSignature signature : signatures) {
 						if (signature.getModifiers().isPrivate()
 								&& !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments())
-								&& !signature.getSymbol().startsWith("$") && !signature.isExtern()
+								&& !signature.isImport()
+								&& !signature.isExport()
 								&& signature.getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
 								&& !signature.isDestroy()) {
 

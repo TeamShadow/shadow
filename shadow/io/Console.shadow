@@ -8,13 +8,18 @@
  */
 singleton shadow:io@Console
 {
-	private readonly extern __ShadowConsole_Initialize() => ();
+	@(ImportAssembly)
+	private readonly __ShadowConsole_Initialize() => ();
 	
-	private readonly extern __ShadowConsole_Print(String str) => ();
-	private readonly extern __ShadowConsole_PrintLine() => ();
+	@(ImportAssembly)
+	private readonly __ShadowConsole_Print(String str) => ();
+	@(ImportAssembly)
+	private readonly __ShadowConsole_PrintLine() => ();
 	
-	private readonly extern __ShadowConsole_PrintError(String str) => ();
-	private readonly extern __ShadowConsole_PrintErrorLine() => ();
+	@(ImportAssembly)
+	private readonly __ShadowConsole_PrintError(String str) => ();
+	@(ImportAssembly)
+	private readonly __ShadowConsole_PrintErrorLine() => ();
 	
 	boolean wasLF = false;
 	
@@ -105,7 +110,8 @@ singleton shadow:io@Console
 	 * @return next byte
 	 * @return {@code true} if the end of the file was reached 
 	 */
-	public native readByte() => (byte, boolean eof);
+	@(ImportNative)
+	public readByte() => (byte, boolean eof);
 
 	/**
 	 * Prints an object's {@code String} representation to {@code stdout}.	 	 
@@ -242,12 +248,14 @@ singleton shadow:io@Console
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern _shadowConsole_PrintLine(Object value) => ()
+	@(ExportAssembly)
+	private _shadowConsole_PrintLine(Object value) => ()
 	{
 		Console.printLine(value);
 	}
 	
-	private extern _shadowConsole_PrintErrorLine(Object value) => ()
+	@(ExportAssembly)
+	private _shadowConsole_PrintErrorLine(Object value) => ()
 	{
 		Console.printErrorLine(value);
 	}

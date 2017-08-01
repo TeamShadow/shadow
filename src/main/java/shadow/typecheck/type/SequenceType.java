@@ -144,7 +144,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 		boolean first = true;
 		 
 		int i = 0;
-		if((options & Type.MANGLE_EXTERN) != 0) ++i;
+		if((options & Type.MANGLE_IMPORT_METHOD) != 0) ++i;
 		
 		for(; i < types.size(); ++i) {
 			ModifiedType modifiedType = types.get(i);

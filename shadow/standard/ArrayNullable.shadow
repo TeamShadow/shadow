@@ -24,19 +24,22 @@ and CanIterateNullable<T>
 	 * because it allows other classes to see the method.
 	 * @unused
 	 */
-	private native create();
+	@(ImportNative)
+	private create();
 		
 	/**
 	 * Creates an {@code Array<T>} object with the given size.
 	 * This method is called internally by the compiler and is only {@code protected}
 	 * because it allows other classes to see the method.
 	 */
-	//protected native create( long size );
+	//@(ImportNative)
+	//protected create( long size );
 	
-	public native destroy;
+	@(ImportNative)
+	public destroy;
 	
-	public native isNullable() => (boolean);
-	
+	@(ImportNative)
+	public isNullable() => (boolean);
 	
 	/**
 	 * Gets the size of the array (total number of elements) as an {@code int}.
@@ -55,8 +58,9 @@ and CanIterateNullable<T>
 	 * @param start	starting index of subarray
 	 * @param end	index after last index in subarray
 	 * @return {@code ArrayNullable<T>} object containing the subarray
-	 */		
-	public native readonly subarray( long start, long end ) => ( ArrayNullable<T> );
+	 */
+	@(ImportNative)
+	public readonly subarray( long start, long end ) => ( ArrayNullable<T> );
 	
 	
 	/**
@@ -64,7 +68,8 @@ and CanIterateNullable<T>
 	 * @param index	location to read from, as a {@code long}	 
 	 * @return value at given location
 	 */	
-	public readonly native index( long index ) => (nullable T);
+	@(ImportNative)
+	public readonly index( long index ) => (nullable T);
 
 	
 	/**
@@ -72,7 +77,8 @@ and CanIterateNullable<T>
 	 * @param index	location to store at	 
 	 * @param value value to be stored
 	 */	
-	public native index( long index, nullable T value ) => ();
+	@(ImportNative)
+	public index( long index, nullable T value ) => ();
 
 	
 	/**

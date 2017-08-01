@@ -541,12 +541,23 @@ public class TypeCollector extends BaseChecker {
 				case "ushort":			Type.USHORT = (ClassType)type; break;
 				case "CanRun":			Type.CAN_RUN = (InterfaceType)type; break;
 				case "Thread":			Type.THREAD = (ClassType)type; break;
+				
+				case "Decorator": Type.DECORATOR = (InterfaceType)type; break;
+				case "MethodDecorator": Type.METHOD_DECORATOR = (InterfaceType)type; break;
+				case "CompilerMetaDecorator": Type.COMPILER_META_DECORATOR = (InterfaceType)type; break;
+				
+				case "ImportNative": Type.IMPORT_NATIVE = (ClassType)type; break;
+				case "ImportAssembly": Type.IMPORT_ASSEMBLY = (ClassType)type; break;
+				case "ImportMethod": Type.IMPORT_METHOD = (ClassType)type; break;
+				
+				case "ExportAssembly": Type.EXPORT_ASSEMBLY = (ClassType)type; break;
+				case "ExportMethod": Type.EXPORT_METHOD = (ClassType)type; break;
 				}
 			}
 			
 			if( currentPackage.getQualifiedName().equals("shadow:natives") ) {
 				switch( typeName ) {
-					case "ShadowPointer": Type.SHADOW_POINTER = (ClassType)type; break;
+					case "Pointer": Type.POINTER = (ClassType)type; break;
 				}
 			}
 			
@@ -689,7 +700,7 @@ public class TypeCollector extends BaseChecker {
 	{ 
 		currentPackage = packageTree;
 		importedItems.clear();
-		importedItems.add("shadow:standard");			
+		importedItems.add("shadow:standard");
 		currentName = "";
 		return visitChildren(ctx);
 	}

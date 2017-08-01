@@ -51,76 +51,87 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code byte}. 	 
 	 * @return {@code byte} value 
 	 */
-	public native toByte() => (byte);
+	@(ImportNative)
+	public toByte() => (byte);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code ubyte}, which will overflow
 	 * if the value is too large to be contained in a {@code ubyte}. 	 
 	 * @return {@code ubyte} value 
 	 */
-	public native toUByte() => (ubyte);
+	@(ImportNative)
+	public toUByte() => (ubyte);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code short}, which will overflow
 	 * if the value is too large to be contained in a {@code short}. 	 
 	 * @return {@code short} value 
 	 */
-	public native toShort() => (short);
+	@(ImportNative)
+	public toShort() => (short);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code ushort}, which will overflow
 	 * if the value is too large to be contained in a {@code ushort}. 	 
 	 * @return {@code ushort} value 
 	 */
-	public native toUShort() => (ushort);
+	@(ImportNative)
+	public toUShort() => (ushort);
 	
 	/** 
 	 * Converts the {@code float} value to an {@code int}, which will overflow
 	 * if the value is too large to be contained in an {@code int}. 	 
 	 * @return {@code int} value 
 	 */
-	public native toInt() => (int);
+	@(ImportNative)
+	public toInt() => (int);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code uint}, which will overflow
 	 * if the value is too large to be contained in a {@code uint}. 	 
 	 * @return {@code uint} value 
 	 */
-	public native toUInt() => (uint);
+	@(ImportNative)
+	public toUInt() => (uint);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code long}, which will overflow
 	 * if the value is too large to be contained in a {@code long}. 	 
 	 * @return {@code long} value 
 	 */
-	public native toLong() => (long);
+	@(ImportNative)
+	public toLong() => (long);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code ulong}, which will overflow
 	 * if the value is too large to be contained in a {@code ulong}. 	 
 	 * @return {@code ulong} value 
 	 */
-	public native toULong() => (ulong);
+	@(ImportNative)
+	public toULong() => (ulong);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code code}, which will overflow
 	 * if the value is too large to be contained in a {@code code}. 	 
 	 * @return {@code code} value 
 	 */
-	public native toCode() => (code);
+	@(ImportNative)
+	public toCode() => (code);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code float}, which involves
 	 * no change. 	 
 	 * @return {@code float} value 
 	 */
-	public native toFloat() => (float);
+	@(ImportNative)
+	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code float} value to a {@code double}. 	 
 	 * @return {@code double} value 
 	 */
-	public native toDouble() => (double);
+	@(ImportNative)
+	public toDouble() => (double);
 
 	// Method for CanAdd<float>
 	/**
@@ -128,7 +139,8 @@ and	CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	public native add(float other) => (float);
+	@(ImportNative)
+	public add(float other) => (float);
 	
 	// Method for CanSubtract<float>
 	/**
@@ -136,7 +148,8 @@ and	CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	public native subtract(float other) => (float);
+	@(ImportNative)
+	public subtract(float other) => (float);
 	
 	// Method for CanMultiply<float>
 	/**
@@ -144,7 +157,8 @@ and	CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	public native multiply(float other) => (float);
+	@(ImportNative)
+	public multiply(float other) => (float);
 	
 	// Method for CanDivide<float>
 	/**
@@ -152,7 +166,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	public native divide(float other) => (float);
+	@(ImportNative)
+	public divide(float other) => (float);
 	
 	// Method for CanModulus<float>
 	/**
@@ -160,7 +175,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	public native modulus(float other) => (float);
+	@(ImportNative)
+	public modulus(float other) => (float);
 	
 	// Method for CanCompare<float>
 	/**
@@ -170,7 +186,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
-	public native compare(float other) => (int);
+	@(ImportNative)
+	public compare(float other) => (int);
 	
 	// Method for CanEqual<float>
 	/**
@@ -179,7 +196,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	public native equal(float other) => (boolean);
+	@(ImportNative)
+	public equal(float other) => (boolean);
 
 	// Method for CanAdd<double>
 	/**
@@ -251,51 +269,59 @@ and	CanHash
 	 * Finds the square root of the value.
 	 * @return square root	 
 	 */
-	public native squareRoot() => (float);
+	@(ImportNative)
+	public squareRoot() => (float);
 	
 	/** 
 	 * Raises the current value to the power of an {@code int}.
 	 * @param exponent power to raise by	 
 	 * @return number after exponentiation
 	 */
-	public native power(int value) => (float);
+	@(ImportNative)
+	public power(int value) => (float);
 	
 	/** 
 	 * Raises the current value to the power of another {@code float}.
 	 * @param exponent power to raise by	 
 	 * @return number after exponentiation
 	 */
-	public native power(float value) => (float);
+	@(ImportNative)
+	public power(float value) => (float);
 	
 	/** 
 	 * Finds the sine of the current value.	 	 
 	 * @return sine of the value
 	 */
-	public native sin() => (float);
+	@(ImportNative)
+	public sin() => (float);
 	
 	/** 
 	 * Finds the cosine of the current value.	 	 
 	 * @return cosine of the value
 	 */
-	public native cos() => (float);
+	@(ImportNative)
+	public cos() => (float);
 	
 	/** 
 	 * Finds the natural logarithm of the current value.	 	 
 	 * @return natural logarithm of the value
 	 */
-	public native logBaseE() => (float);
+	@(ImportNative)
+	public logBaseE() => (float);
 	
 	/** 
 	 * Finds the logarithm base 2 of the current value.	 	 
 	 * @return logarithm base 2 of the value
 	 */
-	public native logBase2() => (float);
+	@(ImportNative)
+	public logBase2() => (float);
 	
 	/** 
 	 * Finds the logarithm base 10 of the current value.	 	 
 	 * @return logarithm base 10 of the value
 	 */
-	public native logBase10() => (float);
+	@(ImportNative)
+	public logBase10() => (float);
 	
 	/** 
 	 * Multiplies the current value by another {@code float} and adds a third
@@ -305,21 +331,24 @@ and	CanHash
 	 * @param addend value to add 	 
 	 * @return result
 	 */
-	public native multiplyAdd(float multiplicand, float addend) => (float);
+	@(ImportNative)
+	public multiplyAdd(float multiplicand, float addend) => (float);
 	
 	/** 
 	 * Finds the largest {@code float} value with no fractional part that is
 	 * less than or equal to the current value.	 	
 	 * @return floor of the current value
 	 */
-	public native floor() => (float);
+	@(ImportNative)
+	public floor() => (float);
 	
 	/** 
 	 * Finds the smallest {@code float} value with no fractional part that is
 	 * greater than or equal to the current value.	 	
 	 * @return ceiling of the current value
 	 */
-	public native ceiling() => (float);
+	@(ImportNative)
+	public ceiling() => (float);
 	
 	/** 
 	 * Rounds the current {@code float} value to the nearest integer.	 	 	
@@ -380,14 +409,16 @@ and	CanHash
 	 * Negates the value.
 	 * @return negated value	 
 	 */
-	public native negate() => (float);
+	@(ImportNative)
+	public negate() => (float);
 	
 	/** 
 	 * Retrieves the raw representation of 32 bits that makes up the current
 	 * {@code float} value, as a {@code uint}.
 	 * @return  bit representation of {@code float} value
 	 */ 
-	public native get raw() => (uint);
+	@(ImportNative)
+	public get raw() => (uint);
 	
 	/** 
 	 * Retrieves the representation of 32 bits that makes up the current
@@ -429,7 +460,8 @@ and	CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern shadowFloat_GetClass() => (Class)
+	@(ExportAssembly)
+	private shadowFloat_GetClass() => (Class)
 	{
 		return float:class;
 	}

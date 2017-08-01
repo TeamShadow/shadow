@@ -5,18 +5,23 @@ class shadow:test@ExternalsTest
 {
 	// uses shadow_ToString() to get the Shadow String, then extracts it to a C String and
 	// prints it to the console using printf()
-	private readonly extern __shadowExternalTest_PrintfToString(ExternalsTest ref) => ();
+	@(ImportAssembly)
+	private readonly __shadowExternalTest_PrintfToString(ExternalsTest ref) => ();
 
 	// creates a Shadow String from a C String and prints it using Shadow Console
-	private readonly extern __shadowExternalTest_CreateString() => ();
+	@(ImportAssembly)
+	private readonly __shadowExternalTest_CreateString() => ();
 
 	// creates a Pointer which holds the number passed as a parameter for later use
-	private readonly extern __shadowExternalTest_InitPointer(int start) => (Pointer);
+	@(ImportAssembly)
+	private readonly __shadowExternalTest_InitPointer(int start) => (Pointer);
 	// prints the number passed earlier to the console, then calls Shadow code to print the number + offset
-	private readonly extern __shadowExternalTest_PrintPointerData(ExternalsTest instance, Pointer ptr) => ();
+	@(ImportAssembly)
+	private readonly __shadowExternalTest_PrintPointerData(ExternalsTest instance, Pointer ptr) => ();
 	
 	// prints the string representation of the Class object for ExternalsTest and all primitives
-	private readonly extern __shadowExternalTest_PrintClasses(ExternalsTest instance) => ();	
+	@(ImportAssembly)
+	private readonly __shadowExternalTest_PrintClasses(ExternalsTest instance) => ();	
 	
 	immutable Pointer ptr;
 	int offset = 1000;
@@ -39,7 +44,8 @@ class shadow:test@ExternalsTest
 		return "This is the result from running shadow_ToString(ref) from C!!";
 	}
 	
-	private extern _shadowExternalsTest_PrintNumberWithOffset(int number) => ()
+	@(ExportAssembly)
+	private _shadowExternalsTest_PrintNumberWithOffset(int number) => ()
 	{
 		Console.printLine(number + offset);
 	}

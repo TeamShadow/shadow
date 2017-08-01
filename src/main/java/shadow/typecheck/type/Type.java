@@ -90,8 +90,14 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType STRING = null;
 	public static ClassType ADDRESS_MAP = null; //used for copying	
-	public static ClassType SHADOW_POINTER = null;
-	public static ClassType THREAD = null;	
+	
+	public static ClassType POINTER = null;
+	public static ClassType THREAD = null;
+	public static ClassType IMPORT_NATIVE = null;
+	public static ClassType IMPORT_ASSEMBLY = null;
+	public static ClassType IMPORT_METHOD = null;
+	public static ClassType EXPORT_ASSEMBLY = null;
+	public static ClassType EXPORT_METHOD = null;
 	
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
@@ -120,6 +126,9 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_MODULUS = null;
 	public static InterfaceType CAN_NEGATE = null;	
 	public static InterfaceType CAN_RUN = null;
+	public static InterfaceType DECORATOR = null;
+	public static InterfaceType METHOD_DECORATOR = null;
+	public static InterfaceType COMPILER_META_DECORATOR = null;
 	
 	//constants used for options in toString()
 	public static final int NO_OPTIONS = 0;
@@ -127,7 +136,7 @@ public abstract class Type implements Comparable<Type> {
 	public static final int TYPE_PARAMETERS =  2;
 	public static final int PARAMETER_BOUNDS =  4;
 	public static final int MANGLE =  8;
-	public static final int MANGLE_EXTERN = 16;
+	public static final int MANGLE_IMPORT_METHOD = 16;
 	public static final int NO_NULLABLE = 32;
 	
 	private static class TypeArgumentCache {
@@ -288,9 +297,20 @@ public abstract class Type implements Comparable<Type> {
 		CAN_DIVIDE = null;
 		CAN_MODULUS = null;
 		CAN_NEGATE = null;
-		SHADOW_POINTER = null;
+		
+		POINTER = null;
 		CAN_RUN = null;
 		THREAD = null;
+		
+		DECORATOR = null;
+		METHOD_DECORATOR = null;
+		COMPILER_META_DECORATOR = null;
+		IMPORT_NATIVE = null;
+		IMPORT_ASSEMBLY = null;
+		IMPORT_METHOD = null;
+		
+		EXPORT_ASSEMBLY = null;
+		EXPORT_METHOD = null;
 	}
 	
 	/*

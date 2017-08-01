@@ -1,0 +1,4 @@
+locked class shadow:standard@
+	ImportMethod is CompilerMetaDecorator {
+		private create() {}
+}

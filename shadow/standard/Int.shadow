@@ -23,7 +23,8 @@ and	CanHash
 	 * Returns the bitwise complement of the {@code int} value.
 	 * @return bitwise complement 
 	 */ 
-	public native bitComplement() => (int);
+	@(ImportNative)
+	public bitComplement() => (int);
 	
 	/** 
 	 * Finds the result of left-shifting the bits of the {@code int} value
@@ -31,7 +32,8 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	public native bitShiftLeft(uint amount) => (int);
+	@(ImportNative)
+	public bitShiftLeft(uint amount) => (int);
 	
 	/** 
 	 * Finds the result of right-shifting the bits of the {@code int} value
@@ -39,7 +41,8 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	public native bitShiftRight(uint amount) => (int);
+	@(ImportNative)
+	public bitShiftRight(uint amount) => (int);
 	
 	/** 
 	 * Finds the result of left-rotating the bits of the {@code int} value
@@ -47,7 +50,8 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	public native bitRotateLeft(uint amount) => (int);
+	@(ImportNative)
+	public bitRotateLeft(uint amount) => (int);
 	
 	/** 
 	 * Finds the result of right-rotating the bits of the {@code int} value
@@ -55,7 +59,8 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	public native bitRotateRight(uint amount) => (int);
+	@(ImportNative)
+	public bitRotateRight(uint amount) => (int);
 	
 	/** 
 	 * Finds the result of left-shifting the bits of the {@code int} value
@@ -112,7 +117,8 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code byte}.
 	 * @return {@code byte} value 
 	 */
-	public native toByte() => (byte);
+	@(ImportNative)
+	public toByte() => (byte);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code ubyte}, which will overflow
@@ -120,14 +126,16 @@ and	CanHash
 	 * underflow if the value is negative.
 	 * @return {@code ubyte} value 
 	 */
-	public native toUByte() => (ubyte);
+	@(ImportNative)
+	public toUByte() => (ubyte);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code short}, which will overflow
 	 * if the value is too large to be contained in a {@code short}.
 	 * @return {@code short} value 
 	 */
-	public native toShort() => (short);
+	@(ImportNative)
+	public toShort() => (short);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code ushort}, which will overflow
@@ -135,53 +143,61 @@ and	CanHash
 	 * underflow if the value is negative.
 	 * @return {@code ushort} value 
 	 */
-	public native toUShort() => (ushort);
+	@(ImportNative)
+	public toUShort() => (ushort);
 	
 	/** 
 	 * Converts the {@code int} value to an {@code int}, which involves no
 	 * change.
 	 * @return {@code int} value 
 	 */
-	public native toInt() => (int);
+	@(ImportNative)
+	public toInt() => (int);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code uint}, which will
 	 * underflow if the value is negative.
 	 * @return {@code uint} value 
 	 */
-	public native toUInt() => (uint);
+	@(ImportNative)
+	public toUInt() => (uint);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code long}.
 	 * @return {@code long} value 
 	 */
-	public native toLong() => (long);
+	@(ImportNative)
+	public toLong() => (long);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code ulong}, which will
 	 * underflow if the value is negative.
 	 * @return {@code ulong} value 
 	 */
-	public native toULong() => (ulong);
+	@(ImportNative)
+	public toULong() => (ulong);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code code}, which will
 	 * underflow if the value is negative.
 	 * @return {@code code} value 
 	 */
-	public native toCode() => (code);
+	@(ImportNative)
+	public toCode() => (code);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code float}.
 	 * @return {@code float} value 
 	 */
-	public native toFloat() => (float);
+	@(ImportNative)
+	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code int} value to a {@code double}.
 	 * @return {@code double} value 
 	 */
-	public native toDouble() => (double);
+	@(ImportNative)
+	public toDouble() => (double);
 
 	// Methods for Integer<int>
 	
@@ -190,21 +206,24 @@ and	CanHash
 	 * @param other value to bitwise OR with
 	 * @return result of bitwise OR 
 	 */
-	public native bitOr(int other) => (int);
+	@(ImportNative)
+	public bitOr(int other) => (int);
 	
 	/** 
 	 * Computes the bitwise XOR of the value and another {@code int} value.
 	 * @param other value to bitwise XOR with
 	 * @return result of bitwise XOR 
 	 */
-	public native bitXor(int other) => (int);
+	@(ImportNative)
+	public bitXor(int other) => (int);
 	
 	/** 
 	 * Computes the bitwise AND of the value and another {@code int} value.
 	 * @param other value to bitwise AND with
 	 * @return result of bitwise AND
 	 */
-	public native bitAnd(int other) => (int);
+	@(ImportNative)
+	public bitAnd(int other) => (int);
 	
 	// Method for CanAdd<int>
 	/**
@@ -212,7 +231,8 @@ and	CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	public native add(int other) => (int);
+	@(ImportNative)
+	public add(int other) => (int);
 	
 	// Method for CanSubtract<int>
 	/**
@@ -220,7 +240,8 @@ and	CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	public native subtract(int other) => (int);
+	@(ImportNative)
+	public subtract(int other) => (int);
 	
 	// Method for CanMultiply<int>
 	/**
@@ -228,7 +249,8 @@ and	CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	public native multiply(int other) => (int);
+	@(ImportNative)
+	public multiply(int other) => (int);
 	
 	// Method for CanDivide<int>
 	/**
@@ -236,7 +258,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	public native divide(int other) => (int);
+	@(ImportNative)
+	public divide(int other) => (int);
 	
 	// Method for CanModulus<int>
 	/**
@@ -244,7 +267,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	public native modulus(int other) => (int);
+	@(ImportNative)
+	public modulus(int other) => (int);
 	
 	// Method for CanCompare<int>
 	/**
@@ -254,7 +278,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
-	public native compare(int other) => (int);
+	@(ImportNative)
+	public compare(int other) => (int);
 	
 	// Method for CanEqual<int>
 	/**
@@ -263,7 +288,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	public native equal(int other) => (boolean);
+	@(ImportNative)
+	public equal(int other) => (boolean);
 
 	// Methods for Integer<long>
 	/** 
@@ -540,7 +566,8 @@ and	CanHash
 	 * Negates the value.
 	 * @return negated value	 
 	 */
-	public native negate() => (int);
+	@(ImportNative)
+	public negate() => (int);
 	
 	/** 
 	 * Finds the square root of the value.
@@ -621,27 +648,31 @@ and	CanHash
 	 * words, the order of the 4 bytes has been reversed.	 	 
 	 * @return value with opposite endianness
 	 */	 
-	public native flipEndian() => (int);
+	@(ImportNative)
+	public flipEndian() => (int);
 	
 	/** 
 	 * Counts the number of 1 bits in the binary representation of the number.	 	 
 	 * @return total 1 bits
 	 */	
-	public native ones() => (int);
+	@(ImportNative)
+	public ones() => (int);
 	
 	/** 
 	 * Counts the number of 0 bits before a non-zero bit, starting with the
 	 * most significant bits. 	 
 	 * @return leading 0 bits
 	 */
-	public native leadingZeroes() => (int);
+	@(ImportNative)
+	public leadingZeroes() => (int);
 	
 	/** 
 	 * Counts the number of 0 bits after a non-zero bit, starting with the
 	 * least significant bits. 	 
 	 * @return trailing 0 bits
 	 */
-	public native trailingZeroes() => (int);
+	@(ImportNative)
+	public trailingZeroes() => (int);
 	
 	
 	/**
@@ -651,7 +682,8 @@ and	CanHash
 	 * @return sum of the two values
 	 * @return {@code true} if overflow occurred
 	 */
-	public native addWithOverflow(int other) => (int, boolean);
+	@(ImportNative)
+	public addWithOverflow(int other) => (int, boolean);
 	
 	/**
 	 * Subtracts another {@code int} from the current value and returns the resulting
@@ -660,7 +692,8 @@ and	CanHash
 	 * @return difference of the two values
 	 * @return {@code true} if overflow occurred
 	 */
-	public native subtractWithOverflow(int other) => (int, boolean);
+	@(ImportNative)
+	public subtractWithOverflow(int other) => (int, boolean);
 	
 	/**
 	 * Multiplies the current value by another {@code int} and returns the
@@ -669,7 +702,8 @@ and	CanHash
 	 * @return product of the two values
 	 * @return {@code true} if overflow occurred
 	 */
-	public native multiplyWithOverflow(int other) => (int, boolean);
+	@(ImportNative)
+	public multiplyWithOverflow(int other) => (int, boolean);
 		
 	// Method for CanHash
 	/** 
@@ -740,7 +774,8 @@ and	CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern shadowInt_GetClass() => (Class)
+	@(ExportAssembly)
+	private shadowInt_GetClass() => (Class)
 	{
 		return int:class;
 	}
