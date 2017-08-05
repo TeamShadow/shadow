@@ -26,7 +26,6 @@ import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
-import shadow.parse.ShadowParser.TypeContext;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -54,7 +53,9 @@ public class StatementChecker extends BaseChecker {
 	/* List of scopes with a hash of symbols & types for each scope. */
 	private LinkedList<HashMap<String, ModifiedType>> symbolTable;
 	/* Keeps track of the method associated with each scope (sometimes null). */
-	private LinkedList<Context> scopeMethods; 
+	private LinkedList<Context> scopeMethods;
+	
+	private boolean decoratorScope;
 	
 	public StatementChecker( Package packageTree, ErrorReporter reporter ) {
 		super(packageTree, reporter);		
@@ -137,31 +138,36 @@ public class StatementChecker extends BaseChecker {
 				addError(node, Error.INVALID_MODIFIER, "Method imports cannot be public.");
 			}
 			
+			// first parameter is the class where the method lives
 			SequenceType params = signature.getParameterTypes();
-			Type parentClass = params.get(0).getType();
+			Type sourceClass = params.get(0).getType();
 			
-			SequenceType parentParams = new SequenceType();
+			// get the actual parameters of the method
+			SequenceType sourceParams = new SequenceType();
 			for(int i = 1; i < params.size(); ++i) {
-				parentParams.add(params.get(i));
+				sourceParams.add(params.get(i));
 			}
 			
-			MethodSignature method = parentClass.getMatchingMethod(signature.getSymbol(), parentParams);
+			// find the method in the source class
+			MethodSignature method = sourceClass.getMatchingMethod(signature.getSymbol(), sourceParams);
 			if(method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
-				addError(node, Error.INVALID_EXTERN_METHOD, "No matching method was found for method '" + signature.getSymbol() + "' in class '" + parentClass + "'");
+				addError(node, Error.INVALID_METHOD_IMPORT, "No matching method was found for method '" + signature.getSymbol() + "' in class '" + sourceClass + "'");
 			} else {
+				// we found the method, but we still need to check if the method is allowed to be
+				// imported by this class
 				boolean found = false;
-				ShadowParser.MethodDeclarationContext p = (ShadowParser.MethodDeclarationContext)method.getNode();
-				
-				List<TypeContext> contexts = p.methodDeclarator().type();
-				for(TypeContext t : contexts) {
-					if(signature.getOuter().equals(t.getType())) {
+				Type destinationClass = signature.getOuter();
+
+				List<Type> exportTypes = method.getExportTypes();
+				for(int i = 0; !found && i < exportTypes.size(); ++i) {
+					Type allowedType = exportTypes.get(i);
+					if(destinationClass.equals(allowedType)) {
 						found = true;
-						break;
 					}
 				}
 				
 				if(!found) {
-					addError(node, Error.INVALID_EXTERN_METHOD, "The '" + signature.getSymbol() + "' method in '" + parentClass +"' is not allowed to be shared with '" + signature.getOuter() + "'");
+					addError(node, Error.INVALID_METHOD_IMPORT, "The '" + signature.getSymbol() + "' method in '" + sourceClass +"' is not allowed to be shared with '" + destinationClass + "'");
 				}
 			}
 		}
@@ -983,7 +989,7 @@ public class StatementChecker extends BaseChecker {
 					addError(child, Error.INVALID_TYPE, "Supplied type " + result + " cannot be used with a logical operator, boolean type required", result);			
 					node.setType(Type.UNKNOWN);
 					return;
-				}					
+				}
 			}
 			
 			node.setType(result);
@@ -1134,33 +1140,33 @@ public class StatementChecker extends BaseChecker {
 	{ 
 		if( ctx.getType() != null && !(ctx.getType() instanceof UninstantiatedType) ) // Optimization if type already determined.
 			return null;
-			
+
 		visitChildren(ctx);
-			
+
 		String typeName = ctx.Identifier(0).getText();
 		if( ctx.unqualifiedName() != null )
 			typeName = ctx.unqualifiedName().getText() + "@" + typeName;
 		Type type = lookupType(ctx, typeName);
-		
+
 		for( int i = 1; type != null && i < ctx.Identifier().size(); ++i ) {
 			typeName = ctx.Identifier(i).getText();
-			
+
 			if( type instanceof ClassType ) 
 				type = ((ClassType)type).getInnerClass(typeName);
 			else
 				type = null;
 		}
-		
+
 		if( type == null ) {
 			ctx.setType(Type.UNKNOWN);
 			addError(ctx, Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in this context");
 			return null;
 		}
-		
+
 		if( !classIsAccessible( type, currentType ) )		
 			addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
 					" not accessible from this context", type);
-		
+
 		if( ctx.typeArguments() != null ) { // Contains type arguments.					
 			SequenceType arguments = (SequenceType) ctx.typeArguments().getType();						
 			if( type.isParameterized() ) {		
@@ -1202,13 +1208,13 @@ public class StatementChecker extends BaseChecker {
 		// After updating type parameters
 		if( currentType instanceof ClassType )
 			currentType.addUsedType(type);
-	
+
 
 		// Set the type now that it has been fully initialized.
 		ctx.setType( type );
 		return null;	
 	}
-	
+
 	@Override public Void visitArguments(ShadowParser.ArgumentsContext ctx)
 	{ 
 		visitChildren(ctx);
@@ -1827,10 +1833,10 @@ public class StatementChecker extends BaseChecker {
 					ctx.getModifiers().upgradeToTemporaryReadonly();					
 			}
 		}	
-		else if( ctx.generalIdentifier() != null ) {							
-			if( !setTypeFromName( ctx, image )) { //automatically sets type if can				
+		else if( ctx.generalIdentifier() != null ) {
+			if( !setTypeFromName( ctx, image ) && (decoratorScope && !setTypeFromName(ctx, image + "Decorator"))) { //automatically sets type if can
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
-				ctx.setType(Type.UNKNOWN);											
+				ctx.setType(Type.UNKNOWN);
 			}			
 		}
 		else if( ctx.conditionalExpression() != null ) {
@@ -1843,7 +1849,7 @@ public class StatementChecker extends BaseChecker {
 			Context child = (Context) ctx.getChild(0);
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());
-		}		
+		}
 		
 		checkForSingleton(ctx.getType());		
 		curPrefix.set(0, ctx); //so that the suffix can figure out where it's at
@@ -2495,14 +2501,15 @@ public class StatementChecker extends BaseChecker {
 
 	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments, SequenceType typeArguments )
 	{	
-		List<ShadowException> errors = new ArrayList<ShadowException>();
+		List<ShadowException> errors = new ArrayList<>();
 		MethodSignature signature = type.getMatchingMethod(method, arguments, typeArguments, errors);
 		
 		if( signature == null )
 			addErrors(node, errors);	
 		else
 		{
-			if( !methodIsAccessible( signature, currentType  ))					
+			// TODO: Decorator needs to be fixed
+			if(!signature.getOuter().hasInterface(Type.DECORATOR) && !methodIsAccessible( signature, currentType ))
 				addError(node, Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");						
 		
 			node.setType(signature.getMethodType());		
@@ -2531,37 +2538,53 @@ public class StatementChecker extends BaseChecker {
 			MethodSignature signature = setMethodType(ctx, outer, unboundMethod.getTypeName(), arguments, null); //type set inside
 			ctx.setSignature(signature);
 			
-			if( signature != null )
-				for( ModifiedType modifiedType : signature.getReturnTypes() )
+			if( signature != null ) {
+				for( ModifiedType modifiedType : signature.getReturnTypes() ) {
 					currentType.addUsedType(modifiedType.getType());
+				}
+			}
 			
-			if( signature != null &&  prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  )
+			// decorators without arguments should not have method call structure
+			// [ImportAssembly()] is incorrect syntax and only [ImportAssembly]
+			// is correct. However, [ImportAssembly(true)] is valid (if there is
+			// a constructor in the form create(boolean))
+			if (outer.hasInterface(Type.DECORATOR) && arguments.isEmpty()) {
+				addError(ctx, Error.INVALID_ARGUMENTS, "A decorator with no arguments should not have the method call structure; use [T] instead of [T()]");
+			}
+			
+			if( signature != null &&  prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  ) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from an immutable reference");
+			}
 			
-			if( signature != null &&  (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly()) && signature.getModifiers().isMutable() )
+			if( signature != null &&  (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly()) && signature.getModifiers().isMutable() ) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from a readonly reference");				
-		}			
+			}
+		}
 		else if( prefixType instanceof MethodType ) { //only happens with method pointers and local methods		
 			MethodType methodType = (MethodType)prefixType;			
 			
 			if( methodType.isInline() ) {
-				for( Context signatureNode : currentMethod )
-					if( signatureNode.getSignature().getMethodType() == methodType ) //if literally the same MethodType, we have illegal recursion						
+				for( Context signatureNode : currentMethod ) {
+					if( signatureNode.getSignature().getMethodType() == methodType ) { //if literally the same MethodType, we have illegal recursion						
 						addError(ctx, Error.INVALID_STRUCTURE, "Inline method cannot be called recursively");
+					}
+				}
 			}
 			
-			if( methodType.canAccept( arguments ) )
+			if( methodType.canAccept( arguments ) ) {
 				ctx.setType(methodType);
-			else  {
+			} else  {
 				addError(ctx, Error.INVALID_ARGUMENTS, "Supplied method arguments " + arguments + " do not match method parameters " + methodType.getParameterTypes(), arguments, methodType.getParameterTypes());
 				ctx.setType(Type.UNKNOWN);
 			}
-							
-			if( prefixNode.getModifiers().isImmutable() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  )
+
+			if( prefixNode.getModifiers().isImmutable() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  ) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Mutable method cannot be called from an immutable reference");
+			}
 			
-			if( prefixNode.getModifiers().isReadonly() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  )
+			if( prefixNode.getModifiers().isReadonly() && !methodType.getModifiers().isImmutable() && !methodType.getModifiers().isReadonly()  ) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Mutable method cannot be called from a readonly reference");
+			}
 		}			
 		else {									
 			addError(ctx, Error.INVALID_METHOD, "Cannot apply arguments to non-method type " + prefixType, prefixType);
@@ -2591,11 +2614,13 @@ public class StatementChecker extends BaseChecker {
 		if( field.getModifiers().isProtected() && checkedType instanceof ClassType ) {
 			ClassType classType = ((ClassType) checkedType).getExtendType();
 			while( classType != null ) {
-				if( enclosing.equals(classType))
+				if( enclosing.equals(classType)) {
 					return true;
+				}
+				
 				classType = classType.getExtendType();
-			}			
-		}		
+			}
+		}
 
 		return false;
 	}
@@ -2631,10 +2656,11 @@ public class StatementChecker extends BaseChecker {
 		
 		boolean nullable = false;
 		List<? extends Context> children;
-		if( !ctx.arrayInitializer().isEmpty() )
+		if( !ctx.arrayInitializer().isEmpty() ) {
 			children = ctx.arrayInitializer();
-		else
+		} else {
 			children = ctx.conditionalExpression();
+		}
 		
 		for( Context child : children ) { //cycle through types, upgrading to broadest legal type				
 			Type type = child.getType();
@@ -2642,19 +2668,19 @@ public class StatementChecker extends BaseChecker {
 			if( first ) {
 				result = type;
 				first = false;
-			}
-			else {
-				if( result.isSubtype(type) )					
+			} else {
+				if( result.isSubtype(type) ) {
 					result = type;				
-				else if( !type.isSubtype(result) ) { //neither is subtype of other, panic!				
+				} else if( !type.isSubtype(result) ) { //neither is subtype of other, panic!				
 					addError(ctx, Error.MISMATCHED_TYPE, "Types in array initializer list do not match");
 					ctx.setType(Type.UNKNOWN);
 					return null;
 				}
 			}
 			
-			if( child.getModifiers().isNullable() )
+			if( child.getModifiers().isNullable() ) {
 				nullable = true;
+			}
 		}
 			
 		//new code assumes that result is array of arrays
@@ -2664,8 +2690,9 @@ public class StatementChecker extends BaseChecker {
 			ctx.addModifiers(Modifiers.NULLABLE);
 			arrayType = new ArrayType(result, 1, nullable);
 		}
-		else
+		else {
 			arrayType = new ArrayType(result, 1, nullable);
+		}
 		
 		ctx.setType(arrayType);
 		currentType.addUsedType(arrayType);
@@ -2680,13 +2707,14 @@ public class StatementChecker extends BaseChecker {
 		
 		Type assertType = ctx.conditionalExpression(0).getType();
 		
-		if( !assertType.equals(Type.BOOLEAN))
+		if( !assertType.equals(Type.BOOLEAN)) {
 			addError(ctx.conditionalExpression(0), Error.INVALID_TYPE, "Supplied type " + assertType + " cannot be used in the condition of an assert, boolean required", assertType);
-		else if( ctx.conditionalExpression().size() == 2 ) {
+		} else if( ctx.conditionalExpression().size() == 2 ) {
 			ShadowParser.ConditionalExpressionContext child = ctx.conditionalExpression(1);
 			Type type = child.getType();
-			if( child.getModifiers().isTypeName() && !(type instanceof SingletonType) )
+			if( child.getModifiers().isTypeName() && !(type instanceof SingletonType) ) {
 				addError(child, Error.NOT_OBJECT, "Object type required for assert information but type name used");
+			}
 		}
 		
 		return null;		
@@ -2697,28 +2725,30 @@ public class StatementChecker extends BaseChecker {
 		//no children visited		
 		Type type = literalToType(ctx);
 		ctx.setType(type);
-		if( type != Type.NULL )
+		if( type != Type.NULL ) {
 			currentType.addUsedType(type);
+		}
 		
-		//ugly but needed to find negation		
+		// ugly but needed to find negation		
 		ParserRuleContext greatGrandparent = ctx.getParent().getParent().getParent();
 		boolean negated = false;
 
 		if( greatGrandparent instanceof ShadowParser.UnaryExpressionContext ) {
 			ParserRuleContext greatGreat = greatGrandparent.getParent();
-			if( greatGreat instanceof ShadowParser.UnaryExpressionContext && greatGreat.getChild(0).getText().equals("-") )
+			
+			if( greatGreat instanceof ShadowParser.UnaryExpressionContext && greatGreat.getChild(0).getText().equals("-") ) {
 				negated = true;
+			}
 		}
 		
 		String literal = ctx.getText();
 		String lower = literal.toLowerCase();
 		int length = literal.length();
-		
-		
+
 		try {		
 			if (literal.equals("null"))
 				ctx.value = new ShadowNull(Type.NULL);
-			else if (literal.startsWith("\'") && literal.endsWith("\'"))				
+			else if (literal.startsWith("\'") && literal.endsWith("\'"))
 				ctx.value = ShadowCode.parseCode(literal);			
 			else if (literal.startsWith("\"") && literal.endsWith("\""))
 				ctx.value = ShadowString.parseString(literal);
@@ -2834,7 +2864,7 @@ public class StatementChecker extends BaseChecker {
 					type = type.getExtendType();
 				else
 					addError(ctx, Error.INVALID_CREATE, "Class type " + type + " cannot invoke a parent create because it does not extend another type", type);
-			}				
+			}
 							
 			MethodSignature signature = setMethodType(ctx, type, "create", arguments, null); //type set inside
 			ctx.setSignature(signature);
@@ -3010,15 +3040,20 @@ public class StatementChecker extends BaseChecker {
 	}
 	
 	@Override
-	public Void visitDecoratorExpression(DecoratorExpressionContext ctx) {
-		visitChildren(ctx);
-		
-		for(TypeContext t : ctx.type()) {
-			Type actualType = resolveType(t).getType();
-			if(!actualType.hasInterface(Type.METHOD_DECORATOR) || !(actualType instanceof ClassType)) {
-				addError(ctx, Error.INVALID_TYPE, "A method decorator must be a class that derives from the MethodDecorator interface.");
-			}
+	public Void visitDecoratorExpression(DecoratorExpressionContext ctx) {		
+		Type actualType = ctx.type().getType();
+		if (!actualType.hasInterface(Type.METHOD_DECORATOR) || !(actualType instanceof ClassType)) {
+			addError(ctx, Error.INVALID_TYPE,
+					"A method decorator must be a class that derives from the MethodDecorator interface.");
 		}
+		
+		setTypeFromContext(ctx, "create", actualType);
+		
+		decoratorScope = true;
+		curPrefix.addFirst(ctx);
+		visitChildren(ctx);
+		curPrefix.removeFirst();
+		decoratorScope = false;
 		
 		return null;
 	}

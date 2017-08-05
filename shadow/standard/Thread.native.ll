@@ -24,9 +24,6 @@
 ; Object
 %shadow.standard..Object = type opaque
 
-; Pointer
-%shadow.natives..ShadowPointer = type opaque
-
 ; Thread
 %shadow.standard..Thread = type opaque
 
@@ -41,13 +38,10 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
-; @ShadowThread.c
-declare %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%shadow.standard..Thread*, %void* (%shadow.standard..Thread*)*)
-
-; runnerNative() => ();
-declare void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread*)
-; createMainNative() => (Thread);
-declare %shadow.standard..Thread* @shadow.standard..Thread_McreateMainNative(%shadow.standard..Thread*)
+; threadStart() => ();
+declare void @shadow.standard..Thread_MthreadStart(%shadow.standard..Thread*)
+; createMainThread() => (Thread);
+declare %shadow.standard..Thread* @shadow.standard..Thread_McreateMainThread(%shadow.standard..Thread*)
 
 ;---------------------------
 ; Shadow Method Definitions
@@ -66,26 +60,18 @@ entry:
 	ret %int %currentId
 }
 
-; spawnThread() => (ShadowPointer);
-define %shadow.natives..ShadowPointer* @shadow.standard..Thread_MspawnThread(%shadow.standard..Thread*) {
-entry:
-	; spawn the thread and get its pointer
-	%call = call %shadow.natives..ShadowPointer* @__ShadowThread_Spawn(%shadow.standard..Thread* %0, %void* (%shadow.standard..Thread*)* @thread_start)
-	ret %shadow.natives..ShadowPointer* %call
-}
-
 ;---------------------------
 ; Custom Method Definitions
 ;---------------------------
 ; the function ran from the newly spawned thread
-define %void* @thread_start(%shadow.standard..Thread* %currentThread) {
+define %void* @_shadowThread_ThreadStart(%shadow.standard..Thread* %currentThread) {
 entry:
 	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
 	; and will cause the TLS to correctly store the reference of this thread.
 	store %shadow.standard..Thread* %currentThread, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
 
 	; we let Shadow take care of running the actual desired operation
-	call void @shadow.standard..Thread_MrunnerNative(%shadow.standard..Thread* %currentThread)
+	call void @shadow.standard..Thread_MthreadStart(%shadow.standard..Thread* %currentThread)
 
 	ret %void* null
 }
@@ -94,7 +80,7 @@ entry:
 define %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread() {
 entry:
 	; we initialize the dummy Thread for the main thread
-	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_McreateMainNative(%shadow.standard..Thread* null)
+	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_McreateMainThread(%shadow.standard..Thread* null)
 	
 	; each thread needs to be able to get a reference to its own Thread, so we set its instance to the currentThread TLS.
 	store %shadow.standard..Thread* %mainThread, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread

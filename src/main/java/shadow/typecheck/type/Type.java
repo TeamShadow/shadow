@@ -93,11 +93,12 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType POINTER = null;
 	public static ClassType THREAD = null;
-	public static ClassType IMPORT_NATIVE = null;
-	public static ClassType IMPORT_ASSEMBLY = null;
-	public static ClassType IMPORT_METHOD = null;
-	public static ClassType EXPORT_ASSEMBLY = null;
-	public static ClassType EXPORT_METHOD = null;
+	public static ClassType IMPORT_NATIVE_DECORATOR = null;
+	public static ClassType IMPORT_ASSEMBLY_DECORATOR = null;
+	public static ClassType IMPORT_METHOD_DECORATOR = null;
+	public static ClassType EXPORT_ASSEMBLY_DECORATOR = null;
+	public static ClassType EXPORT_METHOD_DECORATOR = null;
+	public static ClassType EXPORT_NATIVE_DECORATOR = null;
 	
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
@@ -306,12 +307,13 @@ public abstract class Type implements Comparable<Type> {
 		DECORATOR = null;
 		METHOD_DECORATOR = null;
 		COMPILER_DECORATOR = null;
-		IMPORT_NATIVE = null;
-		IMPORT_ASSEMBLY = null;
-		IMPORT_METHOD = null;
+		IMPORT_NATIVE_DECORATOR = null;
+		IMPORT_ASSEMBLY_DECORATOR = null;
+		IMPORT_METHOD_DECORATOR = null;
 		
-		EXPORT_ASSEMBLY = null;
-		EXPORT_METHOD = null;
+		EXPORT_NATIVE_DECORATOR = null;
+		EXPORT_ASSEMBLY_DECORATOR = null;
+		EXPORT_METHOD_DECORATOR = null;
 	}
 	
 	/*

@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,8 +15,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	public static final int IMPORT_ASSEMBLY = 1;
 	public static final int IMPORT_METHOD = 2;
 	
-	public static final int EXPORT_ASSEMBLY = 0;
-	public static final int EXPORT_METHOD = 1;
+	public static final int EXPORT_NATIVE = 0;
+	public static final int EXPORT_ASSEMBLY = 1;
+	public static final int EXPORT_METHOD = 2;
 	
 	protected final MethodType type;
 	protected final String symbol;
@@ -23,9 +25,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private final MethodSignature wrapped;
 	private MethodSignature signatureWithoutTypeArguments;
 	private Type outer;
-	private Set<SingletonType> singletons = new HashSet<SingletonType>();
+	private Set<SingletonType> singletons = new HashSet<>();
 	private int importType = -1;
 	private int exportType = -1;
+	private List<Type> allowedExports;
 
 	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
 	{
@@ -155,7 +158,17 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		sb.append(symbol);		
+		/*
+		// TODO: Uncomment when decorators are generated in .meta
+		if(isExportMethod() && getExportTypes() != null) {
+			sb.append("[");
+			for(Type t : getExportTypes()) {
+				sb.append(t.getTypeName());
+			}
+			sb.append("] ");
+		}*/
+		
+		sb.append(symbol);
 		
 		//nothing more for destroy
 		if( !symbol.equals("destroy") ) {			
@@ -352,7 +365,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public boolean hasBlock() {
-		boolean hasBlock = true;
+		boolean hasBlock = false;
 		
 		if( node instanceof ShadowParser.CreateDeclarationContext )
 			hasBlock = ((ShadowParser.CreateDeclarationContext)node).createBlock() != null;
@@ -396,11 +409,29 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return exportType != -1;
 	}
 	
+	public boolean isExportNative() {
+		return exportType == EXPORT_NATIVE;
+	}
+	
 	public boolean isExportAssembly() {
 		return exportType == EXPORT_ASSEMBLY;
 	}
 	
 	public boolean isExportMethod() {
 		return exportType == EXPORT_METHOD;
+	}
+	
+	// TODO: Find a better name for this
+	public void addExportType(Type type) {
+		if(allowedExports == null) {
+			allowedExports = new ArrayList<>();
+		}
+		
+		allowedExports.add(type);
+	}
+
+	// TODO: Find a better name for this
+	public List<Type> getExportTypes() {
+		return allowedExports;
 	}
 }

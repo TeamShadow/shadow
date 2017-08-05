@@ -1,4 +1,0 @@
-locked class shadow:standard@
-	ImportNative is CompilerDecorator {
-		private create() {}
-}

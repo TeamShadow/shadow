@@ -604,7 +604,6 @@ public class Main {
 							else if( node instanceof ShadowParser.CreateDeclarationContext )
 								node = ((ShadowParser.CreateDeclarationContext)node).createDeclarator();
 
-
 							reporter.addWarning(node, TypeCheckException.Error.UNUSED_METHOD,
 									"Private method " + signature.getSymbol() + signature.getMethodType()
 									+ " is never used");

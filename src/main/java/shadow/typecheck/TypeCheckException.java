@@ -90,7 +90,7 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 		UNUSED_METHOD("Unused method", "Method is never used"),
 		UNUSED_VARIABLE("Unused variable", "Local variable is never used"),
 		INVALID_METHOD_IDENTIFIER("Invalid identifier", "Only assembly import methods can start with an underscore."),
-		INVALID_EXTERN_METHOD("Invalid method import", "The referenced class does not contain a method which matches this method's signature.");
+		INVALID_METHOD_IMPORT("Invalid method import", "The referenced class does not contain a method which matches this method's signature.");
 		
 		private final String name;
 		private final String message;		

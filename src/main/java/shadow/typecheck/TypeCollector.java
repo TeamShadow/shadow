@@ -546,12 +546,13 @@ public class TypeCollector extends BaseChecker {
 				case "MethodDecorator": Type.METHOD_DECORATOR = (InterfaceType)type; break;
 				case "CompilerDecorator": Type.COMPILER_DECORATOR = (InterfaceType)type; break;
 				
-				case "ImportNative": Type.IMPORT_NATIVE = (ClassType)type; break;
-				case "ImportAssembly": Type.IMPORT_ASSEMBLY = (ClassType)type; break;
-				case "ImportMethod": Type.IMPORT_METHOD = (ClassType)type; break;
-				
-				case "ExportAssembly": Type.EXPORT_ASSEMBLY = (ClassType)type; break;
-				case "ExportMethod": Type.EXPORT_METHOD = (ClassType)type; break;
+				case "ImportNativeDecorator": Type.IMPORT_NATIVE_DECORATOR = (ClassType)type; break;
+				case "ImportAssemblyDecorator": Type.IMPORT_ASSEMBLY_DECORATOR = (ClassType)type; break;
+				case "ImportMethodDecorator": Type.IMPORT_METHOD_DECORATOR = (ClassType)type; break;
+
+				case "ExportNativeDecorator": Type.EXPORT_NATIVE_DECORATOR = (ClassType)type; break;
+				case "ExportAssemblyDecorator": Type.EXPORT_ASSEMBLY_DECORATOR = (ClassType)type; break;
+				case "ExportMethodDecorator": Type.EXPORT_METHOD_DECORATOR = (ClassType)type; break;
 				}
 			}
 			

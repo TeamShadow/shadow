@@ -11,10 +11,11 @@
 locked immutable class shadow:natives@
 	Pointer
 {
-	[ImportAssembly]
-	private __ShadowPointer_Free(long address) => ();
 	[ImportNative]
 	private invalidateAddress() => ();
+
+	[ImportAssembly]
+	private __ShadowPointer_Free(long address) => ();
 	
 	long address;
 	boolean shouldFree;

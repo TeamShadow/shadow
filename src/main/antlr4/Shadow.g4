@@ -122,7 +122,7 @@ classOrInterfaceBodyDeclaration
 	  	( classOrInterfaceDeclaration /*{$ctx.classOrInterfaceDeclaration().setDocumentation($documentation);}*/
 	    | enumDeclaration 
 	    | fieldDeclaration) 
-	  	| (decoratorExpression? modifiers (methodDeclaration | createDeclaration | destroyDeclaration))
+	  	| (decorator? modifiers (methodDeclaration | createDeclaration | destroyDeclaration))
 	  )
 	;
 	
@@ -186,6 +186,14 @@ destroyDeclaration
 explicitCreateInvocation
 	: ( 'this' | 'super' ) 
 	'(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ';'
+	;
+
+decorator
+	: '[' decoratorExpression (',' decoratorExpression)? ']'
+	;
+
+decoratorExpression
+	: type methodCall?
 	;
 
 type
@@ -382,10 +390,6 @@ spawnExpression
 
 spawnRunnerCreateCall
 	: ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
-	;
-
-decoratorExpression
-	: '[' type (',' type)? ']'
 	;
 
 /*receiveExpression

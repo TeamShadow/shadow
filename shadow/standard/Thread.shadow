@@ -13,11 +13,68 @@ locked class shadow:standard@
 	Thread
 is CanIndex<int, Thread>
 {
-	/// @unused
-	[ImportNative]
-	private readonly spawnThread() => (Pointer);
+	[ImportAssembly]
+	private readonly __ShadowThread_Spawn(Thread instance) => (Pointer);
+	
 	[ImportNative]
 	private readonly get staticNextId() => (int);
+
+	Pointer handle;
+	CanRun runner;
+	nullable Exception threadException;
+	
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread.
+	* 
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(CanRun runner)
+	{
+		this(null, runner);
+	}
+	
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread, and takes a {@code String} which is the name
+	* of the thread for reference purposes.
+	* 
+	* @param name The name of the thread.
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(nullable String name, CanRun runner)
+	{
+		this:id = this->staticNextId;
+		
+		try {
+			this:name = check(name);
+		} recover {
+			this:name = "Thread#" # id;
+		}
+		
+		if(this:id == 0) {
+			// no need to copy since it's the NopRunner
+			this:runner = runner;
+			this:parent = null;
+			// we don't need a valid handle anyway
+			this:handle = Pointer:create();
+		} else {
+			this:runner = copy(runner);
+			
+			// set the threads hierarchy
+			this:parent = currentThread();
+			//check(parent):childrenList.add(instance());
+			
+			// spawn the thread and get the Pointer
+			this:handle = __ShadowThread_Spawn(this);
+			
+			if(!this:handle->isValid) {
+				throw ThreadSpawnException:create();
+			}
+		}
+	}
 
 	/// Gets the Shadow-specific thread ID.
 	get int id;
@@ -64,42 +121,6 @@ is CanIndex<int, Thread>
 	public readonly get stateStr() => (String)
 	{
 		throw UnsupportedOperationException:create();
-	}
-	
-	/**
-	* Creates a new {@code Thread} object which takes on a {@code CanRun}
-	* instance, containing a run function that is going to be ran
-	* on a different thread.
-	* 
-	* @param runner The instance that contains a run function.
-	*/
-	protected create(CanRun runner)
-	{
-		this(null, runner);
-	}
-	
-	/**
-	* Creates a new {@code Thread} object which takes on a {@code CanRun}
-	* instance, containing a run function that is going to be ran
-	* on a different thread, and takes a {@code String} which is the name
-	* of the thread for reference purposes.
-	* 
-	* @param name The name of the thread.
-	* @param runner The instance that contains a run function.
-	*/
-	protected create(nullable String name, CanRun runner)
-	{
-		this:id = this->staticNextId;
-
-		if(id > 0) {
-			throw UnsupportedOperationException:create();
-		}
-		
-		try {
-			this:name = check(name);
-		} recover {
-			this:name = "Thread#" # id;
-		}
 	}
 	
 	/**
@@ -265,11 +286,17 @@ is CanIndex<int, Thread>
 	/**
 	* This method is natively executed from the newly spawned thread.
 	* !!DO NOT MANUALLY EXECUTE!!
-	* @unused
 	*/
-	private runnerNative() => ()
+	[ExportNative]
+	private threadStart() => ()
 	{
-		throw UnsupportedOperationException:create();
+		try {
+			runner.run();
+		} catch(Exception e) {
+			threadException = ThreadException:create(this, e);
+		} finally {
+			handle.free();
+		}
 	}
 	
 	/// Gets whether this thread is the current executing thread.
@@ -351,13 +378,13 @@ is CanIndex<int, Thread>
 		return CurrentThread->instance;
 	}
 	
-	/// @unused
-	private waitForThreadsNative() => ()
+	[ExportNative]
+	private waitForThreads() => ()
 	{
 	}
 	
-	/// @unused
-	private readonly createMainNative() => (Thread) 
+	[ExportNative]
+	private readonly createMainThread() => (Thread) 
 	{
 		return Thread:create("Thread#main", NopRunner:create()); 
 	}

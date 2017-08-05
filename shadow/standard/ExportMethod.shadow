@@ -1,3 +1,0 @@
-locked class shadow:standard@
-	ExportMethod is CompilerDecorator {
-}

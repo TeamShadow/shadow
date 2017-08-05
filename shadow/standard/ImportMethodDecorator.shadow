@@ -1,0 +1,4 @@
+locked class shadow:standard@
+	ImportMethodDecorator is CompilerDecorator {
+		protected create() {}
+}

@@ -1,4 +1,0 @@
-locked class shadow:standard@
-	ImportAssembly is CompilerDecorator {
-		private create() {}
-}
