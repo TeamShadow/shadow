@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017 Team Shadow
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 	
+ * 	    http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
 package shadow.typecheck;
 
 import java.util.ArrayList;
@@ -127,12 +143,18 @@ public class StatementChecker extends BaseChecker {
 			signature = node.getSignature();
 		}
 		
-		for( ModifiedType modifiedType : signature.getParameterTypes() )
+		for( ModifiedType modifiedType : signature.getParameterTypes() ) {
+			Type type = modifiedType.getType();
+			if(signature.getOuter().hasInterface(Type.COMPILER_DECORATOR) && signature.isCreate() && !type.isIntegral() && !type.isString() && !(type instanceof EnumType)) {
+				addError(node, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in compiler decorator, only integral, String, and enum types allowed", type);
+			}
+			
 			currentType.addUsedType(modifiedType.getType());
+		}
 		
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
 			currentType.addUsedType(modifiedType.getType());
-		
+
 		if(signature.isImportMethod()) {
 			if(signature.getModifiers().isPublic()) {
 				addError(node, Error.INVALID_MODIFIER, "Method imports cannot be public.");
@@ -199,16 +221,20 @@ public class StatementChecker extends BaseChecker {
 		
 		int defaultCounter = 0;
 		Type type = ctx.conditionalExpression().getType();
-		if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType))
+		if(!type.isIntegral() && !type.isString() && !(type instanceof EnumType)) {
 			addError(ctx, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in switch statement, only integral, String, and enum types allowed", type);
-		for(ShadowParser.SwitchLabelContext label : ctx.switchLabel() ) {		
-			if(label.getType() != null){ //default label should have null type 
-				if(!label.getType().isSubtype(type))
+		}
+		
+		for(ShadowParser.SwitchLabelContext label : ctx.switchLabel()) {
+			if(label.getType() != null) { //default label should have null type
+				if(!label.getType().isSubtype(type)) {
 					addError(label,Error.INVALID_LABEL,"Label type " + label.getType() + " does not match switch type " + type, label.getType(), type);
+				}
 			}
-			else
+			else {
 				defaultCounter++;
-		}			
+			}
+		}
 		
 		if( defaultCounter > 1 )
 			addError(ctx, Error.INVALID_LABEL, "Switch cannot have multiple default labels");
@@ -385,7 +411,7 @@ public class StatementChecker extends BaseChecker {
 					//only worry if there is no explicit invocation
 					//explicit invocations are handled separately
 					//for native creates, we have to trust the author of the native code
-					boolean foundDefault = false;						
+					boolean foundDefault = false;
 					for( MethodSignature method : parentType.getMethods("create") ) {
 						if( method.getParameterTypes().isEmpty() ) {
 							foundDefault = true;
@@ -1894,12 +1920,12 @@ public class StatementChecker extends BaseChecker {
 			}
 			else
 				ctx.setType(Type.UNKNOWN);
-		}				
+		}
 		else {
 			Context child = (Context) ctx.getChild(0);
 			ctx.setType(child.getType());
 			ctx.addModifiers(child.getModifiers());
-		}			
+		}
 		
 		checkForSingleton(ctx.getType());
 		curPrefix.set(0, ctx); //so that a future suffix can figure out where it's at
@@ -2235,22 +2261,24 @@ public class StatementChecker extends BaseChecker {
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Singletons cannot be created");
 		else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.getAllMethods("create").isEmpty()))
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Type " + prefixType + " cannot be created", prefixType);				
-		else if( !prefixNode.getModifiers().isTypeName() )				
+		else if( !prefixNode.getModifiers().isTypeName() )
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Only a type can be created");
 		else {
-			SequenceType typeArguments = null;				
+			SequenceType typeArguments = null;
 			
-			if( ctx.typeArguments() != null )
+			if( ctx.typeArguments() != null ) {
 				typeArguments = (SequenceType) ctx.typeArguments().getType();
+			}
 			
 			SequenceType arguments = new SequenceType();
 			
-			for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() )
+			for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() ) {
 				arguments.add(child);
+			}
 
-			MethodSignature signature;				
+			MethodSignature signature;
 			
-			if( typeArguments != null ) {					
+			if( typeArguments != null ) {
 				if( prefixType.isParameterized() && prefixType.getTypeParameters().canAccept(typeArguments, SubstitutionKind.TYPE_PARAMETER) ) {
 					try {
 						prefixType = prefixType.replace(prefixType.getTypeParameters(), typeArguments);
@@ -2529,8 +2557,9 @@ public class StatementChecker extends BaseChecker {
 		
 		SequenceType arguments = new SequenceType();
 		
-		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() )
-			arguments.add(child);		
+		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() ) {
+			arguments.add(child);
+		}
 	
 		if( prefixType instanceof UnboundMethodType ) {
 			UnboundMethodType unboundMethod = (UnboundMethodType)(prefixType);				

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Team Shadow
+ * Copyright 2017 Team Shadow
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -213,9 +213,7 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(new ArrayType(Type.METHOD_TABLE));
 
 			type.addUsedType(new ArrayType(Type.CLASS));
-
-			type.addUsedType(Type.POINTER);
-
+			
 			// Adding the self adds parents and interfaces and methods
 			type.addUsedType(type);
 
@@ -365,12 +363,8 @@ public class TypeUpdater extends BaseChecker {
 							methodType.addReturn(modifiedType);
 							MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType,
 									methodNode);
-							checkParameterAndReturnVisibility(signature, classType); // Make
-																						// sure
-																						// field
-																						// type
-																						// is
-																						// visible
+							// Make sure field type is visible
+							checkParameterAndReturnVisibility(signature, classType);
 							classType.addMethod(signature);
 						}
 					}
@@ -417,12 +411,8 @@ public class TypeUpdater extends BaseChecker {
 							methodType.addParameter("value", modifiedType);
 							MethodSignature signature = new MethodSignature(methodType, field.getKey(), classType,
 									methodNode);
-							checkParameterAndReturnVisibility(signature, classType); // Make
-																						// sure
-																						// field
-																						// type
-																						// is
-																						// visible
+							// Make sure field type is visible
+							checkParameterAndReturnVisibility(signature, classType);
 							classType.addMethod(signature);
 						}
 					}
@@ -866,7 +856,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 
-		// imports and exports that are meant to be called to and from C are allowed to start with _
+		// only imports and exports that are meant to be called to and from C are allowed to start with _
 		if (!signature.isImportAssembly() && !signature.isExportAssembly() && signature.getSymbol().startsWith("_")) {
 			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
 		}
@@ -976,8 +966,9 @@ public class TypeUpdater extends BaseChecker {
 	private void visitDeclarator(Context node, ShadowParser.FormalParametersContext parameters,
 			MethodSignature signature) {
 		// Add parameters to the signature
-		for (ShadowParser.FormalParameterContext parameter : parameters.formalParameter())
+		for (ShadowParser.FormalParameterContext parameter : parameters.formalParameter()) {
 			signature.addParameter(parameter.Identifier().getText(), parameter);
+		}
 
 		if (signature.getModifiers().isSet()) {
 			if (parameters.formalParameter().size() != 1)

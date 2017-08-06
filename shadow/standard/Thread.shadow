@@ -13,7 +13,7 @@ locked class shadow:standard@
 	Thread
 is CanIndex<int, Thread>
 {
-	[ImportAssembly]
+	[ImportAssembly("assembly", ImportAssembly:ASSEMBLY)]
 	private readonly __ShadowThread_Spawn(Thread instance) => (Pointer);
 	
 	[ImportNative]
