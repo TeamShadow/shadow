@@ -14,8 +14,7 @@ body
     padding: 0; 
     min-width: 60em; 
     font-family: Verdana, Helvetica, Arial, sans-serif;
-	background-color: lightgray;
-	background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.25) 35px, rgba(255,255,255,.25) 70px);
+	background-color: white;	
 	font-size: 90%;
 }
 
@@ -44,20 +43,20 @@ hr
 
 th
 {
-	border: 1px solid white;
-	background-color: rgb(0,170,251);
+	border: 0.1em solid white;
+	background-color: rgb(81, 53, 115);
 	color: white;
 }
 
 table
 {
-    border: 1px solid white;
+    border: 0.1em solid white;
     background-color: white;
 }
 
 td
 {
-	border: 1px solid white;	
+	border: 0.1em solid white;	
 }
 
 th, td
@@ -67,7 +66,7 @@ th, td
 
 tr.shaded
 {
-	background-color: rgb(229, 247, 255);
+	background-color: rgb(229,218,242);
 }
 
 table
@@ -102,11 +101,11 @@ table
 
 .block
 {
-    border: 1px solid white;   
+    border: 0.1em solid white;   
     padding: 0 .5em .5em .5em;
     margin: .5em;
 	
-	background-color: rgb(192, 235, 255);
+	background-color: rgb(225, 225, 225);
 	
 }
 
@@ -127,7 +126,7 @@ code
 
 .detail
 {
-    border: 1px solid white;
+    border: 0.1em solid white;
     background-color: white;
     padding: 0 .5em .5em;
     margin: 0 0 .5em;
@@ -150,15 +149,10 @@ code
 
 .navlist
 {
-    border-bottom: 1px solid white;
-    background-color: rgb( 246, 37, 130 );
+    border-bottom: 0.1em solid white;
+    background-color: rgb(2, 77, 58);
     margin-bottom: .5em;
 	color: white;
-}
-
-.navlist a
-{
-	color: white;	
 }
 
 .navlist ul

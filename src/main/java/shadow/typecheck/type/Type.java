@@ -64,7 +64,8 @@ public abstract class Type implements Comparable<Type> {
 	public static ClassType ARRAY = null;  // object representation of all array types
 	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types	
 	
-	public static ClassType METHOD_TABLE = null; //really just a pointer for method tables, but we sometimes act like it is a class
+	public static ClassType METHOD = null; //used to hold method references
+	public static ClassType METHOD_TABLE = null; //really just a pointer for method tables, but we sometimes act like it is a class	
 	
 	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
 	public static ExceptionType EXCEPTION = null;
@@ -244,6 +245,7 @@ public abstract class Type implements Comparable<Type> {
 	//otherwise, types can become mixed between two different runs of the type checker
 	public static void clearTypes()	{
 		OBJECT = null;
+		METHOD = null;
 		METHOD_TABLE = null;
 		CAST_EXCEPTION = null;
 		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;

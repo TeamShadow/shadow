@@ -1,0 +1,41 @@
+/**
+ * Class {@code Method} is used to hold method references inside the compiler.
+ *
+ * The use of {@code Method} is handled by the compiler.
+ * Users should avoid using the {@code Method} type explicitly.
+ */
+
+
+abstract locked class shadow:standard@
+	Method
+{	
+	/**
+	 * Pointer to actual method called.
+	 * @unused
+	 */	 
+	MethodTable method;
+	
+	/** 
+	 * Object that the method will be called on.
+	 * @unused
+	 */		
+	Object object;
+	
+	/**
+	 * Optional arguments from closure.			
+	 * If arguments is not null, the compiler will assume that method is a
+	 * wrapper method and call it with an Object[] as its first parameter.
+	 * @unused
+	 */	 
+	Object[] arguments;		
+	
+	/**
+	 * Method references are created internally by the compiler. 
+	 * This method is private to prevent a user from creating
+	 * a {@code Method} object explicitly.
+	 * @unused
+	 */
+	private native create();
+	
+	public native destroy;	
+}
