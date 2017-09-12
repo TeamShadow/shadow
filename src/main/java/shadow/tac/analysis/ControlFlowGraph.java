@@ -35,6 +35,8 @@ import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStorage;
 import shadow.tac.nodes.TACLocalStore;
+import shadow.tac.nodes.TACMethodName;
+import shadow.tac.nodes.TACMethodPointer;
 import shadow.tac.nodes.TACMethodRef;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
@@ -72,7 +74,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	private Map<Type, Set<String>> usedFields = new HashMap<Type, Set<String>>();
 	//Method signatures include information that identifies class
 	private Set<MethodSignature> usedPrivateMethods = new HashSet<MethodSignature>();
-	
+
 	/**
 	 * Create a control flow graph for a method.
 	 */
@@ -80,18 +82,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{		
 		super(Loggers.TYPE_CHECKER);
 		this.method = method;
-		
+
 		//a method can only directly use fields in its class and outer classes
 		Type type = method.getSignature().getOuter();
 		while( type != null ) {
 			usedFields.put(type.getTypeWithoutTypeArguments(), new HashSet<String>());
 			type = type.getOuter();
 		}
-		
+
 		//addGarbageCollection();
 		createBlocks(method);
 		addEdges();
-		
+
 	}
 
 	/**
@@ -103,7 +105,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{
 		return method;
 	}
-	
+
 	/*
 	 * Adds edges between all blocks.
 	 */
@@ -117,11 +119,11 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	public Iterator<ControlFlowGraph.Block> iterator() {
 		return nodeBlocks.values().iterator();
 	}
-	
+
 	public Map<Type, Set<String>>  getUsedFields() {
 		return usedFields;
 	}
-	
+
 	public Set<MethodSignature>  getUsedPrivateMethods() {
 		return usedPrivateMethods;
 	}
@@ -133,7 +135,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{
 		TACNode node = block.getLabel();
 		boolean done = false;		
-		
+
 		while( !done ) {
 			if( node instanceof TACBranch ) {			
 				TACBranch branch = (TACBranch) node;			
@@ -188,14 +190,14 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( throw_.getBlock().hasLandingpad() )
 					block.addBranch(nodeBlocks.get(throw_.getBlock().getLandingpad()));
 			}
-			
+
 			if( node == block.getLast() )
 				done = true;
 			else
 				node = node.getNext();
 		}
 	}
-	
+
 	/*
 	 * Divides the code in a method into blocks.
 	 */
@@ -205,9 +207,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		boolean starting = true;
 		boolean done = false;
 		Block block = null;
-		
+
 		Set<TACVariable> usedLocalVariables = new HashSet<TACVariable>();
-		
+
 		// Loop through circular linked-list
 		while( !done ) {
 			if( node instanceof TACLabel ) {
@@ -244,9 +246,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			else if( node instanceof TACCall ) {
 				TACCall call = (TACCall) node;
 				TACMethodRef methodRef = call.getMethodRef();
-				MethodSignature signature = methodRef.getSignature().getSignatureWithoutTypeArguments();
-				if( signature.getModifiers().isPrivate() && signature.getOuter().encloses(method.getThis().getType()) )
-					usedPrivateMethods.add(signature);
+				if( methodRef instanceof TACMethodName ) {
+					TACMethodName methodName = (TACMethodName) methodRef;
+					MethodSignature signature = methodName.getSignature().getSignatureWithoutTypeArguments();
+					if( signature.getModifiers().isPrivate() && signature.getOuter().encloses(method.getThis().getType()) )
+						usedPrivateMethods.add(signature);
+				}
 			}
 			//record local variable usage, for warnings and optimizations
 			else if( node instanceof TACLocalLoad ) {
@@ -258,14 +263,14 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				TACPhi phi = (TACPhi)node;
 				usedLocalVariables.add(phi.getVariable());
 			}			
-			
+
 			block.addNode(node);
-						
+
 			node = node.getNext();
 			if( node == method.getNode() )
 				done = true;
 		}
-		
+
 		//give warnings for unused local variables
 		//skip all copy methods, since they're automatically generated (and often don't use the "addresses" variable)
 		if( !method.getSignature().getSymbol().equals("copy"))
@@ -273,7 +278,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				String name = variable.getName(); 
 				//special compiler-created variables (_temp, _exception, etc.) start with _
 				//no need to check on "this"
-				
+
 				if( !name.startsWith("_") && !name.equals("this") && !name.equals("return") ) { 
 					if( !usedLocalVariables.contains(variable) ) {
 						ModifiedType type = variable.getModifiedType();					
@@ -284,7 +289,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							if( !(declaration instanceof ShadowParser.FormalParameterContext) ) {								
 								if( declaration instanceof ShadowParser.VariableDeclaratorContext)
 									declaration = ((ShadowParser.VariableDeclaratorContext)declaration).generalIdentifier();
-								
+
 								addWarning( declaration, Error.UNUSED_VARIABLE, "Local variable " + variable.getOriginalName() + " is never used");
 							}
 						}
@@ -294,23 +299,23 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}
 			}		
 	}
-	
+
 	/*
 	public void addGarbageCollection() {
-		
+
 		TACNode start = method.getNode(); //junk tree thing?
 		TACNode node = start.getNext();
-		
+
 		while( node != start ) {
 			TACNode next = node.getNext();
-			
+
 			if( node instanceof TACLocalStore ) {
 				TACLocalStore store = (TACLocalStore) node;
 				TACVariable variable = store.getVariable();
 				//type that needs garbage collection will be stored in alloc'ed variable
 				if( needsGarbageCollection(variable) ) {
 					store.setGarbageCollected(true);
-					
+
 					if( variable.getType() instanceof ArrayType && store.getClassData() == null ) {
 						ArrayType arrayType = (ArrayType) variable.getType();
 						TACClass classData = new TACClass(node, arrayType.getBaseType());
@@ -395,13 +400,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					}
 				}
 			}				
-			
+
 			node = next;
 		}				
 	}
-	*/
-	
-	
+	 */
+
+
 	/**
 	 * Removes blocks of code that are unreachable.
 	 *  
@@ -411,18 +416,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{
 		boolean edgesUpdated;
 		boolean changed = false;
-		
+
 		do {
 			edgesUpdated = false;
 			Set<Block> reachable = new HashSet<Block>();
 			findReachable(root, reachable);
-			
+
 			Set<Block> unreachable = new HashSet<Block>(nodeBlocks.values());
 			unreachable.removeAll(reachable);
-			
+
 			if( unreachable.size() > 0 )
 				changed = true;
-			
+
 			//If edges are updated in the process, new nodes might become unreachable
 			for( Block block : unreachable ) {
 				if( block.removeNodes() )
@@ -430,19 +435,19 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				nodeBlocks.remove(block.getLabel());
 				block.removeEdges();
 			}
-			
+
 			//blocks with indirect branches might need to update outgoing
 			//based on changing phi situations
 			for( Block block : reachable )
 				if( block.updatePhiBranches() )
 					edgesUpdated = true;			
-			
+
 		} while( edgesUpdated );
-		
+
 		cachedString = null; //reset cachedString		
 		return changed;
 	}
-	
+
 	/*
 	 * Find all blocks reachable from the starting block. 
 	 */
@@ -462,10 +467,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	public boolean returns()
 	{
 		Set<Block> visited = new HashSet<Block>();
-		
+
 		return returns(root, visited);
 	}
-	
+
 	/*
 	 * Recursive helper to see if all blocks starting at block return.
 	 */
@@ -473,9 +478,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{
 		if (visited.contains(block))
 			return true;
-		
+
 		visited.add(block);
-		
+
 		// A block should either branch or return
 		if (block.branches() > 0) {
 			// Ensure everything we can branch to returns
@@ -488,7 +493,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			return block.returnsDirectly() || block.unwinds();
 		}
 	}
-	
+
 	/* 
 	 * Generates a String representation of the graph.
 	 */
@@ -496,18 +501,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{
 		Set<Block> visited = new HashSet<Block>();
 		List<IndexedString> strings = new ArrayList<IndexedString>();
-		
+
 		generateString(root, visited, strings);
-		
+
 		// Order the strings for each block and combine them
 		Collections.sort(strings);
 		StringBuilder builder = new StringBuilder();
 		for (IndexedString string : strings)
 			builder.append(string.getString() + "\n");
-		
+
 		return builder.toString();
 	}
-	
+
 	/* 
 	 * Traverses the graph to build a readable print-out of it. Useful for
 	 * debugging.
@@ -517,18 +522,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{
 		if (visited.contains(current))
 			return;
-		
+
 		visited.add(current);
-		
+
 		List<Integer> children = new ArrayList<Integer>();
 		for (Block child : current.getOutgoing()) {
 			children.add(child.getNumber());
 			generateString(child, visited, strings);
 		}
-		
+
 		// Lead with the current block's ID
 		String output = Integer.toString(current.getNumber()) + ": ";
-		
+
 		// List the blocks it can branch to
 		Collections.sort(children);
 		for (int i = 0; i < children.size(); ++i) {
@@ -536,17 +541,17 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				output += ", ";
 			output += Integer.toString(children.get(i)) + " ";
 		}
-		
+
 		// Indicate whether or not it returns directly
 		if (current.returnsDirectly())
 			output += "(RETURNS)";
 		else if( current.unwinds() )
 			output += "(UNWINDS)";
-			
+
 		strings.add(new IndexedString(current.getNumber(), output));			
 	}
-	
-	
+
+
 	/** 
 	 * Adds phi nodes to blocks where needed.
 	 * This method *must* be called in order to create the phi nodes
@@ -555,18 +560,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	 */
 	public void addPhiNodes() {
 		Map<Block,Map<TACVariable,TACLocalStorage>> lastDefinitions = new HashMap<Block,Map<TACVariable, TACLocalStorage>>();
-		
+
 		Collection<Block> blocks = nodeBlocks.values();				
-		
+
 		//find the last definition of every variable in every block
 		for( Block block : blocks )
 			lastDefinitions.put(block, block.getLastStores());		
-		
+
 		//use those definitions when constructing phi nodes
 		for( Block block : blocks )
 			block.addPhiNodes(lastDefinitions);
 	}
-	
+
 
 	/**
 	 * Propagate constants and other values through the SSA representation.
@@ -579,11 +584,11 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	public boolean propagateConstants()
 	{		
 		List<Block> blocks = getReversePostorder();
-		
+
 		boolean done = false;
 		boolean changed = false;
 		Set<TACLocalLoad> undefinedLoads = new HashSet<TACLocalLoad>();
-		
+
 		while( !done ) {
 			done = true;
 			undefinedLoads.clear();
@@ -593,13 +598,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					changed = true;
 				}
 		}
-		
+
 		for( TACLocalLoad undefined : undefinedLoads )
 			//_exception is a special variable used only for exception handling
 			//indirect breaks for finally make its value tricky, but it's guaranteed to never *really* be undefined
 			if( !undefined.getVariable().getOriginalName().equals("_exception") && !undefined.getVariable().getOriginalName().equals("return")  && !undefined.getVariable().getOriginalName().startsWith("_return")  )
 				addError(undefined.getContext(), Error.UNDEFINED_VARIABLE, "Variable " + undefined.getVariable().getOriginalName() + " may not have been defined before use");
-		
+
 		return changed;
 	}
 
@@ -608,10 +613,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	{
 		if( cachedString == null )
 			cachedString = generateString();
-		
+
 		return cachedString;
 	}
-	
+
 	/**
 	 * Returns a list giving the graph in reverse postorder.
 	 * Reverse postorder is considered to be an easy ordering
@@ -629,7 +634,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		Collections.reverse(list); //reverse list
 		return list;
 	}
-	
+
 	private static void postorder(Block block, List<Block> list, Set<Block> visited) {
 		if( !visited.contains(block) ) {			
 			visited.add(block);			
@@ -638,32 +643,32 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			list.add(block);
 		}
 	}
-	
-	
+
+
 	public Set<String> getInitializedFields(Set<String> alreadyInitialized, Set<String> thisStores, Map<MethodSignature, StorageData> methodData, Set<String> fieldsNeedingInitialization)
 	{	
 		Map<Block,Set<String>> initialLoadsBeforeStores = new HashMap<Block,Set<String>>();
 		Map<Block,Set<String>> initialStores = new HashMap<Block,Set<String>>();
 		Map<Block,Set<String>> allLoadsBeforeStores = new HashMap<Block,Set<String>>();
 		Map<Block,Set<String>> allStores = new HashMap<Block,Set<String>>();
-		
+
 		Set<String> loads = new TreeSet<String>();
 		List<Block> blocks = getReversePostorder(); //converges faster since many blocks will be visited only after their predecessors
-		
+
 		for(Block block : blocks ) {
 			Set<String> loadsBeforeStores = new TreeSet<String>();			
 			Set<String> stores = new TreeSet<String>();			
-				
+
 			block.recordLoadsAndStoresInCreates(method.getThis().getType(), loadsBeforeStores, stores, loads, thisStores, methodData);			
-			
+
 			initialLoadsBeforeStores.put(block, loadsBeforeStores);
 			initialStores.put(block, stores);			
-			
+
 			if( block == root ) {
 				Set<String> set = new TreeSet<String>(loadsBeforeStores);
 				set.removeAll(alreadyInitialized);				
 				allLoadsBeforeStores.put(block, set);
-				
+
 				set = new TreeSet<String>(stores);
 				set.addAll(alreadyInitialized);				
 				allStores.put(block, set);
@@ -673,22 +678,22 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				allStores.put(block, new TreeSet<String>(fieldsNeedingInitialization)); //for data flow equations, assume everything is stored initially 
 			}
 		}		
-		
+
 		boolean changed = true;		
 		Map<Block, Set<String>> allPreviousStores = new HashMap<Block, Set<String>>();
-		
+
 		//keep going as long as changes to the stores are being detected
 		while( changed ) {
 			changed = false;
-			
+
 			for(Block block : blocks ) {
 				if( block != root && !block.hasIndirectBranch() ) {					
 					//find previous stores, the intersection of the stores of previous blocks
 					Set<String> previousStores = null;				
-					
+
 					for( Block parent : block.incoming ) {	
 						Set<String> parentStores = null;
-						
+
 						//indirect branching blocks are tricky
 						//probably only one parent of the indirect
 						//block will reach the child we're looking at
@@ -703,40 +708,40 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						}
 						else
 							parentStores = allStores.get(parent);
-						
+
 						if( previousStores == null )
 							previousStores = parentStores;
 						else
 							previousStores = intersect( previousStores, parentStores );
 					}
 					allPreviousStores.put(block, previousStores); //keep record for later error reporting					
-					
+
 					//get current state of stores and loads before stores
 					Set<String> stores = allStores.get(block);
 					Set<String> loadsBeforeStores = allLoadsBeforeStores.get(block);
-					
+
 					//record size, to detect changes
 					int storesSize = stores.size();
 					int loadsBeforeSize = loadsBeforeStores.size();						
-										
+
 					//update stores
 					stores.clear();
 					stores.addAll(initialStores.get(block));
 					stores.addAll(previousStores);					
-					
+
 					//update loads before stores
 					loadsBeforeStores.addAll(initialLoadsBeforeStores.get(block));
 					loadsBeforeStores.removeAll(previousStores);									
-					
+
 					if( storesSize != stores.size() || loadsBeforeSize != loadsBeforeStores.size() )
 						changed = true;
 				}
 			}
 		}
-		
+
 		//root has no previous stores
 		allPreviousStores.put(root, new TreeSet<String>());		
-		
+
 		//find blocks that return and record errors for fields that are used before they are initialized
 		List<Block> returningBlocks = new ArrayList<Block>();
 		for(Block block : nodeBlocks.values() ) {
@@ -746,14 +751,14 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			if( loadsBeforeStores.size() > 0 )
 				block.addErrorsForUninitializedFields(allPreviousStores.get(block), methodData);
 		}
-		
+
 		//check all loads of fields that might contain a "this"		
 		for( String field : thisStores ) {
 			//field might contain "this" and is therefore illegal to load
 			if( loads.contains(field) )
 				addError(method.getSignature().getNode(), Error.READ_OF_THIS_IN_CREATE, "Field " + field + " that might contain a reference to \"this\" cannot be read in a create or methods called by a create" );
 		}
-		
+
 		//intersect all of the fields initialized by the time any returning block is reached
 		Set<String> initializedFields = null;
 		for( Block block : returningBlocks )
@@ -761,42 +766,42 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				initializedFields = allStores.get(block);
 			else
 				initializedFields = intersect(initializedFields, allStores.get(block));	
-		
+
 		return initializedFields;		
 	}
-	
+
 	public StorageData getLoadsBeforeStoresInMethods(Type type, CallGraph callGraph) {
 		StorageData data = new StorageData();
 		for(Block block : nodeBlocks.values() )
 			block.recordLoadsBeforeStoresInMethods(type, data, callGraph);
-		
+
 		return data;
 	}
-	
+
 	private Set<String> intersect(Set<String> a, Set<String> b) {
 		Set<String> result = new TreeSet<String>();
-	
+
 		//always iterate over smaller set
 		if( b.size() < a.size() ) {
 			Set<String> temp = a;
 			a = b;
 			b = temp;
 		}
-		
+
 		for( String string : a )
 			if( b.contains(string) )
 				result.add(string);
-		
+
 		return result;
 	}
-	
+
 	private Set<String> union(Set<String> a, Set<String> b) {		
 		Set<String> result = new TreeSet<String>(a);
 		result.addAll(b);
 		return result;
 	}
-	
-	
+
+
 	//constants are already taken care of
 	//nullable fields are initialized to null
 	//primitive types are initialized to reasonable defaults
@@ -804,15 +809,15 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	public static boolean needsInitialization(ModifiedType modifiedType) {
 		Modifiers modifiers = modifiedType.getModifiers();
 		Type type = modifiedType.getType();
-		
+
 		return !modifiers.isConstant() && !modifiers.isNullable() && !type.isPrimitive() && !(type instanceof ArrayType)  && !(type instanceof SingletonType);
 	}
-	
+
 	public void addCallEdges(CallGraph calls, Type type) {
 		for(Block block : this)
 			block.addCallEdges(calls, type);		
 	}
-	
+
 	/*
 	 * Represents a contiguous sequence of TAC nodes, unbroken by branch
 	 * statements.
@@ -825,23 +830,22 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		private boolean returns = false;
 		private boolean unwinds = false;
 		private TACNode lastNode = null;  //last TAC node in this block
-		
-		
+
+
 		public boolean hasIndirectBranch() {
 			return lastNode instanceof TACBranch && ((TACBranch)lastNode).isIndirect();
 		}
-		
+
 		@Override
 		public String toString()
 		{
 			return "Block " + label.getNumber();
 		}		
-		
-		public void addErrorsForUninitializedFields(Set<String> previousStores, Map<MethodSignature, StorageData> methodData)
-		{
+
+		public void addErrorsForUninitializedFields(Set<String> previousStores, Map<MethodSignature, StorageData> methodData) {
 			Set<String> stores = new HashSet<String>(previousStores);
 			Type type = method.getThis().getType();			
-			
+
 			for( TACNode node : this ) {				
 				if( node instanceof TACStore ) {
 					TACStore store = (TACStore) node;
@@ -873,25 +877,28 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}
 				else if( node instanceof TACCall ) {
 					TACCall call = (TACCall)node;
-					MethodSignature signature = call.getMethodRef().getSignature();
-					if( operandIsThis( call.getPrefix(), type ) ) {						 
-						//see if it's in the list of methods whose field usage we track
-						//otherwise, it would have already caused an error
-						if( methodData.containsKey(signature) ) {
-							Set<String> fields = methodData.get(signature).getLoadsBeforeStores();							
-							for( String field : fields  )
-								if( !stores.contains(field) )
-									addError(node.getContext(), Error.UNINITIALIZED_FIELD, "Method call is not permitted before field " + field + " is initialized");
+					TACMethodRef methodRef = call.getMethodRef();
+					if( methodRef instanceof TACMethodName) {					
+						MethodSignature signature = ((TACMethodName)methodRef).getSignature();
+						if( operandIsThis( call.getPrefix(), type ) ) {						 
+							//see if it's in the list of methods whose field usage we track
+							//otherwise, it would have already caused an error
+							if( methodData.containsKey(signature) ) {
+								Set<String> fields = methodData.get(signature).getLoadsBeforeStores();							
+								for( String field : fields  )
+									if( !stores.contains(field) )
+										addError(node.getContext(), Error.UNINITIALIZED_FIELD, "Method call is not permitted before field " + field + " is initialized");
+							}
 						}
 					}
 				}					
 			}
 		}
-		
+
 		public void recordLoadsBeforeStoresInMethods(Type type, StorageData data, CallGraph callGraph)
 		{	
 			Set<String> stores = new HashSet<String>();
-			
+
 			for( TACNode node : this ) {				
 				if( node instanceof TACCall ) {
 					TACCall call = (TACCall)node;
@@ -912,47 +919,56 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					recordLoadsAndStores(node, type, data.getLoadsBeforeStores(), stores, data.getLoads(), data.getThisStores());
 			}			
 		}	
-		
+
 		public void recordLoadsAndStoresInCreates(Type type, Set<String> loadsBeforeStores, Set<String> stores, Set<String> loads, Set<String> thisStores, Map<MethodSignature, StorageData> methodData )
 		{	
 			for( TACNode node : this ) {				
 				if( node instanceof TACCall ) {
 					TACCall call = (TACCall)node;
-					MethodSignature signature = call.getMethodRef().getSignature();
-					if( signature.isExternWithoutBlock() || operandIsThis( call.getPrefix(), type ) ) {
-						//creates are handled separately, and we have to assume that native code works
-						if( !signature.isCreate() && !signature.isNative() && !signature.isExternWithoutBlock() ) {							
-							//if we've recorded the fields a method uses, add those to the loads before stores
-							if( methodData.containsKey(signature) ) {
-								loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
-								loads.addAll(methodData.get(signature).getLoads());
-								thisStores.addAll(methodData.get(signature).getThisStores());
+					if( call.getMethodRef() instanceof TACMethodName ) {
+						MethodSignature signature = ((TACMethodName)call.getMethodRef()).getSignature();
+						if( signature.isExternWithoutBlock() || operandIsThis( call.getPrefix(), type ) ) {
+							//creates are handled separately, and we have to assume that native code works
+							if( !signature.isCreate() && !signature.isNative() && !signature.isExternWithoutBlock() ) {							
+								//if we've recorded the fields a method uses, add those to the loads before stores
+								if( methodData.containsKey(signature) ) {
+									loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
+									loads.addAll(methodData.get(signature).getLoads());
+									thisStores.addAll(methodData.get(signature).getThisStores());
+								}
+								//otherwise, it's not a legal method to call, probably because it's unlocked
+								else
+									addError(node.getContext(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method " + signature.getSymbol() + signature.getMethodType() + " from a create" );
 							}
-							//otherwise, it's not a legal method to call, probably because it's unlocked
-							else
-								addError(node.getContext(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method " + signature.getSymbol() + signature.getMethodType() + " from a create" );
 						}
-					}
-					//an inner class call, perhaps even a create
-					else if( methodData.containsKey(signature) ) {
-						loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
-						loads.addAll(methodData.get(signature).getLoads());
-						thisStores.addAll(methodData.get(signature).getThisStores());
-					}
-					//not a call inside the current file
-					else {						
+						//an inner class call, perhaps even a create
+						else if( methodData.containsKey(signature) ) {
+							loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
+							loads.addAll(methodData.get(signature).getLoads());
+							thisStores.addAll(methodData.get(signature).getThisStores());
+						}
+						//not a call inside the current file
+						else {						
+							for( int i = 1; i < call.getNumParameters(); ++i ) //always an extra parameter for "this"
+								if( operandIsThis(call.getParameter(i), type)  ) {
+									addError(node.getContext(), Error.ILLEGAL_ACCESS, "Current object cannot be passed as a parameter inside of its create" );
+									break;
+								}						
+						}
+					} 
+					else if( call.getMethodRef() instanceof TACMethodPointer ) {
 						for( int i = 1; i < call.getNumParameters(); ++i ) //always an extra parameter for "this"
 							if( operandIsThis(call.getParameter(i), type)  ) {
 								addError(node.getContext(), Error.ILLEGAL_ACCESS, "Current object cannot be passed as a parameter inside of its create" );
 								break;
-							}						
+							}			
 					}
 				}
 				else
 					recordLoadsAndStores(node, type, loadsBeforeStores, stores, loads, thisStores);
 			}			
 		}
-		
+
 		private void recordLoadsAndStores(TACNode node, Type type, Set<String> loadsBeforeStores, Set<String> stores, Set<String> loads, Set<String> thisStores) 
 		{
 			if( node instanceof TACStore ) {
@@ -992,8 +1008,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}
 			}
 		}
-		
-		
+
+
 		private TACOperand getValue(TACOperand op) {			
 			TACOperand start;
 			do {
@@ -1005,20 +1021,20 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( op instanceof TACUpdate )
 					op = ((TACUpdate)op).getValue();				
 			} while( start != op );
-			
+
 			return op;
 		}
-		
+
 		private boolean operandIsThis(TACOperand op, Type type) {
 			Set<TACPhi> visitedPhis = new HashSet<TACPhi>();
 			return operandIsThis(op, type, visitedPhis);
 		}
-		
+
 		//as long as the data flow analysis has already happened, it should be hard to sneak
 		//in a variable that stores "this" without us detecting it
 		private boolean operandIsThis(TACOperand op, Type type, Set<TACPhi> visitedPhis) {
 			op = getValue(op);
-			
+
 			//current type
 			if( method.getThis().getType().equals(type) ) {
 				if( op instanceof TACParameter ) {
@@ -1039,7 +1055,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACPhi phi = (TACPhi)op;
 					if( visitedPhis.contains(phi) )
 						return false;
-					
+
 					visitedPhis.add(phi);				
 					for( TACOperand value : phi.getPreviousStores().values() ) {					
 						if( operandIsThis(value, type, visitedPhis) )
@@ -1047,31 +1063,31 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					}
 				}
 			}
-			
+
 			return false;
 		}
-		
-		
+
+
 
 		@Override
 		public boolean equals(Object other)
 		{
 			if( other == null || !(other instanceof Block) )
 				return false;
-			
+
 			if( this == other )
 				return true;
-			
+
 			Block block = (Block) other;
 			return toString().equals(block.toString());
 		}
-		
+
 		@Override
 		public int hashCode()
 		{
 			return toString().hashCode();			
 		}
-		
+
 		/*
 		 * Gets the number of the label the block starts with.
 		 */
@@ -1090,12 +1106,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			boolean changed = false;			
 			Set<TACUpdate> currentlyUpdating = new HashSet<TACUpdate>();
 			//Can't use the iterator because of node removal
-			
+
 			for( TACNode node : this ) {				
 				if( node instanceof TACUpdate )
 					if( ((TACUpdate)node).update(currentlyUpdating) )
 						changed = true;
-				
+
 				if( node instanceof TACLocalLoad ) {
 					TACLocalLoad load = (TACLocalLoad)node;
 					if( load.isUndefined() )
@@ -1107,7 +1123,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						TACUpdate update = (TACUpdate) branch.getCondition();
 						if( update.update(currentlyUpdating) )
 							changed = true;
-						
+
 						//simplifying branch
 						if( update.getValue() instanceof TACLiteral ) {
 							TACLiteral literal = (TACLiteral) update.getValue();
@@ -1119,7 +1135,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 								Block falseBlock = nodeBlocks.get(falseLabel);
 								outgoing.remove(falseBlock);
 								falseBlock.incoming.remove(this);
-								
+
 								falseBlock.removePhiInput(this);								
 							}
 							else {								
@@ -1127,7 +1143,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 								Block trueBlock = nodeBlocks.get(trueLabel);
 								outgoing.remove(trueBlock);
 								trueBlock.incoming.remove(this);
-								
+
 								trueBlock.removePhiInput(this);
 							}
 							changed = true;
@@ -1135,7 +1151,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					}
 				}
 			}
-			
+
 			return changed;
 		}
 
@@ -1150,7 +1166,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			this.label = label;
 		}
-		
+
 		/*
 		 * Finds the last time that each variable in a block is stored to. 
 		 */
@@ -1164,7 +1180,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			}
 			return stores;
 		}	
-		
+
 		/*
 		 * Finds the previous time that a variable has been stored to.
 		 * If none, a phi node is inserted. 
@@ -1172,7 +1188,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		private TACLocalStorage getPreviousStore(TACVariable variable, Map<Block, Map<TACVariable, TACLocalStorage>> lastStores ) {
 			Map<TACVariable, TACLocalStorage> stores = lastStores.get(this);
 			TACLocalStorage store = stores.get(variable);
-			 //defined by block
+			//defined by block
 			if( store != null )
 				return store;
 
@@ -1185,19 +1201,19 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				phi.addPreviousStore(block.getLabel(), block.getPreviousStore(variable, lastStores));
 			return phi;
 		}	
-		
-		
-		
+
+
+
 		//uses a BFS to see if a variable had a previous assignment
 		public boolean hasPreviousStore(TACVariable variable, Map<Block, Map<TACVariable, TACLocalStorage>> lastStores) {					
 			Set<Block> visited = new HashSet<Block>();
 			Deque<Block> queue = new ArrayDeque<Block>();
 			queue.addLast(this); //start with current block
-			
+
 			while( !queue.isEmpty() ) {
 				Block block = queue.removeFirst();
 				visited.add(block);
-				
+
 				for( Block parent : block.incoming) {
 					if( lastStores.get(parent).containsKey(variable) )
 						return true;
@@ -1208,7 +1224,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 
 			return false;
 		}
-		
+
 
 		/*
 		 * Adds phi nodes as needed to the current block based on the last
@@ -1217,12 +1233,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		public void addPhiNodes(Map<Block, Map<TACVariable, TACLocalStorage>> lastStores) {
 			Map<TACVariable, TACLocalStorage> stores = lastStores.get(this);
 			Map<TACVariable,TACLocalStorage> predecessors = new HashMap<TACVariable, TACLocalStorage>();
-			
+
 			for( TACNode node : this )	{		
 				if( node instanceof TACLocalStorage ) {  //both TACLocalStore and TACPhiStore
 					TACLocalStorage store = (TACLocalStorage)node;
 					TACVariable variable = store.getVariable();
-					
+
 					//Useful to know if there was a previous store
 					//primarily for the case of GC: no need to decrement something that was never assigned 
 					if( node instanceof TACLocalStore ) {
@@ -1234,9 +1250,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						}
 						else if( hasPreviousStore(variable, lastStores) )
 							localStore.setPreviousStore(true);
-						
+
 					}
-										
+
 					predecessors.put(variable, store);
 				}
 				else if( node instanceof TACLocalLoad ) {
@@ -1260,8 +1276,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}
 			}					
 		}
-		
-		
+
+
 		/*
 		 * Changes to phi nodes used for indirect branches may have been taken place.
 		 * This method updates the incoming and outgoing sets for Blocks based on those changes.
@@ -1275,18 +1291,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					//indirect phi branches are fewer than currently believed to be outgoing!	
 					if( phi.getPreviousStores().size() < outgoing.size() ) {
 						changed = true;
-						
+
 						//find all possible destinations
 						Set<TACLabel> destinations = new HashSet<TACLabel>();
 						for( TACOperand address : phi.getPreviousStores().values() )
 							destinations.add(((TACLabelAddress)address).getLabel());
-						
+
 						//find blocks that are no longer visited						
 						Set<Block> notVisited = new HashSet<Block>();
 						for( Block block : outgoing )
 							if( !destinations.contains(block.label) )
 								notVisited.add(block);
-						
+
 						//remove such blocks from outgoing
 						//and remove ourself from their incoming
 						for( Block block : notVisited ) {
@@ -1296,7 +1312,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					}
 				}
 			}
-			
+
 			return changed;
 		}
 
@@ -1304,7 +1320,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			return outgoing;
 		}
-		
+
 		/*
 		 * Removes the TAC nodes from the current block
 		 * as part of pruning the current block away. 
@@ -1312,13 +1328,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		public boolean removeNodes()
 		{
 			boolean edgesUpdated = false;
-			
+
 			for( Block block : outgoing )
 				if( block.removePhiInput(this) )
 					edgesUpdated = true;
-			
+
 			TACNode node = label;
-			
+
 			//might be wise not to use iterator here since removal is involved
 			if( node != null && lastNode != null ) {
 				while( node != lastNode ) {
@@ -1330,10 +1346,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				removeNode(lastNode);				
 				lastNode = null;				
 			}
-			
+
 			return edgesUpdated;
 		}
-		
+
 		/*
 		 * Removes the given block as an input to any phi nodes
 		 * present in the current block. 
@@ -1351,7 +1367,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			Set<Block> oldBranches = outgoing;
 			outgoing = new HashSet<Block>();
 			addEdges(this);
-			
+
 			//if updated branches is smaller, we're going to have to continue
 			return outgoing.size() < oldBranches.size();
 		}
@@ -1364,7 +1380,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			return label;
 		}
-		
+
 		/*
 		 * Returns the node that ends the block.
 		 */
@@ -1372,7 +1388,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			return lastNode;			
 		}
-		
+
 
 		/*
 		 * Removes a node from the TAC listing.
@@ -1384,9 +1400,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			//Labels and label addresses are not counted as errors
 			//Any node without a context is structural stuff added to form legal LLVM
 			if( !(node instanceof TACLabel) && !(node instanceof TACLabelAddress) &&
-				node.getContext() != null ) 
+					node.getContext() != null ) 
 				addError(node.getContext(), Error.UNREACHABLE_CODE, "Code cannot be reached");
-			
+
 			node.remove();
 		}
 
@@ -1401,7 +1417,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				target.incoming.add(this);
 			}
 		}
-		
+
 		/*
 		 * Adds a node to the current block.
 		 * Since a block only keeps track of the first node (a label)
@@ -1413,10 +1429,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{	
 			if( lastNode != null && lastNode.getNext() != node )
 				throw new IllegalArgumentException("Cannot add TAC nodes out of order");
-			
+
 			lastNode = node;
 		}
-		
+
 		/*
 		 * Flags this block as one that returns directly.
 		 */
@@ -1424,7 +1440,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			returns = true;
 		}
-		
+
 		/*
 		 * Flags this block as one that unwinds the stack by throwing an
 		 * uncaught exception
@@ -1433,22 +1449,22 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		{
 			unwinds = true;
 		}
-		
-				
+
+
 		public boolean returnsDirectly()
 		{
 			return returns;
 		}
-		
+
 		public boolean unwinds()
 		{
 			return unwinds;
 		}	
-		
+
 		public int branches() {
 			return outgoing.size();
 		}
-		
+
 		private class NodeIterator implements Iterator<TACNode> {
 			private boolean done = false;
 			private TACNode current = label;
@@ -1462,7 +1478,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			public TACNode next() {
 				if( done )
 					throw new NoSuchElementException();
-				
+
 				TACNode node = current;
 				if( current == lastNode )
 					done = true;
@@ -1475,20 +1491,20 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			public void remove() {
 				if( done )
 					throw new NoSuchElementException();
-				
+
 				TACNode node = current;
-				
+
 				if( current == lastNode ) {
 					lastNode = current.getPrevious();
 					done = true;
 				}
 				else
 					current = current.getNext();
-				
+
 				node.remove();
 			}
 		}
-		
+
 		@Override
 		public Iterator<TACNode> iterator() {
 			return new NodeIterator();
@@ -1499,32 +1515,36 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			for( TACNode node : this ) {
 				if( node instanceof TACCall ) {
 					TACCall call = (TACCall)node;
-					MethodSignature signature = call.getMethodRef().getSignature();
-					//if the call is one present in the graph, add an edge
-					//edges are from callee -> caller
-					if( calls.contains(signature) )
-						calls.addEdge(signature, method.getSignature());
-				}				
+					if( call.getMethodRef() instanceof TACMethodName ) {
+						MethodSignature signature = ((TACMethodName)call.getMethodRef()).getSignature();
+						//if the call is one present in the graph, add an edge
+						//edges are from callee -> caller
+						if( calls.contains(signature) )
+							calls.addEdge(signature, method.getSignature());
+					}
+				}
+				
+				//TODO: Add something for when method references are stored?
 			}		
 		}
 	}
-	
-	
 
-	
+
+
+
 
 	/* Allows strings to be sorted based on given indexes */
 	private static class IndexedString implements Comparable<IndexedString>
 	{
 		private final String string;
 		private final int index;
-		
+
 		public IndexedString(int index, String string)
 		{
 			this.index = index;
 			this.string = string;
 		}
-		
+
 		@Override
 		public int compareTo(IndexedString other)
 		{
@@ -1533,49 +1553,49 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			else
 				return -1;
 		}
-		
+
 		public String getString()
 		{
 			return string;
 		}
 	}	
-	
+
 	public static class StorageData {
 		@SuppressWarnings("unchecked")
 		private Set<String>[] sets = new Set[3];
-		
+
 		public StorageData() {
 			for( int i = 0; i < sets.length; ++i )
 				sets[i] = new HashSet<String>();
 		}		
-		
+
 		public Set<String> getLoadsBeforeStores() 
 		{
 			return sets[0];		
 		}
-		
+
 		public Set<String> getLoads() 
 		{
 			return sets[1];
 		}
-		
+
 		public Set<String> getThisStores() 
 		{			
 			return sets[2];				
 		}
-		
+
 		public boolean addAll(StorageData other) {
 			boolean changed = false;
 			int size;
-			
+
 			for( int i = 0; i < sets.length; ++i ) {
 				size = sets[i].size();
 				sets[i].addAll(other.sets[i]);
-				
+
 				if( size != sets[i].size() )
 					changed = true;
 			}
-			
+
 			return changed;
 		}		
 	}

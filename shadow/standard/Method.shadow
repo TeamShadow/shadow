@@ -31,11 +31,13 @@ abstract locked class shadow:standard@
 	
 	/**
 	 * Method references are created internally by the compiler. 
-	 * This method is private to prevent a user from creating
+	 * This method is protected to prevent a user from creating
 	 * a {@code Method} object explicitly.
 	 * @unused
 	 */
-	private native create();
-	
-	public native destroy;	
+	protected create(MethodTable method, Object object, Object[] arguments) {
+		this:method = method;
+		this:object = object;
+		this:arguments = arguments;
+	}
 }

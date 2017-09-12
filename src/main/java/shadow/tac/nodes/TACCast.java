@@ -282,7 +282,7 @@ public class TACCast extends TACUpdate
 		if( sourceType instanceof ClassType ) {
 			ClassType classType = (ClassType) source.getType();
 		
-			TACMethodRef getClass = new TACMethodRef(this, source,
+			TACMethodName getClass = new TACMethodName(this, source,
 					classType.getMatchingMethod("getClass", new SequenceType()));
 			
 			srcClass = new TACCall(this, getClass, getClass.getPrefix());
@@ -292,7 +292,7 @@ public class TACCast extends TACUpdate
 		else
 			throw new IllegalArgumentException("Unknown source type: " + sourceType);
 				
-		TACMethodRef methodRef = new TACMethodRef(this, srcClass,
+		TACMethodName methodRef = new TACMethodName(this, srcClass,
 				Type.CLASS.getMethods("interfaceData").get(0));
 		TACOperand destClass = new TACClass(this, destination).getClassData();					
 		return new TACCall(this, methodRef, methodRef.getPrefix(), destClass);
@@ -310,10 +310,10 @@ public class TACCast extends TACUpdate
 	
 	private void objectToArrayCheck(TACOperand op) {
 		//get class from object
-		TACMethodRef methodRef = new TACMethodRef(this, op,
+		TACMethodName methodName = new TACMethodName(this, op,
 				Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));						
 		
-		TACOperand operandClass = new TACCall(this, methodRef, methodRef.getPrefix());
+		TACOperand operandClass = new TACCall(this, methodName, methodName.getPrefix());
 		TACOperand destinationClass = new TACClass(this, type).getClassData();
 				
 		TACOperand result = new TACBinary(this, operandClass, destinationClass);
@@ -328,10 +328,10 @@ public class TACCast extends TACUpdate
 		TACOperand asArray = new TACCast(this, new SimpleModifiedType(type, modifiers), op, Kind.OBJECT_TO_OBJECT, false );
 		ArrayType arrayType = (ArrayType) type;		
 		
-		methodRef = new TACMethodRef(this, asArray,
+		methodName = new TACMethodName(this, asArray,
 				arrayType.convertToGeneric().getMatchingMethod("isNullable", new SequenceType()));		
 		
-		result = new TACCall(this, methodRef, methodRef.getPrefix());
+		result = new TACCall(this, methodName, methodName.getPrefix());
 		
 		if( arrayType.isNullable() )
 			new TACBranch(this, result, doneLabel, throwLabel);
@@ -348,8 +348,8 @@ public class TACCast extends TACUpdate
 		MethodSignature signature;
 		signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
 					
-		methodRef = new TACMethodRef(this, signature);			
-		TACCall exception = new TACCall(this, methodRef, object, operandClass, destinationClass);
+		methodName = new TACMethodName(this, signature);			
+		TACCall exception = new TACCall(this, methodName, object, operandClass, destinationClass);
 					
 		new TACThrow(this, exception);						
 		
@@ -358,17 +358,17 @@ public class TACCast extends TACUpdate
 	
 	private void objectToObjectCheck(TACOperand op) {
 		//get class from object
-		TACMethodRef methodRef = new TACMethodRef(this, op,
+		TACMethodName methodName = new TACMethodName(this, op,
 				Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));						
 		
-		TACOperand operandClass = new TACCall(this, methodRef, methodRef.getPrefix());
+		TACOperand operandClass = new TACCall(this, methodName, methodName.getPrefix());
 		TACOperand destinationClass = new TACClass(this, type).getClassData();
 		
-		methodRef = new TACMethodRef(this, operandClass,
+		methodName = new TACMethodName(this, operandClass,
 				Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
 		
 		
-		TACOperand result = new TACCall(this, methodRef, methodRef.getPrefix(), destinationClass);
+		TACOperand result = new TACCall(this, methodName, methodName.getPrefix(), destinationClass);
 		TACLabel throwLabel = new TACLabel(getMethod());
 		TACLabel doneLabel = new TACLabel(getMethod());
 		
@@ -384,8 +384,8 @@ public class TACCast extends TACUpdate
 		MethodSignature signature;
 		signature = Type.CAST_EXCEPTION.getMatchingMethod("create", params);
 					
-		methodRef = new TACMethodRef(this, signature);			
-		TACCall exception = new TACCall(this, methodRef, object, operandClass, destinationClass);
+		methodName = new TACMethodName(this, signature);			
+		TACCall exception = new TACCall(this, methodName, object, operandClass, destinationClass);
 					
 		new TACThrow(this, exception);						
 		

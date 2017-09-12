@@ -174,6 +174,9 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.ARRAY);
 			type.addUsedType(Type.ARRAY_NULLABLE);
 			
+			// Used for method references
+			type.addUsedType(Type.METHOD);
+			
 			// Iterators for foreach loops
 			type.addUsedType(Type.ITERATOR);
 			type.addUsedType(Type.ITERATOR_NULLABLE);

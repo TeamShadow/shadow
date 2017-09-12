@@ -1,9 +1,13 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
+import shadow.ShadowException;
 import shadow.doctool.Documentation;
+import shadow.parse.ShadowParser;
 
 public class MethodType extends ClassType {
 	protected List<String> parameterNames; /** List of parameter names */
@@ -21,13 +25,17 @@ public class MethodType extends ClassType {
 		parameterTypes = new SequenceType();
 		returns = new SequenceType();
 		typeWithoutTypeArguments = this;
-		setExtendType(Type.OBJECT); // change to Method if reinstated?
+		setExtendType(Type.METHOD); // change to Method if reinstated?
 	}
 	
+	
+	//This must have been made null for a reason?  What could it have been?
+	/*
 	@Override
 	public Type getOuter() {
 		return null;
 	}
+	*/
 	
 	public MethodType copy(Type outer, Modifiers modifiers)
 	{
@@ -219,16 +227,14 @@ public class MethodType extends ClassType {
 		return value;
 	}
 	
-	public boolean isSubtype(Type t)
-	{
+	public boolean isSubtype(Type t) {
 		if( t == UNKNOWN )
 			return false;
 	
 		if( equals(t) || t == Type.OBJECT )
 			return true;
 		
-		if( t instanceof MethodType )
-		{
+		if( t instanceof MethodType ) {
 			MethodType otherMethod = (MethodType) t;
 			return returns.isSubtype(otherMethod.returns) && otherMethod.parameterTypes.isSubtype(parameterTypes);
 		}
@@ -236,13 +242,48 @@ public class MethodType extends ClassType {
 			return false;
 	}
 	
-	public void setInline( boolean inline )
-	{
+	public void setInline( boolean inline ) {
 		this.inline = inline;
 	}
 	
-	public boolean isInline()
-	{
+	public boolean isInline() {
 		return inline;
+	}	
+	
+	/*
+	@Override
+	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<ShadowException> errors ) {		
+		return Type.METHOD.getMatchingMethod(methodName, arguments, typeArguments, errors);		
 	}
+	
+	@Override
+	public List<MethodSignature> getAllMethods(String methodName) {
+		return Type.METHOD.getAllMethods(methodName);
+	}
+	
+	@Override
+	public boolean containsField(String fieldName) {
+		return Type.METHOD.containsField(fieldName);
+	}
+	
+	@Override
+	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
+		return Type.METHOD.getField(fieldName);
+	}
+	
+	@Override
+	public LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> getFields() {
+		return Type.METHOD.getFields();
+	}
+	
+	@Override
+	public boolean hasInterface(InterfaceType type) {
+		return Type.METHOD.hasInterface(type);
+	}
+	
+	@Override
+	public boolean hasUninstantiatedInterface(InterfaceType type) {
+		return Type.METHOD.hasUninstantiatedInterface(type);
+	}	
+	*/
 }

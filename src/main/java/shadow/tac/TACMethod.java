@@ -244,10 +244,8 @@ public class TACMethod
 						else if( !call.isDelegatedCreate() ) {
 							//if method return is not saved, save it for ref counting purposes
 							//complex case because of possible multiple return values
-							//delegated create return values should not be GC'd
-							MethodSignature signature = call.getMethodRef().getSignature();
-							SequenceType returns = signature.getFullReturnTypes();
-							//SequenceType returns = signature.getReturnTypes();
+							//delegated create return values should not be GC'd							
+							SequenceType returns = call.getMethodRef().getFullReturnTypes();
 							TACNode anchor = next;
 							if( call.getNoExceptionLabel() != null )
 								anchor = call.getNoExceptionLabel().getNext();
@@ -259,7 +257,7 @@ public class TACMethod
 									new TACLocalStore(anchor, temp, call, false);								
 							}
 							else if( returns.size() > 1 ) {								
-								for( int i = 0; i < signature.getReturnTypes().size(); ++i ) {
+								for( int i = 0; i < returns.size(); ++i ) {
 									TACVariable temp = addTempLocal(returns.get(i));
 									//store into temporary for reference count purposes (and change next)
 									if( temp.needsGarbageCollection())

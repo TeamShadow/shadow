@@ -20,7 +20,8 @@ import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACLongToPointer;
-import shadow.tac.nodes.TACMethodRef;
+import shadow.tac.nodes.TACMethodName;
+import shadow.tac.nodes.TACMethodPointer;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
@@ -98,7 +99,9 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACLongToPointer node) throws ShadowException { }	
 	@Override
-	public void visit(TACMethodRef node) throws ShadowException { }
+	public void visit(TACMethodName node) throws ShadowException { }
+	@Override
+	public void visit(TACMethodPointer node) throws ShadowException { }
 	@Override
 	public void visit(TACMethodTable node) throws ShadowException { }
 	@Override

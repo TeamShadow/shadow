@@ -1,0 +1,37 @@
+import shadow:io@Console;
+
+class shadow:test@MethodReferenceTest
+{
+	int value = 7;
+	
+	public main() => ()
+	{		
+		(int, int) => (double) method;		
+		
+		Console.printLine( "Test 1" );
+		method = method1;		
+		double result = method(3, 4);		
+		Console.printLine( result ); // 3.5
+		
+		Console.printLine( "Test 2" );		
+		method = method2;		
+		result = method( 2, 3 );		
+		Console.printLine( result ); // 4.0
+		
+		Console.printLine( "Test 3" );
+		value = 10;		
+		result = method( 2, 3 );		
+		Console.printLine( result ); // 5.0
+	}
+	
+	
+	public method1(int x, int y) => (double)
+	{	
+		return (x + y) / 2.0;
+	}
+	
+	public method2(int a, int b) => (double)
+	{
+		return (a + b + value) / 3.0;
+	}
+}

@@ -53,7 +53,7 @@ public class TACArrayRef extends TACReference
 			params.add(index);		
 			MethodSignature signature = Type.INDEX_OUT_OF_BOUNDS_EXCEPTION.getMatchingMethod("create", new SequenceType(index.getType()));
 						
-			TACCall exception = new TACCall(node, new TACMethodRef(node, signature), params);						
+			TACCall exception = new TACCall(node, new TACMethodName(node, signature), params);						
 			new TACThrow(node, exception);						
 			
 			done.insertBefore(node);	//done label			

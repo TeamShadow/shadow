@@ -1283,7 +1283,15 @@ public class StatementChecker extends BaseChecker {
 				}
 				
 				if( rightType instanceof PropertyType )
-					rightType = ((PropertyType)rightType).getGetType().getType();				
+					rightType = ((PropertyType)rightType).getGetType().getType();	
+				
+				// let unbound method type know what signature it will eventually be bound to
+				if( rightType instanceof UnboundMethodType && leftType instanceof MethodType ) {					
+					UnboundMethodType unboundType = (UnboundMethodType) rightType;
+					MethodType methodType = (MethodType) leftType;
+					MethodSignature signature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), methodType.getParameterTypes());					
+					unboundType.setKnownSignature( signature );
+				}				
 		
 				ctx.addOperation(leftType.getMatchingMethod(kind.getMethod(), new SequenceType(rightType)));
 			}
@@ -2154,8 +2162,7 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}	
 	
-	@Override public Void visitMethod(ShadowParser.MethodContext ctx)
-	{ 
+	@Override public Void visitMethod(ShadowParser.MethodContext ctx) { 
 		visitChildren(ctx);
 		
 		//always part of a suffix, thus always has a prefix
@@ -2483,22 +2490,31 @@ public class StatementChecker extends BaseChecker {
 		return setMethodType( node, prefixType, "create", arguments, null);		
 	}
 	
-	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments)
-	{
+	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments) {		
 		return setMethodType( node, type, method, arguments, null );
 	}
 
-	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments, SequenceType typeArguments )
-	{	
+	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments, SequenceType typeArguments ) {	
 		List<ShadowException> errors = new ArrayList<ShadowException>();
 		MethodSignature signature = type.getMatchingMethod(method, arguments, typeArguments, errors);
 		
 		if( signature == null )
 			addErrors(node, errors);	
-		else
-		{
+		else {
 			if( !methodIsAccessible( signature, currentType  ))					
-				addError(node, Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");						
+				addError(node, Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");
+			
+			//if any arguments have an UnboundMethodType, note down what their true MethodSignature must be
+			for( int i = 0; i < arguments.size(); ++i ) {
+				ModifiedType argument = arguments.get(i);				
+				if( argument.getType() instanceof UnboundMethodType ) {
+					//since it matches, the parameter of the method must be a MethodType
+					MethodType parameterType = (MethodType) signature.getParameterTypes().get(i).getType();					
+					UnboundMethodType unboundType = (UnboundMethodType) argument.getType();
+					MethodSignature boundSignature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), parameterType.getParameterTypes());
+					unboundType.setKnownSignature(boundSignature);					
+				}
+			}
 		
 			node.setType(signature.getMethodType());		
 		}		

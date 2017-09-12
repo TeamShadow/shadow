@@ -10,6 +10,7 @@ import java.util.List;
 import shadow.ShadowException;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACMethodName;
 import shadow.tac.nodes.TACOperand;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
@@ -178,7 +179,7 @@ public class ShadowString extends ShadowValue
 	}
 	
 	public ShadowValue callMethod(TACCall call) throws ShadowException {
-		MethodSignature signature = call.getMethodRef().getSignature();
+		MethodSignature signature = ((TACMethodName)call.getMethodRef()).getSignature();
 		
 		try
 		{		

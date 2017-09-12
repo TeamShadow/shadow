@@ -52,7 +52,7 @@ public class TACNewObject extends TACOperand
 			TACOperand name = new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("name"), "name"));
 			MethodSignature signature = Type.INTERFACE_CREATE_EXCEPTION.getMatchingMethod("create", new SequenceType(name));
 			
-			TACCall exception = new TACCall(this, new TACMethodRef(this, signature), object, name);
+			TACCall exception = new TACCall(this, new TACMethodName(this, signature), object, name);
 			new TACThrow(this, exception);
 			
 			doneLabel.insertBefore(this);

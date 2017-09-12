@@ -1,5 +1,6 @@
 package shadow.tac;
 
+import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.PointerType;
@@ -103,7 +104,7 @@ public class TACVariable implements ModifiedType
 				//!getMethod().getSignature().isCopy() &&
 				//!variable.getName().equals("return") &&
 				!(type instanceof PointerType) &&
-				//!(type instanceof ArrayType) &&
+				!(type instanceof MethodType) &&
 				//!(type instanceof InterfaceType) &&
 				!(type instanceof SingletonType) &&
 				!type.equals(Type.CLASS) &&

@@ -110,7 +110,7 @@ public class TACCall extends TACUpdate
 	@Override
 	public TACOperand getOperand(int num) {
 		if (num == 0)			
-			return methodRef;
+			return (TACOperand)methodRef;
 		return parameters.get(num - 1);
 	}
 
@@ -123,7 +123,7 @@ public class TACCall extends TACUpdate
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		TACMethodRef method = getMethodRef();
-		sb.append(method.getOuterType()).append('.').append(method.getName()).
+		sb.append(method.toString()).
 				append('(');
 		for (TACOperand parameter : getParameters())
 			sb.append(parameter).append(", ");
@@ -155,15 +155,19 @@ public class TACCall extends TACUpdate
 		}
 				
 		//right now, the only calls we're doing are on String objects 
-		if( (changed || getUpdatedValue() == null) && allLiterals && methodRef.getSignature().getOuter().equals(Type.STRING) && ShadowString.isSupportedMethod(methodRef.getSignature())  ) {
-			try {
-				TACLiteral string = (TACLiteral)value(parameters.get(0));				
-				ShadowValue result = ((ShadowString)string.getValue()).callMethod(this);
-				setUpdatedValue(new TACLiteral(this, result));
-				changed = true;
+		if( methodRef instanceof TACMethodName ) {
+			TACMethodName methodName = (TACMethodName) methodRef;
+		
+			if( (changed || getUpdatedValue() == null) && allLiterals && methodName.getSignature().getOuter().equals(Type.STRING) && ShadowString.isSupportedMethod(methodName.getSignature())  ) {
+				try {
+					TACLiteral string = (TACLiteral)value(parameters.get(0));				
+					ShadowValue result = ((ShadowString)string.getValue()).callMethod(this);
+					setUpdatedValue(new TACLiteral(this, result));
+					changed = true;
+				}
+				catch(ShadowException e)
+				{} //do nothing, failed to evaluate
 			}
-			catch(ShadowException e)
-			{} //do nothing, failed to evaluate
 		}
 		
 		currentlyUpdating.remove(this);

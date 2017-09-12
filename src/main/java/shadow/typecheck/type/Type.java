@@ -624,24 +624,28 @@ public abstract class Type implements Comparable<Type> {
 	}
 
 	
-	public boolean canAccept( Type rightType, AssignmentKind assignmentType, List<ShadowException> errors ) 
-	{
+	public boolean canAccept( Type rightType, AssignmentKind assignmentType, List<ShadowException> errors ) {
 		boolean accepts = false;
 		
 		//equal and cat are separate because they are not dependent on implementing a specific interface
-		if( assignmentType.equals(AssignmentKind.EQUAL) )
-		{
+		if( assignmentType.equals(AssignmentKind.EQUAL) ) {
 			//type parameters are different because the definition of subtype is weak: dependent only on the bounds
 			//real type parameter assignment requires the same type					
 			accepts = rightType.isSubtype(this);
 			
-			if( !accepts )
-				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
+			if( !accepts ) {
+				if( rightType instanceof UnboundMethodType && this instanceof MethodType ) {
+					//adds appropriate errors (either ambiguous method or none matching)
+					MethodType methodType = (MethodType) this;
+					rightType.getOuter().getMatchingMethod(rightType.getTypeName(), methodType.getParameterTypes(), null, errors );
+				}
+				else
+					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
+			}
 		
 			return accepts;
 		}
-		else if( assignmentType.equals(AssignmentKind.CAT) )
-		{
+		else if( assignmentType.equals(AssignmentKind.CAT) ) {
 			accepts = isString();
 			if( !accepts )
 				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING, this);
@@ -653,8 +657,7 @@ public abstract class Type implements Comparable<Type> {
 		InterfaceType interfaceType = null;
 		String operator = assignmentType.getOperator();
 		
-		switch( assignmentType  )
-		{	
+		switch( assignmentType  ) {	
 		case PLUS: interfaceType = Type.CAN_ADD; break;
 		case MINUS: interfaceType = Type.CAN_SUBTRACT; break;
 		case STAR: interfaceType = Type.CAN_MULTIPLY; break;
@@ -673,8 +676,7 @@ public abstract class Type implements Comparable<Type> {
 			return false;
 		}
 		
-		if( hasUninstantiatedInterface(interfaceType) )
-		{
+		if( hasUninstantiatedInterface(interfaceType) ) {
 			SequenceType argument = new SequenceType(rightType);
 			MethodSignature signature = getMatchingMethod(methodName, argument, null, errors);
 			if( signature != null )
@@ -688,8 +690,7 @@ public abstract class Type implements Comparable<Type> {
 			else							
 				return false;				
 		}
-		else		
-		{
+		else {
 			ErrorReporter.addError(errors, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType, this);			
 			return false;						
 		}
@@ -745,7 +746,7 @@ public abstract class Type implements Comparable<Type> {
 					candidate = signature;
 				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
 				{					
-					ErrorReporter.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments, arguments);
+					ErrorReporter.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous reference to " + methodName + " with arguments " + arguments, arguments);
 					return null;
 				}				
 			}			

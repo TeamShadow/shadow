@@ -41,6 +41,7 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
+import shadow.typecheck.type.UnboundMethodType;
 
 /**
  * The <code>BaseChecker</code> class is an abstract class that other type-checking

@@ -46,7 +46,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-r");
+		args.add("-r");
 	}
 	
 	@After
@@ -1220,6 +1220,20 @@ public class OutputTests {
 				"90\n" +
 				"0\n");		
 	}
+	
+	
+	@Test public void testMethodReference() throws Exception {
+		args.add("shadow/test/MethodReferenceTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0], 
+				"Test 1\n" + 
+				"3.5\n" +
+				"Test 2\n" +
+				"4.0\n" + 
+				"Test 3\n" + 
+				"5.0\n");		
+	}
+	
 	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");
