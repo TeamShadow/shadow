@@ -2,6 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.ShadowException;
 import shadow.tac.TACVisitor;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -10,13 +11,13 @@ import shadow.typecheck.type.Type;
 public class TACMethodPointer extends TACOperand implements TACMethodRef {
 	
 	private TACOperand pointer;
-	private MethodType methodType;
+	private MethodReferenceType type;
 	private String name;
 	
-	public TACMethodPointer(TACNode node, TACOperand pointer, String name, MethodType methodType) {
+	public TACMethodPointer(TACNode node, TACOperand pointer, String name, MethodReferenceType type) {
 		super(node);
 		this.pointer = pointer;
-		this.methodType = methodType;		
+		this.type = type;		
 		this.name = name;
 	}
 	
@@ -33,7 +34,7 @@ public class TACMethodPointer extends TACOperand implements TACMethodRef {
 	public SequenceType getParameterTypes() {
 		SequenceType paramTypes = new SequenceType();
 		paramTypes.add(new SimpleModifiedType(Type.OBJECT));
-		paramTypes.addAll(methodType.getParameterTypes());		
+		paramTypes.addAll(type.getMethodType().getParameterTypes());		
 		return paramTypes;
 	}
 	
@@ -41,28 +42,28 @@ public class TACMethodPointer extends TACOperand implements TACMethodRef {
 	public SequenceType getUninstantiatedParameterTypes() {		
 		SequenceType paramTypes = new SequenceType();
 		paramTypes.add(new SimpleModifiedType(Type.OBJECT));
-		paramTypes.addAll(methodType.getTypeWithoutTypeArguments().getParameterTypes());		
+		paramTypes.addAll(type.getMethodType().getTypeWithoutTypeArguments().getParameterTypes());		
 		return paramTypes;
 	}
 	
 	@Override
 	public SequenceType getUninstantiatedReturnTypes() {		
-		return methodType.getTypeWithoutTypeArguments().getReturnTypes();
+		return type.getMethodType().getTypeWithoutTypeArguments().getReturnTypes();
 	}
 
 	@Override
 	public Type getReturnType() {		
-		return methodType.getReturnTypes().get(0).getType();
+		return type.getMethodType().getReturnTypes().get(0).getType();
 	}
 
 	@Override
 	public SequenceType getReturnTypes() {		
-		return methodType.getReturnTypes();
+		return type.getMethodType().getReturnTypes();
 	}
 
 	@Override
-	public Type getType() {		
-		return methodType;
+	public MethodReferenceType getType() {		
+		return type;
 	}
 	
 	@Override

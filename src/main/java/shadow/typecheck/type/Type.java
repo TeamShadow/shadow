@@ -404,10 +404,8 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	@Override
-	public boolean equals(Object object)
-	{
-		if( object instanceof Type )
-		{
+	public boolean equals(Object object) {
+		if( object instanceof Type ) {
 			Type type = (Type)object;
 			return equals( type );			
 		}
@@ -634,9 +632,9 @@ public abstract class Type implements Comparable<Type> {
 			accepts = rightType.isSubtype(this);
 			
 			if( !accepts ) {
-				if( rightType instanceof UnboundMethodType && this instanceof MethodType ) {
+				if( rightType instanceof UnboundMethodType && this instanceof MethodReferenceType ) {
 					//adds appropriate errors (either ambiguous method or none matching)
-					MethodType methodType = (MethodType) this;
+					MethodType methodType = ((MethodReferenceType) this).getMethodType();
 					rightType.getOuter().getMatchingMethod(rightType.getTypeName(), methodType.getParameterTypes(), null, errors );
 				}
 				else
@@ -1196,8 +1194,6 @@ public abstract class Type implements Comparable<Type> {
 				Type baseType = arrayType.getBaseType();
 				
 				usedTypes.add(type);
-				//if( type.onlyUsesTypeParametersFrom(this) )
-				//	partiallyInstantiatedGenerics.add(arrayType);
 				
 				addUsedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
@@ -1205,11 +1201,9 @@ public abstract class Type implements Comparable<Type> {
 				//must do before adding to usedTypes
 				
 				addUsedType(baseType);
-				
-				//if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
-					//usedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues								
-
 			}
+			else if( type instanceof MethodReferenceType )
+				addUsedType( ((MethodReferenceType)type).getMethodType());
 			else if( type instanceof MethodType ) {			
 				MethodType methodType = (MethodType)type;
 				for( ModifiedType parameter : methodType.getParameterTypes() )

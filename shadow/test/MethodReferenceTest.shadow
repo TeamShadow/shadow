@@ -13,17 +13,26 @@ class shadow:test@MethodReferenceTest
 		double result = method(3, 4);		
 		Console.printLine( result ); // 3.5
 		
-		Console.printLine( "Test 2" );		
+		Console.printLine( "Test 2" );
+		takeMethodArgument( method ); // 7.5
+		
+		Console.printLine( "Test 3" );		
 		method = method2;		
 		result = method( 2, 3 );		
 		Console.printLine( result ); // 4.0
-		
-		Console.printLine( "Test 3" );
+				
+		Console.printLine( "Test 4" );
 		value = 10;		
 		result = method( 2, 3 );		
 		Console.printLine( result ); // 5.0
 	}
 	
+	public takeMethodArgument( (int, int) => (double) thing ) => ()
+	{
+		double result = thing( 8, 9 );
+		Console.printLine( result ); // 8.5
+	
+	}
 	
 	public method1(int x, int y) => (double)
 	{	

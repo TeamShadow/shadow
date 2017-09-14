@@ -1228,9 +1228,11 @@ public class OutputTests {
 		run(new String[0], 
 				"Test 1\n" + 
 				"3.5\n" +
-				"Test 2\n" +
+				"Test 2\n" + 
+				"8.5\n" +
+				"Test 3\n" +
 				"4.0\n" + 
-				"Test 3\n" + 
+				"Test 4\n" + 
 				"5.0\n");		
 	}
 	

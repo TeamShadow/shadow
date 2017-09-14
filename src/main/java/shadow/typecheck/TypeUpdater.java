@@ -41,6 +41,7 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -1120,7 +1121,12 @@ public class TypeUpdater extends BaseChecker {
 		visitChildren(ctx);
 		
 		// A field declaration has a type followed by an identifier (or a sequence of them).	
-		Type type = ctx.type().getType();	
+		Type type = ctx.type().getType();
+		
+		if( ctx.getModifiers().isNullable() && type instanceof ArrayType  ) {
+			ArrayType arrayType = (ArrayType) type;
+			type = arrayType.convertToNullable();
+		}		
 						
 		ctx.setType(type);		
 		ctx.getModifiers().addModifier(Modifiers.FIELD);
@@ -1378,7 +1384,7 @@ public class TypeUpdater extends BaseChecker {
 		for( ModifiedType type : returnTypes )
 			methodType.addReturn(type);
 		
-		ctx.setType(methodType);
+		ctx.setType(new MethodReferenceType(methodType));
 		
 		return null;
 	}

@@ -1,15 +1,11 @@
 package shadow.typecheck.type;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 
-import shadow.ShadowException;
 import shadow.doctool.Documentation;
-import shadow.parse.ShadowParser;
 
-public class MethodType extends ClassType {
+public class MethodType extends Type {
 	protected List<String> parameterNames; /** List of parameter names */
 	protected SequenceType parameterTypes; /** List of parameter types */
 	protected SequenceType returns; /** List of return types */
@@ -24,8 +20,7 @@ public class MethodType extends ClassType {
 		parameterNames = new ArrayList<String>();
 		parameterTypes = new SequenceType();
 		returns = new SequenceType();
-		typeWithoutTypeArguments = this;
-		setExtendType(Type.METHOD); // change to Method if reinstated?
+		typeWithoutTypeArguments = this;		
 	}
 	
 	
@@ -132,8 +127,7 @@ public class MethodType extends ClassType {
 	 */
 	@Override
 	public boolean equals(Type o) {
-		if( o != null && o instanceof MethodType )
-		{		
+		if( o != null && o instanceof MethodType ) {		
 			MethodType methodType = (MethodType)o;			
 			return matchesParams( methodType ) && matchesReturns( methodType );
 		}
@@ -141,31 +135,26 @@ public class MethodType extends ClassType {
 			return false;
 	}
 	
-	public boolean matchesParams( MethodType other )
-	{		
+	public boolean matchesParams( MethodType other ) {		
 		return parameterTypes.matches(other.parameterTypes);		
 	}
 	
-	public boolean matchesReturns( MethodType other )
-	{		
+	public boolean matchesReturns( MethodType other ) {		
 		return returns.matches(other.returns);
 	}
 
 	@Override
 	public String toString(int options) {	
-		if( (options & MANGLE) != 0 ) {
+		if( (options & MANGLE) != 0 )
 			return parameterTypes.toString("", "", options);
-		}
-
+		
 		return parameterTypes.toString(options) + " => " + returns.toString(options);
 	}	
 	
-	public String parametersToString()
-	{
+	public String parametersToString() {
 		StringBuilder sb = new StringBuilder("(");
 		
-		for( int i = 0; i < parameterTypes.size(); i++ )
-		{
+		for( int i = 0; i < parameterTypes.size(); i++ ) {
 			if( i != 0 )
 				sb.append(", ");
 			sb.append( parameterTypes.get(i).getModifiers() );
@@ -183,7 +172,6 @@ public class MethodType extends ClassType {
 	{		
 		return (MethodType)typeWithoutTypeArguments;
 	}
-	
 
 	
 	@Override
@@ -238,6 +226,9 @@ public class MethodType extends ClassType {
 			MethodType otherMethod = (MethodType) t;
 			return returns.isSubtype(otherMethod.returns) && otherMethod.parameterTypes.isSubtype(parameterTypes);
 		}
+		else if( t instanceof MethodReferenceType ) {
+			return isSubtype( ((MethodReferenceType)t).getMethodType() );
+		}
 		else
 			return false;
 	}
@@ -248,42 +239,5 @@ public class MethodType extends ClassType {
 	
 	public boolean isInline() {
 		return inline;
-	}	
-	
-	/*
-	@Override
-	public MethodSignature getMatchingMethod(String methodName, SequenceType arguments, SequenceType typeArguments, List<ShadowException> errors ) {		
-		return Type.METHOD.getMatchingMethod(methodName, arguments, typeArguments, errors);		
 	}
-	
-	@Override
-	public List<MethodSignature> getAllMethods(String methodName) {
-		return Type.METHOD.getAllMethods(methodName);
-	}
-	
-	@Override
-	public boolean containsField(String fieldName) {
-		return Type.METHOD.containsField(fieldName);
-	}
-	
-	@Override
-	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
-		return Type.METHOD.getField(fieldName);
-	}
-	
-	@Override
-	public LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> getFields() {
-		return Type.METHOD.getFields();
-	}
-	
-	@Override
-	public boolean hasInterface(InterfaceType type) {
-		return Type.METHOD.hasInterface(type);
-	}
-	
-	@Override
-	public boolean hasUninstantiatedInterface(InterfaceType type) {
-		return Type.METHOD.hasUninstantiatedInterface(type);
-	}	
-	*/
 }

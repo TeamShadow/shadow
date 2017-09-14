@@ -76,6 +76,7 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -1155,7 +1156,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		
 		if( fromMethodReference ) {
-			MethodType methodType = (MethodType) node.getType(); //method reference must have method type
+			MethodReferenceType methodReferenceType = (MethodReferenceType) node.getType(); //method reference must have method type
 			// for method references, signature will be null
 			String name = "";
 			if( prefix instanceof TACLocalLoad )
@@ -1163,10 +1164,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			else if( prefix instanceof TACLoad )
 				name = ((TACLoad)prefix).getReference().toString();			
 			TACOperand methodPointerAsMethodTable = new TACLoad(anchor, new TACFieldRef(prefix, "method"));
-			TACOperand methodPointer = TACCast.cast(anchor, new SimpleModifiedType(methodType), methodPointerAsMethodTable, false);
+			TACOperand methodPointer = TACCast.cast(anchor, new SimpleModifiedType(methodReferenceType.getMethodType()), methodPointerAsMethodTable, false);
 			
 			TACOperand object = new TACLoad(anchor, new TACFieldRef(prefix, "object"));
-			methodRef = new TACMethodPointer(anchor, methodPointer, name, methodType);
+			methodRef = new TACMethodPointer(anchor, methodPointer, name, methodReferenceType);
 			
 			params.add(object);			
 		}
@@ -1364,7 +1365,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 	@Override public Void visitMethodCall(ShadowParser.MethodCallContext ctx)
 	{ 
-		boolean fromMethodReference = prefix != null && prefix.getType() instanceof MethodType;
+		boolean fromMethodReference = prefix != null && prefix.getType() instanceof MethodReferenceType;
 		
 		visitChildren(ctx);
 		methodCall(ctx.getSignature(), ctx, ctx.conditionalExpression(), fromMethodReference ); //handles appending

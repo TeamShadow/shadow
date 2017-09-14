@@ -33,6 +33,7 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -442,14 +443,15 @@ public class StatementChecker extends BaseChecker {
 			type = Type.VAR;
 			isVar = true;
 		}
-		
+				
 		ctx.setType(type);		
 		
 		//add variables
 		for( ShadowParser.VariableDeclaratorContext declarator : ctx.variableDeclarator() ) {
 			if( isVar ) {
-				if( declarator.conditionalExpression() != null ) //has initializer						
-					type = declarator.conditionalExpression().getType();					
+				if( declarator.conditionalExpression() != null ) {//has initializer						
+					type = declarator.conditionalExpression().getType();
+				}
 				else {
 					type = Type.UNKNOWN;
 					addError(declarator, Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
@@ -1286,9 +1288,9 @@ public class StatementChecker extends BaseChecker {
 					rightType = ((PropertyType)rightType).getGetType().getType();	
 				
 				// let unbound method type know what signature it will eventually be bound to
-				if( rightType instanceof UnboundMethodType && leftType instanceof MethodType ) {					
+				if( rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType ) {					
 					UnboundMethodType unboundType = (UnboundMethodType) rightType;
-					MethodType methodType = (MethodType) leftType;
+					MethodType methodType = ((MethodReferenceType) leftType).getMethodType();
 					MethodSignature signature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), methodType.getParameterTypes());					
 					unboundType.setKnownSignature( signature );
 				}				
@@ -1364,7 +1366,7 @@ public class StatementChecker extends BaseChecker {
 		for( ModifiedType type : returnTypes )
 			methodType.addReturn(type);
 		
-		ctx.setType(methodType);
+		ctx.setType(new MethodReferenceType(methodType));
 		ctx.addModifiers(Modifiers.TYPE_NAME);
 		
 		return null;
@@ -2552,8 +2554,8 @@ public class StatementChecker extends BaseChecker {
 			if( signature != null &&  (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly()) && signature.getModifiers().isMutable() )
 				addError(ctx, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from a readonly reference");				
 		}			
-		else if( prefixType instanceof MethodType ) { //only happens with method pointers and local methods		
-			MethodType methodType = (MethodType)prefixType;			
+		else if( prefixType instanceof MethodReferenceType ) { //only happens with method pointers and local methods		
+			MethodType methodType = ((MethodReferenceType)prefixType).getMethodType();			
 			
 			if( methodType.isInline() ) {
 				for( Context signatureNode : currentMethod )
@@ -2562,7 +2564,7 @@ public class StatementChecker extends BaseChecker {
 			}
 			
 			if( methodType.canAccept( arguments ) )
-				ctx.setType(methodType);
+				ctx.setType(prefixType);
 			else  {
 				addError(ctx, Error.INVALID_ARGUMENTS, "Supplied method arguments " + arguments + " do not match method parameters " + methodType.getParameterTypes(), arguments, methodType.getParameterTypes());
 				ctx.setType(Type.UNKNOWN);

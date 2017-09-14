@@ -82,6 +82,7 @@ import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodTableType;
 import shadow.typecheck.type.MethodType;
@@ -170,7 +171,7 @@ public class LLVMOutput extends AbstractOutput {
 		//type references for regular types
 		HashSet<Type> definedGenerics = new HashSet<Type>();
 		for (Type type : moduleType.getUsedTypes()) {			
-			if( !type.isParameterized() && !(type instanceof ArrayType) ) {
+			if( !type.isParameterized() && !(type instanceof ArrayType) && !(type instanceof MethodReferenceType) ) {
 				writeTypeDefinition(type);
 
 				//external stuff for types outside of this file
@@ -199,7 +200,7 @@ public class LLVMOutput extends AbstractOutput {
 		Type moduleType = module.getType();
 		
 		for (Type type : moduleType.getMentionedTypes()) {
-			if(type != null && !(type instanceof ArrayType) && !moduleType.getUsedTypes().contains(type)  ) {	
+			if(type != null && !(type instanceof ArrayType) && !(type instanceof MethodReferenceType) && !moduleType.getUsedTypes().contains(type)  ) {	
 				if( !type.isParameterized() ) {
 					writeTypeDeclaration(type);
 

@@ -9,7 +9,7 @@ import shadow.tac.TACBlock;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.MethodType;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -223,7 +223,7 @@ public abstract class TACNode implements Iterable<TACOperand> {
             throw new IllegalArgumentException(operandType + " and " + typeType + " are not both sequence types");
         
         if( operandType.equals(Type.METHOD) && 
-        		typeType instanceof MethodType )
+        		typeType instanceof MethodReferenceType )
         	return operand;
 
         final shadow.typecheck.Package operandPackage = operandType.getPackage();
