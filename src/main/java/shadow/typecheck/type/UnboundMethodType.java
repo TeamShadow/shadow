@@ -25,7 +25,12 @@ public class UnboundMethodType extends ClassType {
 		
 		if( t instanceof MethodType ) {
 			MethodType methodType = (MethodType) t;
-			return getOuter().getMatchingMethod(getTypeName(), methodType.getParameterTypes()) != null;
+			MethodSignature signature = getOuter().getMatchingMethod(getTypeName(), methodType.getParameterTypes());
+			
+			if( signature == null )
+				return false;
+			
+			return signature.getMethodType().isSubtype(methodType);			
 		}
 		else if( t instanceof MethodReferenceType )
 			return isSubtype( ((MethodReferenceType)t).getMethodType() );

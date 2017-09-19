@@ -3,6 +3,7 @@ import shadow:io@Console;
 class shadow:test@MethodReferenceTest
 {
 	int value = 7;
+	() => (int) thingy = "walter".size;	
 	
 	public main() => ()
 	{		
@@ -25,13 +26,32 @@ class shadow:test@MethodReferenceTest
 		value = 10;		
 		result = method( 2, 3 );		
 		Console.printLine( result ); // 5.0
+		
+		Console.printLine( "Test 5" );
+		int answer = thingy();
+		Console.printLine( answer ); // 6
+		
+		Console.printLine( "Test 6" );
+		String string = "goat song";
+		thingy = string.size;
+		answer = thingy();
+		Console.printLine( answer ); // 9
+		
+		Console.printLine( "Test 7" );		
+		thingy = returnMethod();
+		answer = thingy();
+		Console.printLine( answer ); // 7			
 	}
 	
 	public takeMethodArgument( (int, int) => (double) thing ) => ()
 	{
 		double result = thing( 8, 9 );
-		Console.printLine( result ); // 8.5
+		Console.printLine( result ); // 8.5	
+	}
 	
+	public returnMethod() => ( () => (int)  ) {
+		String spinach = "spinach";
+		return spinach.size;
 	}
 	
 	public method1(int x, int y) => (double)

@@ -1233,7 +1233,13 @@ public class OutputTests {
 				"Test 3\n" +
 				"4.0\n" + 
 				"Test 4\n" + 
-				"5.0\n");		
+				"5.0\n" +
+				"Test 5\n" + 
+				"6\n" +
+				"Test 6\n" + 
+				"9\n" +
+				"Test 7\n" + 
+				"7\n");		
 	}
 	
 	

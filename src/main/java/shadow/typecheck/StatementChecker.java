@@ -475,8 +475,18 @@ public class StatementChecker extends BaseChecker {
 	
 	private void checkInitializers(List<ShadowParser.VariableDeclaratorContext> declarators) {
 		for( ShadowParser.VariableDeclaratorContext declarator : declarators ) {			
-			if( declarator.conditionalExpression() != null ) //has initializer
+			if( declarator.conditionalExpression() != null ) { //has initializer
 				addErrors(declarator, isValidInitialization(declarator, declarator.conditionalExpression()));
+				Type leftType = declarator.getType();
+				Type rightType = declarator.conditionalExpression().getType();
+				// let unbound method type know what signature it will eventually be bound to
+				if( rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType ) {					
+					UnboundMethodType unboundType = (UnboundMethodType) rightType;
+					MethodType methodType = ((MethodReferenceType) leftType).getMethodType();
+					MethodSignature signature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), methodType.getParameterTypes());					
+					unboundType.setKnownSignature( signature );
+				}
+			}
 			else if( declarator.getModifiers().isConstant() ) //only fields are ever constant
 				addError( declarator, Error.INVALID_MODIFIER, "Variable declared with modifier constant must have an initializer");
 		}			
@@ -2812,6 +2822,20 @@ public class StatementChecker extends BaseChecker {
 									
 				if( !updatedTypes.isSubtype(ctx.getType()) )						
 					addError(ctx, Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + ctx.getType() + (methodType.getReturnTypes().size() == 1 ? " is" : " are") + " expected", ctx.getType(), updatedTypes);
+				// update unbound method types 
+				else {
+					for( int i = 0; i < updatedTypes.size(); i++ ) {
+						Type leftType = methodType.getReturnTypes().get(i).getType();
+						Type rightType = updatedTypes.get(i).getType();						
+						
+						if( rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType ) {					
+							UnboundMethodType unboundType = (UnboundMethodType) rightType;
+							MethodType returnMethodType = ((MethodReferenceType) leftType).getMethodType();
+							MethodSignature signature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), returnMethodType.getParameterTypes());					
+							unboundType.setKnownSignature( signature );
+						}
+					}					
+				}
 				
 				for( ModifiedType modifiedType : updatedTypes )
 					if( modifiedType.getModifiers().isTypeName() )

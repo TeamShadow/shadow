@@ -1356,7 +1356,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		if( index == suffixes.size() || suffixes.get(index).methodCall() == null ) {				
 			//Create Method object
 			UnboundMethodType unboundMethod = (UnboundMethodType) ctx.getType();					
-			prefix = makeMethodReference(unboundMethod);			
+			prefix = makeMethodReference(unboundMethod);		
+			ctx.setOperand(prefix);
 		}
 		
 		return null;
