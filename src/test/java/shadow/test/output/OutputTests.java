@@ -1134,6 +1134,41 @@ public class OutputTests {
 		));
 	}
 	
+	@Test public void testString() throws Exception {
+		args.add("shadow/test/StringTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], formatOutputString(				
+				"Hello World!",
+				"b",
+				"l",
+				"e",
+				"a",
+				"r",
+				"g",
+				"h",
+				"h",
+				"h",
+				"h",							
+				"a: 5 (byte)",
+				"b: -7 (byte)",
+				"c: 5 (ubyte)",
+				"d: 5 (short)",
+				"e: -7 (short)",
+				"f: 5 (ushort)",
+				"g: 5 (int)",
+				"h: -7 (int)",
+				"i: 5 (uint)",
+				"j: 5 (long)",
+				"k: -7 (long)",
+				"m: 5 (ulong)",
+				"n: -3.47 (double)",
+				"o: 1.23657E23 (double)",
+				"p: -1.23657E-19 (double)",
+				"q: -1.23657E-19 (float)",
+				"fun"
+		));
+	}
+	
 	@Test public void testReadOnlyList() throws Exception {
 		args.add("shadow/test/ReadOnlyListTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -1220,6 +1255,28 @@ public class OutputTests {
 				"90\n" +
 				"0\n");		
 	}
+	
+	
+	@Test public void testMethodReference() throws Exception {
+		args.add("shadow/test/MethodReferenceTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0], 
+				"Test 1\n" + 
+				"3.5\n" +
+				"Test 2\n" + 
+				"8.5\n" +
+				"Test 3\n" +
+				"4.0\n" + 
+				"Test 4\n" + 
+				"5.0\n" +
+				"Test 5\n" + 
+				"6\n" +
+				"Test 6\n" + 
+				"9\n" +
+				"Test 7\n" + 
+				"7\n");		
+	}
+	
 	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");

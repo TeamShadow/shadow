@@ -31,9 +31,6 @@
 %shadow.standard..ArrayNullable_methods = type opaque
 %shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %long }
 
-%shadow.standard..ClassSet_methods = type opaque
-%shadow.standard..ClassSet = type opaque
-
 @shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 
@@ -57,7 +54,6 @@ declare %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.stand
 declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
 declare %shadow.standard..MethodTable* @shadow.standard..Class_MinterfaceData_shadow.standard..Class(%shadow.standard..Class* %class, %shadow.standard..Class* %interface)
 
-declare %shadow.standard..GenericClass* @shadow.standard..ClassSet_MgetGenericArray_shadow.standard..String_shadow.standard..Class_A_shadow.standard..MethodTable_boolean(%shadow.standard..ClassSet*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong }, %shadow.standard..MethodTable*, %boolean)
 declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate(%shadow.standard..Object*)
 declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate_long(%shadow.standard..Object*, %long)
 

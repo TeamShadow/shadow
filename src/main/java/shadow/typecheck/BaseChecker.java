@@ -32,6 +32,7 @@ import shadow.parse.ShadowVisitorErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -207,9 +208,13 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 		}
 		else {
 			if( rightModifiers.isImmutable() && !leftModifiers.isReadonly() &&
+					// Never a problem if either type is immutable
 					!leftType.getModifiers().isImmutable() &&
-					!rightType.getModifiers().isImmutable() ) {
-				// Never a problem if either type is immutable			
+					!rightType.getModifiers().isImmutable() &&
+					// It's fine to store an immutable method reference into a non-immutable method reference
+					// since the method reference itself can't be changed
+					!(leftType instanceof MethodReferenceType) ) {
+			
 				ErrorReporter.addError( errors, Error.INVALID_ASSIGNMENT,
 						"Right hand side with immutable value cannot be assigned to non-immutable and non-readonly left hand side",
 						rightType, leftType);
@@ -219,11 +224,15 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 			// Readonly issues
 			if( !leftModifiers.isReadonly() ) { // and of course not immutable
 				if( rightModifiers.isReadonly() && !rightType.getModifiers().isImmutable() &&
+						// Never a problem if either type is immutable or readonly
 						!rightType.getModifiers().isReadonly() &&
 						!leftType.getModifiers().isReadonly() &&
 						!leftType.getModifiers().isImmutable() &&
-						!rightType.getModifiers().isImmutable() ) {
-				// Never a problem if either type is immutable or readonly				
+						!rightType.getModifiers().isImmutable() &&
+						// It's fine to store a readonly method reference into a non-readonly method reference
+						// since the method reference itself can't be changed
+						!(leftType instanceof MethodReferenceType) ) {
+								
 					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT,
 							"Right hand side with readonly value cannot be assigned to non-readonly left hand side",
 							rightType, leftType);

@@ -64,7 +64,8 @@ public abstract class Type implements Comparable<Type> {
 	public static ClassType ARRAY = null;  // object representation of all array types
 	public static ClassType ARRAY_NULLABLE = null;  // object representation of nullable array types	
 	
-	public static ClassType METHOD_TABLE = null; //really just a pointer for method tables, but we sometimes act like it is a class
+	public static ClassType METHOD = null; //used to hold method references
+	public static ClassType METHOD_TABLE = null; //really just a pointer for method tables, but we sometimes act like it is a class	
 	
 	public static ClassType ENUM = null;  //weirdly, the base class for enum is not an EnumType
 	public static ExceptionType EXCEPTION = null;
@@ -244,6 +245,7 @@ public abstract class Type implements Comparable<Type> {
 	//otherwise, types can become mixed between two different runs of the type checker
 	public static void clearTypes()	{
 		OBJECT = null;
+		METHOD = null;
 		METHOD_TABLE = null;
 		CAST_EXCEPTION = null;
 		INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
@@ -402,10 +404,8 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	@Override
-	public boolean equals(Object object)
-	{
-		if( object instanceof Type )
-		{
+	public boolean equals(Object object) {
+		if( object instanceof Type ) {
 			Type type = (Type)object;
 			return equals( type );			
 		}
@@ -622,24 +622,28 @@ public abstract class Type implements Comparable<Type> {
 	}
 
 	
-	public boolean canAccept( Type rightType, AssignmentKind assignmentType, List<ShadowException> errors ) 
-	{
+	public boolean canAccept( Type rightType, AssignmentKind assignmentType, List<ShadowException> errors ) {
 		boolean accepts = false;
 		
 		//equal and cat are separate because they are not dependent on implementing a specific interface
-		if( assignmentType.equals(AssignmentKind.EQUAL) )
-		{
+		if( assignmentType.equals(AssignmentKind.EQUAL) ) {
 			//type parameters are different because the definition of subtype is weak: dependent only on the bounds
 			//real type parameter assignment requires the same type					
 			accepts = rightType.isSubtype(this);
 			
-			if( !accepts )
-				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
+			if( !accepts ) {
+				if( rightType instanceof UnboundMethodType && this instanceof MethodReferenceType ) {
+					//adds appropriate errors (either ambiguous method or none matching)
+					MethodType methodType = ((MethodReferenceType) this).getMethodType();
+					rightType.getOuter().getMatchingMethod(rightType.getTypeName(), methodType.getParameterTypes(), null, errors );
+				}
+				else
+					ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + rightType + " is not a subtype of " + this, rightType, this);
+			}
 		
 			return accepts;
 		}
-		else if( assignmentType.equals(AssignmentKind.CAT) )
-		{
+		else if( assignmentType.equals(AssignmentKind.CAT) ) {
 			accepts = isString();
 			if( !accepts )
 				ErrorReporter.addError(errors, Error.INVALID_ASSIGNMENT, "Type " + this + " is not type " + Type.STRING, this);
@@ -651,8 +655,7 @@ public abstract class Type implements Comparable<Type> {
 		InterfaceType interfaceType = null;
 		String operator = assignmentType.getOperator();
 		
-		switch( assignmentType  )
-		{	
+		switch( assignmentType  ) {	
 		case PLUS: interfaceType = Type.CAN_ADD; break;
 		case MINUS: interfaceType = Type.CAN_SUBTRACT; break;
 		case STAR: interfaceType = Type.CAN_MULTIPLY; break;
@@ -671,8 +674,7 @@ public abstract class Type implements Comparable<Type> {
 			return false;
 		}
 		
-		if( hasUninstantiatedInterface(interfaceType) )
-		{
+		if( hasUninstantiatedInterface(interfaceType) ) {
 			SequenceType argument = new SequenceType(rightType);
 			MethodSignature signature = getMatchingMethod(methodName, argument, null, errors);
 			if( signature != null )
@@ -686,8 +688,7 @@ public abstract class Type implements Comparable<Type> {
 			else							
 				return false;				
 		}
-		else		
-		{
+		else {
 			ErrorReporter.addError(errors, Error.INVALID_TYPE, "Cannot apply operator " + operator + " to type " + this + " which does not implement interface " + interfaceType, this);			
 			return false;						
 		}
@@ -743,7 +744,7 @@ public abstract class Type implements Comparable<Type> {
 					candidate = signature;
 				else if( !candidate.getParameterTypes().isSubtype(signature.getParameterTypes()) )
 				{					
-					ErrorReporter.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous call to " + methodName + " with arguments " + arguments, arguments);
+					ErrorReporter.addError(errors, Error.INVALID_ARGUMENTS, "Ambiguous reference to " + methodName + " with arguments " + arguments, arguments);
 					return null;
 				}				
 			}			
@@ -1193,8 +1194,6 @@ public abstract class Type implements Comparable<Type> {
 				Type baseType = arrayType.getBaseType();
 				
 				usedTypes.add(type);
-				//if( type.onlyUsesTypeParametersFrom(this) )
-				//	partiallyInstantiatedGenerics.add(arrayType);
 				
 				addUsedType(arrayType.convertToGeneric());
 				//covers Type.ARRAY and all recursive base types
@@ -1202,11 +1201,9 @@ public abstract class Type implements Comparable<Type> {
 				//must do before adding to usedTypes
 				
 				addUsedType(baseType);
-				
-				//if( !equals(baseType) && baseType instanceof ArrayType && !((ArrayType)baseType).containsUnboundTypeParameters() )
-					//usedTypes.add(baseType); //add in second-level and lower arrays because of Array<T> generic conversion issues								
-
 			}
+			else if( type instanceof MethodReferenceType )
+				addUsedType( ((MethodReferenceType)type).getMethodType());
 			else if( type instanceof MethodType ) {			
 				MethodType methodType = (MethodType)type;
 				for( ModifiedType parameter : methodType.getParameterTypes() )

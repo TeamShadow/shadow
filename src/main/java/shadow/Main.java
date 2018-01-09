@@ -580,6 +580,10 @@ public class Main {
 				// give warnings if fields are never used
 				Type type = class_.getType();
 				Set<String> usedFields = allUsedFields.get(type);
+				if( usedFields == null ) {
+					usedFields = new HashSet<String>();
+					allUsedFields.put(type, usedFields);					
+				}
 				for (Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()) {
 					if (!entry.getValue().getModifiers().isConstant() && !usedFields.contains(entry.getKey())
 							&& entry.getValue().getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()) {

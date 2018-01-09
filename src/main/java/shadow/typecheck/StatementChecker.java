@@ -33,6 +33,7 @@ import shadow.typecheck.type.EnumType;
 import shadow.typecheck.type.ExceptionType;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.InterfaceType;
+import shadow.typecheck.type.MethodReferenceType;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
@@ -442,14 +443,15 @@ public class StatementChecker extends BaseChecker {
 			type = Type.VAR;
 			isVar = true;
 		}
-		
+				
 		ctx.setType(type);		
 		
 		//add variables
 		for( ShadowParser.VariableDeclaratorContext declarator : ctx.variableDeclarator() ) {
 			if( isVar ) {
-				if( declarator.conditionalExpression() != null ) //has initializer						
-					type = declarator.conditionalExpression().getType();					
+				if( declarator.conditionalExpression() != null ) {//has initializer						
+					type = declarator.conditionalExpression().getType();
+				}
 				else {
 					type = Type.UNKNOWN;
 					addError(declarator, Error.UNDEFINED_TYPE, "Variable declared with var has no initializer to infer type from");
@@ -473,8 +475,18 @@ public class StatementChecker extends BaseChecker {
 	
 	private void checkInitializers(List<ShadowParser.VariableDeclaratorContext> declarators) {
 		for( ShadowParser.VariableDeclaratorContext declarator : declarators ) {			
-			if( declarator.conditionalExpression() != null ) //has initializer
+			if( declarator.conditionalExpression() != null ) { //has initializer
 				addErrors(declarator, isValidInitialization(declarator, declarator.conditionalExpression()));
+				Type leftType = declarator.getType();
+				Type rightType = declarator.conditionalExpression().getType();
+				// let unbound method type know what signature it will eventually be bound to
+				if( rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType ) {					
+					UnboundMethodType unboundType = (UnboundMethodType) rightType;
+					MethodType methodType = ((MethodReferenceType) leftType).getMethodType();
+					MethodSignature signature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), methodType.getParameterTypes());					
+					unboundType.setKnownSignature( signature );
+				}
+			}
 			else if( declarator.getModifiers().isConstant() ) //only fields are ever constant
 				addError( declarator, Error.INVALID_MODIFIER, "Variable declared with modifier constant must have an initializer");
 		}			
@@ -1283,7 +1295,15 @@ public class StatementChecker extends BaseChecker {
 				}
 				
 				if( rightType instanceof PropertyType )
-					rightType = ((PropertyType)rightType).getGetType().getType();				
+					rightType = ((PropertyType)rightType).getGetType().getType();	
+				
+				// let unbound method type know what signature it will eventually be bound to
+				if( rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType ) {					
+					UnboundMethodType unboundType = (UnboundMethodType) rightType;
+					MethodType methodType = ((MethodReferenceType) leftType).getMethodType();
+					MethodSignature signature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), methodType.getParameterTypes());					
+					unboundType.setKnownSignature( signature );
+				}				
 		
 				ctx.addOperation(leftType.getMatchingMethod(kind.getMethod(), new SequenceType(rightType)));
 			}
@@ -1356,7 +1376,7 @@ public class StatementChecker extends BaseChecker {
 		for( ModifiedType type : returnTypes )
 			methodType.addReturn(type);
 		
-		ctx.setType(methodType);
+		ctx.setType(new MethodReferenceType(methodType));
 		ctx.addModifiers(Modifiers.TYPE_NAME);
 		
 		return null;
@@ -2154,8 +2174,7 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}	
 	
-	@Override public Void visitMethod(ShadowParser.MethodContext ctx)
-	{ 
+	@Override public Void visitMethod(ShadowParser.MethodContext ctx) { 
 		visitChildren(ctx);
 		
 		//always part of a suffix, thus always has a prefix
@@ -2483,22 +2502,31 @@ public class StatementChecker extends BaseChecker {
 		return setMethodType( node, prefixType, "create", arguments, null);		
 	}
 	
-	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments)
-	{
+	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments) {		
 		return setMethodType( node, type, method, arguments, null );
 	}
 
-	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments, SequenceType typeArguments )
-	{	
+	protected MethodSignature setMethodType( Context node, Type type, String method, SequenceType arguments, SequenceType typeArguments ) {	
 		List<ShadowException> errors = new ArrayList<ShadowException>();
 		MethodSignature signature = type.getMatchingMethod(method, arguments, typeArguments, errors);
 		
 		if( signature == null )
 			addErrors(node, errors);	
-		else
-		{
+		else {
 			if( !methodIsAccessible( signature, currentType  ))					
-				addError(node, Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");						
+				addError(node, Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");
+			
+			//if any arguments have an UnboundMethodType, note down what their true MethodSignature must be
+			for( int i = 0; i < arguments.size(); ++i ) {
+				ModifiedType argument = arguments.get(i);				
+				if( argument.getType() instanceof UnboundMethodType ) {
+					//since it matches, the parameter of the method must be a MethodType
+					MethodType parameterType = (MethodType) signature.getParameterTypes().get(i).getType();					
+					UnboundMethodType unboundType = (UnboundMethodType) argument.getType();
+					MethodSignature boundSignature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), parameterType.getParameterTypes());
+					unboundType.setKnownSignature(boundSignature);					
+				}
+			}
 		
 			node.setType(signature.getMethodType());		
 		}		
@@ -2536,8 +2564,8 @@ public class StatementChecker extends BaseChecker {
 			if( signature != null &&  (prefixNode.getModifiers().isReadonly() || prefixNode.getModifiers().isTemporaryReadonly()) && signature.getModifiers().isMutable() )
 				addError(ctx, Error.ILLEGAL_ACCESS, "Mutable method " + signature + " cannot be called from a readonly reference");				
 		}			
-		else if( prefixType instanceof MethodType ) { //only happens with method pointers and local methods		
-			MethodType methodType = (MethodType)prefixType;			
+		else if( prefixType instanceof MethodReferenceType ) { //only happens with method pointers and local methods		
+			MethodType methodType = ((MethodReferenceType)prefixType).getMethodType();			
 			
 			if( methodType.isInline() ) {
 				for( Context signatureNode : currentMethod )
@@ -2546,7 +2574,7 @@ public class StatementChecker extends BaseChecker {
 			}
 			
 			if( methodType.canAccept( arguments ) )
-				ctx.setType(methodType);
+				ctx.setType(prefixType);
 			else  {
 				addError(ctx, Error.INVALID_ARGUMENTS, "Supplied method arguments " + arguments + " do not match method parameters " + methodType.getParameterTypes(), arguments, methodType.getParameterTypes());
 				ctx.setType(Type.UNKNOWN);
@@ -2794,6 +2822,20 @@ public class StatementChecker extends BaseChecker {
 									
 				if( !updatedTypes.isSubtype(ctx.getType()) )						
 					addError(ctx, Error.INVALID_RETURNS, "Cannot return " + updatedTypes + " when " + ctx.getType() + (methodType.getReturnTypes().size() == 1 ? " is" : " are") + " expected", ctx.getType(), updatedTypes);
+				// update unbound method types 
+				else {
+					for( int i = 0; i < updatedTypes.size(); i++ ) {
+						Type leftType = methodType.getReturnTypes().get(i).getType();
+						Type rightType = updatedTypes.get(i).getType();						
+						
+						if( rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType ) {					
+							UnboundMethodType unboundType = (UnboundMethodType) rightType;
+							MethodType returnMethodType = ((MethodReferenceType) leftType).getMethodType();
+							MethodSignature signature = unboundType.getOuter().getMatchingMethod(unboundType.getTypeName(), returnMethodType.getParameterTypes());					
+							unboundType.setKnownSignature( signature );
+						}
+					}					
+				}
 				
 				for( ModifiedType modifiedType : updatedTypes )
 					if( modifiedType.getModifiers().isTypeName() )

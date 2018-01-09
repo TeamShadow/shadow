@@ -4,8 +4,6 @@
  *
  * @author Claude Abounegm
  *
- * @seeDoc shadow:natives@Mutex
- * @seeDoc shadow:natives@Signaler
  * @seeDoc shadow:standard@Thread
  */
 locked immutable class shadow:natives@

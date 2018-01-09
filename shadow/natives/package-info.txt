@@ -1,0 +1,4 @@
+Package {@code shadow:natives} contains classes and exceptions used to
+interact with C code.
+
+package shadow:natives;

@@ -16,7 +16,7 @@ public class WarningTests {
 	@Before
 	public void setup() throws Exception {
 		//args.add("-v");
-		args.add("--typecheck");
+		args.add("--typecheck");		
 		
 		args.add("-w");
 		args.add("error");

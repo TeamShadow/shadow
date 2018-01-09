@@ -137,10 +137,8 @@ public class MethodSignature implements Comparable<MethodSignature> {
 			else
 				paramTypes.add(new SimpleModifiedType(outerType)); // this
 		}
-				
-		for (ModifiedType parameterType : methodType.getParameterTypes())
-			paramTypes.add(parameterType);	
-			
+		
+		paramTypes.addAll(methodType.getParameterTypes());
 		return paramTypes;
 	}
 
