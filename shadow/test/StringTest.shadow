@@ -7,16 +7,15 @@ class shadow:test@StringTest
 		Console out;
 		out.printLine("Hello World!");
 		foreach( code letter in "blearghhhh" )
-			out.printLine(letter);
+			out.printLine(letter);		
 		
-		
-		Iterator<code> iter = "aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½".iterator();
-		while (iter.hasNext())
-			out.printLine(iter.next());
+		//Hard to get exactly the right Java UTF-16 to match
+		//Iterator<code> iter = "aeiouÃ¤Ã¶Ã¼ÃŸâ€‹â†’ð�€¸ð�„žô�¿½".iterator();
+		//while (iter.hasNext())
+			//out.printLine(iter.next());
 			
 		String x = "5";
 		String y = "-7";
-		String z = "3.47";
 		String r = "-3.47";
 		String s = "123.657e+21";
 		String t = "-123.657e-21";
@@ -56,6 +55,9 @@ class shadow:test@StringTest
 		out.printLine("n: " # n # " (" # n.getClass() # ")" );
 		out.printLine("o: " # o # " (" # o.getClass() # ")" );
 		out.printLine("p: " # p # " (" # p.getClass() # ")" );
-		out.printLine("q: " # q # " (" # q.getClass() # ")" );		
+		out.printLine("q: " # q # " (" # q.getClass() # ")" );
+		
+		String word = "dysfunctional";
+		out.printLine( word.substring(3, 6) );				
 	}
 }

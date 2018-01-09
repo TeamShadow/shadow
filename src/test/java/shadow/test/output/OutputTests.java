@@ -46,7 +46,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		args.add("-r");
+		//args.add("-r");
 	}
 	
 	@After
@@ -1131,6 +1131,41 @@ public class OutputTests {
 								"ulong",
 								"float",
 								"double"
+		));
+	}
+	
+	@Test public void testString() throws Exception {
+		args.add("shadow/test/StringTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], formatOutputString(				
+				"Hello World!",
+				"b",
+				"l",
+				"e",
+				"a",
+				"r",
+				"g",
+				"h",
+				"h",
+				"h",
+				"h",							
+				"a: 5 (byte)",
+				"b: -7 (byte)",
+				"c: 5 (ubyte)",
+				"d: 5 (short)",
+				"e: -7 (short)",
+				"f: 5 (ushort)",
+				"g: 5 (int)",
+				"h: -7 (int)",
+				"i: 5 (uint)",
+				"j: 5 (long)",
+				"k: -7 (long)",
+				"m: 5 (ulong)",
+				"n: -3.47 (double)",
+				"o: 1.23657E23 (double)",
+				"p: -1.23657E-19 (double)",
+				"q: -1.23657E-19 (float)",
+				"fun"
 		));
 	}
 	

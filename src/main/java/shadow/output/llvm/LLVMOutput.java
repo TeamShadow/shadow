@@ -621,7 +621,10 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	public void writeStringLiterals() throws ShadowException {
-		int stringIndex = 0;		
+		int stringIndex = 0;
+		
+		final String BYTE_ARRAY_CLASS = "bitcast (" + type(Type.GENERIC_CLASS) + " " + classOf(new ArrayType(Type.BYTE)) + " to " + type(Type.CLASS) + ")";
+		
 		for (String literal : stringLiterals) {
 			byte[] data = null;
 			try
@@ -651,7 +654,7 @@ public class LLVMOutput extends AbstractOutput {
 			}
 			writer.write("@_array" + stringIndex + " = private unnamed_addr " +
 					"constant {%ulong, " + type(Type.CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + data.length + " x " + type(Type.BYTE) +
-					"]} { %ulong -1, " + typeText(Type.CLASS, classOf(Type.BYTE)) + ", " + methodTableType(Type.ARRAY) + " " + methodTable(Type.ARRAY) + ", " + typeLiteral((long)data.length) + ", [" + data.length + " x " + type(Type.BYTE) +
+					"]} { %ulong -1, " + typeText(Type.CLASS, BYTE_ARRAY_CLASS) + ", " + methodTableType(Type.ARRAY) + " " + methodTable(Type.ARRAY) + ", " + typeLiteral((long)data.length) + ", [" + data.length + " x " + type(Type.BYTE) +
 					"] c\"" + sb + "\" }");
 			writer.write("@_string" + stringIndex + " = private unnamed_addr " +
 					"constant %" + raw(Type.STRING) + " { " +
