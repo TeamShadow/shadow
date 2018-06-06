@@ -1,0 +1,4 @@
+locked class shadow:decorators@
+	ExportAssemblyDecorator is CompilerDecorator {
+		protected create() {}
+}

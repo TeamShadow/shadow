@@ -131,7 +131,7 @@ public class TextOutput extends AbstractOutput
 		for (ModifiedType retType : signature.getFullReturnTypes())
 			sb.append(retType.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS));
 		sb.append(')');
-		if (signature.isNative() || signature.isExternWithoutBlock())
+		if (signature.isImport())
 			writer.write(sb.append(';').toString());
 		else
 		{
@@ -149,7 +149,7 @@ public class TextOutput extends AbstractOutput
 		MethodSignature signature = method.getSignature();
 		
 		//startBlock(defaultBlock);
-		if (!signature.isNative() || !signature.isExternWithoutBlock())
+		if (!signature.isImport())
 		{
 			writer.outdent();
 			writer.write('}');

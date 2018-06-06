@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -10,13 +11,24 @@ import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 
 public class MethodSignature implements Comparable<MethodSignature> {
+	public static final int IMPORT_NATIVE = 0;
+	public static final int IMPORT_ASSEMBLY = 1;
+	public static final int IMPORT_METHOD = 2;
+	
+	public static final int EXPORT_NATIVE = 0;
+	public static final int EXPORT_ASSEMBLY = 1;
+	public static final int EXPORT_METHOD = 2;
+	
 	protected final MethodType type;
 	protected final String symbol;
 	private final Context node;	/** The AST context that corresponds to the branch of the tree for this method */
 	private final MethodSignature wrapped;
 	private MethodSignature signatureWithoutTypeArguments;
 	private Type outer;
-	private Set<SingletonType> singletons = new HashSet<SingletonType>();
+	private Set<SingletonType> singletons = new HashSet<>();
+	private int importType = -1;
+	private int exportType = -1;
+	private List<Type> allowedExports;
 
 	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
 	{
@@ -130,7 +142,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		//else
 			methodType = type;		
 
-		if(!isExternWithoutBlock()) {
+		if(!isImportAssembly()) {
 			Type outerType = getOuter();
 			if (isCreate() || outerType instanceof InterfaceType ) //since actual object is unknown, assume Object for all interface methods
 				paramTypes.add(new SimpleModifiedType(Type.OBJECT));
@@ -144,7 +156,17 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		sb.append(symbol);		
+		/*
+		// TODO: Uncomment when decorators are generated in .meta
+		if(isExportMethod() && getExportTypes() != null) {
+			sb.append("[");
+			for(Type t : getExportTypes()) {
+				sb.append(t.getTypeName());
+			}
+			sb.append("] ");
+		}*/
+		
+		sb.append(symbol);
 		
 		//nothing more for destroy
 		if( !symbol.equals("destroy") ) {			
@@ -166,7 +188,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	//Is it only the wrapped ones that correspond to interface methods?
 	//If so, those are the ones that need special generic attention
 	public String getMangledName() {
-		if(isExtern() && !symbol.startsWith("$")) {
+		if(isImportAssembly() || isExportAssembly()) {
 			return symbol;
 		}
 		
@@ -174,19 +196,19 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		
 		if( isWrapper() )		
 			sb.append(getWrapped().getOuter().toString(Type.MANGLE));			
-		else if(!isExtern())
-			sb.append(getOuter().toString(Type.MANGLE));
-		else
+		else if(isImportMethod()) // we set the first parameter as the owner of the method
 			sb.append(getParameterTypes().get(0).getType().toString(Type.MANGLE));
+		else
+			sb.append(getOuter().toString(Type.MANGLE));
 		
-		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS | (isExtern() ? Type.MANGLE_EXTERN : 0)));
+		sb.append("_M").append(Type.mangle(symbol)).append(type.getTypeWithoutTypeArguments().toString(Type.MANGLE | Type.TYPE_PARAMETERS | (isImportMethod() ? Type.MANGLE_IMPORT_METHOD : 0)));
 		
 		if (isWrapper())
 			sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
 		
 		return sb.toString();
 	}
-
+	
 	public List<String> getParameterNames() {
 		return type.getParameterNames();
 	}
@@ -271,21 +293,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.getModifiers().isLocked();
 	}
 	
-	public boolean isNative()
-	{
-		return type.getModifiers().isNative();
-	}
-	
-	public boolean isExtern()
-	{
-		return type.getModifiers().isExtern();
-	}
-	
-	public boolean isExternWithoutBlock()
-	{
-		return isExtern() && !hasBlock();
-	}
-	
 	public boolean isVoid()
 	{
 		return type.getReturnTypes().size() == 0;
@@ -317,7 +324,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public MethodSignature wrap(MethodSignature wrapped) {		
 		Modifiers modifiers = new Modifiers(wrapped.getModifiers().getModifiers());
-		modifiers.removeModifier(Modifiers.NATIVE);		
 		MethodType methodType;
 		//if( outer instanceof InterfaceType )
 		//	methodType = type.copy(wrapped.getOuter(), modifiers);
@@ -357,7 +363,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public boolean hasBlock() {
-		boolean hasBlock = true;
+		boolean hasBlock = false;
 		
 		if( node instanceof ShadowParser.CreateDeclarationContext )
 			hasBlock = ((ShadowParser.CreateDeclarationContext)node).createBlock() != null;
@@ -371,5 +377,59 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	
 	public boolean isAbstract() {
 		return type.getModifiers().isAbstract();
+	}
+	
+	public void setImportType(int type) {
+		this.importType = type;
+	}
+	
+	public void setExportType(int type) {
+		this.exportType = type;
+	}
+	
+	public boolean isImport() {
+		return importType != -1;
+	}
+	
+	public boolean isImportNative() {
+		return importType == IMPORT_NATIVE;
+	}
+	
+	public boolean isImportAssembly() {
+		return importType == IMPORT_ASSEMBLY;
+	}
+	
+	public boolean isImportMethod() {
+		return importType == IMPORT_METHOD;
+	}
+	
+	public boolean isExport() {
+		return exportType != -1;
+	}
+	
+	public boolean isExportNative() {
+		return exportType == EXPORT_NATIVE;
+	}
+	
+	public boolean isExportAssembly() {
+		return exportType == EXPORT_ASSEMBLY;
+	}
+	
+	public boolean isExportMethod() {
+		return exportType == EXPORT_METHOD;
+	}
+	
+	// TODO: Find a better name for this
+	public void addExportType(Type type) {
+		if(allowedExports == null) {
+			allowedExports = new ArrayList<>();
+		}
+		
+		allowedExports.add(type);
+	}
+
+	// TODO: Find a better name for this
+	public List<Type> getExportTypes() {
+		return allowedExports;
 	}
 }

@@ -19,7 +19,8 @@ and	CanHash
 	 * Returns the bitwise complement of the {@code ulong} value.
 	 * @return bitwise complement 
 	 */ 
-	public native bitComplement() => (ulong);
+	[ImportNative]
+	public bitComplement() => (ulong);
 	
 	/** 
 	 * Finds the result of left-shifting the bits of the {@code ulong} value
@@ -27,7 +28,8 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	public native bitShiftLeft(uint amount) => (ulong);
+	[ImportNative]
+	public bitShiftLeft(uint amount) => (ulong);
 	
 	/** 
 	 * Finds the result of right-shifting the bits of the {@code ulong} value
@@ -35,7 +37,8 @@ and	CanHash
 	 * @param amount bits to shift
 	 * @return shifted value 
 	 */
-	public native bitShiftRight(uint amount) => (ulong);
+	[ImportNative]
+	public bitShiftRight(uint amount) => (ulong);
 	
 	/** 
 	 * Finds the result of left-rotating the bits of the {@code ulong} value
@@ -43,7 +46,8 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	public native bitRotateLeft(uint amount) => (ulong);
+	[ImportNative]
+	public bitRotateLeft(uint amount) => (ulong);
 	
 	/** 
 	 * Finds the result of right-rotating the bits of the {@code ulong} value
@@ -51,7 +55,8 @@ and	CanHash
 	 * @param amount bits to rotate
 	 * @return rotated value 
 	 */
-	public native bitRotateRight(uint amount) => (ulong);
+	[ImportNative]
+	public bitRotateRight(uint amount) => (ulong);
 	
 	/** 
 	 * Finds the result of left-shifting the bits of the {@code ulong} value
@@ -108,75 +113,86 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code byte}.	 
 	 * @return {@code byte} value 
 	 */
-	public native toByte() => (byte);
+	[ImportNative]
+	public toByte() => (byte);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code ubyte}, which will overflow
 	 * if the value is too large to be contained in a {@code ubyte}.	 
 	 * @return {@code ubyte} value 
 	 */
-	public native toUByte() => (ubyte);
+	[ImportNative]
+	public toUByte() => (ubyte);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code short}, which will overflow
 	 * if the value is too large to be contained in a {@code short}.
 	 * @return {@code short} value 
 	 */
-	public native toShort() => (short);
+	[ImportNative]
+	public toShort() => (short);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code ushort}, which will overflow
 	 * if the value is too large to be contained in a {@code ushort}.
 	 * @return {@code ushort} value 
 	 */
-	public native toUShort() => (ushort);
+	[ImportNative]
+	public toUShort() => (ushort);
 	
 	/** 
 	 * Converts the {@code ulong} value to an {@code int}, which will overflow
 	 * if the value is too large to be contained in an {@code int}.
 	 * @return {@code int} value 
 	 */
-	public native toInt() => (int);
+	[ImportNative]
+	public toInt() => (int);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code uint}, which will overflow
 	 * if the value is too large to be contained in a {@code uint}.
 	 * @return {@code uint} value 
 	 */
-	public native toUInt() => (uint);
+	[ImportNative]
+	public toUInt() => (uint);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code long}, which will overflow
 	 * if the value is too large to be contained in a {@code long}.
 	 * @return {@code uint} value 
 	 */
-	public native toLong() => (long);
+	[ImportNative]
+	public toLong() => (long);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code ulong}, which involves
 	 * no change.
 	 * @return {@code ulong} value 
 	 */
-	public native toULong() => (ulong);
+	[ImportNative]
+	public toULong() => (ulong);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code code}, which will overflow
 	 * if the value is too large to be contained in a {@code code}.
 	 * @return {@code code} value 
 	 */
-	public native toCode() => (code);
+	[ImportNative]
+	public toCode() => (code);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code float}.
 	 * @return {@code float} value 
 	 */
-	public native toFloat() => (float);
+	[ImportNative]
+	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code ulong} value to a {@code double}.
 	 * @return {@code double} value 
 	 */
-	public native toDouble() => (double);
+	[ImportNative]
+	public toDouble() => (double);
 
 	// Methods for Integer<ulong>
 	
@@ -185,21 +201,24 @@ and	CanHash
 	 * @param other value to bitwise OR with
 	 * @return result of bitwise OR 
 	 */
-	public native bitOr(ulong other) => (ulong);
+	[ImportNative]
+	public bitOr(ulong other) => (ulong);
 	
 	/** 
 	 * Computes the bitwise XOR of the value and another {@code ulong} value.
 	 * @param other value to bitwise XOR with
 	 * @return result of bitwise XOR 
 	 */
-	public native bitXor(ulong other) => (ulong);
+	[ImportNative]
+	public bitXor(ulong other) => (ulong);
 	
 	/** 
 	 * Computes the bitwise AND of the value and another {@code ulong} value.
 	 * @param other value to bitwise AND with
 	 * @return result of bitwise AND
 	 */
-	public native bitAnd(ulong other) => (ulong);
+	[ImportNative]
+	public bitAnd(ulong other) => (ulong);
 	
 	
 	// Method for CanAdd<ulong>
@@ -208,7 +227,8 @@ and	CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	public native add(ulong other) => (ulong);
+	[ImportNative]
+	public add(ulong other) => (ulong);
 	
 	// Method for CanSubtract<ulong>
 	/**
@@ -216,7 +236,8 @@ and	CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	public native subtract(ulong other) => (ulong);
+	[ImportNative]
+	public subtract(ulong other) => (ulong);
 	
 	// Method for CanMultiply<ulong>
 	/**
@@ -224,7 +245,8 @@ and	CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	public native multiply(ulong other) => (ulong);
+	[ImportNative]
+	public multiply(ulong other) => (ulong);
 	
 	// Method for CanDivide<ulong>
 	/**
@@ -232,7 +254,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	public native divide(ulong other) => (ulong);
+	[ImportNative]
+	public divide(ulong other) => (ulong);
 	
 	// Method for CanModulus<ulong>
 	/**
@@ -240,7 +263,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	public native modulus(ulong other) => (ulong);
+	[ImportNative]
+	public modulus(ulong other) => (ulong);
 	
 	// Method for CanCompare<ulong>
 	/**
@@ -250,7 +274,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
-	public native compare(ulong other) => (int);
+	[ImportNative]
+	public compare(ulong other) => (int);
 	
 	// Method for CanEqual<ulong>
 	/**
@@ -259,7 +284,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	public native equal(ulong other) => (boolean);
+	[ImportNative]
+	public equal(ulong other) => (boolean);
 
 	// Method for CanAdd<double>
 	/**
@@ -420,27 +446,31 @@ and	CanHash
 	 * words, the order of the 8 bytes has been reversed.	 	 
 	 * @return value with opposite endianness
 	 */
-	public native flipEndian() => (ulong);
+	[ImportNative]
+	public flipEndian() => (ulong);
 	
 	/** 
 	 * Counts the number of 1 bits in the binary representation of the number.	 	 
 	 * @return total 1 bits
 	 */	
-	public native ones() => (ulong);
+	[ImportNative]
+	public ones() => (ulong);
 	
 	/** 
 	 * Counts the number of 0 bits before a non-zero bit, starting with the
 	 * most significant bits. 	 
 	 * @return leading 0 bits
 	 */
-	public native leadingZeroes() => (ulong);
+	[ImportNative]
+	public leadingZeroes() => (ulong);
 	
 	/** 
 	 * Counts the number of 0 bits after a non-zero bit, starting with the
 	 * least significant bits. 	 
 	 * @return trailing 0 bits
 	 */
-	public native trailingZeroes() => (ulong);	
+	[ImportNative]
+	public trailingZeroes() => (ulong);	
 	
 
 	// Method for CanHash
@@ -519,7 +549,8 @@ and	CanHash
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern shadowULong_GetClass() => (Class)
+	[ExportAssembly]
+	private shadowULong_GetClass() => (Class)
 	{
 		return ulong:class;
 	}

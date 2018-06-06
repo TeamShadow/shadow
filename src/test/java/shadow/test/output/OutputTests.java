@@ -46,7 +46,8 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-r");
+		args.add("-r");
+		args.add("-f");
 	}
 	
 	@After
@@ -1218,7 +1219,6 @@ public class OutputTests {
 				"A\n");
 	}
 	
-	
 	@Test public void testPath() throws Exception {
 		args.add("shadow/test/PathTest.shadow");
 		
@@ -1240,7 +1240,6 @@ public class OutputTests {
 		run(new String[0],
 				"Hello, world!\n");
 	}
-	
 	
 	@Test public void testArrayCopy() throws Exception {
 		args.add("shadow/test/ArrayCopyTest.shadow");

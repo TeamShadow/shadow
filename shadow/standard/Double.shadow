@@ -50,7 +50,8 @@ and	CanHash
 	 * if the value is too large to be contained in a {@code byte}. 	 
 	 * @return {@code byte} value 
 	 */
-	public native toByte() => (byte);
+	[ImportNative]
+	public toByte() => (byte);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code ubyte}, which will overflow
@@ -58,14 +59,16 @@ and	CanHash
 	 * underflow if the value is negative. 	 
 	 * @return {@code ubyte} value 
 	 */
-	public native toUByte() => (ubyte);
+	[ImportNative]
+	public toUByte() => (ubyte);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code short}, which will overflow
 	 * if the value is too large to be contained in a {@code short}. 	 
 	 * @return {@code short} value 
 	 */
-	public native toShort() => (short);
+	[ImportNative]
+	public toShort() => (short);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code ushort}, which will overflow
@@ -73,14 +76,16 @@ and	CanHash
 	 * underflow if the value is negative. 	 
 	 * @return {@code ushort} value 
 	 */
-	public native toUShort() => (ushort);
+	[ImportNative]
+	public toUShort() => (ushort);
 	
 	/** 
 	 * Converts the {@code double} value to an {@code int}, which will overflow
 	 * if the value is too large to be contained in an {@code int}. 	 
 	 * @return {@code int} value 
 	 */
-	public native toInt() => (int);
+	[ImportNative]
+	public toInt() => (int);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code uint}, which will overflow
@@ -88,14 +93,16 @@ and	CanHash
 	 * underflow if the value is negative.	 
 	 * @return {@code uint} value 
 	 */
-	public native toUInt() => (uint);
+	[ImportNative]
+	public toUInt() => (uint);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code long}, which will overflow
 	 * if the value is too large to be contained in a {@code long}. 	 
 	 * @return {@code long} value 
 	 */
-	public native toLong() => (long);
+	[ImportNative]
+	public toLong() => (long);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code ulong}, which will overflow
@@ -103,28 +110,32 @@ and	CanHash
 	 * underflow if the value is negative.	 
 	 * @return {@code ulong} value 
 	 */
-	public native toULong() => (ulong);
+	[ImportNative]
+	public toULong() => (ulong);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code code}, which will overflow
 	 * if the value is too large to be contained in a {@code code}. 	 
 	 * @return {@code code} value 
 	 */
-	public native toCode() => (code);
+	[ImportNative]
+	public toCode() => (code);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code float}, which may lose
 	 * precision. 	 
 	 * @return {@code float} value 
 	 */
-	public native toFloat() => (float);
+	[ImportNative]
+	public toFloat() => (float);
 	
 	/** 
 	 * Converts the {@code double} value to a {@code double}, which involves
 	 * no change. 	 
 	 * @return {@code double} value 
 	 */
-	public native toDouble() => (double);
+	[ImportNative]
+	public toDouble() => (double);
 
 	// Method for CanAdd<double>
 	/**
@@ -132,7 +143,8 @@ and	CanHash
 	 * @param other value to add
 	 * @return sum of the two values
 	 */
-	public native add(double other) => (double);
+	[ImportNative]
+	public add(double other) => (double);
 	
 	// Method for CanSubtract<double>
 	/**
@@ -140,7 +152,8 @@ and	CanHash
 	 * @param other value to subtract
 	 * @return difference of the two values
 	 */
-	public native subtract(double other) => (double);
+	[ImportNative]
+	public subtract(double other) => (double);
 	
 	// Method for CanMultiply<double>
 	/**
@@ -148,7 +161,8 @@ and	CanHash
 	 * @param other value to multiply by
 	 * @return product of the two values
 	 */
-	public native multiply(double other) => (double);
+	[ImportNative]
+	public multiply(double other) => (double);
 	
 	// Method for CanDivide<double>
 	/**
@@ -156,7 +170,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return quotient of the division
 	 */
-	public native divide(double other) => (double);
+	[ImportNative]
+	public divide(double other) => (double);
 	
 	// Method for CanModulus<double>
 	/**
@@ -164,7 +179,8 @@ and	CanHash
 	 * @param other value to divide by
 	 * @return remainder of the division
 	 */
-	public native modulus(double other) => (double);
+	[ImportNative]
+	public modulus(double other) => (double);
 	
 	// Method for CanCompare<double>
 	/**
@@ -174,7 +190,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return whether smaller, equal, or larger
 	 */	
-	public native compare(double other) => (int);
+	[ImportNative]
+	public compare(double other) => (int);
 	
 	// Method for CanEqual<double>
 	/**
@@ -183,7 +200,8 @@ and	CanHash
 	 * @param other value to compare to
 	 * @return {@code true} if identical
 	 */
-	public native equal(double other) => (boolean);
+	[ImportNative]
+	public equal(double other) => (boolean);
 	
 	// Other math operations
 	
@@ -191,51 +209,59 @@ and	CanHash
 	 * Finds the square root of the value.
 	 * @return square root	 
 	 */
-	public native squareRoot() => (double);
+	[ImportNative]
+	public squareRoot() => (double);
 	
 	/** 
 	 * Raises the current value to the power of an {@code int}.
 	 * @param exponent power to raise by	 
 	 * @return number after exponentiation
 	 */
-	public native power(int value) => (double);
+	[ImportNative]
+	public power(int value) => (double);
 	
 	/** 
 	 * Raises the current value to the power of a {@code double}.
 	 * @param exponent power to raise by	 
 	 * @return number after exponentiation
 	 */
-	public native power(double value) => (double);
+	[ImportNative]
+	public power(double value) => (double);
 	
 	/** 
 	 * Finds the sine of the current value.	 	 
 	 * @return sine of the value
 	 */
-	public native sin() => (double);
+	[ImportNative]
+	public sin() => (double);
 	
 	/** 
 	 * Finds the cosine of the current value.	 	 
 	 * @return cosine of the value
 	 */
-	public native cos() => (double);
+	[ImportNative]
+	public cos() => (double);
 	
 	/** 
 	 * Finds the natural logarithm of the current value.	 	 
 	 * @return natural logarithm of the value
 	 */
-	public native logBaseE() => (double);
+	[ImportNative]
+	public logBaseE() => (double);
 	
 	/** 
 	 * Finds the logarithm base 2 of the current value.	 	 
 	 * @return logarithm base 2 of the value
 	 */
-	public native logBase2() => (double);
+	[ImportNative]
+	public logBase2() => (double);
 	
 	/** 
 	 * Finds the logarithm base 10 of the current value.	 	 
 	 * @return logarithm base 10 of the value
 	 */
-	public native logBase10() => (double);
+	[ImportNative]
+	public logBase10() => (double);
 	
 	/** 
 	 * Multiplies the current value by another {@code double} and adds a third
@@ -245,21 +271,24 @@ and	CanHash
 	 * @param addend value to add 	 
 	 * @return result
 	 */
-	public native multiplyAdd(double multiplicand, double addend) => (double);
+	[ImportNative]
+	public multiplyAdd(double multiplicand, double addend) => (double);
 	
 	/** 
 	 * Finds the largest {@code double} value with no fractional part that is
 	 * less than or equal to the current value.	 	
 	 * @return floor of the current value
 	 */
-	public native floor() => (double);
+	[ImportNative]
+	public floor() => (double);
 	
 	/** 
 	 * Finds the smallest {@code double} value with no fractional part that is
 	 * greater than or equal to the current value.	 	
 	 * @return ceiling of the current value
 	 */
-	public native ceiling() => (double);
+	[ImportNative]
+	public ceiling() => (double);
 	
 	/** 
 	 * Rounds the current {@code double} value to the nearest integer.	 	 	
@@ -504,7 +533,8 @@ and	CanHash
 	 * {@code double} value, as a {@code ulong}.
 	 * @return  bit representation of {@code double} value
 	 */ 
-	public native get raw() => (ulong);
+	[ImportNative]
+	public get raw() => (ulong);
 	
 	/** 
 	 * Retrieves the representation of 64-bits that makes up the current
@@ -524,10 +554,12 @@ and	CanHash
 	 * Negates the value.
 	 * @return negated value	 
 	 */
-	public native negate() => (double);
+	[ImportNative]
+	public negate() => (double);
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern shadowDouble_GetClass() => (Class)
+	[ExportAssembly]
+	private shadowDouble_GetClass() => (Class)
 	{
 		return double:class;
 	}

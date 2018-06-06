@@ -927,9 +927,9 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACCall call = (TACCall)node;
 					if( call.getMethodRef() instanceof TACMethodName ) {
 						MethodSignature signature = ((TACMethodName)call.getMethodRef()).getSignature();
-						if( signature.isExternWithoutBlock() || operandIsThis( call.getPrefix(), type ) ) {
+						if( signature.isImport() || operandIsThis( call.getPrefix(), type ) ) {
 							//creates are handled separately, and we have to assume that native code works
-							if( !signature.isCreate() && !signature.isNative() && !signature.isExternWithoutBlock() ) {							
+							if( !signature.isCreate() && !signature.isImport()  ) {							
 								//if we've recorded the fields a method uses, add those to the loads before stores
 								if( methodData.containsKey(signature) ) {
 									loadsBeforeStores.addAll(methodData.get(signature).getLoadsBeforeStores());
@@ -939,6 +939,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 								//otherwise, it's not a legal method to call, probably because it's unlocked
 								else
 									addError(node.getContext(), Error.ILLEGAL_ACCESS, "Cannot call unlocked method " + signature.getSymbol() + signature.getMethodType() + " from a create" );
+
 							}
 						}
 						//an inner class call, perhaps even a create
