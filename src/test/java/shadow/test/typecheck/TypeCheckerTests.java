@@ -2,8 +2,9 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import shadow.Main;
 
@@ -11,7 +12,7 @@ public class TypeCheckerTests {
 	
 	private ArrayList<String> args = new ArrayList<String>();
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {		
 		//args.add("-v");
 		args.add("--typecheck");
@@ -27,13 +28,15 @@ public class TypeCheckerTests {
 			args.add("linux.xml");
 	}
 	
-	/* // Can't do this one yet until there is method reference support in the TAC
 	
-	@Test public void testAnonymousInlineMethod() throws Exception {
+	
+	@Test 
+	@Disabled // Needs support for inline methods
+	public void testAnonymousInlineMethod() throws Exception {
 		args.add("tests/compile/AnonymousInlineMethod.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
-	*/		
+			
 	
 	 @Test public void testArray() throws Exception {
 		args.add("tests/compile/Array.shadow");
@@ -101,12 +104,12 @@ public class TypeCheckerTests {
 		Main.run(args.toArray(new String[] { }));
 	}
 
-		@Test public void testCreate() throws Exception {
+	@Test public void testCreate() throws Exception {
 		args.add("tests/compile/Create.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 
-		@Test public void testControlFlow() throws Exception {
+	@Test public void testControlFlow() throws Exception {
 		args.add("tests/compile/ControlFlow.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
@@ -121,12 +124,12 @@ public class TypeCheckerTests {
 		Main.run(args.toArray(new String[] { }));
 	}
 
-		@Test public void testFor() throws Exception {
+	@Test public void testFor() throws Exception {
 		args.add("tests/compile/For.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 
-		@Test public void testForeach() throws Exception {
+	@Test public void testForeach() throws Exception {
 		args.add("tests/compile/Foreach.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
@@ -176,15 +179,13 @@ public class TypeCheckerTests {
 		Main.run(args.toArray(new String[] { }));
 	}
 	
-	/* //Can't do this without TAC support for local methods
-	
-	@Test public void testLocalMethod() throws Exception {
+	@Test
+	@Disabled // Needs support for local methods
+	public void testLocalMethod() throws Exception {
 		args.add("tests/compile/LocalMethod.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 	
-	*/
-
 	@Test public void testLValue() throws Exception {
 		args.add("tests/compile/LValue.shadow");
 		Main.run(args.toArray(new String[] { }));

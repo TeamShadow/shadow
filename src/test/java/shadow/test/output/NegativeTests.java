@@ -2,8 +2,8 @@ package shadow.test.output;
 
 import java.util.ArrayList;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import shadow.CompileException;
 import shadow.Main;
@@ -12,7 +12,7 @@ public class NegativeTests {
 
 	private ArrayList<String> args = new ArrayList<String>();
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {		
 		String os = System.getProperty("os.name").toLowerCase();
 		

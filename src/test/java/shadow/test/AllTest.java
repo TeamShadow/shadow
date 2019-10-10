@@ -14,9 +14,10 @@ import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import org.junit.AfterClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.platform.runner.*;
+import org.junit.platform.suite.api.SelectClasses;
 import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
 
 import junit.framework.TestCase;
 import shadow.test.doctool.DocumentationTests;
@@ -27,11 +28,11 @@ import shadow.test.typecheck.TypeCheckerTests;
 import shadow.test.typecheck.UtilityTests;
 import shadow.test.typecheck.WarningTests;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
+@RunWith(JUnitPlatform.class)
+@SelectClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
 public class AllTest extends TestCase {
 
-	@AfterClass
+	@AfterAll
     public static void ringBell() {
 		ClassLoader classLoader = AllTest.class.getClassLoader();
         File file;
