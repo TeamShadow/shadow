@@ -492,7 +492,7 @@ public class Configuration {
 			String aggregateAlignment = "a:0:" + getArch();
 			String nativeIntegers = "n8:16:32:64";
 			String stackAlignment = "S128";
-			dataLayout = "-default-data-layout=" + endian + "-" + mangling + pointerAlignment + "-" + dataAlignment
+			dataLayout = "--data-layout=" + endian + "-" + mangling + pointerAlignment + "-" + dataAlignment
 					+ "-" + aggregateAlignment + "-" + nativeIntegers + "-" + stackAlignment;
 		}
 
