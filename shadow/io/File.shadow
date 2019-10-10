@@ -13,8 +13,10 @@ and CanClose
 	long handle = -1L;
 	get Path path;
 	
-	private readonly extern __shadowFile_Exists(String path) => (boolean);
-	private readonly extern __shadowFile_Close(long handle) => ();
+	[ImportAssembly]
+	private readonly __shadowFile_Exists(String path) => (boolean);
+	[ImportAssembly]
+	private readonly __shadowFile_Close(long handle) => ();
 	
 	/**
 	 * Creates a {@code File} object associated with the file on the given
@@ -68,31 +70,36 @@ and CanClose
 	 * @param createOrDelete {@code true} if the file should be created,
 	 * {@code false} if it should be deleted
 	 */	
-	public native set exists( boolean createOrDelete ) => ();
+	[ImportNative]
+	public set exists( boolean createOrDelete ) => ();
 	
 	/**
 	 * Gets the current position of the read/write pointer inside the file. 
 	 * @return position in file
 	 */	
-	public native get readonly position() => ( long );
+	[ImportNative]
+	public get readonly position() => ( long );
 	
 	/**
 	 * Sets the current position of the read/write pointer inside the file. 
 	 * @param position in file
 	 */
-	public native set position( long position ) => ();
+	[ImportNative]
+	public set position( long position ) => ();
 	
 	/**
 	 * Gets the size of the file in bytes. 
 	 * @return file size
 	 */
-	public native get readonly size() => ( long );
+	[ImportNative]
+	public get readonly size() => ( long );
 	
 	/**
 	 * Sets the size of the file in bytes, extending or truncating it. 
 	 * @param new file size
 	 */
-	public native set size( long size ) => ();
+	[ImportNative]
+	public set size( long size ) => ();
 	
 	/**
 	 * Reads data from the file into the buffer and updates the read pointer
@@ -101,7 +108,8 @@ and CanClose
 	 * @return number of {@code byte} values successfully read, always less
 	 * than or equal the length of the buffer
 	 */
-	public native readonly read( byte[] buffer ) => ( long );
+	[ImportNative]
+	public readonly read( byte[] buffer ) => ( long );
 	
 	/**
 	 * Writes data from the buffer into the file and updates the write pointer
@@ -109,7 +117,8 @@ and CanClose
 	 * @param buffer array of {@code byte} values to be written
 	 * @return number of {@code byte} values successfully written
 	 */
-	public native write( readonly byte[] buffer ) => ( long );
+	[ImportNative]
+	public write( readonly byte[] buffer ) => ( long );
 	
 	/**
 	 * Closes the file.
@@ -123,7 +132,8 @@ and CanClose
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern _shadowFile_SetHandle(long handle) => ()
+	[ExportAssembly]
+	private _shadowFile_SetHandle(long handle) => ()
 	{
 		this:handle = handle;
 	}

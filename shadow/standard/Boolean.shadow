@@ -37,7 +37,8 @@ is  CanEqual<boolean>
 	}
 	
 	// C FRAMEWORK EXTENSIONS
-	private extern shadowBoolean_GetClass() => (Class)
+	[ExportAssembly]
+	private shadowBoolean_GetClass() => (Class)
 	{
 		return boolean:class;
 	}

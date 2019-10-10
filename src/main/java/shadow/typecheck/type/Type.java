@@ -91,8 +91,15 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType STRING = null;
 	public static ClassType ADDRESS_MAP = null; //used for copying	
-	public static ClassType SHADOW_POINTER = null;
-	public static ClassType THREAD = null;	
+	
+	public static ClassType POINTER = null;
+	public static ClassType THREAD = null;
+	public static ClassType IMPORT_NATIVE_DECORATOR = null;
+	public static ClassType IMPORT_ASSEMBLY_DECORATOR = null;
+	public static ClassType IMPORT_METHOD_DECORATOR = null;
+	public static ClassType EXPORT_ASSEMBLY_DECORATOR = null;
+	public static ClassType EXPORT_METHOD_DECORATOR = null;
+	public static ClassType EXPORT_NATIVE_DECORATOR = null;
 	
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
@@ -121,15 +128,19 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_MODULUS = null;
 	public static InterfaceType CAN_NEGATE = null;	
 	public static InterfaceType CAN_RUN = null;
+	public static InterfaceType DECORATOR = null;
+	public static InterfaceType METHOD_DECORATOR = null;
+	public static InterfaceType COMPILER_DECORATOR = null;
 	
 	//constants used for options in toString()
+	private static int bits = 0;
 	public static final int NO_OPTIONS = 0;
-	public static final int PACKAGES =  1;
-	public static final int TYPE_PARAMETERS =  2;
-	public static final int PARAMETER_BOUNDS =  4;
-	public static final int MANGLE =  8;
-	public static final int MANGLE_EXTERN = 16;
-	public static final int NO_NULLABLE = 32;
+	public static final int PACKAGES =  1 << bits++;
+	public static final int TYPE_PARAMETERS = 1 << bits++;
+	public static final int PARAMETER_BOUNDS = 1 << bits++;
+	public static final int MANGLE = 1 << bits++;
+	public static final int MANGLE_IMPORT_METHOD = 1 << bits++;
+	public static final int NO_NULLABLE = 1 << bits++;
 	
 	private static class TypeArgumentCache {
 		public ModifiedType argument;
@@ -290,9 +301,21 @@ public abstract class Type implements Comparable<Type> {
 		CAN_DIVIDE = null;
 		CAN_MODULUS = null;
 		CAN_NEGATE = null;
-		SHADOW_POINTER = null;
+		
+		POINTER = null;
 		CAN_RUN = null;
 		THREAD = null;
+		
+		DECORATOR = null;
+		METHOD_DECORATOR = null;
+		COMPILER_DECORATOR = null;
+		IMPORT_NATIVE_DECORATOR = null;
+		IMPORT_ASSEMBLY_DECORATOR = null;
+		IMPORT_METHOD_DECORATOR = null;
+		
+		EXPORT_NATIVE_DECORATOR = null;
+		EXPORT_ASSEMBLY_DECORATOR = null;
+		EXPORT_METHOD_DECORATOR = null;
 	}
 	
 	/*

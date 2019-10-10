@@ -2,8 +2,8 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import shadow.Main;
 
@@ -11,7 +11,7 @@ public class UtilityTests {
 	
 	private ArrayList<String> args = new ArrayList<String>();
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		//args.add("-v");
 		args.add("--typecheck");
@@ -27,8 +27,7 @@ public class UtilityTests {
 			args.add("linux.xml");
 	}
 
-	 @Test public void testArrayList() throws Exception {		
-	
+	@Test public void testArrayList() throws Exception {
 		args.add("shadow/utility/ArrayList.shadow");
 		Main.run(args.toArray(new String[] { }));
 	

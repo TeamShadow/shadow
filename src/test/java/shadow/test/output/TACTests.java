@@ -6,9 +6,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import shadow.Job;
 import shadow.Main;
@@ -21,7 +21,7 @@ public class TACTests {
 	
 	private ArrayList<String> args = new ArrayList<String>();
 	
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {		
 		args.add("-o");
 		args.add(executableName);
@@ -40,7 +40,7 @@ public class TACTests {
 			args.add("linux.xml");
 	}
 	
-	@After
+	@AfterEach
 	public void cleanup() throws IOException {
 		
 		// To to remove the unit test executable

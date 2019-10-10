@@ -242,7 +242,8 @@ is  CanHash
 	 * 64-bit systems.	 
 	 * @return size of a pointer
 	 */
-	public locked native readonly pointerSize() => ( int );
+	[ImportNative]
+	public locked readonly pointerSize() => ( int );
 	
 	
 	/**

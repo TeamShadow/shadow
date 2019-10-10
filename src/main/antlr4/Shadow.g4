@@ -59,15 +59,13 @@ modifier throws ParseException
 	| 'private' 
 	| 'abstract' 
 	| 'readonly' 
-	| 'native' 
 	| 'weak' 
 	| 'immutable'
 	| 'nullable' 
 	| 'get' 
 	| 'set' 
 	| 'constant' 
-	| 'locked' 
-	| 'extern'
+	| 'locked'
 	;
 
 classOrInterfaceDeclaration
@@ -120,13 +118,11 @@ classOrInterfaceBody
 
 classOrInterfaceBodyDeclaration
 //locals [ Documentation documentation = ShadowLexer.docBuilder.process()   ]
-	: modifiers 
+	: (modifiers 
 	  	( classOrInterfaceDeclaration /*{$ctx.classOrInterfaceDeclaration().setDocumentation($documentation);}*/
 	    | enumDeclaration 
-	    | createDeclaration 
-	    | destroyDeclaration 
-	    | fieldDeclaration 
-	  	| methodDeclaration
+	    | fieldDeclaration) 
+	  	| (decorator? modifiers (methodDeclaration | createDeclaration | destroyDeclaration))
 	  )
 	;
 	
@@ -190,6 +186,14 @@ destroyDeclaration
 explicitCreateInvocation
 	: ( 'this' | 'super' ) 
 	'(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ';'
+	;
+
+decorator
+	: '[' decoratorExpression (',' decoratorExpression)? ']'
+	;
+
+decoratorExpression
+	: type methodCall?
 	;
 
 type
@@ -746,7 +750,6 @@ DOUBLE		: 'double';
 ELSE		: 'else';
 ENUM		: 'enum';
 EXCEPTION	: 'exception';
-EXTERN		: 'extern';
 FINALLY		: 'finally';
 FLOAT		: 'float';
 FOR			: 'for';
@@ -762,7 +765,6 @@ INT			: 'int';
 INTERFACE	: 'interface';
 LOCKED		: 'locked';
 LONG		: 'long';
-NATIVE		: 'native';
 NULLABLE	: 'nullable';
 OR			: 'or';
 PRIVATE		: 'private';
@@ -988,7 +990,7 @@ LEFTROTATEASSIGN	: '<<<=';
 // the order of the identifiers is very important
 
 MethodIdentifier
-	: ('$'|(UNDERSCORE+)) IdentifierFragment
+	: UNDERSCORE+ IdentifierFragment
 	;
 
 Identifier

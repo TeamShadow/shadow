@@ -2,8 +2,8 @@ package shadow.test.typecheck;
 
 import java.util.ArrayList;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import shadow.Main;
 import shadow.typecheck.TypeCheckException;
@@ -13,7 +13,7 @@ public class WarningTests {
 
 	private ArrayList<String> args = new ArrayList<String>();
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		//args.add("-v");
 		args.add("--typecheck");		
@@ -32,41 +32,34 @@ public class WarningTests {
 			args.add("linux.xml");
 	}
 	
-	private void enforce(Error type) throws Exception
-	{
-		try
-		{
+	private void enforce(Error type) throws Exception {
+		try {
 			Main.run(args.toArray(new String[] { }));
 			throw new Exception("Test failed");
 		}
-		catch( TypeCheckException e )
-		{
+		catch( TypeCheckException e ) {
 			if( !e.getError().equals(type) )
 				throw new Exception("Test failed");
 		}		
 	}
 	
-	@Test public void testPackage() throws Exception
-	{
+	@Test public void testPackage() throws Exception {
 		args.add("tests-negative/warnings/package/Test1.shadow");
 		enforce(Error.MISMATCHED_PACKAGE);		
 	}
 	
 	
-	@Test public void testFieldNotUsed() throws Exception
-	{
+	@Test public void testFieldNotUsed() throws Exception {
 		args.add("tests-negative/warnings/field-not-used/Test.shadow");
 		enforce(Error.UNUSED_FIELD);		
 	}
 	
-	@Test public void testPrivateMethodNotUsed() throws Exception
-	{
+	@Test public void testPrivateMethodNotUsed() throws Exception {
 		args.add("tests-negative/warnings/private-method-not-used/Test.shadow");
 		enforce(Error.UNUSED_METHOD);		
 	}
 	
-	@Test public void testVariableNotUsed() throws Exception
-	{
+	@Test public void testVariableNotUsed() throws Exception {
 		args.add("tests-negative/warnings/variable-not-used/Test.shadow");
 		enforce(Error.UNUSED_VARIABLE);		
 	}	

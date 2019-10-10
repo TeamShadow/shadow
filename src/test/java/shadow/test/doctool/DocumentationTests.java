@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
@@ -29,7 +29,7 @@ public class DocumentationTests
 	private static final Path outputDirectory = Paths.get("shadow", "test", "doctool", "docs");
 	private ArrayList<String> args = new ArrayList<String>();
 	
-	@Before
+	@BeforeEach
 	public void setup() throws Exception 
 	{
 		Type.clearTypes();
@@ -52,7 +52,7 @@ public class DocumentationTests
 		args.add(outputDirectory.toString());
 	}
 	
-	@After
+	@AfterEach
 	public void cleanup()
 	{	
 		// Try to remove the documentation directory

@@ -13,5 +13,6 @@ class Bill {
         return a;
     }
     
-    public native printString(String mgs) => ();
+    [ImportNative]
+    public printString(String mgs) => ();
 } 

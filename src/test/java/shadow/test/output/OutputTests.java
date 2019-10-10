@@ -1,6 +1,6 @@
 package shadow.test.output;
 
-import static junit.framework.Assert.assertEquals;
+import org.junit.jupiter.api.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,9 +12,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
@@ -28,7 +27,7 @@ public class OutputTests {
 
 	private ArrayList<String> args = new ArrayList<String>();
 	
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		args.add("-o");
 		args.add(executableName);
@@ -47,9 +46,10 @@ public class OutputTests {
 			args.add("linux.xml");
 		
 		//args.add("-r");
+		//args.add("-f");
 	}
 	
-	@After
+	@AfterEach
 	public void cleanup() throws IOException {
 		
 		// Try to remove the unit test executable
@@ -94,7 +94,7 @@ public class OutputTests {
 				builder.append(line).append('\n');
 		} while (line != null);		
 		String output = builder.toString();
-		assertEquals(expectedOutput, output);
+		Assertions.assertEquals(expectedOutput, output);
 		
 		//error output		
 		builder = new StringBuilder();
@@ -105,11 +105,11 @@ public class OutputTests {
 		} while (line != null);
 		
 		String error = builder.toString();	
-		assertEquals(expectedError, error);		
+		Assertions.assertEquals(expectedError, error);		
 		
 		//check return value to see if the program ends normally
 		//also keeps program from being deleted while running	
-		assertEquals("Program exited abnormally.", expectedReturn, program.waitFor()); 
+		Assertions.assertEquals(expectedReturn, program.waitFor(), "Program exited abnormally."); 
 		program.destroy();
 	}	
 
@@ -1218,7 +1218,6 @@ public class OutputTests {
 				"A\n");
 	}
 	
-	
 	@Test public void testPath() throws Exception {
 		args.add("shadow/test/PathTest.shadow");
 		
@@ -1240,7 +1239,6 @@ public class OutputTests {
 		run(new String[0],
 				"Hello, world!\n");
 	}
-	
 	
 	@Test public void testArrayCopy() throws Exception {
 		args.add("shadow/test/ArrayCopyTest.shadow");

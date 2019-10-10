@@ -140,12 +140,12 @@ _exception:
 
 %shadow.standard..Thread = type opaque
 declare %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
-declare void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread*)
+declare void @shadow.standard..Thread_MwaitForThreads(%shadow.standard..Thread*)
 define void @callMain(%shadow.test..Test* %initialized, %shadow.standard..Array* %args) {
 entry:
 	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread_MinitMainThread()
 	call void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test* %initialized, %shadow.standard..Array* %args)
-	call void @shadow.standard..Thread_MwaitForThreadsNative(%shadow.standard..Thread* %mainThread)
+	call void @shadow.standard..Thread_MwaitForThreads(%shadow.standard..Thread* %mainThread)
 	
 	%threadAsObj = bitcast %shadow.standard..Thread* %mainThread to %shadow.standard..Object*
 	call void @__decrementRef(%shadow.standard..Object* %threadAsObj) nounwind	

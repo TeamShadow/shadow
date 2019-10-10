@@ -22,15 +22,18 @@ and CanIterate<T>
 	 * an {@code Array<T>} object explicitly.
 	 * @unused
 	 */
-	private native create();
+	[ImportNative]
+	private create();
 	
-	public native destroy;
+	[ImportNative]
+	public destroy;
 	
 	/**
 	 * Retrieves whether or not array is nullable.
 	 * @return whether array is nullable
 	 */
-	public readonly native isNullable() => ( boolean );	
+	[ImportNative]
+	public readonly isNullable() => ( boolean );	
 
 	/**
 	 * Gets the size of the array (total number of elements) as an {@code int}.
@@ -62,14 +65,16 @@ and CanIterate<T>
 	 * @param end	index after last index in subarray
 	 * @return {@code Array<T>} object containing the subarray
 	 */	
-	public readonly native subarray( long start, long end ) => ( Array<T> );
+	[ImportNative]
+	public readonly subarray( long start, long end ) => ( Array<T> );
 	
 	/**
 	 * Gets element located at the specified index.
 	 * @param index	location to read from, as a {@code long}	 
 	 * @return value at given location
 	 */	
-	public readonly native index( long index ) => (T);
+	[ImportNative]
+	public readonly index( long index ) => (T);
 
 	
 	/**
@@ -77,7 +82,8 @@ and CanIterate<T>
 	 * @param index	location to store at	 
 	 * @param value value to be stored
 	 */	
-	public native index( long index, T value ) => ();
+	[ImportNative]
+	public index( long index, T value ) => ();
 
 	/**
 	 * Gets formatted {@code String} representation of the array.   

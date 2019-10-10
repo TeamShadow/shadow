@@ -597,7 +597,8 @@ public class Main {
 					for (MethodSignature signature : signatures) {
 						if (signature.getModifiers().isPrivate()
 								&& !allUsedPrivateMethods.contains(signature.getSignatureWithoutTypeArguments())
-								&& !signature.getSymbol().startsWith("$") && !signature.isExtern()
+								&& !signature.isImport()
+								&& !signature.isExport()
 								&& signature.getDocumentation().getBlockTags(BlockTagType.UNUSED).isEmpty()
 								&& !signature.isDestroy()) {
 
@@ -606,7 +607,6 @@ public class Main {
 								node = ((ShadowParser.MethodDeclarationContext)node).methodDeclarator();
 							else if( node instanceof ShadowParser.CreateDeclarationContext )
 								node = ((ShadowParser.CreateDeclarationContext)node).createDeclarator();
-
 
 							reporter.addWarning(node, TypeCheckException.Error.UNUSED_METHOD,
 									"Private method " + signature.getSymbol() + signature.getMethodType()

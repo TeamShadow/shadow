@@ -97,7 +97,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private boolean explicitSuper;	
 	private TACBlock block;	
 	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();
-	
+
 	public TACModule build(Context node) {		
 		method = null;
 		prefix = null;
@@ -106,7 +106,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		visit(node);
 		return moduleStack.pop();
 	}
-	
+
 	@Override
 	public Void visit(ParseTree node) {
 		Context context = (Context) node;
@@ -116,17 +116,17 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//take out dummy node and save the resulting list in the context
 		context.setList(anchor.remove());
 		anchor = saveList; 
-		
+
 		return null;
 	}
-	
+
 	@Override
 	public Void visitChildren(RuleNode node) {
 		TACNode saveList = anchor;
-		
+
 		for( int i = 0; i < node.getChildCount(); i++ ) {			
 			ParseTree child = node.getChild(i);
-			
+
 			if( child instanceof Context) {
 				Context context = (Context) child;			
 				anchor = new TACDummyNode(context, block);			
@@ -137,39 +137,39 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			else
 				child.accept(this);
 		}
-		
+
 		anchor = saveList;
 
 		return null;
 	}	
-		
+
 	private static Type resolveType(Type type) {
 		if( type instanceof PropertyType )
 			return ((PropertyType)type).getGetType().getType();
 		else
 			return type;
 	}
-	
+
 	@Override public Void visitClassOrInterfaceDeclaration(ShadowParser.ClassOrInterfaceDeclarationContext ctx) { 
 		Type type = ctx.getType();
 		TACModule newModule = new TACModule(type);
-		
+
 		if( !moduleStack.isEmpty() )
 			moduleStack.peek().addInnerClass(newModule);
 		moduleStack.push(newModule);
-		
+
 		TACBlock oldBlock = block;
-		
+
 		//dummy method and block for constant building
 		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
 		block = new TACBlock(method);
-		
+
 		for (ShadowParser.VariableDeclaratorContext constant : type.getFields().values())
 			if (constant.getModifiers().isConstant())
 				visitConstant(new TACConstant(type,
 						constant.generalIdentifier().getText()), constant);
 		block = oldBlock;
-		
+
 		for (List<MethodSignature> methods : type.getMethodMap().values())
 			for (MethodSignature method : methods)
 				if (method.isCreate() || method.getModifiers().isPrivate())
@@ -180,7 +180,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						getClassType()))
 					if (method.isWrapper())
 						visitMethod(method);		
-						
+
 		for (MethodSignature method : type.orderMethods())
 			visitMethod(method);
 
@@ -190,20 +190,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			if( declaration.classOrInterfaceDeclaration() != null )					
 				build(declaration.classOrInterfaceDeclaration());
 		}		
-		
+
 		return null; //no children
 	}	
 
-	
+
 	@Override public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx)
 	{ 
 		visitChildren(ctx);
-	
+
 		if( !(ctx.getType() instanceof SingletonType) ) { 
 			String name = ctx.generalIdentifier().getText();			
 			if( ctx.getModifiers().isField() ) {
 				TACReference ref = new TACFieldRef(new TACLocalLoad(anchor, method.getThis()), name);
-				
+
 				if( ctx.conditionalExpression() != null )
 					new TACStore(anchor, ref, ctx.conditionalExpression().appendBefore(anchor));
 				//Note that default values are now removed for regular types
@@ -217,14 +217,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					new TACLocalStore(anchor, var, new TACLiteral(anchor, new ShadowUndefined(ctx.getType())));
 			}			
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitArrayInitializer(ShadowParser.ArrayInitializerContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		List<TACOperand> sizes = new ArrayList<TACOperand>();					
 		//either the list of initializers or conditional expressions will be empty
 		sizes.add(new TACLiteral(anchor, new ShadowInteger(ctx.arrayInitializer().size() + ctx.conditionalExpression().size())));
@@ -232,13 +232,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACClass arrayClass = new TACClass(anchor, arrayType);
 		//allocate array
 		prefix = visitArrayAllocation(arrayType, arrayClass, sizes);
-		
+
 		List<? extends Context> list;		
 		if( !ctx.arrayInitializer().isEmpty() )
 			list = ctx.arrayInitializer();
 		else
 			list = ctx.conditionalExpression();
-		
+
 		//store each element in initializer into the array
 		for( int i = 0; i < list.size(); ++i ) {
 			// last parameter of false means no array bounds checking needed
@@ -247,10 +247,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}		
 
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
+
 	private void initializeSingletons(MethodSignature signature)
 	{
 		for( SingletonType type :  signature.getSingletons() ) {		
@@ -260,7 +260,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACOperand instance = new TACLoad(anchor, reference);
 			new TACBranch(anchor, new TACBinary(anchor, instance, new TACLiteral(anchor, new ShadowNull(instance.getType()))), initLabel, doneLabel);
 			initLabel.insertBefore(anchor);
-			
+
 			TACMethodRef methodRef = new TACMethodName(anchor, type.getMethods("create").get(0));
 			TACOperand object = new TACNewObject(anchor, type);
 			TACCall call = new TACCall(anchor, methodRef, object );			
@@ -269,7 +269,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			doneLabel.insertBefore(anchor);
 		}
 	}
-	
+
 	private static boolean isTerminator(TACNode node)
 	{
 		return( node instanceof TACBranch ||
@@ -277,47 +277,47 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				node instanceof TACReturn ||
 				node instanceof TACThrow );
 	}
-	
+
 	@Override public Void visitMethodDeclaration(ShadowParser.MethodDeclarationContext ctx)
 	{ 
 		initializeSingletons(ctx.getSignature());		
 		visitChildren(ctx);
-		
+
 		ctx.block().appendBefore(anchor);
-		
+
 		TACNode last = anchor.getPrevious();		
 		//A non-void method should always have explicit TACReturns
 		//A void one might need one inserted at the end			
 		if( method.getSignature().isVoid() && !isTerminator(last) ) {
-			
+
 			//turn context off to avoid dead code removal errors
 			Context context = anchor.getContext();
 			anchor.setContext(null);			
 
 			//do the cleanup, de-referencing variables
 			visitCleanup(null, null);
-			
+
 			//explicit return statement
 			new TACReturn(anchor, new SequenceType() );
-			
+
 			anchor.setContext(context);
-			
+
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitCreateDeclaration(ShadowParser.CreateDeclarationContext ctx)
 	{ 
 		initializeSingletons(ctx.getSignature());
 		visitChildren(ctx); 
-		
+
 		if( ctx.createBlock() != null ) //possible because we still walk dummy nodes created for default creates
 			ctx.createBlock().appendBefore(anchor);
-		
+
 		TACNode last = anchor.getPrevious();
-		
+
 		if (last instanceof TACLabel && last.getPrevious() instanceof TACReturn)
 			last.remove();
 		else {
@@ -331,37 +331,37 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					new TACLocalLoad(anchor, method.getLocal("this")));			
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx)
 	{ 
 		initializeSingletons(ctx.getSignature());
 		visitChildren(ctx);
 		if( ctx.block() != null ) //possible because we still walk dummy nodes created for default destroys
 			ctx.block().appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	//here
-	
+
 	@Override public Void visitExplicitCreateInvocation(ShadowParser.ExplicitCreateInvocationContext ctx)
 	{ 
 		visitChildren(ctx);
-	
+
 		boolean isSuper = ctx.getChild(0).getText().equals("super");
 		ClassType thisType = (ClassType)method.getSignature().getOuter();
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		params.add(new TACLocalLoad(anchor, method.getThis()));
-		
+
 		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression())			 
 			params.add(child.appendBefore(anchor));
-		
+
 		TACCall call = new TACCall(anchor, new TACMethodName(anchor, ctx.getSignature()), params);
 		call.setDelegatedCreate(true);
-		
+
 		// If a super create, walk the fields.
 		// Walking the fields is unnecessary if there is a this create,
 		// since it will be taken care of by the this create, either explicitly or implicitly.
@@ -375,56 +375,56 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					field.appendBefore(anchor);
 				}
 		}
-		
+
 		return null;
 	}
 
-	
+
 	@Override public Void visitFormalParameters(ShadowParser.FormalParametersContext ctx)
 	{
 		return null; //no children
 	}
-	
+
 	@Override public Void visitFormalParameter(ShadowParser.FormalParameterContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		//The FormalParameters rule is NOT visited
 		//Parameters for methods are handled separately
 		//The only thing that comes in here are the declarations
 		//in catch blocks
 		method.addLocal(ctx, ctx.Identifier().getText());
-		
+
 		return null;
 	}
-	
+
 	public static TACOperand arraySize(TACNode anchor, TACOperand array, boolean isLong){
 		Type type = array.getType();		
-		
+
 		MethodSignature signature;
 		if( isLong )
 			signature = type.getMatchingMethod("sizeLong", new SequenceType());
 		else
 			signature = type.getMatchingMethod("size", new SequenceType());
-		
+
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		params.add(array);
-		
+
 		return new TACCall(anchor, new TACMethodName(anchor, signature), params);
 	}
-		
+
 	private void doAssignment(TACOperand left, Context leftAST, TACOperand right, String operation, Context node )
 	{
 		TACMethodName methodName;
 		MethodSignature signature;
 		Type leftType = leftAST.getType();
-		
+
 		operation = operation.substring(0, operation.length() - 1); //clip off last character (=)
 
 		if( leftType instanceof PropertyType ) {					
 			PropertyType propertyType = (PropertyType) leftType;
 			List<TACOperand> parameters = new ArrayList<TACOperand>();
-			
+
 			parameters.add( left );
 			if( propertyType instanceof SubscriptType )	{
 				//must be a primary expression with a subscript at the end in order to have SubscriptType
@@ -432,7 +432,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				ShadowParser.SubscriptContext subscript = expression.primarySuffix(expression.primarySuffix().size() - 1).subscript(); //subscript on last suffix
 				parameters.add(subscript.conditionalExpression().getOperand()); //there should only be one index in this list (not needed for properties)
 			}
-						
+
 			if (!operation.isEmpty() ) {				
 				signature = propertyType.getGetter();
 				TACOperand result = null;
@@ -446,11 +446,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					parameters.set(0, methodName.getPrefix()); //replacing left with the method prefix can prevent duplicate code (if there were casts)					
 					result = new TACCall(anchor, methodName, parameters);					
 				}
-				
+
 				//signature for other operation
 				signature = node.getOperations().get(0);
-				
-				if( left.getType().isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
+
+				if( left.getType().isPrimitive() && signature.isImport() )
 					right = new TACBinary(anchor, result, signature, operation, right);
 				else {
 					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
@@ -458,12 +458,12 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					new TACLocalStore(anchor, temp, new TACCall(anchor, methodName, methodName.getPrefix(), right));		
 					right = new TACLocalLoad(anchor, temp);						
 				}		
-				
+
 				parameters = new ArrayList<TACOperand>( parameters );					
 			}				
-			
+
 			parameters.add(right); //value to store (possibly updated by code above)
-			
+
 			signature = propertyType.getSetter();	
 			//optimize sets that are generated (and locked)
 			if( signature.getNode().getParent() == null  && signature.getModifiers().isLocked() )
@@ -480,7 +480,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACReference var = ((TACLoad)left).getReference();
 			if (!operation.isEmpty()) {	
 				signature = node.getOperations().get(0);
-				if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
+				if( left.getType().isPrimitive() && signature.isImport() )
 					right = new TACBinary(anchor, left, signature, operation, right );
 				else {
 					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
@@ -494,7 +494,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				//we had to build in the load so that we had something to get, but now we don't need it
 				left.remove();
 			}
-			
+
 			new TACStore(anchor, var, right);				
 		}
 		else if( left instanceof TACLocalLoad || left instanceof TACLocalStore ) { //local variable operation			
@@ -505,7 +505,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				var = ((TACLocalStore)left).getVariable();
 			if (!operation.isEmpty()) {
 				signature = node.getOperations().get(0);
-				if( left.getType().isPrimitive() && signature.getModifiers().isNative() )
+				if( left.getType().isPrimitive() && signature.isImport() )
 					right = new TACBinary(anchor, left, signature, operation, right );
 				else {
 					TACVariable temp = method.addTempLocal(signature.getReturnTypes().get(0));
@@ -516,45 +516,45 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			}
 			else if( left instanceof TACLocalLoad )
 				left.remove(); //once we know the var, we can remove the local load
-			
+
 			new TACLocalStore(anchor, var, right);	
 		}
 		else
 			throw new UnsupportedOperationException();
 	}
-	
+
 	@Override public Void visitExpression(ShadowParser.ExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACOperand left = ctx.primaryExpression().appendBefore(anchor);
-		
+
 		if( ctx.assignmentOperator() != null ) {					
 			TACOperand right = ctx.conditionalExpression().appendBefore(anchor);							
 			String operation = ctx.assignmentOperator().getText();			
 			doAssignment(left, ctx.primaryExpression(), right, operation, ctx);
 		}		
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitConditionalExpression(ShadowParser.ConditionalExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACOperand condition = ctx.coalesceExpression().appendBefore(anchor);
 		ctx.setOperand(condition);
-		
+
 		if( ctx.throwOrConditionalExpression().size() > 0 ) {
 			ThrowOrConditionalExpressionContext first = ctx.throwOrConditionalExpression(0);
 			ThrowOrConditionalExpressionContext second = ctx.throwOrConditionalExpression(1);
-			
+
 			TACLabel trueLabel = new TACLabel(method),
 					falseLabel = new TACLabel(method),
 					doneLabel = new TACLabel(method);
 			TACVariable var = method.addTempLocal(ctx);
 			new TACBranch(anchor, condition, trueLabel, falseLabel);
-			
+
 			trueLabel.insertBefore(anchor);
 			if(first.throwStatement() != null) {
 				first.throwStatement().getList().appendBefore(anchor);
@@ -562,7 +562,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				new TACLocalStore(anchor, var, first.appendBefore(anchor));
 				new TACBranch(anchor, doneLabel);
 			}
-			
+
 			falseLabel.insertBefore(anchor);
 			if(second.throwStatement() != null) {
 				second.throwStatement().getList().appendBefore(anchor);				
@@ -570,37 +570,37 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				new TACLocalStore(anchor, var, second.appendBefore(anchor));
 				new TACBranch(anchor, doneLabel);
 			}
-			
+
 			doneLabel.insertBefore(anchor);
-			
+
 			ctx.setOperand(new TACLocalLoad(anchor, var));
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitThrowOrConditionalExpression(ThrowOrConditionalExpressionContext ctx) 
 	{
 		visitChildren(ctx);
-		
+
 		if(ctx.conditionalExpression() != null) {
 			ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitCoalesceExpression(ShadowParser.CoalesceExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACOperand value = ctx.conditionalOrExpression(0).appendBefore(anchor);
 		ctx.setOperand(value);
-		
+
 		if( ctx.conditionalOrExpression().size() > 1 ) {
 			TACLabel doneLabel = new TACLabel(method);
 			TACVariable var = method.addTempLocal(ctx);
-			
+
 			for( int i = 1; i < ctx.conditionalOrExpression().size(); ++i ) {
 				TACLabel nullLabel = new TACLabel(method);
 				TACLabel nonNullLabel = new TACLabel(method);
@@ -618,17 +618,17 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			doneLabel.insertBefore(anchor);			
 			ctx.setOperand(new TACLocalLoad(anchor, var));
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitConditionalOrExpression(ShadowParser.ConditionalOrExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACOperand value = ctx.conditionalExclusiveOrExpression(0).appendBefore(anchor);
 		ctx.setOperand(value);
-	
+
 		if( ctx.conditionalExclusiveOrExpression().size() > 1 ) {
 			TACLabel doneLabel = new TACLabel(method);
 			TACVariable var = method.addTempLocal(ctx);			
@@ -644,10 +644,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			doneLabel.insertBefore(anchor);
 			ctx.setOperand(new TACLocalLoad(anchor, var));
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitConditionalExclusiveOrExpression(ShadowParser.ConditionalExclusiveOrExpressionContext ctx) 
 	{
 		visitChildren(ctx); 		
@@ -656,18 +656,18 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACOperand next = ctx.conditionalAndExpression(i).appendBefore(anchor);										
 			value = new TACBinary(anchor, value, TACBinary.Boolean.XOR, next);
 		}		
-		
+
 		ctx.setOperand(value);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitConditionalAndExpression(ShadowParser.ConditionalAndExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
 		TACOperand value = ctx.bitwiseOrExpression(0).appendBefore(anchor);
 		ctx.setOperand(value);
-	
+
 		if( ctx.bitwiseOrExpression().size() > 1 ) {
 			TACLabel doneLabel = new TACLabel(method);
 			TACVariable var = method.addTempLocal(ctx);			
@@ -683,16 +683,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			doneLabel.insertBefore(anchor);
 			ctx.setOperand(new TACLocalLoad(anchor, var));
 		}
-		
+
 		return null;	
 	}
-	
-	
+
+
 	@Override public Void visitBitwiseOrExpression(ShadowParser.BitwiseOrExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
 		visitBinaryOperation(ctx, ctx.bitwiseExclusiveOrExpression());
-		
+
 		return null;
 	}
 
@@ -700,32 +700,32 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	{ 
 		visitChildren(ctx);
 		visitBinaryOperation(ctx, ctx.bitwiseAndExpression());
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitBitwiseAndExpression(ShadowParser.BitwiseAndExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
 		visitBinaryOperation(ctx, ctx.equalityExpression());
-		
+
 		return null;
 	}	
 
 	@Override public Void visitEqualityExpression(ShadowParser.EqualityExpressionContext ctx)
 	{ 
 		visitChildren(ctx);		
-		
+
 		TACOperand current = ctx.isExpression(0).appendBefore(anchor);		
 		for( int i = 1; i < ctx.isExpression().size(); i++ ) {
 			String op = ctx.getChild(2*i - 1).getText();  //the operations are every other child
 			TACOperand next = ctx.isExpression(i).appendBefore(anchor);
 			Type currentType = current.getType();
 			Type nextType = next.getType();
-							
+
 			if( op.equals("==") || op.equals("!=") ) { //== or !=									
 				if (currentType.isPrimitive() &&
-					nextType.isPrimitive() ) //if not, methods are needed					
+						nextType.isPrimitive() ) //if not, methods are needed					
 					current = new TACBinary(anchor, current, next);					
 				else {	
 					//no nullables allowed
@@ -744,7 +744,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				if( currentType.isPrimitive() && nextType.isPrimitive() && ( currentNullable || nextNullable )) {
 					TACVariable var = method.addTempLocal(new SimpleModifiedType(Type.BOOLEAN));
 					TACLabel done = new TACLabel(method);
-					
+
 					if( currentNullable && nextNullable ) {							
 						TACOperand valueNull = new TACBinary(anchor, current, new TACLiteral(anchor, new ShadowNull(current.getType())));
 						TACOperand otherNull = new TACBinary(anchor, next, new TACLiteral(anchor, new ShadowNull(next.getType())));							
@@ -752,13 +752,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						TACOperand eitherNull = new TACBinary(anchor, valueNull, TACBinary.Boolean.OR, otherNull );							
 						TACLabel notBothNull = new TACLabel(method);												
 						TACLabel noNull = new TACLabel(method);
-						
+
 						new TACLocalStore(anchor, var, bothNull);
 						new TACBranch(anchor, bothNull, done, notBothNull); //var will be true (both null)
-						
+
 						notBothNull.insertBefore(anchor);
 						new TACBranch(anchor, eitherNull, done, noNull); //var will be false (one but not both null)
-													
+
 						noNull.insertBefore(anchor);
 						new TACLocalStore(anchor, var, new TACBinary(anchor,
 								TACCast.cast(anchor, new SimpleModifiedType(current.getType()), current),
@@ -793,7 +793,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 								TACCast.cast(anchor, new SimpleModifiedType(next.getType()), next)));
 						new TACBranch(anchor, done);
 					}
-					
+
 					done.insertBefore(anchor);
 					current = new TACLocalLoad(anchor, var);
 				}
@@ -804,19 +804,19 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				current = new TACUnary(anchor, "!", current);
 		}		
 		ctx.setOperand(current);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitIsExpression(ShadowParser.IsExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
 		TACOperand value = ctx.relationalExpression().appendBefore(anchor);
 		ctx.setOperand(value);
-		
+
 		if( ctx.type() != null ) {						
 			Type comparisonType = ctx.type().getType();
-			
+
 			TACOperand comparisonClass = new TACClass(anchor, comparisonType).getClassData();
 
 			//get class from object
@@ -826,22 +826,22 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 			methodName = new TACMethodName(anchor, valueClass,
 					Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
-			
+
 			ctx.setOperand(new TACCall(anchor, methodName, methodName.getPrefix(), comparisonClass));
 		}
-		
+
 		return null;
 	}
-	
-	
+
+
 	@Override public Void visitRelationalExpression(ShadowParser.RelationalExpressionContext ctx)	
 	{ 
 		visitChildren(ctx);
 		visitBinaryOperation(ctx, ctx.concatenationExpression());
-		
+
 		return null;
 	}	
-	
+
 	private TACOperand convertToString( TACOperand operand ) {
 		Type type = resolveType(operand.getType());
 		if( !type.equals(Type.STRING ) ) {
@@ -857,13 +857,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				new TACLocalStore(anchor, var, new TACLiteral(anchor, new ShadowString("null")));
 				new TACBranch(anchor, doneLabel);
 				nonnullLabel.insertBefore(anchor);
-				
+
 				if( type.isPrimitive() ) //convert non null primitive wrapper to real primitive			
 					operand = TACCast.cast(anchor, new SimpleModifiedType(type), operand);
-				
+
 				TACMethodName methodName = new TACMethodName(anchor, operand,
 						type.getMatchingMethod("toString", new SequenceType())); 
-				
+
 				new TACLocalStore(anchor, var, new TACCall(anchor, methodName, methodName.getPrefix()));
 				new TACBranch(anchor, doneLabel);
 				doneLabel.insertBefore(anchor);
@@ -876,65 +876,65 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 						Collections.singletonList(methodRef.getPrefix()));
 			}
 		}
-				
+
 		return operand;
 	}
-	
+
 	@Override public Void visitConcatenationExpression(ShadowParser.ConcatenationExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
 		TACOperand last = ctx.shiftExpression(0).appendBefore(anchor);
-				
+
 		for( int i = 1; i < ctx.shiftExpression().size(); ++i  ) {
 			if( i == 1 )
 				last = convertToString(last);
-			
+
 			TACOperand next = convertToString(ctx.shiftExpression(i).appendBefore(anchor));
 			last = new TACCall(anchor, new TACMethodName(anchor, Type.STRING.getMethods("concatenate").get(0)),
 					Arrays.asList(last, next));
 		}
-		
+
 		ctx.setOperand(last);			
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitShiftExpression(ShadowParser.ShiftExpressionContext ctx)
 	{ 
 		visitChildren(ctx);		
 		visitBinaryOperation(ctx, ctx.rotateExpression());
-		
+
 		return null;		
 	}
-	
+
 	@Override public Void visitRotateExpression(ShadowParser.RotateExpressionContext ctx)
 	{ 
 		visitChildren(ctx);		
 		visitBinaryOperation(ctx, ctx.additiveExpression());
-		
+
 		return null;	
 	}
-	
+
 	@Override public Void visitAdditiveExpression(ShadowParser.AdditiveExpressionContext ctx)
 	{ 
 		visitChildren(ctx);		
 		visitBinaryOperation(ctx, ctx.multiplicativeExpression());
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitMultiplicativeExpression(ShadowParser.MultiplicativeExpressionContext ctx)
 	{ 
 		visitChildren(ctx);		
 		visitBinaryOperation(ctx, ctx.unaryExpression());
-		
+
 		return null;		
 	}
-	
+
 	@Override public Void visitUnaryExpression(ShadowParser.UnaryExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		if( ctx.primaryExpression() != null )
 			ctx.setOperand(ctx.primaryExpression().appendBefore(anchor));
 		else if( ctx.inlineMethodDefinition() != null )
@@ -950,126 +950,126 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					ctx.setOperand(new TACUnary(anchor, "!", operand));
 				else {
 					MethodSignature signature = ctx.getOperations().get(0); 
-					if( type.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
+					if( type.isPrimitive() && signature.isImport() )
 						ctx.setOperand(new TACUnary(anchor, signature, op, operand));				
 					else 
 						ctx.setOperand(new TACCall(anchor, new TACMethodName(anchor, operand, ctx.getOperations().get(0)), operand));					
 				}
 			}
 		}		
-		
+
 		return null;	
 	}
-	
+
 	@Override public Void visitInlineMethodDefinition(ShadowParser.InlineMethodDefinitionContext ctx)
 	{ 		
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override public Void visitCastExpression(ShadowParser.CastExpressionContext ctx)
 	{ 
 		//one day this will be supported
 		if( ctx.getType() instanceof MethodType )
 			throw new UnsupportedOperationException();
-		
+
 		visitChildren(ctx);		
 		ctx.setOperand(TACCast.cast(anchor, ctx, ctx.conditionalExpression().appendBefore(anchor), true));
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitCheckExpression(ShadowParser.CheckExpressionContext ctx)	
 	{ 
 		visitChildren(ctx);
 		TACLabel recover;
-		
+
 		if( block.hasRecover() )
 			recover = block.getRecover();
 		else
 			recover = new TACLabel(method);				
-			
+
 		TACLabel continueLabel = new TACLabel(method);
 		TACOperand operand = ctx.conditionalExpression().appendBefore(anchor);
-		
+
 		//interfaces themselves are value types
 		//so extract the object pointer inside
 		if( operand.getType() instanceof InterfaceType )
 			operand = TACCast.cast(anchor, new SimpleModifiedType(Type.OBJECT), operand);
-		
+
 		//if there's a recover, things will be handled there if null			
 		new TACBranch(anchor, new TACBinary(anchor, operand, new TACLiteral(anchor,
 				new ShadowNull(operand.getType()))), recover, continueLabel);
-		
+
 		//otherwise, we throw an exception here
 		if( !block.hasRecover() ) {
 			recover.insertBefore(anchor);
 			TACOperand object = new TACNewObject(anchor, Type.UNEXPECTED_NULL_EXCEPTION);
 			MethodSignature signature = Type.UNEXPECTED_NULL_EXCEPTION.getMatchingMethod("create", new SequenceType());						
 			TACCall exception = new TACCall(anchor, new TACMethodName(anchor, signature), object);
-						
+
 			new TACThrow(anchor, exception);
 		}	
-		
+
 		continueLabel.insertBefore(anchor);
-		
+
 		//add in cast to remove nullable?
 		prefix = TACCast.cast(anchor, ctx, operand);
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitPrimaryExpression(ShadowParser.PrimaryExpressionContext ctx)
 	{ 		
 		TACOperand savePrefix = prefix;
 		prefix = null;		
 		visitChildren(ctx);
-		
+
 		TACOperand operand = ctx.primaryPrefix().appendBefore(anchor);
 		for( ShadowParser.PrimarySuffixContext suffix : ctx.primarySuffix() )
 			operand = suffix.appendBefore(anchor);
-		
+
 		ctx.setOperand(operand);
 		prefix = savePrefix;
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitPrimarySuffix(ShadowParser.PrimarySuffixContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		Context child = (Context)ctx.getChild(0);
 		ctx.setOperand(child.appendBefore(anchor));
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitAllocation(ShadowParser.AllocationContext ctx)
 	{
 		visitChildren(ctx);
-		
+
 		Context child = (Context)ctx.getChild(0);
 		ctx.setOperand(child.appendBefore(anchor));
-		
+
 		return null;		
 	}
-	
+
 	private TACOperand makeMethodReference(UnboundMethodType methodType) {
 		if (prefix == null)
 			prefix = new TACLocalLoad(anchor, method.getThis());		
-		
+
 		List<TACOperand> params = new ArrayList<TACOperand>(4);
-				
+
 		TACMethodName methodName = new TACMethodName(anchor,
 				prefix,				
 				methodType.getKnownSignature());
 		TACOperand refAsMethodTable = TACCast.cast(anchor, new SimpleModifiedType(Type.METHOD_TABLE), methodName, false);
-		
+
 		params.add(refAsMethodTable);
 		params.add(prefix);
 		params.add(new TACLiteral(anchor, new ShadowNull(new ArrayType(Type.OBJECT))));
-		
+
 		MethodSignature signature = Type.METHOD.getAllMethods("create").get(0);
 		//internally sets prefix
 		return callCreate(signature, params, signature.getOuter());
@@ -1078,7 +1078,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override public Void visitPrimaryPrefix(ShadowParser.PrimaryPrefixContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		//TODO: remove prefix, since the value can be gotten from the Context node?		
 		if( ctx.literal() != null )
 			prefix = ctx.literal().appendBefore(anchor);
@@ -1103,7 +1103,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		else {
 			String name = ctx.getText();
 			explicitSuper = name.equals("super");
-			
+
 			if( ctx.getType() instanceof UnboundMethodType ) {
 				//must create a Method reference if it's not a method call
 				PrimaryExpressionContext parent = (PrimaryExpressionContext) ctx.getParent();
@@ -1140,10 +1140,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			}				
 		}			
 		ctx.setOperand(prefix);
-			
+
 		return null;
 	}	
-	
+
 	private void methodCall(MethodSignature signature, Context node, List<? extends Context> list) {
 		methodCall( signature, node, list, false );
 	}
@@ -1151,10 +1151,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private void methodCall(MethodSignature signature, Context node, List<? extends Context> list, boolean fromMethodReference) {
 		if (prefix == null)
 			prefix = new TACLocalLoad(anchor, method.getThis());
-		
+
 		TACMethodRef methodRef;
 		List<TACOperand> params = new ArrayList<TACOperand>();
-		
 		if( fromMethodReference ) {
 			MethodReferenceType methodReferenceType = (MethodReferenceType) node.getType(); //method reference must have method type
 			// for method references, signature will be null
@@ -1165,42 +1164,42 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				name = ((TACLoad)prefix).getReference().toString();			
 			TACOperand methodPointerAsMethodTable = new TACLoad(anchor, new TACFieldRef(prefix, "method"));
 			TACOperand methodPointer = TACCast.cast(anchor, new SimpleModifiedType(methodReferenceType.getMethodType()), methodPointerAsMethodTable, false);
-			
+
 			TACOperand object = new TACLoad(anchor, new TACFieldRef(prefix, "object"));
 			methodRef = new TACMethodPointer(anchor, methodPointer, name, methodReferenceType);
-			
-			params.add(object);			
+
+			params.add(object);
 		}
 		else {			
 			TACMethodName methodName = new TACMethodName(anchor, prefix, signature);		
 			methodName.setSuper(explicitSuper);
-			
-			if( !signature.isExternWithoutBlock())
+
+			if( !signature.isImportAssembly())
 				params.add(methodName.getPrefix());
-			
+
 			methodRef = methodName;
 		}
-		
+
 		for( Context child : list )	//potentially empty list				
 			params.add(child.appendBefore(anchor));
-		
+
 		prefix = new TACCall(anchor, methodRef, params);
-		
+
 		//sometimes a cast is needed when dealing with generic types
 		SequenceType requiredReturnTypes = methodRef.getReturnTypes();
 		SequenceType methodReturnTypes = methodRef.getUninstantiatedReturnTypes();		
-		
+
 		if( !methodReturnTypes.matches(requiredReturnTypes) ) {
 			if( requiredReturnTypes.size() == 1 )			
 				prefix = TACCast.cast(anchor, requiredReturnTypes.get(0), prefix);
 			else
 				prefix = TACCast.cast(anchor, new SimpleModifiedType(requiredReturnTypes), prefix);
 		}
-		
+
 		node.setOperand(prefix);
 		explicitSuper = false;		
 	}
-	
+
 	private static Context getPrefix(Context ctx)
 	{
 		ShadowParser.PrimarySuffixContext parent = (PrimarySuffixContext) ctx.getParent();
@@ -1212,7 +1211,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		else
 			return expression.primaryPrefix();
 	}
-	
+
 	@Override public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx)
 	{ 
 		visitChildren(ctx);
@@ -1222,34 +1221,34 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType)ctx.getType()));
 		else if( !ctx.getModifiers().isTypeName() )  //doesn't do anything at this stage if it's just a type name				
 			prefix = new TACLoad(anchor, new TACFieldRef(prefix, ctx.Identifier().getText()));
-		
+
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitClassSpecifier(ShadowParser.ClassSpecifierContext ctx)
 	{ 
 		visitChildren(ctx);
-	
+
 		Type type = getPrefix(ctx).getType();
-		
+
 		if( ctx.typeArguments() != null  ) {
 			ShadowParser.TypeArgumentsContext arguments = ctx.typeArguments();
-			
+
 			try {
 				type = type.replace(type.getTypeParameters(), (SequenceType)arguments.getType());
 			}
 			catch (InstantiationException e) {}	//should not happen				
 		}			
-		
+
 		prefix = new TACClass(anchor, type).getClassData();
-		
+
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
+
 	private static Context getSuffix(ShadowParser.PrimaryExpressionContext expression)
 	{
 		if( expression.primarySuffix().size() > 0 )
@@ -1257,7 +1256,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		else
 			return expression.primaryPrefix();		
 	}
-	
+
 	@Override public Void visitSubscript(ShadowParser.SubscriptContext ctx)
 	{ 
 		visitChildren(ctx);
@@ -1266,13 +1265,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		ShadowParser.PrimaryExpressionContext expression = (ShadowParser.PrimaryExpressionContext)suffix.getParent(); 
 		boolean isStore = isLHS(expression) && suffix == getSuffix(expression);
 		Type prefixType = resolveType(prefix.getType());
-		
+
 		if( prefixType instanceof ArrayType && !(((ArrayType)prefixType).getBaseType() instanceof TypeParameter) ) {
 			TACOperand index = ctx.conditionalExpression().appendBefore(anchor);
 			Type indexType = index.getType();
 			if( !indexType.equals(Type.LONG))
 				index = TACCast.cast(anchor, new SimpleModifiedType(Type.LONG, index.getModifiers()), index);				
-	
+
 			prefix = new TACLoad(anchor, new TACArrayRef(anchor, prefix, index));			
 		}				
 		else if( ctx.getType() instanceof SubscriptType ) {					
@@ -1292,28 +1291,28 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}		
 		else
 			throw new UnsupportedOperationException();
-		
+
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}	
-	
+
 	private static boolean isLHS(shadow.parse.ShadowParser.PrimaryExpressionContext context)
 	{
 		ParserRuleContext parent = context.getParent(); 
-		
+
 		if( parent instanceof shadow.parse.ShadowParser.SequenceLeftSideContext )
 			return true;
-		
+
 		if( parent instanceof shadow.parse.ShadowParser.ExpressionContext ) {
 			shadow.parse.ShadowParser.ExpressionContext expression = (ExpressionContext) parent;
 			return expression.assignmentOperator() != null;
 		}
-		
+
 		return false;
 	}
-	
-	
+
+
 	@Override public Void visitProperty(ShadowParser.PropertyContext ctx)
 	{ 
 		visitChildren(ctx);
@@ -1322,7 +1321,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		ShadowParser.PrimarySuffixContext suffix = (PrimarySuffixContext) ctx.getParent();
 		ShadowParser.PrimaryExpressionContext expression = (ShadowParser.PrimaryExpressionContext)suffix.getParent(); 
 		boolean isStore = isLHS(expression) && suffix == getSuffix(expression);
-				
+
 		PropertyType propertyType = (PropertyType) ctx.getType();
 		//only do the straight loads
 		//stores (and +='s) are handled in ASTExpression
@@ -1334,23 +1333,23 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			else			
 				methodCall(signature, ctx, new ArrayList<Context>()); //no parameters to add					
 		}	
-		
+
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
-	
+
+
 	@Override public Void visitMethod(ShadowParser.MethodContext ctx) { 
 		visitChildren(ctx);
-		
+
 		PrimarySuffixContext parent = (PrimarySuffixContext) ctx.getParent();
 		List<PrimarySuffixContext> suffixes = ((PrimaryExpressionContext) parent.getParent()).primarySuffix();
 		int index = 0;
 		while( suffixes.get(index) != parent )
 			index++;
 		index++;
-			
+
 		//if there are no more suffixes after this one or the next suffix is not a method call
 		//make a method references
 		if( index == suffixes.size() || suffixes.get(index).methodCall() == null ) {				
@@ -1359,7 +1358,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			prefix = makeMethodReference(unboundMethod);		
 			ctx.setOperand(prefix);
 		}
-		
+
 		return null;
 	}
 
@@ -1367,44 +1366,44 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override public Void visitMethodCall(ShadowParser.MethodCallContext ctx)
 	{ 
 		boolean fromMethodReference = prefix != null && prefix.getType() instanceof MethodReferenceType;
-		
+
 		visitChildren(ctx);
 		methodCall(ctx.getSignature(), ctx, ctx.conditionalExpression(), fromMethodReference ); //handles appending
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitLiteral(ShadowParser.LiteralContext ctx)
 	{ 
 		//no children
 		prefix = ctx.setOperand(new TACLiteral(anchor, ctx.value));
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitArguments(ShadowParser.ArgumentsContext ctx)
 	{ 
 		visitChildren(ctx);		
 		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() ) 
 			child.appendBefore(anchor);		
 		//no operand saved because the operands are in the children
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitArrayCreate(ShadowParser.ArrayCreateContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		ShadowParser.ArrayDimensionsContext dimensions = ctx.arrayDimensions();
 		dimensions.appendBefore(anchor);		
-			
+
 		ArrayType arrayType = (ArrayType)ctx.getType();		
 		TACClass arrayClass = new TACClass(anchor, arrayType);		
 		List<TACOperand> indices = new ArrayList<TACOperand>(dimensions.conditionalExpression().size());
 		for( ShadowParser.ConditionalExpressionContext dimension : dimensions.conditionalExpression() )
 			indices.add(dimension.getOperand());
-		
+
 		if( ctx.getSignature() != null ) { //either explicit or implicit create call	
 			MethodSignature create = ctx.getSignature();
 			List<TACOperand> arguments = new ArrayList<TACOperand>();
@@ -1434,15 +1433,15 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		else			
 			//nullable array only
 			prefix = visitArrayAllocation(arrayType, arrayClass, indices);
-		
+
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
+
 	private TACOperand callCreate(MethodSignature signature, List<TACOperand> params, Type prefixType) {
 		TACOperand object = new TACNewObject(anchor, prefixType);					
-				
+
 		params.add(0, object); //put object in front of other things	
 
 		TACMethodRef methodRef;		
@@ -1450,24 +1449,24 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			methodRef = new TACMethodName(anchor, TACCast.cast(anchor, new SimpleModifiedType(signature.getOuter()), object), signature);
 		else
 			methodRef = new TACMethodName(anchor, signature);
-				
+
 		prefix = new TACCall(anchor, methodRef, params);
-				
+
 		//sometimes a cast is needed when dealing with generic types
 		if( !prefix.getType().equals(prefixType) )
 			prefix = TACCast.cast(anchor, new SimpleModifiedType(prefixType), prefix);
-		
+
 		return prefix;
 	}
-	
+
 	@Override public Void visitCreate(ShadowParser.CreateContext ctx)
 	{ 
 		visitChildren(ctx);		
-		
+
 		List<TACOperand> params = new ArrayList<TACOperand>(ctx.conditionalExpression().size() + 1);		
 		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression())
-				params.add(child.appendBefore(anchor));			
-		
+			params.add(child.appendBefore(anchor));			
+
 		MethodSignature signature = ctx.getSignature();
 		TACOperand operand;
 		//both set prefix
@@ -1475,38 +1474,38 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			operand = callCreate(signature, params, ((Context)ctx.getParent()).getType() );
 		else
 			operand = callCreate(signature, params, signature.getOuter());
-		
+
 		ctx.setOperand(operand);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitStatement(ShadowParser.StatementContext ctx)
 	{ 
 		visitChildren(ctx);
 		Context context = (Context) ctx.getChild(0);
 		context.appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitAssertStatement(ShadowParser.AssertStatementContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACLabel doneLabel = new TACLabel(method),
 				errorLabel = new TACLabel(method);
-		
+
 		TACOperand condition = ctx.conditionalExpression(0).appendBefore(anchor); 
-		
+
 		new TACBranch(anchor, condition, doneLabel, errorLabel);			
 		errorLabel.insertBefore(anchor);
-		
+
 		TACOperand object = new TACNewObject(anchor, Type.ASSERT_EXCEPTION);
 		List<TACOperand> params = new ArrayList<TACOperand>();
 		params.add(object);			
 		MethodSignature signature;			
-		
+
 		if( ctx.conditionalExpression().size() > 1 ) { // has message
 			TACOperand message = convertToString( ctx.conditionalExpression(1).appendBefore(anchor) );
 			signature = Type.ASSERT_EXCEPTION.getMatchingMethod("create", new SequenceType(message));
@@ -1518,36 +1517,36 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACCall exception = new TACCall(anchor, new TACMethodName(anchor, signature), params);
 		new TACThrow(anchor, exception);
 		doneLabel.insertBefore(anchor);		
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitBlock(ShadowParser.BlockContext ctx)
 	{ 
 		method.enterScope();
 		visitChildren(ctx); 
-		
+
 		for( ShadowParser.BlockStatementContext statement : ctx.blockStatement() )
 			statement.appendBefore(anchor);
-		
+
 		method.exitScope();		
 		return null;
 	}
-	
+
 	@Override public Void visitCreateBlock(ShadowParser.CreateBlockContext ctx)
 	{ 
 		method.enterScope();
 		visitChildren(ctx); 
-		
+
 		if( ctx.explicitCreateInvocation() != null )
 			ctx.explicitCreateInvocation().appendBefore(anchor);
 		for( ShadowParser.BlockStatementContext statement : ctx.blockStatement() )
 			statement.appendBefore(anchor);
-		
+
 		method.exitScope();		
 		return null;
 	}
-	
+
 	@Override public Void visitBlockStatement(ShadowParser.BlockStatementContext ctx)
 	{ 
 		visitChildren(ctx);
@@ -1555,67 +1554,67 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			ctx.localDeclaration().appendBefore(anchor);
 		else
 			ctx.statement().appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitLocalDeclaration(ShadowParser.LocalDeclarationContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		if( ctx.localMethodDeclaration() != null )
 			ctx.localMethodDeclaration().appendBefore(anchor);
 		else
 			ctx.localVariableDeclaration().appendBefore(anchor);
-		
+
 		return null;		
 	}
-	
+
 	@Override public Void visitLocalMethodDeclaration(ShadowParser.LocalMethodDeclarationContext ctx)
 	{
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override public Void visitLocalVariableDeclaration(ShadowParser.LocalVariableDeclarationContext ctx)
 	{
 		visitChildren(ctx);
-		
+
 		for( ShadowParser.VariableDeclaratorContext child : ctx.variableDeclarator() )
 			child.appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitStatementExpression(ShadowParser.StatementExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
-	
+
 		if( ctx.sequenceAssignment() != null )
 			ctx.sequenceAssignment().appendBefore(anchor);
 		else
 			ctx.expression().appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	//private void doAssignment(TACOperand left, TACOperand right, char operation, OperationNode node ) {
 	@Override public Void visitSequenceAssignment(ShadowParser.SequenceAssignmentContext ctx)
 	{ 
 		visitChildren(ctx);
-	
+
 		ShadowParser.RightSideContext rightSide = ctx.rightSide();
 		ShadowParser.SequenceLeftSideContext leftSide = ctx.sequenceLeftSide();
-		
+
 		//add computation of all left values
 		leftSide.appendBefore(anchor);
 		//add computation of all right values
 		rightSide.appendBefore(anchor);		
-		
+
 		List<TACOperand> left = new ArrayList<TACOperand>();
 		for( ParseTree child : leftSide.children)
 			if( child instanceof Context )
 				left.add(((Context) child).getOperand());	
-		
+
 		SequenceType sequence = (SequenceType)leftSide.getType();								
 		//create splat
 		if( !(rightSide.getType() instanceof SequenceType)  ) {				
@@ -1631,7 +1630,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				}				
 		}
 		else if( rightSide.sequenceRightSide() != null ){ //sequence on the right			
-			
+
 			//store all right hand side things into temporary variables (for garbage collection purposes)
 			ArrayList<TACVariable> variables = new ArrayList<TACVariable>();
 			for( int i = 0; i < sequence.size(); ++i )
@@ -1641,7 +1640,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					variables.add(variable);					
 					new TACLocalStore(anchor, variable, rightOperand);
 				}
-			
+
 			//then store all temporary variables into the left
 			int index = 0;
 			for( int i = 0; i < sequence.size(); ++i ) //sequence size must match right hand size
@@ -1659,14 +1658,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					index++;
 				}		
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitSwitchStatement(ShadowParser.SwitchStatementContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACOperand value = ctx.conditionalExpression().appendBefore(anchor);
 		Type type = value.getType();
 		TACLabel defaultLabel = null;
@@ -1674,29 +1673,29 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		if( ctx.hasDefault )
 			defaultLabel = new TACLabel(method);		
 		List<TACLabel> labels = new ArrayList<TACLabel>( ctx.switchLabel().size() );
-		
+
 		if( !( value.getType() instanceof EnumType ) ) {	
 			//first go through and do the conditions
 			for( int i = 0; i < ctx.switchLabel().size(); ++i ) {	
 				ShadowParser.SwitchLabelContext label = ctx.switchLabel(i);
-									
+
 				if( label.primaryExpression().size() == 0 ) 
 					labels.add(defaultLabel);
 				else { // not default
 					label.appendBefore(anchor); //append (all) label conditions
 					TACLabel matchingCase = new TACLabel(method);
 					labels.add(matchingCase);
-					
+
 					for( int j = 0; j < label.primaryExpression().size(); ++j ) {
 						TACOperand operand = label.primaryExpression(j).getOperand();
 						TACOperand comparison;
 						MethodSignature signature = type.getMatchingMethod("equal", new SequenceType(operand));
-						
-						if( type.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() )
+
+						if( type.isPrimitive() && signature.isImport() )
 							comparison = new TACBinary(anchor, value, operand); //equivalent to ===
 						else								
 							comparison = new TACCall(anchor, new TACMethodName(anchor, value, signature), value, operand);
-													
+
 						boolean moreConditions = false;
 						if( j < label.primaryExpression().size() - 1 ) //more conditions in this label
 							moreConditions = true;
@@ -1706,27 +1705,27 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 							moreConditions = true;
 						else
 							moreConditions = false;							
-						
+
 						TACLabel next;
-						
+
 						if( moreConditions )
 							next = new TACLabel(method);
 						else if( ctx.hasDefault )
 							next = defaultLabel;
 						else
 							next = doneLabel;
-						
+
 						new TACBranch(anchor, comparison, matchingCase, next);
-						
+
 						if( moreConditions )
 							next.insertBefore(anchor);							
 					}
 				}
 			}
-			
+
 			if( ctx.hasDefault && ctx.switchLabel().size() == 1 ) //only default exists, needs a direct jump
 				new TACBranch(anchor, defaultLabel);
-			
+
 			//then go through and add the executable blocks of code to jump to
 			for( int i = 0; i < ctx.statement().size(); ++i ) {				
 				labels.get(i).insertBefore(anchor); //mark start of code				
@@ -1734,112 +1733,112 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				TACBranch branch = new TACBranch(anchor, doneLabel);
 				branch.setContext(null); //prevents dead code removal error
 			}
-			
+
 			doneLabel.insertBefore(anchor);			
 		}
 		else
 			throw new UnsupportedOperationException();	
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitSwitchLabel(ShadowParser.SwitchLabelContext ctx)	
 	{ 
 		visitChildren(ctx);
-		
+
 		for(ShadowParser.PrimaryExpressionContext child : ctx.primaryExpression() )
 			child.appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitIfStatement(ShadowParser.IfStatementContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACLabel trueLabel = new TACLabel(method),
 				falseLabel = new TACLabel(method),
 				endLabel = ctx.statement().size() > 1 ? new TACLabel(method) : falseLabel;
-		
-		new TACBranch(anchor, ctx.conditionalExpression().appendBefore(anchor), trueLabel, falseLabel);
-		trueLabel.insertBefore(anchor);
-		ctx.statement(0).appendBefore(anchor);
-		TACBranch branch = new TACBranch(anchor, endLabel);
-		branch.setContext(null); //won't cause a dead code problem if removed
-		
-		if( ctx.statement().size() > 1 ) { //else case
-			falseLabel.insertBefore(anchor);
-			ctx.statement(1).appendBefore(anchor);
-		
-			branch = new TACBranch(anchor, endLabel);
-			branch.setContext(null); //won't cause a dead code problem if removed
-		}
-		
-		endLabel.insertBefore(anchor);		
-		
-		return null;
+
+				new TACBranch(anchor, ctx.conditionalExpression().appendBefore(anchor), trueLabel, falseLabel);
+				trueLabel.insertBefore(anchor);
+				ctx.statement(0).appendBefore(anchor);
+				TACBranch branch = new TACBranch(anchor, endLabel);
+				branch.setContext(null); //won't cause a dead code problem if removed
+
+				if( ctx.statement().size() > 1 ) { //else case
+					falseLabel.insertBefore(anchor);
+					ctx.statement(1).appendBefore(anchor);
+
+					branch = new TACBranch(anchor, endLabel);
+					branch.setContext(null); //won't cause a dead code problem if removed
+				}
+
+				endLabel.insertBefore(anchor);		
+
+				return null;
 	}
 
 	@Override public Void visitWhileStatement(ShadowParser.WhileStatementContext ctx)
 	{
 		block = new TACBlock(anchor, block).addBreak().addContinue();
 		visitChildren(ctx);
-		
+
 		TACLabel bodyLabel = new TACLabel(method),
 				conditionLabel = block.getContinue(),
 				endLabel = block.getBreak();
 		new TACBranch(anchor, conditionLabel);
-		
+
 		//body
 		bodyLabel.insertBefore(anchor);
 		ctx.statement().appendBefore(anchor);
 		new TACBranch(anchor, conditionLabel).setContext(null); //prevents dead code removal error
-		
+
 		//condition
 		conditionLabel.insertBefore(anchor);
 		TACOperand condition = ctx.conditionalExpression().appendBefore(anchor);		
 		new TACBranch(anchor, condition, bodyLabel, endLabel);
-		
+
 		endLabel.insertBefore(anchor);		
 		block = block.getParent();	
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitDoStatement(ShadowParser.DoStatementContext ctx)
 	{ 
 		block = new TACBlock(anchor, block).addBreak().addContinue();
 		visitChildren(ctx);
-		
+
 		TACLabel bodyLabel = new TACLabel(method),
 				conditionLabel = block.getContinue(),
 				endLabel = block.getBreak();
 		//only difference from while is this jump to body instead of condition
 		new TACBranch(anchor, bodyLabel); 
-		
+
 		//body
 		bodyLabel.insertBefore(anchor);
 		ctx.statement().appendBefore(anchor);
 		new TACBranch(anchor, conditionLabel);
-		
+
 		//condition
 		conditionLabel.insertBefore(anchor);
 		TACOperand condition = ctx.conditionalExpression().appendBefore(anchor);		
 		TACBranch branch = new TACBranch(anchor, condition, bodyLabel, endLabel);
 		branch.setContext(null); //avoids dead code removal error 
-		
+
 		endLabel.insertBefore(anchor);
 		block = block.getParent();	
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitForeachStatement(ShadowParser.ForeachStatementContext ctx)
 	{ 
 		block = new TACBlock(anchor, block).addBreak().addContinue();
 		method.enterScope(); //needed because a variable is declared in a foreach
 		visitChildren(ctx);
-		
+
 		ShadowParser.ForeachInitContext init = ctx.foreachInit();		
 		Type type = init.conditionalExpression().getType(); 		
 		TACOperand collection = init.appendBefore(anchor);
@@ -1849,31 +1848,31 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACOperand value;
 		TACLabel bodyLabel = new TACLabel(method),				
 				endLabel = block.getBreak();
-		
+
 		//optimization for (non-generic) arrays
 		if( type instanceof ArrayType && !(((ArrayType)type).getBaseType() instanceof TypeParameter) ) {
 			TACLabel updateLabel = block.getContinue(),
-						conditionLabel = new TACLabel(method);
+					conditionLabel = new TACLabel(method);
 
 			//make iterator (long index)
 			iterator = method.addTempLocal(new SimpleModifiedType(Type.LONG));
 			new TACLocalStore(anchor, iterator, new TACLiteral(anchor, new ShadowInteger(0L)));
 			TACOperand length = arraySize(anchor, collection, true);
 			new TACBranch(anchor, conditionLabel);  //init is done, jump to condition
-			
+
 			//body
 			bodyLabel.insertBefore(anchor);
-			
+
 			//store array element into local variable before executing body
 			value = new TACLoad(anchor, new TACArrayRef(anchor, collection, new TACLocalLoad(anchor, iterator), false));
 			new TACLocalStore(anchor, variable, value);
-			
+
 			ctx.statement().appendBefore(anchor); //body
-			
+
 			TACBranch branch = new TACBranch(anchor, updateLabel);
 			branch.setContext(null); //avoid dead code removal error
 			updateLabel.insertBefore(anchor);			
-			
+
 			//increment iterator
 			value = new TACLocalLoad(anchor, iterator);
 			value.setContext(null); //avoid dead code removal error
@@ -1882,127 +1881,127 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			value = new TACBinary(anchor, value, Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", one, false );
 			value.setContext(null);
 			new TACLocalStore(anchor, iterator, value).setContext(null);			
-			
+
 			new TACBranch(anchor, conditionLabel).setContext(null);
 			conditionLabel.insertBefore(anchor);
-			
+
 			//check if iterator < array length
 			value = new TACLocalLoad(anchor, iterator);
 			condition = new TACBinary(anchor, value, Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
-						
+
 			new TACBranch(anchor, condition, bodyLabel, endLabel);		
 			endLabel.insertBefore(anchor);
 		}
 		else {	
 			TACLabel conditionLabel = block.getContinue();
 			MethodSignature signature;
-			
+
 			//get iterator
 			signature = type.getMatchingMethod("iterator", new SequenceType());
 			ModifiedType iteratorType = signature.getReturnTypes().get(0);
 			iterator = method.addTempLocal(iteratorType);
 			TACMethodName getIterator = new TACMethodName(anchor, collection, signature);
 			new TACLocalStore(anchor, iterator, new TACCall(anchor, getIterator, getIterator.getPrefix()));
-			
+
 			new TACBranch(anchor, conditionLabel);  //init is done, jump to condition
-						
+
 			bodyLabel.insertBefore(anchor);		
-			
+
 			//put variable update before main body
 			signature = iteratorType.getType().getMatchingMethod("next", new SequenceType());
 			TACMethodName next = new TACMethodName(anchor, new TACLocalLoad(anchor, iterator), signature);
 			new TACLocalStore(anchor, variable, new TACCall(anchor, next, new TACLocalLoad(anchor, iterator))); //internally updates iterator
-			
+
 			ctx.statement().appendBefore(anchor); //body
-						
+
 			new TACBranch(anchor, conditionLabel).setContext(null);
 			conditionLabel.insertBefore(anchor);
-			
+
 			//check if iterator has next
 			signature = iteratorType.getType().getMatchingMethod("hasNext", new SequenceType());
 			TACMethodName hasNext = new TACMethodName(anchor, new TACLocalLoad(anchor, iterator), signature);
 			condition = new TACCall(anchor, hasNext, new TACLocalLoad(anchor, iterator));
-			
+
 			new TACBranch(anchor, condition, bodyLabel, endLabel);		
 			endLabel.insertBefore(anchor);
 		}			
 
 		method.exitScope();
 		block = block.getParent();	
-		
+
 		return null;		
 	}
-	
+
 	@Override public Void visitForStatement(ShadowParser.ForStatementContext ctx)
 	{ 
 		block = new TACBlock(anchor, block).addBreak().addContinue();
 		method.enterScope(); //needed because a variable can be declared in a for
 		visitChildren(ctx);		
-		
+
 		if( ctx.forInit() != null )
 			ctx.forInit().appendBefore(anchor);
-		
+
 		TACLabel bodyLabel = new TACLabel(method),
-				 updateLabel = block.getContinue(),
-				 conditionLabel = (ctx.forUpdate() != null) ?
-							new TACLabel(method) : updateLabel,				 
-				 endLabel = block.getBreak();						
-		//branch to condition
-		new TACBranch(anchor, conditionLabel);
-		
-		//body
-		bodyLabel.insertBefore(anchor);
-		ctx.statement().appendBefore(anchor);
-		
-		//update (if exists)
-		if( ctx.forUpdate() != null ) {
-			new TACBranch(anchor, updateLabel).setContext(null); //prevents dead code removal error
-			updateLabel.insertBefore(anchor);
-			ctx.forUpdate().appendBefore(anchor);
-		}
-		
-		//condition
-		new TACBranch(anchor, conditionLabel).setContext(null); //prevents dead code removal error
-		conditionLabel.insertBefore(anchor);
-		new TACBranch(anchor, ctx.conditionalExpression().appendBefore(anchor), bodyLabel, endLabel);
-		
-		endLabel.insertBefore(anchor);		
-		method.exitScope();
-		block = block.getParent();	
-		
-		return null;		
+				updateLabel = block.getContinue(),
+				conditionLabel = (ctx.forUpdate() != null) ?
+						new TACLabel(method) : updateLabel,				 
+						endLabel = block.getBreak();						
+						//branch to condition
+						new TACBranch(anchor, conditionLabel);
+
+						//body
+						bodyLabel.insertBefore(anchor);
+						ctx.statement().appendBefore(anchor);
+
+						//update (if exists)
+						if( ctx.forUpdate() != null ) {
+							new TACBranch(anchor, updateLabel).setContext(null); //prevents dead code removal error
+							updateLabel.insertBefore(anchor);
+							ctx.forUpdate().appendBefore(anchor);
+						}
+
+						//condition
+						new TACBranch(anchor, conditionLabel).setContext(null); //prevents dead code removal error
+						conditionLabel.insertBefore(anchor);
+						new TACBranch(anchor, ctx.conditionalExpression().appendBefore(anchor), bodyLabel, endLabel);
+
+						endLabel.insertBefore(anchor);		
+						method.exitScope();
+						block = block.getParent();	
+
+						return null;		
 	}
-	
+
 	@Override public Void visitForInit(ShadowParser.ForInitContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		if( ctx.localVariableDeclaration() != null )
 			ctx.localVariableDeclaration().appendBefore(anchor);
 		else
 			ctx.statementExpressionList().appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitStatementExpressionList(ShadowParser.StatementExpressionListContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		for( ShadowParser.StatementExpressionContext child : ctx.statementExpression() )
 			child.appendBefore(anchor);
-		
+
 		return null;	
 	}
-	
+
 	@Override public Void visitForUpdate(ShadowParser.ForUpdateContext ctx)
 	{ 
 		visitChildren(ctx);
 		ctx.statementExpressionList().appendBefore(anchor);
-		
+
 		return null;	
 	}
-	
+
 	@Override public Void visitBreakOrContinueStatement(ShadowParser.BreakOrContinueStatementContext ctx)
 	{ 
 		//no children
@@ -2013,7 +2012,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//Unreachable code will be detected and removed in TAC analysis.
 		TACLabel unreachableLabel = new TACLabel(method);
 		TACBlock exitBlock;
-		
+
 		if( ctx.getChild(0).getText().equals("break") ) {
 			exitBlock = block.getBreakBlock();
 			visitCleanup(exitBlock, null, exitBlock.getBreak());
@@ -2022,31 +2021,31 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			exitBlock = block.getContinueBlock();
 			visitCleanup(exitBlock, null, exitBlock.getContinue());
 		}
-		
+
 		unreachableLabel.insertBefore(anchor);		
-		
+
 		return null;	
 	}
-	
+
 	@Override public Void visitReturnStatement(ShadowParser.ReturnStatementContext ctx)
 	{ 
 		visitChildren(ctx);	
-		
+
 		TACOperand rightSide = null;
 		if( ctx.rightSide() != null )
 			rightSide = ctx.rightSide().appendBefore(anchor);
-		
+
 		TACLabel unreachableLabel = new TACLabel(method);		
-		
+
 		//turn context off to avoid dead code removal errors
 		Context context = anchor.getContext();
 		anchor.setContext(null);
-		
+
 		//store the return value before the cleanup
 		if( !method.getSignature().isCreate() ) {			
 			if( rightSide != null ) {			
 				Type type = rightSide.getType();
-				
+
 				if( type instanceof SequenceType ) {
 					TACSequence sequence = (TACSequence)rightSide;
 					SequenceType sequenceType = (SequenceType) type;
@@ -2057,20 +2056,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					new TACLocalStore(anchor, method.getLocal("return"), rightSide);
 			}
 		}
-		
+
 		//do the cleanup, de-referencing variables
 		visitCleanup(null, null);
-		
+
 		//turn context back on
 		anchor.setContext(context);
-		
+
 		if( method.getSignature().isCreate() )				
 			new TACReturn(anchor, method.getSignature().getSignatureWithoutTypeArguments().getFullReturnTypes(),
 					new TACLocalLoad(anchor, method.getLocal("this")));		
 		else {			
 			if( rightSide != null ) {
 				Type type = rightSide.getType();
-						
+
 				if( type instanceof SequenceType ) {
 					SequenceType sequenceType = (SequenceType) type;
 					List<TACOperand> operands = new ArrayList<TACOperand>(sequenceType.size());
@@ -2084,27 +2083,27 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			else
 				new TACReturn(anchor, new SequenceType());			
 		}
-		
+
 		unreachableLabel.insertBefore(anchor);		
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitThrowStatement(ShadowParser.ThrowStatementContext ctx)
 	{ 
 		visitChildren(ctx);
 		TACLabel unreachableLabel = new TACLabel(method);
 		new TACThrow(anchor, ctx.conditionalExpression().appendBefore(anchor));
 		unreachableLabel.insertBefore(anchor);		
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitFinallyStatement(ShadowParser.FinallyStatementContext ctx)
 	{ 
 		block = new TACBlock(anchor, block).addDone();
 		visitChildren(ctx);
-		
+
 		ctx.recoverStatement().appendBefore(anchor);
 		if( ctx.block() != null ) {
 			TACPhi phi = (TACPhi)anchor.getPrevious(); //last thing before the anchor is a phi
@@ -2113,19 +2112,19 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}
 		block.getDone().insertBefore(anchor);		
 		block = block.getParent();	
-		
+
 		return null;	
 	}
-	
+
 	@Override public Void visitRecoverStatement(ShadowParser.RecoverStatementContext ctx)
 	{
 		ShadowParser.FinallyStatementContext parent = (FinallyStatementContext) ctx.getParent();
 		if( parent.block() != null ) //parent has finally
 			block = new TACBlock(anchor, block).addLandingpad().addUnwind().
 			addCleanup().addDone();
-		
+
 		visitChildren(ctx);
-		
+
 		ctx.catchStatements().appendBefore(anchor);
 		if( ctx.block() != null ) { //has recover
 			ctx.block().appendBefore(anchor);
@@ -2134,11 +2133,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		if ( parent.block() != null ) { //parent has finally
 			block.getDone().insertBefore(anchor);
 			method.setHasLandingpad();
-			
+
 			//turn off context to prevent dead code removal errors
 			Context context = anchor.getContext();
 			anchor.setContext(null);			
-			
+
 			visitCleanup( block.getParent(), block.getDone(),
 					block.getParent().getDone() );
 			block.getLandingpad().insertBefore(anchor);
@@ -2155,102 +2154,102 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			}
 			//turn context back on
 			anchor.setContext(context);
-			
+
 			block.getCleanup().insertBefore(anchor);
 			block.getCleanupPhi().insertBefore(anchor);
 			block = block.getParent();				
 		}
-		
+
 		return null;
 	}
 
-	
+
 	@Override public Void visitCatchStatements(ShadowParser.CatchStatementsContext ctx)
 	{ 
 		ShadowParser.RecoverStatementContext parent = (RecoverStatementContext) ctx.getParent();
-		
+
 		block = new TACBlock(anchor, block);
 		if( parent.block() != null ) //parent has recover
 			block.addRecover();
-		
+
 		block.addCatches(ctx.catchStatement().size());
-		
+
 		visitChildren(ctx);
-		
+
 		ctx.tryStatement().appendBefore(anchor); //appends try block
-		
+
 		if( ctx.catchStatement().size() > 0 ) {
 			//ignores context for a while, preventing dead code removal errors
 			//they'll be caught inside the catch
 			//catching them here creates misleading error messages
 			Context context = anchor.getContext();
 			anchor.setContext(null);
-			
+
 			TACOperand typeid = new TACSequenceElement(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")), 1 );
 			for( int i = 0; i < ctx.catchStatement().size(); ++i ) {
 				ShadowParser.CatchStatementContext child = ctx.catchStatement(i);
 				Type type = child.formalParameter().getType();
 				TACLabel catchLabel = block.getCatch(i),
 						skip = new TACLabel(method);
-				
+
 				new TACBranch(anchor, new TACBinary(anchor, typeid, new TACTypeId(anchor, new TACClass(anchor, type).getClassData())),
 						catchLabel, skip);
-						
+
 				catchLabel.insertBefore(anchor);
 				child.appendBefore(anchor); //append catch i
 				new TACBranch(anchor, block.getDone()); //prevents dead code removal error
 				skip.insertBefore(anchor);
 			}
-			
+
 			TACLabel continueUnwind = block.getUnwind();
 			if (continueUnwind != null)
 				new TACBranch(anchor, continueUnwind); //try inside of try					
 			else
 				new TACResume(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")));
-			
+
 			anchor.setContext(context);
 		}			
 
 		if( parent.block() != null ) //parent has recover			
 			block.getRecover().insertBefore(anchor);
-		
+
 		block = block.getParent();	
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitCatchStatement(ShadowParser.CatchStatementContext ctx)	
 	{ 
 		method.enterScope();
 		visitChildren(ctx); 
-		
+
 		ShadowParser.FormalParameterContext parameter = ctx.formalParameter();
-		
+
 		parameter.appendBefore(anchor);
-							
+
 		new TACLocalStore(anchor, method.getLocal(
 				parameter.Identifier().getText()), new TACCatch(anchor,
-				(ExceptionType)parameter.getType(), new TACLocalLoad(anchor, method.getLocal("_exception"))));
+						(ExceptionType)parameter.getType(), new TACLocalLoad(anchor, method.getLocal("_exception"))));
 		ctx.block().appendBefore(anchor);
 		method.exitScope();
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitTryStatement(ShadowParser.TryStatementContext ctx)
 	{ 
 		ShadowParser.CatchStatementsContext parent = (CatchStatementsContext) ctx.getParent();
 		if( parent.catchStatement().size() > 0 )
 			block = new TACBlock(anchor, block).addLandingpad().addUnwind();
-		
+
 		visitChildren(ctx); 
-		
+
 		ctx.block().appendBefore(anchor);
-		
+
 		//turn context off to avoid dead code removal errors
 		Context context = anchor.getContext();
 		anchor.setContext(null);
-		
+
 		new TACBranch(anchor, block.getDone());		
 		if( parent.catchStatement().size() > 0 ) {
 			method.setHasLandingpad();
@@ -2261,10 +2260,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			block.getUnwind().insertBefore(anchor);
 			block = block.getParent();				
 		}
-		
+
 		//turn context back on
 		anchor.setContext(context);
-		
+
 		return null;
 	}	
 
@@ -2288,7 +2287,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		else
 			new TACBranch(anchor, lastLabel);
 	}
-	
+
 	private void visitCleanup(TACBlock currentBlock, TACBlock lastBlock,
 			TACLabel currentLabel, TACLabel lastLabel) {
 		if (currentLabel == null) {
@@ -2318,18 +2317,18 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		constantRef.setNode(constantNode.conditionalExpression().getList().getNext());		
 		moduleStack.peek().addConstant(constantRef);		
 	}	
-	
+
 	private void setupMethod() {
 		//begin synthetic finally for gc handling
 		block = new TACBlock(method).addDone();
 		//block = new TACBlock(method); //no done needed, since nothing should come after?
 		anchor = new TACDummyNode(null, block);		
-		
-		
+
+
 		//synthetic recoverStatement
 		block = new TACBlock(anchor, block).addLandingpad().addUnwind().
 				addCleanup().addDone();
-		
+
 		//synthetic catchStatements
 		block = new TACBlock(anchor, block);	
 	}
@@ -2338,18 +2337,18 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//turn off context to prevent dead code removal errors
 		Context context = anchor.getContext();
 		anchor.setContext(null);		
-		
+
 		//synthetic try statement
 		new TACBranch(anchor, block.getDone()).setContext(null);
-		
+
 		//synthetic catchStatements
 		block = block.getParent();	
-					
+
 		//synthetic recoverStatement			
 		block.getDone().insertBefore(anchor);
 		//new TACBranch(anchor, block.getCleanup());
 		method.setHasLandingpad();					
-		
+
 		//is this necessary, since every GC method will have a finally?
 		visitCleanup( block.getParent(), block.getDone(),
 				block.getParent().getDone() );
@@ -2360,55 +2359,55 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		block.getUnwind().insertBefore(anchor);
 		visitCleanup(block, block.getUnwind());								
 		new TACResume(anchor, new TACLocalLoad(anchor, exception));
-		
+
 		block.getCleanup().insertBefore(anchor);
 		block.getCleanupPhi().insertBefore(anchor);
 		block = block.getParent();	
-		
+
 		//synthetic finally
 		TACPhi phi = (TACPhi)anchor.getPrevious(); //last thing before the anchor is a phi
-		
+
 		//all the decrements go before this indirect branch		
 		new TACBranch(anchor, phi);				
-	
+
 		block.getDone().insertBefore(anchor); //catches things that should have a return but don't		
 		//block = block.getParent();	
-				
+
 		//turn context back on
 		anchor.setContext(context);
 	}
-	
+
 	private void visitCopyMethod(MethodSignature methodSignature) {
 		ClassType type = (ClassType) methodSignature.getOuter();
 		method.addParameters(anchor); //address map called "addresses"
-		
+
 		Context context = anchor.getContext();
 		anchor.setContext(null);
-		
+
 		if( type.getModifiers().isImmutable() ) {
 			//local store includes increase of reference count
 			new TACLocalStore(anchor, method.getLocal("return"), new TACLocalLoad(anchor, method.getThis()));					
-			
+
 			visitCleanup(null, null);
-			
+
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-			
+
 			anchor.setContext(context);
-			
+
 			new TACLabel(method).insertBefore(anchor); //unreachable label
-			
+
 		}			
 		else {					
 			TACOperand this_ = new TACLocalLoad(anchor, method.getThis());
 			TACOperand address = new TACPointerToLong(anchor, this_);					
-			
+
 			TACOperand map = new TACLocalLoad(anchor, method.getParameter("addresses"));
 			TACMethodName indexMethod = new TACMethodName(anchor, Type.ADDRESS_MAP.getMatchingMethod("containsKey", new SequenceType(Type.ULONG)) );
 			TACOperand test = new TACCall(anchor, indexMethod, map, address );
-			
+
 			TACLabel copyLabel = new TACLabel(method),
 					returnLabel = new TACLabel(method);
-			
+
 			new TACBranch(anchor, test, returnLabel, copyLabel);
 			copyLabel.insertBefore(anchor);			
 
@@ -2421,8 +2420,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 				//allocate a new array (which by default gets a ref count of 1)
 				TACOperand array = new TACNewArray(anchor, new ArrayType(genericArray.getTypeParameters().get(0).getType(), isNullable), arrayClass, length);
-				
-				
+
+
 				TACOperand classArray = new TACLoad(anchor, new TACFieldRef(arrayClass, new SimpleModifiedType(new ArrayType(Type.CLASS), new Modifiers(Modifiers.IMMUTABLE)), "parameters"));
 				TACOperand baseClass = new TACLoad(anchor, new TACArrayRef(anchor, classArray, new TACLiteral(anchor, new ShadowInteger(0L)), false));
 
@@ -2431,71 +2430,71 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				TACLabel done = new TACLabel(method);
 				TACLabel body = new TACLabel(method);
 				TACLabel condition = new TACLabel(method);
-				
-				
+
+
 				TACMethodName isPrimitive = new TACMethodName(anchor, baseClass, Type.CLASS.getMatchingMethod("isPrimitive", new SequenceType()));
 				TACOperand checkPrimitive = new TACCall(anchor, isPrimitive, isPrimitive.getPrefix());
 				new TACBranch(anchor, checkPrimitive, primitive, startLoop);	
-				
+
 				//if primitive
 				primitive.insertBefore(anchor);				
-				
+
 				TACMethodName getWidth = new TACMethodName(anchor, baseClass, Type.CLASS.getMatchingMethod("width", new SequenceType()));
 				TACOperand width = new TACCall(anchor, getWidth, getWidth.getPrefix());
 				TACOperand sizeInBytes = new TACBinary(anchor, length, Type.LONG.getMatchingMethod("multiply", new SequenceType(Type.LONG)), "*", width);  
-				
+
 				new TACCopyMemory(anchor, array, this_,  sizeInBytes, true );			
-				
+
 				new TACBranch(anchor, done);				
-				
+
 				//start loop
 				startLoop.insertBefore(anchor);
-				
+
 				TACVariable i = method.addTempLocal(new SimpleModifiedType(Type.LONG));
 				new TACLocalStore(anchor, i, new TACLiteral(anchor, new ShadowInteger(0L)));
 				new TACBranch(anchor, condition);				
 
 				condition.insertBefore(anchor);
-				
+
 				TACOperand loop = new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
 				new TACBranch(anchor, loop, body, done);
 				body.insertBefore(anchor);
-				
+
 				SequenceType indexArguments = new SequenceType();
 				indexArguments.add(i);					
 				TACMethodName indexLoad = new TACMethodName(anchor, genericArray.getMatchingMethod("index", indexArguments));
 				indexArguments.add(genericArray.getTypeParameters().get(0));
 				TACMethodName indexStore = new TACMethodName(anchor, genericArray.getMatchingMethod("index", indexArguments));
-										
+
 				TACOperand value = new TACCall(anchor, indexLoad, this_, new TACLocalLoad(anchor, i));
-				
+
 				TACLabel skipLabel = new TACLabel(method);
 				TACLabel makeCopyLabel = new TACLabel(method);
 				TACOperand isNull = new TACBinary(anchor, value, new TACLiteral(anchor, new ShadowNull(value.getType())));
 				new TACBranch(anchor, isNull, skipLabel, makeCopyLabel);
-				
+
 				makeCopyLabel.insertBefore(anchor);
-				
+
 				TACMethodName copy = new TACMethodName(anchor, value, Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
-				
+
 				value = new TACCall(anchor, copy, copy.getPrefix(), map);
 				new TACCall(anchor, indexStore, array, new TACLocalLoad(anchor, i), value);						
 				new TACBranch(anchor, skipLabel);
-				
+
 				skipLabel.insertBefore(anchor);						
-				
+
 				new TACLocalStore(anchor, i, new TACBinary(anchor, new TACLocalLoad(anchor, i), Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", new TACLiteral(anchor, new ShadowInteger(1L)), false ));
 				new TACBranch(anchor, condition);					
-				
+
 				done.insertBefore(anchor);
-				
+
 				new TACLocalStore(anchor, method.getLocal("return"), array);
 			}
 			else {
 				//allocate a new object (which by default gets a ref count of 1)
 				TACNewObject object = new TACNewObject(anchor, type);
 				TACOperand duplicate;				
-				
+
 				//add it to the map of addresses
 				SequenceType arguments = new SequenceType();
 				arguments.add(new SimpleModifiedType(Type.ULONG));  //key
@@ -2503,16 +2502,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				indexMethod = new TACMethodName(anchor, Type.ADDRESS_MAP.getMatchingMethod("index", arguments) );
 				TACOperand newAddress = new TACPointerToLong(anchor, object);					
 				new TACCall(anchor, indexMethod, map, address, newAddress);
-				
+
 				//perform a memcopy to sweep up all the primitives and immutable data (and nulls)
 				TACOperand size = new TACLoad(anchor, new TACFieldRef(object.getClassData(), "size"));
 				new TACCopyMemory(anchor, object, this_, size);
-				
+
 				if( type.equals(Type.OBJECT))
 					duplicate = object;
 				else
 					duplicate = TACCast.cast(anchor, new SimpleModifiedType(type), object); //casts object to type
-				
+
 				//copy other fields in using their copy methods
 				//arrays need special attention
 				TACMethodName copyMethod;
@@ -2523,7 +2522,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					ModifiedType entryType = entry.getValue();
 					//only copy non-primitive types and non-singletons
 					if( !entryType.getType().isPrimitive() &&
-						!(entryType.getType() instanceof SingletonType) ) {
+							!(entryType.getType() instanceof SingletonType) ) {
 						//increment ref count on immutables (which have already been copied through memcpy)
 						if( entryType.getModifiers().isImmutable() )
 							new TACChangeReferenceCount(anchor, new TACFieldRef(duplicate, entryType, entry.getKey()), true );
@@ -2531,11 +2530,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 							//get field references
 							field = new TACLoad(anchor, new TACFieldRef(this_, entryType, entry.getKey()));
 							newField = new TACFieldRef(duplicate, entryType, entry.getKey());
-							
+
 							TACLabel copyField = new TACLabel(method);
 							TACLabel skipField = new TACLabel(method);									
 
-							
+
 							if( entryType.getType() instanceof InterfaceType ) {
 								//cast converts from interface to object
 								field = TACCast.cast(anchor, new SimpleModifiedType(Type.OBJECT), field);
@@ -2543,7 +2542,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 							}
 							else //normal object or array
 								copyMethod = new TACMethodName(anchor, field, entryType.getType().getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
-							
+
 							TACOperand nullCondition = new TACBinary(anchor, field, new TACLiteral(anchor, new ShadowNull(field.getType())));
 							new TACBranch(anchor, nullCondition, skipField, copyField); //if null, skip
 
@@ -2553,51 +2552,51 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 							if( entryType.getType() instanceof InterfaceType )
 								//and then cast back to interface
 								copiedField = TACCast.cast(anchor, newField, copiedField);																
-							
-							
+
+
 							//store copied value
 							//should increment ref count
 							TACStore store = new TACStore(anchor, newField, copiedField);
 							//don't decrement old value, since the old field is sitting there because of memcpy
 							store.setDecrementReference(false); 
 							new TACBranch(anchor, skipField);								
-							
+
 							skipField.insertBefore(anchor);
 						}
 					}
 				}				
-				
+
 				new TACLocalStore(anchor, method.getLocal("return"), duplicate);
 			}							
-			
+
 			visitCleanup(null, null);
-			
+
 			//for now, just return this
 			//after incrementing reference count
 			//if( !type.isPrimitive() )
-				//new TACChangeReferenceCount(anchor, method.getThis(), true);
-			
+			//new TACChangeReferenceCount(anchor, method.getThis(), true);
+
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-			
+
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 
 			returnLabel.insertBefore(anchor);
-			
+
 			indexMethod = new TACMethodName(anchor, Type.ADDRESS_MAP.getMatchingMethod("index", new SequenceType(Type.ULONG)) );
 			TACOperand index = new TACCall(anchor, indexMethod, map, address );
 			TACOperand existingObject = new TACLongToPointer(anchor, index, new SimpleModifiedType(type));
-			
-			
+
+
 			new TACLocalStore(anchor, method.getLocal("return"), existingObject);					
-			
+
 			visitCleanup(null, null);					
-			
+
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-								
+
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}
 	}
-	
+
 	private void visitGetOrSetMethod(MethodSignature methodSignature) {
 		method.addParameters(anchor);
 		TACFieldRef field = new TACFieldRef(new TACLocalLoad(
@@ -2605,9 +2604,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		if (methodSignature.isGet()) {
 			TACLoad load = new TACLoad(anchor, field);
 			new TACLocalStore(anchor, method.getLocal("return"), load);
-			
+
 			visitCleanup(null, null);	
-			
+
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(),	load);
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}
@@ -2616,28 +2615,28 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			for (TACVariable parameter : method.getParameters())
 				value = parameter;
 			new TACStore(anchor, field, new TACLocalLoad(anchor, value));
-			
+
 			visitCleanup(null, null);	
-			
+
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}	
 	}
-	
+
 	//Anything that's a pure TypeParameter in the unparameterized version will be kept, since primitives and interfaces need special casting into TypeParameters
 	private static SequenceType keepTypeParameters(SequenceType withArguments, SequenceType withoutArguments) {
 		SequenceType result = new SequenceType();
-		
+
 		for( int i = 0; i < withArguments.size(); ++i ) {
 			if( withoutArguments.getType(i) instanceof TypeParameter )
 				result.add(withoutArguments.get(i));
 			else
 				result.add(withArguments.get(i));
 		}
-		
+
 		return result;
 	}
-	
+
 	private void visitWrapperMethod(MethodSignature methodSignature) {
 		// Do nothing for primitive wrappers for destroys
 		if( methodSignature.isDestroy() && methodSignature.getOuter().isPrimitive() ) {
@@ -2647,40 +2646,40 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			explicitReturn.setContext(null);
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}		
-		
+
 		MethodSignature wrapped = methodSignature.getWrapped();
 		SequenceType fromTypes = keepTypeParameters(methodSignature.getFullParameterTypes(),methodSignature.getSignatureWithoutTypeArguments().getFullParameterTypes());
 		SequenceType toTypes = keepTypeParameters(wrapped.getFullParameterTypes(), wrapped.getSignatureWithoutTypeArguments().getFullParameterTypes());
 		Iterator<TACVariable> fromArguments = method.addParameters(anchor, true).getParameters().iterator();
 		List<TACOperand> toArguments = new ArrayList<TACOperand>(toTypes.size());
-		
+
 		for (int i = 0; i < toTypes.size(); i++) {
 			TACOperand argument = new TACLocalLoad(anchor, fromArguments.next());
 			if (!fromTypes.getType(i).isSubtype(toTypes.getType(i)))
 				argument = TACCast.cast(anchor, toTypes.get(i), argument);
 			toArguments.add(argument);				
 		}
-		
+
 		TACOperand value = new TACCall(anchor, new TACMethodName(anchor,wrapped), toArguments); 
-		
+
 		TACLabel unreachableLabel = new TACLabel(method);		
-		
+
 		//turn context off to avoid dead code removal errors
 		Context context = anchor.getContext();
 		anchor.setContext(null);				
-		
+
 		if( methodSignature.getFullReturnTypes().isEmpty() ) {
 			visitCleanup(null, null);	
-			
+
 			//turn context back on
 			anchor.setContext(context);					
-			
+
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), null);
 		}
 		else {
 			fromTypes = keepTypeParameters(wrapped.getFullReturnTypes(), wrapped.getSignatureWithoutTypeArguments().getFullReturnTypes());
 			toTypes = keepTypeParameters(methodSignature.getFullReturnTypes(),methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
-			
+
 			//cast all returns and store them in appropriate variables
 			if( value.getType() instanceof SequenceType ) {						
 				TACSequence sequence = (TACSequence)value;
@@ -2693,12 +2692,12 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					value = TACCast.cast(anchor, toTypes.get(0), value);
 				new TACLocalStore(anchor, method.getLocal("return"), value);
 			}	
-			
+
 			visitCleanup(null, null);
-			
+
 			//turn context back on
 			anchor.setContext(context);
-			
+
 			if( value.getType() instanceof SequenceType ) {
 				SequenceType sequenceType = (SequenceType) value.getType();
 				List<TACOperand> operands = new ArrayList<TACOperand>(sequenceType.size());
@@ -2709,32 +2708,32 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			else			
 				new TACReturn(anchor, toTypes, new TACLocalLoad(anchor, method.getLocal("return")));	
 		}
-		
+
 		unreachableLabel.insertBefore(anchor);
 	}
-	
+
 	private void visitRegularMethod(MethodSignature methodSignature) {		
 		boolean implicitCreate = false;
-		
+
 		method.addParameters(anchor);
-		
+
 		if( methodSignature.isCreate()) {
 			ShadowParser.CreateDeclarationContext declaration = (ShadowParser.CreateDeclarationContext) methodSignature.getNode();
 			implicitCreate = declaration.createBlock() == null || declaration.createBlock().explicitCreateInvocation() == null;
 		}
-		
+
 		// Call parent create if implicit create.
 		if( implicitCreate ) {
 			ClassType thisType = (ClassType)methodSignature.getOuter(),
 					superType = thisType.getExtendType();
 			if (superType != null) {
 				TACCall call = new TACCall(anchor, new TACMethodName(anchor,
-							superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
-							method.getThis()));
-				
+						superType.getMatchingMethod("create", new SequenceType())), new TACLocalLoad(anchor,
+								method.getThis()));
+
 				call.setDelegatedCreate(true);
 			}
-			
+
 			// Walk fields in *exactly* the order they were declared since
 			// some fields depend on prior fields.
 			// This is accomplished by using a LinkedHashMap.
@@ -2744,32 +2743,32 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					field.appendBefore(anchor);
 				}
 		}				
-		
+
 		visit(methodSignature.getNode());
 		methodSignature.getNode().appendBefore(anchor);
-		
+
 		//fill in all the fields to destroy
 		if( methodSignature.isDestroy() ) {
-			
+
 			if( !methodSignature.getOuter().isPrimitive() ) {			
 				TACOperand this_ = new TACLocalLoad(anchor, method.getThis());					
-				
+
 				ClassType classType = (ClassType)(methodSignature.getOuter()); 
 				for( Entry<String, ? extends ModifiedType> entry : classType.sortFields() ) {										
 					TACFieldRef reference = new TACFieldRef(this_, entry.getKey());
 					if( reference.needsGarbageCollection() )
 						new TACChangeReferenceCount(anchor, reference, false);				
 				}					
-				
+
 				//the mirror image of a create: calls parent destroy *afterwards*
 				ClassType thisType = (ClassType)methodSignature.getOuter(),
 						superType = thisType.getExtendType();
 				if( superType != null )					
 					new TACCall(anchor, new TACMethodName(anchor,
 							superType.getMatchingMethod("destroy", new SequenceType())), new TACLocalLoad(anchor,
-							method.getThis()));
+									method.getThis()));
 			}
-			
+
 			//add explicit return					
 			TACReturn explicitReturn = new TACReturn(anchor, new SequenceType() ); 
 			//prevents an error from being recorded if this return is later removed as dead code
@@ -2782,11 +2781,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private void visitMethod(MethodSignature methodSignature) {
 		TACNode saveTree = anchor;
 		TACMethod method = this.method = new TACMethod(methodSignature);
-		
-		if( moduleStack.peek().isClass() && !methodSignature.isNative() && !methodSignature.isExternWithoutBlock() ) {				
-			
+
+		if( moduleStack.peek().isClass() && !methodSignature.isImport() ) {				
+
 			setupMethod();
-			
+
 			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() )
 				visitCopyMethod(methodSignature);
 			//Gets and sets that were created by default (that's why they have a null parent)
@@ -2796,29 +2795,29 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				visitWrapperMethod(methodSignature);
 			else // Regular method, create, or destroy (includes empty creates and destroys)
 				visitRegularMethod(methodSignature);			
-			
+
 			cleanupMethod();			
-			
+
 			anchor = anchor.remove(); //gets node before anchor (and removes dummy)
 			method.setNode(anchor.getNext()); //the node after last node is, strangely, the first node			
 		}
-		
+
 		moduleStack.peek().addMethod(method);
 		block = null;
 		this.method = null;
 		anchor = saveTree;
 	}	
-	
+
 	private void visitBinaryOperation(Context node, List<? extends Context> list) {
 		TACOperand current = list.get(0).appendBefore(anchor);		
-		
+
 		for( int i = 1; i < list.size(); i++ ) {
 			String op = node.getChild(2*i - 1).getText();  //the operations are every other child
 			TACOperand next = list.get(i).appendBefore(anchor);
 			MethodSignature signature = node.getOperations().get(i - 1);
 			boolean isCompare = ( op.equals("<") || op.equals(">") || op.equals("<=") || op.equals(">=") );
 			Type currentType = resolveType(current.getType());
-			if( currentType.isPrimitive() && signature.isNative() && !signature.isExternWithoutBlock() ) //operation based on method
+			if( currentType.isPrimitive() && signature.isImport() ) //operation based on method
 				current = new TACBinary(anchor, current, signature, op, next, isCompare );
 			else {	
 				//comparisons will always give positive, negative or zero integer
@@ -2833,7 +2832,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					current = new TACCall(anchor, new TACMethodName(anchor, current, signature), current, next);				
 			}			
 		}
-		
+
 		node.setOperand(current);
 	}
 
@@ -2842,64 +2841,64 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//nothing to do
 		if( create == null && defaultValue == null )
 			return;
-		
+
 		TACLabel bodyLabel = new TACLabel(method),
-					updateLabel = new TACLabel(method),
-					conditionLabel = new TACLabel(method),
-					endLabel = new TACLabel(method);
-		
+				updateLabel = new TACLabel(method),
+				conditionLabel = new TACLabel(method),
+				endLabel = new TACLabel(method);
+
 		//make iterator (int index)
 		TACVariable iterator = method.addTempLocal(new SimpleModifiedType(Type.LONG));
 		new TACLocalStore(anchor, iterator, new TACLiteral(anchor, new ShadowInteger(0)));
 		TACOperand length = arraySize(anchor, array, true);			
 		new TACBranch(anchor, conditionLabel);  //init is done, jump to condition
-		
+
 		bodyLabel.insertBefore(anchor);
-		
+
 		//put initialization before main body
 		TACArrayRef location = new TACArrayRef(anchor, array, new TACLocalLoad(anchor, iterator), false);		
-				
+
 		if( create != null)
 			new TACStore(anchor, location, callCreate( create, params, create.getOuter()));
 		else
 			new TACStore(anchor, location, defaultValue);		
-		
+
 		new TACBranch(anchor, updateLabel);
 		updateLabel.insertBefore(anchor);			
-		
+
 		//increment iterator							
 		TACOperand value = new TACBinary(anchor, new TACLocalLoad(anchor, iterator), Type.LONG.getMatchingMethod("add", new SequenceType(Type.LONG)), "+", new TACLiteral(anchor, new ShadowInteger(1)));
 		new TACLocalStore(anchor, iterator, value);	
-		
+
 		new TACBranch(anchor, conditionLabel);
 		conditionLabel.insertBefore(anchor);
-		
+
 		//check if iterator < array length
 		value = new TACLocalLoad(anchor, iterator);			
 		TACOperand condition = new TACBinary(anchor, value, Type.LONG.getMatchingMethod("compare", new SequenceType(Type.LONG)), "<", length, true );
-		
+
 		new TACBranch(anchor, condition, bodyLabel, endLabel);		
 		endLabel.insertBefore(anchor);
 	}
-	
+
 	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes, MethodSignature create, List<TACOperand> params)
 	{
 		return visitArrayAllocation(type, arrayClass, sizes, 0, create, params, null);
 	}
-	
+
 	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes, TACOperand defaultValue)
 	{
 		return visitArrayAllocation(type, arrayClass, sizes, 0, null, null, defaultValue);
 	}
-	
+
 	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes)
 	{
 		return visitArrayAllocation(type, arrayClass, sizes, 0, null, null, null);
 	}
-	
+
 	private TACOperand visitArrayAllocation(ArrayType type, TACClass arrayClass,
 			List<TACOperand> sizes, int dimension, MethodSignature create, List<TACOperand> params, TACOperand defaultValue)
 	{
@@ -2931,71 +2930,71 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			//fill with values			
 			initializeArray(alloc, create, params, defaultValue);			
 		}
-		
+
 		return alloc;		
 	}	
-	
+
 	@Override public Void visitDestroy(ShadowParser.DestroyContext ctx)
 	{ 
 		throw new UnsupportedOperationException();		
 	}
-		
+
 	@Override public Void visitForeachInit(ShadowParser.ForeachInitContext ctx)
 	{ 
 		visitChildren(ctx);	
-		
+
 		method.addLocal(ctx, ctx.Identifier().getText());		
 		//append collection
 		ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
 		return null;
 	}
-	
+
 	@Override public Void visitInlineResults(ShadowParser.InlineResultsContext ctx)
 	{ 
 		throw new UnsupportedOperationException();
 	}	
-	
+
 	@Override public Void visitSequenceRightSide(ShadowParser.SequenceRightSideContext ctx)	
 	{ 
 		visitChildren(ctx);
-		
+
 		//Note: their instructions are appended, but the operands for each sequence element are retrieved later and not saved here
 		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() )
 			child.appendBefore(anchor);
-		
+
 		return null;		
 	}	
 
 	@Override public Void visitSequenceLeftSide(ShadowParser.SequenceLeftSideContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		//Note: their instructions are appended, but the operands for each sequence element are retrieved later and not saved here
 		for( ParseTree child : ctx.children )
 			if( child instanceof Context )
 				((Context)child).appendBefore(anchor);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitSequenceVariable(ShadowParser.SequenceVariableContext ctx)
 	{ 
 		visitChildren(ctx);
-				
+
 		TACVariable var = method.addLocal(ctx, ctx.Identifier().getText());
-		
+
 		prefix = new TACLocalLoad(anchor, var);
 		ctx.setOperand(prefix);
-		
+
 		//ctx.setOperand(new TACLocalStore(anchor, var, new TACLiteral(anchor, new ShadowUndefined(ctx.getType()))));
-		
+
 		return null;		
 	}
-	
+
 	@Override public Void visitRightSide(ShadowParser.RightSideContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		if( ctx.sequenceRightSide() != null ) {
 			ctx.sequenceRightSide().appendBefore(anchor);
 			List<TACOperand> sequence =
@@ -3006,31 +3005,31 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}
 		else
 			ctx.setOperand(ctx.conditionalExpression().appendBefore(anchor));
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitCopyExpression(ShadowParser.CopyExpressionContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		TACOperand value = ctx.conditionalExpression().appendBefore(anchor);
 		prefix = value;
 		Type type = ctx.getType();
-		
+
 		if( !type.getModifiers().isImmutable() ) { //if immutable, do nothing, the old one is fine
 			TACNewObject object = new TACNewObject(anchor, Type.ADDRESS_MAP );
 			TACMethodName create = new TACMethodName(anchor, Type.ADDRESS_MAP.getMatchingMethod("create", new SequenceType()) );
 			TACOperand map = new TACCall(anchor, create, object);
-			
+
 			TACMethodName copyMethod;
 			TACVariable result = method.addTempLocal(ctx);
 			TACOperand data = value;					
-			
+
 			TACLabel nullLabel = new TACLabel(method);
 			TACLabel doneLabel = new TACLabel(method);
 			TACLabel copyLabel = new TACLabel(method);
-			
+
 			if( type instanceof InterfaceType )	{	
 				//cast converts from interface to object
 				data = TACCast.cast(anchor, new SimpleModifiedType(Type.OBJECT), data);
@@ -3045,38 +3044,38 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				copyLabel.insertBefore(anchor);
 				copyMethod  = new TACMethodName(anchor, data, type.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));						
 			}
-			
+
 			TACOperand copy = new TACCall(anchor, copyMethod, data, map);
 
 			if( type instanceof InterfaceType )
 				//and then a cast back to interface
 				copy = TACCast.cast(anchor, ctx, copy);
-			
+
 			new TACLocalStore(anchor, result, copy);					
 			new TACBranch(anchor, doneLabel);	
-			
+
 			nullLabel.insertBefore(anchor);
-			
+
 			new TACLocalStore(anchor, result, value);
 			new TACBranch(anchor, doneLabel);
-			
+
 			doneLabel.insertBefore(anchor);
 			prefix = new TACLocalLoad(anchor, result);			
 		}	
-		
+
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitArrayDimensions(ShadowParser.ArrayDimensionsContext ctx)
 	{ 
 		visitChildren(ctx);
-		
+
 		//Note: their instructions are appended, but the operands for each dimension are retrieved later and not saved here
 		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() )
 			child.appendBefore(anchor);
-		
+
 		return null;	
 	}	
 
@@ -3086,7 +3085,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		visitChildren(ctx);		
 		for( ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression() )
 			child.appendBefore(anchor);		
-		
+
 		return null;
 	}
 
@@ -3101,16 +3100,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		new TACLocalStore(anchor, temporary, defaultValue);
 		TACOperand value = new TACLocalLoad(anchor, temporary);
 		ctx.setOperand(value);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitSpawnExpression(shadow.parse.ShadowParser.SpawnExpressionContext ctx)
 	{
 		visitChildren(ctx);
-		
+
 		Type runnerType = ctx.type().getType();
-		
+
 		MethodSignature runnerCreateSignature = ctx.spawnRunnerCreateCall().getSignature();
 		List<TACOperand> runnerParams = new ArrayList<TACOperand>(((SequenceType)ctx.spawnRunnerCreateCall().getType()).size() + 1);	
 
@@ -3118,33 +3117,33 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		for(ShadowParser.ConditionalExpressionContext child : ctx.spawnRunnerCreateCall().conditionalExpression()) {						
 			runnerParams.add(child.getOperand());
 		}
-		
+
 		TACOperand runnerRef = callCreate(runnerCreateSignature, runnerParams, runnerType);
-		
+
 		MethodSignature threadCreateSignature = ctx.getSignature();
 		ArrayList<TACOperand> params = new ArrayList<TACOperand>();
 		if(ctx.StringLiteral() != null) {
 			params.add(new TACLiteral(anchor, ShadowString.parseString(ctx.StringLiteral().getText())));
 		}
 		params.add(runnerRef);
-		
+
 		prefix = callCreate(threadCreateSignature, params, Type.THREAD);
 		ctx.setOperand(prefix);
-		
+
 		return null;
 	}
-	
+
 	@Override public Void visitSpawnRunnerCreateCall(shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx) 
 	{
 		visitChildren(ctx);
-		
+
 		for(ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {
 			child.appendBefore(anchor);
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override
 	public Void visitSendStatement(SendStatementContext ctx) {
 		visitChildren(ctx);

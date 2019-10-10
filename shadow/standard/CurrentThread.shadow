@@ -9,13 +9,18 @@ singleton shadow:standard@
 	CurrentThread
 is CanIndex<int, Thread>
 {
-	private readonly native currentThread() => (Thread);
+	[ImportNative]
+	private readonly currentThread() => (Thread);
 
-	private readonly extern $interrupting(Thread instance) => (boolean);	
-	private readonly extern $sleep(Thread instance, TimeSpan time) => ();
-	private readonly extern $sleep(Thread instance, int milliseconds) => ();
+	[ImportMethod]
+	private readonly interrupting(Thread instance) => (boolean);
+	[ImportMethod]
+	private readonly sleep(Thread instance, TimeSpan time) => ();
+	[ImportMethod]
+	private readonly sleep(Thread instance, int milliseconds) => ();
 	
-	private readonly extern __ShadowCurrentThread_Yield() => (boolean);
+	[ImportAssembly]
+	private readonly __ShadowCurrentThread_Yield() => (boolean);
 	
 	Thread current;
 	
@@ -88,7 +93,7 @@ is CanIndex<int, Thread>
 	*/
 	public get interrupting() => (boolean)
 	{
-		return $interrupting(current);
+		return interrupting(current);
 	}
 	
 	/**
@@ -113,7 +118,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(TimeSpan timeout) => ()
 	{
-		$sleep(current, timeout);
+		sleep(current, timeout);
 	}
 	
 	/**
@@ -123,7 +128,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(int millisecondsTimeout) => ()
 	{
-		$sleep(current, millisecondsTimeout);
+		sleep(current, millisecondsTimeout);
 	}
 	
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Team Shadow
+ * Copyright 2017 Team Shadow
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -399,7 +399,7 @@ public class TypeCollector extends BaseChecker {
 		node.setType(type); //will be Unknown unless set with a real type
 				
 		if( packageName != null ) {			
-			if( currentType == null )													
+			if( currentType == null )
 				currentPackage = packageTree.addQualifiedPackage(packageName);			
 			else {
 				addError(node, Error.INVALID_PACKAGE, "Package can only be defined by outermost classes");				
@@ -545,9 +545,25 @@ public class TypeCollector extends BaseChecker {
 				}
 			}
 			
+			if (currentPackage.getQualifiedName().equals("shadow:decorators")) {
+				switch( typeName ) {
+				case "Decorator": Type.DECORATOR = (InterfaceType)type; break;
+				case "MethodDecorator": Type.METHOD_DECORATOR = (InterfaceType)type; break;
+				case "CompilerDecorator": Type.COMPILER_DECORATOR = (InterfaceType)type; break;
+				
+				case "ImportAssemblyDecorator": Type.IMPORT_ASSEMBLY_DECORATOR = (ClassType)type; break;
+				case "ImportNativeDecorator": Type.IMPORT_NATIVE_DECORATOR = (ClassType)type; break;
+				case "ImportMethodDecorator": Type.IMPORT_METHOD_DECORATOR = (ClassType)type; break;
+
+				case "ExportNativeDecorator": Type.EXPORT_NATIVE_DECORATOR = (ClassType)type; break;
+				case "ExportAssemblyDecorator": Type.EXPORT_ASSEMBLY_DECORATOR = (ClassType)type; break;
+				case "ExportMethodDecorator": Type.EXPORT_METHOD_DECORATOR = (ClassType)type; break;
+				}
+			}
+			
 			if( currentPackage.getQualifiedName().equals("shadow:natives") ) {
 				switch( typeName ) {
-					case "ShadowPointer": Type.SHADOW_POINTER = (ClassType)type; break;
+					case "Pointer": Type.POINTER = (ClassType)type; break;
 				}
 			}
 			
@@ -575,8 +591,6 @@ public class TypeCollector extends BaseChecker {
 	 * Adds a type or a whole package to the current list of imports.
 	 */
 	public boolean addImport( String name ) {
-		
-		
 		String separator = FileSystems.getDefault().getSeparator(); // Adds some platform independence.		
 		if( separator.equals("\\"))		   // Hack for Windows to deal with backslash escaping.
 			separator = "\\\\";
@@ -690,7 +704,11 @@ public class TypeCollector extends BaseChecker {
 	{ 
 		currentPackage = packageTree;
 		importedItems.clear();
-		importedItems.add("shadow:standard");			
+		importedItems.add("shadow:standard");
+		if(addImport("shadow:decorators")) {
+			importedItems.add("shadow:decorators");
+		}
+		
 		currentName = "";
 		return visitChildren(ctx);
 	}
