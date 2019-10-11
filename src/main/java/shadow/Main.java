@@ -187,10 +187,12 @@ public class Main {
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
 			// usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
-					config.getOptimizationLevel())
+					/*"--filetype=obj",*/ config.getOptimizationLevel())
 					/* .redirectOutput(new File("a.s")) */.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT)
 					.redirectError(Redirect.INHERIT).start();
+			//Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(currentJob.getOutputFile().toFile())
+					//.redirectError(Redirect.INHERIT).start();
 
 			try {
 				new Pipe(link.getInputStream(), compile.getOutputStream()).start();
@@ -255,7 +257,9 @@ public class Main {
 			compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
 			// compileCommand.add("-Wall");			
 		} else
-			compileCommand.add("gcc");
+			compileCommand.add("clang");
+		
+		compileCommand.add("-m" + Configuration.getConfiguration().getArch());
 
 		compileCommand.add("-O3");
 

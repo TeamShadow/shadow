@@ -28,6 +28,7 @@ public class Job {
 	private boolean forceRecompile = false; // Recompile all source files, even if unneeded
 	private boolean warningsAsErrors = false; //Treat warnings as errors
 	private boolean humanReadable = false;
+	private Path outputFile;
 	
 	public Job(Arguments compilerArgs) throws FileNotFoundException {
 		
@@ -46,8 +47,6 @@ public class Job {
 			// Ensure that the main source file exists
 			if( mainFile == null || !Files.exists(mainFile) )
 				throw new FileNotFoundException("Source file at " + mainFile.toAbsolutePath() + " not found");
-		
-			Path outputFile;
 			
 			// See if an output file was specified
 			if( compilerArgs.hasOption(Arguments.OUTPUT) ) {
@@ -75,6 +74,10 @@ public class Job {
 					System.err.println("Unknown warning flag: " + flag);
 			}
 		}
+	}
+	
+	public Path getOutputFile() {
+		return outputFile;
 	}
 
 	public boolean isCheckOnly() {

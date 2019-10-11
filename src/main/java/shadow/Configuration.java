@@ -29,16 +29,16 @@ import shadow.jaxb.Shadow;
  * accessible singleton.
  */
 public class Configuration {
-	
+
 	public static final String DEFAULT_CONFIG_NAME = "shadow.xml";
-	
+
 	private static Configuration globalConfig;
-	
+
 	private static final Logger logger = Loggers.SHADOW;
-	
+
 	private Path configFile;
 	private String dataLayout;
-	
+
 	// Configuration fields
 	private int arch;
 	private String os;
@@ -49,39 +49,39 @@ public class Configuration {
 	private String opt;
 	private List<Path> importPaths;
 	private List<String> linkCommand;
-	
+
 	/** 
 	 * Builds the Configuration if necessary. Must be run at least once before
 	 * getConfiguration() is called.
 	 */
 	public static Configuration buildConfiguration(String mainFilePath, String configFilePath, boolean forceRebuild) throws ConfigurationException, IOException {
-		
+
 		if( globalConfig == null || forceRebuild )
 			globalConfig = new Configuration(mainFilePath, configFilePath);
-		
+
 		return globalConfig;
 	}
-	
+
 	/** Retrieves the global compiler Configuration */
 	public static Configuration getConfiguration() throws ConfigurationException {
-		
+
 		if( globalConfig == null )
 			throw new ConfigurationException("Configuration data must be built before being accessed.");
-		
+
 		return globalConfig;
 	}
-	
+
 	/** Hidden constructor for instantiating the Configuration */
 	private Configuration(String mainFilePath, String configFilePath) throws ConfigurationException, IOException {
-		
+
 		// Attempt to locate hierarchy of config files
 		configFile = locateConfig(mainFilePath, configFilePath);
-		
-		
+
+
 		// If a config file was located, parse it
 		if( configFile != null ) 
 			parse(configFile);
-		
+
 		inferSettings(); // Auto-fill any empty fields
 	}
 
@@ -100,26 +100,26 @@ public class Configuration {
 	 * 4. A file in the working directory with the default name
 	 */
 	private Path locateConfig(String mainFilePath, String configFilePath) throws FileNotFoundException, ConfigurationException {
-		
+
 		// Get the various search directories
 		Path sourceDir = mainFilePath == null ? null : Paths.get(mainFilePath).toAbsolutePath().getParent().toAbsolutePath();
 		Path workingDir = Paths.get("").toAbsolutePath();
 		Path runningDir = getRunningDirectory().toAbsolutePath();
-		
+
 		Path defaultFile = Paths.get(DEFAULT_CONFIG_NAME);
 
 		// 1: Config file specified on the command line
-		
+
 		if( configFilePath != null ) {
-			
+
 			Path configFile = Paths.get(configFilePath);
-			
+
 			// If absolute, no need to resolve
 			if( configFile.isAbsolute() ) {
 				if( !Files.exists(configFile) )
 					throw new FileNotFoundException("Configuration file "
 							+ configFile.toAbsolutePath() + " does not exist");
-				
+
 				return configFile;
 			}
 			// If not, first look in the source directory
@@ -147,7 +147,7 @@ public class Configuration {
 		}
 		/// 2: Default config file, local to the main source file
 		else if( sourceDir != null && Files.exists(sourceDir.resolve(defaultFile)) ) {
-				return sourceDir.resolve(defaultFile);
+			return sourceDir.resolve(defaultFile);
 		}
 		/// 3: Default config file, local to the running directory
 		else if( Files.exists(runningDir.resolve(defaultFile)) ) {
@@ -161,23 +161,23 @@ public class Configuration {
 			return null;
 		}
 	}
-	
+
 	/** Auto-detects values for unfilled fields */
 	private void inferSettings() throws ConfigurationException, IOException {
-		
+
 		// TODO: Consider moving default value code into the individual getter
 		// methods
-		
+
 		if( arch == 0 ) {
 			if( System.getProperty("os.arch").contains("64") )
 				arch = 64;
 			else
 				arch = 32;
 		}
-		
+
 		if( os == null ) {
 			String osName = System.getProperty("os.name").toLowerCase();
-			
+
 			if( osName.contains("windows") )
 				os = "Windows";
 			else if( osName.contains("mac"))
@@ -186,28 +186,28 @@ public class Configuration {
 				os = "Linux";
 			else {
 				logger.info("Unrecognized operating system \"" + System.getProperty("os.name")
-							+ "\" detected, defaulting to Linux.ll");
+				+ "\" detected, defaulting to Linux.ll");
 				os = "Linux";
 			}
 		}
-		
+
 		// Make sure that llc is specified early, since it's used to get the default target
 		if( llc == null )
 			llc = "llc";
-		
+
 		if( opt == null )
 			opt = "opt";
-		
+
 		if( llvmLink == null )
 			llvmLink = "llvm-link";
-		
+
 		if( target == null )
 			target = getDefaultTarget();
-		
+
 		if( linkCommand == null ) {		
 			linkCommand = new ArrayList<String>();
-			
-			if( getOs().equals("Mac")) {
+
+			if(getOs().equals("Mac")) {
 				linkCommand.add("clang");				
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
@@ -215,59 +215,75 @@ public class Configuration {
 				linkCommand.add("-lm");
 				linkCommand.add("-lSystem");
 			}			
-			else {
+			else if(getOs().equals("Windows")){
+				linkCommand.add("clang");				
+				linkCommand.add("-x");
+				linkCommand.add("assembler");
+				linkCommand.add("-m32");
+				linkCommand.add("-");				
+				/*linkCommand.add("lld-link");
+				linkCommand.add("/subsystem:CONSOLE");
+				linkCommand.add("-defaultlib:libcmt");
+				if(arch == 32) {
+					linkCommand.add("/libpath:C:\\Shadow\\lib\\x86");
+					linkCommand.add("/libpath:C:\\Windows\\System32");
+				}
+				else {
+					linkCommand.add("/libpath:C:\\Shadow\\lib\\x64");
+					linkCommand.add("/libpath:C:\\Windows\\System");
+				}
+				linkCommand.add("-defaultlib:libcmt");
+				*/
+				// we need this for MinGW pthreads
+				//linkCommand.add("-static");
+			}
+			else if(getOs().equals("Linux")) {
 				linkCommand.add("gcc");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
 				linkCommand.add("-");
-				
-				if( getOs().equals("Linux") ) {
-					linkCommand.add("-lm");
-					linkCommand.add("-lrt");
-					linkCommand.add("-pthread");
-				} /*else {
-					// we need this for MinGW pthreads
-					linkCommand.add("-static");
-				}*/
+				linkCommand.add("-lm");
+				linkCommand.add("-lrt");
+				linkCommand.add("-pthread");
 			}
 		}
 
 		if( systemPath == null )
 			systemPath = getRunningDirectory();
-		
+
 		if( importPaths == null)
 			importPaths = new ArrayList<Path>();
-		
+
 		// The import paths list must contain an "empty" path that can later be
 		// resolved against source files
 		importPaths.add(Paths.get("." + File.separator));
 	}
-	
+
 	/** Parses a config file and fills the corresponding fields */
 	private void parse(Path configFile) {
-		
+
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Shadow.class);
-	 
+
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 			Shadow configuration = (Shadow) jaxbUnmarshaller.unmarshal(configFile.toFile());
-			
+
 			Integer arch = configuration.getArch();
 			if( arch != null )
 				this.arch = arch;
-			
+
 			addImports(configuration.getImport());
-			
+
 			String linkCommand = configuration.getLink(); 
 			if( linkCommand != null )
 				setLinkCommand(linkCommand);
-			
+
 			os = configuration.getOs();			
 			target = configuration.getTarget();
 			llc = configuration.getLlc();
 			opt = configuration.getOpt();
 			llvmLink = configuration.getLlvmLink();
-			
+
 			String systemPath = configuration.getSystem();
 			if( systemPath != null )
 				setSystemImport(systemPath);
@@ -277,16 +293,16 @@ public class Configuration {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void setArch(int arch) {		
 		if(this.arch == 0)
 			this.arch = arch;
 	}
-	
+
 	public int getArch() {		
 		return arch;
 	}
-	
+
 	public void setOs(String os) {		
 		if(this.os == null)
 			this.os = os;
@@ -300,14 +316,14 @@ public class Configuration {
 		for( String path : paths )
 			addImport(path);
 	}
-	
+
 	public void addImport(String importPath) {		
 		if ( importPaths == null )
 			importPaths = new ArrayList<Path>();
-		
+
 		Path newImportPath = Paths.get(importPath);
 		newImportPath = configFile.getParent().resolve(newImportPath);
-		
+
 		importPaths.add(newImportPath);
 	}
 
@@ -321,40 +337,41 @@ public class Configuration {
 			systemPath = configFile.getParent().resolve(systemPath);
 		}
 	}
-	
+
 	public Path getSystemImport() {		
 		return systemPath;
 	}
-	
+
 	public void setLinkCommand(String linkCommand) {		
 		if( this.linkCommand == null ) {			
 			this.linkCommand = new ArrayList<String>();
+			//TODO: What happens here if there are spaces in a path name?
 			this.linkCommand.addAll(Arrays.asList(linkCommand.split("\\s+")));
 		}
 	}
-	
+
 	public List<String> getLinkCommand(Job currentJob) {		
 		// Merge the output commands with the linker commands
 		linkCommand.addAll(currentJob.getOutputCommand());
 		return linkCommand;
 	}
-	
+
 	public void setTarget(String target) {		
 		if( this.target == null )
 			this.target = target;
 	}
-	
+
 	public String getTarget() {		
 		return target;
 	}
-	
+
 	/** Gets the directory within which the compiler is currently running */
 	public static Path getRunningDirectory() throws ConfigurationException {		
 		try {
 			URL url = Main.class.getProtectionDomain().getCodeSource().getLocation();
 			URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(),
-                    url.getPort(), url.getPath(), url.getQuery(), 
-                    url.getRef());
+					url.getPort(), url.getPath(), url.getQuery(), 
+					url.getRef());
 			return Paths.get(uri).getParent().toAbsolutePath();
 		}
 		catch( SecurityException e ) {
@@ -364,40 +381,40 @@ public class Configuration {
 			throw new ConfigurationException(e.getLocalizedMessage());
 		}
 	}
-	
+
 	public String getOpt() {
 		return opt;
 	}
-	
+
 	public String getLlc() {
 		return llc;
 	}
-	
+
 	public String getLlvmLink() {
 		return llvmLink;
 	}
-	
+
 	/** Returns the target platform to be used by the LLVM compiler */
 	public String getDefaultTarget() throws ConfigurationException {
 		// Some reference available here:
 		// http://llvm.org/docs/doxygen/html/Triple_8h_source.html
-		
+
 		// Calling 'llc -version' for current target information
 		// Note: Most of the LLVM tools also have this option
 		Process process = null;
 		try {
-			process = new ProcessBuilder(getLlc(), "-version").redirectErrorStream(true).start();
+			process = new ProcessBuilder(getLlc(), "--version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	
+
 			String versionOutput = "";
 			String line = null;
 			while( (line = reader.readLine()) != null )
-			   versionOutput += line + System.lineSeparator();			
-			
+				versionOutput += line + System.lineSeparator();			
+
 			// Create the regular expression required to find the target "triple"
 			Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
 			Matcher matcher = pattern.matcher(versionOutput);
-			
+
 			if( matcher.find() )
 				return matcher.group(2);
 			else
@@ -413,36 +430,36 @@ public class Configuration {
 				process.destroy();
 		}
 	}
-	
+
 	public static String getLLVMVersion() {
 		Process process = null;
 		try {
 			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	
+
 			String versionOutput = "";
 			String line = null;
 			while( (line = reader.readLine()) != null )
-			   versionOutput += line + System.lineSeparator();			
-			
+				versionOutput += line + System.lineSeparator();			
+
 			// Create the regular expression required to find the version
 			Pattern pattern = Pattern.compile("(LLVM version\\s)(\\d+(\\.\\d+)*)");
 			Matcher matcher = pattern.matcher(versionOutput);
-			
+
 			if( matcher.find() )
 				return matcher.group(2);
 		}
 		catch(IOException | ConfigurationException  e) {			 
-			
+
 		}
 		finally {	
 			if( process != null )
 				process.destroy();
 		}
-		
+
 		return "";
 	}
-	
+
 	public static String getLLVMInformation() {
 		// Calling 'llc -version' for LLVM information
 		// Note: Most of the LLVM tools also have this option
@@ -450,12 +467,12 @@ public class Configuration {
 		try {		
 			process = new ProcessBuilder(getConfiguration().getLlc(), "-version").redirectErrorStream(true).start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	
+
 			String information = "";
 			String line = null;
 			while( (line = reader.readLine()) != null && !line.isEmpty() )
-			   information += line + System.lineSeparator();
-			
+				information += line + System.lineSeparator();
+
 			return information;
 		}
 		catch(IOException | ConfigurationException e) {
@@ -466,18 +483,18 @@ public class Configuration {
 				process.destroy();
 		}
 	}
-	
+
 	public String getOptimizationLevel() {
 		return "-O3"; // set to empty string to check for
 		// race conditions in Threads.
 	}
-	
+
 	//Update this for other architectures?
 	public String getDataLayout() {		
 		if( dataLayout == null ) {
 			String endian = "e"; // little Endian
 			String mangling;
-	
+
 			if (getOs().equals("Mac"))
 				mangling = "m:o-";
 			else if (getOs().equals("Windows"))
@@ -486,7 +503,7 @@ public class Configuration {
 				mangling = "m:e-";
 			else
 				mangling = "";
-	
+
 			String pointerAlignment = "p:" + getArch() + ":" + getArch() + ":" + getArch();
 			String dataAlignment = "i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f16:16:16-f32:32:32-f64:64:64-f80:128";
 			String aggregateAlignment = "a:0:" + getArch();
@@ -498,6 +515,6 @@ public class Configuration {
 
 		return dataLayout;
 	}
-	
+
 }
- 
+
