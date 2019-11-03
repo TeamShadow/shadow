@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>shadow</groupId>
   <artifactId>compiler</artifactId>
-  <version>0.7.5</version>
+  <version>0.8</version>
   <name>Shadow Compiler</name>
   <url>www.shadow-language.org</url>
   <description>A compiler for the Shadow programming language</description>

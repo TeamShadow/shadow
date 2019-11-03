@@ -50,7 +50,7 @@ import shadow.typecheck.type.Type;
 public class Main {
 
 	// Version of the Shadow compiler
-	public static final String VERSION = "0.7.5";
+	public static final String VERSION = "0.8";
 	public static final String MINIMUM_LLVM_VERSION = "3.8";
 
 	// These are the error codes returned by the compiler
