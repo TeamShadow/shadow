@@ -238,7 +238,8 @@ public class Configuration {
 				//linkCommand.add("-static");
 			}
 			else if(getOs().equals("Linux")) {
-				linkCommand.add("gcc");
+				//linkCommand.add("gcc");
+				linkCommand.add("clang");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
 				linkCommand.add("-");
