@@ -239,7 +239,7 @@ public class Configuration {
 			}
 			else if(getOs().equals("Linux")) {
 				//linkCommand.add("gcc");
-				linkCommand.add("clang");
+				linkCommand.add("clang++");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
 				linkCommand.add("-");

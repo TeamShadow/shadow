@@ -202,50 +202,12 @@ singleton shadow:io@Console
 		return this;
 	}
 	
-	public debugPrint(String data) => ()
-	{
-		print(data);
-		printLine();
-	}
+	[ImportNative]
+	public debugPrint(String data) => ();
 	
-	public debugPrint(int value) => ( Console )
-	{
-		if( value < 0 ) {
-			value *= -1;
-			print("-");
-		}
-		
-		int power = 1;
-		
-		while( power <= value )
-			power *= 10;
-		power /= 10;
-		
-		if( value == 0 )
-			print("0");		
-				
-		while( power > 0 ) {
-			switch( value / power )
-			{
-			case( 0 ) print("0");
-			case( 1 ) print("1");
-			case( 2 ) print("2");
-			case( 3 ) print("3");
-			case( 4 ) print("4");
-			case( 5 ) print("5");
-			case( 6 ) print("6");
-			case( 7 ) print("7");
-			case( 8 ) print("8");
-			case( 9 ) print("9");			
-			}
-			
-			value %= power;
-			power /= 10;
-		}
-		
-		printLine();		
-		return this;
-	}
+	[ImportNative]
+	public setDebug(boolean debug) => ();
+	
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]

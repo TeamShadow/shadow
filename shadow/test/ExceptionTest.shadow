@@ -4,7 +4,15 @@ immutable class shadow:test@ExceptionTest
 {
 	public test() => () {		
 		//throw IndexOutOfBoundsException:create();
-		throw ExceptionB:create();
+		//Console.printLine("throwing");
+		try
+		{
+			throw ExceptionB:create();
+		}
+		finally
+		{
+			Console.printLine("finally");
+		}
 	}
 	public test1() => () {
 		try {			

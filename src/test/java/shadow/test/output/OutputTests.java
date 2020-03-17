@@ -45,8 +45,8 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		args.add("-r");
-		args.add("-f");
+		//args.add("-r");
+		//args.add("-f");
 	}
 	
 	@AfterEach
@@ -636,9 +636,24 @@ public class OutputTests {
 		args.add("shadow/test/ExceptionTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
+				"finally\n" +
 				"test2 caught ExceptionB\n", 
 				"shadow:standard@Exception\n",
 				1);
+	}
+	
+	@Test public void testFinally() throws Exception {
+		args.add("shadow/test/FinallyTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],	
+			"before method\n" +
+			"before try\n" +
+			"loop before break\n" + 
+			"try before break\n" +
+			"finally break\n" +
+			"finally\n" +
+			"after method\n" +
+			"return value\n");
 	}
 	
 	@Test public void testForeach() throws Exception {

@@ -158,6 +158,7 @@ public class Main {
 
 		List<String> linkCommand = new ArrayList<>();
 		linkCommand.add(config.getLlvmLink()); // usually llvm-link
+		
 		linkCommand.add("-");
 		List<Path> cFiles = new ArrayList<>();
 
@@ -170,7 +171,7 @@ public class Main {
 			if (!compileCSourceFiles(system.resolve(Paths.get("shadow", "c-source")).normalize(), cFiles,
 					assembleCommand)) {
 				logger.error("Failed to compile one or more C source files.");
-				throw new CompileException("FAILED TO COMPILE");
+			throw new CompileException("FAILED TO COMPILE");
 			}
 
 			logger.info("Building for target \"" + config.getTarget() + "\"");

@@ -1605,6 +1605,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(nextTemp(node) + " = landingpad " + type(node));
 		writer.indent(2);
 		if (node.getBlock().hasCleanup())
+			//writer.write("catch i8* null");
 			writer.write("cleanup");
 		for (TACBlock block = node.getBlock(); block != null;
 				block = block.getParent())

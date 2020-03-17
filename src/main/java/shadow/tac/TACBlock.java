@@ -240,7 +240,8 @@ public class TACBlock
 
 	public boolean hasCleanup()
 	{
-		return getCleanup() != null;
+		//return getCleanup() != null;
+		return cleanupLabel != null;
 	}
 	public TACLabel getCleanup()
 	{
