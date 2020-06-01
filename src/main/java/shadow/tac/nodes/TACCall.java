@@ -10,6 +10,7 @@ import java.util.Set;
 import shadow.ShadowException;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
+import shadow.tac.TACBlock;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -65,11 +66,10 @@ public class TACCall extends TACUpdate
 			i++;
 		}
 					
-		
-		if( getBlock().hasLandingpad() ) {
+		TACBlock block = getBlock();
+		if(block.getCatch() != null || block.getCleanup() != null) {
 			noExceptionLabel = new TACLabel(getMethod());
 			noExceptionLabel.insertBefore(node); //before the node but after the call
-			//new TACNodeRef(node, this);
 		}	
 	}
 	

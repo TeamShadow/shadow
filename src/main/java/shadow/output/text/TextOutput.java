@@ -16,13 +16,16 @@ import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
+import shadow.tac.nodes.TACCatchSwitch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
+import shadow.tac.nodes.TACCleanupPad;
+import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
-import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
@@ -39,7 +42,6 @@ import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
-import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
@@ -266,7 +268,7 @@ public class TextOutput extends AbstractOutput
 
 	@Override
 	public void visit(TACCall node) throws ShadowException {
-		endBlock(node.getBlock().hasLandingpad()); //if landing pad, 
+		endBlock(node.getBlock().getUnwind() != null); //if there are catches or cleanups 
 		if (!node.hasLocalStore() && !node.hasMemoryStore())
 			writer.write(inline.visit(new StringBuilder(), node).append(';').
 					toString());
@@ -289,13 +291,13 @@ public class TextOutput extends AbstractOutput
 	}
 	
 	@Override
-	public void visit(TACCatch node) throws ShadowException {
+	public void visit(TACCatchPad node) throws ShadowException {
 		endBlock(false);		
 		writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
 	}
 	
 	@Override
-	public void visit(TACResume node) throws ShadowException {
+	public void visit(TACCleanupRet node) throws ShadowException {
 		endBlock(true);
 		writer.write("// resume;");
 	}
@@ -350,9 +352,10 @@ public class TextOutput extends AbstractOutput
 				sb.delete(sb.length() - 2, sb.length());
 			sb.append(')');
 			
-			if( node.getBlock().hasLandingpad() )
+			TACCatchSwitch catchSwitch = node.getBlock().getCatchSwitch(); 
+			if( catchSwitch != null  )
 				sb.append(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
-						symbol(node.getBlock().getLandingpad()));
+						symbol(catchSwitch.getLabel()));
 		}
 
 		@Override
@@ -407,12 +410,26 @@ public class TextOutput extends AbstractOutput
 		@Override
 		public void visit(TACClass.TACClassData node) throws ShadowException {
 			sb.append(node.getClassType()).append(":class");
-		}
-		
+		}		
 
 		@Override
-		public void visit(TACLandingpad node) throws ShadowException {
-			sb.append("landingpad");		
+		public void visit(TACCatchPad node) throws ShadowException {
+			sb.append("catchpad");		
+		}
+		
+		@Override
+		public void visit(TACCatchRet node) throws ShadowException {
+			sb.append("catchret");		
+		}
+		
+		@Override
+		public void visit(TACCleanupPad node) throws ShadowException {
+			sb.append("cleanuppad");		
+		}
+		
+		@Override
+		public void visit(TACCleanupRet node) throws ShadowException {
+			sb.append("cleanupret");		
 		}
 
 		@Override

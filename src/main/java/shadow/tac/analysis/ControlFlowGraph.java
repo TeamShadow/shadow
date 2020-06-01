@@ -43,7 +43,7 @@ import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;
-import shadow.tac.nodes.TACResume;
+import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
@@ -180,15 +180,19 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			//handles cases where a method call can cause a catchable exception
 			else if( node instanceof TACCall ) {
 				TACCall call = (TACCall) node;
-				if( call.getBlock().hasLandingpad() ) {
-					block.addBranch(nodeBlocks.get(call.getBlock().getLandingpad()));					
+				TACLabel unwindLabel = call.getBlock().getUnwind();
+				
+				if( unwindLabel != null ) {
+					block.addBranch(nodeBlocks.get(unwindLabel));					
 					block.addBranch(nodeBlocks.get(call.getNoExceptionLabel()));
 				}
 			}
 			else if( node instanceof TACThrow ) {
 				TACThrow throw_ = (TACThrow)node;
-				if( throw_.getBlock().hasLandingpad() )
-					block.addBranch(nodeBlocks.get(throw_.getBlock().getLandingpad()));
+				TACLabel unwindLabel = throw_.getBlock().getUnwind();
+				
+				if( unwindLabel != null )
+					block.addBranch(nodeBlocks.get(unwindLabel));
 			}
 
 			if( node == block.getLast() )
@@ -223,7 +227,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			}
 			else if( node instanceof TACReturn )
 				block.flagReturns();
-			else if( node instanceof TACThrow || node instanceof TACResume )
+			else if( node instanceof TACThrow || node instanceof TACCleanupRet )
 				block.flagUnwinds();
 			//record field usage, for warnings
 			else if( node instanceof TACLoad ) {

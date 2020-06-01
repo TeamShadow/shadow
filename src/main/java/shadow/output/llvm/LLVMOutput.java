@@ -42,16 +42,19 @@ import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
+import shadow.tac.nodes.TACCatchSwitch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
+import shadow.tac.nodes.TACCleanupPad;
+import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACGlobalRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
-import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
 import shadow.tac.nodes.TACLocalStorage;
@@ -64,11 +67,11 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
+import shadow.tac.nodes.TACPad;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
-import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
@@ -95,6 +98,7 @@ import shadow.typecheck.type.TypeParameter;
 
 public class LLVMOutput extends AbstractOutput {	
 	private int tempCounter = 0;
+	private int exceptionCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();	
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
 	private int classCounter = 0;
@@ -122,6 +126,10 @@ public class LLVMOutput extends AbstractOutput {
 	private String nextTemp()
 	{
 		return '%' + Integer.toString(tempCounter++);
+	}
+	private String nextException()
+	{
+		return "%_exception" + Integer.toString(exceptionCounter++);
 	}
 
 	/**
@@ -706,7 +714,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write("define " + methodToString(method) +
 					(signature.getNode().getParent() == null && (signature.isGet() || signature.isSet() ) ? " alwaysinline " : "") +
 					(signature.isWrapper() ? " unnamed_addr" : "" ) +
-					(method.hasLandingpad() ? " personality i32 (...)* @__shadow_personality_v0 {" : " {"  ));
+					" personality i32 (...)* @__shadow_personality_v0 {");  // Because of GC, every function has a personality function
 			writer.indent();
 		}
 	}
@@ -1504,13 +1512,17 @@ public class LLVMOutput extends AbstractOutput {
 			StringBuilder sb = new StringBuilder("indirectbr ").
 					append(typeSymbol(node.getPhi())).append(", [ ");
 			TACPhi phi = node.getPhi();
-			for( TACOperand operand : phi.getPreviousStores().values()) {
+			boolean first = true;
+			for(TACOperand operand : phi.getPreviousStores().values()) {
+				if(first)
+					first = false;
+				else
+					sb.append(", ");
 				TACLabelAddress address = (TACLabelAddress) operand;
-				sb.append("label ").append(symbol(address.getLabel())).
-				append(", ");
+				sb.append("label ").append(symbol(address.getLabel()));
 			}
-			writer.write(sb.delete(sb.length() - 2, sb.length()).append(" ]").
-					toString());
+			sb.append(" ]");
+			writer.write(sb.toString());
 		}
 	}
 
@@ -1522,9 +1534,12 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACCall node) throws ShadowException {
 		TACOperand value = node.getUpdatedValue(); 
+		TACLabel unwindLabel = node.getBlock().getUnwind();
+
 		//no precomputation done
-		if( value == null ) {			
-			StringBuilder sb = new StringBuilder(node.getBlock().hasLandingpad() ?
+		if( value == null ) {
+			// TODO: But shouldn't everything be an invoke if there is a garbage-collection cleanup?
+			StringBuilder sb = new StringBuilder(unwindLabel != null ?
 					"invoke" : "call").append(' ');
 			TACMethodRef method = node.getMethodRef();
 			if( method instanceof TACMethodName ) {
@@ -1548,16 +1563,16 @@ public class LLVMOutput extends AbstractOutput {
 				sb.insert(0, nextTemp(node) + " = ");
 
 			writer.write(sb.append(')').toString());
-			if (node.getBlock().hasLandingpad()) {						
+			if (unwindLabel != null) {						
 				writer.indent(2);
 				writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
-						symbol(node.getBlock().getLandingpad()));			
+						symbol(unwindLabel));			
 				writer.outdent(2);
 			}
 		}
 		else {
 			node.setData(value.getData());
-			if( node.getBlock().hasLandingpad() )
+			if( unwindLabel != null )
 				writer.write("br label " + symbol(node.getNoExceptionLabel()));			
 		}
 	}
@@ -1575,17 +1590,19 @@ public class LLVMOutput extends AbstractOutput {
 		
 		writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getException()) + " to " + type(Type.OBJECT));
 		writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+		TACLabel unwindLabel = node.getBlock().getUnwind();
 		
-		writer.write((node.getBlock().hasLandingpad() ?
+		//TODO: Should always be invoke because of GC cleanup
+		writer.write((unwindLabel != null ?
 				"invoke" : "call") + " void @__shadow_throw(" +
 				typeSymbol(node.getException()) + ") noreturn");
-		if (node.getBlock().hasLandingpad()) {
+		if (unwindLabel != null) {
 			writer.indent(2);
 			//writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
 			//		symbol(node.getBlock().getLandingpad()));			
 
 			writer.write(" to label " + nextTemp() + " unwind label " +
-					symbol(node.getBlock().getLandingpad()));
+					symbol(unwindLabel));
 			writer.outdent(2);
 		}		
 		writer.write("unreachable");
@@ -1601,33 +1618,87 @@ public class LLVMOutput extends AbstractOutput {
 	}	
 
 	@Override
-	public void visit(TACLandingpad node) throws ShadowException {
-		writer.write(nextTemp(node) + " = landingpad " + type(node));
-		writer.indent(2);
-		if (node.getBlock().hasCleanup())
-			//writer.write("catch i8* null");
-			writer.write("cleanup");
-		for (TACBlock block = node.getBlock(); block != null;
-				block = block.getParent())
-			for (int i = 0; i < block.getNumCatches(); i++)
-				writer.write("catch " + type(Type.CLASS) + ' ' +
-						classOf(block.getCatchNode(i).getType()));
-		writer.outdent(2);
+	public void visit(TACCatchPad node) throws ShadowException {
+		String token = nextTemp();
+		node.setToken(token);
+		
+		String exception = nextException();
+		
+		writer.write(token + " = catchpad within " + symbol(node.getBlock().getCatchSwitch()) + " [" + type(Type.CLASS) + ' ' + classOf(node.getType()) + " i32 8, " + type(node.getType()) + "* " + exception + ']');
+		//writer.write(nextTemp() + " = extractvalue " + typeSymbol(node.getException()) + ", 0");
+		//writer.write(nextTemp() + " = call " + type(Type.EXCEPTION) +
+		//		" @__shadow_catch(i8* " + temp(1) + ") nounwind");
+		//int offset = node.hasLocalStore() ? 0 : 1;
+		//writer.write(nextTemp(node) + " = bitcast " + type(Type.EXCEPTION) +
+			//	' ' + temp(offset) + " to " + type(node.getType()));
+		
+		writer.write(nextTemp(node) + " = load " + type(node.getType()) + ", " + type(node.getType()) + "* " + exception);
+	}
+	
+	@Override
+	public void visit(TACCatchRet node) throws ShadowException {
+		writer.write("catchret from " + symbol(node.getBlock().getCatchPad()) + " to label " + symbol(node.getBlock().getDone()));
+	}
+	
+	@Override
+	public void visit(TACCleanupPad node) throws ShadowException {
+		// Parent
+		TACCatchSwitch parentSwitch = node.getBlock().getCatchSwitch();
+		String parent;
+		if(parentSwitch == null)
+			parent = "none";
+		else
+			parent = symbol(parentSwitch);
+		// Empty list because the personality function shouldn't take an arguments from a cleanup
+		node.setToken(nextTemp());
+		writer.write(node.getToken() + " = cleanuppad within " + parent + " []");
 	}
 
 	@Override
-	public void visit(TACCatch node) throws ShadowException {
-		writer.write(nextTemp() + " = extractvalue " + typeSymbol(node.getException()) + ", 0");
-		writer.write(nextTemp() + " = call " + type(Type.EXCEPTION) +
-				" @__shadow_catch(i8* " + temp(1) + ") nounwind");
-		int offset = node.hasLocalStore() ? 0 : 1;
-		writer.write(nextTemp(node) + " = bitcast " + type(Type.EXCEPTION) +
-				' ' + temp(offset) + " to " + type(node.getType()));
+	public void visit(TACCleanupRet node) throws ShadowException {
+		// Unwind
+		String unwind;
+		TACLabel unwindLabel = null;
+		// Have to get parent block or else we'll unwind to the same place
+		TACBlock parent = node.getBlock().getParent(); 
+		if(parent != null)
+			unwindLabel = parent.getUnwind();
+		if(unwindLabel != null)
+			unwind = "label " + symbol(unwindLabel);
+		else
+			unwind = "to caller";
+		writer.write("cleanupret from " + node.getBlock().getCleanupPad().getToken() + " unwind " + unwind);
 	}
-
+	
 	@Override
-	public void visit(TACResume node) throws ShadowException {		
-		writer.write("resume " + typeSymbol(node.getException()));
+	public void visit(TACCatchSwitch node) throws ShadowException {
+		// Parent
+		TACPad parentPad = node.getParent();
+		String parent;
+		if(parentPad == null)
+			parent = "none";
+		else
+			parent = symbol(parentPad.getLabel());
+		
+		// Catches
+		StringBuilder sb = new StringBuilder(" [");
+		for(int i = 0; i < node.getNumOperands(); ++i) {
+			if(i > 0)
+				sb.append(", ");
+			sb.append("label ");
+			sb.append(symbol(node.getOperand(i)));
+		}
+		sb.append("]");
+		
+		// Unwind
+		String unwind;
+		TACLabel unwindLabel = node.getBlock().getParent().getUnwind();
+		if(unwindLabel == null)
+			unwind = "label " + symbol(node.getBlock().getCleanup());
+		else
+			unwind = "to caller";
+			
+		writer.write(nextTemp(node) + " = catchswitch within " + parent + sb.toString() + " unwind " + unwind);
 	}
 
 	private static String interfaceData(Type type) {

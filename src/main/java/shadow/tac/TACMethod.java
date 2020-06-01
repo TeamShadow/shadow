@@ -46,7 +46,6 @@ public class TACMethod
 	private final Map<String, TACVariable> locals;
 	private final Map<String, TACVariable> parameters;
 	private final Deque<Map<String, TACVariable>> scopes;	
-	private boolean landingpad;
 	private int labelCounter = 0;		//counter to keep label numbering unique
 	private int variableCounter = 0;	//counter to keep variable number unique
 	private TACNode node;	
@@ -57,7 +56,6 @@ public class TACMethod
 		locals = new LinkedHashMap<String, TACVariable>();
 		parameters = new LinkedHashMap<String, TACVariable>();
 		scopes = new LinkedList<Map<String, TACVariable>>();		
-		landingpad = false;			
 		enterScope();		
 	}
 
@@ -103,6 +101,7 @@ public class TACMethod
 		
 		//variable to hold low level exception data
 		//note that variables cannot start with underscore (_) in Shadow, so no collision is possible
+		//TODO: Is this still useful?
 		new TACLocalStore(node, addLocal(new SimpleModifiedType(Type.getExceptionType()), "_exception"), new TACLiteral(node, new ShadowUndefined(Type.getExceptionType())));
 
 		
@@ -346,15 +345,6 @@ public class TACMethod
 		scopes.pop();
 		if (scopes.isEmpty())
 			throw new NoSuchElementException();
-	}
-
-	public void setHasLandingpad()
-	{
-		landingpad = true;
-	}
-	public boolean hasLandingpad()
-	{
-		return landingpad;
 	}
 
 	@Override

@@ -4,16 +4,18 @@ import shadow.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ExceptionType;
 
-public class TACCatch extends TACOperand
+public class TACCatchPad extends TACOperand implements TACPad
 {
 	private ExceptionType type;
 	private TACOperand exception;
+	private String token;
+	private TACLabel label;
 
-	public TACCatch(TACNode node, ExceptionType catchType, TACOperand exception)
+	public TACCatchPad(TACNode node, ExceptionType catchType, TACLabel label)
 	{
 		super(node);
 		type = catchType;
-		this.exception = exception;
+		this.label = label;
 	}
 	
 	public TACOperand getException() {
@@ -43,5 +45,20 @@ public class TACCatch extends TACOperand
 	public void accept(TACVisitor visitor) throws ShadowException
 	{
 		visitor.visit(this);
+	}
+
+	@Override
+	public void setToken(String token) {
+		this.token = token;		
+	}
+
+	@Override
+	public String getToken() {
+		return token;
+	}
+
+	@Override
+	public TACLabel getLabel() {
+		return label;
 	}
 }

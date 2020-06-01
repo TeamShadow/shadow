@@ -8,6 +8,8 @@ public class TACTypeId extends TACOperand
 {
 	private TACOperand operand;
 	
+	//TODO: Will type id be unnecessary with the new exception handling?
+	
 	/**
 	 * TACTypeId can take a class operand, in which case it will call a
 	 * typeid LLVM intrinsic when converted into LLVM.

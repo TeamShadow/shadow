@@ -23,12 +23,10 @@ import shadow.parse.ShadowBaseVisitor;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ArrayCreateCallContext;
 import shadow.parse.ShadowParser.ArrayDefaultContext;
-import shadow.parse.ShadowParser.CatchStatementsContext;
+import shadow.parse.ShadowParser.BlockContext;
 import shadow.parse.ShadowParser.ExpressionContext;
-import shadow.parse.ShadowParser.FinallyStatementContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.PrimarySuffixContext;
-import shadow.parse.ShadowParser.RecoverStatementContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.tac.nodes.TACArrayRef;
@@ -36,16 +34,19 @@ import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
+import shadow.tac.nodes.TACCatchSwitch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
+import shadow.tac.nodes.TACCleanupPad;
+import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDummyNode;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
-import shadow.tac.nodes.TACLandingpad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
@@ -58,17 +59,16 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
+import shadow.tac.nodes.TACPad;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
-import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
-import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -81,6 +81,7 @@ import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.MethodType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
+import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.PropertyType;
 import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -273,47 +274,45 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private static boolean isTerminator(TACNode node)
 	{
 		return( node instanceof TACBranch ||
-				node instanceof TACResume ||
+				node instanceof TACCleanupRet ||
 				node instanceof TACReturn ||
 				node instanceof TACThrow );
 	}
 
-	@Override public Void visitMethodDeclaration(ShadowParser.MethodDeclarationContext ctx)
-	{ 
+	@Override public Void visitMethodDeclaration(ShadowParser.MethodDeclarationContext ctx) { 
 		initializeSingletons(ctx.getSignature());		
 		visitChildren(ctx);
 
 		ctx.block().appendBefore(anchor);
 
 		TACNode last = anchor.getPrevious();		
-		//A non-void method should always have explicit TACReturns
-		//A void one might need one inserted at the end			
+		// A non-void method should always have explicit TACReturns
+		// A void one might need one inserted at the end			
 		if( method.getSignature().isVoid() && !isTerminator(last) ) {
 
-			//turn context off to avoid dead code removal errors
+			// Turn context off to avoid dead code removal errors
 			Context context = anchor.getContext();
 			anchor.setContext(null);			
 
-			//do the cleanup, de-referencing variables
-			visitCleanup(null, null);
+			// Do the cleanup, de-referencing variables
+			visitAllCleanups();
 
-			//explicit return statement
+			// Explicit return statement
 			new TACReturn(anchor, new SequenceType() );
 
 			anchor.setContext(context);
 
-			new TACLabel(method).insertBefore(anchor); //unreachable label
+			new TACLabel(method).insertBefore(anchor); // Unreachable label
 		}
 
 		return null;
 	}
 
-	@Override public Void visitCreateDeclaration(ShadowParser.CreateDeclarationContext ctx)
-	{ 
+	@Override public Void visitCreateDeclaration(ShadowParser.CreateDeclarationContext ctx) { 
 		initializeSingletons(ctx.getSignature());
 		visitChildren(ctx); 
 
-		if( ctx.createBlock() != null ) //possible because we still walk dummy nodes created for default creates
+		if( ctx.createBlock() != null ) // Possible because we still walk dummy nodes created for default creates
 			ctx.createBlock().appendBefore(anchor);
 
 		TACNode last = anchor.getPrevious();
@@ -322,24 +321,23 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			last.remove();
 		else {
 			anchor.setContext(null);			
-			//do the cleanup, de-referencing variables
-			visitCleanup(null, null);			
-			//turn context back on
+			// Do the cleanup, de-referencing variables
+			visitAllCleanups();			
+			// Turn context back on
 			anchor.setContext(ctx);
 
 			new TACReturn(anchor, method.getSignature().getSignatureWithoutTypeArguments().getFullReturnTypes(),
 					new TACLocalLoad(anchor, method.getLocal("this")));			
-			new TACLabel(method).insertBefore(anchor); //unreachable label
+			new TACLabel(method).insertBefore(anchor); // Unreachable label
 		}
 
 		return null;
 	}
 
-	@Override public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx)
-	{ 
+	@Override public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx) { 
 		initializeSingletons(ctx.getSignature());
 		visitChildren(ctx);
-		if( ctx.block() != null ) //possible because we still walk dummy nodes created for default destroys
+		if( ctx.block() != null ) // Possible because we still walk dummy nodes created for default destroys
 			ctx.block().appendBefore(anchor);
 
 		return null;
@@ -982,7 +980,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	{ 
 		visitChildren(ctx);
 		TACLabel recover;
-
+		//TODO: If this block doesn't have recover directly, we might need to visit the finally blocks on the way
 		if( block.hasRecover() )
 			recover = block.getRecover();
 		else
@@ -2004,22 +2002,22 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 	@Override public Void visitBreakOrContinueStatement(ShadowParser.BreakOrContinueStatementContext ctx)
 	{ 
-		//no children
-		//An unreachable label is needed in case a programmer writes code after the break or continue.
-		//Such code is unreachable, but a branch is a terminator instruction.
-		//Thus, the result is badly formed LLVM if a block of instructions follows a terminator
-		//without a label first.		
-		//Unreachable code will be detected and removed in TAC analysis.
+		// No children
+		// An unreachable label is needed in case a programmer writes code after the break or continue.
+		// Such code is unreachable, but a branch is a terminator instruction.
+		// Thus, the result is badly formed LLVM if a block of instructions follows a terminator
+		// without a label first.		
+		// Unreachable code will be detected and removed in TAC analysis.
 		TACLabel unreachableLabel = new TACLabel(method);
 		TACBlock exitBlock;
 
 		if( ctx.getChild(0).getText().equals("break") ) {
 			exitBlock = block.getBreakBlock();
-			visitCleanup(exitBlock, null, exitBlock.getBreak());
+			visitCleanups(exitBlock);
 		}
 		else {
 			exitBlock = block.getContinueBlock();
-			visitCleanup(exitBlock, null, exitBlock.getContinue());
+			visitCleanups(exitBlock);
 		}
 
 		unreachableLabel.insertBefore(anchor);		
@@ -2058,7 +2056,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}
 
 		//do the cleanup, de-referencing variables
-		visitCleanup(null, null);
+		visitAllCleanups();
 
 		//turn context back on
 		anchor.setContext(context);
@@ -2098,174 +2096,211 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 		return null;
 	}
+	
+	private void visitFinallyBlock(BlockContext finallyStatements) {
+		// Turn off context to prevent dead code removal errors
+		Context context = anchor.getContext();
+		anchor.setContext(null);	
+		
+		TACPhi phi = block.getCleanupPhi();			
 
-	@Override public Void visitFinallyStatement(ShadowParser.FinallyStatementContext ctx)
-	{ 
+		// Add in cleanup pad (which will receive uncaught exceptions)
+		TACLabel cleanupPadLabel = new TACLabel(method);	
+		cleanupPadLabel.appendBefore(anchor);
+		block.addCleanupPad(new TACCleanupPad(anchor, cleanupPadLabel));
+					
+		// Branch to cleanup code
+		new TACBranch(anchor, block.getCleanup());			
+		TACLabel cleanupRetLabel = new TACLabel(method);
+
+		//Phi branch back to cleanup ret (after cleanup code)
+		phi.addPreviousStore(cleanupPadLabel, new TACLabelAddress(anchor, cleanupRetLabel, method));
+		cleanupRetLabel.insertBefore(anchor);
+		new TACCleanupRet(anchor);
+					
+		//Add in actual cleanup code (1st time, for non-unwinding code)
+		block.getCleanup().insertBefore(anchor);
+		phi.insertBefore(anchor);		
+		
+		if(finallyStatements != null)
+			finallyStatements.appendBefore(anchor);
+		new TACBranch(anchor, phi);	
+
+		//turn context back on
+		anchor.setContext(context);
+	}
+
+	@Override public Void visitFinallyStatement(ShadowParser.FinallyStatementContext ctx) { 
 		block = new TACBlock(anchor, block).addDone();
+		if(ctx.block() != null) // Has a finally block
+			block.addCleanup();
+		
 		visitChildren(ctx);
 
 		ctx.recoverStatement().appendBefore(anchor);
-		if( ctx.block() != null ) {
-			TACPhi phi = (TACPhi)anchor.getPrevious(); //last thing before the anchor is a phi
-			ctx.block().appendBefore(anchor);
-			new TACBranch(anchor, phi);				
-		}
+		
+		if( ctx.block() != null )			
+			visitFinallyBlock(ctx.block());
+		
 		block.getDone().insertBefore(anchor);		
 		block = block.getParent();	
 
 		return null;	
 	}
 
-	@Override public Void visitRecoverStatement(ShadowParser.RecoverStatementContext ctx)
-	{
-		ShadowParser.FinallyStatementContext parent = (FinallyStatementContext) ctx.getParent();
-		if( parent.block() != null ) //parent has finally
-			block = new TACBlock(anchor, block).addLandingpad().addUnwind().
-			addCleanup().addDone();
-
+	@Override public Void visitRecoverStatement(ShadowParser.RecoverStatementContext ctx) {
+		if( ctx.block() != null ) // Has recover
+			block.addRecover();			
+		
 		visitChildren(ctx);
 
 		ctx.catchStatements().appendBefore(anchor);
-		if( ctx.block() != null ) { //has recover
+		if( ctx.block() != null ) { // Has recover
+			block.getRecover().insertBefore(anchor);	
 			ctx.block().appendBefore(anchor);
-			new TACBranch(anchor, block.getDone()).setContext(null); //prevents dead code removal error
+			
+			visitCleanups(block);
+			
+			new TACBranch(anchor, block.getDone()).setContext(null); // Prevents dead code removal error
 		}
-		if ( parent.block() != null ) { //parent has finally
-			block.getDone().insertBefore(anchor);
-			method.setHasLandingpad();
-
-			//turn off context to prevent dead code removal errors
-			Context context = anchor.getContext();
-			anchor.setContext(null);			
-
-			visitCleanup( block.getParent(), block.getDone(),
-					block.getParent().getDone() );
-			block.getLandingpad().insertBefore(anchor);
-			TACVariable exception = method.getLocal("_exception");
-			new TACLocalStore(anchor, exception, new TACLandingpad(anchor, block));
-			new TACBranch(anchor, block.getUnwind());
-			block.getUnwind().insertBefore(anchor);
-			TACLabel continueUnwind = block.getParent().getUnwind();
-			if (continueUnwind != null)
-				visitCleanup(block, block.getUnwind(), continueUnwind);
-			else {
-				visitCleanup(block, block.getUnwind());								
-				new TACResume(anchor, new TACLocalLoad(anchor, exception));
-			}
-			//turn context back on
-			anchor.setContext(context);
-
-			block.getCleanup().insertBefore(anchor);
-			block.getCleanupPhi().insertBefore(anchor);
-			block = block.getParent();				
-		}
-
+		
 		return null;
 	}
 
 
-	@Override public Void visitCatchStatements(ShadowParser.CatchStatementsContext ctx)
-	{ 
-		ShadowParser.RecoverStatementContext parent = (RecoverStatementContext) ctx.getParent();
-
-		block = new TACBlock(anchor, block);
-		if( parent.block() != null ) //parent has recover
-			block.addRecover();
-
-		block.addCatches(ctx.catchStatement().size());
-
+	@Override public Void visitCatchStatements(ShadowParser.CatchStatementsContext ctx) { 
+		block = new TACBlock(anchor, block).addCatch().addDone();
 		visitChildren(ctx);
 
-		ctx.tryStatement().appendBefore(anchor); //appends try block
+		ctx.tryStatement().appendBefore(anchor); // Appends try block
 
 		if( ctx.catchStatement().size() > 0 ) {
+						
 			//ignores context for a while, preventing dead code removal errors
 			//they'll be caught inside the catch
 			//catching them here creates misleading error messages
 			Context context = anchor.getContext();
 			anchor.setContext(null);
 
-			TACOperand typeid = new TACSequenceElement(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")), 1 );
+			block.getCatch().appendBefore(anchor);	
+			// Parent of catchStatements block is finallyStatements block, parent of that is outside of current try
+			TACPad parentPad = null;
+			TACBlock grandParentBlock = block.getParent().getParent();
+			if(grandParentBlock != null)
+				parentPad = grandParentBlock.getParentPad();
+			TACCatchSwitch catchSwitch = new TACCatchSwitch(anchor, parentPad); 
+			block.addCatchSwitch(catchSwitch);
+			
+			//TACOperand typeid = new TACSequenceElement(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")), 1 );
 			for( int i = 0; i < ctx.catchStatement().size(); ++i ) {
-				ShadowParser.CatchStatementContext child = ctx.catchStatement(i);
-				Type type = child.formalParameter().getType();
-				TACLabel catchLabel = block.getCatch(i),
-						skip = new TACLabel(method);
-
-				new TACBranch(anchor, new TACBinary(anchor, typeid, new TACTypeId(anchor, new TACClass(anchor, type).getClassData())),
-						catchLabel, skip);
-
-				catchLabel.insertBefore(anchor);
-				child.appendBefore(anchor); //append catch i
-				new TACBranch(anchor, block.getDone()); //prevents dead code removal error
-				skip.insertBefore(anchor);
+				ShadowParser.CatchStatementContext catchStatement = ctx.catchStatement(i);
+				catchStatement.appendBefore(anchor); //append catch i
+				catchSwitch.addCatchPad((TACCatchPad)catchStatement.getOperand());						
 			}
 
-			TACLabel continueUnwind = block.getUnwind();
-			if (continueUnwind != null)
-				new TACBranch(anchor, continueUnwind); //try inside of try					
-			else
-				new TACResume(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")));
-
 			anchor.setContext(context);
-		}			
-
-		if( parent.block() != null ) //parent has recover			
-			block.getRecover().insertBefore(anchor);
-
+			
+		}	
+		
+		block.getDone().insertBefore(anchor);
 		block = block.getParent();	
-
+		
+		visitCleanups(block); // Visit finally
+	
 		return null;
 	}
 
 	@Override public Void visitCatchStatement(ShadowParser.CatchStatementContext ctx)	
 	{ 
+		block = new TACBlock(anchor, block);
 		method.enterScope();
+		
 		visitChildren(ctx); 
 
 		ShadowParser.FormalParameterContext parameter = ctx.formalParameter();
 
 		parameter.appendBefore(anchor);
-
-		new TACLocalStore(anchor, method.getLocal(
-				parameter.Identifier().getText()), new TACCatch(anchor,
-						(ExceptionType)parameter.getType(), new TACLocalLoad(anchor, method.getLocal("_exception"))));
+		TACLabel label = new TACLabel(method);
+		label.appendBefore(anchor);
+		TACCatchPad catchPad = new TACCatchPad(anchor, (ExceptionType)parameter.getType(), label);
+		ctx.setOperand(catchPad);
+		block.addCatchPad(catchPad);
+		new TACLocalStore(anchor, method.getLocal(parameter.Identifier().getText()), catchPad);
 		ctx.block().appendBefore(anchor);
+		new TACCatchRet(anchor, block.getDone());
+		
+		
 		method.exitScope();
+		block = block.getParent();	
 
 		return null;
 	}
 
 	@Override public Void visitTryStatement(ShadowParser.TryStatementContext ctx)
 	{ 
-		ShadowParser.CatchStatementsContext parent = (CatchStatementsContext) ctx.getParent();
-		if( parent.catchStatement().size() > 0 )
-			block = new TACBlock(anchor, block).addLandingpad().addUnwind();
-
 		visitChildren(ctx); 
 
 		ctx.block().appendBefore(anchor);
 
-		//turn context off to avoid dead code removal errors
+		// Turn context off to avoid dead code removal errors
 		Context context = anchor.getContext();
 		anchor.setContext(null);
+		
+		visitCleanups(block); // Do finally (if needed) up to current block
 
 		new TACBranch(anchor, block.getDone());		
-		if( parent.catchStatement().size() > 0 ) {
-			method.setHasLandingpad();
-			block.getLandingpad().insertBefore(anchor);
-			TACVariable exception = method.getLocal("_exception");			
-			new TACLocalStore(anchor, exception, new TACLandingpad(anchor, block));
-			new TACBranch(anchor, block.getUnwind());
-			block.getUnwind().insertBefore(anchor);
-			block = block.getParent();				
-		}
-
-		//turn context back on
+		
+		// Turn context back on
 		anchor.setContext(context);
 
 		return null;
 	}	
+	
+	// Visits all cleanups out to the outermostBlock, returning to the current location each time
+	// This is done for code that is recovering, returning, breaking or continuing, allowing all the
+	// finally blocks to be visited *without* exception handling
+	// (Possibly including the outermost cleanup which contains reference-count decrements)
+	private void visitCleanups(TACBlock outermostBlock) {
+		TACBlock currentBlock = block;
+		boolean done = false;
+		TACLabel currentLabel = null;
+		while(!done) {
+			if(currentBlock.hasCleanup()) {
+				if(currentLabel == null) {
+					currentLabel = new TACLabel(method);
+					new TACBranch(anchor, currentLabel);
+					currentLabel.insertBefore(anchor);					
+				}
+				
+				// Branch to cleanup
+				new TACBranch(anchor, currentBlock.getCleanup());			
+				TACLabel nextLabel = new TACLabel(method);
+				
+				//Phi branch back to nextLabel (after cleanup code)
+				currentBlock.getCleanupPhi().addPreviousStore(currentLabel, new TACLabelAddress(anchor, nextLabel, method));
+				nextLabel.insertBefore(anchor);
+				
+				currentLabel = nextLabel;
+			}		
+			
+			if(currentBlock == outermostBlock || currentBlock.getParent() == null)
+				done = true;
+			else 
+				currentBlock = currentBlock.getParent();
+		}		
+	}
+	
+	// Visits *all* cleanups out to full method scope, including the outermost cleanup with reference-count decrements 
+	// Done only for returns
+	private void visitAllCleanups() {
+		TACBlock outerBlock = block;
+		while(outerBlock.getParent() != null)
+			outerBlock = outerBlock.getParent();
+		visitCleanups(outerBlock);
+	}
+	
+
+	/*
 
 	private void visitCleanup(TACBlock lastBlock, TACLabel currentLabel) {
 		if (lastBlock != null)
@@ -2308,6 +2343,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		new TACBranch(anchor, currentBlock.getCleanup());
 		currentBlock.getCleanupPhi().addPreviousStore(currentLabel, new TACLabelAddress(anchor, lastLabel, method) );
 	}
+	*/
 
 	private void visitConstant(TACConstant constantRef, ShadowParser.VariableDeclaratorContext constantNode)
 	{			
@@ -2319,21 +2355,41 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}	
 
 	private void setupMethod() {
+		/*
 		//begin synthetic finally for gc handling
 		block = new TACBlock(method).addDone();
 		//block = new TACBlock(method); //no done needed, since nothing should come after?
-		anchor = new TACDummyNode(null, block);		
+		
 
 
 		//synthetic recoverStatement
-		block = new TACBlock(anchor, block).addLandingpad().addUnwind().
+		block = new TACBlock(anchor, block).addCatchSwitch().addUnwind().
 				addCleanup().addDone();
 
 		//synthetic catchStatements
-		block = new TACBlock(anchor, block);	
+		block = new TACBlock(anchor, block);
+		*/
+		
+		// Outermost block (contains cleanup for GC purposes)
+		block = new TACBlock(method).addCleanup().addDone();	
+		anchor = new TACDummyNode(null, block);		
 	}
 
 	private void cleanupMethod() {		
+		// No finally statements, but all the decrements go before the indirect branch		
+		visitFinallyBlock(null);
+
+		// Turn off context to prevent dead code removal errors
+		Context context = anchor.getContext();
+		anchor.setContext(null);	
+	
+		block.getDone().insertBefore(anchor); //catches things that should have a return but don't	
+
+		// Turn context back on
+		anchor.setContext(context);
+		
+		
+		/*
 		//turn off context to prevent dead code removal errors
 		Context context = anchor.getContext();
 		anchor.setContext(null);		
@@ -2347,18 +2403,18 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//synthetic recoverStatement			
 		block.getDone().insertBefore(anchor);
 		//new TACBranch(anchor, block.getCleanup());
-		method.setHasLandingpad();					
+		
 
 		//is this necessary, since every GC method will have a finally?
 		visitCleanup( block.getParent(), block.getDone(),
 				block.getParent().getDone() );
-		block.getLandingpad().insertBefore(anchor);
+		block.getCatchSwitch().insertBefore(anchor);
 		TACVariable exception = method.getLocal("_exception");
 		new TACLocalStore(anchor, exception, new TACLandingpad(anchor, block));
 		new TACBranch(anchor, block.getUnwind());
 		block.getUnwind().insertBefore(anchor);
 		visitCleanup(block, block.getUnwind());								
-		new TACResume(anchor, new TACLocalLoad(anchor, exception));
+		new TACCleanupRet(anchor, new TACLocalLoad(anchor, exception));
 
 		block.getCleanup().insertBefore(anchor);
 		block.getCleanupPhi().insertBefore(anchor);
@@ -2375,6 +2431,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 		//turn context back on
 		anchor.setContext(context);
+		*/
 	}
 
 	private void visitCopyMethod(MethodSignature methodSignature) {
@@ -2388,13 +2445,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			//local store includes increase of reference count
 			new TACLocalStore(anchor, method.getLocal("return"), new TACLocalLoad(anchor, method.getThis()));					
 
-			visitCleanup(null, null);
+			visitAllCleanups();
 
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
 
 			anchor.setContext(context);
 
-			new TACLabel(method).insertBefore(anchor); //unreachable label
+			new TACLabel(method).insertBefore(anchor); // Unreachable label
 
 		}			
 		else {					
@@ -2569,16 +2626,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				new TACLocalStore(anchor, method.getLocal("return"), duplicate);
 			}							
 
-			visitCleanup(null, null);
-
-			//for now, just return this
-			//after incrementing reference count
-			//if( !type.isPrimitive() )
-			//new TACChangeReferenceCount(anchor, method.getThis(), true);
-
+			
+			visitAllCleanups();
+			
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-
-			new TACLabel(method).insertBefore(anchor); //unreachable label
+			new TACLabel(method).insertBefore(anchor); // Unreachable label
 
 			returnLabel.insertBefore(anchor);
 
@@ -2589,11 +2641,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 			new TACLocalStore(anchor, method.getLocal("return"), existingObject);					
 
-			visitCleanup(null, null);					
+			visitAllCleanups();					
 
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(), new TACLocalLoad(anchor, method.getLocal("return")));
-
-			new TACLabel(method).insertBefore(anchor); //unreachable label
+			new TACLabel(method).insertBefore(anchor); // Unreachable label
 		}
 	}
 
@@ -2605,7 +2656,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			TACLoad load = new TACLoad(anchor, field);
 			new TACLocalStore(anchor, method.getLocal("return"), load);
 
-			visitCleanup(null, null);	
+			visitAllCleanups();			
 
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes(),	load);
 			new TACLabel(method).insertBefore(anchor); //unreachable label
@@ -2616,7 +2667,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				value = parameter;
 			new TACStore(anchor, field, new TACLocalLoad(anchor, value));
 
-			visitCleanup(null, null);	
+			visitAllCleanups();			
 
 			new TACReturn(anchor, methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
 			new TACLabel(method).insertBefore(anchor); //unreachable label
@@ -2669,7 +2720,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		anchor.setContext(null);				
 
 		if( methodSignature.getFullReturnTypes().isEmpty() ) {
-			visitCleanup(null, null);	
+			visitAllCleanups();			
 
 			//turn context back on
 			anchor.setContext(context);					
@@ -2693,7 +2744,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				new TACLocalStore(anchor, method.getLocal("return"), value);
 			}	
 
-			visitCleanup(null, null);
+			visitAllCleanups();
 
 			//turn context back on
 			anchor.setContext(context);
@@ -2799,7 +2850,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			cleanupMethod();			
 
 			anchor = anchor.remove(); //gets node before anchor (and removes dummy)
-			method.setNode(anchor.getNext()); //the node after last node is, strangely, the first node			
+			method.setNode(anchor.getNext()); //the node after the last node is, strangely, the first node			
 		}
 
 		moduleStack.peek().addMethod(method);

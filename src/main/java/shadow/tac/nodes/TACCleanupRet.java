@@ -3,31 +3,23 @@ package shadow.tac.nodes;
 import shadow.ShadowException;
 import shadow.tac.TACVisitor;
 
-public class TACResume extends TACNode
+public class TACCleanupRet extends TACNode
 {	
-	private TACOperand exception;
 	
-	public TACResume(TACNode node, TACOperand exception)
+	public TACCleanupRet(TACNode node)
 	{
 		super(node);
-		this.exception = exception;
 	}
 	
-	public TACOperand getException() {
-		return exception;
-	}
-
 	@Override
 	public int getNumOperands()
 	{
-		return 1;
+		return 0;
 	}
 	
 	@Override
 	public TACOperand getOperand(int num)
-	{
-		if( num == 0 )
-			return exception;		
+	{		
 		throw new IndexOutOfBoundsException("" + num);
 	}
 

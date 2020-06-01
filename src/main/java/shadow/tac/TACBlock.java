@@ -1,11 +1,11 @@
 package shadow.tac;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchSwitch;
+import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACNode;
+import shadow.tac.nodes.TACPad;
 import shadow.tac.nodes.TACPhi;
 import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -20,11 +20,14 @@ import shadow.typecheck.type.SimpleModifiedType;
 public class TACBlock
 {
 	private TACBlock parent;
-	private TACLabel breakLabel, continueLabel, landingpadLabel,
-			unwindLabel;
-	private List<TACLabel> catchLabels;
-	private TACLabel recoverLabel, doneLabel, cleanupLabel;
-	private TACPhi cleanupPhi;
+	private TACLabel breakLabel, continueLabel;
+	private TACCatchSwitch catchSwitch;
+	private TACCatchPad catchPad;
+	private TACLabel recoverLabel, doneLabel, catchLabel;
+	// Although it seems like overkill, we need many different items for a cleanup:
+	private TACCleanupPad cleanupPad;	// The cleanuppad, where exceptions will visit as they unwind
+	private TACLabel cleanupLabel;		// Label for the actual cleaning up code, which everything will visit, even if not unwinding
+	private TACPhi cleanupPhi;			// Phi for returning to wherever we were before doing the cleanup
 	private TACMethod method;
 
 	public TACBlock(TACMethod method)
@@ -41,13 +44,6 @@ public class TACBlock
 	private TACBlock(TACMethod method, TACBlock parentBlock)
 	{
 		parent = parentBlock;
-		breakLabel = null;
-		continueLabel = null;
-		landingpadLabel = null;
-		unwindLabel = null;
-		catchLabels = null;
-		recoverLabel = null;
-		cleanupLabel = null;
 		this.method = method;		
 	}
 	
@@ -71,23 +67,8 @@ public class TACBlock
 	}
 	public TACBlock getBreakBlock()
 	{
-		return getBreakBlock(null);
-	}
-	public TACBlock getBreakBlock(TACBlock last)
-	{
-		return getBreakBlock(this, last);
-	}
-	public TACBlock getNextBreakBlock()
-	{
-		return getNextBreakBlock(null);
-	}
-	public TACBlock getNextBreakBlock(TACBlock last)
-	{
-		return getBreakBlock(getParent(), last);
-	}
-	private TACBlock getBreakBlock(TACBlock block, TACBlock last)
-	{
-		while (block != last && !block.hasBreak())
+		TACBlock block = this;
+		while (block != null && !block.hasBreak())
 			block = block.getParent();
 		return block;
 	}
@@ -108,26 +89,12 @@ public class TACBlock
 	}
 	public TACBlock getContinueBlock()
 	{
-		return getContinueBlock(null);
-	}
-	public TACBlock getContinueBlock(TACBlock last)
-	{
-		return getContinueBlock(this, last);
-	}
-	public TACBlock getNextContinueBlock()
-	{
-		return getNextContinueBlock(null);
-	}
-	public TACBlock getNextContinueBlock(TACBlock last)
-	{
-		return getContinueBlock(getParent(), last);
-	}
-	private TACBlock getContinueBlock(TACBlock block, TACBlock last)
-	{
-		while (block != last && !block.hasContinue())
+		TACBlock block = this;
+		while (block != null && !block.hasContinue())
 			block = block.getParent();
 		return block;
 	}
+
 	public TACBlock addContinue()
 	{
 		if (continueLabel != null)
@@ -135,72 +102,30 @@ public class TACBlock
 		continueLabel = new TACLabel(method);
 		return this;
 	}
-
-	public boolean hasLandingpad()
+	public TACCatchSwitch getCatchSwitch()
 	{
-		return getLandingpad() != null;
+		if (catchSwitch != null)
+			return catchSwitch;
+		return parent == null ? null : parent.getCatchSwitch();
 	}
-	public TACLabel getLandingpad()
+	public TACBlock addCatchSwitch(TACCatchSwitch catchSwitch)
 	{
-		if (landingpadLabel != null)
-			return landingpadLabel;
-		return parent == null ? null : parent.getLandingpad();
-	}
-	public TACBlock addLandingpad()
-	{
-		if (landingpadLabel != null)
-			throw new IllegalStateException("Landingpad label already added.");
-		landingpadLabel = new TACLabel(method);
+		if (this.catchSwitch != null)
+			throw new IllegalStateException("Catch switch already added.");
+		this.catchSwitch = catchSwitch;
 		return this;
 	}
-
-	public boolean hasUnwind()
+	public TACCatchPad getCatchPad()
 	{
-		return getUnwind() != null;
+		if (catchPad != null)
+			return catchPad;
+		return parent == null ? null : parent.getCatchPad();
 	}
-	public TACLabel getUnwind()
+	public TACBlock addCatchPad(TACCatchPad catchPad)
 	{
-		if (unwindLabel != null)
-			return unwindLabel;
-		return parent == null ? null : parent.getUnwind();
-	}
-	public TACBlock addUnwind()
-	{
-		if (unwindLabel != null)
-			throw new IllegalStateException("Unwind label already added.");
-		unwindLabel = new TACLabel(method);
-		return this;
-	}
-
-	public int getNumCatches()
-	{
-		return catchLabels != null ? catchLabels.size() : 0;
-	}
-	public TACLabel getCatch(int num)
-	{
-		return catchLabels.get(num);
-	}
-	public TACCatch getCatchNode(int num)
-	{
-		TACNode node = getCatch(num);
-		do
-			node = node.getNext();
-		while (!(node instanceof TACCatch));
-		return (TACCatch)node;
-	}
-	public TACBlock addCatch()
-	{
-		return addCatches(1);
-	}
-	public TACBlock addCatches(int num)
-	{
-		if (catchLabels != null)
-			throw new IllegalStateException("Catch labels already added.");
-		if (num > 0) {
-			catchLabels = new ArrayList<TACLabel>(num);
-			for (int i = 0; i < num; i++)
-				catchLabels.add(new TACLabel(method));
-		}
+		if (this.catchPad != null)
+			throw new IllegalStateException("Catch pad already added.");
+		this.catchPad = catchPad;
 		return this;
 	}
 
@@ -255,6 +180,43 @@ public class TACBlock
 			return cleanupPhi;
 		return parent == null ? null : parent.getCleanupPhi();
 	}
+
+	public TACCleanupPad getCleanupPad()
+	{
+		if (cleanupPad != null)
+			return cleanupPad;
+		return parent == null ? null : parent.getCleanupPad();
+	}
+	
+	public TACLabel getUnwind() {
+		TACBlock currentBlock = this;
+		while(currentBlock != null) {
+			if(currentBlock.catchSwitch != null)
+				return currentBlock.catchSwitch.getLabel();
+			if(currentBlock.cleanupPad != null)
+				return currentBlock.cleanupPad.getLabel();
+			
+			currentBlock = currentBlock.getParent();
+		}
+		
+		return null;
+	}
+	
+	public TACPad getParentPad() {
+		TACBlock currentBlock = this;
+		while(currentBlock != null) {
+			if(currentBlock.catchPad != null)
+				return currentBlock.catchPad;
+			if(currentBlock.cleanupPad != null)
+				return currentBlock.cleanupPad;
+			
+			currentBlock = currentBlock.getParent();
+		}
+		
+		return null;
+	}
+	
+	/*
 	public TACBlock getCleanupBlock()
 	{
 		return getCleanupBlock(null);
@@ -273,12 +235,35 @@ public class TACBlock
 			block = block.getParent();
 		return block;
 	}
+	*/
 	public TACBlock addCleanup()
 	{
 		if (cleanupLabel != null)
 			throw new IllegalStateException("Cleanup label already added.");
-		cleanupLabel = new TACLabel(method);		
+		cleanupLabel = new TACLabel(method);
 		cleanupPhi = new TACPhi(null, method.addTempLocal(new SimpleModifiedType(new PointerType())));
 		return this;
+	}
+	
+	public TACBlock addCatch()
+	{
+		if (catchLabel != null)
+			throw new IllegalStateException("Catch label already added.");
+		catchLabel = new TACLabel(method);
+		return this;
+	}
+	
+	public TACLabel getCatch()
+	{
+		if (catchLabel != null)
+			return catchLabel;
+		return parent == null ? null : parent.getCatch();
+	}
+
+	public TACBlock addCleanupPad(TACCleanupPad cleanupPad) {
+		if (this.cleanupPad != null)
+			throw new IllegalStateException("Cleanup pad already added.");
+		this.cleanupPad = cleanupPad;
+		return this;		
 	}
 }
