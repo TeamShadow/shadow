@@ -257,7 +257,10 @@ public class Main {
 			String[] version = System.getProperty("os.version").split("\\.");
 			compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
 			// compileCommand.add("-Wall");			
-		} else
+		}
+		else if(Configuration.getConfiguration().getOs().equals("Windows"))
+			compileCommand.add("gcc");
+		else
 			compileCommand.add("clang");
 		
 		compileCommand.add("-m" + Configuration.getConfiguration().getArch());
