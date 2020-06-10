@@ -216,10 +216,10 @@ public class Configuration {
 				linkCommand.add("-lSystem");
 			}			
 			else if(getOs().equals("Windows")){
-				linkCommand.add("clang");
+				linkCommand.add("gcc");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
-				linkCommand.add("-m64");
+				//linkCommand.add("-m64");
 				linkCommand.add("-");							
 				/*linkCommand.add("lld-link");
 				linkCommand.add("/subsystem:CONSOLE");

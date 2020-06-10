@@ -29,7 +29,6 @@ import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACCatchSwitch;
-import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
