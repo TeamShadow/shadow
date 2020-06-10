@@ -10,7 +10,6 @@ import shadow.typecheck.type.Type;
 public class TACCatchSwitch extends TACOperand {
 	
 	private TACPad parent;	
-	private TACLabel label;
 	private List<TACCatchPad> catchPads = new ArrayList<>();
 	
 	public TACCatchSwitch(TACNode node, TACPad parent) {
@@ -19,7 +18,7 @@ public class TACCatchSwitch extends TACOperand {
 	}
 	
 	public TACLabel getLabel() {
-		return label;
+		return getBlock().getCatch();
 	}
 
 	public TACPad getParent()

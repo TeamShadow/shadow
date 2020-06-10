@@ -27,6 +27,10 @@ import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatchRet;
+import shadow.tac.nodes.TACCatchSwitch;
+import shadow.tac.nodes.TACCleanupPad;
+import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
@@ -43,7 +47,6 @@ import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;
-import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
@@ -177,7 +180,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						}
 				}
 			}
-			//handles cases where a method call can cause a catchable exception
+			// Handles cases where a method call can cause a catchable exception
 			else if( node instanceof TACCall ) {
 				TACCall call = (TACCall) node;
 				TACLabel unwindLabel = call.getBlock().getUnwind();
@@ -191,6 +194,21 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				TACThrow throw_ = (TACThrow)node;
 				TACLabel unwindLabel = throw_.getBlock().getUnwind();
 				
+				if( unwindLabel != null )
+					block.addBranch(nodeBlocks.get(unwindLabel));
+			}
+			else if(node instanceof TACCatchSwitch) {
+				TACCatchSwitch catchSwitch = (TACCatchSwitch)node;
+				for(int i = 0; i < catchSwitch.getNumOperands(); ++i)
+					block.addBranch(nodeBlocks.get(catchSwitch.getOperand(i).getLabel()));
+			}
+			else if(node instanceof TACCatchRet) {
+				TACCatchRet catchRet = (TACCatchRet)node;
+				block.addBranch(nodeBlocks.get(catchRet.getLabel()));
+			}
+			else if(node instanceof TACCleanupRet) {
+				TACCleanupRet cleanupRet = (TACCleanupRet)node;
+				TACLabel unwindLabel = cleanupRet.getUnwind();
 				if( unwindLabel != null )
 					block.addBranch(nodeBlocks.get(unwindLabel));
 			}
@@ -1129,7 +1147,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						if( update.update(currentlyUpdating) )
 							changed = true;
 
-						//simplifying branch
+						// Simplifying branch
 						if( update.getValue() instanceof TACLiteral ) {
 							TACLiteral literal = (TACLiteral) update.getValue();
 							boolean value = ((ShadowBoolean)literal.getValue()).getValue();
@@ -1167,8 +1185,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				block.incoming.remove(this);
 		}
 
-		public Block(TACLabel label)
-		{
+		public Block(TACLabel label) {
 			this.label = label;
 		}
 
@@ -1244,8 +1261,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACLocalStorage store = (TACLocalStorage)node;
 					TACVariable variable = store.getVariable();
 
-					//Useful to know if there was a previous store
-					//primarily for the case of GC: no need to decrement something that was never assigned 
+					// Useful to know if there was a previous store
+					// primarily for GC: no need to decrement something that was never assigned 
 					if( node instanceof TACLocalStore ) {
 						TACLocalStore localStore = (TACLocalStore) node;
 						if( predecessors.get(variable) != null ) {

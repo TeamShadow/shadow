@@ -19,6 +19,7 @@ import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
@@ -48,7 +49,10 @@ public class TACMethod
 	private final Deque<Map<String, TACVariable>> scopes;	
 	private int labelCounter = 0;		//counter to keep label numbering unique
 	private int variableCounter = 0;	//counter to keep variable number unique
-	private TACNode node;	
+	private TACNode node;
+	private TACLabel normalCleanup;
+	private TACLabel unwindCleanup;
+	
 	
 	public TACMethod(MethodSignature methodSignature)
 	{
@@ -130,12 +134,24 @@ public class TACMethod
 	
 
     private void addCleanup(Set<TACVariable> storedVariables) {
-		TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
-			
-		//add each decrement before the first thing, making it the new last thing
+		//TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
+		
+    	// Run cleanups twice, once for normal
+    	TACNode last = normalCleanup.getNext().getNext(); // label -> phi -> indirect branch
+    	
+		// Add each decrement before the last thing (the indirect branch)
 		for( TACVariable variable : storedVariables )	
-			//return doesn't get cleaned up, so that it has an extra reference count
+			// Return doesn't get cleaned up, so that it has an extra reference count
 			if( !variable.isReturn() )				
+				new TACChangeReferenceCount(last, variable, false);
+		
+		// Run cleanups twice, the second time for unwinding
+    	last = unwindCleanup.getNext().getNext(); // label -> cleanuppad -> cleanupret
+    	
+    	// Add each decrement before the last thing (the cleanupret)
+		for( TACVariable variable : storedVariables )	
+			// Return doesn't get cleaned up, so that it has an extra reference count
+			if( !variable.isReturn() ) //TODO: Is that true for an unwind? Probably: the return hasn't been incremented either				
 				new TACChangeReferenceCount(last, variable, false);
 	}
     
@@ -372,7 +388,9 @@ public class TACMethod
 		return variableCounter++;
 	}
 
-	//add allocations of garbage collected variables
+	/** 
+	 * Add allocations of garbage collected variables
+	 */
 	public void addAllocations() {
 		Set<TACVariable> usedLocals = new HashSet<TACVariable>();
 		Set<TACChangeReferenceCount> referenceCountChanges = new HashSet<TACChangeReferenceCount>();
@@ -380,20 +398,24 @@ public class TACMethod
 		TACNode node = start;
 		
 		do {
-			if( node instanceof TACLocalLoad ) {
+			if(node instanceof TACLocalLoad) {
 				TACLocalLoad load = (TACLocalLoad)node;
 				if( load.getVariable().needsGarbageCollection() )
 					usedLocals.add(load.getVariable());
 			}
-			else if( node instanceof TACLocalStore ) {
+			else if(node instanceof TACLocalStore) {
 				TACLocalStore store = (TACLocalStore)node;
 				if( store.getVariable().needsGarbageCollection() )
 					usedLocals.add(store.getVariable());
 			}
-			else if( node instanceof TACChangeReferenceCount ) {
+			else if(node instanceof TACChangeReferenceCount ) {
 				TACChangeReferenceCount change = (TACChangeReferenceCount) node;
 				if( !change.isField() )
 					referenceCountChanges.add(change);
+			}
+			else if(node instanceof TACCatchPad) {
+				TACCatchPad catchPad = (TACCatchPad)node;
+				usedLocals.add(catchPad.getVariable());
 			}
 			node = node.getNext();
 		} while( node != start );
@@ -441,5 +463,21 @@ public class TACMethod
 			node = node.getNext();
 		} while( node != start );
 		
+	}
+	
+	public void setNormalCleanup(TACLabel label) {
+		normalCleanup = label;
+	}
+	
+	public void setUnwindCleanup(TACLabel label) {
+		unwindCleanup = label;
+	}
+	
+	public TACLabel getNormalCleanup() {
+		return normalCleanup;
+	}
+	
+	public TACLabel getUnwindCleanup() {
+		return unwindCleanup;
 	}
 }

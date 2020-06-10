@@ -154,7 +154,7 @@ public class TACModule {
 			MethodSignature signature = method.getSignature();
 
 			//don't bother with unimplemented methods
-			if( !signature.getModifiers().isAbstract() && !signature.isImport() ) {			
+			if( !signature.getModifiers().isAbstract() && !signature.isImport() ) {	
 				
 				//adds garbage collection and code that cleans up variables that need garbage collection
 				//at the end of the method

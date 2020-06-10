@@ -1,64 +1,32 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
+import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ExceptionType;
 
-public class TACCatchPad extends TACOperand implements TACPad
+public class TACCatchPad extends TACPad
 {
 	private ExceptionType type;
-	private TACOperand exception;
-	private String token;
-	private TACLabel label;
+	private TACVariable variable;
 
-	public TACCatchPad(TACNode node, ExceptionType catchType, TACLabel label)
-	{
-		super(node);
+	public TACCatchPad(TACNode node, ExceptionType catchType, TACLabel label, TACVariable variable) {
+		super(node, label);
 		type = catchType;
-		this.label = label;
-	}
-	
-	public TACOperand getException() {
-		return exception;
+		this.variable = variable;
 	}
 
 	@Override
-	public ExceptionType getType()
-	{
+	public ExceptionType getType() {
 		return type;
 	}
 
 	@Override
-	public int getNumOperands()
-	{
-		return 1;
-	}
-	@Override
-	public TACOperand getOperand(int num)
-	{
-		if( num == 0 )
-			return exception;		
-		throw new IndexOutOfBoundsException("" + num);
-	}
-
-	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
+	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
-
-	@Override
-	public void setToken(String token) {
-		this.token = token;		
-	}
-
-	@Override
-	public String getToken() {
-		return token;
-	}
-
-	@Override
-	public TACLabel getLabel() {
-		return label;
+	
+	public TACVariable getVariable() {
+		return variable;
 	}
 }

@@ -31,7 +31,6 @@ import shadow.interpreter.ShadowValue;
 import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
 import shadow.parse.Context;
-import shadow.tac.TACBlock;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
 import shadow.tac.TACModule;
@@ -98,7 +97,6 @@ import shadow.typecheck.type.TypeParameter;
 
 public class LLVMOutput extends AbstractOutput {	
 	private int tempCounter = 0;
-	private int exceptionCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();	
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
 	private int classCounter = 0;
@@ -126,10 +124,6 @@ public class LLVMOutput extends AbstractOutput {
 	private String nextTemp()
 	{
 		return '%' + Integer.toString(tempCounter++);
-	}
-	private String nextException()
-	{
-		return "%_exception" + Integer.toString(exceptionCounter++);
 	}
 
 	/**
@@ -1619,12 +1613,8 @@ public class LLVMOutput extends AbstractOutput {
 
 	@Override
 	public void visit(TACCatchPad node) throws ShadowException {
-		String token = nextTemp();
-		node.setToken(token);
 		
-		String exception = nextException();
-		
-		writer.write(token + " = catchpad within " + symbol(node.getBlock().getCatchSwitch()) + " [" + type(Type.CLASS) + ' ' + classOf(node.getType()) + " i32 8, " + type(node.getType()) + "* " + exception + ']');
+		writer.write(nextTemp(node) + " = catchpad within " + symbol(node.getBlock().getCatchSwitch()) + " [" + type(Type.CLASS) + ' ' + classOf(node.getType()) + ", i32 8, " + type(node.getType()) + "* " + name(node.getVariable()) + ']');
 		//writer.write(nextTemp() + " = extractvalue " + typeSymbol(node.getException()) + ", 0");
 		//writer.write(nextTemp() + " = call " + type(Type.EXCEPTION) +
 		//		" @__shadow_catch(i8* " + temp(1) + ") nounwind");
@@ -1632,12 +1622,12 @@ public class LLVMOutput extends AbstractOutput {
 		//writer.write(nextTemp(node) + " = bitcast " + type(Type.EXCEPTION) +
 			//	' ' + temp(offset) + " to " + type(node.getType()));
 		
-		writer.write(nextTemp(node) + " = load " + type(node.getType()) + ", " + type(node.getType()) + "* " + exception);
+		//writer.write(nextTemp(node) + " = load " + type(node.getType()) + ", " + type(node.getType()) + "* " + exception);
 	}
 	
 	@Override
 	public void visit(TACCatchRet node) throws ShadowException {
-		writer.write("catchret from " + symbol(node.getBlock().getCatchPad()) + " to label " + symbol(node.getBlock().getDone()));
+		writer.write("catchret from " + symbol(node.getBlock().getCatchPad()) + " to label " + symbol(node.getLabel()));
 	}
 	
 	@Override
@@ -1650,24 +1640,19 @@ public class LLVMOutput extends AbstractOutput {
 		else
 			parent = symbol(parentSwitch);
 		// Empty list because the personality function shouldn't take an arguments from a cleanup
-		node.setToken(nextTemp());
-		writer.write(node.getToken() + " = cleanuppad within " + parent + " []");
+		writer.write(nextTemp(node) + " = cleanuppad within " + parent + " []");
 	}
 
 	@Override
 	public void visit(TACCleanupRet node) throws ShadowException {
 		// Unwind
 		String unwind;
-		TACLabel unwindLabel = null;
-		// Have to get parent block or else we'll unwind to the same place
-		TACBlock parent = node.getBlock().getParent(); 
-		if(parent != null)
-			unwindLabel = parent.getUnwind();
+		TACLabel unwindLabel = node.getUnwind();
 		if(unwindLabel != null)
 			unwind = "label " + symbol(unwindLabel);
 		else
 			unwind = "to caller";
-		writer.write("cleanupret from " + node.getBlock().getCleanupPad().getToken() + " unwind " + unwind);
+		writer.write("cleanupret from " + symbol(node.getBlock().getCleanupPad()) + " unwind " + unwind);
 	}
 	
 	@Override
@@ -1686,7 +1671,7 @@ public class LLVMOutput extends AbstractOutput {
 			if(i > 0)
 				sb.append(", ");
 			sb.append("label ");
-			sb.append(symbol(node.getOperand(i)));
+			sb.append(symbol(node.getOperand(i).getLabel()));
 		}
 		sb.append("]");
 		

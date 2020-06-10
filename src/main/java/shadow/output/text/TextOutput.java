@@ -290,6 +290,7 @@ public class TextOutput extends AbstractOutput
 				node.getException()).append(';').toString());
 	}
 	
+		
 	@Override
 	public void visit(TACCatchPad node) throws ShadowException {
 		endBlock(false);		
@@ -300,6 +301,12 @@ public class TextOutput extends AbstractOutput
 	public void visit(TACCleanupRet node) throws ShadowException {
 		endBlock(true);
 		writer.write("// resume;");
+	}
+	
+	@Override
+	public void visit(TACCleanupPad node) throws ShadowException {
+		endBlock(false);
+		writer.write("finally");
 	}
 
 	private class Inline extends TACAbstractVisitor {
