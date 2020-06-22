@@ -7,23 +7,12 @@ import shadow.ShadowException;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Type;
 
-public class TACCatchSwitch extends TACOperand {
+public class TACCatchSwitch extends TACPad {
 	
-	private TACPad parent;	
 	private List<TACCatchPad> catchPads = new ArrayList<>();
-	
-	public TACCatchSwitch(TACNode node, TACPad parent) {
-		super(node);
-		this.parent = parent;
-	}
-	
-	public TACLabel getLabel() {
-		return getBlock().getCatch();
-	}
 
-	public TACPad getParent()
-	{
-		return parent;
+	public TACCatchSwitch(TACNode node, TACLabel label) {
+		super(node, label);
 	}
 
 	@Override
@@ -52,5 +41,6 @@ public class TACCatchSwitch extends TACOperand {
 	
 	public void addCatchPad(TACCatchPad catchPad) {
 		catchPads.add(catchPad);
+		catchPad.setCatchSwitch(this);
 	}
 }

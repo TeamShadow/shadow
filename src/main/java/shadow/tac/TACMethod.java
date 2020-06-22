@@ -50,8 +50,8 @@ public class TACMethod
 	private int labelCounter = 0;		//counter to keep label numbering unique
 	private int variableCounter = 0;	//counter to keep variable number unique
 	private TACNode node;
-	private TACLabel normalCleanup;
-	private TACLabel unwindCleanup;
+	private TACNode normalCleanupAnchor;
+	private TACNode unwindCleanupAnchor;
 	
 	
 	public TACMethod(MethodSignature methodSignature)
@@ -76,7 +76,7 @@ public class TACMethod
 	public TACMethod addParameters(TACNode node, boolean isWrapped)
 	{		
 		//method starts with a label, always
-		new TACLabel(this).insertBefore(node);
+		//new TACLabel(this).insertBefore(node); //already has one created by startup
 		
 		Type prefixType = signature.getOuter();		
 		int parameter = 0;		
@@ -137,22 +137,22 @@ public class TACMethod
 		//TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
 		
     	// Run cleanups twice, once for normal
-    	TACNode last = normalCleanup.getNext().getNext(); // label -> phi -> indirect branch
+    	TACNode anchor = normalCleanupAnchor;
     	
 		// Add each decrement before the last thing (the indirect branch)
 		for( TACVariable variable : storedVariables )	
 			// Return doesn't get cleaned up, so that it has an extra reference count
 			if( !variable.isReturn() )				
-				new TACChangeReferenceCount(last, variable, false);
+				new TACChangeReferenceCount(anchor, variable, false);
 		
 		// Run cleanups twice, the second time for unwinding
-    	last = unwindCleanup.getNext().getNext(); // label -> cleanuppad -> cleanupret
+    	anchor = unwindCleanupAnchor;
     	
-    	// Add each decrement before the last thing (the cleanupret)
+    	// Add each decrement before the last thing (the throw)
 		for( TACVariable variable : storedVariables )	
 			// Return doesn't get cleaned up, so that it has an extra reference count
 			if( !variable.isReturn() ) //TODO: Is that true for an unwind? Probably: the return hasn't been incremented either				
-				new TACChangeReferenceCount(last, variable, false);
+				new TACChangeReferenceCount(anchor, variable, false);
 	}
     
     void addGarbageCollection() {    	
@@ -415,7 +415,8 @@ public class TACMethod
 			}
 			else if(node instanceof TACCatchPad) {
 				TACCatchPad catchPad = (TACCatchPad)node;
-				usedLocals.add(catchPad.getVariable());
+				if(!catchPad.isCatchAll())
+					usedLocals.add(catchPad.getVariable());
 			}
 			node = node.getNext();
 		} while( node != start );
@@ -465,19 +466,11 @@ public class TACMethod
 		
 	}
 	
-	public void setNormalCleanup(TACLabel label) {
-		normalCleanup = label;
+	public void setNormalCleanupAnchor(TACNode node) {
+		normalCleanupAnchor = node;
 	}
 	
-	public void setUnwindCleanup(TACLabel label) {
-		unwindCleanup = label;
-	}
-	
-	public TACLabel getNormalCleanup() {
-		return normalCleanup;
-	}
-	
-	public TACLabel getUnwindCleanup() {
-		return unwindCleanup;
+	public void setUnwindCleanupAnchor(TACNode node) {
+		unwindCleanupAnchor = node;
 	}
 }

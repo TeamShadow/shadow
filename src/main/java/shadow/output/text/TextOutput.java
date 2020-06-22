@@ -293,8 +293,11 @@ public class TextOutput extends AbstractOutput
 		
 	@Override
 	public void visit(TACCatchPad node) throws ShadowException {
-		endBlock(false);		
-		writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
+		endBlock(false);
+		if(node.isCatchAll())
+			writer.write("catch all");
+		else
+			writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
 	}
 	
 	@Override
@@ -359,10 +362,10 @@ public class TextOutput extends AbstractOutput
 				sb.delete(sb.length() - 2, sb.length());
 			sb.append(')');
 			
-			TACCatchSwitch catchSwitch = node.getBlock().getCatchSwitch(); 
-			if( catchSwitch != null  )
+			TACLabel unwindLabel = node.getBlock().getUnwind(); 
+			if( unwindLabel != null  )
 				sb.append(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
-						symbol(catchSwitch.getLabel()));
+						symbol(unwindLabel));
 		}
 
 		@Override

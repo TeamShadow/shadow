@@ -81,7 +81,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 	 * Create a control flow graph for a method.
 	 */
 	public ControlFlowGraph(TACMethod method)
-	{		
+	{
 		super(Loggers.TYPE_CHECKER);
 		this.method = method;
 
@@ -185,7 +185,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				TACLabel unwindLabel = call.getBlock().getUnwind();
 				
 				if( unwindLabel != null ) {
-					block.addBranch(nodeBlocks.get(unwindLabel));					
+					block.addBranch(nodeBlocks.get(unwindLabel));
 					block.addBranch(nodeBlocks.get(call.getNoExceptionLabel()));
 				}
 			}
@@ -1418,15 +1418,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		 * creates "junk" branches and labels that can't be reached. 
 		 */
 		private void removeNode(TACNode node) {
-			//Labels and label addresses are not counted as errors
-			//Any node without a context is structural stuff added to form legal LLVM
+			/* Labels and label addresses are not counted as errors
+			 * Any node without a context is structural stuff added to form legal LLVM
+			 * Code inside a cleanup can be removed because finally blocks sometimes have
+			 * two copies: the normal (cleanup) copy and the unwind copy.  As long as at least 
+			 * one of the two is reachable, the original Shadow is legal. 
+			 */ 
 			if( !(node instanceof TACLabel) && !(node instanceof TACLabelAddress) &&
-					node.getContext() != null ) 
+					node.getContext() != null && !node.getBlock().isInsideCleanup() ) 
 				addError(node.getContext(), Error.UNREACHABLE_CODE, "Code cannot be reached");
 
 			node.remove();
 		}
-
 
 		/*
 		 * Adds a branch from the current block to a target block.

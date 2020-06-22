@@ -258,8 +258,6 @@ public class Main {
 			compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
 			// compileCommand.add("-Wall");			
 		}
-		else if(Configuration.getConfiguration().getOs().equals("Windows"))
-			compileCommand.add("gcc");
 		else
 			compileCommand.add("clang");
 		
@@ -280,11 +278,11 @@ public class Main {
 		/*
 		 * The compiling of the C files is done in two stages: 1. We traverse
 		 * the `c-source` directory looking for `.c` files, and we add those to
-		 * the coreCFiles list. All those files are compiled in one gcc run, and
+		 * the coreCFiles list. All those files are compiled in one gcc (clang) run, and
 		 * the corresponding .s files are generated next to the .c files, with
 		 * the same name. 2. The cFiles list contains all the .c files found
 		 * while generating LLVM for .shadow files. Each `.c` file is compiled
-		 * using a gcc run. So, if there are 100 .c files, we will run gcc 100
+		 * using a gcc run. So, if there are 100 .c files, we will run gcc (clang) 100
 		 * times.
 		 */
 
@@ -363,7 +361,10 @@ public class Main {
 		Path shadow = config.getSystemImport().resolve("shadow");
 
 		// Add architecture-dependent exception handling code
-		linkCommand.add(optimizeLLVMFile(shadow.resolve("Unwind" + config.getArch() + ".ll")));
+		if (Configuration.getConfiguration().getOs().equals("Windows"))
+			linkCommand.add(optimizeLLVMFile(shadow.resolve("UnwindWindows" + config.getArch() + ".ll")));
+		else
+			linkCommand.add(optimizeLLVMFile(shadow.resolve("Unwind" + config.getArch() + ".ll")));
 
 		// Add platform-specific system code
 		linkCommand.add(optimizeLLVMFile(shadow.resolve(config.getOs() + ".ll")));

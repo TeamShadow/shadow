@@ -675,18 +675,14 @@ sendStatement
  * finally/recover/catch is present.
  */
 finallyStatement
-	: recoverStatement
-  	('finally' block)?
-  	;
-
-recoverStatement
 	: catchStatements
-  	('recover' block )?
+  	('finally' block)?
   	;
 
 catchStatements
 	: tryStatement
 	catchStatement*
+	('recover' block )?
 	;
 
 catchStatement

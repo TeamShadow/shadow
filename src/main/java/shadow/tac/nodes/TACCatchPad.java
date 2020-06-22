@@ -9,11 +9,24 @@ public class TACCatchPad extends TACPad
 {
 	private ExceptionType type;
 	private TACVariable variable;
+	private TACCatchSwitch catchSwitch;
 
-	public TACCatchPad(TACNode node, ExceptionType catchType, TACLabel label, TACVariable variable) {
+	public TACCatchPad(TACNode node, TACLabel label, ExceptionType catchType, TACVariable variable) {
 		super(node, label);
 		type = catchType;
 		this.variable = variable;
+	}
+	
+	public TACCatchPad(TACNode node, TACLabel label) {
+		this(node, label, null, null);
+	}
+	
+	public void setCatchSwitch(TACCatchSwitch catchSwitch) {
+		this.catchSwitch = catchSwitch;
+	}
+	
+	public TACCatchSwitch getCatchSwitch() {
+		return catchSwitch;
 	}
 
 	@Override
@@ -28,5 +41,9 @@ public class TACCatchPad extends TACPad
 	
 	public TACVariable getVariable() {
 		return variable;
+	}
+	
+	public boolean isCatchAll() {
+		return type == null && variable == null; 
 	}
 }

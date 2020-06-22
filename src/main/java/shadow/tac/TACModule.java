@@ -158,7 +158,9 @@ public class TACModule {
 				
 				//adds garbage collection and code that cleans up variables that need garbage collection
 				//at the end of the method
-				method.addGarbageCollection();				
+				method.addGarbageCollection();		
+				
+				String output = method.toString();
 				
 				ControlFlowGraph graph = new ControlFlowGraph(method);
 				

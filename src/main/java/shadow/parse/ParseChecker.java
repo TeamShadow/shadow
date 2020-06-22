@@ -424,14 +424,14 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		if( ctx.block() != null )
 			finally_ = true;
 		
-		if( !ctx.recoverStatement().catchStatements().catchStatement().isEmpty() )
+		if( !ctx.catchStatements().catchStatement().isEmpty() )
 			catch_ = true;
 		
-		if( ctx.recoverStatement().block() != null )
+		if( ctx.catchStatements().block() != null )
 			recover = true;
 		
 		if( !recover && !catch_ && !finally_ )			
-			addError(ctx.recoverStatement().catchStatements().tryStatement(), Error.INCOMPLETE_TRY, "Given try statement is not followed by catch, recover, or finally statements" );
+			addError(ctx.catchStatements().tryStatement(), Error.INCOMPLETE_TRY, "Given try statement is not followed by catch, recover, or finally statements" );
 		
 		return visitChildren(ctx);
 	}
