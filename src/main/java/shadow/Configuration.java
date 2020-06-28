@@ -216,7 +216,7 @@ public class Configuration {
 				linkCommand.add("-lSystem");
 			}			
 			else if(getOs().equals("Windows")){
-				linkCommand.add("clang++");
+				linkCommand.add("clang");
 				linkCommand.add("-x");
 				linkCommand.add("assembler");
 				if(arch == 32)
@@ -487,10 +487,22 @@ public class Configuration {
 				process.destroy();
 		}
 	}
+	
+	public String getLLVMOptimizationLevel() {
+		// set to empty string to check for
+		// race conditions in Threads.
+		if(os == null || os.equals("Windows") )
+			return "";  //TODO: Bring up to -O2?
+		else
+			return "-O3";	
+		
+		
+	}
 
 	public String getOptimizationLevel() {
-		return "-O3"; // set to empty string to check for
+		// set to empty string to check for
 		// race conditions in Threads.
+		return "-O3";		
 	}
 
 	//Update this for other architectures?

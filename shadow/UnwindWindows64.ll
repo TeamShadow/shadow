@@ -51,6 +51,12 @@
 @shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
 
+
+@_array0 = private unnamed_addr constant {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %byte]} {%ulong -1, %shadow.standard..Class* @byte_A_class, %shadow.standard..Array_methods* @shadow.standard..Array_methods, %long 20, [20 x %byte] c"Heap space exhausted"}
+@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, %shadow.standard..Array* bitcast ( {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %byte]}* @_array0 to %shadow.standard..Array*), %boolean true }
+@_OutOfMemoryException = private unnamed_addr constant %shadow.standard..OutOfMemoryException { %ulong -1, %shadow.standard..Class* @shadow.standard..OutOfMemoryException_class, %shadow.standard..OutOfMemoryException_methods* @shadow.standard..OutOfMemoryException_methods, %shadow.standard..String* @_string0 }
+
+
 declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryException_Mcreate(%shadow.standard..Object*)
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
 
@@ -58,52 +64,37 @@ declare i1 @shadow.standard..Class_MisSubtype_shadow.standard..Class(%shadow.sta
 
 declare %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) nounwind alwaysinline
 
-; _URC_NO_REASON = 0
-; _URC_FOREIGN_EXCEPTION_CAUGHT = 1
-; _URC_FATAL_PHASE2_ERROR = 2
-; _URC_FATAL_PHASE1_ERROR = 3
-; _URC_NORMAL_STOP = 4
-; _URC_END_OF_STACK = 5
-; _URC_HANDLER_FOUND = 6
-; _URC_INSTALL_CONTEXT = 7
-; _URC_CONTINUE_UNWIND = 8
+;typedef struct _EXCEPTION_RECORD64 {
+;  DWORD   ExceptionCode;
+;  DWORD   ExceptionFlags;
+;  DWORD64 ExceptionRecord;
+;  DWORD64 ExceptionAddress;
+;  DWORD   NumberParameters;
+;  DWORD   __unusedAlignment;
+;  DWORD64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS]; //15
+;} EXCEPTION_RECORD64;
 
-; _UA_SEARCH_PHASE = 1
-; _UA_CLEANUP_PHASE = 2
-; _UA_HANDLER_FRAME = 3
-; _UA_FORCE_UNWIND = 8
-; _UA_END_OF_STACK = 16
 
-%_Unwind_Ptr = type i8*
-%_Unwind_Word = type i8*
-%_Unwind_Sword = type i8*
-%_Unwind_Action = type i32
-%_Unwind_Reason_Code = type i32
-%_Unwind_Exception_Class = type i64
-%_Unwind_Stop_Fn = type %_Unwind_Reason_Code (i32, %_Unwind_Action, %_Unwind_Exception_Class, %struct._Unwind_Exception*, %struct._Unwind_Context*, i8*)*
-%_Unwind_Trace_Fn = type %_Unwind_Reason_Code (%struct._Unwind_Context*, i8*)*
-%_Unwind_Personality_Fn = type %_Unwind_Reason_Code (i32, %_Unwind_Action, %_Unwind_Exception_Class, %struct._Unwind_Exception*, %struct._Unwind_Context*)*
-%_Unwind_Exception_Cleanup_Fn = type void (%_Unwind_Reason_Code, %struct._Unwind_Exception*)*
-%struct._Unwind_Context = type opaque
-%struct._Unwind_Exception = type { %_Unwind_Exception_Class, %_Unwind_Exception_Cleanup_Fn, i64, i64 }
+;typedef struct _EXCEPTION_RECORD {
+;  DWORD                    ExceptionCode;
+;  DWORD                    ExceptionFlags;
+;  struct _EXCEPTION_RECORD *ExceptionRecord;
+;  PVOID                    ExceptionAddress;
+;  DWORD                    NumberParameters;
+;  ULONG_PTR                ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+;} EXCEPTION_RECORD;
 
-declare %_Unwind_Reason_Code @_Unwind_RaiseException(%struct._Unwind_Exception*)
-declare %_Unwind_Reason_Code @_Unwind_ForcedUnwind(%struct._Unwind_Exception*, %_Unwind_Stop_Fn, i8*)
-declare void @_Unwind_DeleteException(%struct._Unwind_Exception*)
-declare void @_Unwind_Resume(%struct._Unwind_Exception*)
-declare %_Unwind_Reason_Code @_Unwind_Resume_or_Rethrow(%struct._Unwind_Exception)
-declare %_Unwind_Reason_Code @_Unwind_Backtrace(%_Unwind_Trace_Fn, i8*)
-declare %_Unwind_Word @_Unwind_GetGR(%struct._Unwind_Context*, i32) nounwind readonly
-declare void @_Unwind_SetGR(%struct._Unwind_Context*, i32, %_Unwind_Word) nounwind
-declare %_Unwind_Ptr @_Unwind_GetIP(%struct._Unwind_Context*) nounwind readonly
-declare %_Unwind_Ptr @_Unwind_GetIPInfo(%struct._Unwind_Context*, i32*) nounwind readonly
-declare void @_Unwind_SetIP(%struct._Unwind_Context*, %_Unwind_Ptr) nounwind
-declare %_Unwind_Word @_Unwind_GetCFA(%struct._Unwind_Context*) nounwind readonly
-declare i8* @_Unwind_GetLanguageSpecificData(%struct._Unwind_Context*) nounwind readonly
-declare %_Unwind_Ptr @_Unwind_GetRegionStart(%struct._Unwind_Context*) nounwind readonly
-declare %_Unwind_Ptr @_Unwind_GetDataRelBase(%struct._Unwind_Context*) nounwind readonly
-declare %_Unwind_Ptr @_Unwind_GetTextRelBase(%struct._Unwind_Context*) nounwind readonly
-declare i8* @_Unwind_FindEnclosingFunction(i8*) nounwind readonly
+%struct._EXCEPTION_RECORD = type {i32, i32, %struct._EXCEPTION_RECORD*, i8*, i32, i32, [15 x i64]}
+
+;RaiseException(
+;  DWORD           dwExceptionCode,
+;  DWORD           dwExceptionFlags,
+;  DWORD           nNumberOfArguments,
+;  const ULONG_PTR *lpArguments
+
+; Shadow exception code: 0x0SHD -> 0x00534844 -> 5457988 (since some upper bits are used by the system)
+declare void @RaiseException(i32, i32, i32, i8*) noreturn
+declare i32 @__C_specific_handler(%struct._EXCEPTION_RECORD*, i8*, i8*, i8*) nounwind
 
 declare noalias i8* @calloc(i64, i64) nounwind
 declare noalias i8* @malloc(i64) nounwind
@@ -118,19 +109,11 @@ declare void @exit(i32) noreturn nounwind
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
 
 
-define void @__shadow_throw(%shadow.standard..Object*) cold noreturn {
+define void @__shadow_throw(%shadow.standard..Object* %obj) cold noreturn {
 entry:
-	%1 = tail call noalias i8* @malloc(i64 add (i64 ptrtoint (%struct._Unwind_Exception* getelementptr (%struct._Unwind_Exception, %struct._Unwind_Exception* null, i64 1) to i64), i64 ptrtoint (i1** getelementptr (i1*, i1** null, i64 1) to i64))) nounwind
-	%2 = bitcast i8* %1 to %struct._Unwind_Exception*
-	%3 = load %_Unwind_Exception_Class, %_Unwind_Exception_Class* bitcast ([8 x i8]* @shadow.exception.class to %_Unwind_Exception_Class*)
-	%4 = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %2, i64 0, i32 0
-	store %_Unwind_Exception_Class %3, %_Unwind_Exception_Class* %4
-	%5 = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %2, i64 0, i32 1
-	store %_Unwind_Exception_Cleanup_Fn @shadow.exception.cleanup, %_Unwind_Exception_Cleanup_Fn* %5
-	%6 = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %2, i64 1
-	%7 = bitcast %struct._Unwind_Exception* %6 to %shadow.standard..Object**
-	store %shadow.standard..Object* %0, %shadow.standard..Object** %7
-	%8 = tail call %_Unwind_Reason_Code @_Unwind_RaiseException(%struct._Unwind_Exception* %2)
+	%arg = bitcast %shadow.standard..Object* %obj to i8*
+	; Shadow code, 0 for flags (means continuable exception), 1 argument, exception itself
+	tail call void @RaiseException(i32 5457988, i32 0, i32 1, i8* %arg) noreturn
 	tail call void @abort() noreturn nounwind unreachable
 }
 
@@ -149,7 +132,8 @@ define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %c
 _outOfMemory: 
 	%exception = bitcast %shadow.standard..OutOfMemoryException* @_OutOfMemoryException to %shadow.standard..Object*
 	call void @__shadow_throw(%shadow.standard..Object* %exception) noreturn
-    unreachable
+    ;call void @abort() noreturn nounwind ; fix this eventually
+	unreachable
 _success:
 	%object = bitcast i8* %memory to %shadow.standard..Object*
 	; set reference count
@@ -181,6 +165,7 @@ define noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Gener
 _outOfMemory:	
 	%exception = bitcast %shadow.standard..OutOfMemoryException* @_OutOfMemoryException to %shadow.standard..Object*
 	call void @__shadow_throw(%shadow.standard..Object* %exception) noreturn
+	;call void @abort() noreturn nounwind ; fix this eventually
 	unreachable
 _success:
 	%array = bitcast i8* %arrayAsBytes to  %shadow.standard..Array*	
@@ -215,17 +200,15 @@ _notNullable:
 	ret %shadow.standard..Array* %array
 }
 
-
-define %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind {
-entry:
-	%1 = bitcast i8* %0 to %struct._Unwind_Exception*
-	%2 = getelementptr %struct._Unwind_Exception, %struct._Unwind_Exception* %1, i32 1
-	%3 = bitcast %struct._Unwind_Exception* %2 to %shadow.standard..Exception**
-	%4 = load %shadow.standard..Exception*, %shadow.standard..Exception** %3
-	tail call void @free(i8* %0) nounwind
-	ret %shadow.standard..Exception* %4
+define i32 @__shadow_personality_v0(%struct._EXCEPTION_RECORD* %record, i8* %frame, i8* %contextRecord, i8* %dispatcherContext) {
+_entry:
+	%codeRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %record, i32 0, i32 0
+	%code = load i32, i32* %codeRef	
+	%isShadowCode = icmp eq i32 %code, 5457988
+	br i1 %isShadowCode, label %_isShadow, label %_notShadow
+_isShadow:
+	%value = call i32 @__C_specific_handler(%struct._EXCEPTION_RECORD* %record, i8* %frame, i8* %contextRecord, i8* %dispatcherContext)
+	ret i32 %value
+_notShadow:
+	ret i32 0 ; EXCEPTION_CONTINUE_SEARCH 
 }
-
-@_array0 = private unnamed_addr constant {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %byte]} {%ulong -1, %shadow.standard..Class* @byte_A_class, %shadow.standard..Array_methods* @shadow.standard..Array_methods, %long 20, [20 x %byte] c"Heap space exhausted"}
-@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, %shadow.standard..Array* bitcast ( {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %byte]}* @_array0 to %shadow.standard..Array*), %boolean true }
-@_OutOfMemoryException = private constant %shadow.standard..OutOfMemoryException { %ulong -1, %shadow.standard..Class* @shadow.standard..OutOfMemoryException_class, %shadow.standard..OutOfMemoryException_methods* @shadow.standard..OutOfMemoryException_methods, %shadow.standard..String* @_string0 }

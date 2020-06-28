@@ -110,7 +110,7 @@ public class Main {
 	// Check LLVM version using lexical comparison
 	private static void checkLLVMVersion() throws ConfigurationException {
 		String LLVMVersion = Configuration.getLLVMVersion();
-		if (LLVMVersion.compareTo(MINIMUM_LLVM_VERSION) < 0) {
+		if(compareVersions(LLVMVersion, MINIMUM_LLVM_VERSION) < 0) {
 			String error = "LLVM version " + MINIMUM_LLVM_VERSION + " or higher is required for Shadow " + VERSION
 					+ ", but ";
 			if (LLVMVersion.isEmpty())
@@ -119,6 +119,43 @@ public class Main {
 				error += "version " + LLVMVersion + " found.";
 			throw new ConfigurationException(error);
 		}
+	}
+	
+	private static int versionStringToInt(String number) {
+		int start = 0;
+		int end = 0;
+		
+		// Start at the beginning, since alphabetic characters indicating alpha or similar might be at the end
+		while(end < number.length() && Character.isDigit(number.charAt(end)))
+			++end;
+		
+		try {
+			return Integer.parseInt(number.substring(start, end));
+		}
+		catch(NumberFormatException e) {
+			return 0;
+		}
+	}
+	
+	private static int compareVersions(String v1,String v2) {
+		String[] strings1 = v1.split("\\.");
+		String[] strings2 = v2.split("\\.");
+		int size = Math.max(strings1.length, strings2.length);
+		for(int i = 0; i < size; ++i) {
+			int value1, value2;
+			if(i < strings1.length)
+				value1 = versionStringToInt(strings1[i].trim());
+			else
+				value1 = 0;
+			if(i < strings2.length)
+				value2 = versionStringToInt(strings2[i].trim());
+			else
+				value2 = 0;
+			if(value1 != value2)
+				return value1 - value2;
+		}
+		
+		return 0;
 	}
 
 	public static void run(String[] args) throws FileNotFoundException, ParseException, ShadowException, IOException,
@@ -177,10 +214,18 @@ public class Main {
 			logger.info("Building for target \"" + config.getTarget() + "\"");
 			Path mainLL;
 
-			if (mainArguments)
-				mainLL = Paths.get("shadow", "Main.ll");
-			else
-				mainLL = Paths.get("shadow", "NoArguments.ll");
+			if(config.getOs().equals("Windows")) {
+				if (mainArguments)
+					mainLL = Paths.get("shadow", "MainWindows.ll");
+				else
+					mainLL = Paths.get("shadow", "NoArgumentsWindows.ll");
+			}
+			else {
+				if (mainArguments)
+					mainLL = Paths.get("shadow", "Main.ll");
+				else
+					mainLL = Paths.get("shadow", "NoArguments.ll");
+			}
 
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
@@ -463,7 +508,7 @@ public class Main {
 
 		try {
 			optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
+					config.getLLVMOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
 					.redirectError(Redirect.INHERIT).start();
 			if( optimize.waitFor() != 0 )
 				throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
@@ -503,7 +548,7 @@ public class Main {
 				out = Files.newOutputStream(Paths.get(path + ".ll"));
 			else {
 				optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-						config.getOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
+						config.getLLVMOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
 						.redirectError(Redirect.INHERIT).start();
 				out = optimize.getOutputStream();
 			}

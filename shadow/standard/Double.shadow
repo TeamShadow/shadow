@@ -264,17 +264,6 @@ and	CanHash
 	public logBase10() => (double);
 	
 	/** 
-	 * Multiplies the current value by another {@code double} and adds a third
-	 * {@code double} in a high-precision register if supported and returns
-	 * the resulting value.	
-	 * @param multiplicand value to multiply by
-	 * @param addend value to add 	 
-	 * @return result
-	 */
-	[ImportNative]
-	public multiplyAdd(double multiplicand, double addend) => (double);
-	
-	/** 
 	 * Finds the largest {@code double} value with no fractional part that is
 	 * less than or equal to the current value.	 	
 	 * @return floor of the current value

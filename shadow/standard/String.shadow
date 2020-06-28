@@ -537,7 +537,7 @@ and	CanHash
 					negative = digit == '-';				
 				else if( digit >= '0' and digit <= '9' )
 				{				
-					value = value.multiplyAdd(10.0, cast<double>(digit - '0'));
+					value = value* 10.0 + cast<double>(digit - '0');
 					if( afterDecimal )
 						decimalPosition += 1;					
 				}

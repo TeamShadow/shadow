@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +48,7 @@ public class OutputTests {
 			args.add("linux.xml");
 		
 		args.add("-r");
-		args.add("-f");
+		//args.add("-f");
 	}
 	
 	@AfterEach
@@ -59,15 +61,15 @@ public class OutputTests {
 		catch(Exception e) {}
 	}
 	
-	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
+	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
 		run( programArgs, expectedOutput, "" ); 			
 	}
 	
-	private void run(String[] programArgs, String expectedOutput, String expectedError) throws IOException, ConfigurationException, InterruptedException {
+	private void run(String[] programArgs, String expectedOutput, String expectedError) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
 		run( programArgs, expectedOutput, expectedError, 0 ); 			
 	}
 	
-	private void run(String[] programArgs, String expectedOutput, String expectedError, int expectedReturn ) throws IOException, ConfigurationException, InterruptedException {
+	private void run(String[] programArgs, String expectedOutput, String expectedError, int expectedReturn ) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
 		
 		// Should be initialized at this point by call to Main.run()
 		Configuration config = Configuration.getConfiguration();
@@ -107,10 +109,17 @@ public class OutputTests {
 		String error = builder.toString();	
 		Assertions.assertEquals(expectedError, error);		
 		
-		//check return value to see if the program ends normally
-		//also keeps program from being deleted while running	
-		Assertions.assertEquals(expectedReturn, program.waitFor(), "Program exited abnormally."); 
-		program.destroy();
+		// Check return value to see if the program ends normally
+		// Also keeps program from being deleted while running
+		if(program.waitFor(30, TimeUnit.SECONDS)) {
+				int exitValue = program.exitValue();
+				program.destroy();
+				Assertions.assertEquals(expectedReturn, exitValue, "Program exited abnormally.");	
+		}
+		else {
+			program.destroyForcibly();
+			throw new TimeoutException();
+		}
 	}	
 
 	private String formatOutputString(CharSequence... elements)

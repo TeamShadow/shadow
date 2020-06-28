@@ -15,7 +15,6 @@ class shadow:test@MathTest
 		out.printLine( "ln(" # a # ") = " # a.logBaseE());
 		out.printLine( "log10(" # a # ") = " # a.logBase10());
 		out.printLine( "log2(" # a # ") = " # a.logBase2());
-		out.printLine(  a # "* 4.1 + 6.2 = " # a.multiplyAdd(4.1, 6.2));
 		out.printLine( "floor(" # a # ") = " # a.floor());
 		out.printLine( "ceil(" # a # ") = " # a.ceiling());
 		out.printLine( a # " rounds to " # a.round());
@@ -37,7 +36,6 @@ class shadow:test@MathTest
 		out.printLine( "ln(" # b # ") = " # b.logBaseE());
 		out.printLine( "log10(" # b # ") = " # b.logBase10());
 		out.printLine( "log2(" # b # ") = " # b.logBase2());
-		out.printLine(  b # "* 4.1 + 6.2 = " # b.multiplyAdd(4.1f, 6.2f));
 		out.printLine( "floor(" # b # ") = " # b.floor());
 		out.printLine( "ceil(" # b # ") = " # b.ceiling());
 		out.printLine( b # " rounds to " # b.round());

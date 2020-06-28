@@ -39,8 +39,12 @@
 	            <exclude>Mac.ll</exclude>
 	            <exclude>Main.ll</exclude>
 	            <exclude>NoArguments.ll</exclude>
+	            <exclude>MainWindows.ll</exclude>
+	            <exclude>NoArgumentsWindows.ll</exclude>
 	            <exclude>Unwind32.ll</exclude>
 	            <exclude>Unwind64.ll</exclude>
+	            <exclude>UnwindWindows32.ll</exclude>
+	            <exclude>UnwindWindows64.ll</exclude>
 	            <exclude>Windows.ll</exclude>
 				<exclude>Shared.ll</exclude>
 	          </excludes>

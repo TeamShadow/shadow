@@ -12,6 +12,8 @@ bin/
 !Linux.ll
 !Main.ll
 !NoArguments.ll
+!MainWindows.ll
+!NoArgumentsWindows.ll
 !Unwind*.ll
 !Windows.ll
 !Shared.ll
