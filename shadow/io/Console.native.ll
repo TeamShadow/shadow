@@ -24,6 +24,7 @@
 
 ; String
 %shadow.standard..String = type opaque
+%shadow.standard..Object = type opaque
 
 ; Console
 %shadow.io..Console = type opaque
@@ -34,8 +35,9 @@
 declare void @__ShadowConsole_ReadByte(%byte*, %boolean*)
 declare void @__ShadowConsole_Print(%shadow.standard..String*)
 declare void @__ShadowConsole_PrintLine()
+declare i32 @printf(i8*, ...)
 
-@debugPrint = private global %boolean 0
+@debugPrint = private global %boolean 1
 
 define void @shadow.io..Console_MdebugPrint_shadow.standard..String(%shadow.io..Console* %console, %shadow.standard..String* %string) {
 entry:
@@ -43,6 +45,33 @@ entry:
 	br i1 %debug, label %_print, label %_exit
 _print:
 	call void @__ShadowConsole_Print(%shadow.standard..String* %string)
+	call void @__ShadowConsole_PrintLine()
+	ret void
+_exit:
+	ret void
+}
+
+@integer = linkonce_odr dso_local unnamed_addr constant [4 x i8] c"%x\0A\00"
+@pointer = linkonce_odr dso_local unnamed_addr constant [4 x i8] c"%p\0A\00"
+
+define void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* %console, %shadow.standard..Object* %obj) {
+entry:
+	%debug = load %boolean, %boolean* @debugPrint
+	br i1 %debug, label %_print, label %_exit
+_print:
+	call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @pointer, i64 0, i64 0), %shadow.standard..Object* %obj)
+	call void @__ShadowConsole_PrintLine()
+	ret void
+_exit:
+	ret void
+}
+
+define void @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* %console, %int %value) {
+entry:
+	%debug = load %boolean, %boolean* @debugPrint
+	br i1 %debug, label %_print, label %_exit
+_print:
+	call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @integer, i64 0, i64 0), %int %value)
 	call void @__ShadowConsole_PrintLine()
 	ret void
 _exit:

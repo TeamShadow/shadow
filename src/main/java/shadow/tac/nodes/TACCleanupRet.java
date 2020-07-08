@@ -6,10 +6,12 @@ import shadow.tac.TACVisitor;
 
 public class TACCleanupRet extends TACNode
 {	
+	private TACCatchSwitch cleanupPad;
 	
-	public TACCleanupRet(TACNode node)
+	public TACCleanupRet(TACNode node, TACCatchSwitch cleanupPad)
 	{
 		super(node);
+		this.cleanupPad = cleanupPad;
 	}
 	
 	public TACLabel getUnwind() {
@@ -25,6 +27,10 @@ public class TACCleanupRet extends TACNode
 	public int getNumOperands()
 	{
 		return 0;
+	}
+	
+	public TACCatchSwitch getCleanupPad() {
+		return cleanupPad;
 	}
 	
 	@Override

@@ -2177,16 +2177,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				block = block.getParent();
 				anchor.setBlock(block); // move the current block to the parent on the anchor
 				
-				cleanupUnwindLabel.appendBefore(anchor);
+				cleanupUnwindLabel.appendBefore(anchor);				
+				TACCatchSwitch cleanupPad = new TACCatchSwitch(anchor, cleanupUnwindLabel);
 				
-				TACCatchSwitch cleanupSwitch = new TACCatchSwitch(anchor, cleanupUnwindLabel);
-				TACLabel cleanupPadLabel = new TACLabel(method);
-				cleanupPadLabel.appendBefore(anchor);
-				TACCatchPad cleanupPad = new TACCatchPad(anchor, cleanupPadLabel);
-				cleanupSwitch.addCatchPad(cleanupPad);
-	
 				ctx.block().appendBefore(anchor);
-				new TACThrow(anchor, cleanupPad, true);
+				new TACCleanupRet(anchor, cleanupPad);
 			}
 			// Turn context back on
 			anchor.setContext(context);
@@ -2447,17 +2442,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		method.setNormalCleanupAnchor(new TACBranch(anchor, phi));	
 		
 		// Add in cleanup code (2nd time, for unwinding code)
-		TACLabel cleanupSwitchLabel = block.getCleanupUnwind();
-		cleanupSwitchLabel.appendBefore(anchor);
-		TACCatchSwitch cleanupSwitch = new TACCatchSwitch(anchor, cleanupSwitchLabel);
-
-		TACLabel cleanupPadLabel = new TACLabel(method);	
+		TACLabel cleanupPadLabel = block.getCleanupUnwind();
 		cleanupPadLabel.appendBefore(anchor);
-
-		TACCatchPad cleanupPad = new TACCatchPad(anchor, cleanupPadLabel);
-		cleanupSwitch.addCatchPad(cleanupPad);
-		
-		method.setUnwindCleanupAnchor(new TACThrow(anchor, cleanupPad, true)); // Rethrows exception	
+		TACCatchSwitch cleanupPad = new TACCatchSwitch(anchor, cleanupPadLabel);
+		method.setUnwindCleanupAnchor(new TACCleanupRet(anchor, cleanupPad));
 		
 		methodBody.appendBefore(anchor);
 	}

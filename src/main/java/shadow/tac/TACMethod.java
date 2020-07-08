@@ -415,8 +415,7 @@ public class TACMethod
 			}
 			else if(node instanceof TACCatchPad) {
 				TACCatchPad catchPad = (TACCatchPad)node;
-				if(!catchPad.isCatchAll())
-					usedLocals.add(catchPad.getVariable());
+				usedLocals.add(catchPad.getVariable());
 			}
 			node = node.getNext();
 		} while( node != start );

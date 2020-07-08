@@ -221,9 +221,7 @@ public class TACBlock
 				while(node.getClass() != TACCatchSwitch.class)
 					node = node.getNext();
 
-				// Cleanup switches only have one catchpad
-				TACCatchSwitch cleanupSwitch = (TACCatchSwitch)node;
-				return cleanupSwitch.getOperand(0);
+				return (TACCatchSwitch)node;
 			}			
 			
 			current = current.getParent();

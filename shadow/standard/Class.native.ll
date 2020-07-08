@@ -13,7 +13,6 @@
 %float = type float
 %double = type double
 
-declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone

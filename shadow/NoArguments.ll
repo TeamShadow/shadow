@@ -70,7 +70,7 @@ declare i32 @strlen(i8* nocapture)
 declare %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object*)
 declare void @shadow.test..Test_Mmain(%shadow.test..Test*)
 
-declare i32 @__shadow_personality_v0(...)
+declare i32 @__CxxFrameHandler3(...)
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
@@ -78,7 +78,7 @@ declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %longElements, %boolean %nullable)
 
-define i32 @main(i32, i8**) personality i32 (...)* @__shadow_personality_v0 {				
+define i32 @main(i32, i8**) personality i32 (...)* @__CxxFrameHandler3 {				
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
 	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
     store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance		

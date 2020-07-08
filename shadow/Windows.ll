@@ -69,7 +69,6 @@ declare %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
 ;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
-declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
 

@@ -206,6 +206,12 @@ singleton shadow:io@Console
 	public debugPrint(String data) => ();
 	
 	[ImportNative]
+	public debugPrint(int data) => ();
+	
+	[ImportNative]
+	public printAddress(Object object) => ();
+	
+	[ImportNative]
 	public setDebug(boolean debug) => ();
 	
 	

@@ -985,6 +985,13 @@ public class OutputTests {
 		run(new String[0], "Hello, world!\n");
 	}
 	
+	@Test public void testSimpleException() throws Exception {
+		args.add("shadow/test/SimpleExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "success\n" +
+				"shadow:test@ExceptionA\n");
+	}
+	
 	@Test public void testSubscript() throws Exception {
 		args.add("shadow/test/SubscriptTest.shadow");
 		Main.run(args.toArray(new String[] { }));

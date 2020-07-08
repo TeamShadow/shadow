@@ -75,6 +75,29 @@ declare %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) 
 ;} EXCEPTION_RECORD64;
 
 
+
+
+@__exceptionStorage = thread_local global %shadow.standard..Exception* null
+
+
+
+declare noalias i8* @calloc(i64, i64) nounwind
+declare noalias i8* @malloc(i64) nounwind
+declare void @free(i8*) nounwind
+declare void @abort() noreturn nounwind
+declare void @exit(i32) noreturn nounwind
+
+%shadow.io..Console = type opaque
+declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
+declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+declare void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+
+%eh.ThrowInfo = type { i32, i32, i32, i32 }
+%eh.CatchableTypeArray = type { i32, [1 x i32] }
+;declare dso_local void @_CxxThrowException(i8*, %eh.ThrowInfo*)
+
 ;typedef struct _EXCEPTION_RECORD {
 ;  DWORD                    ExceptionCode;
 ;  DWORD                    ExceptionFlags;
@@ -84,7 +107,127 @@ declare %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) 
 ;  ULONG_PTR                ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 ;} EXCEPTION_RECORD;
 
-%struct._EXCEPTION_RECORD = type {i32, i32, %struct._EXCEPTION_RECORD*, i8*, i32, i32, [15 x i64]}
+%struct._EXCEPTION_RECORD = type {i32, i32, %struct._EXCEPTION_RECORD*, i8*, i32, [15 x i64]}
+
+;declare i32 @_exceptionMethodshadow.test..ExceptionA(i8*, i8*)
+;define i64 @__exceptionHashCode(i8* %object) {
+;	call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 128)
+;	ret i64 3763554372 ; Shadow exception code
+;}
+define i32 @__exceptionFilter(i8* %records, i8* %payload, %shadow.standard..Class* %handlerClass ) {
+	%asPointer = bitcast i8* %records to { %struct._EXCEPTION_RECORD*, i8* }*
+	%recordRefRef = getelementptr inbounds { %struct._EXCEPTION_RECORD*, i8* }, { %struct._EXCEPTION_RECORD*, i8* }* %asPointer, i32 0, i32 0
+	%recordRef = load %struct._EXCEPTION_RECORD*, %struct._EXCEPTION_RECORD** %recordRefRef
+	
+	%exCodeRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordRef, i32 0, i32 0
+	%exCode = load i32, i32* %exCodeRef
+	%codeMatches = icmp eq i32 %exCode, 3763554372 ; Shadow exception code
+	br i1 %codeMatches, label %_match, label %_nomatch
+_match:
+	%exInfoRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordRef, i32 0, i32 5, i32 0
+	%exInfo = load i64, i64* %exInfoRef
+	%exInfoAsObj = inttoptr i64 %exInfo to %shadow.standard..Object*
+	%classRef = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %exInfoAsObj, i32 0, i32 1
+	%class = load %shadow.standard..Class*, %shadow.standard..Class** %classRef
+	%exceptionMatches = call i1 @shadow.standard..Class_MisSubtype_shadow.standard..Class(%shadow.standard..Class* %class, %shadow.standard..Class* %handlerClass)
+	br i1 %exceptionMatches, label %_handle, label %_nomatch
+_handle:
+	;%payloadRefRef = load i64*, i64** %payload
+	;%payloadOffset = getelementptr i64, i64* %payloadRefRef, i32 2
+	;%payloadValue = load i64, i64* %payloadOffset
+	;%payloadAsObj = inttoptr i64 %payloadValue to %shadow.standard..Object*
+	;call void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %payloadAsObj)
+	
+	;%payloadValueRef = inttoptr i64 %payloadValueValue to i64*
+	;%payloadValueValueValue = load i64, i64* %payloadValueRef
+	;%payloadAsObj3 = inttoptr i64 %payloadValueValueValue to %shadow.standard..Object*
+	;call void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %payloadAsObj3)
+	%exInfoAsException = bitcast %shadow.standard..Object* %exInfoAsObj to %shadow.standard..Exception*
+	store %shadow.standard..Exception* %exInfoAsException, %shadow.standard..Exception** @__exceptionStorage
+	
+	ret i32 1 ; EXCEPTION_EXECUTE_HANDLER
+_nomatch:	
+	ret i32 0 ; EXCEPTION_CONTINUE_SEARCH
+	
+
+
+	;%address = bitcast i8* %payload to %shadow.standard..Object*
+	;call void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %address)
+	
+
+	;%recordPointerFirst = bitcast i8* %records to %struct._EXCEPTION_RECORD*
+	;%exceptionRecordRef0 = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordPointerFirst, i32 0, i32 2
+	;%recordPointer = load %struct._EXCEPTION_RECORD*, %struct._EXCEPTION_RECORD** %exceptionRecordRef0
+	
+	
+	;%numberRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordPointer, i32 0, i32 0
+	;%number = load i32, i32* %numberRef
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %number)
+	
+	;%numberRef2 = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordPointer, i32 0, i32 1
+	;%number2 = load i32, i32* %numberRef2
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %number2)
+	
+	;%exceptionObjRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordPointer, i32 0, i32 3
+	;%exceptionRef = bitcast i8** %exceptionObjRef to %shadow.standard..Object**
+	;%exception = load %shadow.standard..Object*, %shadow.standard..Object** %exceptionRef
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %exception)
+	
+	;%numberRef3 = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordPointer, i32 0, i32 4
+	;%number3 = load i32, i32* %numberRef3
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %number3)
+	
+	;%pointerRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordPointer, i32 0, i32 5, i32 0
+	;%pointer = load i64, i64* %pointerRef
+	;%pointerAsObj = inttoptr i64 %pointer to %shadow.standard..Object*
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %pointerAsObj)
+
+	;call %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console* null) 
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int 101)
+
+	;%recordsAsObj = bitcast i8* %records to %shadow.standard..Object*
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %recordsAsObj)
+	
+	;%payloadAsObj = bitcast i8* %payload to %shadow.standard..Object*
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %payloadAsObj)
+	
+	;%payloadRef = bitcast i8* %payload to i8**
+	;%payloadValue = load i8*, i8** %payloadRef
+	;%payloadValueAsObj = bitcast i8* %payloadValue to %shadow.standard..Object*
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %payloadValueAsObj)
+	
+	;%payloadRef2 = getelementptr i8*, i8** %payloadRef, i32 1
+	;%payloadValue2 = load i8*, i8** %payloadRef2
+	;%payloadValueAsObj2 = bitcast i8* %payloadValue2 to %shadow.standard..Object*
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %payloadValueAsObj2)
+	
+	;%imageAsObj = bitcast i8* @__ImageBase to %shadow.standard..Object*
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %imageAsObj)
+	;%exception = inttoptr i64 %number to %shadow.standard..Object*
+		
+	;%valueRef = getelementptr %eh.ThrowInfo, %eh.ThrowInfo* @__exceptionInfo, i32 0, i32 3
+	;%value = load i32, i32* %valueRef
+	;call %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console* null, %int %value)
+	
+	;%exceptionRecordRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %recordPointer, i32 0, i32 2
+	;%exceptionRecord = load %struct._EXCEPTION_RECORD*, %struct._EXCEPTION_RECORD** %exceptionRecordRef
+	;%exceptionRecordAsObj = bitcast %struct._EXCEPTION_RECORD* %exceptionRecord to %shadow.standard..Object*
+	;call  void @shadow.io..Console_MprintAddress_shadow.standard..Object(%shadow.io..Console* null, %shadow.standard..Object* %exceptionRecordAsObj)
+
+	;"Shadow\00\00"
+	;0x836861646F770000
+
+}
+
+;@__exceptionArray = linkonce_odr unnamed_addr constant %eh.CatchableTypeArray { i32 1, [1 x i32] [i32 trunc (i64 sub nuw nsw (i64 ptrtoint (%shadow.standard..Class* @shadow.standard..Exception_class to i64), i64 ptrtoint (i8* @__ImageBase to i64)) to i32)] }, section ".xdata"
+;@__exceptionInfo = linkonce_odr unnamed_addr constant %eh.ThrowInfo { i32 0,
+;;i32 trunc (i64 sub nuw nsw (i64 ptrtoint (void (%"class.std::bad_cast"*)* @"??1bad_cast@std@@UEAA@XZ" to i64), i64 ptrtoint (i8* @__ImageBase to i64)) to i32),
+;i32 0, ; seems to be 0 on some calls?
+;i32 0,
+;i32 trunc (i64 sub nuw nsw (i64 ptrtoint (%eh.CatchableTypeArray* @__exceptionArray to i64), i64 ptrtoint (i8* @__ImageBase to i64)) to i32)
+;}, section ".xdata"
+
+;@__ImageBase = external dso_local constant i8
 
 ;RaiseException(
 ;  DWORD           dwExceptionCode,
@@ -92,29 +235,23 @@ declare %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) 
 ;  DWORD           nNumberOfArguments,
 ;  const ULONG_PTR *lpArguments
 
-; Shadow exception code: 0x0SHD -> 0x00534844 -> 5457988 (since some upper bits are used by the system)
-declare void @RaiseException(i32, i32, i32, i8*) noreturn
-declare i32 @__C_specific_handler(%struct._EXCEPTION_RECORD*, i8*, i8*, i8*) nounwind
-
-declare noalias i8* @calloc(i64, i64) nounwind
-declare noalias i8* @malloc(i64) nounwind
-declare void @free(i8*) nounwind
-declare void @abort() noreturn nounwind
-declare void @exit(i32) noreturn nounwind
-
-;%shadow.io..Console = type opaque
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-
+; Shadow exception code: 0x?SHD -> 0xE0534844 -> 3763554372
+;(? refers to bits that should be set: 1110 for bits 31 30 29 28, 0000 for the next 4)
+; 31 and 30 as 11 means error
+; 29 as 1 means user defined
+; 28 is reserved to be 0
+declare void @RaiseException(i32, i32, i32, i64*) noreturn
 
 define void @__shadow_throw(%shadow.standard..Object* %obj) cold noreturn {
 entry:
-	%arg = bitcast %shadow.standard..Object* %obj to i8*
-	; Shadow code, 0 for flags (means continuable exception), 1 argument, exception itself
-	tail call void @RaiseException(i32 5457988, i32 0, i32 1, i8* %arg) noreturn
-	tail call void @abort() noreturn nounwind unreachable
+	%variable = alloca i64
+	%value = ptrtoint %shadow.standard..Object* %obj to i64
+	store i64 %value, i64* %variable
+	;%arg = bitcast i64* %variable to i8*
+	; Shadow code, 1 for flags (means non-continuable exception), 1 argument, exception itself
+	call void @RaiseException(i32 3763554372, i32 1, i32 1, i64* %variable) noreturn
+	;call void @_CxxThrowException(i8* %arg, %eh.ThrowInfo* @__exceptionInfo) noreturn
+	unreachable
 }
 
 define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods) {	
@@ -200,15 +337,15 @@ _notNullable:
 	ret %shadow.standard..Array* %array
 }
 
-define i32 @__shadow_personality_v0(%struct._EXCEPTION_RECORD* %record, i8* %frame, i8* %contextRecord, i8* %dispatcherContext) {
-_entry:
-	%codeRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %record, i32 0, i32 0
-	%code = load i32, i32* %codeRef	
-	%isShadowCode = icmp eq i32 %code, 5457988
-	br i1 %isShadowCode, label %_isShadow, label %_notShadow
-_isShadow:
-	%value = call i32 @__C_specific_handler(%struct._EXCEPTION_RECORD* %record, i8* %frame, i8* %contextRecord, i8* %dispatcherContext)
-	ret i32 %value
-_notShadow:
-	ret i32 0 ; EXCEPTION_CONTINUE_SEARCH 
-}
+;define i32 @__shadow_personality_v0(%struct._EXCEPTION_RECORD* %record, i8* %frame, i8* %contextRecord, i8* %dispatcherContext) {
+;_entry:
+;	%codeRef = getelementptr inbounds %struct._EXCEPTION_RECORD, %struct._EXCEPTION_RECORD* %record, i32 0, i32 0
+;	%code = load i32, i32* %codeRef	
+;	%isShadowCode = icmp eq i32 %code, 5457988
+;	br i1 %isShadowCode, label %_isShadow, label %_notShadow
+;_isShadow:
+;	%value = call i32 @__C_specific_handler(%struct._EXCEPTION_RECORD* %record, i8* %frame, i8* %contextRecord, i8* %dispatcherContext)
+;	ret i32 %value
+;_notShadow:
+;	ret i32 0 ; EXCEPTION_CONTINUE_SEARCH 
+;}

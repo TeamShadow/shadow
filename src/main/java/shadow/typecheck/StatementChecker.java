@@ -1880,7 +1880,11 @@ public class StatementChecker extends BaseChecker {
 			}
 		}	
 		else if( ctx.generalIdentifier() != null ) {
-			if( !setTypeFromName( ctx, image ) && (decoratorScope && !setTypeFromName(ctx, image + "Decorator"))) { //automatically sets type if can
+			boolean success = setTypeFromName( ctx, image );
+			if(!success && decoratorScope)
+				success = setTypeFromName(ctx, image + "Decorator");
+			
+			if(!success) {
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 				ctx.setType(Type.UNKNOWN);
 			}			
@@ -2226,7 +2230,7 @@ public class StatementChecker extends BaseChecker {
 		else if( prefixType instanceof SequenceType ) {
 			addError(curPrefix.getFirst(), Error.INVALID_TYPE, "Method cannot be called on a sequence result");
 		}
-		else {				
+		else if(prefixType != null) {				
 			List<MethodSignature> methods = prefixType.getAllMethods(methodName);
 			
 			//unbound method (it gets bound when you supply arguments)

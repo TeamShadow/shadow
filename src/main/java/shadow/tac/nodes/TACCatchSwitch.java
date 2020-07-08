@@ -14,6 +14,11 @@ public class TACCatchSwitch extends TACPad {
 	public TACCatchSwitch(TACNode node, TACLabel label) {
 		super(node, label);
 	}
+	
+	public boolean isCatchAll() {
+		return catchPads.size() == 0;
+	}
+	
 
 	@Override
 	public int getNumOperands()

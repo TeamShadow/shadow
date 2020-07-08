@@ -290,14 +290,30 @@ public class TextOutput extends AbstractOutput
 				node.getException()).append(';').toString());
 	}
 	
+	@Override
+	public void visit(TACCatchSwitch node) throws ShadowException {
+		endBlock(false);
+		if(node.isCatchAll())
+			writer.write("finally");
+		else {
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < node.getNumOperands(); ++i) {
+				if(i == 0)
+					sb.append("label ");
+				else
+					sb.append(", label ");
+				sb.append(symbol(((TACCatchPad)node.getOperand(i)).getLabel()));
+			}
+			
+			writer.write("catch switch to " + sb);
+		}
+	}
+	
 		
 	@Override
 	public void visit(TACCatchPad node) throws ShadowException {
 		endBlock(false);
-		if(node.isCatchAll())
-			writer.write("catch all");
-		else
-			writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
+		writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
 	}
 	
 	@Override

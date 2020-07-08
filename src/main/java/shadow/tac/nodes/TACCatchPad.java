@@ -17,10 +17,6 @@ public class TACCatchPad extends TACPad
 		this.variable = variable;
 	}
 	
-	public TACCatchPad(TACNode node, TACLabel label) {
-		this(node, label, null, null);
-	}
-	
 	public void setCatchSwitch(TACCatchSwitch catchSwitch) {
 		this.catchSwitch = catchSwitch;
 	}
@@ -41,9 +37,5 @@ public class TACCatchPad extends TACPad
 	
 	public TACVariable getVariable() {
 		return variable;
-	}
-	
-	public boolean isCatchAll() {
-		return type == null && variable == null; 
 	}
 }

@@ -75,14 +75,16 @@ declare i8* @strncpy(i8*, i8* nocapture, %size_t)
 declare %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object*)
 declare void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test*, %shadow.standard..Array*)
 
-declare i32 @__shadow_personality_v0(...)
-declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
+;declare i32 @__CxxFrameHandler3(...)
+declare i32 @__C_specific_handler(...)
+declare i8* @llvm.eh.padparam.pNi8(token)
+;declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* %class, %ulong %longElements, %boolean %nullable)
 
-define i32 @main(i32 %argc, i8** %argv) personality i32 (...)* @__shadow_personality_v0 {
+define i32 @main(i32 %argc, i8** %argv) personality i32 (...)* @__C_specific_handler  {
 _start:
     %ex = alloca %shadow.standard..Exception*
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
@@ -131,13 +133,16 @@ _success:
 _exception:
 	%switchToken = catchswitch within none [label %_catch] unwind to caller
 _catch:
-    %catchToken = catchpad within %switchToken [%shadow.standard..Class* @shadow.standard..Exception_class, i32 8, %shadow.standard..Exception** %ex]
-	%exception = load %shadow.standard..Exception*, %shadow.standard..Exception** %ex
+    %catchToken = catchpad within %switchToken [i8* bitcast (i32 (i8*, i8*)* @_exceptionMethodshadow.standard..Exception to i8*)]
+	%exceptionPointer = call i8* @llvm.eh.padparam.pNi8(token %catchToken)
+	%exceptionRef = bitcast i8* %exceptionPointer to %shadow.standard..Exception**
+	%exception = load %shadow.standard..Exception*, %shadow.standard..Exception** %exceptionRef
 	catchret from %catchToken to label %_catchBody
 _catchBody:
 	; Console already initialized		
 	%exceptionAsObject = bitcast %shadow.standard..Exception* %exception to %shadow.standard..Object*	
 	call %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console* %console, %shadow.standard..Object* %exceptionAsObject )
+	call void @__decrementRef(%shadow.standard..Object* %exceptionAsObject) nounwind
 	ret i32 1
 }
 
@@ -155,4 +160,10 @@ entry:
 	call void @__decrementRef(%shadow.standard..Object* %threadAsObj) nounwind	
 	
 	ret void
+}
+
+declare i32 @__exceptionFilter(i8*, i8*, %shadow.standard..Class*)
+define linkonce_odr i32 @_exceptionMethodshadow.standard..Exception(i8* %0, i8* %1) {
+    %3 = call i32 @__exceptionFilter(i8* %0, i8* %1, %shadow.standard..Class* @shadow.standard..Exception_class)
+    ret i32 %3
 }
