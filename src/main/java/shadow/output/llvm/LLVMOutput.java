@@ -130,10 +130,6 @@ public class LLVMOutput extends AbstractOutput {
 		} catch (ConfigurationException e) {
 		}
 	}
-	
-	private boolean isWindows() {
-		return configuration != null && configuration.getOs().equals("Windows");
-	}
 
 	private String temp(int offset)
 	{
@@ -630,7 +626,7 @@ public class LLVMOutput extends AbstractOutput {
 		writeMentionedTypes(definedGenerics);
 
 		// Methods for exception handling
-		if(isWindows()) {
+		if(Configuration.isWindows()) {
 			writer.write("declare i32 @__C_specific_handler(...)");
 			//writer.write("declare i32 @__CxxFrameHandler3 (...)"); 
 			writer.write("@__exceptionStorage = external global " + type(Type.EXCEPTION));			
@@ -741,7 +737,7 @@ public class LLVMOutput extends AbstractOutput {
 
 		writeStringLiterals();
 				
-		if(isWindows())
+		if(Configuration.isWindows())
 			writeExceptions(); 
 		
 	}
@@ -754,7 +750,7 @@ public class LLVMOutput extends AbstractOutput {
 		if (module.getType() instanceof InterfaceType ) {
 			skipMethod = true;
 		}
-		else if (signature.isImport()) {
+		else if (signature.isImport()) { 
 			writer.write("declare " + methodToString(method));
 			writer.write();
 			skipMethod = true;
@@ -765,7 +761,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write("define " + methodToString(method) +
 					(signature.getNode().getParent() == null && (signature.isGet() || signature.isSet() ) ? " alwaysinline " : "") +
 					(signature.isWrapper() ? " unnamed_addr" : "" ) +
-					" personality i32 (...)* " + (isWindows() ? "@__C_specific_handler {" : "@__shadow_personality_v0 {"));  // Because of GC, every function has a personality function
+					" personality i32 (...)* " + (Configuration.isWindows() ? "@__C_specific_handler {" : "@__shadow_personality_v0 {"));  // Because of GC, every function has a personality function
 			writer.indent();
 		}
 	}
@@ -832,7 +828,8 @@ public class LLVMOutput extends AbstractOutput {
 			//source
 			writer.write(nextTemp() + " = bitcast " + typeText(sourceArrayType, temp(2)) + " to i8*");
 			
-			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(1) + ", i8* " + temp(0) + ", " + typeSymbol(size) + ", i32 1, i1 0)");
+			
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(1) + ", i8* " + temp(0) + ", " + typeSymbol(size) + ", i32 1, i1 0)" + funcletData(node));
 		}
 		else {
 			String destination = typeSymbol(destinationNode);
@@ -849,6 +846,14 @@ public class LLVMOutput extends AbstractOutput {
 		}
 	}
 	
+	private String funcletData(TACNode node) {
+		TACPad parentPad = node.getBlock().getCleanupPad();
+		if(parentPad == null)
+			return "";
+		
+		return " [ \"funclet\"(token " + symbol(parentPad) + ")]";
+	}
+
 	@Override
 	public void visit(TACMethodPointer node) throws ShadowException {
 		node.setData(symbol(node.getPointer()));		
@@ -980,7 +985,7 @@ public class LLVMOutput extends AbstractOutput {
 						type(Type.CLASS) + ' ' +
 						classOf(srcType) + ", " + methodTableType(Type.OBJECT) + " bitcast(" +
 						methodTableType(srcType) + " " + methodTable(srcType) + " to " +
-						methodTableType(Type.OBJECT) + ")" + ")");			
+						methodTableType(Type.OBJECT) + ")" + ")" + funcletData(node));			
 				back1 = temp(0);
 				String result = nextTemp(node); 
 				writer.write(result + " = bitcast " + typeText(Type.OBJECT,
@@ -1063,7 +1068,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
 				" @__allocate(" + type(Type.CLASS) +
 				" " + symbol(_class) + ", " + methodTableType(Type.OBJECT) + " " + back1 +
-				" )");
+				" )" + funcletData(node));
 	}
 
 	@Override
@@ -1072,14 +1077,14 @@ public class LLVMOutput extends AbstractOutput {
 		ArrayType type = node.getType();
 		if( type.isNullable() ) {		
 			writer.write(nextTemp() + " = call noalias " + type(Type.ARRAY) + " @__allocateArray(" +
-					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "true") + ')');
+					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "true") + ')' + funcletData(node));
 			
 			String last = temp(0);
 			writer.write(nextTemp(node) + " = bitcast " + typeText(Type.ARRAY, last) + " to " + type(Type.ARRAY_NULLABLE));
 		}
 		else
 			writer.write(nextTemp(node) + " = call noalias " + type(Type.ARRAY) + " @__allocateArray(" +
-					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "false") + ')');
+					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "false") + ')' + funcletData(node));
 	}
 
 	@Override
@@ -1154,7 +1159,7 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write(nextTemp() + " = bitcast " + typeText(reference, name) + " to " + type(Type.OBJECT) );
 
 			//same increment for both cases
-			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");	
+			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));	
 		}
 		else {			
 			if( node.isField() ) {
@@ -1179,7 +1184,7 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write(nextTemp() + " = bitcast " + typeText(reference, name) + " to " + type(Type.OBJECT) );
 			
 			//same decrement for these two cases
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");			
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));			
 		}
 	}
 
@@ -1281,7 +1286,6 @@ public class LLVMOutput extends AbstractOutput {
 		}		
 	}
 
-
 	private void visitUnsignedOperation(TACBinary node, String instruction)
 			throws ShadowException {
 		visitOperation(node, "", "", "f", instruction);
@@ -1356,12 +1360,12 @@ public class LLVMOutput extends AbstractOutput {
 			//sometimes they are incremented, if a value is later stored into the same parameter name
 			if( node.getValue() instanceof TACParameter ) {
 				TACParameter parameter = (TACParameter) node.getValue();
-				gcObjectStore( name(variable), variable.getType(), node.getValue(), parameter.isIncrement(), false );				
+				gcObjectStore( name(variable), variable.getType(), node.getValue(), parameter.isIncrement(), false, node );				
 			}	
 			else if( variable.getType() instanceof InterfaceType )				
-				gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference()  );
+				gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node);
 			else 
-				gcObjectStore( name(variable), variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );			
+				gcObjectStore( name(variable), variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );			
 		}
 	}
 
@@ -1437,10 +1441,10 @@ public class LLVMOutput extends AbstractOutput {
 			
 			if( node.isGarbageCollected() ) {
 				if( arrayRef.getType() instanceof InterfaceType )					
-					gcInterfaceStore(temp(0), (InterfaceType)arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
+					gcInterfaceStore(temp(0), (InterfaceType)arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );
 				//regular variable
 				else 
-					gcObjectStore(temp(0), arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );				
+					gcObjectStore(temp(0), arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );				
 			}
 			else
 				writer.write("store " + typeSymbol(node.getValue()) + ", " + 
@@ -1455,10 +1459,10 @@ public class LLVMOutput extends AbstractOutput {
 			
 			if( node.isGarbageCollected() ) {
 				if( fieldRef.getType() instanceof InterfaceType )					
-					gcInterfaceStore(temp(0), (InterfaceType)fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
+					gcInterfaceStore(temp(0), (InterfaceType)fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );
 				//regular variable
 				else 
-					gcObjectStore(temp(0), fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference() );
+					gcObjectStore(temp(0), fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );
 			}
 			else
 				writer.write("store " + typeSymbol(node.getValue()) + ", " + 
@@ -1467,10 +1471,10 @@ public class LLVMOutput extends AbstractOutput {
 	}	
 	
 	
-	private void gcObjectStore(String destination, Type type, TACOperand value, boolean increment, boolean decrement ) throws ShadowException {
+	private void gcObjectStore(String destination, Type type, TACOperand value, boolean increment, boolean decrement, TACNode node ) throws ShadowException {
 		if( increment ) {
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(value) + " to " + type(Type.OBJECT));
-			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
 		}
 				
 		//decrement old value in variable
@@ -1478,17 +1482,17 @@ public class LLVMOutput extends AbstractOutput {
 		if( decrement ) {
 			writer.write(nextTemp() + " = load " + type(type, true) + ", " + type(type, true) + "* " + destination);
 			writer.write(nextTemp() + " = bitcast " + type(type, true) + " " + temp(1) + " to " + type(Type.OBJECT));					
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
 		}
 		//then store new value					
 		writer.write("store " + typeSymbol(value) + ", " + type(type, true) + "* " + destination);		
 	}
 	
-	private void gcInterfaceStore(String destination, InterfaceType type, TACOperand value, boolean increment, boolean decrement ) throws ShadowException {
+	private void gcInterfaceStore(String destination, InterfaceType type, TACOperand value, boolean increment, boolean decrement, TACNode node ) throws ShadowException {
 		if( increment ) {
 			//increment the Object* reference
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(value) + ", 1");
-			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
 		}
 		
 		//decrement the old one	
@@ -1496,7 +1500,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = getelementptr inbounds " + type(type) + ", " +
 					typeText(type, destination, true) + ", i32 0, i32 1");
 			writer.write(nextTemp() + " = load " + type(Type.OBJECT) + ", " + typeText(Type.OBJECT, temp(1), true));					
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
 		}
 				
 		//store the whole thing after decrement
@@ -1613,7 +1617,7 @@ public class LLVMOutput extends AbstractOutput {
 			if (!method.getReturnTypes().isEmpty())
 				sb.insert(0, nextTemp(node) + " = ");
 
-			writer.write(sb.append(')').toString());
+			writer.write(sb.append(')' + funcletData(node)).toString());
 			if (unwindLabel != null) {						
 				writer.indent(2);
 				writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
@@ -1655,7 +1659,7 @@ public class LLVMOutput extends AbstractOutput {
 			//TODO: Should always be invoke because of GC cleanup
 			writer.write((unwindLabel != null ?
 					"invoke" : "call") + " void @__shadow_throw(" +
-					typeSymbol(node.getException()) + ") noreturn");
+					typeSymbol(node.getException()) + ") noreturn" + funcletData(node));
 			if (unwindLabel != null) {
 				writer.indent(2);
 				//writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
@@ -1753,7 +1757,11 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACCatchSwitch node) throws ShadowException {
 		// Parent
-		TACPad parentPad = node.getBlock().getParentPad();
+		TACBlock parentBlock = node.getBlock().getParent();
+		TACPad parentPad = null;
+		if(parentBlock != null)
+			parentPad = parentBlock.getCleanupPad();
+		
 		String parent;
 		if(parentPad == null)
 			parent = "none";
@@ -1773,7 +1781,6 @@ public class LLVMOutput extends AbstractOutput {
 		// Unwind
 		String unwind;
 		TACLabel unwindLabel = null;
-		TACBlock parentBlock = node.getBlock().getParent();
 		if(parentBlock != null)
 			unwindLabel = parentBlock.getUnwind();
 		if(unwindLabel == null)

@@ -248,8 +248,8 @@ entry:
 	%value = ptrtoint %shadow.standard..Object* %obj to i64
 	store i64 %value, i64* %variable
 	;%arg = bitcast i64* %variable to i8*
-	; Shadow code, 1 for flags (means non-continuable exception), 1 argument, exception itself
-	call void @RaiseException(i32 3763554372, i32 1, i32 1, i64* %variable) noreturn
+	; Shadow code, 0 for flags (means continuable exception), 1 argument, exception itself
+	call void @RaiseException(i32 3763554372, i32 0, i32 1, i64* %variable) noreturn
 	;call void @_CxxThrowException(i8* %arg, %eh.ThrowInfo* @__exceptionInfo) noreturn
 	unreachable
 }

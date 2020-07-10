@@ -1,5 +1,4 @@
 ; Shadow Library
-
 %boolean = type i1
 %byte = type i8
 %ubyte = type i8
@@ -71,7 +70,8 @@ declare %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object*
 declare void @shadow.test..Test_Mmain(%shadow.test..Test*)
 
 declare i32 @__C_specific_handler(...)
-declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
+@__exceptionStorage = external global %shadow.standard.Exception*
+
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 
@@ -96,8 +96,8 @@ _success:
 _exception:
 	%switchToken = catchswitch within none [label %_catch] unwind to caller
 _catch:
-    %catchToken = catchpad within %switchToken [%shadow.standard..Class* @shadow.standard..Exception_class, i32 8, %shadow.standard..Exception** %ex]
-	%exception = load %shadow.standard..Exception*, %shadow.standard..Exception** %ex
+	%catchToken = catchpad within %switchToken [i8* bitcast (i32 (i8*, i8*)* @_exceptionMethodshadow.standard..Exception to i8*)]
+	%exception = load %shadow.standard..Exception*, %shadow.standard..Exception**  @__exceptionStorage
 	catchret from %catchToken to label %_catchBody
 _catchBody:
 	; Console already initialized		

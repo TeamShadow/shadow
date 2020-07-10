@@ -75,9 +75,9 @@ declare i8* @strncpy(i8*, i8* nocapture, %size_t)
 declare %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object*)
 declare void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test*, %shadow.standard..Array*)
 
-;declare i32 @__CxxFrameHandler3(...)
 declare i32 @__C_specific_handler(...)
-declare i8* @llvm.eh.padparam.pNi8(token)
+@__exceptionStorage = external global %shadow.standard..Exception*
+
 ;declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
@@ -134,14 +134,12 @@ _exception:
 	%switchToken = catchswitch within none [label %_catch] unwind to caller
 _catch:
     %catchToken = catchpad within %switchToken [i8* bitcast (i32 (i8*, i8*)* @_exceptionMethodshadow.standard..Exception to i8*)]
-	%exceptionPointer = call i8* @llvm.eh.padparam.pNi8(token %catchToken)
-	%exceptionRef = bitcast i8* %exceptionPointer to %shadow.standard..Exception**
-	%exception = load %shadow.standard..Exception*, %shadow.standard..Exception** %exceptionRef
 	catchret from %catchToken to label %_catchBody
 _catchBody:
-	; Console already initialized		
+	; Console already initialized	
+	%exception = load %shadow.standard..Exception*, %shadow.standard..Exception**  @__exceptionStorage
 	%exceptionAsObject = bitcast %shadow.standard..Exception* %exception to %shadow.standard..Object*	
-	call %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console* %console, %shadow.standard..Object* %exceptionAsObject )
+	call %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console* %console, %shadow.standard..Object* %exceptionAsObject)
 	call void @__decrementRef(%shadow.standard..Object* %exceptionAsObject) nounwind
 	ret i32 1
 }

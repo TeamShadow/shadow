@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import shadow.Configuration;
+import shadow.ConfigurationException;
 import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
@@ -105,9 +107,8 @@ public class TACMethod
 		
 		//variable to hold low level exception data
 		//note that variables cannot start with underscore (_) in Shadow, so no collision is possible
-		//TODO: Is this still useful?
-		new TACLocalStore(node, addLocal(new SimpleModifiedType(Type.getExceptionType()), "_exception"), new TACLiteral(node, new ShadowUndefined(Type.getExceptionType())));
-
+		if(!Configuration.isWindows())
+			new TACLocalStore(node, addLocal(new SimpleModifiedType(Type.getExceptionType()), "_exception"), new TACLiteral(node, new ShadowUndefined(Type.getExceptionType())));
 		
 		if( !signature.isCreate() ) {		
 			SequenceType returnTypes = signature.getFullReturnTypes(); 
@@ -148,11 +149,19 @@ public class TACMethod
 		// Run cleanups twice, the second time for unwinding
     	anchor = unwindCleanupAnchor;
     	
+		TACLabel cleanupPadLabel = anchor.getBlock().getCleanupUnwind();
+		// This block is used for funclet generation for code inside the cleanup that decrements variables
+		TACBlock block = new TACBlock(anchor,anchor.getBlock()).setCleanupPad(cleanupPadLabel);
+    	
     	// Add each decrement before the last thing (the throw)
 		for( TACVariable variable : storedVariables )	
 			// Return doesn't get cleaned up, so that it has an extra reference count
 			if( !variable.isReturn() ) //TODO: Is that true for an unwind? Probably: the return hasn't been incremented either				
 				new TACChangeReferenceCount(anchor, variable, false);
+		
+		// Reset the block on the anchor (which is the cleanupret) so that it doesn't think that its own cleanuppad is its parent
+		block = block.getParent();
+		anchor.setBlock(block);
 	}
     
     void addGarbageCollection() {    	

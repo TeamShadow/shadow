@@ -14,31 +14,39 @@ immutable class shadow:test@ExceptionTest
 			Console.printLine("finally");
 		}
 	}
-	public test1() => () {
-		try {			
+	public test1() => ()
+	{
+		try
+		{			
 			test();						
 		} catch (ExceptionA ex) {
 			Console.printLine("test1 caught ExceptionA");
 		}		
 	}
-	public test2() => () {
-		try {
-			test1();
+	public test2() => ()
+	{
+		try
+		{
+			test();
 		} catch (ExceptionA ex) {
 			Console.printLine("test2 caught ExceptionA");
 		} catch (ExceptionB ex) {
 			Console.printLine("test2 caught ExceptionB");
 		}
 	}
-	public test3() => () {
-		try {
+	public test3() => ()
+	{
+		try
+		{
 			test2();
 		} catch (Exception ex) {
 			Console.printLine("test3 caught Exception");
 		}
 	}
-	public main( String[] args ) => () {
-		test3();
-		throw Exception:create();
+	
+	public main( String[] args ) => ()
+	{
+		test2();
+		//throw Exception:create();
 	}
 }

@@ -29,7 +29,7 @@ public class TACBlock
 	private TACMethod method;
 	private boolean unwindTarget = false; // Used to see if the block can be reached by unwinding, important for finally code-generation
 	private boolean cleanupTarget = false; // Used to see if the block contains a cleanup, important for finally code-generation
-	private TACLabel parentPad = null;
+	private TACLabel cleanupPad = null;
 
 	
 	public TACBlock(TACMethod method) {
@@ -206,18 +206,18 @@ public class TACBlock
 	}
 
 	
-	public TACPad getParentPad() {
+	public TACPad getCleanupPad() {
 		/*
 		 * The only parent pads that matter for funclet generation are 
 		 * cleanup unwind pads.  These are the ones where the exception
 		 * is still in-flight.  Other catches are caught and dealt with.
 		 */
 		
-		TACBlock current = parent;
+		TACBlock current = this;
 		while(current != null) {
-			if(current.parentPad != null) {
+			if(current.cleanupPad != null) {
 				// A cleanup switch might have phi nodes after it
-				TACNode node = parentPad.getNext();
+				TACNode node = cleanupPad.getNext();
 				while(node.getClass() != TACCatchSwitch.class)
 					node = node.getNext();
 
@@ -316,8 +316,8 @@ public class TACBlock
 		return false;
 	}
 
-	public TACBlock setParentPad(TACLabel parentPad) {
-		this.parentPad = parentPad;
+	public TACBlock setCleanupPad(TACLabel cleanupPad) {
+		this.cleanupPad = cleanupPad;
 		return this;
 	}	
 }

@@ -2171,7 +2171,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				TACLabel cleanupUnwindLabel = tryBlock.getCleanupUnwind();
 				
 				// By marking this as a parent pad, finally blocks inside of it will know where to unwind to
-				block = new TACBlock(anchor, block).setParentPad(cleanupUnwindLabel);
+				block = new TACBlock(anchor, block).setCleanupPad(cleanupUnwindLabel);
 				// Add in cleanup code (2nd time, for unwinding code)
 				visit(ctx.block()); // Visit again to rebuild TAC
 				block = block.getParent();
@@ -2440,7 +2440,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 		// Cleanup code goes here
 		method.setNormalCleanupAnchor(new TACBranch(anchor, phi));	
-		
+
 		// Add in cleanup code (2nd time, for unwinding code)
 		TACLabel cleanupPadLabel = block.getCleanupUnwind();
 		cleanupPadLabel.appendBefore(anchor);

@@ -531,6 +531,19 @@ public class Configuration {
 
 		return dataLayout;
 	}
+	
+	public static boolean isWindows() {
+		try {
+			Configuration configuration = getConfiguration();
+			String os = configuration.getOs(); 
+			if(os == null)
+				return false;
+			else
+				return os.equals("Windows");
+		} catch (ConfigurationException e) {
+			return false;
+		}
+	}
 
 }
 
