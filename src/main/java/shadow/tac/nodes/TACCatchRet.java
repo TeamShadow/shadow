@@ -5,16 +5,16 @@ import shadow.tac.TACVisitor;
 
 public class TACCatchRet extends TACNode {
 	private TACLabel label;
-	private TACCatchPad catchPad;
+	private TACCatch catchPad;
 	
-	public TACCatchRet(TACNode node, TACLabel label, TACCatchPad catchPad)
+	public TACCatchRet(TACNode node, TACLabel label, TACCatch catchPad)
 	{
 		super(node);
 		this.label = label;
 		this.catchPad = catchPad;
 	}
 	
-	public TACCatchPad getCatchPad() {
+	public TACCatch getCatch() {
 		return catchPad;
 	}
 	

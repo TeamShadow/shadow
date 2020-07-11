@@ -1,9 +1,8 @@
 package shadow.tac;
 
-import shadow.tac.nodes.TACCatchSwitch;
+import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACPad;
 import shadow.tac.nodes.TACPhi;
 import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -19,7 +18,7 @@ public class TACBlock
 {
 	private TACBlock parent;
 	private TACLabel breakLabel, continueLabel;
-	private TACLabel recoverLabel, doneLabel, catchLabel, catchSwitchLabel;
+	private TACLabel recoverLabel, doneLabel, catchesLabel;
 	// Although it seems like overkill, we need many different items for a cleanup:
 	private TACLabel cleanupLabel;		// Label for the actual cleaning up code, which everything will visit, even if not unwinding
 	private TACPhi cleanupPhi;			// Phi for returning to wherever we were before doing the cleanup
@@ -102,14 +101,14 @@ public class TACBlock
 	
 	
 	/*
-	public TACCatchSwitch getCatchSwitch()
+	public TACCatch getCatchSwitch()
 	{
 		if (catchSwitch != null)
 			return catchSwitch;
 		return parent == null ? null : parent.getCatchSwitch();
 	}
 	
-	public TACBlock addCatchSwitch(TACCatchSwitch catchSwitch)
+	public TACBlock addCatchSwitch(TACCatch catchSwitch)
 	{
 		if (this.catchSwitch != null)
 			throw new IllegalStateException("Catch switch already added.");
@@ -194,8 +193,8 @@ public class TACBlock
 	public TACLabel getUnwind() {
 		TACBlock currentBlock = this;
 		while(currentBlock != null) {
-			if(currentBlock.catchSwitchLabel != null)
-				return currentBlock.catchSwitchLabel;
+			if(currentBlock.catchesLabel != null)
+				return currentBlock.catchesLabel;
 			if(currentBlock.cleanupUnwindLabel != null)
 				return currentBlock.cleanupUnwindLabel;
 			
@@ -206,7 +205,7 @@ public class TACBlock
 	}
 
 	
-	public TACPad getCleanupPad() {
+	public TACCleanupPad getCleanupPad() {
 		/*
 		 * The only parent pads that matter for funclet generation are 
 		 * cleanup unwind pads.  These are the ones where the exception
@@ -216,12 +215,12 @@ public class TACBlock
 		TACBlock current = this;
 		while(current != null) {
 			if(current.cleanupPad != null) {
-				// A cleanup switch might have phi nodes after it
-				TACNode node = cleanupPad.getNext();
-				while(node.getClass() != TACCatchSwitch.class)
+				// A cleanup label have phi nodes after it
+				TACNode node = current.cleanupPad.getNext();
+				while(node.getClass() != TACCleanupPad.class)
 					node = node.getNext();
 
-				return (TACCatchSwitch)node;
+				return (TACCleanupPad)node;
 			}			
 			
 			current = current.getParent();
@@ -260,25 +259,19 @@ public class TACBlock
 		return this;
 	}
 	
-	public TACBlock addCatch()
-	{
-		if (catchLabel != null)
-			throw new IllegalStateException("Catch label already added.");
-		catchLabel = new TACLabel(method);
-		return this;
-	}
+
 	
-	public TACBlock addCatchSwitch() {
-		if (catchSwitchLabel != null)
-			throw new IllegalStateException("Catch switch label already added.");
-		catchSwitchLabel = new TACLabel(method);
+	public TACBlock addCatches() {
+		if (catchesLabel != null)
+			throw new IllegalStateException("Catches label already added.");
+		catchesLabel = new TACLabel(method);
 		return this;		
 	}
 
-	public TACLabel getCatchSwitch() {
-		if (catchSwitchLabel != null)
-			return catchSwitchLabel;
-		return parent == null ? null : parent.getCatchSwitch();
+	public TACLabel getCatches() {
+		if (catchesLabel != null)
+			return catchesLabel;
+		return parent == null ? null : parent.getCatches();
 	}
 	
 	public boolean isUnwindTarget() {

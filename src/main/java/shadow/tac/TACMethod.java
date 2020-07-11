@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import shadow.Configuration;
-import shadow.ConfigurationException;
 import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
@@ -21,7 +20,7 @@ import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
@@ -422,8 +421,8 @@ public class TACMethod
 				if( !change.isField() )
 					referenceCountChanges.add(change);
 			}
-			else if(node instanceof TACCatchPad) {
-				TACCatchPad catchPad = (TACCatchPad)node;
+			else if(node instanceof TACCatch) {
+				TACCatch catchPad = (TACCatch)node;
 				usedLocals.add(catchPad.getVariable());
 			}
 			node = node.getNext();

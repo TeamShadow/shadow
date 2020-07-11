@@ -18,7 +18,7 @@ import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACCatchRet;
-import shadow.tac.nodes.TACCatchSwitch;
+import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACCleanupPad;
@@ -290,28 +290,10 @@ public class TextOutput extends AbstractOutput
 				node.getException()).append(';').toString());
 	}
 	
-	@Override
-	public void visit(TACCatchSwitch node) throws ShadowException {
-		endBlock(false);
-		if(node.isCatchAll())
-			writer.write("finally");
-		else {
-			StringBuilder sb = new StringBuilder();
-			for(int i = 0; i < node.getNumOperands(); ++i) {
-				if(i == 0)
-					sb.append("label ");
-				else
-					sb.append(", label ");
-				sb.append(symbol(((TACCatchPad)node.getOperand(i)).getLabel()));
-			}
-			
-			writer.write("catch switch to " + sb);
-		}
-	}
-	
+
 		
 	@Override
-	public void visit(TACCatchPad node) throws ShadowException {
+	public void visit(TACCatch node) throws ShadowException {
 		endBlock(false);
 		writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
 	}
@@ -437,11 +419,6 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACClass.TACClassData node) throws ShadowException {
 			sb.append(node.getClassType()).append(":class");
 		}		
-
-		@Override
-		public void visit(TACCatchPad node) throws ShadowException {
-			sb.append("catchpad");		
-		}
 		
 		@Override
 		public void visit(TACCatchRet node) throws ShadowException {

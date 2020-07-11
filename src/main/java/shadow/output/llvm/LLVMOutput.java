@@ -17,7 +17,6 @@ import java.util.TreeSet;
 
 import shadow.CompileException;
 import shadow.Configuration;
-import shadow.ConfigurationException;
 import shadow.ShadowException;
 import shadow.interpreter.InterpreterException;
 import shadow.interpreter.ShadowBoolean;
@@ -44,11 +43,11 @@ import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACCatchPad;
-import shadow.tac.nodes.TACCatchRet;
-import shadow.tac.nodes.TACCatchSwitch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
+import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
@@ -68,7 +67,6 @@ import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNewObject;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
-import shadow.tac.nodes.TACPad;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
@@ -98,7 +96,7 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.TypeParameter;
 
-public class LLVMOutput extends AbstractOutput {	
+public class LLVMOutput extends AbstractOutput {
 	private int tempCounter = 0;
 	private List<String> stringLiterals = new LinkedList<String>();	
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
@@ -111,24 +109,14 @@ public class LLVMOutput extends AbstractOutput {
 	private Set<ExceptionType> exceptions = new TreeSet<ExceptionType>();
 
 	private TACModule module;
-	private boolean skipMethod = false;
-	private Configuration configuration = null;
-	
+	private boolean skipMethod = false;	
 
 	public LLVMOutput(Path file) throws ShadowException {
 		super(file);
-		try {
-			configuration = Configuration.getConfiguration();
-		} catch (ConfigurationException e) {
-		}
 	}
 	
 	public LLVMOutput(OutputStream stream) throws ShadowException {
 		super(stream);
-		try {
-			configuration = Configuration.getConfiguration();
-		} catch (ConfigurationException e) {
-		}
 	}
 
 	private String temp(int offset)
@@ -847,7 +835,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 	
 	private String funcletData(TACNode node) {
-		TACPad parentPad = node.getBlock().getCleanupPad();
+		TACCleanupPad parentPad = node.getBlock().getCleanupPad();
 		if(parentPad == null)
 			return "";
 		
@@ -1643,18 +1631,13 @@ public class LLVMOutput extends AbstractOutput {
 	@Override
 	public void visit(TACThrow node) throws ShadowException {
 
-		if(node.isRethrow()) {
-			TACBlock parent = node.getBlock().getParent(); // must get parent to avoid unwinding to oneself 
-			TACLabel unwindLabel = null;
-			if( parent != null )
-				unwindLabel = parent.getUnwind();
-			writer.write("cleanupret from " + symbol(node.getException()) + " unwind " + (unwindLabel == null ? "to caller" : "label " + symbol(unwindLabel) ) );
-			//writer.write("call void @_CxxThrowException(i8* null, i8* null) noreturn [ \"funclet\"(token " + symbol(node.getException()) + ") ]");
-		}
-		else {
+
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getException()) + " to " + type(Type.OBJECT));
 			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
 			TACLabel unwindLabel = node.getBlock().getUnwind();
+			
+			//Must leave funclets?
+			//YARGH
 			
 			//TODO: Should always be invoke because of GC cleanup
 			writer.write((unwindLabel != null ?
@@ -1671,7 +1654,7 @@ public class LLVMOutput extends AbstractOutput {
 			}
 			
 			writer.write("unreachable");
-		}		
+		
 	}	
 
 	@Override
@@ -1703,7 +1686,6 @@ public class LLVMOutput extends AbstractOutput {
 		//writer.write("call void @__addressPrint(i8* null, %shadow.standard..Object* " + temp(0) + ") [ \"funclet\"(token " + temp(2) + ") ]");
 		//writer.write(nextTemp() + " = bitcast " + type(Type.EXCEPTION) + " " + name(node.getVariable()) + " to %shadow.standard..Object*");
 		
-		
 
 		//writer.write(nextTemp() + " = bitcast i8* " + temp(1) + " to " + type(node.getType()));
 		//writer.write(nextTemp() + " = load " + type(node.getType()) + ", " + type(node.getType()) + "* " + temp(1));
@@ -1719,26 +1701,15 @@ public class LLVMOutput extends AbstractOutput {
 		//writer.write(nextTemp(node) + " = load " + type(node.getType()) + ", " + type(node.getType()) + "* " + exception);
 	}
 	
+	/*
 	@Override
 	public void visit(TACCatchRet node) throws ShadowException {
 		
-		writer.write("catchret from " + symbol(node.getCatchPad()) + " to label " + symbol(node.getLabel()));
-	}
-	
-	/*
-	@Override
-	public void visit(TACCleanupPad node) throws ShadowException {
-		// Parent
-		TACCatchSwitch parentSwitch = node.getBlock().getCatchSwitch();
-		String parent;
-		if(parentSwitch == null)
-			parent = "none";
-		else
-			parent = symbol(parentSwitch);
-		// Empty list because the personality function shouldn't take an arguments from a cleanup
-		writer.write(nextTemp(node) + " = cleanuppad within " + parent + " []");
+		writer.write("catchret from " + symbol(node.getCatch()) + " to label " + symbol(node.getLabel()));
 	}
 	*/
+	
+
 
 	
 	@Override
@@ -1753,12 +1724,10 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write("cleanupret from " + symbol(node.getCleanupPad()) + " unwind " + unwind);
 	}
 	
-	
 	@Override
-	public void visit(TACCatchSwitch node) throws ShadowException {
-		// Parent
+	public void visit(TACCleanupPad node) throws ShadowException {
 		TACBlock parentBlock = node.getBlock().getParent();
-		TACPad parentPad = null;
+		TACCleanupPad parentPad = null;
 		if(parentBlock != null)
 			parentPad = parentBlock.getCleanupPad();
 		
@@ -1767,31 +1736,54 @@ public class LLVMOutput extends AbstractOutput {
 			parent = "none";
 		else
 			parent = symbol(parentPad);
+
+		writer.write(nextTemp(node) + " = cleanuppad within " + parent + " []");
+	}
+	
+	
+	@Override
+	public void visit(TACCatch node) throws ShadowException {
+		// Parent
+		TACBlock parentBlock = node.getBlock().getParent();
+		TACCleanupPad parentPad = null;
+		if(parentBlock != null)
+			parentPad = parentBlock.getCleanupPad();
 		
-		// Catches
-		StringBuilder sb = new StringBuilder(" [");
-		for(int i = 0; i < node.getNumOperands(); ++i) {
-			if(i > 0)
-				sb.append(", ");
-			sb.append("label ");
-			sb.append(symbol(node.getOperand(i).getLabel()));
-		}
-		sb.append("]");
-		
+		String parent;
+		if(parentPad == null)
+			parent = "none";
+		else
+			parent = symbol(parentPad);
+
 		// Unwind
 		String unwind;
-		TACLabel unwindLabel = null;
-		if(parentBlock != null)
-			unwindLabel = parentBlock.getUnwind();
+		TACLabel unwindLabel = node.getSuccessor();
+		if(unwindLabel == null)
+			unwindLabel = node.getBlock().getUnwind();
 		if(unwindLabel == null)
 			unwind = "to caller";
 		else
 			unwind = "label " + symbol(unwindLabel);
-			
-		if(node.isCatchAll())
-			writer.write(nextTemp(node) + " = cleanuppad within " + parent + sb.toString());
-		else
-			writer.write(nextTemp(node) + " = catchswitch within " + parent + sb.toString() + " unwind " + unwind);	
+		
+		TACLabel label = new TACLabel(node.getMethod());			
+		
+		String switchToken = nextTemp(); 
+		writer.write(switchToken + " = catchswitch within " + parent + " [label " + symbol(label)  + "]" + " unwind " + unwind);
+		writer.writeLeft(name(label) + ':');
+		String padToken = nextTemp();
+		writer.write(padToken + " = catchpad within " + switchToken + " [i8* bitcast (i32 (i8*, i8*)* " + exceptionMethod(node.getType()) + " to i8*)]");
+		//writer.write(nextTemp(node) + " = catchpad within " + symbol(node.getCatchSwitch()) + " [i8* bitcast (i32 (i8*, i8*)* " + exceptionData(node.getType()) + " to i8*)]");
+		
+		//writer.write(nextTemp(node) + " = catchpad within " + symbol(node.getCatchSwitch()) + " [{ i8**, i8*, [8 x i8] }* " + exceptionData(node.getType()) + ", i32 8, " + type(node.getVariable()) + "* " + name(node.getVariable()) + "]");
+		//writer.write(nextTemp(node) + " = catchpad within " + symbol(node.getCatchSwitch()) + " [i8* bitcast (i32 (i8*, i8*)* " + exceptionMethod(node.getType()) + " to i8*), i32 8, " + type(node.getVariable()) + "* " + name(node.getVariable()) + "]");
+		
+		exceptions.add(node.getType());
+
+		writer.write(nextTemp() + " = load " + type(Type.EXCEPTION) + ", " + type(Type.EXCEPTION) + "* @__exceptionStorage");
+		writer.write(nextTemp() + " = bitcast " + type(Type.EXCEPTION) + " " + temp(1) + " to " + type(node.getVariable()));
+		writer.write("store " + type(node.getVariable()) + " " + temp(0) + ", " + type(node.getVariable()) + "* " +  name(node.getVariable()));
+		
+		writer.write("catchret from " + padToken + " to label " + symbol(node.getCatchBody()));
 	}
 
 	private static String interfaceData(Type type) {

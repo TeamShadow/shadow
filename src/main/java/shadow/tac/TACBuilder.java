@@ -33,11 +33,10 @@ import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatchPad;
-import shadow.tac.nodes.TACCatchRet;
-import shadow.tac.nodes.TACCatchSwitch;
+import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
+import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
@@ -2178,7 +2177,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				anchor.setBlock(block); // move the current block to the parent on the anchor
 				
 				cleanupUnwindLabel.appendBefore(anchor);				
-				TACCatchSwitch cleanupPad = new TACCatchSwitch(anchor, cleanupUnwindLabel);
+				TACCleanupPad cleanupPad = new TACCleanupPad(anchor);
 				
 				ctx.block().appendBefore(anchor);
 				new TACCleanupRet(anchor, cleanupPad);
@@ -2215,7 +2214,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACLabel preCleanupLabel = new TACLabel(method);
 				
 		if( ctx.catchStatement().size() > 0 )		
-			block.addCatchSwitch();
+			block.addCatches();
 	
 		if(ctx.block() != null)
 			block.addRecover();
@@ -2235,17 +2234,23 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			Context context = anchor.getContext();
 			anchor.setContext(null);
 
-			tryBlock.getCatchSwitch().appendBefore(anchor);	
-			
-			// Current block is finallyStatements block, parent of that is outside of current try
-			TACCatchSwitch catchSwitch = new TACCatchSwitch(anchor, tryBlock.getCatchSwitch());
+			//TACCatch catchSwitch = new TACCatch(anchor, tryBlock.getCatches());
 			
 			//TACOperand typeid = new TACSequenceElement(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")), 1 );
+			TACCatch previousCatch = null;
 			for( int i = 0; i < ctx.catchStatement().size(); ++i ) {
+				TACLabel label;
+				if(i == 0)
+					label = tryBlock.getCatches();
+				else {
+					label = new TACLabel(method);
+					previousCatch.setSuccessor(label);
+				}
+				label.appendBefore(anchor);	
 				ShadowParser.CatchStatementContext catchStatement = ctx.catchStatement(i);
 				visit(catchStatement);
 				catchStatement.appendBefore(anchor); //append catch i
-				catchSwitch.addCatchPad((TACCatchPad)catchStatement.getOperand());	
+				previousCatch = (TACCatch)catchStatement.getOperand();	
 				// Turn context off to avoid dead code removal errors
 				new TACBranch(anchor, preCleanupLabel);
 			}
@@ -2272,26 +2277,24 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 	@Override public Void visitCatchStatement(ShadowParser.CatchStatementContext ctx)	
 	{ 
-		block = new TACBlock(anchor, block);
+		//block = new TACBlock(anchor, block);
 		method.enterScope();
 
 		visitChildren(ctx); 
 
 		ShadowParser.FormalParameterContext parameter = ctx.formalParameter();
-
 		parameter.appendBefore(anchor);
-		TACLabel label = new TACLabel(method);
-		label.appendBefore(anchor);
-		TACCatchPad catchPad = new TACCatchPad(anchor, label, (ExceptionType)parameter.getType(),  method.getLocal(parameter.Identifier().getText()));
-		ctx.setOperand(catchPad);
 		TACLabel catchBody = new TACLabel(method);
-		new TACCatchRet(anchor, catchBody, catchPad);
+		TACCatch catchPad = new TACCatch(anchor, (ExceptionType)parameter.getType(),  method.getLocal(parameter.Identifier().getText()), catchBody);
+		ctx.setOperand(catchPad);
+		
+		//new TACCatchRet(anchor, catchBody, catchPad);
 		catchBody.appendBefore(anchor);
 		//new TACLocalStore(anchor, method.getLocal(parameter.Identifier().getText()), catchPad);
 		ctx.block().appendBefore(anchor);
 		
 		method.exitScope();
-		block = block.getParent();	
+		//block = block.getParent();	
 
 		return null;
 	}
@@ -2444,7 +2447,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		// Add in cleanup code (2nd time, for unwinding code)
 		TACLabel cleanupPadLabel = block.getCleanupUnwind();
 		cleanupPadLabel.appendBefore(anchor);
-		TACCatchSwitch cleanupPad = new TACCatchSwitch(anchor, cleanupPadLabel);
+		TACCleanupPad cleanupPad = new TACCleanupPad(anchor);
 		method.setUnwindCleanupAnchor(new TACCleanupRet(anchor, cleanupPad));
 		
 		methodBody.appendBefore(anchor);

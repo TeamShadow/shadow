@@ -22,13 +22,13 @@ import shadow.interpreter.ShadowNull;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
+import shadow.tac.TACBlock;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatchRet;
-import shadow.tac.nodes.TACCatchSwitch;
+import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
@@ -61,7 +61,7 @@ import shadow.typecheck.type.Type;
 
 /**
  * Represents the various paths which code execution can take within a method.
- * Useful for determining whether or not a method returns in all cases.
+ * Useful for determining whether or not a method returns in all cases. 
  * 
  * @author Brian Stottler
  * @author Barry Wittman
@@ -196,14 +196,17 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( unwindLabel != null )
 					block.addBranch(nodeBlocks.get(unwindLabel));
 			}
-			else if(node instanceof TACCatchSwitch) {
-				TACCatchSwitch catchSwitch = (TACCatchSwitch)node;
-				for(int i = 0; i < catchSwitch.getNumOperands(); ++i)
-					block.addBranch(nodeBlocks.get(catchSwitch.getOperand(i).getLabel()));
-			}
-			else if(node instanceof TACCatchRet) {
-				TACCatchRet catchRet = (TACCatchRet)node;
-				block.addBranch(nodeBlocks.get(catchRet.getLabel()));
+			else if(node instanceof TACCatch) {
+				TACCatch catchSwitch = (TACCatch)node;
+				block.addBranch(nodeBlocks.get(catchSwitch.getCatchBody()));
+				
+				if(catchSwitch.getSuccessor() != null)
+					block.addBranch(nodeBlocks.get(catchSwitch.getSuccessor()));
+				else {
+					TACLabel unwindLabel = node.getBlock().getUnwind();
+					if(unwindLabel != null)
+						block.addBranch(nodeBlocks.get(unwindLabel));
+				}
 			}
 			else if(node instanceof TACCleanupRet) {
 				TACCleanupRet cleanupRet = (TACCleanupRet)node;

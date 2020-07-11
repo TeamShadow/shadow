@@ -3,8 +3,6 @@ import shadow:io@Console;
 immutable class shadow:test@ExceptionTest
 {
 	public test() => () {		
-		//throw IndexOutOfBoundsException:create();
-		//Console.printLine("throwing");
 		try
 		{
 			throw ExceptionB:create();
@@ -28,9 +26,13 @@ immutable class shadow:test@ExceptionTest
 		try
 		{
 			test();
-		} catch (ExceptionA ex) {
+		}
+		catch (ExceptionA ex)
+		{
 			Console.printLine("test2 caught ExceptionA");
-		} catch (ExceptionB ex) {
+		}
+		catch (ExceptionB ex)
+		{
 			Console.printLine("test2 caught ExceptionB");
 		}
 	}
@@ -39,14 +41,16 @@ immutable class shadow:test@ExceptionTest
 		try
 		{
 			test2();
-		} catch (Exception ex) {
+		}
+		catch (Exception ex)
+		{
 			Console.printLine("test3 caught Exception");
 		}
 	}
 	
 	public main( String[] args ) => ()
 	{
-		test2();
-		//throw Exception:create();
+		test3();
+		throw Exception:create();
 	}
 }

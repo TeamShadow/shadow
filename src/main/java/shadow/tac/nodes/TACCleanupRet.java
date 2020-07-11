@@ -6,9 +6,9 @@ import shadow.tac.TACVisitor;
 
 public class TACCleanupRet extends TACNode
 {	
-	private TACCatchSwitch cleanupPad;
+	private TACCleanupPad cleanupPad;
 	
-	public TACCleanupRet(TACNode node, TACCatchSwitch cleanupPad)
+	public TACCleanupRet(TACNode node, TACCleanupPad cleanupPad)
 	{
 		super(node);
 		this.cleanupPad = cleanupPad;
@@ -29,7 +29,7 @@ public class TACCleanupRet extends TACNode
 		return 0;
 	}
 	
-	public TACCatchSwitch getCleanupPad() {
+	public TACCleanupPad getCleanupPad() {
 		return cleanupPad;
 	}
 	

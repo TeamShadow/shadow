@@ -602,6 +602,24 @@ public class OutputTests {
 				"e: 11 + 7i\n");
 	}
 	
+	@Test public void testComplicatedException() throws Exception {
+		args.add("shadow/test/ComplicatedExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Finally\n" + 
+				"Catch outer 2 shadow:test@ExceptionA\n" + 
+				"Finally\n" + 
+				"Catch outer 2 shadow:standard@Exception\n" + 
+				"Finally\n" + 
+				"Catch outer 1 shadow:test@ExceptionB\n" + 
+				"Recover\n" + 
+				"Finally\n" + 
+				"No catch\n" + 
+				"Finally\n" + 
+				"Overriding old exception with shadow:test@ExceptionB\n" + 
+				"Catch outer 1 shadow:test@ExceptionB\n");
+	}
+	
 	@Test public void testCopy() throws Exception {
 		args.add("shadow/test/CopyTest.shadow");
 		Main.run(args.toArray(new String[] { }));
