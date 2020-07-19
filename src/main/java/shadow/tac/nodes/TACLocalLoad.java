@@ -4,8 +4,10 @@ import java.util.Set;
 
 import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
@@ -13,14 +15,13 @@ public class TACLocalLoad extends TACUpdate {
 
 	private final TACVariable variable;
 	private TACOperand previousStore;
-	private boolean undefined = false;	
+	private boolean undefined = false;
 
-	public TACLocalLoad(TACNode node, TACVariable variable)
-	{
+	public TACLocalLoad(TACNode node, TACVariable variable) {
 		super(node);
 		this.variable = variable;
 	}
-	
+
 	public boolean isUndefined() 
 	{
 		return undefined;
@@ -127,7 +128,7 @@ public class TACLocalLoad extends TACUpdate {
 
 	@Override
 	public TACOperand getValue() {
-		if( previousStore != null && !isGarbageCollected() )
+		if( previousStore != null && !isGarbageCollected() && !variable.isFinallyVariable() )
 			return previousStore;
 		else
 			return this;

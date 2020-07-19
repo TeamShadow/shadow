@@ -427,8 +427,7 @@ public class ShadowInterpreter extends TACAbstractVisitor {
 	}
 
 
-	private static ShadowValue value(TACOperand node) throws ShadowException
-	{		
+	private static ShadowValue value(TACOperand node) throws ShadowException {		
 		Object value = node.getData();
 		if (value instanceof ShadowValue)
 			return (ShadowValue)value;

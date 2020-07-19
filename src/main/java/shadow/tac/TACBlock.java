@@ -1,5 +1,6 @@
 package shadow.tac;
 
+import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACNode;
@@ -29,6 +30,7 @@ public class TACBlock
 	private boolean unwindTarget = false; // Used to see if the block can be reached by unwinding, important for finally code-generation
 	private boolean cleanupTarget = false; // Used to see if the block contains a cleanup, important for finally code-generation
 	private TACLabel cleanupPad = null;
+	private TACFinallyFunction finallyFunction = null;
 
 	
 	public TACBlock(TACMethod method) {
@@ -312,5 +314,21 @@ public class TACBlock
 	public TACBlock setCleanupPad(TACLabel cleanupPad) {
 		this.cleanupPad = cleanupPad;
 		return this;
-	}	
+	}
+	
+	public void setFinallyFunction(TACFinallyFunction function) {
+		finallyFunction = function;
+	}
+	
+	public TACFinallyFunction getFinallyFunction() {
+		TACBlock current = this;
+		while(current != null) {
+			if(current.finallyFunction != null)
+				return finallyFunction;
+			
+			current = current.parent;
+		}
+		
+		return null;
+	}
 }

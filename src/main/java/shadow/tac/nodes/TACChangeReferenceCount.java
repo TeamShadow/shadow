@@ -1,8 +1,10 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.tac.TACMethod.TACFinallyFunction;
 
 public class TACChangeReferenceCount extends TACNode {
 
@@ -10,11 +12,19 @@ public class TACChangeReferenceCount extends TACNode {
 	private TACFieldRef field;
 	private boolean increment;
 	private TACOperand classData; //only used for array decrements
+	private TACFinallyFunction function;
 	
 	public TACChangeReferenceCount(TACNode node, TACVariable variable, boolean increment) {
 		super(node);
 		this.variable = variable;
 		this.increment = increment;	
+		TACMethod method = node.getMethod();
+		if(method != null)
+			this.function = method.getCurrentFinallyFunction();
+	}
+	
+	public TACFinallyFunction getFinallyFunction() {
+		return function;
 	}
 	
 	public TACChangeReferenceCount(TACNode node, TACFieldRef field, boolean increment) {

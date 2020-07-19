@@ -41,6 +41,7 @@ public class TACModule {
     private final List<TACConstant> constants = new ArrayList<TACConstant>();
     private final List<TACMethod> methods = new ArrayList<TACMethod>();
     private final List<TACModule> innerClasses = new ArrayList<TACModule>();
+    
        
 
     public TACModule(Type moduleType) {
@@ -158,10 +159,8 @@ public class TACModule {
 				
 				//adds garbage collection and code that cleans up variables that need garbage collection
 				//at the end of the method
-				method.addGarbageCollection();		
-				
-				String output = method.toString();
-				
+				method.addGarbageCollection();
+
 				ControlFlowGraph graph = new ControlFlowGraph(method);
 				
 				/*
@@ -299,10 +298,12 @@ public class TACModule {
 			methodData.put(method, graph.getLoadsBeforeStoresInMethods(type, callGraph));
 		}
 		
-		//since methods can call each other, an edge between methods means that the
-		//caller (end of the edge) should be considered to use the same fields
-		//as the callee (beginning of the edge)
-		//things used may need to propagate through the graph
+		/* 
+		 * Since methods can call each other, an edge between methods means that the
+		 * caller (end of the edge) should be considered to use the same fields
+		 * as the callee (beginning of the edge)
+		 * things used may need to propagate through the graph 
+		 */
 		boolean changed = true;
 		while( changed ) {
 			changed = false;

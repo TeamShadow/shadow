@@ -48,7 +48,7 @@ public class OutputTests {
 			args.add("linux.xml");
 		
 		args.add("-r");
-		args.add("-f");
+		//args.add("-f");
 	}
 	
 	@AfterEach
@@ -606,18 +606,32 @@ public class OutputTests {
 		args.add("shadow/test/ComplicatedExceptionTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
+				"1\n" + 
+				"Catch shadow:test@ExceptionA\n" + 
 				"Finally\n" + 
-				"Catch outer 2 shadow:test@ExceptionA\n" + 
+				"No catch\n" + 
+				"2\n" + 
 				"Finally\n" + 
 				"Catch outer 2 shadow:standard@Exception\n" + 
+				"3\n" + 
 				"Finally\n" + 
 				"Catch outer 1 shadow:test@ExceptionB\n" + 
+				"4\n" + 
 				"Recover\n" + 
 				"Finally\n" + 
 				"No catch\n" + 
+				"5\n" + 
 				"Finally\n" + 
 				"Overriding old exception with shadow:test@ExceptionB\n" + 
 				"Catch outer 1 shadow:test@ExceptionB\n");
+	}
+	
+	@Test public void testNestedException() throws Exception {
+		args.add("shadow/test/NestedExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Dunks\n" + 
+				"Punks\n");
 	}
 	
 	@Test public void testCopy() throws Exception {

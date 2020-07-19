@@ -12,21 +12,18 @@ public class TACLocalStore extends TACLocalStorage {
 	private boolean decrementReference = true;
 	private boolean previousStore;
 
-	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op)
-	{
+	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op) {
 		this(node, variable, op, true);		
 	}
 	
-	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op, boolean incrementReference)
-	{
+	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op, boolean incrementReference) {
 		super(node, variable);		
 		value = check(op, variable);
 		value.setLocalStore(this);
-		this.incrementReference = incrementReference;
+		this.incrementReference = incrementReference;		
 	}
 	
-	public boolean isIncrementReference()
-	{
+	public boolean isIncrementReference() {
 		return incrementReference;		
 	}
 	
@@ -72,7 +69,7 @@ public class TACLocalStore extends TACLocalStorage {
 	
 	public TACOperand getValue()
 	{	
-		if( getUpdatedValue() == null || isGarbageCollected() )
+		if(getUpdatedValue() == null || isGarbageCollected() || getVariable().isFinallyVariable())
 			return value;
 		else
 			return getUpdatedValue();

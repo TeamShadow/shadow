@@ -28,10 +28,13 @@ import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.PrimarySuffixContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
+import shadow.tac.TACMethod.TACFinallyFunction;
+import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACChangeReferenceCount;
@@ -46,7 +49,9 @@ import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLocalEscape;
 import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalRecover;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodName;
@@ -65,6 +70,7 @@ import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACSingletonRef;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
+import shadow.tac.nodes.TACTypeId;
 import shadow.tac.nodes.TACUnary;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -93,6 +99,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private boolean explicitSuper;	
 	private TACBlock block;	
 	private Deque<TACModule> moduleStack = new ArrayDeque<TACModule>();
+	private Deque<TACMethod> methodStack = new ArrayDeque<TACMethod>();
+	
 
 	public TACModule build(Context node) {		
 		method = null;
@@ -2141,7 +2149,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			 */
 			block = new TACBlock(anchor, block);
 			TACBlock cleanupBlock = block;
-			visit(ctx.block());			
+			TACFinallyFunction function = visitFinallyFunction(ctx.block());			
 			block = block.getParent();
 			anchor.setBlock(block); // move the current block to the parent on the anchor
 			
@@ -2155,7 +2163,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			tryBlock.getCleanup().insertBefore(anchor);
 			TACPhi phi = tryBlock.getCleanupPhi();	
 			phi.insertBefore(anchor);
-			ctx.block().appendBefore(anchor);
+			if(function != null)
+				new TACCallFinallyFunction(anchor, function, null);
+			
+			//ctx.block().appendBefore(anchor);
 			new TACBranch(anchor, phi);	
 			
 			if(tryBlock.isUnwindTarget()) {
@@ -2168,18 +2179,19 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				cleanupBlock.setCleanupTarget();
 				
 				TACLabel cleanupUnwindLabel = tryBlock.getCleanupUnwind();
-				
+				/*
 				// By marking this as a parent pad, finally blocks inside of it will know where to unwind to
 				block = new TACBlock(anchor, block).setCleanupPad(cleanupUnwindLabel);
 				// Add in cleanup code (2nd time, for unwinding code)
 				visit(ctx.block()); // Visit again to rebuild TAC
 				block = block.getParent();
 				anchor.setBlock(block); // move the current block to the parent on the anchor
-				
+				*/
 				cleanupUnwindLabel.appendBefore(anchor);				
 				TACCleanupPad cleanupPad = new TACCleanupPad(anchor);
-				
-				ctx.block().appendBefore(anchor);
+				if(function != null)
+					new TACCallFinallyFunction(anchor, function, cleanupPad);
+				//ctx.block().appendBefore(anchor);
 				new TACCleanupRet(anchor, cleanupPad);
 			}
 			// Turn context back on
@@ -2412,7 +2424,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		moduleStack.peek().addConstant(constantRef);		
 	}	
 
-	private void setupMethod() {
+	private TACLabel setupMethod() {
 		/*
 		//begin synthetic finally for gc handling
 		block = new TACBlock(method).addDone();
@@ -2433,7 +2445,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		anchor = new TACDummyNode(null, block);
 		
 		TACLabel methodBody = new TACLabel(method);
-		new TACLabel(method).appendBefore(anchor); //always start with a label
+		TACLabel startingLabel = new TACLabel(method);
+		startingLabel.appendBefore(anchor); //always start with a label
 		new TACBranch(anchor, methodBody); // branch to method body
 
 		// Add in cleanup code (1st time, for non-unwinding code)
@@ -2442,15 +2455,23 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		phi.insertBefore(anchor);		
 
 		// Cleanup code goes here
-		method.setNormalCleanupAnchor(new TACBranch(anchor, phi));	
+		TACFinallyFunction function = visitFinallyFunction(null);
+		method.setCleanupFinallyFunction(function);
+		
+		new TACCallFinallyFunction(anchor, function, null);
+		new TACBranch(anchor, phi);	
 
 		// Add in cleanup code (2nd time, for unwinding code)
 		TACLabel cleanupPadLabel = block.getCleanupUnwind();
 		cleanupPadLabel.appendBefore(anchor);
 		TACCleanupPad cleanupPad = new TACCleanupPad(anchor);
-		method.setUnwindCleanupAnchor(new TACCleanupRet(anchor, cleanupPad));
+		new TACCallFinallyFunction(anchor, function, cleanupPad);
+		//method.setUnwindCleanupAnchor(new TACCleanupRet(anchor, cleanupPad));
+		new TACCleanupRet(anchor, cleanupPad);
 		
 		methodBody.appendBefore(anchor);
+		
+		return startingLabel;
 	}
 
 	private void cleanupMethod() {		
@@ -2851,19 +2872,93 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			new TACLabel(method).insertBefore(anchor); //unreachable label
 		}		
 	}
+	
+	private TACFinallyFunction visitFinallyFunction(ShadowParser.BlockContext ctx) {
+		TACNode saveTree = anchor;
+		// Creation of the finally function adds it to the module
+		TACFinallyFunction function = method.new TACFinallyFunction();
+		method.pushFinallyFunction(function);
+		
+		TACBlock saveBlock = block;
+		block = new TACBlock(method);
+		block.setFinallyFunction(function);
+		anchor = new TACDummyNode(null, block);
+		
+		TACLabel label = new TACLabel(method); //always start with a label
+		label.appendBefore(anchor);
+		
+		// The finally that decrements references has no block and must be added later
+		if(ctx != null)
+			visitBlock(ctx);
+		
+		// All finally functions end with void return
+		function.setReturn(new TACReturn(anchor, new SequenceType()));
+
+		anchor = anchor.remove(); // Gets node before anchor (and removes dummy)
+		function.setNode(label); // The label is the first node
+	
+		method.popFinallyFunction();
+		
+		anchor = saveTree;
+		block = saveBlock;
+		
+		// Check for empty finally
+		if(ctx != null) {
+			TACNode node = label;
+			boolean meaningful = false;
+			do {
+				if(isMeaningfulInFinally(node))
+					meaningful = true;				
+				
+				node = node.getNext();
+			} while(node != label && !meaningful);
+			
+			if(meaningful)
+				return function;
+			else {
+				method.removeFinallyFunction(function);
+				return null;
+			}
+		}
+		else
+			return function;		
+	}
+	
+	private static boolean isMeaningfulInFinally(TACNode node) {
+		return !(node instanceof TACAllocateVariable || 
+				node instanceof TACBinary ||
+				node instanceof TACBranch ||
+				node instanceof TACCast ||
+				node instanceof TACClass ||
+				node instanceof TACDummyNode ||
+				node instanceof TACLabel ||
+				node instanceof TACLabelAddress ||
+				node instanceof TACLiteral ||
+				node instanceof TACLocalLoad ||
+				node instanceof TACLocalEscape ||
+				node instanceof TACLocalRecover ||
+				node instanceof TACLocalLoad ||
+				node instanceof TACPhi ||
+				node instanceof TACPointerToLong ||
+				node instanceof TACReturn || // Doesn't matter in finally
+				node instanceof TACSequence || 
+				node instanceof TACTypeId ||
+				node instanceof TACUnary);
+	}
 
 
 	private void visitMethod(MethodSignature methodSignature) {
 		TACNode saveTree = anchor;
 		TACMethod method = this.method = new TACMethod(methodSignature);
+		methodStack.push(method);
 
 		if( moduleStack.peek().isClass() && !methodSignature.isImport() ) {				
 
-			setupMethod();
+			TACLabel startingLabel = setupMethod();
 
 			if( methodSignature.getSymbol().equals("copy") && !methodSignature.isWrapper() )
 				visitCopyMethod(methodSignature);
-			//Gets and sets that were created by default (that's why they have a null parent)
+			// Gets and sets that were created by default (that's why they have a null parent)
 			else if( methodSignature.getNode().getParent() == null && (methodSignature.isGet() || methodSignature.isSet() ))
 				visitGetOrSetMethod(methodSignature);			
 			else if (methodSignature.isWrapper())
@@ -2873,13 +2968,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 			cleanupMethod();			
 
-			anchor = anchor.remove(); //gets node before anchor (and removes dummy)
-			method.setNode(anchor.getNext()); //the node after the last node is, strangely, the first node			
+			anchor = anchor.remove(); // Gets node before anchor (and removes dummy)
+			method.setNode(startingLabel); // Starting node for the method			
 		}
 
 		moduleStack.peek().addMethod(method);
 		block = null;
 		this.method = null;
+		methodStack.pop();
 		anchor = saveTree;
 	}	
 

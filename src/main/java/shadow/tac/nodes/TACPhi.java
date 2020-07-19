@@ -130,7 +130,7 @@ public class TACPhi extends TACLocalStorage {
 		previousStores.put(label, store);
 	}
 	
-	public void removePreviousStore(TACLabel label)
+	public boolean removePreviousStore(TACLabel label)
 	{
 		TACOperand store = previousStores.get(label);
 		
@@ -149,7 +149,10 @@ public class TACPhi extends TACLocalStorage {
 					}					
 				}					
 			}
+			return true;
 		}
+		
+		return false;
 	}
 	
 	public Map<TACLabel, TACOperand> getPreviousStores()

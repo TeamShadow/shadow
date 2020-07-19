@@ -5,6 +5,7 @@ import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACCatchPad;
@@ -20,7 +21,9 @@ import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLocalEscape;
 import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalRecover;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodName;
@@ -73,6 +76,8 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACCall node) throws ShadowException { }
 	@Override
+	public void visit(TACCallFinallyFunction node) throws ShadowException { }
+	@Override
 	public void visit(TACCast node) throws ShadowException { }
 	@Override
 	public void visit(TACCatchPad node) throws ShadowException { }
@@ -101,7 +106,11 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACLoad node) throws ShadowException { }	
 	@Override
+	public void visit(TACLocalEscape node) throws ShadowException { }
+	@Override
 	public void visit(TACLocalLoad node) throws ShadowException { }
+	@Override
+	public void visit(TACLocalRecover node) throws ShadowException { }
 	@Override
 	public void visit(TACLocalStore node) throws ShadowException { }
 	@Override

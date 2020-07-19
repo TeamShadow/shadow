@@ -1,8 +1,10 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.typecheck.type.ExceptionType;
 
 public class TACCatch extends TACOperand {
@@ -16,7 +18,7 @@ public class TACCatch extends TACOperand {
 		type = catchType;
 		this.variable = variable;
 		this.catchBody = catchBody;
-	}
+	}	
 
 	public TACLabel getCatchBody() {
 		return catchBody;

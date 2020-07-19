@@ -9,16 +9,17 @@ import shadow.output.AbstractOutput;
 import shadow.output.Cleanup;
 import shadow.tac.TACAbstractVisitor;
 import shadow.tac.TACMethod;
+import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatchPad;
-import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACCleanupPad;
@@ -81,7 +82,7 @@ public class TextOutput extends AbstractOutput
 		block = label;
 	}
 	
-	private void endBlock(boolean terminate) throws ShadowException {
+	private void continueBlock(boolean terminate) throws ShadowException {
 		if (block == null)
 			writer.writeLeft("// Missing label!!!");
 		if (terminate)
@@ -135,8 +136,7 @@ public class TextOutput extends AbstractOutput
 		sb.append(')');
 		if (signature.isImport())
 			writer.write(sb.append(';').toString());
-		else
-		{
+		else {
 			writer.write(sb.append(" {").toString());
 			writer.indent();
 			for (TACVariable param : method.getLocals())
@@ -155,7 +155,21 @@ public class TextOutput extends AbstractOutput
 		{
 			writer.outdent();
 			writer.write('}');
-		}
+		} 
+		
+		for(TACFinallyFunction function : method.getFinallyFunctions()) {
+			block = null;
+			writer.write();
+			StringBuilder sb = new StringBuilder("void _finally").append(function.getNumber())
+					.append(signature.getMangledName() + "() => () {");
+			writer.write(sb.toString());
+			writer.indent();
+			
+			walk(function.getNode());
+			
+			writer.outdent();
+			writer.write('}');
+		}	
 	}
 
 	@Override
@@ -190,14 +204,14 @@ public class TextOutput extends AbstractOutput
 	
 	@Override
 	public void visit(TACLocalStore node) throws ShadowException {
-		endBlock(false);
+		continueBlock(false);
 		writer.write(inline.visit(new StringBuilder(node.getVariable().toString()).append(" = "), node.getValue()).
 				append(';').toString());
 	}	
 
 	@Override
 	public void visit(TACStore node) throws ShadowException {
-		endBlock(false);
+		continueBlock(false);
 		TACReference reference = node.getReference();
 		StringBuilder sb = new StringBuilder();
 		
@@ -208,7 +222,7 @@ public class TextOutput extends AbstractOutput
 	
 	@Override
 	public void visit(TACChangeReferenceCount node) throws ShadowException {
-		endBlock(false);
+		continueBlock(false);
 		
 		
 		StringBuilder sb = new StringBuilder( node.isIncrement() ? "_IncrementRef(" : "_DecrementRef(");
@@ -245,7 +259,7 @@ public class TextOutput extends AbstractOutput
 
 	@Override
 	public void visit(TACBranch node) throws ShadowException {		
-		endBlock(true);
+		continueBlock(true);
 		StringBuilder sb = new StringBuilder("goto ");
 		if (node.isConditional())
 			inline.visit(sb, node.getCondition()).append(" ? ").
@@ -265,10 +279,17 @@ public class TextOutput extends AbstractOutput
 			sb.append(symbol(node.getLabel()));
 		writer.write(sb.append(';').toString());
 	}
+	
+	@Override
+	public void visit(TACCallFinallyFunction node) throws ShadowException {
+		continueBlock(false);
+		TACFinallyFunction function = node.getFinallyFunction();
+		writer.write("_finally" + function.getNumber() + function.getSignature().getMangledName() + "()");
+	}
 
 	@Override
 	public void visit(TACCall node) throws ShadowException {
-		endBlock(node.getBlock().getUnwind() != null); //if there are catches or cleanups 
+		continueBlock(node.getBlock().getUnwind() != null); //if there are catches or cleanups 
 		if (!node.hasLocalStore() && !node.hasMemoryStore())
 			writer.write(inline.visit(new StringBuilder(), node).append(';').
 					toString());
@@ -276,7 +297,7 @@ public class TextOutput extends AbstractOutput
 
 	@Override
 	public void visit(TACReturn node) throws ShadowException {
-		endBlock(true);
+		continueBlock(true);
 		StringBuilder sb = new StringBuilder("return");
 		if (node.hasReturnValue())
 			inline.visit(sb.append(' '), node.getReturnValue());
@@ -285,7 +306,7 @@ public class TextOutput extends AbstractOutput
 
 	@Override
 	public void visit(TACThrow node) throws ShadowException {
-		endBlock(true);
+		continueBlock(true);
 		writer.write(inline.visit(new StringBuilder("throw "),
 				node.getException()).append(';').toString());
 	}
@@ -294,19 +315,19 @@ public class TextOutput extends AbstractOutput
 		
 	@Override
 	public void visit(TACCatch node) throws ShadowException {
-		endBlock(false);
+		continueBlock(false);
 		writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
 	}
 	
 	@Override
 	public void visit(TACCleanupRet node) throws ShadowException {
-		endBlock(true);
+		continueBlock(true);
 		writer.write("// resume;");
 	}
 	
 	@Override
 	public void visit(TACCleanupPad node) throws ShadowException {
-		endBlock(false);
+		continueBlock(false);
 		writer.write("finally");
 	}
 
@@ -488,5 +509,7 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACParameter node) throws ShadowException {
 			sb.append(node);
 		}
-	}	
+	}
+
+		
 }

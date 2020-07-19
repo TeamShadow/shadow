@@ -35,6 +35,7 @@ import shadow.parse.Context;
 import shadow.tac.TACBlock;
 import shadow.tac.TACConstant;
 import shadow.tac.TACMethod;
+import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.tac.TACModule;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACAllocateVariable;
@@ -42,6 +43,7 @@ import shadow.tac.nodes.TACArrayRef;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACCatchPad;
@@ -56,7 +58,9 @@ import shadow.tac.nodes.TACGlobalRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLocalEscape;
 import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalRecover;
 import shadow.tac.nodes.TACLocalStorage;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACLongToPointer;
@@ -626,6 +630,11 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
 		}
 		
+		// Stack stuff for finally blocks
+		writer.write("declare i8* @llvm.localaddress() nounwind readnone");
+		writer.write("declare void @llvm.localescape(...) nounwind");
+		writer.write("declare i8* @llvm.localrecover(i8*, i8*, i32 immarg) nounwind readnone");
+		
 		writer.write("declare void @__shadow_throw(" + type(Type.OBJECT) + ") noreturn");
 		//memcopy
 		writer.write("declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)");
@@ -754,10 +763,14 @@ public class LLVMOutput extends AbstractOutput {
 		}
 	}
 	
-	private String name(TACVariable variable)
-	{		
+	private static String name(TACVariable variable) {		
 		return '%' + variable.getName();
 	}
+	
+	private static String name(TACFinallyFunction function) {
+		return '@' + "_finally" + function.getNumber() + function.getSignature().getMangledName();
+	}
+	
 
 	@Override
 	public void walk(TACNode nodes) throws ShadowException {
@@ -774,8 +787,27 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write();
 		}
 		skipMethod = false;
-		method = null;
+		
+		for(TACFinallyFunction function : method.getFinallyFunctions()) {
+			startFinallyFunction(function);
+			walk(function.getNode());
+			endFinallyFunction();
+		}
 	}
+	
+	public void startFinallyFunction(TACFinallyFunction function) throws ShadowException {
+		tempCounter = 1;
+		writer.write("define internal void " + name(function) + "(i8* %0) \"frame-pointer\"=\"none\"" +
+				" personality i32 (...)* " + (Configuration.isWindows() ? "@__C_specific_handler {" : "@__shadow_personality_v0 {"));
+		writer.indent();
+	}
+	
+	public void endFinallyFunction() throws ShadowException {
+		writer.outdent();
+		writer.write('}');
+		writer.write();
+	}
+	
 
 	@Override
 	public void visit(TACLongToPointer node) throws ShadowException {
@@ -817,7 +849,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = bitcast " + typeText(sourceArrayType, temp(2)) + " to i8*");
 			
 			
-			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(1) + ", i8* " + temp(0) + ", " + typeSymbol(size) + ", i32 1, i1 0)" + funcletData(node));
+			writer.write("call void @llvm.memcpy.p0i8.p0i8.i64(i8* " + temp(1) + ", i8* " + temp(0) + ", " + typeSymbol(size) + ", i32 1, i1 0)");
 		}
 		else {
 			String destination = typeSymbol(destinationNode);
@@ -834,6 +866,7 @@ public class LLVMOutput extends AbstractOutput {
 		}
 	}
 	
+	/*
 	private String funcletData(TACNode node) {
 		TACCleanupPad parentPad = node.getBlock().getCleanupPad();
 		if(parentPad == null)
@@ -841,6 +874,7 @@ public class LLVMOutput extends AbstractOutput {
 		
 		return " [ \"funclet\"(token " + symbol(parentPad) + ")]";
 	}
+	*/
 
 	@Override
 	public void visit(TACMethodPointer node) throws ShadowException {
@@ -973,7 +1007,7 @@ public class LLVMOutput extends AbstractOutput {
 						type(Type.CLASS) + ' ' +
 						classOf(srcType) + ", " + methodTableType(Type.OBJECT) + " bitcast(" +
 						methodTableType(srcType) + " " + methodTable(srcType) + " to " +
-						methodTableType(Type.OBJECT) + ")" + ")" + funcletData(node));			
+						methodTableType(Type.OBJECT) + ")" + ")");			
 				back1 = temp(0);
 				String result = nextTemp(node); 
 				writer.write(result + " = bitcast " + typeText(Type.OBJECT,
@@ -1056,7 +1090,7 @@ public class LLVMOutput extends AbstractOutput {
 		writer.write(nextTemp(node) + " = call noalias " + type(Type.OBJECT) +
 				" @__allocate(" + type(Type.CLASS) +
 				" " + symbol(_class) + ", " + methodTableType(Type.OBJECT) + " " + back1 +
-				" )" + funcletData(node));
+				" )");
 	}
 
 	@Override
@@ -1065,14 +1099,14 @@ public class LLVMOutput extends AbstractOutput {
 		ArrayType type = node.getType();
 		if( type.isNullable() ) {		
 			writer.write(nextTemp() + " = call noalias " + type(Type.ARRAY) + " @__allocateArray(" +
-					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "true") + ')' + funcletData(node));
+					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "true") + ')');
 			
 			String last = temp(0);
 			writer.write(nextTemp(node) + " = bitcast " + typeText(Type.ARRAY, last) + " to " + type(Type.ARRAY_NULLABLE));
 		}
 		else
 			writer.write(nextTemp(node) + " = call noalias " + type(Type.ARRAY) + " @__allocateArray(" +
-					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "false") + ')' + funcletData(node));
+					allocationClass + ", " + typeSymbol(node.getSize()) + ", " + typeText(Type.BOOLEAN, "false") + ')');
 	}
 
 	@Override
@@ -1107,7 +1141,8 @@ public class LLVMOutput extends AbstractOutput {
 	public void visit(TACAllocateVariable node) throws ShadowException { 
 		TACVariable local = node.getVariable();
 		writer.write(name(local) + " = alloca " + type(local));
-		writer.write("store " + type(local) + " " + literal(new ShadowNull(local.getType())) + ", " + typeText(local, name(local), true));
+		if(!local.getType().isPrimitive() || local.getModifiers().isNullable())
+			writer.write("store " + type(local) + " " + literal(new ShadowNull(local.getType())) + ", " + typeText(local, name(local), true));
 	}
 	
 	@Override
@@ -1147,7 +1182,7 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write(nextTemp() + " = bitcast " + typeText(reference, name) + " to " + type(Type.OBJECT) );
 
 			//same increment for both cases
-			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));	
+			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");	
 		}
 		else {			
 			if( node.isField() ) {
@@ -1172,7 +1207,7 @@ public class LLVMOutput extends AbstractOutput {
 				writer.write(nextTemp() + " = bitcast " + typeText(reference, name) + " to " + type(Type.OBJECT) );
 			
 			//same decrement for these two cases
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));			
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");			
 		}
 	}
 
@@ -1340,10 +1375,9 @@ public class LLVMOutput extends AbstractOutput {
 	
 	@Override
 	public void visit(TACLocalStore node) throws ShadowException {
-		//if not garbage collected, the "store" only happens in SSA data flow
+		// If not garbage collected (or used in a finally), the "store" only happens in SSA data flow
+		TACVariable variable = node.getVariable();
 		if( node.isGarbageCollected() ) {
-			TACVariable variable = node.getVariable();
-			
 			//initial parameter stores never have decrements
 			//sometimes they are incremented, if a value is later stored into the same parameter name
 			if( node.getValue() instanceof TACParameter ) {
@@ -1353,8 +1387,37 @@ public class LLVMOutput extends AbstractOutput {
 			else if( variable.getType() instanceof InterfaceType )				
 				gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node);
 			else 
-				gcObjectStore( name(variable), variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );			
+				gcObjectStore( name(variable), variable.getType(), node.getValue(), node.isIncrementReference() && node.isGarbageCollected(), node.isDecrementReference() && node.isGarbageCollected(), node );
 		}
+		else if(variable.isFinallyVariable() ) // And not garbage collected
+			writer.write("store " + typeSymbol(node.getValue()) + ", " + type(variable) + "* " + name(variable));
+	}
+	
+
+	@Override
+	public void visit(TACLocalEscape node) throws ShadowException {
+		StringBuilder sb = new StringBuilder("call void (...) @llvm.localescape(");
+		List<TACVariable> variables = node.getEscapedVariables();
+		boolean first = true;
+		for(TACVariable variable : variables) {
+			if(first)
+				first = false;
+			else
+				sb.append(", ");
+			sb.append(type(variable)).append("* ").append(name(variable));
+		}
+		sb.append(")");
+		
+		writer.write(sb.toString());
+	}
+	
+	@Override
+	public void visit(TACLocalRecover node) throws ShadowException {
+		TACVariable variable = node.getVariable();
+		MethodSignature signature = node.getMethod().getSignature();
+		
+		writer.write(nextTemp() + " = call i8* @llvm.localrecover(i8* bitcast (" + methodToString(signature, false, true) + "* " + name(signature) + " to i8*), i8* %0, i32 " + node.getIndex() + ")");
+		writer.write(name(variable) + " = bitcast i8* " + temp(0) + " to " + type(variable) + "*");
 	}
 
 	@Override
@@ -1462,7 +1525,7 @@ public class LLVMOutput extends AbstractOutput {
 	private void gcObjectStore(String destination, Type type, TACOperand value, boolean increment, boolean decrement, TACNode node ) throws ShadowException {
 		if( increment ) {
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(value) + " to " + type(Type.OBJECT));
-			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
+			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
 		}
 				
 		//decrement old value in variable
@@ -1470,7 +1533,7 @@ public class LLVMOutput extends AbstractOutput {
 		if( decrement ) {
 			writer.write(nextTemp() + " = load " + type(type, true) + ", " + type(type, true) + "* " + destination);
 			writer.write(nextTemp() + " = bitcast " + type(type, true) + " " + temp(1) + " to " + type(Type.OBJECT));					
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
 		}
 		//then store new value					
 		writer.write("store " + typeSymbol(value) + ", " + type(type, true) + "* " + destination);		
@@ -1480,7 +1543,7 @@ public class LLVMOutput extends AbstractOutput {
 		if( increment ) {
 			//increment the Object* reference
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(value) + ", 1");
-			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
+			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
 		}
 		
 		//decrement the old one	
@@ -1488,7 +1551,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = getelementptr inbounds " + type(type) + ", " +
 					typeText(type, destination, true) + ", i32 0, i32 1");
 			writer.write(nextTemp() + " = load " + type(Type.OBJECT) + ", " + typeText(Type.OBJECT, temp(1), true));					
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(node));
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
 		}
 				
 		//store the whole thing after decrement
@@ -1498,11 +1561,9 @@ public class LLVMOutput extends AbstractOutput {
 
 	@Override
 	public void visit(TACLocalLoad node) throws ShadowException {	
-
-		if( node.isGarbageCollected() ) {
-			TACVariable variable = node.getVariable();
+		TACVariable variable = node.getVariable();
+		if( node.isGarbageCollected() || variable.isFinallyVariable() )
 			writer.write(nextTemp(node) + " = load " + type(variable) + ", " + type(variable) + "* " + name(variable));
-		}
 		else {		
 			TACOperand store = node.getPreviousStore(); 
 			if( store == null ) {
@@ -1521,7 +1582,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void visit(TACPhi node) throws ShadowException {
 
 		//Garbage collected phi variable is not needed since all of those loads are used directly
-		if( !node.isGarbageCollected() ) {
+		if( !node.isGarbageCollected() && !node.getVariable().isFinallyVariable() ) {
 			Map<TACLabel, TACOperand> values = node.getPreviousStores();
 			if( values.size() > 1 ) {
 				StringBuilder sb = new StringBuilder(name(node)).
@@ -1605,7 +1666,7 @@ public class LLVMOutput extends AbstractOutput {
 			if (!method.getReturnTypes().isEmpty())
 				sb.insert(0, nextTemp(node) + " = ");
 
-			writer.write(sb.append(')' + funcletData(node)).toString());
+			writer.write(sb.append(')').toString());
 			if (unwindLabel != null) {						
 				writer.indent(2);
 				writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
@@ -1618,6 +1679,24 @@ public class LLVMOutput extends AbstractOutput {
 			if( unwindLabel != null )
 				writer.write("br label " + symbol(node.getNoExceptionLabel()));			
 		}
+	}
+	
+	@Override
+	public void visit(TACCallFinallyFunction node) throws ShadowException {
+		TACFinallyFunction function = node.getFinallyFunction();
+		
+		String funclet = "";
+		TACCleanupPad cleanupPad = node.getCleanupPad(); 
+		if(cleanupPad != null)
+			funclet = " [ \"funclet\"(token " + symbol(cleanupPad) + ")]";
+		
+		if(function.getOuterFinallyFunction() == null) {
+			String address = nextTemp();
+			writer.write(address + " = call i8* @llvm.localaddress()" + funclet);
+			writer.write("call void " + name(function) + "(i8* " + address + ")" + funclet);
+		}
+		else
+			writer.write("call void " + name(function) + "(i8* %0)" + funclet);
 	}
 
 	@Override
@@ -1635,19 +1714,13 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(node.getException()) + " to " + type(Type.OBJECT));
 			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
 			TACLabel unwindLabel = node.getBlock().getUnwind();
-			
-			//Must leave funclets?
-			//YARGH
-			
+
 			//TODO: Should always be invoke because of GC cleanup
 			writer.write((unwindLabel != null ?
 					"invoke" : "call") + " void @__shadow_throw(" +
-					typeSymbol(node.getException()) + ") noreturn" + funcletData(node));
+					typeSymbol(node.getException()) + ") noreturn");
 			if (unwindLabel != null) {
 				writer.indent(2);
-				//writer.write(" to label " + symbol(node.getNoExceptionLabel()) + " unwind label " +
-				//		symbol(node.getBlock().getLandingpad()));			
-	
 				writer.write(" to label " + nextTemp() + " unwind label " +
 						symbol(unwindLabel));
 				writer.outdent(2);
@@ -2002,6 +2075,7 @@ public class LLVMOutput extends AbstractOutput {
 		
 		//should never be a create
 		SequenceType returnTypes = type.getTypeWithoutTypeArguments().getReturnTypes();
+		
 		if( returnTypes.size() == 0 )
 			sb.append("void");
 		else if (returnTypes.size() == 1 )			
@@ -2475,4 +2549,6 @@ public class LLVMOutput extends AbstractOutput {
 	public void close() throws IOException {
 		writer.close();
 	}
+
+
 }
