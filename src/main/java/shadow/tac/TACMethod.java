@@ -24,7 +24,7 @@ import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLocalEscape;
@@ -511,8 +511,8 @@ public class TACMethod
 					variable.makeFinallyVariable();
 				}
 			}
-			else if(node instanceof TACCatch) {
-				TACCatch catchPad = (TACCatch)node;
+			else if(node instanceof TACCatchPad) {
+				TACCatchPad catchPad = (TACCatchPad)node;
 				TACVariable variable = catchPad.getVariable();
 				usedLocals.add(variable);
 				if(finallyUsedLocals != null) {

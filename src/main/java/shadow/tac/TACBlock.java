@@ -103,14 +103,14 @@ public class TACBlock
 	
 	
 	/*
-	public TACCatch getCatchSwitch()
+	public TACCatchPad getCatchSwitch()
 	{
 		if (catchSwitch != null)
 			return catchSwitch;
 		return parent == null ? null : parent.getCatchSwitch();
 	}
 	
-	public TACBlock addCatchSwitch(TACCatch catchSwitch)
+	public TACBlock addCatchSwitch(TACCatchPad catchSwitch)
 	{
 		if (this.catchSwitch != null)
 			throw new IllegalStateException("Catch switch already added.");

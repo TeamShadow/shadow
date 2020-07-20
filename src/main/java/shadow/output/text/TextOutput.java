@@ -18,8 +18,8 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACCatch;
-import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACCleanupPad;
@@ -27,6 +27,7 @@ import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
+import shadow.tac.nodes.TACLandingPad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
 import shadow.tac.nodes.TACLocalLoad;
@@ -43,6 +44,7 @@ import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACPointerToLong;
 import shadow.tac.nodes.TACReference;
+import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequence;
 import shadow.tac.nodes.TACSequenceElement;
@@ -314,10 +316,29 @@ public class TextOutput extends AbstractOutput
 
 		
 	@Override
-	public void visit(TACCatch node) throws ShadowException {
+	public void visit(TACCatchPad node) throws ShadowException {
 		continueBlock(false);
 		writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
 	}
+	
+	@Override
+	public void visit(TACLandingPad node) throws ShadowException {
+		continueBlock(false);
+		writer.write("landing pad");		
+	}	
+	
+	@Override
+	public void visit(TACCatch node) throws ShadowException {
+		continueBlock(false);
+		writer.write("catch(" + node.getType() + ")");		
+	}
+	
+	@Override
+	public void visit(TACResume node) throws ShadowException {
+		continueBlock(true);
+		writer.write("// resume;");
+	}
+	
 	
 	@Override
 	public void visit(TACCleanupRet node) throws ShadowException {
@@ -440,12 +461,7 @@ public class TextOutput extends AbstractOutput
 		public void visit(TACClass.TACClassData node) throws ShadowException {
 			sb.append(node.getClassType()).append(":class");
 		}		
-		
-		@Override
-		public void visit(TACCatchRet node) throws ShadowException {
-			sb.append("catchret");		
-		}
-		
+
 		@Override
 		public void visit(TACCleanupPad node) throws ShadowException {
 			sb.append("cleanuppad");		

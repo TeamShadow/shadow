@@ -29,7 +29,7 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
@@ -236,8 +236,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( unwindLabel != null )
 					block.addBranch(nodeBlocks.get(unwindLabel));
 			}
-			else if(node instanceof TACCatch) {
-				TACCatch catchSwitch = (TACCatch)node;
+			else if(node instanceof TACCatchPad) {
+				TACCatchPad catchSwitch = (TACCatchPad)node;
 				block.addBranch(nodeBlocks.get(catchSwitch.getCatchBody()));
 
 				if(catchSwitch.getSuccessor() != null)

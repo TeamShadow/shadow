@@ -5,37 +5,53 @@ import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ExceptionType;
 
-public class TACCatchPad extends TACPad
-{
+public class TACCatchPad extends TACOperand {
+	private TACLabel successor;
 	private ExceptionType type;
 	private TACVariable variable;
-	private TACCatch catchSwitch;
-
-	public TACCatchPad(TACNode node, TACLabel label, ExceptionType catchType, TACVariable variable) {
-		super(node, label);
+	private TACLabel catchBody;
+	
+	public TACCatchPad(TACNode node, ExceptionType catchType, TACVariable variable, TACLabel catchBody) {
+		super(node);
 		type = catchType;
 		this.variable = variable;
-	}
-	
-	public void setCatchSwitch(TACCatch catchSwitch) {
-		this.catchSwitch = catchSwitch;
-	}
-	
-	public TACCatch getCatchSwitch() {
-		return catchSwitch;
-	}
+		this.catchBody = catchBody;
+	}	
 
+	public TACLabel getCatchBody() {
+		return catchBody;
+	}
+	
+	public void setSuccessor(TACLabel successor ) {
+		this.successor = successor;
+	}
+	
+	public TACLabel getSuccessor() {
+		return successor;
+	}
+	
 	@Override
-	public ExceptionType getType() {
-		return type;
+	public int getNumOperands() {
+		return 0;
+	}
+	
+	@Override
+	public TACOperand getOperand(int num) {
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override
 	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
+
+	@Override
+	public ExceptionType getType() {
+		return type;
+	}
 	
 	public TACVariable getVariable() {
 		return variable;
 	}
+
 }
