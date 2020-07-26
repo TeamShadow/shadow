@@ -7,8 +7,9 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACClass.TACClassData;
@@ -79,9 +80,11 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACCast node) throws ShadowException { }
 	@Override
+	public void visit(TACCatch node) throws ShadowException { }
+	@Override
 	public void visit(TACCatchPad node) throws ShadowException { }
 	@Override
-	public void visit(TACCatch node) throws ShadowException { }
+	public void visit(TACCatchRet node) throws ShadowException { }
 	@Override
 	public void visit(TACCleanupPad node) throws ShadowException { }
 	@Override

@@ -21,6 +21,7 @@ import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Job;
 import shadow.Main;
+import shadow.typecheck.type.Type;
 
 public class OutputTests {
 	// To simplify removal, every unit test executable will have the same name
@@ -47,7 +48,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		args.add("-r");
+		//args.add("-r");
 		//args.add("-f");
 	}
 	
@@ -56,7 +57,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -631,6 +632,9 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
 				"Dunks\n" + 
+				"Sunks\n" +
+				"Chunks\n" +
+				"Monks\n" +
 				"Punks\n");
 	}
 	

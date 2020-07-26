@@ -51,7 +51,8 @@ public class Main {
 
 	// Version of the Shadow compiler
 	public static final String VERSION = "0.8";
-	public static final String MINIMUM_LLVM_VERSION = "3.8";
+	public static final String MINIMUM_LLVM_VERSION = "6.0";
+	public static final String MINIMUM_WINDOWS_LLVM_VERSION = "10.0";
 
 	// These are the error codes returned by the compiler
 	public static final int NO_ERROR = 0;
@@ -110,7 +111,14 @@ public class Main {
 	// Check LLVM version using lexical comparison
 	private static void checkLLVMVersion() throws ConfigurationException {
 		String LLVMVersion = Configuration.getLLVMVersion();
-		if(compareVersions(LLVMVersion, MINIMUM_LLVM_VERSION) < 0) {
+	
+		int comparison = 0;
+		if(Configuration.isWindows()) // Higher versions of LLVM are needed for Windows because of EH
+			comparison = compareVersions(LLVMVersion, MINIMUM_WINDOWS_LLVM_VERSION);
+		else
+			comparison = compareVersions(LLVMVersion, MINIMUM_LLVM_VERSION);
+					
+		if(comparison < 0) {
 			String error = "LLVM version " + MINIMUM_LLVM_VERSION + " or higher is required for Shadow " + VERSION
 					+ ", but ";
 			if (LLVMVersion.isEmpty())

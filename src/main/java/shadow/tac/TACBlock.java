@@ -1,8 +1,10 @@
 package shadow.tac;
 
+import shadow.Configuration;
 import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACLabel;
+import shadow.tac.nodes.TACLandingPad;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
 import shadow.typecheck.type.PointerType;
@@ -31,6 +33,7 @@ public class TACBlock
 	private boolean cleanupTarget = false; // Used to see if the block contains a cleanup, important for finally code-generation
 	private TACLabel cleanupPad = null;
 	private TACFinallyFunction finallyFunction = null;
+	private TACLandingPad landingPad;
 
 	
 	public TACBlock(TACMethod method) {
@@ -205,7 +208,6 @@ public class TACBlock
 		
 		return null;
 	}
-
 	
 	public TACCleanupPad getCleanupPad() {
 		/*
@@ -258,15 +260,17 @@ public class TACBlock
 		cleanupLabel = new TACLabel(method);
 		cleanupPhi = new TACPhi(null, method.addTempLocal(new SimpleModifiedType(new PointerType())));
 		cleanupUnwindLabel = new TACLabel(method);
+		if(!Configuration.isWindows())
+			landingPad = new TACLandingPad(method);
 		return this;
 	}
-	
-
 	
 	public TACBlock addCatches() {
 		if (catchesLabel != null)
 			throw new IllegalStateException("Catches label already added.");
 		catchesLabel = new TACLabel(method);
+		if(!Configuration.isWindows())
+			landingPad = new TACLandingPad(method);
 		return this;		
 	}
 
@@ -274,6 +278,12 @@ public class TACBlock
 		if (catchesLabel != null)
 			return catchesLabel;
 		return parent == null ? null : parent.getCatches();
+	}
+	
+	public TACLandingPad getLandingPad() {
+		if(landingPad != null)
+			return landingPad;
+		return parent == null ? null : parent.getLandingPad();
 	}
 	
 	public boolean isUnwindTarget() {
@@ -324,7 +334,7 @@ public class TACBlock
 		TACBlock current = this;
 		while(current != null) {
 			if(current.finallyFunction != null)
-				return finallyFunction;
+				return current.finallyFunction;
 			
 			current = current.parent;
 		}

@@ -29,7 +29,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private int importType = -1;
 	private int exportType = -1;
 	private List<Type> allowedExports;
-
+	
 	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
 	{
 		this.type = type;

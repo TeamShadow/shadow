@@ -8,19 +8,12 @@ import shadow.typecheck.type.ExceptionType;
 public class TACCatchPad extends TACOperand {
 	private TACLabel successor;
 	private ExceptionType type;
-	private TACVariable variable;
-	private TACLabel catchBody;
+	private String token;
 	
-	public TACCatchPad(TACNode node, ExceptionType catchType, TACVariable variable, TACLabel catchBody) {
+	public TACCatchPad(TACNode node, ExceptionType catchType, TACLabel catchBody) {
 		super(node);
 		type = catchType;
-		this.variable = variable;
-		this.catchBody = catchBody;
 	}	
-
-	public TACLabel getCatchBody() {
-		return catchBody;
-	}
 	
 	public void setSuccessor(TACLabel successor ) {
 		this.successor = successor;
@@ -28,6 +21,14 @@ public class TACCatchPad extends TACOperand {
 	
 	public TACLabel getSuccessor() {
 		return successor;
+	}
+	
+	public void setToken(String token) {
+		this.token = token;
+	}
+	
+	public String getToken() {
+		return token;
 	}
 	
 	@Override
@@ -49,9 +50,4 @@ public class TACCatchPad extends TACOperand {
 	public ExceptionType getType() {
 		return type;
 	}
-	
-	public TACVariable getVariable() {
-		return variable;
-	}
-
 }

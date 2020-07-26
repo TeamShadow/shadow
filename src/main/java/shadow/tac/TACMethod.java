@@ -1,7 +1,6 @@
 package shadow.tac;
 
 import java.io.StringWriter;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
@@ -24,7 +23,6 @@ import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLocalEscape;
@@ -57,9 +55,10 @@ public class TACMethod
 		private int number;
 		private TACFinallyFunction outerFinallyFunction;
 		private TACReturn return_;
+		private TACVariable exceptionStorage;
 		
-		public TACFinallyFunction() {
-			outerFinallyFunction = finallyFunctionStack.peek(); // Can be null
+		public TACFinallyFunction(TACFinallyFunction outerFinallyFunction) {
+			this.outerFinallyFunction = outerFinallyFunction;
 			number = finallyFunctions.size();
 			finallyFunctions.add(this);
 		}
@@ -70,6 +69,14 @@ public class TACMethod
 		
 		public void setReturn(TACReturn return_) {
 			this.return_ = return_;
+		}
+		
+		public TACVariable getExceptionStorage() {
+			return exceptionStorage;
+		}
+		
+		public void setExceptionStorage(TACVariable variable) {
+			exceptionStorage = variable;
 		}
 		
 		public TACReturn getReturn() {
@@ -103,10 +110,9 @@ public class TACMethod
 	//private TACNode normalCleanupAnchor;
 	//private TACNode unwindCleanupAnchor;
 	private TACFinallyFunction cleanupFinallyFunction;
-    private final List<TACFinallyFunction> finallyFunctions  = new ArrayList<TACFinallyFunction>();
-    private Deque<TACFinallyFunction> finallyFunctionStack = new ArrayDeque<TACFinallyFunction>();	
-	
-	public TACMethod(MethodSignature methodSignature) {
+    private final List<TACFinallyFunction> finallyFunctions  = new ArrayList<>();
+    
+    public TACMethod(MethodSignature methodSignature) {
 		signature = methodSignature;
 		locals = new LinkedHashMap<String, TACVariable>();
 		parameters = new LinkedHashMap<String, TACVariable>();
@@ -153,11 +159,6 @@ public class TACMethod
 			ModifiedType parameterType = type.getParameterType(name);
 			new TACLocalStore(node, addParameter(parameterType, name), new TACParameter(node, parameterType, parameter++));
 		}
-		
-		//variable to hold low level exception data
-		//note that variables cannot start with underscore (_) in Shadow, so no collision is possible
-		if(!Configuration.isWindows())
-			new TACLocalStore(node, addLocal(new SimpleModifiedType(Type.getExceptionType()), "_exception"), new TACLiteral(node, new ShadowUndefined(Type.getExceptionType())));
 		
 		if( !signature.isCreate() ) {		
 			SequenceType returnTypes = signature.getFullReturnTypes(); 
@@ -474,6 +475,10 @@ public class TACMethod
 		return variableCounter++;
 	}
 	
+	private static boolean isUsedVariable(TACVariable variable) {
+		return variable.needsGarbageCollection() || (variable.isFinallyVariable() && (variable.getOriginalName().equals("_exception") || !variable.getOriginalName().startsWith("_exception")));
+	}
+	
 	private void addAllocations(TACNode start, Set<TACVariable> usedLocals, Set<TACChangeReferenceCount> referenceCountChanges, Set<TACVariable> finallyUsedLocals) {
 		TACNode node = start;
 		
@@ -481,12 +486,12 @@ public class TACMethod
 			if(node instanceof TACLocalLoad) {
 				TACLocalLoad load = (TACLocalLoad)node;
 				TACVariable variable = load.getVariable();
-				if(finallyUsedLocals != null) {
+				if(finallyUsedLocals != null ) {
 					finallyUsedLocals.add(variable);
 					variable.makeFinallyVariable();
 				}
 				
-				if( variable.needsGarbageCollection() || variable.isFinallyVariable() )
+				if( isUsedVariable(variable) )
 					usedLocals.add(variable);
 			}
 			else if(node instanceof TACLocalStore) {
@@ -497,7 +502,7 @@ public class TACMethod
 					variable.makeFinallyVariable();
 				}
 				
-				if( variable.needsGarbageCollection() || variable.isFinallyVariable() )
+				if( isUsedVariable(variable) )
 					usedLocals.add(variable);
 			}
 			else if(node instanceof TACChangeReferenceCount ) {
@@ -506,15 +511,6 @@ public class TACMethod
 				if(!change.isField())
 					referenceCountChanges.add(change);
 				
-				if(finallyUsedLocals != null) {
-					finallyUsedLocals.add(variable);
-					variable.makeFinallyVariable();
-				}
-			}
-			else if(node instanceof TACCatchPad) {
-				TACCatchPad catchPad = (TACCatchPad)node;
-				TACVariable variable = catchPad.getVariable();
-				usedLocals.add(variable);
 				if(finallyUsedLocals != null) {
 					finallyUsedLocals.add(variable);
 					variable.makeFinallyVariable();
@@ -529,7 +525,7 @@ public class TACMethod
 				if(finallyUsedLocals != null)
 					variable.makeFinallyVariable();
 		
-				if( variable.needsGarbageCollection() || variable.isFinallyVariable() )
+				if( isUsedVariable(variable) )
 					usedLocals.add(variable);
 			}
 			node = node.getNext();
@@ -582,8 +578,17 @@ public class TACMethod
 			for(TACVariable variable : finallyUsedLocals) {
 				//new TACAllocateVariable(anchor, variable);
 				//new TACLocalStore(anchor, variable, new TACLocalRecover(anchor, variable), false);
-				new TACLocalRecover(anchor, variable, locallyEscapedVariables.indexOf(variable)); // The local recover handles it all?
+				// _exception is a special variable used for all exceptions
+				// _exception1, _exception2, etc. are special variables used only in finally functions to store in-flight exceptions
+				if(variable.getOriginalName().equals("_exception")  || !variable.getOriginalName().startsWith("_exception"))
+					new TACLocalRecover(anchor, variable, locallyEscapedVariables.indexOf(variable)); // The local recover handles it all?
+				else
+					new TACAllocateVariable(anchor, variable);
 			}
+			
+			// Store in-flight exception into finally exception holder
+			if(!Configuration.isWindows() && function.getExceptionStorage() != null)
+				new TACLocalStore(anchor, function.getExceptionStorage(), new TACLocalLoad(anchor, getLocal("_exception")));
 		}
 	}
 
@@ -637,18 +642,6 @@ public class TACMethod
 	
 	public List<TACFinallyFunction> getFinallyFunctions() {
 		return finallyFunctions;
-	}
-	
-	public void pushFinallyFunction(TACFinallyFunction function) {
-		finallyFunctionStack.push(function);
-	}
-	
-	public void popFinallyFunction() {
-		finallyFunctionStack.pop();
-	}
-	
-	public TACFinallyFunction getCurrentFinallyFunction() {
-		return finallyFunctionStack.peek(); // null if empty
 	}
 
 	public void removeFinallyFunction(TACFinallyFunction function) {

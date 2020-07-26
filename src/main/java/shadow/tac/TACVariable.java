@@ -108,7 +108,7 @@ public class TACVariable implements ModifiedType
 	public boolean needsGarbageCollection() {
 		Type type = getType();		
 		
-		return !getOriginalName().equals("_exception") &&
+		return !getOriginalName().startsWith("_exception") &&
 				!getOriginalName().equals("this") &&
 				//!getMethod().getSignature().isCopy() &&
 				//!variable.getName().equals("return") &&

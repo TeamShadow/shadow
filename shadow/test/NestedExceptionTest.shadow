@@ -7,6 +7,7 @@ class shadow:test@NestedExceptionTest
 		try
 		{
 			method();
+			Console.printLine("After");
 		}
 		catch(ExceptionA e)
 		{
@@ -18,7 +19,7 @@ class shadow:test@NestedExceptionTest
 	{
 			try 
 			{
-				throw  ExceptionA:create();
+				throw ExceptionA:create();
 			}
 			finally
 			{
@@ -29,6 +30,33 @@ class shadow:test@NestedExceptionTest
 				catch(ExceptionB e)
 				{
 					Console.printLine("Dunks");
+					
+					try
+					{
+					
+						try
+						{
+							throw ExceptionC:create();
+						}
+						catch(ExceptionC e1)
+						{
+							Console.printLine("Sunks");
+						}
+					}
+					finally
+					{
+						try
+						{
+							throw ExceptionD:create();
+						}
+						catch(ExceptionD e1)
+						{
+							Console.printLine("Chunks");
+						}					
+					}
+					
+					
+					Console.printLine("Monks");
 				}
 			}
 	}

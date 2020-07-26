@@ -37,8 +37,9 @@ import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatchPad;
 import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACCleanupPad;
@@ -399,7 +400,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		//The only thing that comes in here are the declarations
 		//in catch blocks
 		method.addLocal(ctx, ctx.Identifier().getText());
-
 		return null;
 	}
 
@@ -2201,14 +2201,23 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					new TACCleanupRet(anchor, cleanupPad);
 				}
 				else {
-					new TACLandingPad(anchor);
+					
+					TACLandingPad landingPad = tryBlock.getLandingPad();
+					landingPad.appendBefore(anchor);
+					TACLabel finallyBody = landingPad.getBody();
+					TACVariable exceptionVariable = method.getLocal("_exception");
+					new TACLocalStore(anchor, exceptionVariable, landingPad);
+					new TACBranch(anchor, finallyBody);
+					finallyBody.appendBefore(anchor);
+					
 					if(function != null)
 						new TACCallFinallyFunction(anchor, function, null);
-					TACLabel continueUnwind = block.getUnwind();
-					if (continueUnwind != null)
-						new TACBranch(anchor, continueUnwind); // finally inside of outer try					
+					
+					TACLandingPad parentLandingPad = block.getLandingPad(); 
+					if (parentLandingPad != null) 			
+						new TACBranch(anchor, parentLandingPad.getBody());	
 					else
-						new TACResume(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")));
+						new TACResume(anchor, new TACLocalLoad(anchor, exceptionVariable)); // This is unlikely to happen
 				}
 			}
 			// Turn context back on
@@ -2227,6 +2236,22 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 		return null;	
 	}
+	
+	/*
+	private boolean hasFinallyParentBeforeCatch(ParserRuleContext context) {
+		while(context != null) {
+			if(context instanceof ShadowParser.BlockContext && context.getParent() instanceof ShadowParser.FinallyStatementContext)
+				return true;
+			
+			if(context instanceof ShadowParser.CatchStatementContext)
+				return false;		
+			
+			context = context.getParent();
+		}
+		
+		return false;
+	}
+	*/
 
 	@Override public Void visitCatchStatements(ShadowParser.CatchStatementsContext ctx) { 
 		block = new TACBlock(anchor, block);
@@ -2277,54 +2302,81 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					}
 					label.appendBefore(anchor);	
 					ShadowParser.CatchStatementContext catchStatement = ctx.catchStatement(i);
+					ShadowParser.FormalParameterContext parameter = catchStatement.formalParameter();
+					
+					method.enterScope();					
 					visit(catchStatement);
+					TACLabel catchLabel = new TACLabel(method);
+					TACCatchPad catchPad = new TACCatchPad(anchor, (ExceptionType)parameter.getType(), catchLabel);
+					//TODO: Should this be a no-increment reference?
+					new TACLocalStore(anchor, method.getLocal(parameter.Identifier().getText()), catchPad, false);
+					new TACCatchRet(anchor, catchPad, catchLabel);
+					catchLabel.appendBefore(anchor);					
 					catchStatement.appendBefore(anchor); //append catch i
-					previousCatch = (TACCatchPad)catchStatement.getOperand();	
-					// Turn context off to avoid dead code removal errors
+					method.exitScope();
+					
+					previousCatch =  catchPad;	
 					new TACBranch(anchor, preCleanupLabel);
 				}
 			}
 			else {
 				// Insert landing pad
-				tryBlock.getCatches().appendBefore(anchor);
-			
+				tryBlock.getCatches().appendBefore(anchor);			
 				
-				TACVariable exception = method.getLocal("_exception");		
-				TACLandingPad landingPad = new TACLandingPad(anchor);
-				new TACLocalStore(anchor, exception, landingPad);
+				TACVariable exceptionVariable = method.getLocal("_exception");
 				
-				TACOperand typeid = new TACSequenceElement(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")), 1 );
+				TACLandingPad landingPad = tryBlock.getLandingPad();
+				landingPad.appendBefore(anchor);
+				TACLabel catchBodies = landingPad.getBody();
 				
-				// Create a label for each catch
-				int catches = ctx.catchStatement().size();
+				/*
+				// If catching inside of a finally, we might need to store the old, in-flight exception
+				TACFinallyFunction function = block.getFinallyFunctionBeforeCatches();
+				if(function != null) {
+					TACVariable oldExceptionVariable = method.getLocal("_exception" + function.getNumber());
+					new TACLocalStore(anchor, oldExceptionVariable, new TACLocalLoad(anchor, exceptionVariable));
+				}
+				*/
 				
+				new TACLocalStore(anchor, exceptionVariable, landingPad);
+				new TACBranch(anchor, catchBodies);
+								
+				catchBodies.appendBefore(anchor);
+				TACLocalLoad exceptionLoad = new TACLocalLoad(anchor, method.getLocal("_exception"));				
+				TACOperand typeid = new TACSequenceElement(anchor, exceptionLoad, 1);
+				TACOperand exception = new TACSequenceElement(anchor, exceptionLoad, 0);
+				
+				int catches = ctx.catchStatement().size();				
 				
 				for( int i = 0; i < catches; ++i ) {
 					ShadowParser.CatchStatementContext catchStatement = ctx.catchStatement(i);
-					visit(catchStatement);
+					ShadowParser.FormalParameterContext parameter = catchStatement.formalParameter();
+					ExceptionType exceptionType = (ExceptionType)parameter.getType();
 					
-					TACCatch catch_ = (TACCatch)catchStatement.getOperand();
-					ExceptionType type = catch_.getType();
-					landingPad.addCatch(catch_);
-
 					TACLabel skipLabel = new TACLabel(method);
 					TACLabel catchLabel = new TACLabel(method);
-					new TACBranch(anchor, new TACBinary(anchor, typeid, new TACTypeId(anchor, new TACClass(anchor, type).getClassData())),
+					new TACBranch(anchor, new TACBinary(anchor, typeid, new TACTypeId(anchor, new TACClass(anchor, exceptionType).getClassData())),
 							catchLabel, skipLabel);
-
+					
+					method.enterScope();		
+					visit(catchStatement);
 					catchLabel.insertBefore(anchor);
-					catchStatement.appendBefore(anchor); //append catch i
+					//TODO: Should this be a no-increment reference?
+					new TACLocalStore(anchor, method.getLocal(parameter.Identifier().getText()),  new TACCatch(anchor, exception, exceptionType, landingPad), false);
+					catchStatement.appendBefore(anchor); //append catch i					
+					method.exitScope();					
+					
 					new TACBranch(anchor, preCleanupLabel);
 					
 					// Last skip label is for continuing to unwind
 					skipLabel.insertBefore(anchor);
 				}
 
-				TACLabel continueUnwind = block.getUnwind();
-				if (continueUnwind != null)
-					new TACBranch(anchor, continueUnwind); // try inside of try					
+				TACLandingPad parentLandingPad = block.getLandingPad();
+				if (parentLandingPad != null)				
+					new TACBranch(anchor, parentLandingPad.getBody()); // Skip the landing pad part and go straight to exception checking
 				else
-					new TACResume(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")));
+					new TACResume(anchor, exceptionLoad); // Only happens inside finally functions
 			}
 
 			anchor.setContext(context);
@@ -2340,6 +2392,15 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}
 
 		preCleanupLabel.appendBefore(anchor);
+		/*
+		// Put old in-flight exception back into _exception
+		TACFinallyFunction function = block.getFinallyFunctionBeforeCatches();
+		if(!Configuration.isWindows() && function != null) {
+			TACVariable oldExceptionVariable = method.getLocal("_exception" + function.getNumber());
+			TACVariable exceptionVariable = method.getLocal("_exception");
+			new TACLocalStore(anchor, exceptionVariable, new TACLocalLoad(anchor, oldExceptionVariable));
+		}
+		*/		
 		visitCleanups(block); // One set of cleanup for try/catches/recover
 		// Turn context off to avoid dead code removal errors
 		new TACBranch(anchor, block.getDone()).setContext(null);
@@ -2406,30 +2467,25 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override public Void visitCatchStatement(ShadowParser.CatchStatementContext ctx)	
 	{ 
 		//block = new TACBlock(anchor, block);
-		method.enterScope();
+		
 
 		visitChildren(ctx); 
 
-		ShadowParser.FormalParameterContext parameter = ctx.formalParameter();
-		parameter.appendBefore(anchor);
-
 		
+		//parameter.appendBefore(anchor);  // Shouldn't be anything in here
+
+
 		if(Configuration.isWindows()) {
-			TACLabel catchBody = new TACLabel(method);
-			TACCatchPad catchPad = new TACCatchPad(anchor, (ExceptionType)parameter.getType(),  method.getLocal(parameter.Identifier().getText()), catchBody);
-			ctx.setOperand(catchPad);
-			catchBody.appendBefore(anchor);
+			
 		}
 		else {
-			TACCatch catch_ = new TACCatch(anchor, (ExceptionType)parameter.getType());
-			new TACLocalStore(anchor, method.getLocal(parameter.Identifier().getText()), catch_);
-			ctx.setOperand(catch_);
+			
 		}
-
+		
 
 		ctx.block().appendBefore(anchor);
 
-		method.exitScope();
+		
 		//block = block.getParent();	
 
 		return null;
@@ -2571,6 +2627,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACLabel methodBody = new TACLabel(method);
 		TACLabel startingLabel = new TACLabel(method);
 		startingLabel.appendBefore(anchor); //always start with a label
+		
+		// Variable to hold low level exception data
+		// Note that variables cannot start with underscore (_) in Shadow, so no collision is possible
+		if(!Configuration.isWindows())
+			new TACLocalStore(anchor, method.addLocal(new SimpleModifiedType(Type.getExceptionType()), "_exception"), new TACLiteral(anchor, new ShadowUndefined(Type.getExceptionType())));
+	
+			
 		new TACBranch(anchor, methodBody); // branch to method body
 
 		// Add in cleanup code (1st time, for non-unwinding code)
@@ -2595,7 +2658,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			new TACCleanupRet(anchor, cleanupPad);
 		}
 		else {
-			new TACLandingPad(anchor);
+			
+			TACLandingPad landingPad = block.getLandingPad();
+			landingPad.appendBefore(anchor);
+			TACLabel finallyBody = landingPad.getBody();
+			TACVariable exceptionVariable = method.getLocal("_exception");
+			new TACLocalStore(anchor, exceptionVariable, landingPad);
+			new TACBranch(anchor, finallyBody);
+			finallyBody.appendBefore(anchor);
 			new TACCallFinallyFunction(anchor, function, null);
 			new TACResume(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")));
 		}
@@ -3007,8 +3077,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	private TACFinallyFunction visitFinallyFunction(ShadowParser.BlockContext ctx) {
 		TACNode saveTree = anchor;
 		// Creation of the finally function adds it to the module
-		TACFinallyFunction function = method.new TACFinallyFunction();
-		method.pushFinallyFunction(function);
+		TACFinallyFunction function = method.new TACFinallyFunction(block.getFinallyFunction());
 
 		TACBlock saveBlock = block;
 		block = new TACBlock(method);
@@ -3019,8 +3088,12 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		label.appendBefore(anchor);
 
 		// The finally that decrements references has no block and must be added later
-		if(ctx != null)
+		if(ctx != null) {
+			// We use this variable to hold in-flight exceptions temporarily
+			if(!Configuration.isWindows())
+				function.setExceptionStorage(new TACVariable(new SimpleModifiedType(Type.getExceptionType()), "_exception" + function.getNumber(), method));
 			visitBlock(ctx);
+		}
 
 		// All finally functions end with void return
 		function.setReturn(new TACReturn(anchor, new SequenceType()));
@@ -3028,7 +3101,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		anchor = anchor.remove(); // Gets node before anchor (and removes dummy)
 		function.setNode(label); // The label is the first node
 
-		method.popFinallyFunction();
 
 		anchor = saveTree;
 		block = saveBlock;
@@ -3044,15 +3116,19 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				node = node.getNext();
 			} while(node != label && !meaningful);
 
-			if(meaningful)
+			if(meaningful) {
+				// Store the backup of the in-flight exception back into the _exception variable
+				if(!Configuration.isWindows())
+					new TACLocalStore(function.getReturn(), method.getLocal("_exception"), new TACLocalLoad(function.getReturn(), function.getExceptionStorage())); 					
 				return function;
+			}
 			else {
 				method.removeFinallyFunction(function);
 				return null;
 			}
 		}
 		else
-			return function;		
+			return function;
 	}
 
 	private static boolean isMeaningfulInFinally(TACNode node) {

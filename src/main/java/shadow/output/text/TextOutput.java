@@ -19,6 +19,7 @@ import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACCatch;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
@@ -313,12 +314,17 @@ public class TextOutput extends AbstractOutput
 				node.getException()).append(';').toString());
 	}
 	
-
-		
+	
 	@Override
 	public void visit(TACCatchPad node) throws ShadowException {
 		continueBlock(false);
 		writer.write(new StringBuilder("catch( ").append(node.getType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS)).append(" )").toString());
+	}
+	
+	@Override
+	public void visit(TACCatchRet node) throws ShadowException {
+		continueBlock(true);
+		writer.write("catchret to " + symbol(node.getLabel()));
 	}
 	
 	@Override
@@ -526,6 +532,8 @@ public class TextOutput extends AbstractOutput
 			sb.append(node);
 		}
 	}
+
+
 
 		
 }

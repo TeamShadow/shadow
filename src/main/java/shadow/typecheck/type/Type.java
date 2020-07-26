@@ -316,6 +316,8 @@ public abstract class Type implements Comparable<Type> {
 		EXPORT_NATIVE_DECORATOR = null;
 		EXPORT_ASSEMBLY_DECORATOR = null;
 		EXPORT_METHOD_DECORATOR = null;
+		
+		exceptionType = null;
 	}
 	
 	/*
@@ -1475,11 +1477,15 @@ public abstract class Type implements Comparable<Type> {
 	public void setDocumentation(Documentation documentation) {
 		this.documentation = documentation;
 	}
+	
+	private static SequenceType exceptionType = null;
 
 	public static SequenceType getExceptionType() {
-		SequenceType type = new SequenceType();
-		type.add(new SimpleModifiedType(new PointerType()));
-		type.add(new SimpleModifiedType(Type.INT));
-		return type;
+		if(exceptionType == null ) {
+			exceptionType = new SequenceType();
+			exceptionType.add(new SimpleModifiedType(new PointerType()));
+			exceptionType.add(new SimpleModifiedType(Type.INT));
+		}
+		return exceptionType;
 	}
 }

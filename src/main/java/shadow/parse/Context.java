@@ -70,7 +70,7 @@ public class Context extends ParserRuleContext implements ModifiedType {
 	private Documentation documentation;
 	private List<MethodSignature> operations;
 	private TACNode list;
-	private TACOperand operand;	
+	private TACOperand operand;
 	
 	public Context()
 	{				

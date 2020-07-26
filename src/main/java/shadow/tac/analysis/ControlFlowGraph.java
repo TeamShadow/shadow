@@ -30,6 +30,7 @@ import shadow.tac.nodes.TACCall;
 import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
@@ -47,6 +48,7 @@ import shadow.tac.nodes.TACOperand;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;
+import shadow.tac.nodes.TACResume;
 import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACThrow;
@@ -210,7 +212,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							if(next instanceof TACBranch ) {
 								TACBranch branch = (TACBranch)next;
 								if( branch.isDirect() ) 
-									block.addBranch(nodeBlocks.get(branch.getTrueLabel()));
+									block.addBranch(nodeBlocks.get(branch.getLabel()));
 								else {								
 									Map<TACLabel, TACOperand> destinations = branch.getPhi().getPreviousStores();
 									for( TACOperand destination : destinations.values() ) {
@@ -219,7 +221,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 									}
 								}
 							}
-							else if(callFinallyFunction.getNext() instanceof TACCleanupRet) {
+							else if(next instanceof TACCleanupRet) {
 								TACCleanupRet cleanupRet = (TACCleanupRet)callFinallyFunction.getNext();
 								TACLabel unwindLabel = cleanupRet.getUnwind();
 								if( unwindLabel != null )
@@ -236,18 +238,22 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				if( unwindLabel != null )
 					block.addBranch(nodeBlocks.get(unwindLabel));
 			}
+			else if(node instanceof TACCatchRet) {
+				TACCatchRet catchRet = (TACCatchRet)node;
+				block.addBranch(nodeBlocks.get(catchRet.getLabel()));
+			}
 			else if(node instanceof TACCatchPad) {
-				TACCatchPad catchSwitch = (TACCatchPad)node;
-				block.addBranch(nodeBlocks.get(catchSwitch.getCatchBody()));
+				TACCatchPad catchPad = (TACCatchPad)node;
 
-				if(catchSwitch.getSuccessor() != null)
-					block.addBranch(nodeBlocks.get(catchSwitch.getSuccessor()));
+				if(catchPad.getSuccessor() != null)
+					block.addBranch(nodeBlocks.get(catchPad.getSuccessor()));
 				else {
 					TACLabel unwindLabel = node.getBlock().getUnwind();
 					if(unwindLabel != null)
 						block.addBranch(nodeBlocks.get(unwindLabel));
 				}
 			}
+
 			// Will this ever happen?
 			/*
 			else if(node instanceof TACCleanupRet && !(node.getPrevious() instanceof TACCallFinallyFunction)) {
@@ -287,7 +293,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				else
 					block.flagReturns();
 			}
-			else if( node instanceof TACThrow || node instanceof TACCleanupRet )
+			else if( node instanceof TACThrow || node instanceof TACCleanupRet || node instanceof TACResume)
 				block.flagUnwinds();
 			//record field usage, for warnings
 			else if( node instanceof TACLoad ) {
@@ -698,7 +704,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		for( TACLocalLoad undefined : undefinedLoads )
 			//_exception is a special variable used only for exception handling
 			//indirect breaks for finally make its value tricky, but it's guaranteed to never *really* be undefined
-			if( !undefined.getVariable().getOriginalName().equals("_exception") && !undefined.getVariable().getOriginalName().equals("return")  && !undefined.getVariable().getOriginalName().startsWith("_return")  )
+			if( !undefined.getVariable().getOriginalName().startsWith("_exception") && !undefined.getVariable().getOriginalName().equals("return")  && !undefined.getVariable().getOriginalName().startsWith("_return")  )
 				addError(undefined.getContext(), Error.UNDEFINED_VARIABLE, "Variable " + undefined.getVariable().getOriginalName() + " may not have been defined before use");
 
 		return changed;
