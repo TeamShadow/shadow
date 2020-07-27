@@ -473,4 +473,19 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/non-array-nullable-cast/Test.shadow");
 		enforce(Error.INVALID_CAST);		
 	}	
+	
+	@Test public void testBreakOutOfFinally() throws Exception {
+		args.add("tests-negative/typechecker/break-out-of-finally/Test.shadow");
+		enforce(Error.INVALID_STRUCTURE);		
+	}
+	
+	@Test public void testReturnFromFinally() throws Exception {
+		args.add("tests-negative/typechecker/return-from-finally/Test.shadow");
+		enforce(Error.INVALID_STRUCTURE);		
+	}
+	
+	@Test public void testCheckLeavingFinally() throws Exception {
+		args.add("tests-negative/typechecker/check-leaving-finally/Test.shadow");
+		enforce(Error.INVALID_STRUCTURE);		
+	}
 }

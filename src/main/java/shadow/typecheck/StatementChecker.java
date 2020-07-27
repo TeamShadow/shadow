@@ -36,6 +36,7 @@ import shadow.interpreter.ShadowString;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.CatchStatementsContext;
 import shadow.parse.ShadowParser.ConditionalExpressionContext;
 import shadow.parse.ShadowParser.DecoratorExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
@@ -1772,6 +1773,37 @@ public class StatementChecker extends BaseChecker {
 		
 		ctx.setType(type);
 		
+		ParserRuleContext parent = ctx.getParent();
+		boolean foundRecover = false;
+		boolean foundFinally = false;
+		
+		/*
+		catchStatements
+		: tryStatement
+		catchStatement*
+		('recover' block )?
+		;
+		 */
+		
+		while(parent != null && !foundRecover) {
+			// Trying to check out of a finally
+			if(parent instanceof ShadowParser.BlockContext && parent.getParent() instanceof ShadowParser.FinallyStatementContext)
+				foundFinally = true;
+			
+			// Legitimate recover first (we're inside of a try that has a matching recover)
+			if( parent instanceof ShadowParser.TryStatementContext) {
+				ShadowParser.CatchStatementsContext grandparent = (CatchStatementsContext) parent.getParent();
+				if(grandparent.block() != null)
+					foundRecover = true;
+			}
+			else	
+				parent = parent.getParent();
+		}
+				
+		if(foundFinally)
+			addError(ctx, Error.INVALID_STRUCTURE, "check statement cannot branch out of a finally block to a recover");
+		
+		
 		return null;
 	}
 	
@@ -2689,22 +2721,32 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitBreakOrContinueStatement(ShadowParser.BreakOrContinueStatementContext ctx)
 	{ 
-		//no children to visit
+		// No children to visit
 		ParserRuleContext parent = ctx.getParent();
-		boolean found = false;
+		boolean foundLoop = false;
+		boolean foundFinally = false;
+		String name = ctx.getText().substring(0, ctx.getText().length() - 1).trim();
 		
-		while( parent != null && !found ) {
+		while(parent != null && !foundLoop) {
+			// Trying to break or continue out of a finally
+			if(parent instanceof ShadowParser.BlockContext && parent.getParent() instanceof ShadowParser.FinallyStatementContext)
+				foundFinally = true;
+			
+			// Legitimate loop to break out of
 			if( parent instanceof ShadowParser.DoStatementContext || 
 				parent instanceof ShadowParser.ForeachStatementContext ||
 				parent instanceof ShadowParser.ForStatementContext ||
 				parent instanceof ShadowParser.WhileStatementContext )
-				found = true;
-			else
+				foundLoop = true;
+			else	
 				parent = parent.getParent();
 		}
 		
-		if( !found )
-			addError(ctx, Error.INVALID_STRUCTURE, ctx.getText() + " statement cannot occur outside of a loop body");
+		if(!foundLoop)
+			addError(ctx, Error.INVALID_STRUCTURE, name + " statement cannot occur outside of a loop body");
+		
+		if(foundFinally)
+			addError(ctx, Error.INVALID_STRUCTURE, name + " statement cannot exit a finally block");
 		
 		return null;
 	}
@@ -2851,7 +2893,7 @@ public class StatementChecker extends BaseChecker {
 	{ 
 		visitChildren(ctx);
 	
-		if( currentMethod.isEmpty() ) //should never happen			
+		if( currentMethod.isEmpty() ) // Should never happen			
 			addError(ctx, Error.INVALID_STRUCTURE, "Return statement cannot be outside of method body");
 		else {
 			MethodType methodType = (MethodType)(currentMethod.getFirst().getType());
@@ -2908,7 +2950,21 @@ public class StatementChecker extends BaseChecker {
 				
 				for( ModifiedType modifiedType : updatedTypes )
 					if( modifiedType.getModifiers().isTypeName() )
-						addError(ctx, Error.INVALID_RETURNS, "Cannot return type name from a method" );			
+						addError(ctx, Error.INVALID_RETURNS, "Cannot return type name from a method" );
+				
+				ParserRuleContext parent = ctx.getParent();
+				boolean foundFinally = false;
+				
+				while(parent != null && !foundFinally) {
+					// Trying to break or continue out of a finally
+					if(parent instanceof ShadowParser.BlockContext && parent.getParent() instanceof ShadowParser.FinallyStatementContext)
+						foundFinally = true;
+					else	
+						parent = parent.getParent();
+				}
+				
+				if(foundFinally)
+					addError(ctx, Error.INVALID_STRUCTURE, "Cannot return from inside a finally block");
 			}
 		}
 		
