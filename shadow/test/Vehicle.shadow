@@ -1,0 +1,32 @@
+import shadow:io@Console;
+
+abstract class shadow:test@Vehicle
+{
+	get String type; 
+	get set int year; 
+	get set int miles; 
+	get double price; 
+	
+	public create(String t, int y, int m, double p)
+	{
+		type = t; 
+		year = y; 
+		miles = m; 
+		price = p; 
+	}
+	
+	public abstract takeTrip(int mph) => (); 
+	
+	public buy(double offer) => () 
+	{
+		if ( (price - offer) <= 1000 )
+		{
+			Console.printLine("Your offer is accepted! The " # this # " is yours!"); 
+		}
+		else 
+		{
+			Console.printLine("Sorry, your offer is too low"); 
+		}
+		
+	} 
+}

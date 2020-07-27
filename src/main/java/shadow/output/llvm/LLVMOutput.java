@@ -661,8 +661,13 @@ public class LLVMOutput extends AbstractOutput {
 		StringBuilder sb = new StringBuilder();
 		for (MethodSignature method : methods) {			
 			sb.append(", ").append(methodType(method));
-			if (name)
-				sb.append(' ').append(name(method));
+			if (name) {
+				sb.append(' ');
+				if(method.isAbstract())
+					sb.append("null");
+				else
+					sb.append(name(method));
+			}
 		}
 
 		if( sb.length() > 0 )
@@ -747,7 +752,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void startMethod(TACMethod method, TACModule module) throws ShadowException {
 			
 		MethodSignature signature = method.getSignature();
-		if (module.getType() instanceof InterfaceType ) {
+		if (module.getType() instanceof InterfaceType || signature.isAbstract() ) {
 			skipMethod = true;
 		}
 		else if (signature.isImport()) { 
@@ -870,16 +875,14 @@ public class LLVMOutput extends AbstractOutput {
 		}
 	}
 	
-	/*
-	private String funcletData(TACNode node) {
-		TACCleanupPad parentPad = node.getBlock().getCleanupPad();
-		if(parentPad == null)
+	
+	private String funcletData(TACCatchPad catchPad) {
+		if(catchPad == null)
 			return "";
 		
-		return " [ \"funclet\"(token " + symbol(parentPad) + ")]";
+		return " [ \"funclet\"(token " + catchPad.getToken() + ")]";
 	}
-	*/
-
+	
 	@Override
 	public void visit(TACMethodPointer node) throws ShadowException {
 		node.setData(symbol(node.getPointer()));		
@@ -1085,9 +1088,11 @@ public class LLVMOutput extends AbstractOutput {
 		TACOperand methods = node.getMethodTable();	
 
 		//this is pretty ugly, but if we retrieved a generic type parameter's method table, it'll be stored as MethodTable*, not an Object_methods*
-		if( type instanceof TypeParameter )
-			writer.write(nextTemp() + " = bitcast " + type(Type.METHOD_TABLE) + " " +  symbol(methods) +  " to "  + methodTableType(Type.OBJECT));
+		if( type instanceof TypeParameter ) {			
+			TypeParameter parameter = (TypeParameter) type;
+			writer.write(nextTemp() + " = bitcast " + type(Type.METHOD_TABLE) + " " +  symbol(methods) +  " to "  + methodTableType(parameter.getClassBound()));
 		//any other method table will be of the correct type but needs cast to Object_methods* for compatibility with allocate()
+		}
 		else 
 			writer.write(nextTemp() + " = bitcast " + methodTableType(type.getTypeWithoutTypeArguments()) + " " +  symbol(methods) +  " to "  + methodTableType(Type.OBJECT));
 		String back1 = temp(0);		
@@ -1387,12 +1392,12 @@ public class LLVMOutput extends AbstractOutput {
 			//sometimes they are incremented, if a value is later stored into the same parameter name
 			if( node.getValue() instanceof TACParameter ) {
 				TACParameter parameter = (TACParameter) node.getValue();
-				gcObjectStore( name(variable), variable.getType(), node.getValue(), parameter.isIncrement(), false, node );				
+				gcObjectStore( name(variable), variable.getType(), node.getValue(), parameter.isIncrement(), false, node.getCatchPad() );				
 			}	
 			else if( variable.getType() instanceof InterfaceType )				
-				gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node);
+				gcInterfaceStore( name(variable), (InterfaceType)variable.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node.getCatchPad());
 			else 
-				gcObjectStore( name(variable), variable.getType(), node.getValue(), node.isIncrementReference() && node.isGarbageCollected(), node.isDecrementReference() && node.isGarbageCollected(), node );
+				gcObjectStore( name(variable), variable.getType(), node.getValue(), node.isIncrementReference() && node.isGarbageCollected(), node.isDecrementReference() && node.isGarbageCollected(), node.getCatchPad() );
 		}
 		else if(variable.isFinallyVariable() ) // And not garbage collected
 			writer.write("store " + typeSymbol(node.getValue()) + ", " + type(variable) + "* " + name(variable));
@@ -1497,10 +1502,10 @@ public class LLVMOutput extends AbstractOutput {
 			
 			if( node.isGarbageCollected() ) {
 				if( arrayRef.getType() instanceof InterfaceType )					
-					gcInterfaceStore(temp(0), (InterfaceType)arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );
+					gcInterfaceStore(temp(0), (InterfaceType)arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), null );
 				//regular variable
 				else 
-					gcObjectStore(temp(0), arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );				
+					gcObjectStore(temp(0), arrayRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), null );				
 			}
 			else
 				writer.write("store " + typeSymbol(node.getValue()) + ", " + 
@@ -1515,10 +1520,10 @@ public class LLVMOutput extends AbstractOutput {
 			
 			if( node.isGarbageCollected() ) {
 				if( fieldRef.getType() instanceof InterfaceType )					
-					gcInterfaceStore(temp(0), (InterfaceType)fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );
+					gcInterfaceStore(temp(0), (InterfaceType)fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), null );
 				//regular variable
 				else 
-					gcObjectStore(temp(0), fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), node );
+					gcObjectStore(temp(0), fieldRef.getType(), node.getValue(), node.isIncrementReference(), node.isDecrementReference(), null );
 			}
 			else
 				writer.write("store " + typeSymbol(node.getValue()) + ", " + 
@@ -1527,7 +1532,7 @@ public class LLVMOutput extends AbstractOutput {
 	}	
 	
 	
-	private void gcObjectStore(String destination, Type type, TACOperand value, boolean increment, boolean decrement, TACNode node ) throws ShadowException {
+	private void gcObjectStore(String destination, Type type, TACOperand value, boolean increment, boolean decrement, TACCatchPad catchPad ) throws ShadowException {
 		if( increment ) {
 			writer.write(nextTemp() + " = bitcast " + typeSymbol(value) + " to " + type(Type.OBJECT));
 			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
@@ -1538,17 +1543,17 @@ public class LLVMOutput extends AbstractOutput {
 		if( decrement ) {
 			writer.write(nextTemp() + " = load " + type(type, true) + ", " + type(type, true) + "* " + destination);
 			writer.write(nextTemp() + " = bitcast " + type(type, true) + " " + temp(1) + " to " + type(Type.OBJECT));					
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(catchPad));
 		}
 		//then store new value					
 		writer.write("store " + typeSymbol(value) + ", " + type(type, true) + "* " + destination);		
 	}
 	
-	private void gcInterfaceStore(String destination, InterfaceType type, TACOperand value, boolean increment, boolean decrement, TACNode node ) throws ShadowException {
+	private void gcInterfaceStore(String destination, InterfaceType type, TACOperand value, boolean increment, boolean decrement, TACCatchPad catchPad ) throws ShadowException {
 		if( increment ) {
 			//increment the Object* reference
 			writer.write(nextTemp() + " = extractvalue " + typeSymbol(value) + ", 1");
-			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(catchPad));
 		}
 		
 		//decrement the old one	
@@ -1556,7 +1561,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp() + " = getelementptr inbounds " + type(type) + ", " +
 					typeText(type, destination, true) + ", i32 0, i32 1");
 			writer.write(nextTemp() + " = load " + type(Type.OBJECT) + ", " + typeText(Type.OBJECT, temp(1), true));					
-			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
+			writer.write("call void @__decrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind" + funcletData(catchPad));
 		}
 				
 		//store the whole thing after decrement
@@ -1717,7 +1722,6 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
 			TACLabel unwindLabel = node.getBlock().getUnwind();
 
-			//TODO: Should always be invoke because of GC cleanup
 			writer.write((unwindLabel != null ?
 					"invoke" : "call") + " void @__shadow_throw(" +
 					typeSymbol(node.getException()) + ") noreturn");
@@ -1809,7 +1813,8 @@ public class LLVMOutput extends AbstractOutput {
 		exceptions.add(node.getType());
 
 		writer.write(nextTemp() + " = load " + type(Type.EXCEPTION) + ", " + type(Type.EXCEPTION) + "* @__exceptionStorage");
-		writer.write(nextTemp(node) + " = bitcast " + type(Type.EXCEPTION) + " " + temp(1) + " to " + type(node.getType()));
+		int offset = node.hasLocalStore() ? 0 : 1;
+		writer.write(nextTemp(node) + " = bitcast " + type(Type.EXCEPTION) + " " + temp(offset) + " to " + type(node.getType()));
 		//writer.write("store " + type(node.getVariable()) + " " + temp(0) + ", " + type(node.getVariable()) + "* " +  name(node.getVariable()));
 		
 		

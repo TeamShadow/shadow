@@ -288,6 +288,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	}
 
 	@Override public Void visitMethodDeclaration(ShadowParser.MethodDeclarationContext ctx) { 
+		
 		initializeSingletons(ctx.getSignature());		
 		visitChildren(ctx);
 
@@ -2282,15 +2283,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
 		// Handle catches
 		if( ctx.catchStatement().size() > 0 ) {
-			//ignores context for a while, preventing dead code removal errors
-			//they'll be caught inside the catch
-			//catching them here creates misleading error messages
+			// Ignores context for a while, preventing dead code removal errors
+			// They'll be caught inside the catch
+			// Catching them here creates misleading error messages
 			Context context = anchor.getContext();
 			anchor.setContext(null);
 
 
 			if(Configuration.isWindows()) {
-				//TACOperand typeid = new TACSequenceElement(anchor, new TACLocalLoad(anchor, method.getLocal("_exception")), 1 );
 				TACCatchPad previousCatch = null;
 				for( int i = 0; i < ctx.catchStatement().size(); ++i ) {
 					TACLabel label;
@@ -2309,7 +2309,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 					TACLabel catchLabel = new TACLabel(method);
 					TACCatchPad catchPad = new TACCatchPad(anchor, (ExceptionType)parameter.getType(), catchLabel);
 					//TODO: Should this be a no-increment reference?
-					new TACLocalStore(anchor, method.getLocal(parameter.Identifier().getText()), catchPad, false);
+					new TACLocalStore(anchor, method.getLocal(parameter.Identifier().getText()), catchPad, false, catchPad);
 					new TACCatchRet(anchor, catchPad, catchLabel);
 					catchLabel.appendBefore(anchor);					
 					catchStatement.appendBefore(anchor); //append catch i
@@ -3159,7 +3159,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		TACMethod method = this.method = new TACMethod(methodSignature);
 		methodStack.push(method);
 
-		if( moduleStack.peek().isClass() && !methodSignature.isImport() ) {				
+		if( moduleStack.peek().isClass() && !methodSignature.isImport() && !methodSignature.isAbstract() ) {				
 
 			TACLabel startingLabel = setupMethod();
 

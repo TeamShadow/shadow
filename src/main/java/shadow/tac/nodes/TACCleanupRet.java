@@ -40,8 +40,7 @@ public class TACCleanupRet extends TACNode
 	}
 
 	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
+	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
 }

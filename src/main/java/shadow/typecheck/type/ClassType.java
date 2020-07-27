@@ -169,7 +169,7 @@ public class ClassType extends Type {
 				
 		if( !methodName.equals("create")  ) {	
 			//first the parents
-			ClassType parent = extendType;
+			ClassType parent = this;
 			while( parent != null ) {
 				parent.includeMethods(methodName, list);
 				parent = parent.extendType;

@@ -1,0 +1,22 @@
+import shadow:io@Console;
+
+class shadow:test@Motorcycle is Vehicle
+{
+	
+	public create(String t, int y, int m, double p)
+	{
+		super(t, y, m, p);  
+	}
+	
+	public takeTrip(int mph) => ()
+	{
+		Console.printLine("Buckle up!"); 
+		Console.printLine("Your " # this # " is going " # mph # " mph!"); 
+	}
+	
+	public readonly toString() => (String)
+	{
+		return "motorcycle";
+	} 
+
+}

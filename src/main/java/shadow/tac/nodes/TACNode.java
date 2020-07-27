@@ -196,8 +196,10 @@ public abstract class TACNode implements Iterable<TACOperand> {
      * return check(operand, type, false); }
      */
     protected final TACOperand check(TACOperand operand, ModifiedType type) {
-        if (type.getType() instanceof TypeParameter && !(operand.getType() instanceof TypeParameter)  && !operand.getType().equals(Type.NULL))
-            type = new SimpleModifiedType(Type.OBJECT);
+        if (type.getType() instanceof TypeParameter && !(operand.getType() instanceof TypeParameter)  && !operand.getType().equals(Type.NULL)) {
+            TypeParameter parameter = (TypeParameter) type.getType();
+        	type = new SimpleModifiedType(parameter.getClassBound());
+        }
 
         operand = operand.checkVirtual(type, this); // puts in casts where needed
         

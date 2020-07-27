@@ -48,8 +48,8 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		//args.add("-r");
-		//args.add("-f");
+		args.add("-r");
+		args.add("-f");
 	}
 	
 	@AfterEach
@@ -57,7 +57,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			Files.delete(executable);
+			//Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -127,6 +127,16 @@ public class OutputTests {
 	{
 		return String.join("\n", elements) + "\n";
 	}
+	
+	@Test public void testAbstract() throws Exception {
+		args.add("shadow/test/AbstractTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"Your offer is accepted! The motorcycle is yours!\n" + 
+			"Buckle up!\n" + 
+			"Your motorcycle is going 75 mph!\n");
+	}
+	
 	
 	@Test public void testAddressMap() throws Exception {
 		args.add("shadow/test/AddressMapTest.shadow");
@@ -935,6 +945,7 @@ public class OutputTests {
 			"s1 != s3\n");
 	}
 	
+
 	@Test public void testMutableString() throws Exception {
 		args.add("shadow/test/MutableStringTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -1269,6 +1280,15 @@ public class OutputTests {
 				"Method 1\n" + 
 				"Method 2\n");
 	}
+	
+	@Test public void testGenericWithBound() throws Exception {
+		args.add("shadow/test/GenericWithBoundTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"10283.6\n" + 
+				"230953.34\n" + 
+				"Finished!\n");
+	}	
 	
 	@Test public void testGarbageCollectionOutput() throws Exception {
 		args.add("shadow/test/GarbageCollectionOutputTest.shadow");

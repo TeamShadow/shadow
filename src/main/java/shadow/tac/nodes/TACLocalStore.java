@@ -11,25 +11,34 @@ public class TACLocalStore extends TACLocalStorage {
 	private boolean incrementReference;
 	private boolean decrementReference = true;
 	private boolean previousStore;
+	private TACCatchPad catchPad;
 
 	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op) {
 		this(node, variable, op, true);		
 	}
 	
 	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op, boolean incrementReference) {
+		this(node, variable, op, incrementReference, null);		
+	}
+	
+	public TACLocalStore(TACNode node, TACVariable variable, TACOperand op, boolean incrementReference, TACCatchPad catchPad) {
 		super(node, variable);		
 		value = check(op, variable);
 		value.setLocalStore(this);
-		this.incrementReference = incrementReference;		
+		this.incrementReference = incrementReference;
+		this.catchPad = catchPad;
 	}
 	
+	public TACCatchPad getCatchPad() {
+		return catchPad;
+	}
+
 	public boolean isIncrementReference() {
 		return incrementReference;		
 	}
 	
 
-	public void setIncrementReference(boolean value)
-	{
+	public void setIncrementReference(boolean value) {
 		incrementReference = value;		
 	}
 	
@@ -101,8 +110,7 @@ public class TACLocalStore extends TACLocalStorage {
 	}	
 		
 	@Override
-	public boolean equals(Object other)
-	{
+	public boolean equals(Object other) {
 		if( other == null || !(other instanceof TACLocalStore)  )
 			return false;
 		
@@ -114,13 +122,11 @@ public class TACLocalStore extends TACLocalStorage {
 		return getNumber() == store.getNumber() && getVariable().equals(store.getVariable());
 	}
 	
-	public void setPreviousStore(boolean value)
-	{	
+	public void setPreviousStore(boolean value) {	
 		previousStore = value;
 	}
 	
-	public boolean hasPreviousStore()
-	{
+	public boolean hasPreviousStore() {
 		return previousStore;		
 	}
 }

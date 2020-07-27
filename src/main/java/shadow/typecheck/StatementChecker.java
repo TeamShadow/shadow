@@ -544,7 +544,7 @@ public class StatementChecker extends BaseChecker {
 				if( setTypeFromContext( node, name, type ) )
 					return true;
 			
-			return setTypeFromContext( node, name, Type.OBJECT );			
+			return setTypeFromContext( node, name, typeParameter.getClassBound());			
 		}		
 		else if( context instanceof InterfaceType ) {			
 			InterfaceType interfaceType = (InterfaceType)context;			

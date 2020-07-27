@@ -24,20 +24,17 @@ public class TACCatchRet extends TACNode {
 
 	@Override
 	public int getNumOperands() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public TACOperand getOperand(int num) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override
 	public void accept(TACVisitor visitor) throws ShadowException {
-		// TODO Auto-generated method stub
-
+		visitor.visit(this);
 	}
 
 }

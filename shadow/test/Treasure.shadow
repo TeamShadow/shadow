@@ -1,0 +1,10 @@
+class shadow:test@Treasure
+{
+	get double value; 
+	
+	public create(double v)
+	{
+		value = v; 
+	}
+
+}

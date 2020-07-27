@@ -1259,6 +1259,10 @@ public abstract class Type implements Comparable<Type> {
 					ClassType classType = (ClassType) type;
 					for( ClassType inner : classType.getInnerClasses().values() )
 						addUsedType(inner);
+
+					//add parent types
+					if(classType.getExtendType() != null)
+						addUsedType(classType.getExtendType());
 				}					
 				
 				//add reference to outer types
@@ -1266,7 +1270,8 @@ public abstract class Type implements Comparable<Type> {
 				while( outer != null ) {
 					outer.addUsedType(type);
 					outer = outer.getOuter();
-				}				
+				}
+				
 				
 				//add interfaces
 				ArrayList<InterfaceType> interfaces = type.getInterfaces();			
