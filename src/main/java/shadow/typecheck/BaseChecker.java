@@ -390,7 +390,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 					return current;
 
 				current = current.getOuter();					
-			}	
+			}
 
 			// If still not found, the outermost type has imports.
 			while(outer.getOuter() != null)
@@ -535,7 +535,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 		// So are direct inner classes.
 		if( !type.hasOuter() || type.getOuter().equals( currentType ) || type instanceof TypeParameter )
 			return true;
-		
+
 		// If it's public all the way up, it's accessible
 		Type current = type;
 		while(current.hasOuter() && current.getModifiers().isPublic())
@@ -561,9 +561,9 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 						if(test.getModifiers().isPrivate())
 							return false;
 					}
-					
+
 					return true;
-				}				
+				}
 				
 				outer = parent.getOuter();				
 				while( outer != null ) {
@@ -575,7 +575,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 				parent = parent.getExtendType();
 			}
 		}		
-		
+
 		return false;
 	}
 
@@ -623,7 +623,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 
 	@Override
 	public Void visitClassOrInterfaceBody( ShadowParser.ClassOrInterfaceBodyContext ctx )
-	{		
+	{
 		// Entering a type							
 		currentType = declarationType;
 		currentPackage = currentType.getPackage();
@@ -648,8 +648,35 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 		declarationType = declarationType.getOuter();
 
 		return null;
-	}	
+	}
 
+	@Override
+	public Void visitAttributeBody(ShadowParser.AttributeBodyContext ctx) {
+		// Entering a type
+		currentType = declarationType;
+		currentPackage = currentType.getPackage();
+
+		visitChildren(ctx);
+
+		// Leaving a type
+		currentType = currentType.getOuter();
+
+		return null;
+	}
+
+	@Override
+	public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
+		// Entering declaration, but type has not yet been entered.
+		declarationType = ctx.getType();
+		currentPackage = declarationType.getPackage();
+
+		visitChildren(ctx);
+
+		declarationType = declarationType.getOuter();
+
+		return null;
+	}
+	
 	/*
 	 * TypeCollector overrides this method, because it does something different.
 	 * All other checkers use this method.

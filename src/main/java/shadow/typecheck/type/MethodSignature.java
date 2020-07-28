@@ -1,14 +1,12 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowVisitorErrorReporter;
+import shadow.typecheck.TypeCheckException;
 
 public class MethodSignature implements Comparable<MethodSignature> {
 	public static final int IMPORT_NATIVE = 0;
@@ -29,8 +27,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private int importType = -1;
 	private int exportType = -1;
 	private List<Type> allowedExports;
-	
-	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
+	private final Map<AttributeType, AttributeInvocation> attributes = new HashMap<>();
+
+	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped)
 	{
 		this.type = type;
 		this.symbol = symbol;
@@ -436,5 +435,55 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	// TODO: Find a better name for this
 	public List<Type> getExportTypes() {
 		return allowedExports;
+	}
+
+	/**
+	 * Associates any attribute invocations and their fields with this method signature. Triggers
+	 * "early" attribute processing logic (i.e. prior to fields being evaluated).
+	 */
+	public void attachAndProcessAttributes(
+			ShadowParser.AttributeInvocationsContext ctx, ShadowVisitorErrorReporter errorReporter) {
+		if (ctx == null) {
+			return;
+		}
+
+		for (ShadowParser.AttributeInvocationContext attributeCtx : ctx.attributeInvocation()) {
+			attachAttribute(attributeCtx, errorReporter);
+		}
+
+		processAttributeTypes();
+	}
+
+
+    private void attachAttribute(
+    		ShadowParser.AttributeInvocationContext ctx, ShadowVisitorErrorReporter errorReporter) {
+		AttributeInvocation attribute = new AttributeInvocation(ctx, errorReporter);
+		AttributeType type = attribute.getType();
+
+    	if (attributes.containsKey(type)) {
+			errorReporter.addError(
+				ctx,
+				TypeCheckException.Error.REPEATED_ATTRIBUTE,
+				type.getTypeName() + " appears more than once on the same method",
+				type);
+		} else {
+			attributes.put(type, attribute);
+		}
+    }
+
+    public Collection<AttributeInvocation> getAttributes() {
+		return Collections.unmodifiableCollection(attributes.values());
+	}
+
+	// Performs any required operations based on the attached attribute types, prior to those
+	// attributes having their fields evaluated
+	private void processAttributeTypes() {
+
+	}
+
+	// Performs any required operations based on the attached attribute types AND the values of
+	// their fields. Runs relatively late, after compile-time constants can be evaluated.
+	private void processAttributeValues() {
+
 	}
 }

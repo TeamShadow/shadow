@@ -51,7 +51,7 @@ public abstract class Type implements Comparable<Type> {
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> usedTypes = new HashSet<Type>();
 	private Set<Type> mentionedTypes = new HashSet<Type>();
-	private Set<Type> partiallyInstantiatedClasses = new TreeSet<>();	
+	private Set<Type> partiallyInstantiatedClasses = new TreeSet<>();
 	private List<Type> typeParameterDependencies = new ArrayList<>();
 
 
@@ -109,7 +109,7 @@ public abstract class Type implements Comparable<Type> {
 
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); // UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
-	public static final VarType VAR = new VarType(); // VAR type used for placeholder for variables declared with var, until type is known	
+	public static final VarType VAR = new VarType(); // VAR type used for placeholder for variables declared with var, until type is known
 
 	/*
 	 * Predefined interfaces needed for Shadow
@@ -161,7 +161,7 @@ public abstract class Type implements Comparable<Type> {
 				if( children != null ) {
 					result += " children: ";
 					for( TypeArgumentCache cache : children)
-						result += cache.argument.getType().toString() + " ";					 
+						result += cache.argument.getType().toString() + " ";
 				}				
 
 				return result;
@@ -237,7 +237,7 @@ public abstract class Type implements Comparable<Type> {
 
 				boolean found = false;
 				for( int i = 0; !found && i < types.children.size(); ++i ) {
-					TypeArgumentCache child = types.children.get(i); 	
+					TypeArgumentCache child = types.children.get(i);
 
 					if( child.argument != null  && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers())) {
 						types = child;
@@ -265,7 +265,7 @@ public abstract class Type implements Comparable<Type> {
 
 			boolean found = false;
 			for( int i = 0; !found && i < types.children.size(); ++i ) {
-				TypeArgumentCache child = types.children.get(i); 	
+				TypeArgumentCache child = types.children.get(i);
 
 				if( child.argument != null  && child.argument.getType().equals(argument.getType()) && child.argument.getModifiers().equals(argument.getModifiers())) {
 					types = child;
@@ -351,6 +351,8 @@ public abstract class Type implements Comparable<Type> {
 		EXPORT_METHOD = null;
 
 		exceptionType = null;
+
+		AttributeType.clearTypes();
 	}
 
 	/*
@@ -603,7 +605,7 @@ public abstract class Type implements Comparable<Type> {
 	public boolean containsInnerType(String className) {
 		return innerTypes.containsKey(className);
 	}
-	
+
 	public boolean recursivelyContainsInnerType(Type type) {
 		if( innerTypes.containsValue(type) )
 			return true;
@@ -636,7 +638,7 @@ public abstract class Type implements Comparable<Type> {
 				return inner.getInnerType(className.substring(colon + 1));
 			else
 				return null;
-		}			
+		}
 
 		return innerTypes.get(className);
 	}
@@ -691,10 +693,10 @@ public abstract class Type implements Comparable<Type> {
 	{
 		return
 				this.equals(BYTE) ||
-				this.equals(CODE) ||	
+				this.equals(CODE) ||
 				this.equals(SHORT) ||
 				this.equals(INT) ||
-				this.equals(LONG) ||	  
+				this.equals(LONG) ||
 				this.equals(UBYTE) ||
 				this.equals(UINT) ||
 				this.equals(ULONG) ||
@@ -1011,12 +1013,6 @@ public abstract class Type implements Comparable<Type> {
 		return isSubtype(other);
 	}
 
-	/**
-	 * @param other another type
-	 * @return {@literal true} if {@code this} can be cast to {@code other}
-	 */
-
-
 	public void addTypeParameterDependency( Type type )
 	{
 		typeParameterDependencies.add(type);	
@@ -1208,7 +1204,7 @@ public abstract class Type implements Comparable<Type> {
 					for ( int i = 0; i < parentSize; i++ )
 					{
 						MethodSignature originalMethod = original.get(i);
-						SequenceType originalParameters = originalMethod.getParameterTypes(), 
+						SequenceType originalParameters = originalMethod.getParameterTypes(),
 								rawParameters = originalMethod.getSignatureWithoutTypeArguments().getMethodType().getParameterTypes();
 
 						if ( (!method.isCreate() || originalMethod.getOuter() instanceof InterfaceType) &&
@@ -1220,11 +1216,11 @@ public abstract class Type implements Comparable<Type> {
 								wrapped = true;
 							for ( int j = 0; replace && j < parameters.size(); j++ )
 							{
-								ModifiedType parameter = parameters.get(j),								
+								ModifiedType parameter = parameters.get(j),
 										originalParameter = originalParameters.get(j),
 										rawParameter = rawParameters.get(j);
 
-								//can be broader than original types						
+								//can be broader than original types
 								if ( !originalParameter.getType().isSubtype(parameter.getType()) )
 									replace = false;
 								else if ( getWidth(parameter) != getWidth(rawParameter) )
@@ -1253,7 +1249,7 @@ public abstract class Type implements Comparable<Type> {
 								//we've found a replacement method, but it has to be the tightest replacement possible
 								MethodSignature currentMethod = methodList.get(i);
 								if( currentMethod == originalMethod || currentMethod.getMethodType().isSubtype(method.getMethodType()) )
-								{						
+								{
 									replaced = true;
 									if ( wrapped && wrapper == method )
 										wrapper = originalMethod.wrap(method);
@@ -1395,7 +1391,7 @@ public abstract class Type implements Comparable<Type> {
 				// Covers Type.ARRAY and all recursive base types
 				// automatically does the right thing for NullableArray
 				// must do before adding to usedTypes
-				addUsedType(arrayType.convertToGeneric());	
+				addUsedType(arrayType.convertToGeneric());
 
 				addUsedType(baseType);
 			}
@@ -1424,7 +1420,7 @@ public abstract class Type implements Comparable<Type> {
 				}
 
 				// Interface classes are often needed "invisibly" in order to perform casts
-				if( type instanceof InterfaceType )				
+				if( type instanceof InterfaceType )
 					addPartiallyInstantiatedClass(type);
 				else {
 					// Add parent types
@@ -1437,7 +1433,7 @@ public abstract class Type implements Comparable<Type> {
 			// References to inner types
 			for(Type inner : type.getInnerTypes().values())
 				addUsedType(inner);
-		
+
 			// Add reference to outer types
 			Type outer = getOuter();
 			while( outer != null ) {
@@ -1446,12 +1442,12 @@ public abstract class Type implements Comparable<Type> {
 			}
 
 			// Add interfaces
-			ArrayList<InterfaceType> interfaces = type.getInterfaces();			
+			ArrayList<InterfaceType> interfaces = type.getInterfaces();
 			for( InterfaceType interfaceType : interfaces )
 				addUsedType(interfaceType);
 
 			/* Add methods and fields to mentioned types
-			 * These do not need to be filled out later unless they are also used types. 
+			 * These do not need to be filled out later unless they are also used types.
 			 */
 			for( List<MethodSignature> methodList :  type.getMethodMap().values() )
 				for( MethodSignature signature : methodList ) {
@@ -1590,7 +1586,7 @@ public abstract class Type implements Comparable<Type> {
 			}
 			 */
 
-			out.println(); 
+			out.println();
 		}
 	}	
 

@@ -44,26 +44,8 @@ import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.typecheck.TypeCheckException.Error;
-import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.EnumType;
-import shadow.typecheck.type.ExceptionType;
+import shadow.typecheck.type.*;
 import shadow.typecheck.type.InstantiationException;
-import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodReferenceType;
-import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.PropertyType;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
-import shadow.typecheck.type.SingletonType;
-import shadow.typecheck.type.SubscriptType;
-import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
-import shadow.typecheck.type.UnboundMethodType;
-import shadow.typecheck.type.UninstantiatedType;
 
 public class StatementChecker extends ScopedChecker {
 	/* Stack for current prefix (needed for arbitrarily long chains of expressions). */
@@ -145,6 +127,11 @@ public class StatementChecker extends ScopedChecker {
 		
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
 			currentType.addUsedType(modifiedType.getType());
+
+		// Done here because AttributeInvocationContext doesn't have references to these AttributeInvocation objects
+		for (AttributeInvocation attribute : signature.getAttributes()) {
+			attribute.checkForMissingFields(/* errorReporter= */ this);
+		}
 
 		if(signature.isImportMethod()) {
 			if(signature.getModifiers().isPublic()) {
@@ -3120,4 +3107,26 @@ public class StatementChecker extends ScopedChecker {
 		
 		return null;
 	}*/
+
+	@Override
+	public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx) {
+		// Must happen first to determine the types of conditional expressions
+		visitChildren(ctx);
+
+		if (ctx.getParent() instanceof ShadowParser.AttributeInvocationContext) {
+			Type attributeType = ((ShadowParser.AttributeInvocationContext) ctx.getParent()).getType();
+			String fieldName = ctx.generalIdentifier().getText();
+			if (!attributeType.getFields().containsKey(fieldName)) {
+				addError(
+						ctx,
+						Error.UNDEFINED_SYMBOL,
+						"Field \"" + fieldName + "\" is not declared in " + attributeType.getTypeName(),
+						attributeType);
+			} else {
+				addErrors(ctx, isValidInitialization(attributeType.getField(fieldName), ctx.conditionalExpression()));
+			}
+		}
+
+		return null;
+	}
 }

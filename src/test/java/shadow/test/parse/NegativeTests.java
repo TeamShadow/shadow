@@ -102,4 +102,10 @@ public class NegativeTests {
 		args.add("tests-negative/parser/unterminated-string/Test.shadow");
 		enforce(Error.SYNTAX_ERROR);
 	}
+
+	@Test public void testAttributeInvocationFieldWithoutAssignment() throws Exception
+	{
+		args.add("tests-negative/parser/attribute-invocation-field-without-assignment/Test.shadow");
+		enforce(Error.MISSING_ASSIGNMENT);
+	}
 }

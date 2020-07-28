@@ -35,7 +35,7 @@ import shadow.typecheck.type.Type;
 options {contextSuperClass=shadow.parse.Context;}
 
 compilationUnit	
-    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration) EOF
+    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration | attributeDeclaration) EOF
     ;
     
 importDeclaration
@@ -92,6 +92,25 @@ enumBody
 enumConstant
 	: Identifier arguments? classOrInterfaceBody?
 	;
+
+attributeDeclaration
+    :
+    'attribute' ( unqualifiedName '@' )? Identifier
+    attributeBody
+    ;
+
+attributeBody
+    :
+    '{'
+        attributeBodyDeclaration*
+    '}'
+    ;
+
+// Note that attribute fields should not have modifiers. We allow them here
+// but enforce their absence in the typechecker to provide clearer errors
+attributeBodyDeclaration
+    : modifiers fieldDeclaration
+    ;
 	
 dependencyList
 	: ':' '<' type( ',' type )* '>'
@@ -122,7 +141,7 @@ classOrInterfaceBodyDeclaration
 	  	( classOrInterfaceDeclaration /*{$ctx.classOrInterfaceDeclaration().setDocumentation($documentation);}*/
 	    | enumDeclaration 
 	    | fieldDeclaration) 
-	  	| (decorator? modifiers (methodDeclaration | createDeclaration | destroyDeclaration))
+	  	| (attributeInvocations? decorator? modifiers (methodDeclaration | createDeclaration | destroyDeclaration))
 	  )
 	;
 	
@@ -188,6 +207,18 @@ explicitCreateInvocation
 	'(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ';'
 	;
 
+// TODO(Brinsky): Switch to square braces after decorates are removed
+attributeInvocations
+    : '<' attributeInvocation ( ',' attributeInvocation )* '>'
+    ;
+
+// Parentheses are disallowed unless at least one field is being initialized. Each
+// variableDeclarator in an attribute invocation must include an assignment (enforced
+// at parse-checking time).
+attributeInvocation
+    : classOrInterfaceType ( '(' variableDeclarator ( ',' variableDeclarator )* ')' )?
+    ;
+
 decorator
 	: '[' decoratorExpression (',' decoratorExpression)? ']'
 	;
@@ -243,7 +274,7 @@ resultType
 resultTypes
 	: '(' ( resultType ( ',' resultType )* )? ')'
 	;
-	
+
 name
 	: (unqualifiedName '@')? Identifier ( ':' Identifier )*
 	;

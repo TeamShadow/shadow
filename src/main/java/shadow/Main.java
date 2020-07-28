@@ -448,9 +448,9 @@ public class Main {
 				if (currentJob.isCheckOnly()) {
 					// performs checks to make sure all paths return, there is
 					// no dead code, etc.
-					// no need to check interfaces or .meta files (no code in
-					// either case)
-					if (!node.isFromMetaFile())
+					// no need to check interfaces, attributes, or .meta files (no code in
+					// those cases)
+					if (!node.isFromMetaFile() && !(node.getType() instanceof AttributeType))
 						optimizeTAC(new TACBuilder().build(node), reporter, true);
 				} else {
 					String name = BaseChecker.stripExtension(file.getFileName().toString());
@@ -469,6 +469,12 @@ public class Main {
 						else
 							throw new CompileException(
 									"File " + file + " does not contain an appropriate main() method");
+					}
+
+					// For now, we don't generate modules for attributes - they exist only during typechecking.
+					// This will change at some point to allow inspecting attributes at runtime.
+					if (type instanceof AttributeType) {
+						continue;
 					}
 
 					String className = typeToFileName(type);

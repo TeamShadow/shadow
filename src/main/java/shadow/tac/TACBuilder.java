@@ -198,8 +198,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}		
 
 		return null; //no children
-	}	
-
+	}
 
 	@Override public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx)
 	{ 
