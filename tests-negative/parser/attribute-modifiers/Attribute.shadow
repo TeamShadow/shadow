@@ -1,0 +1,3 @@
+// Modifiers shouldn't be allowed
+immutable attribute Attribute {
+}

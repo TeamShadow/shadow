@@ -1,0 +1,6 @@
+class Test {
+
+    <Attribute(test = 10, test = 11)>
+    public main() => () {
+    }
+}

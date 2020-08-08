@@ -1,0 +1,4 @@
+attribute Attribute {
+    // Fields within attributes shouldn't have modifiers
+    public int test;
+}

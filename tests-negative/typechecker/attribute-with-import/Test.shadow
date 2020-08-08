@@ -1,0 +1,7 @@
+class Test {
+
+    // 'test' is of type int
+    <Attribute(test = 3.5)>
+    public main() => () {
+    }
+}

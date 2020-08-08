@@ -1,0 +1,7 @@
+class Test {
+
+    // Field 'test' should be initialized
+    <Attribute>
+    public main() => () {
+    }
+}
