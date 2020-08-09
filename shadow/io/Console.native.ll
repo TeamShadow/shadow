@@ -87,19 +87,19 @@ define void  @shadow.io..Console_MsetDebug_boolean(%shadow.io..Console* %console
 ; Shadow Method Definitions
 ;---------------------------
 ; readByte() => (byte value, boolean eof);
-%ReadByteReturn = type { %byte, %boolean }
-define %ReadByteReturn @shadow.io..Console_MreadByte(%shadow.io..Console*) {
-entry:
-	%ret.addr = alloca %ReadByteReturn
-	
-	; get address pointers
-	%value.addr = getelementptr %ReadByteReturn, %ReadByteReturn* %ret.addr, i32 0, i32 0
-	%eof.addr = getelementptr %ReadByteReturn, %ReadByteReturn* %ret.addr, i32 0, i32 1
-	
-	; call the native method
-	call void @__ShadowConsole_ReadByte(%byte* %value.addr, %boolean* %eof.addr)
-	
-	; return the actual values
-	%ret = load %ReadByteReturn, %ReadByteReturn* %ret.addr
-	ret %ReadByteReturn %ret
-}
+;%ReadByteReturn = type { %byte, %boolean }
+;define %ReadByteReturn @shadow.io..Console_MreadByte(%shadow.io..Console*) {
+;entry:
+;	%ret.addr = alloca %ReadByteReturn
+;	
+;	; get address pointers
+;	%value.addr = getelementptr %ReadByteReturn, %ReadByteReturn* %ret.addr, i32 0, i32 0
+;	%eof.addr = getelementptr %ReadByteReturn, %ReadByteReturn* %ret.addr, i32 0, i32 1
+;	
+;	; call the native method
+;	call void @__ShadowConsole_ReadByte(%byte* %value.addr, %boolean* %eof.addr)
+;	
+;	; return the actual values
+;	%ret = load %ReadByteReturn, %ReadByteReturn* %ret.addr
+;	ret %ReadByteReturn %ret
+;}

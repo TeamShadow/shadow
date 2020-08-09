@@ -1,11 +1,10 @@
 package shadow.test.output;
 
-import org.junit.jupiter.api.*;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,13 +14,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Job;
 import shadow.Main;
-import shadow.typecheck.type.Type;
 
 public class OutputTests {
 	// To simplify removal, every unit test executable will have the same name
@@ -48,8 +48,8 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		args.add("-r");
-		args.add("-f");
+		//args.add("-r");
+		//args.add("-f");
 	}
 	
 	@AfterEach
@@ -67,10 +67,10 @@ public class OutputTests {
 	}
 	
 	private void run(String[] programArgs, String expectedOutput, String expectedError) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
-		run( programArgs, expectedOutput, expectedError, 0 ); 			
+		run( programArgs, expectedOutput, expectedError, null, 0 ); 			
 	}
 	
-	private void run(String[] programArgs, String expectedOutput, String expectedError, int expectedReturn ) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
+	private void run(String[] programArgs, String expectedOutput, String expectedError, String input, int expectedReturn ) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
 		
 		// Should be initialized at this point by call to Main.run()
 		Configuration config = Configuration.getConfiguration();
@@ -86,25 +86,33 @@ public class OutputTests {
 		//set working directory as parent of executable, in case executable makes any files
 		Process program = new ProcessBuilder(programCommand).directory(fullExecutable.getParent().toFile()).start();
 		
-		//regular output
+		// Send input
+		if(input != null && !input.isBlank()) {
+			PrintWriter writer = new PrintWriter(program.getOutputStream());
+			writer.print(input);
+			writer.close();
+		}	
+		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));
 		BufferedReader errorReader = new BufferedReader(new InputStreamReader(program.getErrorStream()));
+
+		// Regular output
 		StringBuilder builder = new StringBuilder();
 		String line;
 		do {
 			line = reader.readLine();
 			if (line != null)
-				builder.append(line).append('\n');
+				builder.append(line).append("\n");
 		} while (line != null);		
 		String output = builder.toString();
 		Assertions.assertEquals(expectedOutput, output);
 		
-		//error output		
+		// Error output	
 		builder = new StringBuilder();
 		do {
 			line = errorReader.readLine();
 			if (line != null)
-				builder.append(line).append('\n');
+				builder.append(line).append("\n");
 		} while (line != null);
 		
 		String error = builder.toString();	
@@ -602,6 +610,18 @@ public class OutputTests {
 				"8\n");
 	}
 	
+	@Test public void testCommandLine() throws Exception {
+		args.add("shadow/test/CommandLine.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[] {"this", "is", "the", "bleh", "situation"},
+				"Yes!\n" + 
+				"situation doesn't match!\n" +
+				"bleh matches!\n" +
+				"the doesn't match!\n" +
+				"is doesn't match!\n" +
+				"this doesn't match!\n");
+	}
+	
 	@Test public void testComplex() throws Exception {
 		args.add("shadow/test/ComplexTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -646,6 +666,31 @@ public class OutputTests {
 				"Chunks\n" +
 				"Monks\n" +
 				"Punks\n");
+	}
+	
+	@Test public void testConsole() throws Exception {
+		args.add("shadow/test/ConsoleTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0],
+				"12345\n" + 
+				"Hello World!\n" +
+				"Test String\n" +
+				"\n" +
+				"Enter your name: Your name is Alan Turing!\n" +
+				"Enter your age: Your age is 45\n" +
+				"Enter your weight: Your weight is 132.5\n" +
+				"a\n" + 
+				"b\n" + 
+				"c\n" +
+				"d\n" +
+				"e\n" +
+				"f\n",
+				"",
+				"Alan Turing" + System.lineSeparator() + 
+				"45" + System.lineSeparator() +
+				"132.5" + System.lineSeparator() +
+				"abcdef",
+				0);
 	}
 	
 	@Test public void testCopy() throws Exception {
@@ -694,6 +739,7 @@ public class OutputTests {
 				"finally\n" +
 				"test2 caught ExceptionB\n", 
 				"shadow:standard@Exception\n",
+				null,
 				1);
 	}
 	
@@ -839,6 +885,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 	"", 			
 				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n",
+				null,
 				1);
 	}
 		
@@ -999,6 +1046,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "",
 				"shadow:standard@UnexpectedNullException\n",
+				null,
 				1);
 	}
 	
@@ -1251,6 +1299,12 @@ public class OutputTests {
 		args.add("shadow/test/ReadOnlyListTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], formatOutputString("5", "7"));
+	}
+	
+	@Test public void testRecursion() throws Exception {
+		args.add("shadow/test/Recursion.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Fibonacci of 10: 55\n");
 	}
 	
 	@Test public void testEqualityComparer() throws Exception {

@@ -26,7 +26,18 @@ void __ShadowConsole_PrintErrorLine(void);
 		SetConsoleCP(65001);
 		SetConsoleOutputCP(65001);
 	}
+	
+	int __ShadowConsole_ReadBuffer(shadow_Array_t* array)
+	{
+		ArrayData buffer;
+		shadowArray_GetData(array, &buffer);
+		DWORD bytesRead = 0;
+		ReadFile(GetStdHandle(STD_INPUT_HANDLE), buffer.data, buffer.size, &bytesRead, NULL);
+		
+		return bytesRead;		
+	}
 
+	/*
 	void __ShadowConsole_ReadByte(shadow_byte_t* value, shadow_boolean_t* eof)
 	{
 		DWORD bytesRead = 0;
@@ -39,6 +50,7 @@ void __ShadowConsole_PrintErrorLine(void);
 			*eof = 0;	
 		}
 	}
+	*/
 
 	static void printString(int handleId, shadow_String_t* stringRef)
 	{
@@ -80,7 +92,17 @@ void __ShadowConsole_PrintErrorLine(void);
 	static char newLine[1] = { '\n' };
 
 	void __ShadowConsole_Initialize(void) { }
+	
+	int __ShadowConsole_ReadBuffer(shadow_Array_t* array)
+	{
+		ArrayData buffer;
+		shadowArray_GetData(array, &buffer);
+		ssize_t bytesRead = read(0, buffer.data, buffer.size);
+		
+		return bytesRead;		
+	}
 
+	/*
 	void __ShadowConsole_ReadByte(shadow_byte_t* value, shadow_boolean_t* eof)
 	{
 		ssize_t bytesRead = read(0, value, 1);
@@ -92,6 +114,7 @@ void __ShadowConsole_PrintErrorLine(void);
 			*eof = 0;
 		}
 	}
+	*/
 
 	static void printString(int fd, shadow_String_t* stringRef)
 	{

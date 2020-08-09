@@ -56,18 +56,6 @@ public class TACTests {
 		// can't test output because of timing dependence		
 	}
 	
-	@Test public void testCommandLine() throws Exception {
-		args.add("shadow/test/CommandLine.shadow");
-		Main.run(args.toArray(new String[] { }));
-		// can't test because I/O is needed
-	}
-	
-	@Test public void testConsole() throws Exception {
-		args.add("shadow/test/ConsoleTest.shadow");
-		Main.run(args.toArray(new String[] { }));	
-		// can't test because I/O is needed
-	}
-	
 	@Test public void testFile() throws Exception {
 		args.add("shadow/test/FileTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -78,12 +66,6 @@ public class TACTests {
 		args.add("shadow/test/SortMain.shadow");
 		Main.run(args.toArray(new String[] { }));
 		// can't test because output is connected to timing
-	}
-	
-	@Test public void testEcho() throws Exception {
-		args.add("shadow/test/Echo.shadow");
-		Main.run(args.toArray(new String[] { }));
-		// can't test because I/O is needed
 	}	
 	
 	@Test public void testDouble() throws Exception {
@@ -102,7 +84,6 @@ public class TACTests {
 		args.add("shadow/test/GarbageCollectionTest.shadow");
 		Main.run(args.toArray(new String[] { }));		
 	}
-	
 	
 	
 	@Test public void testMath() throws Exception {
