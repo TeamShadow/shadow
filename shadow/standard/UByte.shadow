@@ -1253,6 +1253,12 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
+	private shadowUByteArray_GetClass() => (Class)
+	{
+		return ubyte[]:class;
+	}
+	
+	[ExportAssembly]
 	private shadowUByte_GetClass() => (Class)
 	{
 		return ubyte:class;

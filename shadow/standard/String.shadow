@@ -11,10 +11,10 @@ locked immutable class shadow:standard@
 	String
 is	CanCompare<String>
 and	CanIterate<code>
-and	CanIndex<int,byte>
+and	CanIndex<int,ubyte>
 and	CanHash	
 {
-	byte[] data;
+	ubyte[] data;
 	boolean ascii;
 	
 	/**
@@ -22,7 +22,7 @@ and	CanHash
 	 */
 	public create()
 	{
-		this:data = freeze(byte:create[0]);
+		this:data = freeze(ubyte:create[0]);
 		this:ascii = true;
 	}
 	
@@ -33,11 +33,11 @@ and	CanHash
 	 * @throws IllegalArgumentException if the {@code byte} values do not
 	 * specify legal UTF-8 code points 
 	 */
-	public create( byte[] data )
+	public create( ubyte[] data )
 	{	
 		byte ascii = 0y;
 		for ( int i = 0; i < data->size and ascii >= 0y; i += 1 )		
-			ascii |= data[i];		
+			ascii |= cast<byte>(data[i]);		
 		this:ascii = ascii >= 0y; //will be negative if the MSB is set
 
 		this:data = freeze(data);		
@@ -66,53 +66,53 @@ and	CanHash
 					size += 1;
 			}
 		}
-		byte[] temp = byte:create[size];
+		ubyte[] temp = ubyte:create[size];
 		for ( int i = 0, j = 0; i < data->size; i += 1 )
 		{
 			int codePoint = cast<int>(data[i]);
 			if ( codePoint < 1 << 7 )
 			{
-				temp[j + 0] = cast<byte>(codePoint);
+				temp[j + 0] = cast<ubyte>(codePoint);
 				j += 1;
 			}
 			else if ( codePoint < 1 << 11 )
 			{
-				temp[j + 0] = cast<byte>(codePoint >>  6 & 0b00011111 | 0b11000000);
-				temp[j + 1] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<ubyte>(codePoint >>  6 & 0b00011111 | 0b11000000);
+				temp[j + 1] = cast<ubyte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 2;
 			}
 			else if ( codePoint < 1 << 16 )
 			{
-				temp[j + 0] = cast<byte>(codePoint >> 12 & 0b00001111 | 0b11100000);
-				temp[j + 1] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				temp[j + 2] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<ubyte>(codePoint >> 12 & 0b00001111 | 0b11100000);
+				temp[j + 1] = cast<ubyte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<ubyte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 3;
 			}
 			else if ( codePoint < 1 << 21 )
 			{
-				temp[j + 0] = cast<byte>(codePoint >> 18 & 0b00000111 | 0b11110000);
-				temp[j + 1] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
-				temp[j + 2] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				temp[j + 3] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<ubyte>(codePoint >> 18 & 0b00000111 | 0b11110000);
+				temp[j + 1] = cast<ubyte>(codePoint >> 12 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<ubyte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 3] = cast<ubyte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 4;
 			}
 			else if ( codePoint < 1 << 26 )
 			{
-				temp[j + 0] = cast<byte>(codePoint >> 24 & 0b00000011 | 0b11111000);
-				temp[j + 1] = cast<byte>(codePoint >> 18 & 0b00111111 | 0b10000000);
-				temp[j + 2] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
-				temp[j + 3] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				temp[j + 4] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<ubyte>(codePoint >> 24 & 0b00000011 | 0b11111000);
+				temp[j + 1] = cast<ubyte>(codePoint >> 18 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<ubyte>(codePoint >> 12 & 0b00111111 | 0b10000000);
+				temp[j + 3] = cast<ubyte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 4] = cast<ubyte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 5;
 			}
 			else if ( codePoint < 1 << 31 )
 			{
-				temp[j + 0] = cast<byte>(codePoint >> 30 & 0b00000001 | 0b11111100);
-				temp[j + 1] = cast<byte>(codePoint >> 24 & 0b00111111 | 0b10000000);
-				temp[j + 2] = cast<byte>(codePoint >> 18 & 0b00111111 | 0b10000000);
-				temp[j + 3] = cast<byte>(codePoint >> 12 & 0b00111111 | 0b10000000);
-				temp[j + 4] = cast<byte>(codePoint >>  6 & 0b00111111 | 0b10000000);
-				temp[j + 5] = cast<byte>(codePoint >>  0 & 0b00111111 | 0b10000000);
+				temp[j + 0] = cast<ubyte>(codePoint >> 30 & 0b00000001 | 0b11111100);
+				temp[j + 1] = cast<ubyte>(codePoint >> 24 & 0b00111111 | 0b10000000);
+				temp[j + 2] = cast<ubyte>(codePoint >> 18 & 0b00111111 | 0b10000000);
+				temp[j + 3] = cast<ubyte>(codePoint >> 12 & 0b00111111 | 0b10000000);
+				temp[j + 4] = cast<ubyte>(codePoint >>  6 & 0b00111111 | 0b10000000);
+				temp[j + 5] = cast<ubyte>(codePoint >>  0 & 0b00111111 | 0b10000000);
 				j += 6;
 			}
 		}		
@@ -132,7 +132,7 @@ and	CanHash
 	}
 	
 	// Creates a String that is a copy of data known to be valid code points.
-	private create( byte[] data, boolean ascii )
+	private create( ubyte[] data, boolean ascii )
 	{		
 		this:data = virtualFreeze(data);
 		this:ascii = ascii;
@@ -140,7 +140,7 @@ and	CanHash
 	
 	// Used to pretend that an array that will never be used elsewhere and cannot leak is actually immutable.
 	[ImportNative]
-	private readonly virtualFreeze( byte[] data ) => ( immutable byte[] );	
+	private readonly virtualFreeze( ubyte[] data ) => ( immutable ubyte[] );	
 
 	/**
 	 * Retrieves the {@code byte} value at the given offset inside the object.
@@ -148,17 +148,17 @@ and	CanHash
 	 * @return {@code byte} value
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public index( long location ) => ( byte )
+	public index( long location ) => ( ubyte )
 	{		
 		return data[location];
 	}
 	
 	/**
-	 * Retrieves an immutable copy of the {@code byte} array inside the
+	 * Retrieves an immutable copy of the {@code ubyte} array inside the
 	 * object.
 	 * @return {@code byte} array	 
 	 */
-	public get chars() => ( immutable byte[] )
+	public get chars() => ( immutable ubyte[] )
 	{
 		return data;
 	}
@@ -248,7 +248,7 @@ and	CanHash
 	 */
 	public concatenate( String other ) => ( String )
 	{
-		byte[] data = byte:create[this->sizeLong + other->sizeLong];
+		ubyte[] data = ubyte:create[this->sizeLong + other->sizeLong];
 		for ( long i = 0; i < this->sizeLong; i += 1L )
 			data[i] = index(i);
 		for ( long i = 0; i < other->sizeLong; i += 1L )
@@ -514,7 +514,7 @@ and	CanHash
 		int decimalPosition = 0;
 		int exponent = 0;
 		
-		foreach( byte digit in data )
+		foreach( ubyte digit in data )
 		{		
 			if( inExponent )
 			{
@@ -576,7 +576,7 @@ and	CanHash
 		ulong value = 0uL;		
 		boolean first = true;
 		
-		foreach( byte digit in data )
+		foreach( ubyte digit in data )
 		{
 			ulong old = value;
 			value *= 10uL;			
@@ -626,7 +626,7 @@ and	CanHash
 			if ( value < 0 )
 			{
 				int bytes = 0;
-				byte mask = 1y << 7 >> 1;
+				ubyte mask = 1uy << 7 >> 1;
 				while ( value >= mask )
 				{
 					bytes += 1;
@@ -637,7 +637,7 @@ and	CanHash
 				{
 					index += 1L;
 					value <<= 6;
-					value |= string:data[index] & 0b00111111y;
+					value |= string:data[index] & 0b00111111uy;
 					bytes -= 1;
 				}
 			}
@@ -648,7 +648,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowString_CreateBytes(byte[] data) => (String)
+	private _shadowString_CreateBytes(ubyte[] data) => (String)
 	{
 		return String:create(data);
 	}

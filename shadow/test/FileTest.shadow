@@ -4,26 +4,29 @@ class shadow:test@FileTest
 {
 	public main( String[] args ) => ()
 	{	
-		if( args->size == 0 ) {
+		if( args->size == 0 )
 			throw Exception:create("No file specified!");
-		}
 
-		try {
+		try 
+		{
 			File file = File:create(args[0]);
 			
-			try {	
+			try 
+			{	
 				file->exists = true;
-			} catch ( IOException ex ) {				
+			} 
+			catch ( IOException ex )
+			{				
 				Console.printLine("catch ( " # ex # " )");
 			}
 								
-			readonly byte[] chars = "Hello World!"->chars;
+			readonly ubyte[] chars = "Hello World!"->chars;
 			file.write(chars);
 						
 			file->size = file->position;
 			file.close();
 			
-			byte[] buffer = byte:create[chars->size];
+			ubyte[] buffer = ubyte:create[chars->size];
 			file.read(buffer);
 			
 			Console.printLine(String:create(buffer));
@@ -31,7 +34,9 @@ class shadow:test@FileTest
 			
 			file->exists = false;
 			
-		} catch ( IOException ex ) {
+		}
+		catch ( IOException ex )
+		{
 			Console.printLine(ex);
 		}
 	}

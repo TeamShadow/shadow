@@ -44,7 +44,7 @@
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
-@byte_A_class = external constant %shadow.standard..Class
+@ubyte_A_class = external constant %shadow.standard..Class
 @shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.io..IOException_class = external constant %shadow.standard..Class
@@ -58,7 +58,7 @@
 %shadow.standard..System = type opaque
 %shadow.io..Console = type opaque
 
-declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object*, %shadow.standard..Array*)
+declare %shadow.standard..String* @shadow.standard..String_Mcreate_ubyte_A(%shadow.standard..Object*, %shadow.standard..Array*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object*, %shadow.standard..String*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object*)
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
@@ -99,12 +99,12 @@ define private void @throwIOException() noreturn {
 	%message = call i8* @strerror_r(i32 %error, i8* %buffer, i32 256) nounwind
 	%length = tail call %size_t @strlen(i8* %message)
 	%lengthLong = ptrtoint %size_t %length to %ulong
-	%array = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* @byte_A_class, %ulong %lengthLong, %boolean false) nounwind
+	%array = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* @ubyte_A_class, %ulong %lengthLong, %boolean false) nounwind
 	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
 	%dataAsChars = bitcast %shadow.standard..Array* %data to i8*
 	call i8* @strncpy(i8* %dataAsChars, i8* nocapture %message, %size_t %length) nounwind
 	%stringAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))
-	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)
+	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_ubyte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)
 	%exceptionAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
 	%exception = call %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object* %exceptionAsObj, %shadow.standard..String* %string)
 	call void @__shadow_throw(%shadow.standard..Object* %exceptionAsObj) noreturn
@@ -215,7 +215,7 @@ define void @shadow.io..File_Msize_long(%shadow.io..File*, i64) {
 }
 
 
-define %long @shadow.io..File_Mread_byte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
+define %long @shadow.io..File_Mread_ubyte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
 _entry:
 	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
 	%descriptorAsLong = load i64, i64* %descriptorRef
@@ -262,7 +262,7 @@ _throw:
 }
 
 
-define %long @shadow.io..File_Mwrite_byte_A(%shadow.io..File* %file, %shadow.standard..Array* %array ) {
+define %long @shadow.io..File_Mwrite_ubyte_A(%shadow.io..File* %file, %shadow.standard..Array* %array ) {
 _entry:
 	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
 	%descriptorAsLong = load i64, i64* %descriptorRef

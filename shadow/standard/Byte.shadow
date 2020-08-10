@@ -958,13 +958,7 @@ and	CanHash
 		return toInt().toString(base);
 	}
 
-	// C FRAMEWORK EXTENSIONS
-	[ExportAssembly]
-	private shadowByteArray_GetClass() => (Class)
-	{
-		return byte[]:class;
-	}
-	
+	// C FRAMEWORK EXTENSIONS	
 	[ExportAssembly]
 	private shadowByte_GetClass() => (Class)
 	{

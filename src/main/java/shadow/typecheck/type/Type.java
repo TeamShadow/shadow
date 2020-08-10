@@ -486,7 +486,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 		else if( this.equals(UBYTE))
 		{
-			return t.equals(USHORT) || t.equals(UINT) || t.equals(ULONG)  || t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			return t.equals(CODE) || t.equals(USHORT) || t.equals(UINT) || t.equals(ULONG)  || t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}		
 		else if( this.equals(UINT))
 		{
@@ -499,7 +499,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 		else if( this.equals(USHORT) )
 		{
-			return t.equals(UINT) || t.equals(ULONG)  || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			return t.equals(CODE) || t.equals(UINT) || t.equals(ULONG)  || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
 		else		
 			return false;

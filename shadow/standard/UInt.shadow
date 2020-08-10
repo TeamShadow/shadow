@@ -877,11 +877,11 @@ and	CanHash
 	}
 	
 	// Converts a digit to its byte value, assuming digits between 0 and 35.	
-	private digit(uint digit) => (byte)
+	private digit(uint digit) => (ubyte)
 	{
 		if (digit < 10u)
-			return cast<byte>(digit + '0');
-		return cast<byte>(digit - 10u + 'a');
+			return cast<ubyte>(digit + '0');
+		return cast<ubyte>(digit - 10u + 'a');
 	}
 	
 	// C FRAMEWORK EXTENSIONS

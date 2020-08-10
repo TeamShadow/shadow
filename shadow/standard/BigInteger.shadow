@@ -437,7 +437,7 @@ and CanHash
 	}
 	
 	/* Finds numerical value of letter in a given base. */
-	private digitValue(byte letter, uint base) => (uint)
+	private digitValue(ubyte letter, uint base) => (uint)
 	{
 		uint value = 0u;
 	
@@ -606,9 +606,9 @@ and CanHash
 			uint digit = remainder[0]; 
 			
 			if( digit >= 10u ) // A through Z
-				buffer.append(cast<byte>(digit + 'A') - 10y);
+				buffer.append(cast<ubyte>(digit + 'A' - 10u));
 			else
-				buffer.append(cast<byte>(digit + '0'));
+				buffer.append(cast<ubyte>(digit + '0'));
 				
 			number = quotient;				
 		} while( !isZero( number ) );

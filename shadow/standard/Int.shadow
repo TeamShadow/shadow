@@ -768,7 +768,7 @@ and	CanHash
 	 * @return  {@code String} representation
 	 */ 
 	public toString(uint base) => (String)
-	{		
+	{
 		String string = abs().toString(base);		
 		return this >= 0 ? string, '-' # string;
 	}

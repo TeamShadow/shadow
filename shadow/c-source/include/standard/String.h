@@ -6,7 +6,7 @@
 
 #include <standard/ULong.h>
 #include <standard/Long.h>
-#include <standard/Byte.h>
+#include <standard/UByte.h>
 #include <standard/Boolean.h>
 #include <standard/MethodTable.h>
 #include <standard/Array.h>
@@ -28,7 +28,7 @@ typedef struct {
 	
 	// The array which contains size elements.
 	// Note: this array is not null terminated.
-	shadow_byte_t* chars;
+	shadow_ubyte_t* chars;
 	
 	// A boolean to whether the chars array is in ascii or not.
 	shadow_boolean_t ascii;

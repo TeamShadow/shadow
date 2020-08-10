@@ -679,7 +679,7 @@ public class LLVMOutput extends AbstractOutput {
 	public void writeStringLiterals() throws ShadowException {
 		int stringIndex = 0;
 		
-		final String BYTE_ARRAY_CLASS = "bitcast (" + type(Type.GENERIC_CLASS) + " " + classOf(new ArrayType(Type.BYTE)) + " to " + type(Type.CLASS) + ")";
+		final String UBYTE_ARRAY_CLASS = "bitcast (" + type(Type.GENERIC_CLASS) + " " + classOf(new ArrayType(Type.UBYTE)) + " to " + type(Type.CLASS) + ")";
 		
 		for (String literal : stringLiterals) {
 			byte[] data = null;
@@ -709,8 +709,8 @@ public class LLVMOutput extends AbstractOutput {
 					append(Character.forDigit(b & 0xf, 16));
 			}
 			writer.write("@_array" + stringIndex + " = private unnamed_addr " +
-					"constant {%ulong, " + type(Type.CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + data.length + " x " + type(Type.BYTE) +
-					"]} { %ulong -1, " + typeText(Type.CLASS, BYTE_ARRAY_CLASS) + ", " + methodTableType(Type.ARRAY) + " " + methodTable(Type.ARRAY) + ", " + typeLiteral((long)data.length) + ", [" + data.length + " x " + type(Type.BYTE) +
+					"constant {%ulong, " + type(Type.CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + data.length + " x " + type(Type.UBYTE) +
+					"]} { %ulong -1, " + typeText(Type.CLASS, UBYTE_ARRAY_CLASS) + ", " + methodTableType(Type.ARRAY) + " " + methodTable(Type.ARRAY) + ", " + typeLiteral((long)data.length) + ", [" + data.length + " x " + type(Type.UBYTE) +
 					"] c\"" + sb + "\" }");
 			writer.write("@_string" + stringIndex + " = private unnamed_addr " +
 					"constant %" + raw(Type.STRING) + " { " +
@@ -718,7 +718,7 @@ public class LLVMOutput extends AbstractOutput {
 					type(Type.CLASS) + " " + classOf(Type.STRING) + ", " +
 					methodTableType(Type.STRING) + " " + methodTable(Type.STRING) + ", " +					
 					type(Type.ARRAY) + " bitcast (" +
-					"{%ulong, " + type(Type.CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + data.length + " x " + type(Type.BYTE) + "]}* " +
+					"{%ulong, " + type(Type.CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + data.length + " x " + type(Type.UBYTE) + "]}* " +
 					"@_array" + stringIndex + " to " + type(Type.ARRAY) + "), " +
 					typeLiteral(ascii) + " }");
 			stringIndex++;

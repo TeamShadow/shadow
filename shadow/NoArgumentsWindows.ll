@@ -54,7 +54,6 @@ declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..Ob
 declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 declare %shadow.io..Console* @shadow.io..Console_MprintErrorLine(%shadow.io..Console*)
 declare %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object*, { {%ulong, i8}*, %shadow.standard..Class*, %ulong })
 
 ;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 

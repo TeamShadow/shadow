@@ -615,6 +615,6 @@ entry:
 	ret %shadow.standard..Exception* %4
 }
 
-@_array0 = private unnamed_addr constant {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %byte]} {%ulong -1, %shadow.standard..Class* @byte_A_class, %shadow.standard..Array_methods* @shadow.standard..Array_methods, %long 20, [20 x %byte] c"Heap space exhausted"}
-@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, %shadow.standard..Array* bitcast ( {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %byte]}* @_array0 to %shadow.standard..Array*), %boolean true }
+@_array0 = private unnamed_addr constant {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %ubyte]} {%ulong -1, %shadow.standard..Class* @ubyte_A_class, %shadow.standard..Array_methods* @shadow.standard..Array_methods, %long 20, [20 x %ubyte] c"Heap space exhausted"}
+@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, %shadow.standard..Array* bitcast ( {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %ubyte]}* @_array0 to %shadow.standard..Array*), %boolean true }
 @_OutOfMemoryException = private constant %shadow.standard..OutOfMemoryException { %ulong -1, %shadow.standard..Class* @shadow.standard..OutOfMemoryException_class, %shadow.standard..OutOfMemoryException_methods* @shadow.standard..OutOfMemoryException_methods, %shadow.standard..String* @_string0 }

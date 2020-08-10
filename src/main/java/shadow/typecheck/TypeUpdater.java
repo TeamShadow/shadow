@@ -211,7 +211,7 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.STRING);
 
 			// byte array
-			type.addUsedType(new ArrayType(Type.BYTE));
+			type.addUsedType(new ArrayType(Type.UBYTE));
 
 			// method table array
 			type.addUsedType(new ArrayType(Type.METHOD_TABLE));

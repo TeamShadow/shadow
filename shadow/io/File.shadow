@@ -109,7 +109,7 @@ and CanClose
 	 * than or equal the length of the buffer
 	 */
 	[ImportNative]
-	public readonly read( byte[] buffer ) => ( long );
+	public readonly read( ubyte[] buffer ) => ( long );
 	
 	/**
 	 * Writes data from the buffer into the file and updates the write pointer
@@ -118,7 +118,7 @@ and CanClose
 	 * @return number of {@code byte} values successfully written
 	 */
 	[ImportNative]
-	public write( readonly byte[] buffer ) => ( long );
+	public write( readonly ubyte[] buffer ) => ( long );
 	
 	/**
 	 * Closes the file.

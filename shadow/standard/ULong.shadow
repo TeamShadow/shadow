@@ -541,11 +541,11 @@ and	CanHash
 	}
 	
 	// Converts a digit to its byte value, assuming digits between 0 and 35.
-	private digit(ulong digit) => (code)
+	private digit(ulong digit) => (ubyte)
 	{
 		if (digit < 10uL)
-			return cast<code>(digit + '0');
-		return cast<code>(digit - 10uL + 'a');
+			return cast<ubyte>(digit + '0');
+		return cast<ubyte>(digit - 10uL + 'a');
 	}
 	
 	// C FRAMEWORK EXTENSIONS
