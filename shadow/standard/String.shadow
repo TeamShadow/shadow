@@ -1,6 +1,6 @@
 /**
  * Class {@code String} holds arbitrary-length sequences of UTF-8 code points
- * stored in a fixed-size array of {@code byte} values.
+ * stored in a fixed-size array of {@code ubyte} values.
  * {@code String} objects are the most common way to represent text in Shadow.
  * {@code String} objects differ from {@code MutableString} objects in that
  * their contents cannot be changed.
@@ -27,10 +27,10 @@ and	CanHash
 	}
 	
 	/**
-	 * Creates a new {@code String} object whose contents are the {@code byte}
+	 * Creates a new {@code String} object whose contents are the {@code ubyte}
 	 * values contained in the given array.
 	 * @param data array specifying the contents of the array
-	 * @throws IllegalArgumentException if the {@code byte} values do not
+	 * @throws IllegalArgumentException if the {@code ubyte} values do not
 	 * specify legal UTF-8 code points 
 	 */
 	public create( ubyte[] data )
@@ -143,9 +143,9 @@ and	CanHash
 	private readonly virtualFreeze( ubyte[] data ) => ( immutable ubyte[] );	
 
 	/**
-	 * Retrieves the {@code byte} value at the given offset inside the object.
+	 * Retrieves the {@code ubyte} value at the given offset inside the object.
 	 * @param index offset inside the object	   
-	 * @return {@code byte} value
+	 * @return {@code ubyte} value
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
 	public index( long location ) => ( ubyte )
@@ -190,7 +190,7 @@ and	CanHash
 	}
 	
 	/**
-	 * Gets the number of {@code byte} values stored in the object as an {@code int}.	 
+	 * Gets the number of {@code ubyte} values stored in the object as an {@code int}.	 
 	 * @return number of bytes	 
 	 */
 	public get size() => ( int )
@@ -199,7 +199,7 @@ and	CanHash
 	}
 	
 	/**
-	 * Gets the number of {@code byte} values stored in the object as a {@code long}.	 
+	 * Gets the number of {@code ubyte} values stored in the object as a {@code long}.	 
 	 * @return number of bytes	 
 	 */
 	public get sizeLong() => ( long )

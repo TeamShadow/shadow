@@ -675,6 +675,14 @@ public class OutputTests {
 				"12345\n" + 
 				"Hello World!\n" +
 				"Test String\n" +
+				"-12\n" + 
+				"130\n" +
+				"1000\n" +
+				"61234\n" +
+				"2000000002\n" +
+				"3100000000\n" +
+				"-8000000000000\n" +
+				"10223372036854775807\n" +
 				"\n" +
 				"Enter your name: Your name is Alan Turing!\n" +
 				"Enter your age: Your age is 45\n" +

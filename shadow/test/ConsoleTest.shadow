@@ -20,6 +20,14 @@ class shadow:test@ConsoleTest
 		console.print('!');
 		console.printLine();
 		console.printLine("Test String");
+		console.printLine(-12y);	// byte
+		console.printLine(130uy);	// ubyte
+		console.printLine(1000s);	// short
+		console.printLine(61234us);	// ushort
+		console.printLine(2000000002);	// int
+		console.printLine(3100000000u);	// uint
+		console.printLine(-8000000000000L); //long
+		console.printLine(10223372036854775807uL); //ulong
 
 		console.printLine();
 		console.print("Enter your name: ");
