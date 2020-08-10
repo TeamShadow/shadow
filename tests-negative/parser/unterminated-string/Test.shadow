@@ -1,0 +1,16 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{	
+		Console.print("Enter your first and last name: ");
+		(String name, ) = Console.readLine();
+		Console.print("Enter your height in inches (with up to two decimal places of accuracy): "); 
+		double height = Console.readDouble();
+		Console.print("Enter your weight in pounds: ");
+		int weight = Console.readInt();
+		double bmi = 703.0 * weight / (height * height); // Formula for BMI
+		Console.printLine(name # " has a BMI of  # bmi # ".");
+	}
+}

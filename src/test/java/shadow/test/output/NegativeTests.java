@@ -54,5 +54,5 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/compile/invalid-constant-dependency/Test.shadow");
 		enforce();		
-	}	
+	}
 }

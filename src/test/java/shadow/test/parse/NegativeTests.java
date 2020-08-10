@@ -96,4 +96,10 @@ public class NegativeTests {
 		args.add("tests-negative/parser/newline-in-string/Test.shadow");
 		enforce(Error.NEWLINE_IN_STRING);
 	}
+	
+	@Test public void testUnterminatedString() throws Exception
+	{
+		args.add("tests-negative/parser/unterminated-string/Test.shadow");
+		enforce(Error.SYNTAX_ERROR);
+	}
 }

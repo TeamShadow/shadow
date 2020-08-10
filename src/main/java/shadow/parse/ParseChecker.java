@@ -66,7 +66,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		try {
 			context = parser.compilationUnit();
 		}
-		catch(ParseCancellationException e) {
+		catch(Exception e) {
 			tokens.seek(0);
 			parser.reset();
 			lexer.addErrorListener(listener);
