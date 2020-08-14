@@ -12,6 +12,7 @@ class shadow:test@MathTest
 		out.printLine( a # "^3.6 = " # a.power(3.6));
 		out.printLine( "sin(" # a # ") = " # a.sin());
 		out.printLine( "cos(" # a # ") = " # a.cos());
+		out.printLine( "tan(" # a # ") = " # a.tan());
 		out.printLine( "ln(" # a # ") = " # a.logBaseE());
 		out.printLine( "log10(" # a # ") = " # a.logBase10());
 		out.printLine( "log2(" # a # ") = " # a.logBase2());
@@ -33,6 +34,7 @@ class shadow:test@MathTest
 		out.printLine( b # "^3.6 = " # b.power(3.6f));
 		out.printLine( "sin(" # b # ") = " # b.sin());
 		out.printLine( "cos(" # b # ") = " # b.cos());
+		out.printLine( "tan(" # b # ") = " # b.tan());
 		out.printLine( "ln(" # b # ") = " # b.logBaseE());
 		out.printLine( "log10(" # b # ") = " # b.logBase10());
 		out.printLine( "log2(" # b # ") = " # b.logBase2());
@@ -47,6 +49,7 @@ class shadow:test@MathTest
 		out.printLine( c # "^3.6 = " # c.power(3.6));
 		out.printLine( "sin(" # c # ") = " # c.sin());
 		out.printLine( "cos(" # c # ") = " # c.cos());
+		out.printLine( "tan(" # c # ") = " # c.tan());
 		out.printLine( "ln(" # c # ") = " # c.logBaseE());
 		out.printLine( "log10(" # c # ") = " # c.logBase10());
 		out.printLine( "log2(" # c # ") = " # c.logBase2());
@@ -68,6 +71,7 @@ class shadow:test@MathTest
 		out.printLine( d # "^3.6 = " # d.power(3.6));
 		out.printLine( "sin(" # d # ") = " # d.sin());
 		out.printLine( "cos(" # d # ") = " # d.cos());
+		out.printLine( "tan(" # d # ") = " # d.tan());
 		out.printLine( "ln(" # d # ") = " # d.logBaseE());
 		out.printLine( "log10(" # d # ") = " # d.logBase10());
 		out.printLine( "log2(" # d # ") = " # d.logBase2());

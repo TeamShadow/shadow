@@ -59,8 +59,6 @@ and CanIterate<T>
 	/**
 	 * Copy a subarray from the given array, starting at {@code start} and
 	 * going up to but not including index {@code end}.
-	 * The resulting array will require an explicit cast in order to be stored
-	 * back into a normal array reference.
 	 * @param start	starting index of subarray
 	 * @param end	index after last index in subarray
 	 * @return {@code Array<T>} object containing the subarray
