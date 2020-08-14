@@ -250,10 +250,7 @@ public abstract class Page
 	{
 				
 		Path toPath = Paths.get("/").resolve(Paths.get(to.getPath()));
-		
-		// For some reason, Path.relativize() will only work from the directory
-		// above the start file
-		Path fromPath = Paths.get(from.getPath()).getParent();
+		Path fromPath = Paths.get(from.getPath());
 		if (fromPath == null)
 			fromPath = Paths.get("/");
 		else
