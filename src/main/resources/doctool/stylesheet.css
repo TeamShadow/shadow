@@ -19,7 +19,7 @@ body
     font-family: 'Source Sans Pro', sans-serif;
 	background-color: #02182b;
 	font-weight: 300;
-	font-size: 90%;
+	font-size: 100%;
 	color: white;
 }
 
@@ -65,25 +65,27 @@ hr
 
 th
 {
-	border: 0.1em solid white;
 	background-color: #a8d0e6;
 	color: white;
 }
 
 table
 {
-    border: 0.1em solid white;
+    border: 1px solid #e1e4e5;
     background-color: white;
-}
-
-td
-{
-	border: 0.1em solid white;	
 }
 
 th, td
 {
-    padding: .5em .5em; 
+	border-bottom: 1px solid #e1e4e5;
+    border-left: 1px solid #e1e4e5;
+	vertical-align: text-top;
+	padding: .5em .5em; 
+}
+
+td p, td a, td span
+{
+	vertical-align: text-top;	
 }
 
 tr.shaded
@@ -121,7 +123,7 @@ table
     border: 0.1em solid white;   
     padding: 0 .5em .5em .5em;
     margin: .5em;
-	color: #222;
+	color: #000;
 	
 	background-color: #f2f4f5;
 	
@@ -184,11 +186,12 @@ table
 .navlist b, .navlist strong
 {
 	color: inherit;
-	font-weight: bold;	
+	background-color: #02182b;
+	padding: .25em;
 }
 
 .navlist a { text-decoration: none; color:inherit; border-bottom-color: rgba(255, 255, 255, 0);  }
-.navlist a:hover { color: #02182b; }
+.navlist a:hover { color: #02182b; background-color: #a8d0e6;}
 
 
 .navlist ul
@@ -215,12 +218,17 @@ pre, code, tt {
   font-family: "Courier New", monospace, serif;
   _font-family: "courier new", monospace;
   
+  /*
   background: rgba(0, 0, 0, 0.05);
 border-color: rgba(0, 0, 0, 0.2);
 border-radius: 4px;
 font-family: "Courier New", monospace;
 font-size: 0.9em;
 padding: 0.25em 0.325em;
+*/
+		border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.04);
+  border: none;
 }
 
 pre {
@@ -252,5 +260,13 @@ b, strong
 	font-weight: 300;	
 }
 
-a { text-decoration: none; color:inherit; border-bottom: 1px dotted rgba(128, 128, 128, 0.5);  }
+.header a {
+	color: inherit;
+}
+
+a { 
+	text-decoration: none; 
+	color: #096cc3;
+	border-bottom: dotted 1px rgba(9, 108, 195, 0.5);  
+}
 a:hover { color: #d7263d; border-bottom-color: rgba(255, 255, 255, 0); }

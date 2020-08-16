@@ -488,4 +488,11 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/check-leaving-finally/Test.shadow");
 		enforce(Error.INVALID_STRUCTURE);		
 	}
+	
+	@Test public void testTypeParameterWithMultipleClassBounds() throws Exception {
+		args.add("tests-negative/typechecker/type-parameter-with-multiple-class-bounds/Test.shadow");
+		enforce(Error.INVALID_TYPE_PARAMETERS);		
+	}
+	
+	
 }

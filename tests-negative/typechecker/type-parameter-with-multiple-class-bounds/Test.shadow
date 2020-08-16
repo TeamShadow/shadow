@@ -1,0 +1,5 @@
+class Test<T is String and Object>
+{
+
+
+}

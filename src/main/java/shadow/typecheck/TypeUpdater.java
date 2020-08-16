@@ -1368,9 +1368,20 @@ public class TypeUpdater extends BaseChecker {
 
 		visitChildren(ctx);
 
+		boolean hasClass = false;
 		if (ctx.isList() != null) {
-			for (ShadowParser.ClassOrInterfaceTypeContext bound : ctx.isList().classOrInterfaceType())
-				typeParameter.addBound(bound.getType());
+			for (ShadowParser.ClassOrInterfaceTypeContext bound : ctx.isList().classOrInterfaceType()) {
+				Type boundType = bound.getType();
+				if(boundType instanceof ClassType) {
+					if(hasClass)
+						addError(ctx, Error.INVALID_TYPE_PARAMETERS,
+								"Type parameter " + symbol + " cannot have more than one class bound");
+					
+					
+					hasClass = true;
+				}
+				typeParameter.addBound(boundType);
+			}
 		}
 
 		return null;

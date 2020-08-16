@@ -15,7 +15,7 @@
  * 
  */ 
 
-/** A Shadow 0.7 grammar for ANTLR v4. */
+/** A Shadow 0.8 grammar for ANTLR v4. */
 grammar Shadow;
 
 @header {
@@ -788,7 +788,7 @@ VAR			: 'var';
 WEAK		: 'weak';
 WHILE		: 'while';
 XOR			: 'xor';
-//RECEIVE		: 'receive';
+RECEIVE		: 'receive';
 
 // Literals
 
