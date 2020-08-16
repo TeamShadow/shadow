@@ -41,7 +41,7 @@
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
-@byte_A_class = external constant %shadow.standard..Class
+@ubyte_A_class = external constant %shadow.standard..Class
 
 @shadow.standard..Array_methods = external constant %shadow.standard..Array_methods
 @shadow.standard..ArrayNullable_methods = external constant %shadow.standard..Array_methods
