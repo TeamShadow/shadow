@@ -165,7 +165,7 @@ is  Map<K,V>
 	 * @param key key to find
 	 * @return value at key location or {@code null} if not found
 	 */
-	public index( K key ) => ( nullable V value )
+	public readonly index( K key ) => ( nullable V value )
 	{		
 		try
 		{

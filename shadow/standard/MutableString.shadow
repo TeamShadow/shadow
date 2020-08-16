@@ -307,7 +307,7 @@ and CanHash
 	 * @param other object to compare to
 	 * @return {@code true} if identical
 	 */
-	public equal( MutableString other ) => ( boolean )
+	public readonly equal( MutableString other ) => ( boolean )
 	{
 		return sizeLong == other:sizeLong and compare(other) == 0;
 	}
@@ -320,7 +320,7 @@ and CanHash
 	 * @param other value to compare to
 	 * @return whether earlier, identical, or later
 	 */
-	public compare( MutableString other ) => ( int )
+	public readonly compare( MutableString other ) => ( int )
 	{
 		for ( long i = 0L; i < sizeLong and i < other:sizeLong; i += 1L )
 			if ( data[i] != other:data[i] )

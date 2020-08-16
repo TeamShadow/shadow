@@ -494,5 +494,8 @@ public class NegativeTests {
 		enforce(Error.INVALID_TYPE_PARAMETERS);		
 	}
 	
-	
+	@Test public void testMethodIsNotReadonlyButInterfaceMethodIs() throws Exception {
+		args.add("tests-negative/typechecker/method-is-not-readonly-but-interface-method-is/Test.shadow");
+		enforce(Error.MISSING_INTERFACE);		
+	}
 }

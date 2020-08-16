@@ -256,8 +256,13 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public boolean matchesInterface(MethodSignature interfaceSignature) {
-			return interfaceSignature.symbol.equals(symbol) && 					
+			boolean matches = interfaceSignature.symbol.equals(symbol) && 					
 					type.matchesInterface(interfaceSignature.type);
+			
+			if(interfaceSignature.getModifiers().isReadonly() && !getModifiers().isReadonly())
+				matches = false;
+			
+			return matches;			
 	}
 
 	@Override
