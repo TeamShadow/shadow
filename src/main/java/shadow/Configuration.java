@@ -373,9 +373,7 @@ public class Configuration {
 	public static Path getRunningDirectory() throws ConfigurationException {		
 		try {
 			URL url = Main.class.getProtectionDomain().getCodeSource().getLocation();
-			URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(),
-					url.getPort(), url.getPath(), url.getQuery(), 
-					url.getRef());
+			URI uri = url.toURI();
 			return Paths.get(uri).getParent().toAbsolutePath();
 		}
 		catch( SecurityException e ) {

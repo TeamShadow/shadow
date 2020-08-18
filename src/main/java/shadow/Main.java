@@ -747,7 +747,11 @@ public class Main {
 
 	public static String canonicalize(Path path)
 	{
-		return path.toAbsolutePath().normalize().toString();
+		Path absolute = path.toAbsolutePath();
+		Path normalized = absolute.normalize();
+		String result = normalized.toString();
+		
+		return result;
 	}
 
 }
