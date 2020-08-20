@@ -489,12 +489,7 @@ public class Configuration {
 	public String getLLVMOptimizationLevel() {
 		// set to empty string to check for
 		// race conditions in Threads.
-		if(os == null || os.equals("Windows") )
-			return "";  //TODO: Bring up to -O2?
-		else
-			return "-O3";	
-		
-		
+		return "-O3";	
 	}
 
 	public String getOptimizationLevel() {
