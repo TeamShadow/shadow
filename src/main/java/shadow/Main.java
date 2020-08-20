@@ -306,7 +306,7 @@ public class Main {
 		List<String> compileCommand = new ArrayList<String>();
 
 		if (Configuration.getConfiguration().getOs().equals("Mac")) {
-			compileCommand.add("gcc");
+			compileCommand.add("clang");
 			String[] version = System.getProperty("os.version").split("\\.");
 			compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
 			// compileCommand.add("-Wall");			
