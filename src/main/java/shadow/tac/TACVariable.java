@@ -13,6 +13,7 @@ public class TACVariable implements ModifiedType
 	private final String name;
 	private int suffix;
 	private TACMethod method;
+	private boolean finallyVariable = false;
 
 	public TACVariable(ModifiedType varType, String varName, TACMethod varMethod)
 	{
@@ -96,10 +97,18 @@ public class TACVariable implements ModifiedType
 		return getOriginalName().equals("return") || getOriginalName().startsWith("_return");
 	}
 	
+	public boolean isFinallyVariable() {
+		return finallyVariable;
+	}
+	
+	public void makeFinallyVariable() {
+		finallyVariable = true;
+	}
+	
 	public boolean needsGarbageCollection() {
 		Type type = getType();		
 		
-		return !getOriginalName().equals("_exception") &&
+		return !getOriginalName().startsWith("_exception") &&
 				!getOriginalName().equals("this") &&
 				//!getMethod().getSignature().isCopy() &&
 				//!variable.getName().equals("return") &&

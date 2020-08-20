@@ -28,7 +28,7 @@ shadow_Class_t;
 shadow_Class_t* shadowULong_GetClass();
 shadow_Class_t* shadowLong_GetClass();
 shadow_Class_t* shadowByte_GetClass();
-shadow_Class_t* shadowByteArray_GetClass();
+shadow_Class_t* shadowUByteArray_GetClass();
 shadow_Class_t* shadowInt_GetClass();
 shadow_Class_t* shadowUInt_GetClass();
 shadow_Class_t* shadowBoolean_GetClass();

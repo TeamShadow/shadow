@@ -23,10 +23,15 @@ import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACMethod;
+import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.tac.TACVariable;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
+import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACFieldRef;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
@@ -59,7 +64,7 @@ import shadow.typecheck.type.Type;
 
 /**
  * Represents the various paths which code execution can take within a method.
- * Useful for determining whether or not a method returns in all cases.
+ * Useful for determining whether or not a method returns in all cases. 
  * 
  * @author Brian Stottler
  * @author Barry Wittman
@@ -68,18 +73,19 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 {
 	private Block root;	
 	private String cachedString; // Saves toString() from re-walking the graph
-	private Map<TACLabel, Block> nodeBlocks = new LinkedHashMap<TACLabel, Block>();
+	private Map<TACLabel, Block> nodeBlocks = new LinkedHashMap<>();
 	private TACMethod method;
 	//field names can be repeated in inner classes
-	private Map<Type, Set<String>> usedFields = new HashMap<Type, Set<String>>();
+	private Map<Type, Set<String>> usedFields = new HashMap<>();
 	//Method signatures include information that identifies class
-	private Set<MethodSignature> usedPrivateMethods = new HashSet<MethodSignature>();
+	private Set<MethodSignature> usedPrivateMethods = new HashSet<>();
+	private Map<TACFinallyFunction, List<TACCallFinallyFunction>> finallyFunctionCalls = new HashMap<>();
 
 	/**
 	 * Create a control flow graph for a method.
 	 */
 	public ControlFlowGraph(TACMethod method)
-	{		
+	{
 		super(Loggers.TYPE_CHECKER);
 		this.method = method;
 
@@ -160,7 +166,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}
 				else if (branch.isDirect())
 					block.addBranch(nodeBlocks.get(branch.getLabel()));				
-				else if (branch.isIndirect()) {
+				// The following can happen now if a TACCallFinallyFunction was removed
+				else if (branch.isIndirect() && !(branch.getPrevious() instanceof TACCallFinallyFunction)) {
 					// Branch to every possible destination
 					TACPhi phi = branch.getPhi();
 					Map<TACLabel, TACOperand> destinations = phi.getPreviousStores();
@@ -177,19 +184,85 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						}
 				}
 			}
-			//handles cases where a method call can cause a catchable exception
+			// Handles cases where a method call can cause a catchable exception
 			else if( node instanceof TACCall ) {
 				TACCall call = (TACCall) node;
-				if( call.getBlock().hasLandingpad() ) {
-					block.addBranch(nodeBlocks.get(call.getBlock().getLandingpad()));					
+				TACLabel unwindLabel = call.getBlock().getUnwind();
+
+				if( unwindLabel != null ) {
+					block.addBranch(nodeBlocks.get(unwindLabel));
 					block.addBranch(nodeBlocks.get(call.getNoExceptionLabel()));
+				}
+			}
+			else if(node instanceof TACCallFinallyFunction) {
+				TACCallFinallyFunction callFinallyFunction = (TACCallFinallyFunction)node;
+				// Node should always be a label
+				block.addBranch(nodeBlocks.get(callFinallyFunction.getFinallyFunction().getNode()));
+			}
+			// Weird case only inside of finally functions
+			else if(node instanceof TACReturn) {
+				TACReturn return_ = (TACReturn)node;
+				TACFinallyFunction function = return_.getBlock().getFinallyFunction();
+				if(!return_.hasReturnValue() && function != null) {
+					List<TACCallFinallyFunction> list = finallyFunctionCalls.get(function);
+					if(list != null) {
+						for(TACCallFinallyFunction callFinallyFunction : list) {
+							TACNode next = callFinallyFunction.getNext();
+
+							if(next instanceof TACBranch ) {
+								TACBranch branch = (TACBranch)next;
+								if( branch.isDirect() ) 
+									block.addBranch(nodeBlocks.get(branch.getLabel()));
+								else {								
+									Map<TACLabel, TACOperand> destinations = branch.getPhi().getPreviousStores();
+									for( TACOperand destination : destinations.values() ) {
+										TACLabelAddress address = (TACLabelAddress) destination;
+										block.addBranch(nodeBlocks.get(address.getLabel()));
+									}
+								}
+							}
+							else if(next instanceof TACCleanupRet) {
+								TACCleanupRet cleanupRet = (TACCleanupRet)callFinallyFunction.getNext();
+								TACLabel unwindLabel = cleanupRet.getUnwind();
+								if( unwindLabel != null )
+									block.addBranch(nodeBlocks.get(unwindLabel));
+							}
+						}						
+					}
 				}
 			}
 			else if( node instanceof TACThrow ) {
 				TACThrow throw_ = (TACThrow)node;
-				if( throw_.getBlock().hasLandingpad() )
-					block.addBranch(nodeBlocks.get(throw_.getBlock().getLandingpad()));
+				TACLabel unwindLabel = throw_.getBlock().getUnwind();
+
+				if( unwindLabel != null )
+					block.addBranch(nodeBlocks.get(unwindLabel));
 			}
+			else if(node instanceof TACCatchRet) {
+				TACCatchRet catchRet = (TACCatchRet)node;
+				block.addBranch(nodeBlocks.get(catchRet.getLabel()));
+			}
+			else if(node instanceof TACCatchPad) {
+				TACCatchPad catchPad = (TACCatchPad)node;
+
+				if(catchPad.getSuccessor() != null)
+					block.addBranch(nodeBlocks.get(catchPad.getSuccessor()));
+				else {
+					TACLabel unwindLabel = node.getBlock().getUnwind();
+					if(unwindLabel != null)
+						block.addBranch(nodeBlocks.get(unwindLabel));
+				}
+			}
+
+			// Will this ever happen?
+			/*
+			else if(node instanceof TACCleanupRet && !(node.getPrevious() instanceof TACCallFinallyFunction)) {
+				TACCleanupRet cleanupRet = (TACCleanupRet)node;
+				TACLabel unwindLabel = cleanupRet.getUnwind();
+				if( unwindLabel != null )
+					block.addBranch(nodeBlocks.get(unwindLabel));
+			}
+			 */
 
 			if( node == block.getLast() )
 				done = true;
@@ -198,17 +271,10 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		}
 	}
 
-	/*
-	 * Divides the code in a method into blocks.
-	 */
-	private void createBlocks(TACMethod method)
-	{	
-		TACNode node = method.getNode(); //junk tree thing?
-		boolean starting = true;
+	private void visitNodes(TACNode start, Set<TACVariable> usedLocalVariables, boolean starting) {
 		boolean done = false;
 		Block block = null;
-
-		Set<TACVariable> usedLocalVariables = new HashSet<TACVariable>();
+		TACNode node = start;
 
 		// Loop through circular linked-list
 		while( !done ) {
@@ -221,9 +287,13 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				}				
 				nodeBlocks.put(label, block);
 			}
-			else if( node instanceof TACReturn )
-				block.flagReturns();
-			else if( node instanceof TACThrow || node instanceof TACResume )
+			else if( node instanceof TACReturn ) {
+				if(node.getBlock().getFinallyFunction() != null)
+					block.flagUnwinds();
+				else
+					block.flagReturns();
+			}
+			else if( node instanceof TACThrow || node instanceof TACCleanupRet || node instanceof TACResume)
 				block.flagUnwinds();
 			//record field usage, for warnings
 			else if( node instanceof TACLoad ) {
@@ -253,6 +323,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						usedPrivateMethods.add(signature);
 				}
 			}
+			else if(node instanceof TACCallFinallyFunction) {
+				TACCallFinallyFunction callFinallyFunction = (TACCallFinallyFunction)node;
+				TACFinallyFunction function = callFinallyFunction.getFinallyFunction();
+				List<TACCallFinallyFunction> list = finallyFunctionCalls.get(function);
+				if(list == null) {
+					list = new ArrayList<>();
+					list.add(callFinallyFunction);
+					finallyFunctionCalls.put(function, list);
+				}
+				else
+					list.add(callFinallyFunction);
+			}
 			//record local variable usage, for warnings and optimizations
 			else if( node instanceof TACLocalLoad ) {
 				TACLocalLoad load = (TACLocalLoad) node;
@@ -267,9 +349,29 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			block.addNode(node);
 
 			node = node.getNext();
-			if( node == method.getNode() )
+			if( node == start )
 				done = true;
 		}
+	}
+
+	/*
+	 * Divides the code in a method into blocks.
+	 */
+	private void createBlocks(TACMethod method) {	
+		TACNode node = method.getNode();
+		Set<TACVariable> usedLocalVariables = new HashSet<TACVariable>();
+
+		// Record all used local variables
+		visitNodes(node, usedLocalVariables, true);
+		for(TACFinallyFunction function : method.getFinallyFunctions())
+			visitNodes(function.getNode(), usedLocalVariables, false);
+
+		/*
+		// An ordered list of finally function variables
+		List<TACVariable> finallyFunctionVariables = new ArrayList<>(variablesInFinallyFunctions.size());
+		finallyFunctionVariables.addAll(variablesInFinallyFunctions);
+		method.setFinallyFunctionVariables(finallyFunctionVariables);
+		 */
 
 		//give warnings for unused local variables
 		//skip all copy methods, since they're automatically generated (and often don't use the "addresses" variable)
@@ -602,7 +704,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		for( TACLocalLoad undefined : undefinedLoads )
 			//_exception is a special variable used only for exception handling
 			//indirect breaks for finally make its value tricky, but it's guaranteed to never *really* be undefined
-			if( !undefined.getVariable().getOriginalName().equals("_exception") && !undefined.getVariable().getOriginalName().equals("return")  && !undefined.getVariable().getOriginalName().startsWith("_return")  )
+			if( !undefined.getVariable().getOriginalName().startsWith("_exception") && !undefined.getVariable().getOriginalName().equals("return")  && !undefined.getVariable().getOriginalName().startsWith("_return")  )
 				addError(undefined.getContext(), Error.UNDEFINED_VARIABLE, "Variable " + undefined.getVariable().getOriginalName() + " may not have been defined before use");
 
 		return changed;
@@ -687,7 +789,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			changed = false;
 
 			for(Block block : blocks ) {
-				if( block != root && !block.hasIndirectBranch() ) {					
+				if( block != root && !block.hasIndirectBranch() && !block.isEndOfFinally() ) {					
 					//find previous stores, the intersection of the stores of previous blocks
 					Set<String> previousStores = null;				
 
@@ -705,6 +807,47 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 								if( address.getLabel().getNumber() == block.getLabel().getNumber() )
 									parentStores = union( parentStores, allStores.get(nodeBlocks.get(entry.getKey())));
 							}							
+						}
+						// Ends of finally blocks are basically indirect branching blocks
+						else if(parent.isEndOfFinally()) {
+							parentStores = initialStores.get(parent);
+							TACReturn return_ = (TACReturn) parent.getLast();
+							TACFinallyFunction function = return_.getBlock().getFinallyFunction();
+							if(!return_.hasReturnValue() && function != null) {
+								List<TACCallFinallyFunction> list = finallyFunctionCalls.get(function);
+								if(list != null) {
+									boolean unwindToCurrentBlock = false;
+									// See if current block is the unwind
+									for(TACCallFinallyFunction callFinallyFunction : list) {
+										TACNode next = callFinallyFunction.getNext();
+										if(next instanceof TACCleanupRet) {
+											TACCleanupRet cleanupRet = (TACCleanupRet)next;
+											TACLabel unwindLabel = cleanupRet.getUnwind();
+											if( unwindLabel != null && block.getLabel().equals(unwindLabel))
+												unwindToCurrentBlock = true;
+										}
+									}									
+
+									for(TACCallFinallyFunction callFinallyFunction : list) {
+										TACNode next = callFinallyFunction.getNext();
+										if(!unwindToCurrentBlock && next instanceof TACBranch) {
+											TACBranch branch = (TACBranch)next;
+											if(branch.isIndirect()) {
+												for( Entry<TACLabel, TACOperand> entry :  branch.getPhi().getPreviousStores().entrySet() ) {
+													TACLabelAddress address = (TACLabelAddress) entry.getValue();
+													if( address.getLabel().getNumber() == block.getLabel().getNumber() )
+														parentStores = union( parentStores, allStores.get(nodeBlocks.get(entry.getKey())));
+												}		
+											}
+											else if (branch.isDirect())
+												parentStores = allStores.get(parent);					
+										}
+										else if(unwindToCurrentBlock && next instanceof TACCleanupRet) {
+											parentStores = allStores.get(parent);
+										}
+									}						
+								}
+							}
 						}
 						else
 							parentStores = allStores.get(parent);
@@ -831,6 +974,12 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		private boolean unwinds = false;
 		private TACNode lastNode = null;  //last TAC node in this block
 
+
+
+
+		public boolean isEndOfFinally() {
+			return lastNode instanceof TACReturn && lastNode.getBlock().getFinallyFunction() != null;
+		}
 
 		public boolean hasIndirectBranch() {
 			return lastNode instanceof TACBranch && ((TACBranch)lastNode).isIndirect();
@@ -1125,7 +1274,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 						if( update.update(currentlyUpdating) )
 							changed = true;
 
-						//simplifying branch
+						// Simplifying branch
 						if( update.getValue() instanceof TACLiteral ) {
 							TACLiteral literal = (TACLiteral) update.getValue();
 							boolean value = ((ShadowBoolean)literal.getValue()).getValue();
@@ -1163,8 +1312,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 				block.incoming.remove(this);
 		}
 
-		public Block(TACLabel label)
-		{
+		public Block(TACLabel label) {
 			this.label = label;
 		}
 
@@ -1240,8 +1388,8 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 					TACLocalStorage store = (TACLocalStorage)node;
 					TACVariable variable = store.getVariable();
 
-					//Useful to know if there was a previous store
-					//primarily for the case of GC: no need to decrement something that was never assigned 
+					// Useful to know if there was a previous store
+					// primarily for GC: no need to decrement something that was never assigned 
 					if( node instanceof TACLocalStore ) {
 						TACLocalStore localStore = (TACLocalStore) node;
 						if( predecessors.get(variable) != null ) {
@@ -1336,7 +1484,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 
 			TACNode node = label;
 
-			//might be wise not to use iterator here since removal is involved
+			// Don't use iterator here since removal is involved
 			if( node != null && lastNode != null ) {
 				while( node != lastNode ) {
 					TACNode temp = node.getNext();
@@ -1357,10 +1505,17 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		 */
 		private boolean removePhiInput(Block block)
 		{	
+			TACCallFinallyFunction function = null;
+
+			Set<TACPhi> stores = new HashSet<>();
 			for( TACNode node : this ) {
 				if( node instanceof TACPhi ) {
 					TACPhi store = (TACPhi)node;
-					store.removePreviousStore(block.getLabel());					
+					if(store.removePreviousStore(block.getLabel()))
+						stores.add(store);
+				}
+				else if(node instanceof TACCallFinallyFunction) {
+					function = (TACCallFinallyFunction)node;
 				}
 			}
 
@@ -1369,8 +1524,30 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 			outgoing = new HashSet<Block>();
 			addEdges(this);
 
-			//if updated branches is smaller, we're going to have to continue
-			return outgoing.size() < oldBranches.size();
+			// If updated branches is smaller, we're going to have to continue
+			boolean changed = outgoing.size() < oldBranches.size();
+
+			// Updating phi nodes can affect finally functions that branch back using the phi
+			if(function != null && function.getNext() instanceof TACBranch) {
+				TACBranch branch = (TACBranch)function.getNext();
+				if(branch.isIndirect() && stores.contains(branch.getPhi())) {
+					TACReturn return_ = function.getFinallyFunction().getReturn();
+					TACNode node = return_.getPrevious();
+					while(!(node instanceof TACLabel))
+						node = node.getPrevious();
+					TACLabel label = (TACLabel)node;
+					
+					Block finallyReturnBlock = nodeBlocks.get(label);
+					oldBranches = finallyReturnBlock.outgoing;
+
+					finallyReturnBlock.outgoing = new HashSet<Block>();
+					addEdges(finallyReturnBlock);	
+
+					changed = changed || finallyReturnBlock.outgoing.size() < oldBranches.size();
+				}
+			}
+
+			return changed;
 		}
 
 		/*
@@ -1398,15 +1575,18 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 		 * creates "junk" branches and labels that can't be reached. 
 		 */
 		private void removeNode(TACNode node) {
-			//Labels and label addresses are not counted as errors
-			//Any node without a context is structural stuff added to form legal LLVM
+			/* Labels and label addresses are not counted as errors
+			 * Any node without a context is structural stuff added to form legal LLVM
+			 * Code inside a cleanup can be removed because finally blocks sometimes have
+			 * two copies: the normal (cleanup) copy and the unwind copy.  As long as at least 
+			 * one of the two is reachable, the original Shadow is legal. 
+			 */ 
 			if( !(node instanceof TACLabel) && !(node instanceof TACLabelAddress) &&
-					node.getContext() != null ) 
+					node.getContext() != null && !node.getBlock().isInsideCleanup() ) 
 				addError(node.getContext(), Error.UNREACHABLE_CODE, "Code cannot be reached");
 
 			node.remove();
 		}
-
 
 		/*
 		 * Adds a branch from the current block to a target block.
@@ -1524,7 +1704,7 @@ public class ControlFlowGraph extends ErrorReporter implements Iterable<ControlF
 							calls.addEdge(signature, method.getSignature());
 					}
 				}
-				
+
 				//TODO: Add something for when method references are stored?
 			}		
 		}

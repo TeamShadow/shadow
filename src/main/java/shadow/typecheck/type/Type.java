@@ -316,6 +316,8 @@ public abstract class Type implements Comparable<Type> {
 		EXPORT_NATIVE_DECORATOR = null;
 		EXPORT_ASSEMBLY_DECORATOR = null;
 		EXPORT_METHOD_DECORATOR = null;
+		
+		exceptionType = null;
 	}
 	
 	/*
@@ -484,7 +486,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 		else if( this.equals(UBYTE))
 		{
-			return t.equals(USHORT) || t.equals(UINT) || t.equals(ULONG)  || t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			return t.equals(CODE) || t.equals(USHORT) || t.equals(UINT) || t.equals(ULONG)  || t.equals(SHORT) || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}		
 		else if( this.equals(UINT))
 		{
@@ -497,7 +499,7 @@ public abstract class Type implements Comparable<Type> {
 		}
 		else if( this.equals(USHORT) )
 		{
-			return t.equals(UINT) || t.equals(ULONG)  || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
+			return t.equals(CODE) || t.equals(UINT) || t.equals(ULONG)  || t.equals(INT) || t.equals(LONG) || t.equals(FLOAT) || t.equals(DOUBLE);
 		}
 		else		
 			return false;
@@ -1257,6 +1259,10 @@ public abstract class Type implements Comparable<Type> {
 					ClassType classType = (ClassType) type;
 					for( ClassType inner : classType.getInnerClasses().values() )
 						addUsedType(inner);
+
+					//add parent types
+					if(classType.getExtendType() != null)
+						addUsedType(classType.getExtendType());
 				}					
 				
 				//add reference to outer types
@@ -1264,7 +1270,8 @@ public abstract class Type implements Comparable<Type> {
 				while( outer != null ) {
 					outer.addUsedType(type);
 					outer = outer.getOuter();
-				}				
+				}
+				
 				
 				//add interfaces
 				ArrayList<InterfaceType> interfaces = type.getInterfaces();			
@@ -1475,11 +1482,15 @@ public abstract class Type implements Comparable<Type> {
 	public void setDocumentation(Documentation documentation) {
 		this.documentation = documentation;
 	}
+	
+	private static SequenceType exceptionType = null;
 
 	public static SequenceType getExceptionType() {
-		SequenceType type = new SequenceType();
-		type.add(new SimpleModifiedType(new PointerType()));
-		type.add(new SimpleModifiedType(Type.INT));
-		return type;
+		if(exceptionType == null ) {
+			exceptionType = new SequenceType();
+			exceptionType.add(new SimpleModifiedType(new PointerType()));
+			exceptionType.add(new SimpleModifiedType(Type.INT));
+		}
+		return exceptionType;
 	}
 }

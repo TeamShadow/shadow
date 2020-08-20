@@ -1,6 +1,7 @@
 package shadow.tac;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -8,27 +9,32 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import shadow.Configuration;
 import shadow.ShadowException;
 import shadow.interpreter.ShadowUndefined;
 import shadow.output.text.TextOutput;
 import shadow.tac.analysis.ControlFlowGraph;
 import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACChangeReferenceCount;
-import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLiteral;
+import shadow.tac.nodes.TACLocalEscape;
 import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalRecover;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACNewArray;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACParameter;
 import shadow.tac.nodes.TACPhi;
 import shadow.tac.nodes.TACReference;
+import shadow.tac.nodes.TACReturn;
 import shadow.tac.nodes.TACSequenceElement;
 import shadow.tac.nodes.TACStore;
 import shadow.typecheck.type.InterfaceType;
@@ -42,22 +48,75 @@ import shadow.typecheck.type.Type;
 
 public class TACMethod
 {
+	
+	public class TACFinallyFunction {
+		
+		private TACNode node;
+		private int number;
+		private TACFinallyFunction outerFinallyFunction;
+		private TACReturn return_;
+		private TACVariable exceptionStorage;
+		
+		public TACFinallyFunction(TACFinallyFunction outerFinallyFunction) {
+			this.outerFinallyFunction = outerFinallyFunction;
+			number = finallyFunctions.size();
+			finallyFunctions.add(this);
+		}
+		
+		public TACFinallyFunction getOuterFinallyFunction() {
+			return outerFinallyFunction;
+		}
+		
+		public void setReturn(TACReturn return_) {
+			this.return_ = return_;
+		}
+		
+		public TACVariable getExceptionStorage() {
+			return exceptionStorage;
+		}
+		
+		public void setExceptionStorage(TACVariable variable) {
+			exceptionStorage = variable;
+		}
+		
+		public TACReturn getReturn() {
+			return return_;
+		}
+		
+		public TACNode getNode() {
+			return node;		
+		}
+		
+		public void setNode(TACNode node) {
+			this.node = node;
+		}
+		
+		public MethodSignature getSignature() {
+			return TACMethod.this.getSignature();
+		}
+
+		public int getNumber() {
+			return number;
+		}
+	}
+	
 	private final MethodSignature signature;
 	private final Map<String, TACVariable> locals;
 	private final Map<String, TACVariable> parameters;
 	private final Deque<Map<String, TACVariable>> scopes;	
-	private boolean landingpad;
 	private int labelCounter = 0;		//counter to keep label numbering unique
 	private int variableCounter = 0;	//counter to keep variable number unique
-	private TACNode node;	
-	
-	public TACMethod(MethodSignature methodSignature)
-	{
+	private TACNode node;
+	//private TACNode normalCleanupAnchor;
+	//private TACNode unwindCleanupAnchor;
+	private TACFinallyFunction cleanupFinallyFunction;
+    private final List<TACFinallyFunction> finallyFunctions  = new ArrayList<>();
+    
+    public TACMethod(MethodSignature methodSignature) {
 		signature = methodSignature;
 		locals = new LinkedHashMap<String, TACVariable>();
 		parameters = new LinkedHashMap<String, TACVariable>();
 		scopes = new LinkedList<Map<String, TACVariable>>();		
-		landingpad = false;			
 		enterScope();		
 	}
 
@@ -74,7 +133,7 @@ public class TACMethod
 	public TACMethod addParameters(TACNode node, boolean isWrapped)
 	{		
 		//method starts with a label, always
-		new TACLabel(this).insertBefore(node);
+		//new TACLabel(this).insertBefore(node); //already has one created by startup
 		
 		Type prefixType = signature.getOuter();		
 		int parameter = 0;		
@@ -101,11 +160,6 @@ public class TACMethod
 			new TACLocalStore(node, addParameter(parameterType, name), new TACParameter(node, parameterType, parameter++));
 		}
 		
-		//variable to hold low level exception data
-		//note that variables cannot start with underscore (_) in Shadow, so no collision is possible
-		new TACLocalStore(node, addLocal(new SimpleModifiedType(Type.getExceptionType()), "_exception"), new TACLiteral(node, new ShadowUndefined(Type.getExceptionType())));
-
-		
 		if( !signature.isCreate() ) {		
 			SequenceType returnTypes = signature.getFullReturnTypes(); 
 			
@@ -130,14 +184,57 @@ public class TACMethod
 	}
 	
 
-    private void addCleanup(Set<TACVariable> storedVariables) {
-		TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
-			
-		//add each decrement before the first thing, making it the new last thing
+    private void addCleanup(Set<TACVariable> storedVariables, Set<TACCallFinallyFunction> cleanupCalls) {
+		//TACNode last = getNode().getPrevious().getPrevious(); //should be indirect branch at the end of finally, before final done label
+		/*
+    	// Run cleanups twice, once for normal
+    	TACNode anchor = normalCleanupAnchor;
+    	
+		// Add each decrement before the last thing (the indirect branch)
 		for( TACVariable variable : storedVariables )	
-			//return doesn't get cleaned up, so that it has an extra reference count
+			// Return doesn't get cleaned up, so that it has an extra reference count
 			if( !variable.isReturn() )				
-				new TACChangeReferenceCount(last, variable, false);
+				new TACChangeReferenceCount(anchor, variable, false);
+		
+		// Run cleanups twice, the second time for unwinding
+    	anchor = unwindCleanupAnchor;
+    	
+		TACLabel cleanupPadLabel = anchor.getBlock().getCleanupUnwind();
+		// This block is used for funclet generation for code inside the cleanup that decrements variables
+		TACBlock block = new TACBlock(anchor,anchor.getBlock()).setCleanupPad(cleanupPadLabel);
+    	
+    	// Add each decrement before the last thing (the throw)
+		for( TACVariable variable : storedVariables )	
+			// Return doesn't get cleaned up, so that it has an extra reference count
+			if( !variable.isReturn() ) //TODO: Is that true for an unwind? Probably: the return hasn't been incremented either				
+				new TACChangeReferenceCount(anchor, variable, false);
+		
+		// Reset the block on the anchor (which is the cleanupret) so that it doesn't think that its own cleanuppad is its parent
+		block = block.getParent();
+		anchor.setBlock(block);
+		*/
+    	
+    	// First node is label, second is return
+    	// Use the return as the anchor
+    	TACNode anchor = cleanupFinallyFunction.getNode().getNext();
+    	boolean addedDecrements = false;
+    	
+		// Add each decrement before the last thing (the indirect branch)
+		for( TACVariable variable : storedVariables )	
+			// Return doesn't get cleaned up, so that it has an extra reference count
+			if( !variable.isReturn() )	{			
+				new TACChangeReferenceCount(anchor, variable, false);
+				addedDecrements = true;
+			}
+		
+		// Get rid of finally function calls if nothing happens inside
+		if(!addedDecrements) {
+			for(TACCallFinallyFunction call : cleanupCalls)
+				call.remove();
+			
+			removeFinallyFunction(cleanupFinallyFunction);
+			cleanupFinallyFunction = null;
+		}    	
 	}
     
     void addGarbageCollection() {    	
@@ -150,6 +247,7 @@ public class TACMethod
 	    //if a method parameter is never stored again (which is the typical case), 
 	    //then we will neither need to increment it nor clean it up
 	    Map<TACVariable, TACParameter> parameterStores = new HashMap<TACVariable, TACParameter>();
+	    Set<TACCallFinallyFunction> cleanupCalls = new HashSet<TACCallFinallyFunction>();	    
 		
 		//fix this!  Run stores in a separate loop, after arrays and calls?
 		boolean changed = true;
@@ -266,13 +364,19 @@ public class TACMethod
 							}
 						}
 					}
+					// Used to note cleanup calls in case we don't end up using them
+					else if(node instanceof TACCallFinallyFunction) {
+						TACCallFinallyFunction call = (TACCallFinallyFunction)node;
+						if(call.getFinallyFunction() == cleanupFinallyFunction)
+							cleanupCalls.add(call);
+					}
 				}
 				
 				node = node.getNext();
 			}
 		}
 		
-		addCleanup(storedVariables);
+		addCleanup(storedVariables, cleanupCalls);
 	}
     
 	
@@ -348,18 +452,8 @@ public class TACMethod
 			throw new NoSuchElementException();
 	}
 
-	public void setHasLandingpad()
-	{
-		landingpad = true;
-	}
-	public boolean hasLandingpad()
-	{
-		return landingpad;
-	}
-
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		StringWriter writer = new StringWriter();
 		try
 		{
@@ -369,64 +463,144 @@ public class TACMethod
 		{
 			return "Error";
 		}
+		
 		return writer.toString();
 	}
 	
-	public int incrementLabelCounter()
-	{
+	public int incrementLabelCounter() {
 		return labelCounter++;
 	}
 	
-	public int incrementVariableCounter()
-	{
+	public int incrementVariableCounter() {
 		return variableCounter++;
 	}
-
-	//add allocations of garbage collected variables
-	public void addAllocations() {
-		Set<TACVariable> usedLocals = new HashSet<TACVariable>();
-		Set<TACChangeReferenceCount> referenceCountChanges = new HashSet<TACChangeReferenceCount>();
-		TACNode start = this.node;
+	
+	private static boolean isUsedVariable(TACVariable variable) {
+		return variable.needsGarbageCollection() || (variable.isFinallyVariable() && (variable.getOriginalName().equals("_exception") || !variable.getOriginalName().startsWith("_exception")));
+	}
+	
+	private void addAllocations(TACNode start, Set<TACVariable> usedLocals, Set<TACChangeReferenceCount> referenceCountChanges, Set<TACVariable> finallyUsedLocals) {
 		TACNode node = start;
 		
 		do {
-			if( node instanceof TACLocalLoad ) {
+			if(node instanceof TACLocalLoad) {
 				TACLocalLoad load = (TACLocalLoad)node;
-				if( load.getVariable().needsGarbageCollection() )
-					usedLocals.add(load.getVariable());
+				TACVariable variable = load.getVariable();
+				if(finallyUsedLocals != null ) {
+					finallyUsedLocals.add(variable);
+					variable.makeFinallyVariable();
+				}
+				
+				if( isUsedVariable(variable) )
+					usedLocals.add(variable);
 			}
-			else if( node instanceof TACLocalStore ) {
+			else if(node instanceof TACLocalStore) {
 				TACLocalStore store = (TACLocalStore)node;
-				if( store.getVariable().needsGarbageCollection() )
-					usedLocals.add(store.getVariable());
+				TACVariable variable = store.getVariable();
+				if(finallyUsedLocals != null) {
+					finallyUsedLocals.add(variable);
+					variable.makeFinallyVariable();
+				}
+				
+				if( isUsedVariable(variable) )
+					usedLocals.add(variable);
 			}
-			else if( node instanceof TACChangeReferenceCount ) {
+			else if(node instanceof TACChangeReferenceCount ) {
 				TACChangeReferenceCount change = (TACChangeReferenceCount) node;
-				if( !change.isField() )
+				TACVariable variable = change.getVariable();
+				if(!change.isField())
 					referenceCountChanges.add(change);
+				
+				if(finallyUsedLocals != null) {
+					finallyUsedLocals.add(variable);
+					variable.makeFinallyVariable();
+				}
+			}
+			else if(node instanceof TACPhi) {
+				TACPhi phi = (TACPhi)node;
+				TACVariable variable = phi.getVariable();
+				
+				// Being present in a phi doesn't mean it's really used in the finally
+				// But it still needs to be treated like a finally variable so that the variable is stored/loaded (and not used in phis)
+				if(finallyUsedLocals != null)
+					variable.makeFinallyVariable();
+		
+				if( isUsedVariable(variable) )
+					usedLocals.add(variable);
 			}
 			node = node.getNext();
 		} while( node != start );
-		
-		TACNode anchor = this.node.getNext();  //first is a label, then all the allocations
-		
-		for( TACVariable variable : usedLocals )
-			new TACAllocateVariable(anchor, variable);
-		
-		//remove reference count changes for unused variables
-		for( TACChangeReferenceCount change : referenceCountChanges ) {
-			if( !usedLocals.contains(change.getVariable()) )
-				change.remove(); //takes node out of linked list
-		}		
 	}
 
-	//For purposes of detecting variables that are not initialized
-	//the compiler stores undefined values into local variables
-	//these cause problems for garbage collection, since it tries
-	//to increment the reference count on undef, crashing the program.
-	//This method removes all undefined stores.
-	//This method is also an ideal place to turn off decrementing for
-	//variables that are null	
+	/** 
+	 * Add allocations of garbage collected variables
+	 * and variables used in finally functions.
+	 */
+	public void addAllocations() {
+		Set<TACVariable> usedLocals = new HashSet<TACVariable>();
+		Set<TACChangeReferenceCount> referenceCountChanges = new HashSet<TACChangeReferenceCount>();
+		
+		Map<TACFinallyFunction, Set<TACVariable>> finallyUsedLocalsMap = new HashMap<>();
+		Set<TACVariable> allFinallyLocals = new HashSet<>();
+		
+		addAllocations(node, usedLocals, referenceCountChanges, null);
+		
+		for(TACFinallyFunction function : finallyFunctions) {
+			Set<TACVariable> finallyUsedLocals = new HashSet<TACVariable>();
+			addAllocations(function.getNode(), usedLocals, referenceCountChanges, finallyUsedLocals);
+			finallyUsedLocalsMap.put(function, finallyUsedLocals);
+			allFinallyLocals.addAll(finallyUsedLocals);
+		}
+		
+		// Remove reference count changes for unused variables
+		for( TACChangeReferenceCount change : referenceCountChanges ) {
+			if( !usedLocals.contains(change.getVariable()) )
+				change.remove(); // Takes node out of linked list
+		}
+		
+		TACNode anchor = node.getNext();  //first is a label, then all the allocations
+		
+		// Put allocations in method for used variables
+		List<TACVariable> locallyEscapedVariables = new ArrayList<>();
+		for( TACVariable variable : usedLocals ) {
+			new TACAllocateVariable(anchor, variable);
+			if(allFinallyLocals.contains(variable))
+				locallyEscapedVariables.add(variable);
+		}
+		
+		if(locallyEscapedVariables.size() > 0)
+			new TACLocalEscape(anchor, locallyEscapedVariables);
+				
+		// Put allocations in finally functions for used variables
+		for(TACFinallyFunction function : finallyFunctions) {
+			anchor = function.getNode().getNext(); // first is a label
+			Set<TACVariable> finallyUsedLocals = finallyUsedLocalsMap.get(function);
+			for(TACVariable variable : finallyUsedLocals) {
+				//new TACAllocateVariable(anchor, variable);
+				//new TACLocalStore(anchor, variable, new TACLocalRecover(anchor, variable), false);
+				// _exception is a special variable used for all exceptions
+				// _exception1, _exception2, etc. are special variables used only in finally functions to store in-flight exceptions
+				if(variable.getOriginalName().equals("_exception")  || !variable.getOriginalName().startsWith("_exception"))
+					new TACLocalRecover(anchor, variable, locallyEscapedVariables.indexOf(variable)); // The local recover handles it all?
+				else
+					new TACAllocateVariable(anchor, variable);
+			}
+			
+			// Store in-flight exception into finally exception holder
+			if(!Configuration.isWindows() && function.getExceptionStorage() != null)
+				new TACLocalStore(anchor, function.getExceptionStorage(), new TACLocalLoad(anchor, getLocal("_exception")));
+		}
+	}
+
+	/*
+	 * For purposes of detecting variables that are not initialized
+	 * the compiler stores undefined values into local variables
+	 * these cause problems for garbage collection, since it tries
+	 * to increment the reference count on undef, crashing the program.
+	 * This method removes all undefined stores.
+	 * This method is also an ideal place to turn off decrementing for
+	 * variables that are null.
+	 */	
 	public void removeUndefinedStores(ControlFlowGraph graph) {
 		TACNode start = this.node;
 		TACNode node = start;
@@ -451,5 +625,26 @@ public class TACMethod
 			node = node.getNext();
 		} while( node != start );
 		
+	}
+	/*
+	public void setNormalCleanupAnchor(TACNode node) {
+		normalCleanupAnchor = node;
+	}
+	
+	public void setUnwindCleanupAnchor(TACNode node) {
+		unwindCleanupAnchor = node;
+	}
+	*/
+	
+	public void setCleanupFinallyFunction(TACFinallyFunction function) {
+		cleanupFinallyFunction = function;
+	}
+	
+	public List<TACFinallyFunction> getFinallyFunctions() {
+		return finallyFunctions;
+	}
+
+	public void removeFinallyFunction(TACFinallyFunction function) {
+		finallyFunctions.remove(function);
 	}
 }

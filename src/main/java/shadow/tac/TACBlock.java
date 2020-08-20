@@ -1,10 +1,10 @@
 package shadow.tac;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import shadow.tac.nodes.TACCatch;
+import shadow.Configuration;
+import shadow.tac.TACMethod.TACFinallyFunction;
+import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACLabel;
+import shadow.tac.nodes.TACLandingPad;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACPhi;
 import shadow.typecheck.type.PointerType;
@@ -20,44 +20,41 @@ import shadow.typecheck.type.SimpleModifiedType;
 public class TACBlock
 {
 	private TACBlock parent;
-	private TACLabel breakLabel, continueLabel, landingpadLabel,
-			unwindLabel;
-	private List<TACLabel> catchLabels;
-	private TACLabel recoverLabel, doneLabel, cleanupLabel;
-	private TACPhi cleanupPhi;
+	private TACLabel breakLabel, continueLabel;
+	private TACLabel recoverLabel, doneLabel, catchesLabel;
+	// Although it seems like overkill, we need many different items for a cleanup:
+	private TACLabel cleanupLabel;		// Label for the actual cleaning up code, which everything will visit, even if not unwinding
+	private TACPhi cleanupPhi;			// Phi for returning to wherever we were before doing the cleanup
+	
+	private TACLabel cleanupUnwindLabel; // Label for the cleanup done when unwinding
+	
 	private TACMethod method;
+	private boolean unwindTarget = false; // Used to see if the block can be reached by unwinding, important for finally code-generation
+	private boolean cleanupTarget = false; // Used to see if the block contains a cleanup, important for finally code-generation
+	private TACLabel cleanupPad = null;
+	private TACFinallyFunction finallyFunction = null;
+	private TACLandingPad landingPad;
 
-	public TACBlock(TACMethod method)
-	{
+	
+	public TACBlock(TACMethod method) {
 		this(method, null);	
 	}
 	
-	public TACBlock(TACNode node, TACBlock parentBlock)
-	{
+	public TACBlock(TACNode node, TACBlock parentBlock) {
 		this(node.getMethod(), parentBlock);
 		node.setBlock(this);
 	}
 	
-	private TACBlock(TACMethod method, TACBlock parentBlock)
-	{
+	private TACBlock(TACMethod method, TACBlock parentBlock) {
 		parent = parentBlock;
-		breakLabel = null;
-		continueLabel = null;
-		landingpadLabel = null;
-		unwindLabel = null;
-		catchLabels = null;
-		recoverLabel = null;
-		cleanupLabel = null;
 		this.method = method;		
 	}
 	
-	public TACMethod getMethod()
-	{
+	public TACMethod getMethod() {
 		return method;
 	}
 
-	public TACBlock getParent()
-	{
+	public TACBlock getParent() {
 		return parent;
 	}
 
@@ -71,23 +68,8 @@ public class TACBlock
 	}
 	public TACBlock getBreakBlock()
 	{
-		return getBreakBlock(null);
-	}
-	public TACBlock getBreakBlock(TACBlock last)
-	{
-		return getBreakBlock(this, last);
-	}
-	public TACBlock getNextBreakBlock()
-	{
-		return getNextBreakBlock(null);
-	}
-	public TACBlock getNextBreakBlock(TACBlock last)
-	{
-		return getBreakBlock(getParent(), last);
-	}
-	private TACBlock getBreakBlock(TACBlock block, TACBlock last)
-	{
-		while (block != last && !block.hasBreak())
+		TACBlock block = this;
+		while (block != null && !block.hasBreak())
 			block = block.getParent();
 		return block;
 	}
@@ -108,26 +90,12 @@ public class TACBlock
 	}
 	public TACBlock getContinueBlock()
 	{
-		return getContinueBlock(null);
-	}
-	public TACBlock getContinueBlock(TACBlock last)
-	{
-		return getContinueBlock(this, last);
-	}
-	public TACBlock getNextContinueBlock()
-	{
-		return getNextContinueBlock(null);
-	}
-	public TACBlock getNextContinueBlock(TACBlock last)
-	{
-		return getContinueBlock(getParent(), last);
-	}
-	private TACBlock getContinueBlock(TACBlock block, TACBlock last)
-	{
-		while (block != last && !block.hasContinue())
+		TACBlock block = this;
+		while (block != null && !block.hasContinue())
 			block = block.getParent();
 		return block;
 	}
+
 	public TACBlock addContinue()
 	{
 		if (continueLabel != null)
@@ -135,75 +103,39 @@ public class TACBlock
 		continueLabel = new TACLabel(method);
 		return this;
 	}
-
-	public boolean hasLandingpad()
+	
+	
+	/*
+	public TACCatchPad getCatchSwitch()
 	{
-		return getLandingpad() != null;
+		if (catchSwitch != null)
+			return catchSwitch;
+		return parent == null ? null : parent.getCatchSwitch();
 	}
-	public TACLabel getLandingpad()
+	
+	public TACBlock addCatchSwitch(TACCatchPad catchSwitch)
 	{
-		if (landingpadLabel != null)
-			return landingpadLabel;
-		return parent == null ? null : parent.getLandingpad();
-	}
-	public TACBlock addLandingpad()
-	{
-		if (landingpadLabel != null)
-			throw new IllegalStateException("Landingpad label already added.");
-		landingpadLabel = new TACLabel(method);
+		if (this.catchSwitch != null)
+			throw new IllegalStateException("Catch switch already added.");
+		this.catchSwitch = catchSwitch;
 		return this;
 	}
+	public TACCatchPad getCatchPad()
+	{
+		if (catchPad != null)
+			return catchPad;
+		return parent == null ? null : parent.getCatchPad();
+	}
 
-	public boolean hasUnwind()
+	public TACBlock addCatchPad(TACCatchPad catchPad)
 	{
-		return getUnwind() != null;
-	}
-	public TACLabel getUnwind()
-	{
-		if (unwindLabel != null)
-			return unwindLabel;
-		return parent == null ? null : parent.getUnwind();
-	}
-	public TACBlock addUnwind()
-	{
-		if (unwindLabel != null)
-			throw new IllegalStateException("Unwind label already added.");
-		unwindLabel = new TACLabel(method);
+		if (this.catchPad != null)
+			throw new IllegalStateException("Catch pad already added.");
+		this.catchPad = catchPad;
 		return this;
 	}
-
-	public int getNumCatches()
-	{
-		return catchLabels != null ? catchLabels.size() : 0;
-	}
-	public TACLabel getCatch(int num)
-	{
-		return catchLabels.get(num);
-	}
-	public TACCatch getCatchNode(int num)
-	{
-		TACNode node = getCatch(num);
-		do
-			node = node.getNext();
-		while (!(node instanceof TACCatch));
-		return (TACCatch)node;
-	}
-	public TACBlock addCatch()
-	{
-		return addCatches(1);
-	}
-	public TACBlock addCatches(int num)
-	{
-		if (catchLabels != null)
-			throw new IllegalStateException("Catch labels already added.");
-		if (num > 0) {
-			catchLabels = new ArrayList<TACLabel>(num);
-			for (int i = 0; i < num; i++)
-				catchLabels.add(new TACLabel(method));
-		}
-		return this;
-	}
-
+	
+	*/
 	public TACLabel getRecover()
 	{
 		if (recoverLabel != null)
@@ -240,7 +172,8 @@ public class TACBlock
 
 	public boolean hasCleanup()
 	{
-		return getCleanup() != null;
+		//return getCleanup() != null;
+		return cleanupLabel != null;
 	}
 	public TACLabel getCleanup()
 	{
@@ -248,12 +181,59 @@ public class TACBlock
 			return cleanupLabel;
 		return parent == null ? null : parent.getCleanup();
 	}
+	
+	public TACLabel getCleanupUnwind()
+	{
+		if (cleanupUnwindLabel != null)
+			return cleanupUnwindLabel;
+		return parent == null ? null : parent.getCleanupUnwind();
+	}
 	public TACPhi getCleanupPhi()
 	{
 		if (cleanupPhi != null)
 			return cleanupPhi;
 		return parent == null ? null : parent.getCleanupPhi();
 	}
+	
+	public TACLabel getUnwind() {
+		TACBlock currentBlock = this;
+		while(currentBlock != null) {
+			if(currentBlock.catchesLabel != null)
+				return currentBlock.catchesLabel;
+			if(currentBlock.cleanupUnwindLabel != null)
+				return currentBlock.cleanupUnwindLabel;
+			
+			currentBlock = currentBlock.getParent();
+		}
+		
+		return null;
+	}
+	
+	public TACCleanupPad getCleanupPad() {
+		/*
+		 * The only parent pads that matter for funclet generation are 
+		 * cleanup unwind pads.  These are the ones where the exception
+		 * is still in-flight.  Other catches are caught and dealt with.
+		 */
+		
+		TACBlock current = this;
+		while(current != null) {
+			if(current.cleanupPad != null) {
+				// A cleanup label have phi nodes after it
+				TACNode node = current.cleanupPad.getNext();
+				while(node.getClass() != TACCleanupPad.class)
+					node = node.getNext();
+
+				return (TACCleanupPad)node;
+			}			
+			
+			current = current.getParent();
+		}
+			
+		return null;
+	}
+	
+	/*
 	public TACBlock getCleanupBlock()
 	{
 		return getCleanupBlock(null);
@@ -272,12 +252,93 @@ public class TACBlock
 			block = block.getParent();
 		return block;
 	}
+	*/
 	public TACBlock addCleanup()
 	{
 		if (cleanupLabel != null)
 			throw new IllegalStateException("Cleanup label already added.");
-		cleanupLabel = new TACLabel(method);		
+		cleanupLabel = new TACLabel(method);
 		cleanupPhi = new TACPhi(null, method.addTempLocal(new SimpleModifiedType(new PointerType())));
+		cleanupUnwindLabel = new TACLabel(method);
+		if(!Configuration.isWindows())
+			landingPad = new TACLandingPad(method);
 		return this;
+	}
+	
+	public TACBlock addCatches() {
+		if (catchesLabel != null)
+			throw new IllegalStateException("Catches label already added.");
+		catchesLabel = new TACLabel(method);
+		if(!Configuration.isWindows())
+			landingPad = new TACLandingPad(method);
+		return this;		
+	}
+
+	public TACLabel getCatches() {
+		if (catchesLabel != null)
+			return catchesLabel;
+		return parent == null ? null : parent.getCatches();
+	}
+	
+	public TACLandingPad getLandingPad() {
+		if(landingPad != null)
+			return landingPad;
+		return parent == null ? null : parent.getLandingPad();
+	}
+	
+	public boolean isUnwindTarget() {
+		return unwindTarget;
+	}
+	
+	/*
+	 * Method calls and throws make it possible to unwind, perhaps all the way.
+	 */
+	public void addUnwindSource() {
+		TACBlock block = this;
+		while(block != null) {
+			if(block.hasCleanup()) // only finally blocks
+				block.unwindTarget = true;
+			block = block.getParent();
+		}
+	}
+	
+	public TACBlock setCleanupTarget() {
+		cleanupTarget = true;
+		return this;		
+	}
+	
+	// Used to see if code is inside of a cleanup
+	// If it is, we don't report an error for dead code removal
+	public boolean isInsideCleanup() {
+		TACBlock block = this;
+		while(block != null) {
+			if(block.cleanupTarget)
+				return true;
+			
+			block = block.getParent();
+		}
+		
+		return false;
+	}
+
+	public TACBlock setCleanupPad(TACLabel cleanupPad) {
+		this.cleanupPad = cleanupPad;
+		return this;
+	}
+	
+	public void setFinallyFunction(TACFinallyFunction function) {
+		finallyFunction = function;
+	}
+	
+	public TACFinallyFunction getFinallyFunction() {
+		TACBlock current = this;
+		while(current != null) {
+			if(current.finallyFunction != null)
+				return current.finallyFunction;
+			
+			current = current.parent;
+		}
+		
+		return null;
 	}
 }

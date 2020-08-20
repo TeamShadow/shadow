@@ -1,0 +1,21 @@
+import shadow:io@Console;
+
+class shadow:test@GenericWithBoundTest
+{
+	public main( String[] args ) => ()   
+	{ 
+		Silver silver = Silver:create(10283.60); 
+		Gold gold = Gold:create(230953.34); 
+		
+	    var chest1 = Chest<Silver>:create(silver); 
+	    var chest2 = Chest<Gold>:create(gold); 
+	    Silver silverContents = chest1.getObject();
+	    Gold goldContents = chest2.getObject();
+	    
+	    Console.printLine(chest1.getValue());
+	    Console.printLine(chest2.getValue());
+	    
+		Console.printLine("Finished!");  
+	}
+
+}

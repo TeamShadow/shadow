@@ -3,33 +3,53 @@ import shadow:io@Console;
 immutable class shadow:test@ExceptionTest
 {
 	public test() => () {		
-		//throw IndexOutOfBoundsException:create();
-		throw ExceptionB:create();
+		try
+		{
+			throw ExceptionB:create();
+		}
+		finally
+		{
+			Console.printLine("finally");
+		}
 	}
-	public test1() => () {
-		try {			
+	public test1() => ()
+	{
+		try
+		{			
 			test();						
 		} catch (ExceptionA ex) {
 			Console.printLine("test1 caught ExceptionA");
 		}		
 	}
-	public test2() => () {
-		try {
-			test1();
-		} catch (ExceptionA ex) {
+	public test2() => ()
+	{
+		try
+		{
+			test();
+		}
+		catch (ExceptionA ex)
+		{
 			Console.printLine("test2 caught ExceptionA");
-		} catch (ExceptionB ex) {
+		}
+		catch (ExceptionB ex)
+		{
 			Console.printLine("test2 caught ExceptionB");
 		}
 	}
-	public test3() => () {
-		try {
+	public test3() => ()
+	{
+		try
+		{
 			test2();
-		} catch (Exception ex) {
+		}
+		catch (Exception ex)
+		{
 			Console.printLine("test3 caught Exception");
 		}
 	}
-	public main( String[] args ) => () {
+	
+	public main( String[] args ) => ()
+	{
 		test3();
 		throw Exception:create();
 	}

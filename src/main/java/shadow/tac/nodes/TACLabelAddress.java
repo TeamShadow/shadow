@@ -3,6 +3,7 @@ package shadow.tac.nodes;
 import shadow.ShadowException;
 import shadow.output.llvm.LLVMOutput;
 import shadow.tac.TACMethod;
+import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.PointerType;
 import shadow.typecheck.type.Type;
@@ -41,9 +42,12 @@ public class TACLabelAddress extends TACOperand {
 	}
 	
 	@Override
-	public Object getData()
-	{
-		return "blockaddress(" + LLVMOutput.name(method) + ", " + LLVMOutput.symbol(label) + ")";								
+	public Object getData() {
+		TACFinallyFunction function = label.getBlock().getFinallyFunction();
+		if(function != null)
+			return "blockaddress(" + LLVMOutput.name(function) + ", " + LLVMOutput.symbol(label) + ")";
+		else
+			return "blockaddress(" + LLVMOutput.name(method) + ", " + LLVMOutput.symbol(label) + ")";								
 	}
 
 	@Override

@@ -426,6 +426,15 @@ and	CanHash
 	}
 	
 	/** 
+	 * Finds the tangent of the current value.	 	 
+	 * @return tangent of the value
+	 */
+	public tan() => (double)
+	{
+		return toDouble().tan();
+	}
+	
+	/** 
 	 * Finds the natural logarithm of the current value.	 	 
 	 * @return natural logarithm of the value
 	 */

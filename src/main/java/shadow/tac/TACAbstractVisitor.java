@@ -5,19 +5,26 @@ import shadow.tac.nodes.TACAllocateVariable;
 import shadow.tac.nodes.TACBinary;
 import shadow.tac.nodes.TACBranch;
 import shadow.tac.nodes.TACCall;
+import shadow.tac.nodes.TACCallFinallyFunction;
 import shadow.tac.nodes.TACCast;
 import shadow.tac.nodes.TACCatch;
+import shadow.tac.nodes.TACCatchPad;
+import shadow.tac.nodes.TACCatchRet;
 import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACClass.TACClassData;
 import shadow.tac.nodes.TACClass.TACMethodTable;
+import shadow.tac.nodes.TACCleanupPad;
+import shadow.tac.nodes.TACCleanupRet;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACLabel;
 import shadow.tac.nodes.TACLabelAddress;
-import shadow.tac.nodes.TACLandingpad;
+import shadow.tac.nodes.TACLandingPad;
 import shadow.tac.nodes.TACLiteral;
 import shadow.tac.nodes.TACLoad;
+import shadow.tac.nodes.TACLocalEscape;
 import shadow.tac.nodes.TACLocalLoad;
+import shadow.tac.nodes.TACLocalRecover;
 import shadow.tac.nodes.TACLocalStore;
 import shadow.tac.nodes.TACLongToPointer;
 import shadow.tac.nodes.TACMethodName;
@@ -41,8 +48,7 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	
 	protected TACNode current = null;
 
-	public void walk(TACNode nodes) throws ShadowException
-	{
+	public void walk(TACNode nodes) throws ShadowException {
 		current = nodes;
 		do
 		{
@@ -52,8 +58,7 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 		while (current != nodes);
 	}
 	
-	protected void visit(TACNode node) throws ShadowException
-	{
+	protected void visit(TACNode node) throws ShadowException {
 		if(node == null) {
 			throw new RuntimeException();
 		}
@@ -71,9 +76,19 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACCall node) throws ShadowException { }
 	@Override
+	public void visit(TACCallFinallyFunction node) throws ShadowException { }
+	@Override
 	public void visit(TACCast node) throws ShadowException { }
 	@Override
 	public void visit(TACCatch node) throws ShadowException { }
+	@Override
+	public void visit(TACCatchPad node) throws ShadowException { }
+	@Override
+	public void visit(TACCatchRet node) throws ShadowException { }
+	@Override
+	public void visit(TACCleanupPad node) throws ShadowException { }
+	@Override
+	public void visit(TACCleanupRet node) throws ShadowException { }
 	@Override
 	public void visit(TACChangeReferenceCount node) throws ShadowException { }
 	@Override
@@ -81,19 +96,23 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACClassData node) throws ShadowException { }	
 	@Override
-	public void visit(TACCopyMemory node) throws ShadowException { }	
+	public void visit(TACCopyMemory node) throws ShadowException { }
 	@Override
 	public void visit(TACLabel node) throws ShadowException { }	
 	@Override
 	public void visit(TACLabelAddress node) throws ShadowException { }
 	@Override
-	public void visit(TACLandingpad node) throws ShadowException { }
+	public void visit(TACLandingPad node) throws ShadowException { }
 	@Override
 	public void visit(TACLiteral node) throws ShadowException { }
 	@Override
 	public void visit(TACLoad node) throws ShadowException { }	
 	@Override
+	public void visit(TACLocalEscape node) throws ShadowException { }
+	@Override
 	public void visit(TACLocalLoad node) throws ShadowException { }
+	@Override
+	public void visit(TACLocalRecover node) throws ShadowException { }
 	@Override
 	public void visit(TACLocalStore node) throws ShadowException { }
 	@Override
@@ -113,11 +132,11 @@ public abstract class TACAbstractVisitor implements TACVisitor {
 	@Override
 	public void visit(TACPointerToLong node) throws ShadowException { }	
 	@Override
-	public void visit(TACSequenceElement node) throws ShadowException { }	
-	@Override
-	public void visit(TACResume node) throws ShadowException { }
+	public void visit(TACSequenceElement node) throws ShadowException { }
 	@Override
 	public void visit(TACReturn node) throws ShadowException { }
+	@Override
+	public void visit(TACResume node) throws ShadowException { } 
 	@Override
 	public void visit(TACSequence node) throws ShadowException { }
 	@Override

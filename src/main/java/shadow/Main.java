@@ -50,8 +50,9 @@ import shadow.typecheck.type.Type;
 public class Main {
 
 	// Version of the Shadow compiler
-	public static final String VERSION = "0.7.5";
-	public static final String MINIMUM_LLVM_VERSION = "3.8";
+	public static final String VERSION = "0.8";
+	public static final String MINIMUM_LLVM_VERSION = "6.0";
+	public static final String MINIMUM_WINDOWS_LLVM_VERSION = "10.0";
 
 	// These are the error codes returned by the compiler
 	public static final int NO_ERROR = 0;
@@ -110,7 +111,14 @@ public class Main {
 	// Check LLVM version using lexical comparison
 	private static void checkLLVMVersion() throws ConfigurationException {
 		String LLVMVersion = Configuration.getLLVMVersion();
-		if (LLVMVersion.compareTo(MINIMUM_LLVM_VERSION) < 0) {
+	
+		int comparison = 0;
+		if(Configuration.isWindows()) // Higher versions of LLVM are needed for Windows because of EH
+			comparison = compareVersions(LLVMVersion, MINIMUM_WINDOWS_LLVM_VERSION);
+		else
+			comparison = compareVersions(LLVMVersion, MINIMUM_LLVM_VERSION);
+					
+		if(comparison < 0) {
 			String error = "LLVM version " + MINIMUM_LLVM_VERSION + " or higher is required for Shadow " + VERSION
 					+ ", but ";
 			if (LLVMVersion.isEmpty())
@@ -119,6 +127,43 @@ public class Main {
 				error += "version " + LLVMVersion + " found.";
 			throw new ConfigurationException(error);
 		}
+	}
+	
+	private static int versionStringToInt(String number) {
+		int start = 0;
+		int end = 0;
+		
+		// Start at the beginning, since alphabetic characters indicating alpha or similar might be at the end
+		while(end < number.length() && Character.isDigit(number.charAt(end)))
+			++end;
+		
+		try {
+			return Integer.parseInt(number.substring(start, end));
+		}
+		catch(NumberFormatException e) {
+			return 0;
+		}
+	}
+	
+	private static int compareVersions(String v1,String v2) {
+		String[] strings1 = v1.split("\\.");
+		String[] strings2 = v2.split("\\.");
+		int size = Math.max(strings1.length, strings2.length);
+		for(int i = 0; i < size; ++i) {
+			int value1, value2;
+			if(i < strings1.length)
+				value1 = versionStringToInt(strings1[i].trim());
+			else
+				value1 = 0;
+			if(i < strings2.length)
+				value2 = versionStringToInt(strings2[i].trim());
+			else
+				value2 = 0;
+			if(value1 != value2)
+				return value1 - value2;
+		}
+		
+		return 0;
 	}
 
 	public static void run(String[] args) throws FileNotFoundException, ParseException, ShadowException, IOException,
@@ -158,6 +203,7 @@ public class Main {
 
 		List<String> linkCommand = new ArrayList<>();
 		linkCommand.add(config.getLlvmLink()); // usually llvm-link
+		
 		linkCommand.add("-");
 		List<Path> cFiles = new ArrayList<>();
 
@@ -170,16 +216,24 @@ public class Main {
 			if (!compileCSourceFiles(system.resolve(Paths.get("shadow", "c-source")).normalize(), cFiles,
 					assembleCommand)) {
 				logger.error("Failed to compile one or more C source files.");
-				throw new CompileException("FAILED TO COMPILE");
+			throw new CompileException("FAILED TO COMPILE");
 			}
 
 			logger.info("Building for target \"" + config.getTarget() + "\"");
 			Path mainLL;
 
-			if (mainArguments)
-				mainLL = Paths.get("shadow", "Main.ll");
-			else
-				mainLL = Paths.get("shadow", "NoArguments.ll");
+			if(config.getOs().equals("Windows")) {
+				if (mainArguments)
+					mainLL = Paths.get("shadow", "MainWindows.ll");
+				else
+					mainLL = Paths.get("shadow", "NoArgumentsWindows.ll");
+			}
+			else {
+				if (mainArguments)
+					mainLL = Paths.get("shadow", "Main.ll");
+				else
+					mainLL = Paths.get("shadow", "NoArguments.ll");
+			}
 
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
@@ -187,10 +241,12 @@ public class Main {
 			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
 			// usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
-					config.getOptimizationLevel())
+					/*"--filetype=obj",*/ config.getOptimizationLevel())
 					/* .redirectOutput(new File("a.s")) */.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT)
 					.redirectError(Redirect.INHERIT).start();
+			//Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(currentJob.getOutputFile().toFile())
+					//.redirectError(Redirect.INHERIT).start();
 
 			try {
 				new Pipe(link.getInputStream(), compile.getOutputStream()).start();
@@ -250,12 +306,15 @@ public class Main {
 		List<String> compileCommand = new ArrayList<String>();
 
 		if (Configuration.getConfiguration().getOs().equals("Mac")) {
-			compileCommand.add("gcc");
+			compileCommand.add("clang");
 			String[] version = System.getProperty("os.version").split("\\.");
 			compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
 			// compileCommand.add("-Wall");			
-		} else
-			compileCommand.add("gcc");
+		}
+		else
+			compileCommand.add("clang");
+		
+		compileCommand.add("-m" + Configuration.getConfiguration().getArch());
 
 		compileCommand.add("-O3");
 
@@ -272,11 +331,11 @@ public class Main {
 		/*
 		 * The compiling of the C files is done in two stages: 1. We traverse
 		 * the `c-source` directory looking for `.c` files, and we add those to
-		 * the coreCFiles list. All those files are compiled in one gcc run, and
+		 * the coreCFiles list. All those files are compiled in one gcc (clang) run, and
 		 * the corresponding .s files are generated next to the .c files, with
 		 * the same name. 2. The cFiles list contains all the .c files found
 		 * while generating LLVM for .shadow files. Each `.c` file is compiled
-		 * using a gcc run. So, if there are 100 .c files, we will run gcc 100
+		 * using a gcc run. So, if there are 100 .c files, we will run gcc (clang) 100
 		 * times.
 		 */
 
@@ -355,7 +414,10 @@ public class Main {
 		Path shadow = config.getSystemImport().resolve("shadow");
 
 		// Add architecture-dependent exception handling code
-		linkCommand.add(optimizeLLVMFile(shadow.resolve("Unwind" + config.getArch() + ".ll")));
+		if (Configuration.getConfiguration().getOs().equals("Windows"))
+			linkCommand.add(optimizeLLVMFile(shadow.resolve("UnwindWindows" + config.getArch() + ".ll")));
+		else
+			linkCommand.add(optimizeLLVMFile(shadow.resolve("Unwind" + config.getArch() + ".ll")));
 
 		// Add platform-specific system code
 		linkCommand.add(optimizeLLVMFile(shadow.resolve(config.getOs() + ".ll")));
@@ -454,7 +516,7 @@ public class Main {
 
 		try {
 			optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-					config.getOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
+					config.getLLVMOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
 					.redirectError(Redirect.INHERIT).start();
 			if( optimize.waitFor() != 0 )
 				throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
@@ -494,7 +556,7 @@ public class Main {
 				out = Files.newOutputStream(Paths.get(path + ".ll"));
 			else {
 				optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-						config.getOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
+						config.getLLVMOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
 						.redirectError(Redirect.INHERIT).start();
 				out = optimize.getOutputStream();
 			}
@@ -685,7 +747,11 @@ public class Main {
 
 	public static String canonicalize(Path path)
 	{
-		return path.toAbsolutePath().normalize().toString();
+		Path absolute = path.toAbsolutePath();
+		Path normalized = absolute.normalize();
+		String result = normalized.toString();
+		
+		return result;
 	}
 
 }

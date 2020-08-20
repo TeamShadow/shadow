@@ -45,8 +45,8 @@ declare void @__incrementRef(%shadow.standard..Object*) nounwind
 ; Shadow Method Definitions
 ;---------------------------
 ; Used to pretend that an array that will never be used elsewhere and cannot leak is actually immutable.
-; private native readonly virtualFreeze( byte[] data ) => ( immutable byte[] )
-define %shadow.standard..Array* @shadow.standard..String_MvirtualFreeze_byte_A(%shadow.standard..String* %string, %shadow.standard..Array* %data) alwaysinline nounwind readnone  {
+; private native readonly virtualFreeze( ubyte[] data ) => ( immutable byte[] )
+define %shadow.standard..Array* @shadow.standard..String_MvirtualFreeze_ubyte_A(%shadow.standard..String* %string, %shadow.standard..Array* %data) alwaysinline nounwind readnone  {
 _entry:	
 	%asObject = bitcast %shadow.standard..Array* %data to %shadow.standard..Object*
 	call void @__incrementRef(%shadow.standard..Object* %asObject) nounwind	

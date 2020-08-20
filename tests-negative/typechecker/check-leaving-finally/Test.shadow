@@ -1,0 +1,27 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		nullable Object o = null;
+		int x = 4;
+		try
+		{
+			try
+			{
+				x = 3;
+			}
+			finally
+			{
+				Object other = check(o);
+			}
+		}
+		recover
+		{
+			Console.printLine("Safe!");
+		}
+		
+		Console.printLine(x);
+	}
+}

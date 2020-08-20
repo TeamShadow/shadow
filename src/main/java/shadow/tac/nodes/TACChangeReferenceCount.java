@@ -1,8 +1,10 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
+import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
+import shadow.tac.TACMethod.TACFinallyFunction;
 
 public class TACChangeReferenceCount extends TACNode {
 
@@ -10,7 +12,7 @@ public class TACChangeReferenceCount extends TACNode {
 	private TACFieldRef field;
 	private boolean increment;
 	private TACOperand classData; //only used for array decrements
-	
+
 	public TACChangeReferenceCount(TACNode node, TACVariable variable, boolean increment) {
 		super(node);
 		this.variable = variable;

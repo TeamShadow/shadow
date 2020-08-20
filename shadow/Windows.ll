@@ -44,7 +44,7 @@
 @shadow.standard..Class_class = external constant %shadow.standard..Class
 @shadow.standard..String_methods = external constant %shadow.standard..String_methods
 @shadow.standard..String_class = external constant %shadow.standard..Class
-@byte_A_class = external constant %shadow.standard..Class
+@ubyte_A_class = external constant %shadow.standard..Class
 @shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.io..IOException_class = external constant %shadow.standard..Class
@@ -56,7 +56,7 @@
 %shadow.io..Path = type { %ulong, %shadow.standard..Class*, %shadow.io..Path_methods* , {{%ulong, %shadow.standard..String*}*, %shadow.standard..Class*, %ulong } }
 %shadow.standard..System = type opaque
 
-declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object*, %shadow.standard..Array*)
+declare %shadow.standard..String* @shadow.standard..String_Mcreate_ubyte_A(%shadow.standard..Object*, %shadow.standard..Array*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object*, %shadow.standard..String*)
 declare %shadow.io..IOException* @shadow.io..IOException_Mcreate(%shadow.standard..Object*)
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
@@ -69,7 +69,6 @@ declare %long @shadow.standard..Array_MsizeLong(%shadow.standard..Array* %array)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
 ;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
-declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
 
@@ -114,12 +113,12 @@ define private void @throwIOException() noreturn {
 	%characters = tail call x86_stdcallcc i32 @FormatMessageA( i32 4608, i8* null, i32 %error, i32 0, i8** %pointer, i32 1024, i8* null)
 	%length = inttoptr i32 %characters to %size_t
 	%lengthLong = ptrtoint %size_t %length to %ulong	
-	%array = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* @byte_A_class, %ulong %lengthLong, %boolean false) nounwind
+	%array = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* @ubyte_A_class, %ulong %lengthLong, %boolean false) nounwind
 	%data = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 1
 	%dataAsChars = bitcast %shadow.standard..Array* %data to i8*
 	call i8* @strncpy(i8* %dataAsChars, i8* nocapture %buffer, %size_t %length) nounwind
 	%stringAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))
-	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)	
+	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_ubyte_A(%shadow.standard..Object* %stringAsObj, %shadow.standard..Array* %array)	
 	%exceptionAsObj = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..IOException_class, %shadow.standard..Object_methods* bitcast(%shadow.io..IOException_methods* @shadow.io..IOException_methods to %shadow.standard..Object_methods*))
 	%exception = call %shadow.io..IOException* @shadow.io..IOException_Mcreate_shadow.standard..String(%shadow.standard..Object* %exceptionAsObj, %shadow.standard..String* %string)
 	call void @__shadow_throw(%shadow.standard..Object* %exceptionAsObj) noreturn
@@ -243,7 +242,7 @@ define void @shadow.io..File_Msize_long(%shadow.io..File*, i64) {
 	%11 = call x86_stdcallcc i32 @SetFilePointerEx(i8* %6, i64 %10, i64* null, i32 0)
 	ret void
 }
-define %long @shadow.io..File_Mread_byte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
+define %long @shadow.io..File_Mread_ubyte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
 _entry:
 	%bytesReadRef = alloca i32
 	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3
@@ -293,7 +292,7 @@ _throw:
 	unreachable
 }
 
-define %long @shadow.io..File_Mwrite_byte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
+define %long @shadow.io..File_Mwrite_ubyte_A(%shadow.io..File* %file, %shadow.standard..Array* %array) {
 _entry:
 	%bytesWrittenRef = alloca i32
 	%descriptorRef = getelementptr inbounds %shadow.io..File, %shadow.io..File* %file, i32 0, i32 3

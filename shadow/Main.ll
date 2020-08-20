@@ -46,7 +46,7 @@
 @shadow.standard..Exception_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
 @shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
-@byte_A_class = external constant %shadow.standard..GenericClass
+@ubyte_A_class = external constant %shadow.standard..GenericClass
 @shadow.standard..String_A_class = external constant %shadow.standard..GenericClass
 
 %shadow.io..Console_methods = type opaque
@@ -60,7 +60,7 @@ declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..Ob
 declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 declare %shadow.io..Console* @shadow.io..Console_MprintErrorLine(%shadow.io..Console*)
 declare %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-declare %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object*, %shadow.standard..Array*)
+declare %shadow.standard..String* @shadow.standard..String_Mcreate_ubyte_A(%shadow.standard..Object*, %shadow.standard..Array*)
 
 ;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
@@ -97,11 +97,11 @@ _loopBody:
 	%allocatedString = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..String_methods* @shadow.standard..String_methods to %shadow.standard..Object_methods*))	
 	%length = call %size_t @strlen(i8* nocapture %nextArg)	
 	%longLength = ptrtoint %size_t %length to %ulong
-	%allocatedArray = call %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* @byte_A_class, %long %longLength, %boolean false)	
+	%allocatedArray = call %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* @ubyte_A_class, %long %longLength, %boolean false)	
 	%byteArray = getelementptr %shadow.standard..Array, %shadow.standard..Array* %allocatedArray, i32 1
 	%bytes = bitcast %shadow.standard..Array* %byteArray to i8*
 	call i8* @strncpy(i8* %bytes, i8* nocapture %nextArg, %size_t %length)	
-	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_byte_A(%shadow.standard..Object* %allocatedString, %shadow.standard..Array* %allocatedArray)
+	%string = call %shadow.standard..String* @shadow.standard..String_Mcreate_ubyte_A(%shadow.standard..Object* %allocatedString, %shadow.standard..Array* %allocatedArray)
 	%byteArrayAsObj = bitcast %shadow.standard..Array* %byteArray to %shadow.standard..Object*
 	call void @__decrementRef(%shadow.standard..Object* %byteArrayAsObj) nounwind
 	store %shadow.standard..String* %string, %shadow.standard..String** %stringPhi

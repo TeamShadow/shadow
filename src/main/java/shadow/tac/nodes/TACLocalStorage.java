@@ -13,12 +13,10 @@ public abstract class TACLocalStorage extends TACUpdate {
 		this.variable = variable;
 		number = variable.getMethod().incrementVariableCounter();
 	}
-	
-	
-	
+
 	@Override
 	public Object getData() {	
-		if( isGarbageCollected() )
+		if( isGarbageCollected() || variable.isFinallyVariable() )
 			return super.getData();		
 		else if( getUpdatedValue() == null )	
 			return '%' + variable.getName() + '.' + number;		

@@ -31,7 +31,7 @@ is  OrderedSet<V>
 	 * @param value object to search for
 	 * @return {@code true} if the object is present
 	 */
-	public index( V value ) => ( boolean found )
+	public readonly index( V value ) => ( boolean found )
 	{
 		return map.containsKey(value);
 	}

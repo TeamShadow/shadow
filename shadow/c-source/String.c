@@ -42,10 +42,10 @@ shadow_String_t* shadowString_Create(const char* c_str)
 	int length = strlen(c_str);
 	
 	// this is an empty array with size length
-	shadow_byte_t* chars;
+	shadow_ubyte_t* chars;
 
 	// create the array then copy the c_str to chars without the null terminator
-	shadow_Array_t* array = shadowArray_Create(length, shadowByteArray_GetClass(), false, (void**)&chars);
+	shadow_Array_t* array = shadowArray_Create(length, shadowUByteArray_GetClass(), false, (void**)&chars);
 	memcpy(chars, c_str, length);
 	
 	// we then need to create the actual Shadow String, but Shadow deals with arrays

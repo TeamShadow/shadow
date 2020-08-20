@@ -1,0 +1,40 @@
+import shadow:io@Console;
+
+class shadow:test@FinallyTest
+{
+	Console console;
+
+	public main( String[] args ) => ()
+	{	
+		console.printLine("before method");
+		String result = test();
+		console.printLine("after method");
+		console.printLine("return " # result);
+	}
+	public test() => ( String )
+	{
+		console.printLine("before " # "try");
+		try
+		{
+			for ( int i = 0; i < 2;  )
+			{
+				i += 1;
+				console.printLine("loop " # "before " # "break");
+				try
+				{
+					console.printLine("try " # "before " # "break");
+					break;					
+				}
+				finally
+				{
+					console.printLine("finally " # "break");
+				}				
+			}
+			return "value";
+		}
+		finally
+		{
+			console.printLine("finally");			
+		}
+	}
+}

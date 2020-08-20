@@ -18,20 +18,39 @@ class shadow:test@ConsoleTest
 		console.print('l');
 		console.print('d');
 		console.print('!');
-		console.print('\n');
 		console.printLine();
-		console.print("Test String\r\n");
+		console.printLine("Test String");
+		console.printLine(-12y);	// byte
+		console.printLine(130uy);	// ubyte
+		console.printLine(1000s);	// short
+		console.printLine(61234us);	// ushort
+		console.printLine(2000000002);	// int
+		console.printLine(3100000000u);	// uint
+		console.printLine(-8000000000000L); //long
+		console.printLine(10223372036854775807uL); //ulong
 
 		console.printLine();
 		console.print("Enter your name: ");
 		(String line, ) = console.readLine();
 		console.printLine("Your name is " # line # '!');
+		
+		console.print("Enter your age: ");
+		int age = console.readInt();
+		console.printLine("Your age is " # age);
+		
+		console.print("Enter your weight: ");
+		double weight = console.readDouble();
+		console.printLine("Your weight is " # weight);
+		
+		console.readLine(); // clean off newline after weight
+		
 		boolean eof;
 		do
 		{			
 			(code c, eof) = console.readCode();
-			console.printLine(c);
+			if(!eof)
+				console.printLine(c);
 		}
-		while ( !eof );
+		while ( !eof );		
 	}
 }

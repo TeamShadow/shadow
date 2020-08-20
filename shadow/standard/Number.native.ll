@@ -1157,6 +1157,13 @@ define float @shadow.standard..float_Mcos(float) #0 {
 	ret float %2
 }
 
+define float @shadow.standard..float_Mtan(float) #0 {	
+	%2 = call float @llvm.sin.f32(float %0)
+	%3 = call float @llvm.cos.f32(float %0)
+	%4 = fdiv float %2, %3
+	ret float %4
+}
+
 define float @shadow.standard..float_MlogBaseE(float) #0 {	
 	%2 = call float @llvm.log.f32(float %0)
 	ret float %2
@@ -1316,6 +1323,13 @@ define double @shadow.standard..double_Msin(double) #0 {
 define double @shadow.standard..double_Mcos(double) #0 {	
 	%2 = call double @llvm.cos.f64(double %0)
 	ret double %2
+}
+
+define double @shadow.standard..double_Mtan(double) #0 {	
+	%2 = call double @llvm.sin.f64(double %0)
+	%3 = call double @llvm.cos.f64(double %0)
+	%4 = fdiv double %2, %3
+	ret double %4
 }
 
 define double @shadow.standard..double_MlogBaseE(double) #0 {	

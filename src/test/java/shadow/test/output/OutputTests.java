@@ -1,19 +1,22 @@
 package shadow.test.output;
 
-import org.junit.jupiter.api.*;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
@@ -59,15 +62,15 @@ public class OutputTests {
 		catch(Exception e) {}
 	}
 	
-	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException {
+	private void run(String[] programArgs, String expectedOutput) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
 		run( programArgs, expectedOutput, "" ); 			
 	}
 	
-	private void run(String[] programArgs, String expectedOutput, String expectedError) throws IOException, ConfigurationException, InterruptedException {
-		run( programArgs, expectedOutput, expectedError, 0 ); 			
+	private void run(String[] programArgs, String expectedOutput, String expectedError) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
+		run( programArgs, expectedOutput, expectedError, null, 0 ); 			
 	}
 	
-	private void run(String[] programArgs, String expectedOutput, String expectedError, int expectedReturn ) throws IOException, ConfigurationException, InterruptedException {
+	private void run(String[] programArgs, String expectedOutput, String expectedError, String input, int expectedReturn ) throws IOException, ConfigurationException, InterruptedException, TimeoutException {
 		
 		// Should be initialized at this point by call to Main.run()
 		Configuration config = Configuration.getConfiguration();
@@ -83,40 +86,65 @@ public class OutputTests {
 		//set working directory as parent of executable, in case executable makes any files
 		Process program = new ProcessBuilder(programCommand).directory(fullExecutable.getParent().toFile()).start();
 		
-		//regular output
+		// Send input
+		if(input != null && !input.isBlank()) {
+			PrintWriter writer = new PrintWriter(program.getOutputStream());
+			writer.print(input);
+			writer.close();
+		}	
+		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(program.getInputStream()));
 		BufferedReader errorReader = new BufferedReader(new InputStreamReader(program.getErrorStream()));
+
+		// Regular output
 		StringBuilder builder = new StringBuilder();
 		String line;
 		do {
 			line = reader.readLine();
 			if (line != null)
-				builder.append(line).append('\n');
+				builder.append(line).append("\n");
 		} while (line != null);		
 		String output = builder.toString();
 		Assertions.assertEquals(expectedOutput, output);
 		
-		//error output		
+		// Error output	
 		builder = new StringBuilder();
 		do {
 			line = errorReader.readLine();
 			if (line != null)
-				builder.append(line).append('\n');
+				builder.append(line).append("\n");
 		} while (line != null);
 		
 		String error = builder.toString();	
 		Assertions.assertEquals(expectedError, error);		
 		
-		//check return value to see if the program ends normally
-		//also keeps program from being deleted while running	
-		Assertions.assertEquals(expectedReturn, program.waitFor(), "Program exited abnormally."); 
-		program.destroy();
+		// Check return value to see if the program ends normally
+		// Also keeps program from being deleted while running
+		if(program.waitFor(30, TimeUnit.SECONDS)) {
+				int exitValue = program.exitValue();
+				program.destroy();
+				Assertions.assertEquals(expectedReturn, exitValue, "Program exited abnormally.");	
+		}
+		else {
+			program.destroyForcibly();
+			throw new TimeoutException();
+		}
 	}	
 
 	private String formatOutputString(CharSequence... elements)
 	{
 		return String.join("\n", elements) + "\n";
 	}
+	
+	@Test public void testAbstract() throws Exception {
+		args.add("shadow/test/AbstractTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+			"Your offer is accepted! The motorcycle is yours!\n" + 
+			"Buckle up!\n" + 
+			"Your motorcycle is going 75 mph!\n");
+	}
+	
 	
 	@Test public void testAddressMap() throws Exception {
 		args.add("shadow/test/AddressMapTest.shadow");
@@ -582,6 +610,18 @@ public class OutputTests {
 				"8\n");
 	}
 	
+	@Test public void testCommandLine() throws Exception {
+		args.add("shadow/test/CommandLine.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[] {"this", "is", "the", "bleh", "situation"},
+				"Yes!\n" + 
+				"situation doesn't match!\n" +
+				"bleh matches!\n" +
+				"the doesn't match!\n" +
+				"is doesn't match!\n" +
+				"this doesn't match!\n");
+	}
+	
 	@Test public void testComplex() throws Exception {
 		args.add("shadow/test/ComplexTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -591,6 +631,74 @@ public class OutputTests {
 				"c: 5 + 4i\n" +
 				"d: -1 - 6i\n" +
 				"e: 11 + 7i\n");
+	}
+	
+	@Test public void testComplicatedException() throws Exception {
+		args.add("shadow/test/ComplicatedExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"1\n" + 
+				"Catch shadow:test@ExceptionA\n" + 
+				"Finally\n" + 
+				"No catch\n" + 
+				"2\n" + 
+				"Finally\n" + 
+				"Catch outer 2 shadow:standard@Exception\n" + 
+				"3\n" + 
+				"Finally\n" + 
+				"Catch outer 1 shadow:test@ExceptionB\n" + 
+				"4\n" + 
+				"Recover\n" + 
+				"Finally\n" + 
+				"No catch\n" + 
+				"5\n" + 
+				"Finally\n" + 
+				"Overriding old exception with shadow:test@ExceptionB\n" + 
+				"Catch outer 1 shadow:test@ExceptionB\n");
+	}
+	
+	@Test public void testNestedException() throws Exception {
+		args.add("shadow/test/NestedExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"Dunks\n" + 
+				"Sunks\n" +
+				"Chunks\n" +
+				"Monks\n" +
+				"Punks\n");
+	}
+	
+	@Test public void testConsole() throws Exception {
+		args.add("shadow/test/ConsoleTest.shadow");
+		Main.run(args.toArray(new String[] { }));	
+		run(new String[0],
+				"12345\n" + 
+				"Hello World!\n" +
+				"Test String\n" +
+				"-12\n" + 
+				"130\n" +
+				"1000\n" +
+				"61234\n" +
+				"2000000002\n" +
+				"3100000000\n" +
+				"-8000000000000\n" +
+				"10223372036854775807\n" +
+				"\n" +
+				"Enter your name: Your name is Alan Turing!\n" +
+				"Enter your age: Your age is 45\n" +
+				"Enter your weight: Your weight is 132.5\n" +
+				"a\n" + 
+				"b\n" + 
+				"c\n" +
+				"d\n" +
+				"e\n" +
+				"f\n",
+				"",
+				"Alan Turing" + System.lineSeparator() + 
+				"45" + System.lineSeparator() +
+				"132.5" + System.lineSeparator() +
+				"abcdef",
+				0);
 	}
 	
 	@Test public void testCopy() throws Exception {
@@ -636,9 +744,25 @@ public class OutputTests {
 		args.add("shadow/test/ExceptionTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0],
+				"finally\n" +
 				"test2 caught ExceptionB\n", 
 				"shadow:standard@Exception\n",
+				null,
 				1);
+	}
+	
+	@Test public void testFinally() throws Exception {
+		args.add("shadow/test/FinallyTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],	
+			"before method\n" +
+			"before try\n" +
+			"loop before break\n" + 
+			"try before break\n" +
+			"finally break\n" +
+			"finally\n" +
+			"after method\n" +
+			"return value\n");
 	}
 	
 	@Test public void testForeach() throws Exception {
@@ -769,6 +893,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], 	"", 			
 				"shadow:standard@InterfaceCreateException: Cannot create interface shadow:standard@CanCreate\n",
+				null,
 				1);
 	}
 		
@@ -875,6 +1000,7 @@ public class OutputTests {
 			"s1 != s3\n");
 	}
 	
+
 	@Test public void testMutableString() throws Exception {
 		args.add("shadow/test/MutableStringTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -928,6 +1054,7 @@ public class OutputTests {
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "",
 				"shadow:standard@UnexpectedNullException\n",
+				null,
 				1);
 	}
 	
@@ -959,6 +1086,13 @@ public class OutputTests {
 		args.add("shadow/test/SimpleTest.shadow");
 		Main.run(args.toArray(new String[] { }));
 		run(new String[0], "Hello, world!\n");
+	}
+	
+	@Test public void testSimpleException() throws Exception {
+		args.add("shadow/test/SimpleExceptionTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "success\n" +
+				"shadow:test@ExceptionA\n");
 	}
 	
 	@Test public void testSubscript() throws Exception {
@@ -1175,6 +1309,12 @@ public class OutputTests {
 		run(new String[0], formatOutputString("5", "7"));
 	}
 	
+	@Test public void testRecursion() throws Exception {
+		args.add("shadow/test/Recursion.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Fibonacci of 10: 55\n");
+	}
+	
 	@Test public void testEqualityComparer() throws Exception {
 		args.add("shadow/test/EqualityComparerTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -1202,6 +1342,15 @@ public class OutputTests {
 				"Method 1\n" + 
 				"Method 2\n");
 	}
+	
+	@Test public void testGenericWithBound() throws Exception {
+		args.add("shadow/test/GenericWithBoundTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"10283.6\n" + 
+				"230953.34\n" + 
+				"Finished!\n");
+	}	
 	
 	@Test public void testGarbageCollectionOutput() throws Exception {
 		args.add("shadow/test/GarbageCollectionOutputTest.shadow");

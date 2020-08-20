@@ -10,6 +10,7 @@ import java.util.Set;
 import shadow.ShadowException;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowValue;
+import shadow.tac.TACBlock;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -41,7 +42,10 @@ public class TACCall extends TACUpdate
 	
 	public TACCall(TACNode node, TACMethodRef methodRef,
 			Collection<? extends TACOperand> params) {
-		super(node);		
+		super(node);	
+		
+		node.getBlock().addUnwindSource();
+		
 		this.methodRef = methodRef;
 		SequenceType types = methodRef.getParameterTypes();
 		SequenceType uninstantiatedTypes = methodRef.getUninstantiatedParameterTypes();
@@ -65,11 +69,12 @@ public class TACCall extends TACUpdate
 			i++;
 		}
 					
-		
-		if( getBlock().hasLandingpad() ) {
+		TACBlock block = getBlock();
+		// If there's a catch or a cleanup, we will always need the chance to unwind
+		// (Note that the cleanup is actually non-unwinding, but it is used because one always accompanies a finally)
+		if(block.getUnwind() != null) {
 			noExceptionLabel = new TACLabel(getMethod());
 			noExceptionLabel.insertBefore(node); //before the node but after the call
-			//new TACNodeRef(node, this);
 		}	
 	}
 	

@@ -243,6 +243,13 @@ and	CanHash
 	public cos() => (double);
 	
 	/** 
+	 * Finds the tangent of the current value.	 	 
+	 * @return tangent of the value
+	 */
+	[ImportNative]
+	public tan() => (double);
+	
+	/** 
 	 * Finds the natural logarithm of the current value.	 	 
 	 * @return natural logarithm of the value
 	 */
@@ -262,17 +269,6 @@ and	CanHash
 	 */
 	[ImportNative]
 	public logBase10() => (double);
-	
-	/** 
-	 * Multiplies the current value by another {@code double} and adds a third
-	 * {@code double} in a high-precision register if supported and returns
-	 * the resulting value.	
-	 * @param multiplicand value to multiply by
-	 * @param addend value to add 	 
-	 * @return result
-	 */
-	[ImportNative]
-	public multiplyAdd(double multiplicand, double addend) => (double);
 	
 	/** 
 	 * Finds the largest {@code double} value with no fractional part that is
@@ -439,11 +435,11 @@ and	CanHash
 		// Number is too big or too small, use scientific notation		
 		if( integerDigits > integerThreshold or -integerDigits > fractionalThreshold )
 		{	
-		 	output.insert(1, cast<byte>('.'));
+		 	output.insert(1, cast<ubyte>('.'));
 		 	if( output->size == 2 )
-		 		output.append(cast<byte>('0'));
+		 		output.append(cast<ubyte>('0'));
 		 	removeZeroes( output );			 	
-		 	output.append(cast<byte>('E'));
+		 	output.append(cast<ubyte>('E'));
 			output.append(#(integerDigits - 1));
 		}		
 		// Number is smaller than 1
@@ -451,15 +447,15 @@ and	CanHash
 		{
 			// Pad with zeroes on the left.
 			for( int i = 0; i < -integerDigits; i += 1 )			
-				output.prepend(cast<byte>('0'));
+				output.prepend(cast<ubyte>('0'));
 							
 			length = maxPrecision + 1;						 
 			length = length.min(output->size - rightZeroes);
 			length = length.max(-integerDigits + 1);
 							
 			round( output, length );	
-			output.prepend(cast<byte>('.'));
-			output.prepend(cast<byte>('0'));
+			output.prepend(cast<ubyte>('.'));
+			output.prepend(cast<ubyte>('0'));
 			removeZeroes( output );	
 		}
 		//Number is larger than 1
@@ -467,13 +463,13 @@ and	CanHash
 		{		
 			// Pad with zeroes on the right, if necessary.
 			for( int i = output->size; i <= integerDigits; i += 1 )			
-				output.append(cast<byte>('0'));
-		 	output.insert(integerDigits, cast<byte>('.'));
+				output.append(cast<ubyte>('0'));
+		 	output.insert(integerDigits, cast<ubyte>('.'));
 		 	removeZeroes( output );
 		}		
 			
 		if( negative )	
-			return #(output.prepend(cast<byte>('-')));
+			return #(output.prepend(cast<ubyte>('-')));
 		else
 			return #output;
 	}
@@ -486,7 +482,7 @@ and	CanHash
 		else if( length > number->size )
 		{
 			while( length > number->size )
-				number.append(cast<byte>('0'));
+				number.append(cast<ubyte>('0'));
 			return false;
 		}
 		else
@@ -494,19 +490,19 @@ and	CanHash
 			if( length < 17 and number[length] >= '5' )
 			{
 				int index = length;
-				number[index - 1] += 1y;				
+				number[index - 1] += 1uy;				
 			
 				while( index > 1 and number[index - 1] > '9' )
 				{
-					number[index - 1] = cast<byte>('0');
+					number[index - 1] = cast<ubyte>('0');
 					index -= 1;
-					number[index - 1] += 1y;
+					number[index - 1] += 1uy;
 				}
 				
 				if( number[0] > '9' )
 				{				
-					number[0] = cast<byte>('0');				
-					number.prepend(cast<byte>('1'));
+					number[0] = cast<ubyte>('0');				
+					number.prepend(cast<ubyte>('1'));
 					number.delete(length, number->size);
 					return true;	
 				}

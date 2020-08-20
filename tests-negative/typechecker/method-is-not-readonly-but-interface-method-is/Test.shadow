@@ -1,0 +1,7 @@
+class Test is ReadonlyInterface
+{
+	public biscuit(int x) => (boolean)
+	{
+		return x > 10;
+	}
+}

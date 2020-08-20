@@ -29,7 +29,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private int importType = -1;
 	private int exportType = -1;
 	private List<Type> allowedExports;
-
+	
 	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
 	{
 		this.type = type;
@@ -256,8 +256,13 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	}
 	
 	public boolean matchesInterface(MethodSignature interfaceSignature) {
-			return interfaceSignature.symbol.equals(symbol) && 					
+			boolean matches = interfaceSignature.symbol.equals(symbol) && 					
 					type.matchesInterface(interfaceSignature.type);
+			
+			if(interfaceSignature.getModifiers().isReadonly() && !getModifiers().isReadonly())
+				matches = false;
+			
+			return matches;			
 	}
 
 	@Override

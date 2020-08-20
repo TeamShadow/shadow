@@ -1,0 +1,4 @@
+interface ReadonlyInterface
+{
+	readonly biscuit(int x) => (boolean);
+}

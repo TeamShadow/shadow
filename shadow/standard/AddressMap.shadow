@@ -167,7 +167,7 @@ locked class shadow:standard@
 	 * @param key key to find
 	 * @return address at key location or {@code null} if not found
 	 */
-	public index( ulong key ) => ( nullable ulong value )
+	public readonly index( ulong key ) => ( nullable ulong value )
 	{
 		(long index, long hash) = findIndex( key, table->sizeLong );
 		try

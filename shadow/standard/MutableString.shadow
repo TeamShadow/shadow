@@ -1,6 +1,6 @@
 /**
  * Class {@code MutableString} holds arbitrary-length
- * sequences of UTF-8 code points stored in a dynamic array of {@code byte}
+ * sequences of UTF-8 code points stored in a dynamic array of {@code ubyte}
  * values. {@code MutableString} objects differ from {@code String} objects
  * in that their contents can be changed.
  *
@@ -8,14 +8,14 @@
  */
 locked class shadow:standard@
 	MutableString
-is  CanIndex<long, byte>
-and CanIndexStore<long, byte>
+is  CanIndex<long, ubyte>
+and CanIndexStore<long, ubyte>
 and CanCompare<MutableString>
 and CanHash
 {
-	/// Number of {@code byte} values stored as part of the string. 
+	/// Number of {@code ubyte} values stored as part of the string. 
 	get long sizeLong = 0L;
-	byte[] data;
+	ubyte[] data;
 	
 	/**
 	 * Creates a new {@code MutableString} with no code points and the
@@ -33,7 +33,7 @@ and CanHash
 	 */
 	public create( long capacity )
 	{
-		data = byte:create[capacity];
+		data = ubyte:create[capacity];
 	}
 	
 	/**
@@ -45,12 +45,12 @@ and CanHash
 	public create( nullable Object initialValue )
 	{
 		String value = #initialValue;
-		data = byte:create[value->sizeLong];			
+		data = ubyte:create[value->sizeLong];			
 		append(value);			
 	}
 	
 	/**
-	 * Gets the number of {@code byte} values stored as part of the string as an {@code int}.	 
+	 * Gets the number of {@code ubyte} values stored as part of the string as an {@code int}.	 
 	 * @return number of bytes	 
 	 */
 	public get size() => ( int )
@@ -73,7 +73,7 @@ and CanHash
 	{
 		if ( this->capacity < size ) {
 			size = size.max( this->capacity * 2L );
-			byte[] data = byte:create[size];
+			ubyte[] data = ubyte:create[size];
 			for ( long i = 0; i < this->sizeLong; i += 1L )
 				data[i] = this:data[i];
 			this:data = data;
@@ -91,36 +91,36 @@ and CanHash
 	}
 
 	/**
-	 * Retrieves the {@code byte} value at the given offset inside the object.
+	 * Retrieves the {@code ubyte} value at the given offset inside the object.
 	 * @param index offset inside the object	   
-	 * @return {@code byte} value
+	 * @return {@code ubyte} value
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public readonly index( long index ) => ( byte value )
+	public readonly index( long index ) => ( ubyte value )
 	{
 		return data[index];
 	}
 	
 	/**
-	 * Stores the given {@code byte} value at the given offset inside the
+	 * Stores the given {@code ubyte} value at the given offset inside the
 	 * object.
 	 * @param index offset inside the object	   
 	 * @param value value to store	 
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public index( long index, byte value ) => ()
+	public index( long index, ubyte value ) => ()
 	{
 		data[index] = value;
 	}
 	
 	/**
-	 * Inserts the given {@code byte} value at the given offset inside the
+	 * Inserts the given {@code ubyte} value at the given offset inside the
 	 * object, moving over any values coming after the offset
 	 * @param index offset inside the object
 	 * @param value value to store	 
 	 * @throws IndexOutOfBoundsException if the offset is illegal
 	 */
-	public insert( long index, byte value ) => (MutableString)
+	public insert( long index, ubyte value ) => (MutableString)
 	{
 		ensureCapacity( sizeLong + 1 );
 		for( long i = sizeLong; i >= index + 1L; i -= 1L )
@@ -196,12 +196,12 @@ and CanHash
 	}
 	
 	/**
-	 * Appends a single {@code byte} value to the end of the string
+	 * Appends a single {@code ubyte} value to the end of the string
 	 * representation.	 
 	 * @param value value to append	 
 	 * @return {@code MutableString} object after append
 	 */	
-	public append( byte value ) => ( MutableString )
+	public append( ubyte value ) => ( MutableString )
 	{		
 		ensureCapacity( sizeLong + 1L );		
 		data[sizeLong] = value;
@@ -225,12 +225,12 @@ and CanHash
 	}
 	
 	/**
-	 * Prepends a single {@code byte} value to the beginning of the string
+	 * Prepends a single {@code ubyte} value to the beginning of the string
 	 * representation, moving all other values down.	 
 	 * @param value value to prepend	 
 	 * @return {@code MutableString} object after prepend
 	 */
-	public prepend( byte value ) => ( MutableString )
+	public prepend( ubyte value ) => ( MutableString )
 	{		
 		return insert( 0L, value );
 	}
@@ -254,9 +254,9 @@ and CanHash
 	}
 	
 	/**
-	 * Reverses the order of the {@code byte} values stored in this
+	 * Reverses the order of the {@code ubyte} values stored in this
 	 * string representation.  Note that this method may not correctly reverse
-	 * representations containing mult-byte code points.
+	 * representations containing multi-byte code points.
 	 * @return reversed {@code MutableString} object
 	 */	
 	public reverse() => ( MutableString )
@@ -283,7 +283,7 @@ and CanHash
 		if( end < start or end > sizeLong )
 			throw IllegalArgumentException:create("Invalid end index");
 	
-		return String:create(cast<byte[]>(data.subarray(start, end)));	
+		return String:create(cast<ubyte[]>(data.subarray(start, end)));	
 	}
 
 	/**
@@ -293,7 +293,7 @@ and CanHash
 	 */
 	public readonly toString() => ( String )
 	{	
-		byte[] bytes = data;
+		ubyte[] bytes = data;
 
 		if( data->sizeLong != sizeLong )			
 			bytes = data.subarray(0L, sizeLong);
@@ -307,7 +307,7 @@ and CanHash
 	 * @param other object to compare to
 	 * @return {@code true} if identical
 	 */
-	public equal( MutableString other ) => ( boolean )
+	public readonly equal( MutableString other ) => ( boolean )
 	{
 		return sizeLong == other:sizeLong and compare(other) == 0;
 	}
@@ -320,7 +320,7 @@ and CanHash
 	 * @param other value to compare to
 	 * @return whether earlier, identical, or later
 	 */
-	public compare( MutableString other ) => ( int )
+	public readonly compare( MutableString other ) => ( int )
 	{
 		for ( long i = 0L; i < sizeLong and i < other:sizeLong; i += 1L )
 			if ( data[i] != other:data[i] )

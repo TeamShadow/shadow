@@ -15,7 +15,7 @@
  * 
  */ 
 
-/** A Shadow 0.7 grammar for ANTLR v4. */
+/** A Shadow 0.8 grammar for ANTLR v4. */
 grammar Shadow;
 
 @header {
@@ -675,18 +675,14 @@ sendStatement
  * finally/recover/catch is present.
  */
 finallyStatement
-	: recoverStatement
-  	('finally' block)?
-  	;
-
-recoverStatement
 	: catchStatements
-  	('recover' block )?
+  	('finally' block)?
   	;
 
 catchStatements
 	: tryStatement
 	catchStatement*
+	('recover' block )?
 	;
 
 catchStatement
@@ -792,7 +788,7 @@ VAR			: 'var';
 WEAK		: 'weak';
 WHILE		: 'while';
 XOR			: 'xor';
-//RECEIVE		: 'receive';
+RECEIVE		: 'receive';
 
 // Literals
 

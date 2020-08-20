@@ -22,15 +22,7 @@ public class MethodType extends Type {
 		returns = new SequenceType();
 		typeWithoutTypeArguments = this;		
 	}
-	
-	
-	//This must have been made null for a reason?  What could it have been?
-	/*
-	@Override
-	public Type getOuter() {
-		return null;
-	}
-	*/
+
 	
 	public MethodType copy(Type outer, Modifiers modifiers)
 	{

@@ -6,42 +6,40 @@ import shadow.typecheck.type.ExceptionType;
 
 public class TACCatch extends TACOperand
 {
-	private ExceptionType type;
 	private TACOperand exception;
+	private TACLandingPad landingPad;
+	private ExceptionType type;
 
-	public TACCatch(TACNode node, ExceptionType catchType, TACOperand exception)
-	{
+	public TACCatch(TACNode node, TACOperand exception, ExceptionType type, TACLandingPad landingPad) {
 		super(node);
-		type = catchType;
 		this.exception = exception;
+		this.landingPad = landingPad;
+		this.type = type;
+		landingPad.addCatch(this);
+	}
+
+	public TACLandingPad getLandingPad() {
+		return landingPad;
 	}
 	
-	public TACOperand getException() {
-		return exception;
-	}
-
 	@Override
-	public ExceptionType getType()
-	{
+	public ExceptionType getType() {
 		return type;
 	}
 
 	@Override
-	public int getNumOperands()
-	{
+	public int getNumOperands() {
 		return 1;
 	}
 	@Override
-	public TACOperand getOperand(int num)
-	{
-		if( num == 0 )
-			return exception;		
+	public TACOperand getOperand(int num) {
+		if(num == 0)
+				return exception;
 		throw new IndexOutOfBoundsException("" + num);
 	}
 
 	@Override
-	public void accept(TACVisitor visitor) throws ShadowException
-	{
+	public void accept(TACVisitor visitor) throws ShadowException {
 		visitor.visit(this);
 	}
 }

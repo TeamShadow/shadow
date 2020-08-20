@@ -13,7 +13,6 @@
 %float = type float
 %double = type double
 
-declare i32 @__shadow_personality_v0(...)
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
@@ -58,12 +57,15 @@ declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryExc
 declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
 declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
 
-
 ;%shadow.io..Console = type opaque
 ;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
 ;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+;declare void @shadow.io..Console_MdebugPrint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;@byte_A_class = external constant %shadow.standard..GenericClass
+;@shadow.standard..Array_methods = external constant %shadow.standard..Array_methods
 
 define %int @shadow.standard..Class_MpointerSize(%shadow.standard..Class*) alwaysinline nounwind readnone {
 		%2 = ptrtoint %shadow.standard..Object** getelementptr (%shadow.standard..Object*, %shadow.standard..Object** null, i32 1) to i32
@@ -74,6 +76,7 @@ define void @__decrementRef(%shadow.standard..Object* %object) nounwind {
 	%isNull = icmp eq %shadow.standard..Object* %object, null
 	br i1 %isNull, label %_exit, label %_check
 _check:
+	;call void @shadow.io..Console_MdebugPrint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string0)
 	; get reference count
 	%countRef = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 0
 	%count = load %ulong, %ulong* %countRef
@@ -100,10 +103,11 @@ _freeLabel:
 	tail call void @free(i8* %address) nounwind
 	ret void
 _exit:	
+	;call void @shadow.io..Console_MdebugPrint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string1)
 	ret void
 }
 
-define void @__incrementRef(%shadow.standard..Object* %object) nounwind {	
+define void @__incrementRef(%shadow.standard..Object* %object) nounwind {
 	%isNull = icmp eq %shadow.standard..Object* %object, null
 	br i1 %isNull, label %_exit, label %_check
 _check:

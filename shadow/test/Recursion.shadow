@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class shadow:test@Echo
+class shadow:test@Recursion
 {
 	public main(String[] args) => ()
 	{
