@@ -87,7 +87,7 @@ public class OutputTests {
 		Process program = new ProcessBuilder(programCommand).directory(fullExecutable.getParent().toFile()).start();
 		
 		// Send input
-		if(input != null && !input.isBlank()) {
+		if(input != null && !input.trim().isEmpty()) {
 			PrintWriter writer = new PrintWriter(program.getOutputStream());
 			writer.print(input);
 			writer.close();
