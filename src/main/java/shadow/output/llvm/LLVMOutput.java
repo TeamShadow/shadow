@@ -24,7 +24,7 @@ import shadow.interpreter.ShadowCode;
 import shadow.interpreter.ShadowDouble;
 import shadow.interpreter.ShadowFloat;
 import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.ShadowInterpreter;
+import shadow.interpreter.TACInterpreter;
 import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowString;
 import shadow.interpreter.ShadowUndefined;
@@ -318,7 +318,7 @@ public class LLVMOutput extends AbstractOutput {
 
 		//constants
 		for (TACConstant constant : module.getConstants()) {
-			ShadowInterpreter interpreter = new ShadowInterpreter(constants);
+			TACInterpreter interpreter = new TACInterpreter(constants);
 			String name = constant.getName();
 			Context node = module.getType().getField(name);
 			try {
