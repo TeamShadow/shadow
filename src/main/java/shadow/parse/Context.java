@@ -246,4 +246,10 @@ public class Context extends ParserRuleContext implements ModifiedType {
 	{
 		return operand;
 	}
+
+	@Override
+	public String toString() {
+		// Makes debugging easier vs. seeing indices
+		return getText();
+	}
 }
