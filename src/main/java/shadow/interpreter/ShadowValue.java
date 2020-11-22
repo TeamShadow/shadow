@@ -12,6 +12,10 @@ import shadow.typecheck.type.Type;
  * An abstract class that is the base of all values (array, boolean, code, number, object, string) in Shadow.
  */
 public abstract class ShadowValue implements ModifiedType {
+
+    // Exposed here for convenience
+    public static final ShadowInvalid INVALID = ShadowInvalid.INVALID;
+
     private Modifiers modifiers;
 
     protected ShadowValue() {
@@ -32,6 +36,63 @@ public abstract class ShadowValue implements ModifiedType {
         throw new UnsupportedOperationException();
     }
 
+    /** Applies the specified binary operation to this {@link ShadowValue} and another */
+    public final ShadowValue apply(BinaryOperator operator, ShadowValue right) throws ShadowException {
+        if (this instanceof ShadowInvalid || right instanceof ShadowInvalid) {
+            return INVALID;
+        }
+
+        switch (operator) {
+            case COALESCE: return coalesce(right);
+            case OR: return or(right);
+            case XOR: return xor(right);
+            case AND: return and(right);
+            case BITWISE_OR: return bitwiseOr(right);
+            case BITWISE_XOR: return bitwiseXor(right);
+            case BITWISE_AND: return bitwiseAnd(right);
+            case EQUAL: return equal(right);
+            case NOT_EQUAL: return notEqual(right);
+            case REFERENCE_EQUAL: return referenceEqual(right);
+            case REFERENCE_NOT_EQUAL: return referenceNotEqual(right);
+            case LESS_THAN: return lessThan(right);
+            case GREATER_THAN: return greaterThan(right);
+            case LESS_THAN_OR_EQUAL: return lessThanOrEqual(right);
+            case GREATER_THAN_OR_EQUAL: return greaterThanOrEqual(right);
+            case CAT: return cat(right);
+            case RIGHT_SHIFT: return rightShift(right);
+            case LEFT_SHIFT: return leftShift(right);
+            case RIGHT_ROTATE: return rightRotate(right);
+            case LEFT_ROTATE: return leftRotate(right);
+            case ADD: return add(right);
+            case SUBTRACT: return subtract(right);
+            case MULTIPLY: return multiply(right);
+            case DIVIDE: return divide(right);
+            case MODULUS: return modulus(right);
+            default: throw new UnsupportedOperationException(
+                    "Unexpected binary operator " + operator.getName());
+        }
+    }
+
+    /** Applies the specified unary operation to this {@link ShadowValue} */
+    public final ShadowValue apply(UnaryOperator operator) throws ShadowException {
+        if (this instanceof ShadowInvalid) {
+            return INVALID;
+        }
+
+        switch (operator) {
+            case CAT: return unaryCat();
+            case BITWISE_COMPLEMENT: return bitwiseComplement();
+            case NOT: return not();
+            case NEGATE: return negate();
+            default: throw new UnsupportedOperationException(
+                    "Unexpected unary operator " + operator.getName());
+        }
+    }
+
+    public ShadowValue unaryCat() throws ShadowException {
+        return new ShadowString(toString());
+    }
+
     public ShadowValue negate() throws ShadowException {
         throw new UnsupportedOperationException("Negate operation not supported");
     }
@@ -42,6 +103,10 @@ public abstract class ShadowValue implements ModifiedType {
 
     public ShadowBoolean not() throws ShadowException {
         throw new UnsupportedOperationException("Not operation not supported");
+    }
+
+    public final ShadowValue coalesce(ShadowValue value) throws ShadowException {
+        return (this instanceof ShadowNull) ? value : this;
     }
 
     public ShadowValue cat(ShadowValue value) throws ShadowException {
@@ -95,6 +160,19 @@ public abstract class ShadowValue implements ModifiedType {
             return new ShadowBoolean(!result.getValue());
         } catch (Exception e) {
             throw new UnsupportedOperationException("Not equal operation not supported");
+        }
+    }
+
+    public ShadowBoolean referenceEqual(ShadowValue value) throws ShadowException {
+        throw new UnsupportedOperationException("Reference equal operation not supported");
+    }
+
+    public final ShadowBoolean referenceNotEqual(ShadowValue value) throws ShadowException {
+        try {
+            ShadowBoolean result = this.referenceEqual(value);
+            return new ShadowBoolean(!result.getValue());
+        } catch (Exception e) {
+            throw new UnsupportedOperationException("Reference not equal operation not supported");
         }
     }
 

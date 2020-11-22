@@ -22,6 +22,8 @@ import java.util.Set;
 import org.apache.logging.log4j.Logger;
 
 import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.interpreter.ASTInterpreter;
+import shadow.interpreter.ConstantFieldInterpreter;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
@@ -34,11 +36,7 @@ import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
-import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.Type;
+import shadow.typecheck.type.*;
 
 /**
  * @author Bill Speirs
@@ -432,18 +430,19 @@ public class Main {
 
 		// TypeChecker generates a list of AST nodes corresponding to
 		// classes needing compilation
-		TypeChecker.TypeCheckerOutput typecheckedNodes =
+		TypeChecker.TypeCheckerOutput typecheckerOutput =
 				TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter);
 
+		ConstantFieldInterpreter.evaluateConstants(
+				typecheckerOutput.packageTree, typecheckerOutput.allNodes);
+
 		// As an optimization, print .meta files for the .shadow files being checked
-		for (Context node : typecheckedNodes.allNodes) {
-			if (!node.isFromMetaFile()) {
-				TypeChecker.printMetaFile(node);
-			}
-		}
+		typecheckerOutput.allNodes.stream()
+				.filter((node) -> !node.isFromMetaFile())
+				.forEach(TypeChecker::printMetaFile);
 
 		try {
-			for (Context node : typecheckedNodes.neededNodes) {
+			for (Context node : typecheckerOutput.neededNodes) {
 				Path file = node.getPath();
 
 				if (currentJob.isCheckOnly()) {

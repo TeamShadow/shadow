@@ -1390,7 +1390,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override public Void visitLiteral(ShadowParser.LiteralContext ctx)
 	{ 
 		//no children
-		prefix = ctx.setOperand(new TACLiteral(anchor, ctx.value));
+		prefix = ctx.setOperand(new TACLiteral(anchor, ctx.getInterpretedValue()));
 
 		return null;
 	}

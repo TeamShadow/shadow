@@ -29,6 +29,7 @@ import shadow.Main;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
 import shadow.ShadowException;
+import shadow.parse.ShadowParser;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
@@ -41,10 +42,12 @@ public class TypeChecker {
 	public static class TypeCheckerOutput {
 		public final List<Context> allNodes;
 		public final List<Context> neededNodes;
+		public final Package packageTree;
 
-		public TypeCheckerOutput(List<Context> allNodes, List<Context> neededNodes) {
+		public TypeCheckerOutput(List<Context> allNodes, List<Context> neededNodes, Package packageTree) {
 			this.allNodes = Collections.unmodifiableList(allNodes);
 			this.neededNodes = Collections.unmodifiableList(neededNodes);
+			this.packageTree = packageTree;
 		}
 	}
 
@@ -88,8 +91,8 @@ public class TypeChecker {
 				allNodes.add(node);
 		
 		/* Do type-checking of statements, i.e., actual code. */
-		StatementChecker checker = new StatementChecker( packageTree, reporter );
-		for( Context node : allNodes ) {
+		StatementChecker checker = new StatementChecker(packageTree, reporter);
+		for (Context node : allNodes) {
 			// We assume .meta files are already type-checked
 			if (!node.isFromMetaFile()) {
 				/* Check all statements for type safety and other features */
@@ -120,7 +123,7 @@ public class TypeChecker {
 			if( neededTypes.contains( node.getType() ) )
 				neededNodes.add(node);
 		
-		return new TypeCheckerOutput(allNodes, neededNodes);
+		return new TypeCheckerOutput(allNodes, neededNodes, packageTree);
 	}
 	
 	/**

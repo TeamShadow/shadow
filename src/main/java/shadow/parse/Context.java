@@ -9,8 +9,10 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import shadow.doctool.Documentation;
+import shadow.interpreter.ShadowValue;
 import shadow.tac.nodes.TACNode;
 import shadow.tac.nodes.TACOperand;
+import shadow.interpreter.ASTInterpreter;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -71,7 +73,10 @@ public class Context extends ParserRuleContext implements ModifiedType {
 	private List<MethodSignature> operations;
 	private TACNode list;
 	private TACOperand operand;
-	
+
+	/** For use when evaluation compile-time constants in {@link ASTInterpreter} */
+	private ShadowValue interpretedValue;
+
 	public Context()
 	{				
 	}
@@ -255,5 +260,21 @@ public class Context extends ParserRuleContext implements ModifiedType {
 
 	public boolean isFromMetaFile() {
 		return getPath().toString().endsWith(".meta");
+	}
+
+	/** Sets a compile-time-interpreted value for this AST node */
+	public void setInterpretedValue(ShadowValue value) {
+		this.interpretedValue = value;
+	}
+
+	/** Gets the value of this AST node (if any) that was interpreted at compile time */
+	public ShadowValue getInterpretedValue() {
+		return interpretedValue;
+	}
+
+	// Explicitly overridden to indicate that we *do* want reference comparison
+	@Override
+	public boolean equals(Object obj) {
+		return this == obj;
 	}
 }
