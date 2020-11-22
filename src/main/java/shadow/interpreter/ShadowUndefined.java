@@ -3,6 +3,9 @@ package shadow.interpreter;
 import shadow.ShadowException;
 import shadow.typecheck.type.Type;
 
+/**
+ * A value held by a variable before it's been defined.
+ */
 public class ShadowUndefined extends ShadowValue {
 	
 	private final Type type;

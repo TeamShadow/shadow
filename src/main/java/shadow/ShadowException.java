@@ -11,7 +11,9 @@ import shadow.parse.Context;
 public abstract class ShadowException extends Exception {
 	private static final long serialVersionUID = 750991826899853128L;
 	private static final String EOL = System.getProperty("line.separator", "\n");
+
 	private final Context context;
+	private final ShadowExceptionErrorKind kind;
 
 	public ShadowException(String message) {
 		this(message, null);
@@ -19,8 +21,24 @@ public abstract class ShadowException extends Exception {
 	
 	public ShadowException(String message, Context context) {
 		super(message);
-		this.context = context;		
-	}	
+		this.context = context;
+		this.kind = null;
+	}
+
+	public ShadowException(ShadowExceptionErrorKind kind, Context context) {
+		this(kind, kind.getDefaultMessage(), context);
+	}
+
+
+	public ShadowException(ShadowExceptionErrorKind kind, String message) {
+		this(kind, message, null);
+	}
+
+	public ShadowException(ShadowExceptionErrorKind kind, String message, Context context) {
+		super(makeMessage(kind, message, context));
+		this.kind = kind;
+		this.context = context;
+	}
 
 	/**
 	 * Gets starting line where error happened.
@@ -102,7 +120,7 @@ public abstract class ShadowException extends Exception {
 	 * @param context			context where problem is occurring
 	 * @return					formatted message
 	 */
-	public static String makeMessage( ShadowExceptionFactory kind, String message, Context context ) {
+	public static String makeMessage(ShadowExceptionErrorKind kind, String message, Context context ) {
 		StringBuilder error = new StringBuilder();
 		
 		if( context != null ) {
@@ -168,5 +186,7 @@ public abstract class ShadowException extends Exception {
 		return error.toString();		
 	}
 	
-	public abstract ShadowExceptionFactory getError();
+	public ShadowExceptionErrorKind getError() {
+		return kind;
+	};
 }

@@ -3,7 +3,7 @@ package shadow.parse;
 import java.util.List;
 
 import shadow.ShadowException;
-import shadow.ShadowExceptionFactory;
+import shadow.ShadowExceptionErrorKind;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.Type;
 
@@ -35,7 +35,17 @@ public class ShadowVisitorErrorReporter extends ShadowBaseVisitor<Void> {
 	{		
 		reporter.addErrors(ctx, errors);
 	}
-	
+
+	/**
+	 * Adds an error associated with a context to the main list of errors.
+	 * @param ctx				context related to error
+	 * @param error				kind of error
+	 */
+	public void addError(Context ctx, ShadowExceptionErrorKind error)
+	{
+		reporter.addError(error.getException(ctx));
+	}
+
 	/**
 	 * Adds an error associated with a context to the main list of errors.
 	 * @param ctx				context related to error	
@@ -43,7 +53,7 @@ public class ShadowVisitorErrorReporter extends ShadowBaseVisitor<Void> {
 	 * @param message			message explaining error
 	 * @param errorTypes		types associated with error
 	 */
-	public void addError(Context ctx, ShadowExceptionFactory error, String message, Type... errorTypes)
+	public void addError(Context ctx, ShadowExceptionErrorKind error, String message, Type... errorTypes)
 	{
 		reporter.addError(ctx, error, message, errorTypes);	
 	}	
@@ -64,7 +74,7 @@ public class ShadowVisitorErrorReporter extends ShadowBaseVisitor<Void> {
 	 * @param warning			kind of warning
 	 * @param message			message explaining warning
 	 */
-	public void addWarning(Context ctx, ShadowExceptionFactory warning, String message)
+	public void addWarning(Context ctx, ShadowExceptionErrorKind warning, String message)
 	{
 		reporter.addWarning(ctx, warning, message);
 	}

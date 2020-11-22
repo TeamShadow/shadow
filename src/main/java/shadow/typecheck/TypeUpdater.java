@@ -862,7 +862,7 @@ public class TypeUpdater extends BaseChecker {
 
 		// only imports and exports that are meant to be called to and from C are allowed to start with _
 		if (!signature.isImportAssembly() && !signature.isExportAssembly() && signature.getSymbol().startsWith("_")) {
-			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
+			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getDefaultMessage());
 		}
 
 		// checks for method imports
