@@ -21,12 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
@@ -42,19 +37,30 @@ import shadow.typecheck.type.Type;
  * @author Barry Wittman
  */
 public class TypeChecker {
+
+	public static class TypeCheckerOutput {
+		public final List<Context> allNodes;
+		public final List<Context> neededNodes;
+
+		public TypeCheckerOutput(List<Context> allNodes, List<Context> neededNodes) {
+			this.allNodes = Collections.unmodifiableList(allNodes);
+			this.neededNodes = Collections.unmodifiableList(neededNodes);
+		}
+	}
+
 	/**
 	 * Typechecks a main file and all files that it depends on.
-	 * @param file 				the main file to compile
-	 * @param useSourceFiles 	whether the source files should be recompiled
-	 * @param reporter			object used to report errors
-	 * 
+	 * @param mainFile            the main file to compile
+	 * @param useSourceFiles    whether the source files should be recompiled
+	 * @param reporter            object used to report errors
+	 *
 	 * @return nodes list of AST nodes for the classes to be compile
 	 * @throws ShadowException
 	 * @throws ParseException 
 	 * @throws IOException 
 	 * @throws ConfigurationException 
 	 */
-	public static List<Context> typeCheck(Path file, boolean useSourceFiles, ErrorReporter reporter)
+	public static TypeCheckerOutput typeCheck(Path mainFile, boolean useSourceFiles, ErrorReporter reporter)
 			throws ShadowException, IOException, ConfigurationException {
 		Type.clearTypes();		
 		Package packageTree = new Package(); // Root of all packages, storing all types
@@ -63,7 +69,7 @@ public class TypeChecker {
 		TypeCollector collector = new TypeCollector( packageTree, reporter, useSourceFiles );
 		
 		/* Its return value maps all the types to the nodes that need compiling. */		
-		Map<Type, Context> nodeTable = collector.collectTypes( file );
+		Map<Type, Context> nodeTable = collector.collectTypes( mainFile );
 		Type mainType = collector.getMainType();
 		
 		/* Updates types, adding:
@@ -76,20 +82,18 @@ public class TypeChecker {
 		nodeTable = updater.update( nodeTable );
 		
 		/* Select only nodes corresponding to outer types. */				
-		List<Context> allNodes = new ArrayList<Context>();
+		List<Context> allNodes = new ArrayList<>();
 		for( Context node : nodeTable.values())
 			if( !node.getType().hasOuter() )
 				allNodes.add(node);
 		
 		/* Do type-checking of statements, i.e., actual code. */
 		StatementChecker checker = new StatementChecker( packageTree, reporter );
-		for( Context node: allNodes ) {	
-			Path nodeFile = node.getPath();
-			if( !nodeFile.toString().endsWith(".meta")) {
+		for( Context node : allNodes ) {
+			// We assume .meta files are already type-checked
+			if (!node.isFromMetaFile()) {
 				/* Check all statements for type safety and other features */
-				checker.check(node);				
-				/* As an optimization, print .meta file for the .shadow file being checked. */
-				printMetaFile( node, BaseChecker.stripExtension( Main.canonicalize(nodeFile) ) );
+				checker.check(node);
 			}
 		}
 		
@@ -109,14 +113,14 @@ public class TypeChecker {
 			
 			referencedTypes.remove(next);
 		}
-		
-		/* Return only those nodes corresponding to needed types. */
-		List<Context> neededNodes = new ArrayList<Context>();		
+
+		/* Filter for the nodes corresponding to needed types. */
+		List<Context> neededNodes = new ArrayList<Context>();
 		for( Context node : allNodes )
 			if( neededTypes.contains( node.getType() ) )
 				neededNodes.add(node);
 		
-		return neededNodes;
+		return new TypeCheckerOutput(allNodes, neededNodes);
 	}
 	
 	/**
@@ -165,7 +169,8 @@ public class TypeChecker {
 	 * These .meta files are used for type-checking as a speed optimization, to avoid 
 	 * type-checking the full code.
 	 */
-	private static void printMetaFile( Context node, String file ) {
+	public static void printMetaFile(Context node) {
+		String file = BaseChecker.stripExtension(Main.canonicalize(node.getPath()));
 		try {
 			File shadowVersion = new File( file + ".shadow");
 			File metaVersion = new File( file + ".meta");
@@ -178,7 +183,7 @@ public class TypeChecker {
 			}
 		}
 		catch( IOException e ) {
-			Loggers.SHADOW.error("Failed to create meta file for " + node.getType() );					
+			Loggers.SHADOW.error("Failed to create meta file for " + node.getType());
 		}		
 	}	
 	

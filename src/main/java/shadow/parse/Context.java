@@ -252,4 +252,8 @@ public class Context extends ParserRuleContext implements ModifiedType {
 		// Makes debugging easier vs. seeing indices
 		return getText();
 	}
+
+	public boolean isFromMetaFile() {
+		return getPath().toString().endsWith(".meta");
+	}
 }

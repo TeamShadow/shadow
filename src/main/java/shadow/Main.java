@@ -428,11 +428,22 @@ public class Main {
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = BaseChecker.stripExtension(canonicalize(mainFile));
 
+		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+
+		// TypeChecker generates a list of AST nodes corresponding to
+		// classes needing compilation
+		TypeChecker.TypeCheckerOutput typecheckedNodes =
+				TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter);
+
+		// As an optimization, print .meta files for the .shadow files being checked
+		for (Context node : typecheckedNodes.allNodes) {
+			if (!node.isFromMetaFile()) {
+				TypeChecker.printMetaFile(node);
+			}
+		}
+
 		try {
-			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
-			// TypeChecker generates a list of AST nodes corresponding to
-			// classes needing compilation
-			for (Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter)) {
+			for (Context node : typecheckedNodes.neededNodes) {
 				Path file = node.getPath();
 
 				if (currentJob.isCheckOnly()) {
@@ -440,7 +451,7 @@ public class Main {
 					// no dead code, etc.
 					// no need to check interfaces or .meta files (no code in
 					// either case)
-					if (!file.toString().endsWith(".meta"))
+					if (!node.isFromMetaFile())
 						optimizeTAC(new TACBuilder().build(node), reporter, true);
 				} else {
 					String name = BaseChecker.stripExtension(file.getFileName().toString());
@@ -474,7 +485,7 @@ public class Main {
 
 					// if the LLVM bitcode didn't exist, the full .shadow file would
 					// have been used
-					if( file.toString().endsWith(".meta") ) {
+					if(node.isFromMetaFile()) {
 						logger.info("Using pre-existing LLVM code for " + name);
 						if (Files.exists(bitcodeFile))
 							linkCommand.add(canonicalize(bitcodeFile));
