@@ -10,16 +10,19 @@ public class ShadowInteger extends ShadowNumber {
 
 	private final int size;  //in bytes
 	private final boolean signed;
+	private final int preferredBase; // used for writing the value back out as a literal
 	private BigInteger value;
+
 	private final BigInteger max;
 	private final BigInteger min;
 
-	public ShadowInteger(BigInteger value, int size, boolean signed)
+	public ShadowInteger(BigInteger value, int size, boolean signed, int preferredBase)
 	{
 		super(Modifiers.IMMUTABLE);
 		this.value = value;
 		this.size = size;
 		this.signed = signed;
+		this.preferredBase = preferredBase;
 
 		if( signed )
 		{
@@ -34,15 +37,19 @@ public class ShadowInteger extends ShadowNumber {
 
 		fixValue();
 	}
+
+	public ShadowInteger(BigInteger value, int size, boolean signed) {
+		this(value, size, signed, 10);
+	}
 	
 	public ShadowInteger(int value)
 	{
-		this(BigInteger.valueOf(value), 4, true);		
+		this(BigInteger.valueOf(value), 4, true);
 	}
 	
 	public ShadowInteger(long value)
 	{
-		this(BigInteger.valueOf(value), 8, true);		
+		this(BigInteger.valueOf(value), 8, true);
 	}
 	
 	public static ShadowInteger parseNumber(String string) {
@@ -121,7 +128,7 @@ public class ShadowInteger extends ShadowNumber {
 		if( test.bitLength() > bits )
 			throw new NumberFormatException("Value out of range");
 		
-		return new ShadowInteger(integer, bytes, signed);
+		return new ShadowInteger(integer, bytes, signed, base);
 	}
 
 	private void fixValue()
@@ -465,6 +472,41 @@ public class ShadowInteger extends ShadowNumber {
 		return first.bitwiseXor(second);
 	}
 
+	@Override
+	public String toLiteral() {
+		return getLiteralPrefix(preferredBase) + value.toString(preferredBase) + getLiteralSuffix(signed, size);
+	}
+
+	private static String getLiteralPrefix(int base) {
+		switch (base) {
+			case 2: return "0b";
+			case 8: return "0c";
+			case 10: return "";
+			case 16: return "0x";
+		}
+
+		throw new IllegalArgumentException("Unsupported base " + base);
+	}
+
+	private static String getLiteralSuffix(boolean signed, int size) {
+		if (signed) {
+			switch (size) {
+				case 1: return "y";
+				case 2: return "s";
+				case 4: return "";
+				case 8: return "L";
+			}
+		} else {
+			switch (size) {
+				case 1: return "uy";
+				case 2: return "us";
+				case 4: return "u";
+				case 8: return "uL";
+			}
+		}
+
+		throw new IllegalArgumentException("Unknown integer type with size " + size);
+	}
 
 	@Override
 	public String toString()

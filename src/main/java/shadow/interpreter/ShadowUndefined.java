@@ -34,4 +34,9 @@ public class ShadowUndefined extends ShadowValue {
 	public String toString() {
 		return "Undefined";
 	}
+
+	@Override
+	public String toLiteral() {
+		throw new UnsupportedOperationException("Undefined values cannot be represented as literals");
+	}
 }

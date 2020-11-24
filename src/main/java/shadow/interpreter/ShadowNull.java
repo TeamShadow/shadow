@@ -39,6 +39,11 @@ public class ShadowNull extends ShadowValue {
 	
 	@Override
 	public String toString() {
+		return toLiteral();
+	}
+
+	@Override
+	public String toLiteral() {
 		return "null";
 	}
 }

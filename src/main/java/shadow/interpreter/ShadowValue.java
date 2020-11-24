@@ -284,4 +284,7 @@ public abstract class ShadowValue implements ModifiedType {
 
         throw new UnsupportedOperationException("Cannot compare types " + first.getType() + " and " + second.getType());
     }
+
+    /** Returns a valid Shadow literal representation of the value */
+    public abstract String toLiteral();
 }

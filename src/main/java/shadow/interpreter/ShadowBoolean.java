@@ -42,6 +42,11 @@ public class ShadowBoolean extends ShadowValue
 	
 	@Override
 	public String toString() {
-		return "" + value;
+		return toLiteral();
+	}
+
+	@Override
+	public String toLiteral() {
+		return Boolean.toString(value);
 	}
 }

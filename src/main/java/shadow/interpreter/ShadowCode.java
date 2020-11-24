@@ -58,9 +58,14 @@ public class ShadowCode extends ShadowValue
 	@Override
 	public String toString()
 	{
+		return toLiteral();
+	}
+
+	@Override
+	public String toLiteral() {
 		return new StringBuilder("'").appendCodePoint(getValue()).append("'").toString();
 	}
-	
+
 	public static ShadowCode parseCode(String literal) {
 		int value;
 		if (literal.charAt(1) == '\\')

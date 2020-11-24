@@ -190,10 +190,29 @@ public class ShadowDouble extends ShadowNumber
 	{
 		return new ShadowDouble(getValue());
 	}
+
+	@Override
+	public String toLiteral() {
+		double value = getValue();
+
+		// These special values cannot be represented as a single literal
+		if (Double.isNaN(value)) {
+			return "0d / 0d";
+		} else if (Double.isInfinite(value)) {
+			if (value > 0) {
+				return "1d / 0d";
+			} else {
+				return "-1d / 0d";
+			}
+		}
+
+		return Double.toString(getValue());
+	}
+
 	@Override
 	public String toString()
 	{
-		return Double.toString(getValue());
+		return toLiteral();
 	}
 	@Override
 	public ShadowDouble abs()

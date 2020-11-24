@@ -46,6 +46,12 @@ public class ShadowArray extends ShadowValue
 			copy.data[i] = data[i].copy();
 		return copy;
 	}
+
+	@Override
+	public String toLiteral() {
+		throw new UnsupportedOperationException("Cannot currently create array literals");
+	}
+
 	@Override
 	public ShadowValue cast(Type type) throws ShadowException
 	{
