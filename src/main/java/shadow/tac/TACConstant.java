@@ -2,72 +2,45 @@ package shadow.tac;
 
 import java.io.StringWriter;
 
-import shadow.tac.nodes.TACNode;
-import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
+import shadow.interpreter.ConstantFieldInterpreter.FieldKey;
+import shadow.interpreter.ShadowValue;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.type.Type;
 
-public class TACConstant implements ModifiedType
+/**
+ * A simple node representing a compile-time constant field and containing its
+ * {@link shadow.interpreter.ShadowValue} (as computed by
+ * {@link shadow.interpreter.ASTInterpreter}).
+ */
+public class TACConstant
 {
-	private Type prefix;
-	private ModifiedType type;
-	private String name;
-	private TACNode node;
+	private final FieldKey fieldKey;
+	private final VariableDeclaratorContext context;
 	
-	public TACConstant(Type prefixType, String constantName)
+	public TACConstant(FieldKey fieldKey, VariableDeclaratorContext context)
 	{
-		ModifiedType constantType = prefixType.getField(constantName);
-		if (!constantType.getModifiers().isConstant())
-			throw new IllegalArgumentException(constantType + "is not constant");
-		prefix = prefixType;
-		type = constantType;
-		name = constantName;		
+		this.fieldKey = fieldKey;
+		this.context = context;
 	}
 
-	public Type getPrefixType()
-	{
-		return prefix;
-	}
-	public String getName()
-	{
-		return name;
-	}
-	public TACNode getNode()
-	{
-		return node;
-	}
-	
-	public void setNode(TACNode node)
-	{
-		this.node = node;
+	public FieldKey getFieldKey() {
+		return fieldKey;
 	}
 
-	@Override
-	public Modifiers getModifiers()
-	{
-		return type.getModifiers();
-	}
-	@Override
-	public Type getType()
-	{
-		return type.getType();
-	}
-	@Override
-	public void setType(Type newType)
-	{
-		type.setType(newType);
+	public ShadowValue getInterpretedValue() {
+		return context.getInterpretedValue();
 	}
 
 	@Override
 	public String toString()
 	{
 		StringWriter writer = new StringWriter();
-		writer.write(getModifiers().toString());
-		writer.write(getType().toString(Type.TYPE_PARAMETERS));
+		writer.write(context.getModifiers().toString());
+		writer.write(context.getType().toString(Type.TYPE_PARAMETERS));
 		writer.write(' ');
-		writer.write(getName());
+		writer.write(fieldKey.fieldName);
 		writer.write(" = ");
-		writer.write(getNode().toString());
+		writer.write(getInterpretedValue().toLiteral());
 		return writer.toString();		
 	}
 

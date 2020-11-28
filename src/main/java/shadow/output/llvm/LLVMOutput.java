@@ -1,107 +1,21 @@
 package shadow.output.llvm;
 
+import shadow.Configuration;
+import shadow.ShadowException;
+import shadow.interpreter.*;
+import shadow.output.AbstractOutput;
+import shadow.tac.*;
+import shadow.tac.TACMethod.TACFinallyFunction;
+import shadow.tac.nodes.*;
+import shadow.typecheck.type.*;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
-
-import shadow.CompileException;
-import shadow.Configuration;
-import shadow.ShadowException;
-import shadow.interpreter.InterpreterException;
-import shadow.interpreter.ShadowBoolean;
-import shadow.interpreter.ShadowCode;
-import shadow.interpreter.ShadowDouble;
-import shadow.interpreter.ShadowFloat;
-import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.TACInterpreter;
-import shadow.interpreter.ShadowNull;
-import shadow.interpreter.ShadowString;
-import shadow.interpreter.ShadowUndefined;
-import shadow.interpreter.ShadowValue;
-import shadow.output.AbstractOutput;
-import shadow.output.Cleanup;
-import shadow.parse.Context;
-import shadow.tac.TACBlock;
-import shadow.tac.TACConstant;
-import shadow.tac.TACMethod;
-import shadow.tac.TACMethod.TACFinallyFunction;
-import shadow.tac.TACModule;
-import shadow.tac.TACVariable;
-import shadow.tac.nodes.TACAllocateVariable;
-import shadow.tac.nodes.TACArrayRef;
-import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACBranch;
-import shadow.tac.nodes.TACCall;
-import shadow.tac.nodes.TACCallFinallyFunction;
-import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACCatch;
-import shadow.tac.nodes.TACCatchPad;
-import shadow.tac.nodes.TACCatchRet;
-import shadow.tac.nodes.TACChangeReferenceCount;
-import shadow.tac.nodes.TACClass;
-import shadow.tac.nodes.TACCleanupPad;
-import shadow.tac.nodes.TACCleanupRet;
-import shadow.tac.nodes.TACConstantRef;
-import shadow.tac.nodes.TACCopyMemory;
-import shadow.tac.nodes.TACFieldRef;
-import shadow.tac.nodes.TACGlobalRef;
-import shadow.tac.nodes.TACLabel;
-import shadow.tac.nodes.TACLabelAddress;
-import shadow.tac.nodes.TACLandingPad;
-import shadow.tac.nodes.TACLoad;
-import shadow.tac.nodes.TACLocalEscape;
-import shadow.tac.nodes.TACLocalLoad;
-import shadow.tac.nodes.TACLocalRecover;
-import shadow.tac.nodes.TACLocalStorage;
-import shadow.tac.nodes.TACLocalStore;
-import shadow.tac.nodes.TACLongToPointer;
-import shadow.tac.nodes.TACMethodName;
-import shadow.tac.nodes.TACMethodPointer;
-import shadow.tac.nodes.TACMethodRef;
-import shadow.tac.nodes.TACNewArray;
-import shadow.tac.nodes.TACNewObject;
-import shadow.tac.nodes.TACNode;
-import shadow.tac.nodes.TACOperand;
-import shadow.tac.nodes.TACParameter;
-import shadow.tac.nodes.TACPhi;
-import shadow.tac.nodes.TACPointerToLong;
-import shadow.tac.nodes.TACReference;
-import shadow.tac.nodes.TACResume;
-import shadow.tac.nodes.TACReturn;
-import shadow.tac.nodes.TACSequence;
-import shadow.tac.nodes.TACSequenceElement;
-import shadow.tac.nodes.TACSingletonRef;
-import shadow.tac.nodes.TACStore;
-import shadow.tac.nodes.TACThrow;
-import shadow.tac.nodes.TACTypeId;
-import shadow.tac.nodes.TACUnary;
-import shadow.tac.nodes.TACUpdate;
-import shadow.typecheck.TypeCheckException;
-import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.ExceptionType;
-import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodReferenceType;
-import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.MethodTableType;
-import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.PointerType;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SingletonType;
-import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
 
 public class LLVMOutput extends AbstractOutput {
 	private int tempCounter = 0;
@@ -285,12 +199,7 @@ public class LLVMOutput extends AbstractOutput {
 		}	
 	}
 
-	protected void writeModuleDefinition(TACModule module) throws ShadowException {
-		Map<String, ShadowValue> constants = new HashMap<String, ShadowValue>();		
-		writeModuleDefinition(module, constants);	
-	}
-
-	private void writeModuleDefinition(TACModule module, Map<String, ShadowValue> constants) throws ShadowException {		
+	private void writeModuleDefinition(TACModule module) throws ShadowException {
 		Type moduleType = module.getType();
 		writer.write("; " + moduleType.toString(Type.PACKAGES | Type.TYPE_PARAMETERS | Type.PARAMETER_BOUNDS));
 		writer.write();
@@ -313,42 +222,9 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write();
 		}
 
-
-		Set<String> localConstants = new HashSet<String>();		
-
 		//constants
 		for (TACConstant constant : module.getConstants()) {
-			TACInterpreter interpreter = new TACInterpreter(constants);
-			String name = constant.getName();
-			Context node = module.getType().getField(name);
-			try {
-				interpreter.walk(constant.getNode());
-				TACNode constantNode = constant.getNode().getPrevious(); //gets last node (value node)
-				if( !(constantNode instanceof TACOperand ))
-					throw new CompileException(
-							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node ));
-
-				Object result = TACOperand.value((TACOperand)constantNode).getData();
-				if (!(result instanceof ShadowValue))
-					throw new CompileException(
-							TypeCheckException.makeMessage(null, "Could not initialize constant " + name, node ));				
-				
-				ShadowValue value = (ShadowValue) result;
-				if( !value.getType().equals(node.getType()))
-					value = value.cast(node.getType());
-
-				String fullName = constant.getPrefixType().toString() + ":" + name; 
-				constants.put(fullName, value);				
-				localConstants.add(fullName);
-				writer.write(name(constant) + " = constant " +
-						typeLiteral(value));
-			}
-			catch(InterpreterException e) {
-				String message = TypeCheckException.makeMessage(null, "Could not initialize constant " + name + ": " + e.getMessage(), node );
-				throw new CompileException(message);
-			}
-
-			Cleanup.getInstance().walk(constant.getNode());
+			writer.write(name(constant) + " = constant " + typeLiteral(constant.getInterpretedValue()));
 		}
 
 		//interfaces implemented (because a special object is used to map the methods correctly)
@@ -500,12 +376,7 @@ public class LLVMOutput extends AbstractOutput {
 
 		//recursively do inner classes
 		for( TACModule innerClass : module.getInnerClasses() )
-			writeModuleDefinition(innerClass, constants);		
-
-		//remove constants defined in current class
-		//inner classes can use outer constants but not the converse
-		for( String name : localConstants )
-			constants.remove(name);
+			writeModuleDefinition(innerClass);
 	}
 	
 	private void writeExceptions() throws ShadowException {
@@ -2161,7 +2032,7 @@ public class LLVMOutput extends AbstractOutput {
 
 	private static String name(TACConstant constant) {
 		return new StringBuilder("@").
-				append(raw(constant.getPrefixType(), "_C" + constant.getName())).toString();
+				append(raw(constant.getFieldKey().parentType, "_C" + constant.getFieldKey().fieldName)).toString();
 	}
 
 	private static String name(TACMethodName method) {		

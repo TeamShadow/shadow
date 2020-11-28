@@ -40,7 +40,7 @@ public class ASTInterpreter extends BaseChecker {
      * This method might be useful in other contexts outside of {@link ASTInterpreter}, e.g.
      * TACBuilder.getPrefix() serves the same purposes. TODO: Find a better home.
      */
-    private static Context getPreviousSuffix(ShadowParser.PrimarySuffixContext ctx) {
+    public static Context getPreviousSuffix(ShadowParser.PrimarySuffixContext ctx) {
         ShadowParser.PrimaryExpressionContext primaryExpression =
                 (ShadowParser.PrimaryExpressionContext) ctx.getParent();
 
