@@ -11,6 +11,7 @@ import shadow.typecheck.Package;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static shadow.interpreter.InterpreterException.Error;
 
@@ -72,7 +73,14 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
      *  {@link TypeChecker#typeCheck(Path, boolean, ErrorReporter)}.
      */
     public static void evaluateConstants(Package packageTree, List<Context> nodes) throws ShadowException {
-        Map<FieldKey, VariableDeclaratorContext> constantFields = getConstantFields(nodes);
+        // We also want to process fields from inner types. Order doesn't really matter.
+        List<Type> typesIncludingInner = nodes.stream().map(Context::getType).collect(Collectors.toList());
+        nodes.stream()
+                .map(Context::getType)
+                .map(Type::recursivelyGetInnerTypes)
+                .forEach(typesIncludingInner::addAll);
+
+        Map<FieldKey, VariableDeclaratorContext> constantFields = getConstantFields(typesIncludingInner);
 
         ConstantFieldInterpreter visitor =
                 new ConstantFieldInterpreter(
@@ -91,11 +99,10 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
         visitor.printAndReportErrors();
     }
 
-    private static Map<FieldKey, VariableDeclaratorContext> getConstantFields(List<Context> nodes) {
+    private static Map<FieldKey, VariableDeclaratorContext> getConstantFields(List<Type> types) {
         Map<FieldKey, VariableDeclaratorContext> constantFields = new HashMap<>();
 
-        for (Context node : nodes) {
-            Type type = node.getType();
+        for (Type type : types) {
             for (String fieldName : type.getFields().keySet()) {
                 VariableDeclaratorContext fieldCtx = type.getField(fieldName);
                 if (fieldCtx.getModifiers().isConstant()) {
@@ -115,6 +122,8 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
         visit(rootFieldCtx);
     }
 
+    // TODO: Disallow references to inner class fields from outer class fields?
+    //  c.f. test-negative/compile/invalid-constant-dependency
     @Override
     protected ShadowValue dereferenceField(
             Type parentType, String fieldName, Context referenceCtx) {

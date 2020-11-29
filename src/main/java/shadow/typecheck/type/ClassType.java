@@ -513,9 +513,15 @@ public class ClassType extends Type {
 		}
 		return false;
 	}
-	
+
+	// TODO: Fold into Type#getInnerTypes and refactor related methods into Type
 	public Map<String, ClassType> getInnerClasses() {
 		return innerClasses;
+	}
+
+	@Override
+	public Set<Type> getInnerTypes() {
+		return new HashSet<>(innerClasses.values());
 	}
 	
 	public void addInnerClass(String name, ClassType innerClass) {
