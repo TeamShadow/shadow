@@ -3,6 +3,9 @@ package shadow.interpreter;
 import shadow.ShadowException;
 import shadow.typecheck.type.Type;
 
+/**
+ * A value held by a variable before it's been defined.
+ */
 public class ShadowUndefined extends ShadowValue {
 	
 	private final Type type;
@@ -30,5 +33,10 @@ public class ShadowUndefined extends ShadowValue {
 	@Override
 	public String toString() {
 		return "Undefined";
+	}
+
+	@Override
+	public String toLiteral() {
+		throw new UnsupportedOperationException("Undefined values cannot be represented as literals");
 	}
 }

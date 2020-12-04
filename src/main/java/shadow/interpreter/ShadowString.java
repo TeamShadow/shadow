@@ -94,11 +94,16 @@ public class ShadowString extends ShadowValue
 		
 		return new ShadowInteger( BigInteger.valueOf(code), 4, false);		
 	}
-	
+
+	@Override
+	public String toLiteral() {
+		return "\"" + getValue() + "\"";
+	}
+
 	@Override
 	public String toString()
 	{
-		return "\"" + getValue() + "\"";
+		return toLiteral();
 	}
 	
 	public static ShadowString parseString(String string)

@@ -97,7 +97,7 @@ public class TypeUpdater extends BaseChecker {
 
 		/* Add fields and methods. */
 		for (Context declarationNode : typeTable.values()) {
-			isMeta = declarationNode.getPath().toString().endsWith(".meta");
+			isMeta = declarationNode.isFromMetaFile();
 			// Only walk outer types since inner ones will be walked
 			// automatically.
 			if (!declarationNode.getType().hasOuter())
@@ -241,7 +241,7 @@ public class TypeUpdater extends BaseChecker {
 			 * checking. Note that imports in meta files have been optimized to
 			 * include only the originally imported classes that are referenced.
 			 */
-			if (declarationNode.getPath().toString().endsWith(".meta")) {
+			if (declarationNode.isFromMetaFile()) {
 				for (Object item : type.getImportedItems())
 					if (item instanceof Type) {
 						Type importType = (Type) item;
@@ -862,7 +862,7 @@ public class TypeUpdater extends BaseChecker {
 
 		// only imports and exports that are meant to be called to and from C are allowed to start with _
 		if (!signature.isImportAssembly() && !signature.isExportAssembly() && signature.getSymbol().startsWith("_")) {
-			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
+			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getDefaultMessage());
 		}
 
 		// checks for method imports

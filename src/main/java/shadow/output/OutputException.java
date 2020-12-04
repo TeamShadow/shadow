@@ -1,7 +1,7 @@
 package shadow.output;
 
 import shadow.ShadowException;
-import shadow.ShadowExceptionFactory;
+import shadow.ShadowExceptionErrorKind;
 
 public class OutputException extends ShadowException {
 
@@ -12,7 +12,7 @@ public class OutputException extends ShadowException {
 	}
 
 	@Override
-	public ShadowExceptionFactory getError() {		
+	public ShadowExceptionErrorKind getError() {
 		return null;
 	}
 

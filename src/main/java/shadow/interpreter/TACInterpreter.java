@@ -29,16 +29,19 @@ import shadow.typecheck.type.Type;
  * At present, method calls for primitive types and strings are hardcoded, but a future version of the
  * interpreter should actually walk method definitions, failing only if it reaches unsupported native
  * methods.
- * 
+ *
+ * @deprecated Compile-time constant evaluation is being moved to {@link ASTInterpreter}. There may
+ * be future cases where interpretation of TAC nodes is desired, so this code is being preserved.
+ *
  * @author Barry Wittman
  * @author Jacob Young
  *
  */
-public class ShadowInterpreter extends TACAbstractVisitor {
+public class TACInterpreter extends TACAbstractVisitor {
 	private Map<String, ShadowValue> constants;
 	private Map<String, ShadowValue> variables = new HashMap<String, ShadowValue>();
 
-	public ShadowInterpreter(Map<String, ShadowValue> constants) {
+	public TACInterpreter(Map<String, ShadowValue> constants) {
 		this.constants = constants;
 	}
 

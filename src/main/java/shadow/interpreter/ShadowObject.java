@@ -49,6 +49,12 @@ public class ShadowObject extends ShadowValue
 			copy.field(field).setValue(field(field).getValue());
 		return copy;
 	}
+
+	@Override
+	public String toLiteral() {
+		throw new UnsupportedOperationException("Cannot convert an arbitrary object to a literal");
+	}
+
 	@Override
 	public ShadowValue cast(Type type) throws ShadowException
 	{

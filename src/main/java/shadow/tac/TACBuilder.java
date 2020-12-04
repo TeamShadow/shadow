@@ -14,11 +14,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 
 import shadow.Configuration;
-import shadow.interpreter.ShadowBoolean;
-import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.ShadowNull;
-import shadow.interpreter.ShadowString;
-import shadow.interpreter.ShadowUndefined;
+import shadow.interpreter.*;
+import shadow.interpreter.ConstantFieldInterpreter.FieldKey;
 import shadow.parse.Context;
 import shadow.parse.ShadowBaseVisitor;
 import shadow.parse.ShadowParser;
@@ -167,17 +164,14 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			moduleStack.peek().addInnerClass(newModule);
 		moduleStack.push(newModule);
 
-		TACBlock oldBlock = block;
-
-		//dummy method and block for constant building
-		method = new TACMethod( new MethodSignature(new MethodType(), "", type, null));
-		block = new TACBlock(method);
-
-		for (ShadowParser.VariableDeclaratorContext constant : type.getFields().values())
-			if (constant.getModifiers().isConstant())
-				visitConstant(new TACConstant(type,
-						constant.generalIdentifier().getText()), constant);
-		block = oldBlock;
+		// Constant fields
+		for (String fieldName : type.getFields().keySet()) {
+			ShadowParser.VariableDeclaratorContext fieldCtx = type.getField(fieldName);
+			if (fieldCtx.getModifiers().isConstant()) {
+				moduleStack.peek().addConstant(
+						new TACConstant(new FieldKey(type, fieldName), fieldCtx));
+			}
+		}
 
 		for (List<MethodSignature> methods : type.getMethodMap().values())
 			for (MethodSignature method : methods)
@@ -1131,23 +1125,26 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			}
 			else if( !ctx.getModifiers().isTypeName() ) {
 				TACVariable local;
-				if( explicitSuper )
+				if( explicitSuper ) {
 					local = method.getLocal("this");
-				else
+				} else {
 					local = method.getLocal(name);
-				if (local != null)
+				}
+				if (local != null) {
 					prefix = new TACLocalLoad(anchor, local);
-				else {
+				} else {
 					if (ctx.getModifiers().isConstant()) { //constant
+						// TODO: Replace this TACLoad with a TACLiteral since the value is known
 						Type thisType = method.getSignature().getOuter();
-						//figure out type that defines constant							
+						//figure out type that defines constant
 						while( !thisType.containsField(name))
 							thisType = thisType.getOuter();
 						prefix = new TACLoad(anchor, new TACConstantRef(thisType, name));
 					}
-					else { //field					
+					else { //field
 						ModifiedType thisRef = method.getThis();
-						TACOperand op = new TACLocalLoad(anchor, (TACVariable)thisRef);													
+						TACOperand op = new TACLocalLoad(anchor, (TACVariable)thisRef);
+
 						prefix = new TACLoad(anchor, new TACFieldRef(op, name));
 					}
 				}
@@ -1226,15 +1223,17 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			return expression.primaryPrefix();
 	}
 
-	@Override public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx)
-	{ 
+	@Override public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx) {
 		visitChildren(ctx);
-		if( ctx.getModifiers().isConstant() )
-			prefix = new TACLoad(anchor, new TACConstantRef(getPrefix(ctx).getType(), ctx.Identifier().getText()));
-		else if( ctx.getType() instanceof SingletonType)
-			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType)ctx.getType()));
-		else if( !ctx.getModifiers().isTypeName() )  //doesn't do anything at this stage if it's just a type name				
+		if (ctx.getModifiers().isConstant()) {
+			// TODO: Replace this TACLoad with a TACLiteral since the value is known
+			Type parentType = ASTInterpreter.getPreviousSuffix((PrimarySuffixContext) ctx.getParent()).getType();
+			prefix = new TACLoad(anchor, new TACConstantRef(parentType, ctx.Identifier().getText()));
+		} else if (ctx.getType() instanceof SingletonType) {
+			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType) ctx.getType()));
+		} else if (!ctx.getModifiers().isTypeName()) { //doesn't do anything at this stage if it's just a type name
 			prefix = new TACLoad(anchor, new TACFieldRef(prefix, ctx.Identifier().getText()));
+		}
 
 		ctx.setOperand(prefix);
 
@@ -1390,7 +1389,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 	@Override public Void visitLiteral(ShadowParser.LiteralContext ctx)
 	{ 
 		//no children
-		prefix = ctx.setOperand(new TACLiteral(anchor, ctx.value));
+		prefix = ctx.setOperand(new TACLiteral(anchor, ctx.getInterpretedValue()));
 
 		return null;
 	}
@@ -2594,15 +2593,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		currentBlock.getCleanupPhi().addPreviousStore(currentLabel, new TACLabelAddress(anchor, lastLabel, method) );
 	}
 	 */
-
-	private void visitConstant(TACConstant constantRef, ShadowParser.VariableDeclaratorContext constantNode)
-	{			
-		visit(constantNode.conditionalExpression());
-		//normal nodes have the last node in the list, but constants need the first
-		//the node after the last is the first
-		constantRef.setNode(constantNode.conditionalExpression().getList().getNext());		
-		moduleStack.peek().addConstant(constantRef);		
-	}	
 
 	private TACLabel setupMethod() {
 		/*

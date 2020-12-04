@@ -26,13 +26,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import shadow.ShadowException;
-import shadow.interpreter.ShadowBoolean;
-import shadow.interpreter.ShadowCode;
-import shadow.interpreter.ShadowDouble;
-import shadow.interpreter.ShadowFloat;
-import shadow.interpreter.ShadowInteger;
-import shadow.interpreter.ShadowNull;
-import shadow.interpreter.ShadowString;
+import shadow.interpreter.*;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
@@ -2826,57 +2820,69 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitLiteral(ShadowParser.LiteralContext ctx)
 	{ 
-		//no children visited		
+		//no children visited
 		Type type = literalToType(ctx);
 		ctx.setType(type);
-		if( type != Type.NULL ) {
+		if(type != Type.NULL) {
 			currentType.addUsedType(type);
 		}
+
+		ctx.setInterpretedValue(processLiteral(ctx, getErrorReporter()));
 		
-		// ugly but needed to find negation		
+		return null;		
+	}
+
+	/**
+	 * Initializes a {@link ShadowValue} corresponding to the given literal node.
+	 *
+	 * Also sets the appropriate {@link Type} on the node.
+	 */
+	public static ShadowValue processLiteral(ShadowParser.LiteralContext ctx, ErrorReporter reporter) {
+		// ugly but needed to find negation
 		ParserRuleContext greatGrandparent = ctx.getParent().getParent().getParent();
 		boolean negated = false;
 
-		if( greatGrandparent instanceof ShadowParser.UnaryExpressionContext ) {
+		if (greatGrandparent instanceof ShadowParser.UnaryExpressionContext) {
 			ParserRuleContext greatGreat = greatGrandparent.getParent();
-			
-			if( greatGreat instanceof ShadowParser.UnaryExpressionContext && greatGreat.getChild(0).getText().equals("-") ) {
+
+			if (greatGreat instanceof ShadowParser.UnaryExpressionContext && greatGreat.getChild(0).getText().equals("-")) {
 				negated = true;
 			}
 		}
-		
+
 		String literal = ctx.getText();
 		String lower = literal.toLowerCase();
 		int length = literal.length();
 
-		try {		
-			if (literal.equals("null"))
-				ctx.value = new ShadowNull(Type.NULL);
-			else if (literal.startsWith("\'") && literal.endsWith("\'"))
-				ctx.value = ShadowCode.parseCode(literal);			
-			else if (literal.startsWith("\"") && literal.endsWith("\""))
-				ctx.value = ShadowString.parseString(literal);
-			else if (literal.equals("true"))
-				ctx.value = new ShadowBoolean(true);
-			else if (literal.equals("false"))
-				ctx.value = new ShadowBoolean(false);
-			else if (lower.endsWith("f") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
-				ctx.value = ShadowFloat.parseFloat(lower.substring(0,  length - 1));
-			else if (lower.endsWith("d") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
-				ctx.value = ShadowDouble.parseDouble(lower.substring(0, length - 1));
-			else if (literal.indexOf('.') != -1 || (lower.indexOf('e') != -1 && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") ))
-				ctx.value = ShadowDouble.parseDouble(lower);
-			else
-				ctx.value = ShadowInteger.parseNumber(lower, negated);
+		try {
+			if (literal.equals("null")) {
+				return new ShadowNull(Type.NULL);
+			} else if (literal.startsWith("\'") && literal.endsWith("\'")) {
+				return ShadowCode.parseCode(literal);
+			} else if (literal.startsWith("\"") && literal.endsWith("\"")) {
+				return ShadowString.parseString(literal);
+			} else if (literal.equals("true")) {
+				return new ShadowBoolean(true);
+			} else if (literal.equals("false")) {
+				return new ShadowBoolean(false);
+			} else if (lower.endsWith("f") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b")) {
+				return ShadowFloat.parseFloat(lower.substring(0, length - 1));
+			} else if (lower.endsWith("d") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") ) {
+				return ShadowDouble.parseDouble(lower.substring(0, length - 1));
+			} else if (literal.indexOf('.') != -1 || (lower.indexOf('e') != -1 && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )) {
+				return ShadowDouble.parseDouble(lower);
+			} else {
+				return ShadowInteger.parseNumber(lower, negated);
+			}
 		}
-		catch(NumberFormatException e) {
-			addError(ctx, Error.INVALID_LITERAL, "Value out of range: " + ctx.getText());
+		catch (NumberFormatException e) {
+			reporter.addError(ctx, Error.INVALID_LITERAL, "Value out of range: " + ctx.getText());
 		}
-		catch(IllegalArgumentException e) {
-			addError(ctx, Error.INVALID_LITERAL, e.getLocalizedMessage());
+		catch (IllegalArgumentException e) {
+			reporter.addError(ctx, Error.INVALID_LITERAL, e.getLocalizedMessage());
 		}
-		
-		return null;		
+
+		return ShadowValue.INVALID;
 	}
 	
 	@Override public Void visitPrimitiveType(ShadowParser.PrimitiveTypeContext ctx)

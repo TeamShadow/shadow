@@ -513,9 +513,15 @@ public class ClassType extends Type {
 		}
 		return false;
 	}
-	
+
+	// TODO: Fold into Type#getInnerTypes and refactor related methods into Type
 	public Map<String, ClassType> getInnerClasses() {
 		return innerClasses;
+	}
+
+	@Override
+	public Set<Type> getInnerTypes() {
+		return new HashSet<>(innerClasses.values());
 	}
 	
 	public void addInnerClass(String name, ClassType innerClass) {
@@ -653,11 +659,15 @@ public class ClassType extends Type {
 		
 		//constants		
 		newLine = false;
-		for( Map.Entry<String, ? extends ModifiedType> field : getFields().entrySet() ) {
-			Modifiers modifiers = field.getValue().getModifiers(); 
-			if( modifiers.isConstant() && (modifiers.isPublic() || modifiers.isProtected())) {
+		for (String fieldName : getFields().keySet()) {
+			ShadowParser.VariableDeclaratorContext field = getField(fieldName);
+			Modifiers modifiers = field.getModifiers();
+			if (modifiers.isConstant() && (modifiers.isPublic() || modifiers.isProtected())) {
 				String visibility = modifiers.isPublic() ? "public" : "protected";
-				out.println(indent + visibility + " constant " + field.getValue().getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE) + " " + field.getKey() + ";");
+				out.println(
+						indent + visibility + " constant "
+								+ field.getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE)
+								+ " " + fieldName + " = " + field.getInterpretedValue().toLiteral() + ";");
 				newLine = true;				
 			}
 		}

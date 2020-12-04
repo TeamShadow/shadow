@@ -3,7 +3,7 @@ package shadow.tac.nodes;
 import java.util.Set;
 
 import shadow.ShadowException;
-import shadow.interpreter.ShadowInterpreter;
+import shadow.interpreter.TACInterpreter;
 import shadow.interpreter.ShadowValue;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.MethodSignature;
@@ -115,7 +115,7 @@ public class TACUnary extends TACUpdate
 		
 		if( (changed || getUpdatedValue() == null) && value instanceof TACLiteral ) {
 			try {
-				ShadowValue result = ShadowInterpreter.evaluate(this);
+				ShadowValue result = TACInterpreter.evaluate(this);
 				setUpdatedValue(new TACLiteral(this, result));
 				changed = true;
 			}

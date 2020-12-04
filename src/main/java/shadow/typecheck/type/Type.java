@@ -553,6 +553,31 @@ public abstract class Type implements Comparable<Type> {
 	{
 		this.outer = outer;
 	}
+
+	// TODO: Consider folding ClassType#getInnerClasses() into this and refactoring
+	//  related methods into Type
+	/** Gets the direct inner types contained within this type */
+	public Set<Type> getInnerTypes() {
+		return new HashSet<>();
+	}
+
+	public Set<Type> recursivelyGetInnerTypes() {
+		Set<Type> innerTypes = new HashSet<>();
+		recursivelyGetInnerTypes(innerTypes);
+		return innerTypes;
+	}
+
+	/**
+	 * Recursively gets all inner types contained within this type (and within its inner types,
+	 * etc.)
+	 */
+	private void recursivelyGetInnerTypes(Set<Type> allInnerTypes) {
+		Set<Type> currentInnerTypes = getInnerTypes();
+		allInnerTypes.addAll(currentInnerTypes);
+		for (Type type : currentInnerTypes) {
+			type.recursivelyGetInnerTypes(allInnerTypes);
+		}
+	}
 	
 	/**
 	 * Given an unsigned type, returns the signed version or the same type otherwise.
@@ -938,7 +963,7 @@ public abstract class Type implements Comparable<Type> {
 		
 	public LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> getFields() {
 		return fieldTable;
-	}	
+	}
 	
 	public boolean containsMethod(String symbol)
 	{

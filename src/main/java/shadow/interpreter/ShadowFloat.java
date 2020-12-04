@@ -193,10 +193,29 @@ public class ShadowFloat extends ShadowNumber
 	{
 		return new ShadowFloat(getValue());
 	}
+
+	@Override
+	public String toLiteral() {
+		float value = getValue();
+
+		// These special values cannot be represented as a single literal
+		if (Float.isNaN(value)) {
+			return "0f / 0f";
+		} else if (Float.isInfinite(value)) {
+			if (value > 0) {
+				return "1f / 0f";
+			} else {
+				return "-1f / 0f";
+			}
+		}
+
+		return Float.toString(getValue()) + "f";
+	}
+
 	@Override
 	public String toString()
 	{
-		return Float.toString(getValue()) + 'f';
+		return toLiteral();
 	}
 
 	@Override

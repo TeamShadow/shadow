@@ -9,7 +9,7 @@ public class CompileException extends ShadowException
 	}
 
 	@Override
-	public ShadowExceptionFactory getError() {	
+	public ShadowExceptionErrorKind getError() {
 		return null;
 	}
 }
