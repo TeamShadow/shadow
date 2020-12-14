@@ -51,6 +51,20 @@
 	          <followSymlinks>false</followSymlinks>
 	        </fileset>
 	        <fileset>
+	          <directory>tests</directory>
+	          <includes>
+	            <include>**/*.meta</include>	            
+	          </includes>
+	          <followSymlinks>false</followSymlinks>
+	        </fileset>
+	        <fileset>
+	          <directory>tests-negative</directory>
+	          <includes>
+	            <include>**/*.meta</include>	            
+	          </includes>
+	          <followSymlinks>false</followSymlinks>
+	        </fileset>
+	        <fileset>
 	          <directory>src/main/java/shadow/jaxb</directory>
 	          <includes>
 	            <include>*.java</include>	            
