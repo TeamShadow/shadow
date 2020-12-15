@@ -1,6 +1,7 @@
 package shadow.typecheck.type;
 
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,12 +46,12 @@ public abstract class Type implements Comparable<Type> {
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> usedTypes = new HashSet<Type>();
 	private Set<Type> mentionedTypes = new HashSet<Type>();
-	private Set<Type> partiallyInstantiatedClasses = new TreeSet<Type>();	
-	private List<Type> typeParameterDependencies = new ArrayList<Type>();
+	private Set<Type> partiallyInstantiatedClasses = new TreeSet<>();	
+	private List<Type> typeParameterDependencies = new ArrayList<>();
 	
 	
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();	
-	private LinkedList<Object> importedItems = new LinkedList<Object>();
+	private Map<String, Object> importedItems = new HashMap<>();
 			
 	private String hashName = null;	
 
@@ -94,16 +95,16 @@ public abstract class Type implements Comparable<Type> {
 	
 	public static ClassType POINTER = null;
 	public static ClassType THREAD = null;
-	public static ClassType IMPORT_NATIVE_DECORATOR = null;
-	public static ClassType IMPORT_ASSEMBLY_DECORATOR = null;
-	public static ClassType IMPORT_METHOD_DECORATOR = null;
-	public static ClassType EXPORT_ASSEMBLY_DECORATOR = null;
-	public static ClassType EXPORT_METHOD_DECORATOR = null;
-	public static ClassType EXPORT_NATIVE_DECORATOR = null;
+	public static ClassType IMPORT_NATIVE = null;
+	public static ClassType IMPORT_ASSEMBLY = null;
+	public static ClassType IMPORT_METHOD = null;
+	public static ClassType EXPORT_ASSEMBLY = null;
+	public static ClassType EXPORT_METHOD = null;
+	public static ClassType EXPORT_NATIVE = null;
 	
-	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); //UNKNOWN type used for placeholder when typechecking goes wrong
+	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); // UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
-	public static final VarType VAR = new VarType(); //VAR type used for placeholder for variables declared with var, until type is known	
+	public static final VarType VAR = new VarType(); // VAR type used for placeholder for variables declared with var, until type is known	
 	
 	/*
 	 * Predefined interfaces needed for Shadow
@@ -309,13 +310,13 @@ public abstract class Type implements Comparable<Type> {
 		DECORATOR = null;
 		METHOD_DECORATOR = null;
 		COMPILER_DECORATOR = null;
-		IMPORT_NATIVE_DECORATOR = null;
-		IMPORT_ASSEMBLY_DECORATOR = null;
-		IMPORT_METHOD_DECORATOR = null;
+		IMPORT_NATIVE = null;
+		IMPORT_ASSEMBLY = null;
+		IMPORT_METHOD = null;
 		
-		EXPORT_NATIVE_DECORATOR = null;
-		EXPORT_ASSEMBLY_DECORATOR = null;
-		EXPORT_METHOD_DECORATOR = null;
+		EXPORT_NATIVE = null;
+		EXPORT_ASSEMBLY = null;
+		EXPORT_METHOD = null;
 		
 		exceptionType = null;
 	}
@@ -1415,14 +1416,9 @@ public abstract class Type implements Comparable<Type> {
 	public abstract Type replace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException;
 	public abstract Type partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements ) throws InstantiationException;
 	public abstract void updateFieldsAndMethods() throws InstantiationException;	
+
 	
-	public void addImportedItems( List<Object> items )
-	{
-		importedItems.addAll(items);		
-	}
-	
-	public List<Object> getImportedItems()
-	{
+	public Map<String, Object> getImportedItems() {
 		return importedItems;		
 	}
 	
@@ -1434,37 +1430,23 @@ public abstract class Type implements Comparable<Type> {
 	
 	protected final void printImports(PrintWriter out, String linePrefix ) {		
 		if( getOuter() == null ) {
-			HashSet<String> imports = new HashSet<String>();
-						
-			//imported items come from import statements and fully qualified classes
-			for( Object importItem : getImportedItems() ) {
-				if( importItem instanceof Type ) {
-					Type importType = (Type)importItem;
-					if( !importType.hasOuter() && getUsedTypes().contains(importType) && !importType.getPackage().toString().equals("shadow:standard"))
-						imports.add(importType.toString(PACKAGES));
-						
-				}
-				else if( importItem instanceof Package )
-				{
-					Package importPackage = (Package)importItem;
-					if( !importPackage.toString().equals("shadow:standard"))
-						for( Type referencedType : getUsedTypes() )
-							if( !referencedType.hasOuter() && !(referencedType instanceof ArrayType) &&  referencedType.getPackage().equals( importPackage ) && !referencedType.isPrimitive() )
-								imports.add(referencedType.toString(PACKAGES));					
+			
+			for(Object object : importedItems.values()) {
+				if(object instanceof Type) {
+					Type type = (Type)object;
+					if(type.getOuter() == null && type != this)
+						out.println(linePrefix + "import " + type.toString(PACKAGES) + ";");
 				}
 			}
 			
-			//also classes from the same package
-			if( !getPackage().toString().equals("shadow:standard") )
-				for( Type packageType : getPackage().getTypes() )
-					if( packageType != this && !packageType.hasOuter() && getUsedTypes().contains(packageType) && !packageType.isPrimitive())
-						imports.add(packageType.toString(PACKAGES));			
+			/*
+			for(Type type : usedTypes) {
+				if(type.getOuter() == null && type != this)
+					out.println(linePrefix + "import " + type.toString(PACKAGES) + ";");
+			}
+			*/
 			
-			for( String importType : imports )			
-				out.println(linePrefix + "import " + importType + ";");
-			
-			if( imports.size() > 0 )
-				out.println(); 
+			out.println(); 
 		}
 	}	
 	

@@ -1,6 +1,4 @@
-import shadow:utility;
-import shadow:natives;
-import shadow:io@Console;
+import shadow:natives@Pointer;
 
 /**
  * Class {@code Thread} provides ways to manipulate threads. 

@@ -1,0 +1,8 @@
+locked class shadow:standard:decorators@
+	ImportAssembly is CompilerDecorator {
+		public constant int ASSEMBLY = 0;
+	
+		protected create() {}
+		
+		protected create(String x, int y) {}
+}

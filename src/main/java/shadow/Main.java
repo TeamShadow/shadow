@@ -431,7 +431,7 @@ public class Main {
 		// TypeChecker generates a list of AST nodes corresponding to
 		// classes needing compilation
 		TypeChecker.TypeCheckerOutput typecheckerOutput =
-				TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter);
+				TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
 		ConstantFieldInterpreter.evaluateConstants(
 				typecheckerOutput.packageTree, typecheckerOutput.allNodes);

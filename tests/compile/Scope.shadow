@@ -2,7 +2,7 @@ class Scope {
 
 	int a;
 
-    public blah(int a) => () {
+    public blah(int z) => () {
         int a = 1;
         int b = 7;
         int c = 3, d = 4;

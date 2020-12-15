@@ -73,14 +73,32 @@ public class TypeUpdater extends BaseChecker {
 
 	private boolean isMeta = false;
 
+
 	/**
 	 * Creates a new <code>TypeUpdater</code> with the given tree of packages.
 	 * 
 	 * @param packageTree
 	 *            root of all packages
+	 * @param fileTable 
 	 */
-	public TypeUpdater(Package packageTree, ErrorReporter reporter) {
+	public TypeUpdater(Package packageTree, ErrorReporter reporter, Map<String, Context> fileTable) {
 		super(packageTree, reporter);
+		
+		// Update so that all the imported names map to types instead of paths to the class files
+		for(Type type : packageTree) {
+			//Maps from name to path
+			Map<String, Object> imports = type.getImportedItems();
+			for(Map.Entry<String, Object> entry : imports.entrySet() ) {
+				// If the file table has the path
+				if(fileTable.containsKey(entry.getValue())) {
+					// Get the context associated with that path
+					Context context = fileTable.get(entry.getValue());
+					
+					// Replace the path with the type information
+					imports.put(entry.getKey(), context.getType());
+				}				
+			}
+		}
 	}
 
 	/**
@@ -94,7 +112,7 @@ public class TypeUpdater extends BaseChecker {
 	 * @throws TypeCheckException
 	 */
 	public Map<Type, Context> update(Map<Type, Context> typeTable) throws ShadowException {
-
+		
 		/* Add fields and methods. */
 		for (Context declarationNode : typeTable.values()) {
 			isMeta = declarationNode.isFromMetaFile();
@@ -234,15 +252,16 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.UBYTE);
 			type.addUsedType(Type.UINT);
 			type.addUsedType(Type.ULONG);
-			type.addUsedType(Type.USHORT);
+			type.addUsedType(Type.USHORT);		
+			
 
 			/*
-			 * Update imports for meta files, since they won't have statement
+			 * Update used items for meta files, since they won't have statement
 			 * checking. Note that imports in meta files have been optimized to
-			 * include only the originally imported classes that are referenced.
+			 * include only referenced types.
 			 */
 			if (declarationNode.isFromMetaFile()) {
-				for (Object item : type.getImportedItems())
+				for (Object item : type.getImportedItems().values())
 					if (item instanceof Type) {
 						Type importType = (Type) item;
 						type.addUsedType(importType);
@@ -832,28 +851,28 @@ public class TypeUpdater extends BaseChecker {
 
 				for (DecoratorExpressionContext t : decoratorCtx.decoratorExpression()) {
 					Type actualType = t.type().getType();
-					String typeName = actualType.getTypeName().toLowerCase();
-
-					if (importExportType != null && (typeName.startsWith("import") || typeName.startsWith("export"))) {
-						addError(node, Error.INVALID_TYPE,
-								"Only one import or export decorator can be present on a method at all times.");
-					} else {
-						importExportType = actualType;
+					if (importExportType != null && 
+							(actualType == Type.IMPORT_ASSEMBLY || actualType == Type.IMPORT_METHOD || actualType == Type.IMPORT_NATIVE ||
+							 actualType == Type.EXPORT_ASSEMBLY || actualType == Type.EXPORT_METHOD || actualType == Type.EXPORT_NATIVE) ) {
+						addError(node, Error.INVALID_TYPE, "Only one import or export decorator can be present on a method at all times.");
 					}
+					else
+						importExportType = actualType;
+
 				}
 
 				if (importExportType != null) {
-					if (importExportType == Type.IMPORT_NATIVE_DECORATOR) {
+					if (importExportType == Type.IMPORT_NATIVE) {
 						signature.setImportType(MethodSignature.IMPORT_NATIVE);
-					} else if (importExportType == Type.IMPORT_ASSEMBLY_DECORATOR) {
+					} else if (importExportType == Type.IMPORT_ASSEMBLY) {
 						signature.setImportType(MethodSignature.IMPORT_ASSEMBLY);
-					} else if (importExportType == Type.IMPORT_METHOD_DECORATOR) {
+					} else if (importExportType == Type.IMPORT_METHOD) {
 						signature.setImportType(MethodSignature.IMPORT_METHOD);
-					} else if (importExportType == Type.EXPORT_ASSEMBLY_DECORATOR) {
+					} else if (importExportType == Type.EXPORT_ASSEMBLY) {
 						signature.setExportType(MethodSignature.EXPORT_ASSEMBLY);
-					} else if (importExportType == Type.EXPORT_METHOD_DECORATOR) {
+					} else if (importExportType == Type.EXPORT_METHOD) {
 						signature.setExportType(MethodSignature.EXPORT_METHOD);
-					} else if(importExportType == Type.EXPORT_NATIVE_DECORATOR) {
+					} else if(importExportType == Type.EXPORT_NATIVE) {
 						signature.setExportType(MethodSignature.EXPORT_NATIVE);						
 					}
 				}
@@ -1041,13 +1060,13 @@ public class TypeUpdater extends BaseChecker {
 		currentPackage = packageTree;
 		return visitChildren(ctx);
 	}
+	
+	/*
 
 	private void updateImports(Context node) {
-		/* Changing these items updates the imports inside the type. */
-		List<Object> importedItems = node.getType().getImportedItems();
-		for (int i = 0; i < importedItems.size(); i++) {
-			Object thing = importedItems.get(i);
-			String item = (String) thing;
+		// Changing these items updates the imports inside the type.
+		Set<String> importedItems = node.getType().getImportedItems();
+		for (String path : importedItems) {
 			if (item.contains("@")) { // Single class.
 				Type type = lookupType(node, item);
 				// shouldn't fail
@@ -1064,6 +1083,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 	}
+	*/
 
 	@Override
 	public Void visitLiteral(ShadowParser.LiteralContext ctx) {
@@ -1082,7 +1102,7 @@ public class TypeUpdater extends BaseChecker {
 	private void visitDeclaration(Context node, ShadowParser.IsListContext list) {
 		declarationType = node.getType();
 		currentPackage = declarationType.getPackage();
-		updateImports(node);
+		//updateImports(node);
 
 		visitChildren(node);
 
@@ -1183,12 +1203,14 @@ public class TypeUpdater extends BaseChecker {
 
 		// Any decorator class or interface definition needs to end with
 		// Decorator
+		/*  //Don't like it.
 		if (declarationType != null && declarationType.hasInterface(Type.DECORATOR)
 				&& !declarationType.getTypeName().endsWith("Decorator")) {
 			addError(node, Error.INVALID_LITERAL,
 					"Any class or interface that derives from the Decorator interface needs to end with the 'Decorator' literal, as such: "
 							+ declarationType.getTypeName() + "Decorator");
 		}
+		*/
 	}
 
 	@Override
@@ -1399,6 +1421,7 @@ public class TypeUpdater extends BaseChecker {
 		// Note that all type arguments are on the last class
 		String typeName = ctx.Identifier(0).getText();
 
+		/*  // Don't like it.
 		if (isDecorator) {
 			String _decoratorStr = "Decorator";
 
@@ -1412,6 +1435,7 @@ public class TypeUpdater extends BaseChecker {
 				typeName += _decoratorStr;
 			}
 		}
+		*/
 
 		if (ctx.unqualifiedName() != null)
 			typeName = ctx.unqualifiedName().getText() + "@" + typeName;
