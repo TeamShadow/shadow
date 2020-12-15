@@ -21,16 +21,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.Main;
+import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
-import shadow.ShadowException;
-import shadow.parse.ShadowParser;
-import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.Type;
 
 /**

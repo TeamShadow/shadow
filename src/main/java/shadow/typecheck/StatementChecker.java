@@ -61,11 +61,10 @@ import shadow.typecheck.type.UninstantiatedType;
 
 public class StatementChecker extends ScopedChecker {
 	/* Stack for current prefix (needed for arbitrarily long chains of expressions). */
-	private LinkedList<Context> curPrefix = null;
+	private LinkedList<Context> curPrefix = new LinkedList<>();
 
 	public StatementChecker( Package packageTree, ErrorReporter reporter ) {
 		super(packageTree, reporter);
-		curPrefix = new LinkedList<Context>();		
 	}
 	
 	public void check(Context node) throws ShadowException {

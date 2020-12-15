@@ -5,9 +5,11 @@ import org.antlr.v4.runtime.Token;
 import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.CreateContext;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.StatementChecker;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.Package;
 
@@ -340,6 +342,20 @@ public class ASTInterpreter extends BaseChecker {
             //                                                     ^^^^^^^^^
             value = dereferenceField(
                     getPreviousSuffix(lastSuffix).getType(), lastSuffix.scopeSpecifier().Identifier().getText(), ctx);
+        }
+        else if(lastSuffix.allocation() != null && lastSuffix.allocation().create() != null) {
+        	CreateContext create = lastSuffix.allocation().create();
+        	Context previousSuffix = getPreviousSuffix(lastSuffix);
+        	if(previousSuffix.getType() == Type.STRING) {
+        		if(create.conditionalExpression().size() == 0)
+        			value = new ShadowString("");
+        		else if(create.conditionalExpression().size() == 1 && create.conditionalExpression(0).getType() == Type.STRING)
+        			value = create.conditionalExpression(0).getInterpretedValue();
+        		else
+        			addError(ctx, Error.INVALID_CREATE, "Cannot call create " + create.getSignature());
+        	}
+        	else
+        		addError(ctx, Error.INVALID_CREATE, "For a constant field, the String type is the only one that can have a create");
         }
 
         if (value == ShadowValue.INVALID) {
