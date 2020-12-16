@@ -308,9 +308,11 @@ public class TypeCollector extends ScopedChecker {
 				if( !useSourceFiles &&
 						!mustRecompile.contains(canonical) &&
 						source == null &&
+						// Always do the full .shadow file for the main file if typechecking
+						(!typeCheckOnly || !hasMain || !files.get(0).equals(canonicalFile)) &&
 						// Only use .meta if it's newer than .shadow 
 						Files.exists(meta) && Files.getLastModifiedTime(meta).compareTo(Files.getLastModifiedTime(canonicalFile)) >= 0 &&
-						// Also, only use .meta if we're not going to need to recompile it into an LLVM
+						// Also, only use .meta if we're not going to need to recompile it into an LLVM 
 						(typeCheckOnly || (Files.exists(llvm) && Files.getLastModifiedTime(llvm).compareTo(Files.getLastModifiedTime(meta)) >= 0)))
 					canonicalFile = meta;				
 				else
