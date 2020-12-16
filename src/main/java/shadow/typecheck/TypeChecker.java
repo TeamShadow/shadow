@@ -60,6 +60,7 @@ public class TypeChecker {
 	 * @param mainFile            the main file to compile
 	 * @param useSourceFiles    whether the source files should be recompiled
 	 * @param reporter            object used to report errors
+	 * @param typeCheckOnly		whether the source files are only being type-checked
 	 *
 	 * @return nodes list of AST nodes for the classes to be compile
 	 * @throws ShadowException

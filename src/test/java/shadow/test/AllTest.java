@@ -27,9 +27,10 @@ import shadow.test.typecheck.StandardLibraryTests;
 import shadow.test.typecheck.TypeCheckerTests;
 import shadow.test.typecheck.UtilityTests;
 import shadow.test.typecheck.WarningTests;
+import shadow.test.typecheck.ImportTests;
 
 @RunWith(JUnitPlatform.class)
-@SelectClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
+@SelectClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class, ImportTests.class })
 public class AllTest extends TestCase {
 
 	@AfterAll

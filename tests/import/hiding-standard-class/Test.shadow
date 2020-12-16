@@ -1,0 +1,12 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		String thing = String:create();
+		Console.printLine(thing->secret);
+		shadow:standard@String other = "goats";
+		Console.printLine(other);
+	}
+}

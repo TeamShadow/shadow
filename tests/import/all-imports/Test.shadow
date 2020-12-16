@@ -1,0 +1,16 @@
+import shadow:io@Console;
+
+class Test
+{
+	Cow cow = Cow:create(); 
+	
+	public main() => ()
+	{
+		var pig = Pig:create();
+		cow->name = "Lily";
+		pig->name = "Wilbur";
+		String amazing = cow->name;
+		Console.printLine(pig);
+		Console.printLine(cow);	
+	}
+}

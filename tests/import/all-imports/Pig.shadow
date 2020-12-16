@@ -1,0 +1,9 @@
+class Pig
+{
+	get set String name = "Pig";
+	
+	public toString() => (String)
+	{
+		return name;
+	}
+}

@@ -1,0 +1,6 @@
+class Problem  //added because everyone uses it
+{
+	ant x; // ant, not int
+
+
+}
