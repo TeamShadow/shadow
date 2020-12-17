@@ -1,0 +1,10 @@
+import meat:beef@Thang;
+
+class testing@Test
+{
+	public method() => ()
+	{
+		int a = 5;	
+		var object = Thang:create();
+	}
+}

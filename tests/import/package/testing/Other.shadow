@@ -1,0 +1,7 @@
+class testing@Other
+{
+	public readonly toString() => (String)
+	{
+		return "other";
+	}
+}

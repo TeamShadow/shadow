@@ -1,0 +1,11 @@
+import shadow:io@Console;
+
+class testing@Test
+{
+	public main() => ()
+	{
+		var other = Other:create(); 
+		Console.printLine("No problems here!");
+		Console.printLine(#other);
+	}
+}

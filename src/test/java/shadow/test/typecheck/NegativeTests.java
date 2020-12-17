@@ -499,4 +499,14 @@ public class NegativeTests {
 		args.add("tests-negative/typechecker/method-is-not-readonly-but-interface-method-is/Test.shadow");
 		enforce(Error.MISSING_INTERFACE);		
 	}
+	
+	@Test public void testImportsCollide() throws Exception {
+		args.add("tests-negative/import/imports-collide/testing/Test.shadow");
+		enforce(Error.IMPORT_COLLIDES);		
+	}
+	
+	@Test public void testImportNotFound() throws Exception {
+		args.add("tests-negative/import/import-not-found/testing/Test.shadow");
+		enforce(Error.INVALID_IMPORT);		
+	}
 }

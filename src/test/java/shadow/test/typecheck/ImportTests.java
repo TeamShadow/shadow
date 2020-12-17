@@ -8,7 +8,6 @@ import java.util.TreeSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import shadow.Configuration;
 import shadow.Loggers;
 import shadow.Main;
 import shadow.typecheck.ErrorReporter;
@@ -45,6 +44,12 @@ public class ImportTests {
 	// Local file has the same name as a standard class (String)
 	@Test public void testHidingStandardClass() throws Exception {
 		args.add("tests/import/hiding-standard-class/Test.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	// Local files are in a package
+	@Test public void testPackage() throws Exception {
+		args.add("tests/import/package/testing/Test.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
 

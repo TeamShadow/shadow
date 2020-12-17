@@ -37,6 +37,7 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 	public enum Error implements ShadowExceptionErrorKind {
 		CIRCULAR_CREATE("Circular create", "Create calls are circular"),
 		ILLEGAL_ACCESS("Illegal access", "Class, member, method, or property not accessible from this context"),
+		IMPORT_COLLIDES("Import collides", "Import collides with existing import"),
 		INVALID_ARGUMENTS("Invalid arguments", "Supplied method arguments do not match parameters"),
 		INVALID_ASSIGNMENT("Invalid assignment", "Right hand side cannot be assigned to left hand side"),
 		INVALID_CAST("Invalid cast", "Result type cannot be cast to specified type"),

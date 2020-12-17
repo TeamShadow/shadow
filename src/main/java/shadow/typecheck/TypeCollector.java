@@ -44,6 +44,8 @@ import shadow.parse.ParseChecker;
 import shadow.parse.ParseException;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
+import shadow.parse.ShadowParser.CompilationUnitContext;
+import shadow.parse.ShadowParser.UnqualifiedNameContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.Package.PackageException;
 import shadow.typecheck.TypeCheckException.Error;
@@ -325,7 +327,7 @@ public class TypeCollector extends ScopedChecker {
 
 			// Use the semantic checker to parse the file
 			ParseChecker checker = new ParseChecker(new ErrorReporter(Loggers.PARSER));
-			Context node;
+			CompilationUnitContext node;
 			// If there's an updated source, use that
 			// Otherwise, read from the file
 			if( source != null  )
@@ -337,7 +339,7 @@ public class TypeCollector extends ScopedChecker {
 			// Make another collector to walk the current file. 
 			TypeCollector collector = new TypeCollector( new Package(), getErrorReporter(), useSourceFiles, typeCheckOnly );
 			// Keeping a current files gives us a file whose directory we can check against.
-			collector.setCurrentFile(currentFile);
+			collector.setCurrentFile(currentFile, node);
 			collector.visit(node);				
 
 			if( canonical.equals(main) )
@@ -410,7 +412,7 @@ public class TypeCollector extends ScopedChecker {
 		}
 	}
 
-	private void setCurrentFile(Path currentFile) throws IOException {
+	private void setCurrentFile(Path currentFile, CompilationUnitContext node) throws IOException {
 		this.currentFile = currentFile;
 		importedTypes.clear();
 		
@@ -419,7 +421,29 @@ public class TypeCollector extends ScopedChecker {
 		
 		// Possible sources for imports (order matters)
 		importPaths.clear();
-		importPaths.add(currentFile.getParent().normalize());
+		
+		
+		// If the file has package information, back up so that the import root is the above the package information
+		Path parent = currentFile.getParent();
+		if(node != null) {
+			UnqualifiedNameContext unqualifiedName = null;
+			if(node.classOrInterfaceDeclaration() != null)
+				unqualifiedName = node.classOrInterfaceDeclaration().unqualifiedName();
+			else if(node.enumDeclaration() != null)
+				unqualifiedName = node.enumDeclaration().unqualifiedName();
+			
+			
+			if(unqualifiedName != null) {
+				String text = unqualifiedName.getText();
+				if(!text.equals("default")) {
+					String[] parts = text.split(":");
+					for(int i = 0; i < parts.length; ++i)
+						parent = parent.getParent();
+				}				
+			}
+		}
+		
+		importPaths.add(parent.normalize());
 		importPaths.addAll(config.getImports());
 		importPaths.add(standard);
 				
@@ -839,7 +863,7 @@ public class TypeCollector extends ScopedChecker {
 			if(file == null)
 				addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
 			else if(!addImport(file))
-				addError(ctx, Error.INVALID_IMPORT, "Type " + name + " collides with an existing import");
+				addError(ctx, Error.IMPORT_COLLIDES, "Type " + name + " collides with existing import");
 		}
 		// Whole package
 		else {
@@ -847,7 +871,7 @@ public class TypeCollector extends ScopedChecker {
 			if(directory == null)			
 				addError(ctx, Error.INVALID_IMPORT, "No directory found for package " + name);
 			else if(!addImports(directory))
-				addError(ctx, Error.INVALID_IMPORT, "One or more types in package " + name + " collide with an existing import");
+				addError(ctx, Error.IMPORT_COLLIDES, "One or more types in package " + name + " collide with an existing import");
 		}
 
 		return null;
