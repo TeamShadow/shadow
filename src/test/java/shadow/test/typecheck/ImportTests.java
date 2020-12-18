@@ -52,6 +52,12 @@ public class ImportTests {
 		args.add("tests/import/package/testing/Test.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	// Type has no import statement because it's fully qualifed
+	@Test public void testFullyQualifiedType() throws Exception {
+		args.add("tests/import/fully-qualified-type/Test.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
 	@Test public void testAllImports() throws Exception {
 		String file = "tests/import/all-imports/Test.shadow";

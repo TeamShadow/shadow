@@ -509,4 +509,9 @@ public class NegativeTests {
 		args.add("tests-negative/import/import-not-found/testing/Test.shadow");
 		enforce(Error.INVALID_IMPORT);		
 	}
+	
+	@Test public void testMismatchedPackage() throws Exception {
+		args.add("tests-negative/import/mismatched-package/package/Test1.shadow");
+		enforce(Error.MISMATCHED_PACKAGE);		
+	}
 }

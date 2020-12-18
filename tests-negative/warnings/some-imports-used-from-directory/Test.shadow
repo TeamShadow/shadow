@@ -1,0 +1,19 @@
+import shadow:io;
+import shadow:utility;
+
+class Test
+{
+	public main() => ()
+	{
+		var list = LinkedList<String>:create();
+		list.add("boats");
+		list.add("goats");
+		list.add("moats");
+		Console.printLine(list->size); 
+	}
+	
+	public other() => (int)
+	{
+		return 10;
+	}
+}

@@ -4,6 +4,8 @@ class package@Test1
 {	
 	public main() => ()
 	{
+		Test2 test = Test2:create();
 		Console.printLine("Test 1");
+		Console.printLine(#test);
 	}
 }
