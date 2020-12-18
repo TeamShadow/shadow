@@ -434,15 +434,15 @@ public class Main {
 				TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
 		ConstantFieldInterpreter.evaluateConstants(
-				typecheckerOutput.packageTree, typecheckerOutput.allNodes);
+				typecheckerOutput.packageTree, typecheckerOutput.nodes);
 
 		// As an optimization, print .meta files for the .shadow files being checked
-		typecheckerOutput.allNodes.stream()
+		typecheckerOutput.nodes.stream()
 				.filter((node) -> !node.isFromMetaFile())
 				.forEach(TypeChecker::printMetaFile);
 
 		try {
-			for (Context node : typecheckerOutput.neededNodes) {
+			for (Context node : typecheckerOutput.nodes) {
 				Path file = node.getPath();
 
 				if (currentJob.isCheckOnly()) {

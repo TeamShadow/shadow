@@ -42,6 +42,7 @@ import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.Type.ImportInformation;
 import shadow.typecheck.type.TypeParameter;
 
 /**
@@ -390,29 +391,16 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 					return current;
 
 				current = current.getOuter();					
-			}		
-
-			// Walk up the tree of package from the starting point
-			//TODO: Remove? I don't think this is right.  Types from outer packages shouldn't be visible.
-			/*
-			Package p = outer.getPackage();		
-			while( p != null ) {
-				type = p.getType(name);
-				if( type != null )
-					return type;
-				p = p.getParent();
-			}
-			 */		
+			}	
 
 			// If still not found, the outermost type has imports.
 			while(outer.getOuter() != null)
 				outer = outer.getOuter();
 
-			Map<String, Object> imports = outer.getImportedItems();
-			Object object = imports.get(name);
-			if(object instanceof Type)
-				return (Type)object;
-
+			Map<String, ImportInformation> imports = outer.getImportedItems();
+			ImportInformation information = imports.get(name);
+			if(information != null)
+				return information.getType();
 		}
 
 		return null;	

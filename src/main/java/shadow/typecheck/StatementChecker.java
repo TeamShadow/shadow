@@ -16,8 +16,8 @@
  */
 package shadow.typecheck;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +26,14 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import shadow.ShadowException;
-import shadow.interpreter.*;
+import shadow.interpreter.ShadowBoolean;
+import shadow.interpreter.ShadowCode;
+import shadow.interpreter.ShadowDouble;
+import shadow.interpreter.ShadowFloat;
+import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowNull;
+import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowValue;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
@@ -73,7 +80,7 @@ public class StatementChecker extends ScopedChecker {
 		printAndReportErrors();		
 	}
 	
-	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
+	// Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
 	
 	@Override public Void visitClassOrInterfaceBody(ShadowParser.ClassOrInterfaceBodyContext ctx) {
 		currentType = ((Context)ctx.getParent()).getType(); //get type from declaration
@@ -786,8 +793,8 @@ public class StatementChecker extends ScopedChecker {
 		visitBinary(ctx);
 		
 		return null;
-	}	
-		
+	}
+
 	private Type visitUnary( ShadowParser.UnaryExpressionContext node, String method, String operator, InterfaceType interfaceType ) {
 		Type type = node.unaryExpression().getType();
 		

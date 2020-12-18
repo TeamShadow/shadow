@@ -51,7 +51,7 @@ public abstract class Type implements Comparable<Type> {
 	
 	
 	private TypeArgumentCache instantiatedTypes = new TypeArgumentCache();	
-	private Map<String, Object> importedItems = new HashMap<>();
+	private Map<String, ImportInformation> importedItems = new HashMap<>();
 			
 	private String hashName = null;	
 
@@ -162,6 +162,27 @@ public abstract class Type implements Comparable<Type> {
 				return result;
 			}
 		}		
+	}
+	
+	public static class ImportInformation {
+		private final String importPath;
+		private Type type;
+		
+		public ImportInformation(String importPath) {
+			this.importPath = importPath;
+		}
+		
+		public String getImportPath() {
+			return importPath;
+		}
+		
+		public void setType(Type type) {
+			this.type = type;
+		}
+		
+		public Type getType() {
+			return type;
+		}
 	}
 	
 	private static List<ModifiedType> getArguments(Type type, List<ModifiedType> values, List<ModifiedType> replacements) throws InstantiationException {
@@ -1418,7 +1439,7 @@ public abstract class Type implements Comparable<Type> {
 	public abstract void updateFieldsAndMethods() throws InstantiationException;	
 
 	
-	public Map<String, Object> getImportedItems() {
+	public Map<String, ImportInformation> getImportedItems() {
 		return importedItems;		
 	}
 	
@@ -1431,12 +1452,10 @@ public abstract class Type implements Comparable<Type> {
 	protected final void printImports(PrintWriter out, String linePrefix ) {		
 		if( getOuter() == null ) {
 			
-			for(Object object : importedItems.values()) {
-				if(object instanceof Type) {
-					Type type = (Type)object;
-					if(type.getOuter() == null && type != this)
-						out.println(linePrefix + "import " + type.toString(PACKAGES) + ";");
-				}
+			for(ImportInformation information : importedItems.values()) {
+				Type type = information.getType();
+				if(type.getOuter() == null && type != this)
+					out.println(linePrefix + "import " + type.toString(PACKAGES) + ";");
 			}
 			
 			/*

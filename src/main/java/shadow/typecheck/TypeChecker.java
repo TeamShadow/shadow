@@ -44,13 +44,11 @@ import shadow.typecheck.type.Type;
 public class TypeChecker {
 
 	public static class TypeCheckerOutput {
-		public final List<Context> allNodes;
-		public final List<Context> neededNodes;
+		public final List<Context> nodes;
 		public final Package packageTree;
 
-		public TypeCheckerOutput(List<Context> allNodes, List<Context> neededNodes, Package packageTree) {
-			this.allNodes = Collections.unmodifiableList(allNodes);
-			this.neededNodes = Collections.unmodifiableList(neededNodes);
+		public TypeCheckerOutput(List<Context> allNodes, Package packageTree) {
+			this.nodes = Collections.unmodifiableList(allNodes);
 			this.packageTree = packageTree;
 		}
 	}
@@ -78,7 +76,6 @@ public class TypeChecker {
 		
 		/* Its return value maps all the types to the nodes that need compiling. */		
 		Map<Type, Context> nodeTable = collector.collectTypes( mainFile );
-		Type mainType = collector.getMainType();
 		Map<String, Context> fileTable = collector.getFileTable();
 		
 		/* Updates types, adding:
@@ -91,14 +88,14 @@ public class TypeChecker {
 		nodeTable = updater.update( nodeTable );
 		
 		/* Select only nodes corresponding to outer types. */				
-		List<Context> allNodes = new ArrayList<>();
-		for( Context node : nodeTable.values())
-			if( !node.getType().hasOuter() )
-				allNodes.add(node);
+		List<Context> nodes = new ArrayList<>();
+		for(Context node : nodeTable.values())
+			if(!node.getType().hasOuter())
+				nodes.add(node);
 		
 		/* Do type-checking of statements, i.e., actual code. */
 		StatementChecker checker = new StatementChecker(packageTree, reporter);
-		for (Context node : allNodes) {
+		for (Context node : nodes) {
 			// We assume .meta files are already type-checked
 			if (!node.isFromMetaFile()) {
 				/* Check all statements for type safety and other features */
@@ -106,44 +103,7 @@ public class TypeChecker {
 			}
 		}
 		
-		/* After type-checking, we can determine which types are referenced
-		 * by the main type (even indirectly). */
-		TreeSet<Type> referencedTypes = new TreeSet<Type>();
-		referencedTypes.add(mainType); // almost everything gets figured out from there
-		addStandardTypes(referencedTypes);
-		
-		
-		/* Determine which types are needed for the current compilation. */
-		Set<Type> neededTypes = new HashSet<>(referencedTypes);
-		while( !referencedTypes.isEmpty() ) {			
-			Type next = referencedTypes.first();
-			
-			/*
-			
-			Type simplified = next.getTypeWithoutTypeArguments();			
-			if( !(simplified instanceof ArrayType) && !simplified.hasOuter() && neededTypes.add( simplified ) )				
-				referencedTypes.addAll( simplified.getUsedTypes() );
-			*/
-			
-			
-			for(Object object : next.getImportedItems().values()) {
-				if(object instanceof Type) {
-					Type type = (Type)object;
-					if(neededTypes.add(type))
-						referencedTypes.add(type);
-				}
-			}
-			
-			referencedTypes.remove(next);
-		}
-
-		/* Filter for the nodes corresponding to needed types. */
-		List<Context> neededNodes = new ArrayList<Context>();
-		for( Context node : allNodes )
-			if( neededTypes.contains( node.getType() ) )
-				neededNodes.add(node);
-		
-		return new TypeCheckerOutput(allNodes, neededNodes, packageTree);
+		return new TypeCheckerOutput(nodes, packageTree);
 	}
 	
 //	/**

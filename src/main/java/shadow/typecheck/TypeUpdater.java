@@ -55,6 +55,7 @@ import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.Type.ImportInformation;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UninstantiatedClassType;
 import shadow.typecheck.type.UninstantiatedInterfaceType;
@@ -87,15 +88,15 @@ public class TypeUpdater extends BaseChecker {
 		// Update so that all the imported names map to types instead of paths to the class files
 		for(Type type : packageTree) {
 			//Maps from name to path
-			Map<String, Object> imports = type.getImportedItems();
-			for(Map.Entry<String, Object> entry : imports.entrySet() ) {
+			Map<String, ImportInformation> imports = type.getImportedItems();
+			for(ImportInformation information : imports.values() ) {
+				String path = information.getImportPath();
+				Context context = fileTable.get(information.getImportPath());
 				// If the file table has the path
-				if(fileTable.containsKey(entry.getValue())) {
-					// Get the context associated with that path
-					Context context = fileTable.get(entry.getValue());
-					
-					// Replace the path with the type information
-					imports.put(entry.getKey(), context.getType());
+				if(context != null) {
+					// Add type information
+					//TODO: fix for imported inner types
+					information.setType(context.getType());
 				}				
 			}
 		}

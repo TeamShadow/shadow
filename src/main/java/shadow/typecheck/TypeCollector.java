@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -45,6 +46,7 @@ import shadow.parse.ParseException;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
 import shadow.parse.ShadowParser.CompilationUnitContext;
+import shadow.parse.ShadowParser.NameContext;
 import shadow.parse.ShadowParser.UnqualifiedNameContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.Package.PackageException;
@@ -74,7 +76,7 @@ public class TypeCollector extends ScopedChecker {
 	private final boolean typeCheckOnly;
 
 	// Holds all of the imports we know about.
-	private final Map<String,String> importedTypes = new HashMap<>(); // Type name -> file path
+	private final Map<String,PathWithContext> importedTypes = new HashMap<>(); // Type name -> file path and import statement
 	private final Set<String> usedTypes = new HashSet<>(); // File paths
 		
 	// Paths where we can search for imports. 
@@ -98,6 +100,18 @@ public class TypeCollector extends ScopedChecker {
 	private final LinkedList<Set<String>> localTypes = new LinkedList<>();
 	// Current type parameters for the current class
 	private final LinkedList<Set<String>> typeParameters = new LinkedList<>();
+	
+	// Java is stupid
+	private static class PathWithContext {
+		public final String path;
+		public final NameContext context;
+		
+		public PathWithContext(String path, NameContext context) {
+			this.path = path;
+			this.context = context;
+		}
+	}
+	
 
 	/**
 	 * Creates a new <code>TypeCollector</code> with the given tree of packages. 
@@ -357,9 +371,9 @@ public class TypeCollector extends ScopedChecker {
 						// The only classes without a package that will be imported will be
 						// in the same directory as the main type.
 						// Implication: classes in the same directory have different packages.
-						String message = "Type " + type +
-								" belongs to the default package, but types defined in the same directory belong to other packages";
-						addWarning(new TypeCheckException(Error.MISMATCHED_PACKAGE, message));
+					
+						addError(new TypeCheckException(Error.MISMATCHED_PACKAGE, "Type " + type +
+								" belongs to the default package, but types defined in the same directory belong to other packages"));
 					}											
 				}
 				catch(PackageException e) {
@@ -422,7 +436,6 @@ public class TypeCollector extends ScopedChecker {
 		// Possible sources for imports (order matters)
 		importPaths.clear();
 		
-		
 		// If the file has package information, back up so that the import root is the above the package information
 		Path parent = currentFile.getParent();
 		if(node != null) {
@@ -452,13 +465,13 @@ public class TypeCollector extends ScopedChecker {
 		recursivelyAddImports(standard);		
 		
 		// And everything from the current directory
-		addImports(currentFile.getParent()); 	
+		addImports(currentFile.getParent(), null); 	
 	}
 	
 	/*
 	 * Add all the files in a directory as imports.
 	 */
-	private boolean addImports(Path directory) {
+	private boolean addImports(Path directory, NameContext context) {
 		boolean success = true;
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
 			for (Path file : stream) {
@@ -468,7 +481,7 @@ public class TypeCollector extends ScopedChecker {
 					
 					if(file.toString().endsWith(".shadow") || 
 					  (file.toString().endsWith(".meta")  && !Files.exists(file.resolveSibling(typeName + ".shadow")))) {
-						if(!addImport(file))
+						if(!addImport(file, context))
 							success = false;
 					}
 				}					
@@ -486,31 +499,24 @@ public class TypeCollector extends ScopedChecker {
 	 * Returns true if successful.
 	 * Returns false if that type name was already imported.
 	 */
-	private boolean addImport(Path file) {
+	private boolean addImport(Path file, NameContext context) {
 		String filePath = stripExtension(Main.canonicalize(file));
 		String typeName = stripExtension(file.getFileName().toString());
 		// Put in list of imported types and see if anything else has the same name
-		String oldPath = importedTypes.put(typeName, filePath);
+		PathWithContext oldPathWithContext = importedTypes.put(typeName, new PathWithContext(filePath, context));
 		
 		// For .meta files, an import signals that the type was actually used
 		if(currentFile.getFileName().toString().endsWith(".meta"))
 			usedTypes.add(filePath);
 				
-		// If something else had the same name...
-		if(oldPath != null) {
-			Path path = Paths.get(oldPath).getParent();
-			Path standardPath = config.getSystemImport().resolve("shadow").resolve("standard").normalize();
-			Path currentPath = currentFile.getParent();
-			// We're allowed to overwrite names from standard or immediately in the current path, but not other things.
-			if(!path.startsWith(standardPath) && !path.equals(currentPath))
-				return false;
-		}
-		
-		
+		// If something else had the same name and also had a context, two imports are colliding
+		// (Automatic imports like the standard library and the current directory don't have import contexts)
+		if(oldPathWithContext != null && oldPathWithContext.context != null)
+			return false;
+				
 		return true;
 	}
 
-	
 	private void recursivelyAddImports(Path path) throws IOException {
 		List<Path> directories = new LinkedList<>();
 
@@ -524,7 +530,7 @@ public class TypeCollector extends ScopedChecker {
 				else if(file.toString().endsWith(".shadow")) {
 					String filePath = stripExtension(file.toAbsolutePath().normalize().toString());
 					String typeName = stripExtension(file.getFileName().toString());
-					importedTypes.put(typeName, filePath);			
+					importedTypes.put(typeName, new PathWithContext(filePath, null));			
 				}					
 			}
 		}
@@ -862,7 +868,7 @@ public class TypeCollector extends ScopedChecker {
 			Path file = findPath(name);
 			if(file == null)
 				addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
-			else if(!addImport(file))
+			else if(!addImport(file, ctx))
 				addError(ctx, Error.IMPORT_COLLIDES, "Type " + name + " collides with existing import");
 		}
 		// Whole package
@@ -870,7 +876,7 @@ public class TypeCollector extends ScopedChecker {
 			Path directory = findPath(name);			
 			if(directory == null)			
 				addError(ctx, Error.INVALID_IMPORT, "No directory found for package " + name);
-			else if(!addImports(directory))
+			else if(!addImports(directory, ctx))
 				addError(ctx, Error.IMPORT_COLLIDES, "One or more types in package " + name + " collide with an existing import");
 		}
 
@@ -895,9 +901,11 @@ public class TypeCollector extends ScopedChecker {
 		visitChildren(ctx); 
 
 		//It's important to visit children first because how types are stored in the typeTable depends on it
-		type = type.getTypeWithoutTypeArguments(); // Necessary?
+		type = type.getTypeWithoutTypeArguments();
 		typeTable.put(type, ctx);
-		((Context)ctx.getParent()).setType(type);		
+		// Set type on compilation unit
+		if(!type.hasOuter())
+			((Context)ctx.getParent()).setType(type);		
 
 		removeMembers();
 		removeTypeParameters();
@@ -912,12 +920,31 @@ public class TypeCollector extends ScopedChecker {
 
 		// Let type know what it has imported.
 		// Imported items should be empty at this point.
-		Map<String, Object> items = type.getImportedItems();
-		for(Map.Entry<String, String> entry : importedTypes.entrySet()) {
+		Map<String, Type.ImportInformation> items = type.getImportedItems();
+		Set<NameContext> usedDirectories = new HashSet<>();
+		Set<NameContext> potentiallyUnusedDirectories = new HashSet<>();
+		for(Entry<String, PathWithContext> entry : importedTypes.entrySet()) {
 			// Only import the types that were actually used
-			if(usedTypes.contains(entry.getValue()))
-				items.put(entry.getKey(), entry.getValue());
+			String path = entry.getValue().path;
+			NameContext context = entry.getValue().context;
+			if(usedTypes.contains(path)) {
+				items.put(entry.getKey(), new Type.ImportInformation(path));
+				if(context != null && context.unqualifiedName() == null)
+					usedDirectories.add(context);
+			}
+			else if(context != null) {
+				if(context.unqualifiedName() != null) // Fully qualified type
+					addWarning(context, Error.UNUSED_IMPORT, "Import for type " + context.getText() + " is not used");
+				else // Whole directory, but maybe something in it is used?
+					potentiallyUnusedDirectories.add(context);
+			}
 		}
+		
+		
+		for(NameContext context : potentiallyUnusedDirectories) {
+			if(!usedDirectories.contains(context))
+				addWarning(context, Error.UNUSED_IMPORT, "Import for package " + context.getText() + " is not used");
+		}		
 	}
 
 	private void addTypeParameters() {
@@ -992,8 +1019,9 @@ public class TypeCollector extends ScopedChecker {
 		addMembers(ctx.enumBody().classOrInterfaceBodyDeclaration());
 
 		visitChildren(ctx);
-		type = type.getTypeWithoutTypeArguments(); //necessary?
+		type = type.getTypeWithoutTypeArguments();
 		typeTable.put(type, ctx);
+		// Set type on compilation unit
 		((Context)ctx.getParent()).setType(type);	
 
 		removeMembers();
@@ -1053,7 +1081,7 @@ public class TypeCollector extends ScopedChecker {
 		}
 		else if(!isTypeParameter(name) && !isLocalType(name)) {
 			if(importedTypes.containsKey(name))
-				usedTypes.add(importedTypes.get(name));
+				usedTypes.add(importedTypes.get(name).path);
 			else
 				addError(ctx, Error.UNDEFINED_TYPE, "Type " + name + " not defined in current context");
 		}
@@ -1099,7 +1127,7 @@ public class TypeCollector extends ScopedChecker {
 				// we know it's a class
 				if(suffix.classSpecifier() != null || suffix.scopeSpecifier() != null || suffix.allocation() != null) {
 					if(importedTypes.containsKey(symbol))
-						usedTypes.add(importedTypes.get(symbol));
+						usedTypes.add(importedTypes.get(symbol).path);
 					else
 						addError(ctx, Error.UNDEFINED_TYPE, "Type " + symbol + " not defined in current context");
 				}
@@ -1108,7 +1136,7 @@ public class TypeCollector extends ScopedChecker {
 				// since an error message here would be confusing: The programmer probably misspelled a variable name.
 				else if(suffix.method() != null || suffix.property() != null) {
 					if(importedTypes.containsKey(symbol))
-						usedTypes.add(importedTypes.get(symbol));
+						usedTypes.add(importedTypes.get(symbol).path);
 				}
 			}			
 		}
