@@ -71,6 +71,11 @@ public class WarningTests {
 	
 	@Test public void testSomeImportsUsedFromDirectory() throws Exception {
 		args.add("tests-negative/warnings/some-imports-used-from-directory/Test.shadow");
-		Main.run(args.toArray(new String[] { }));
+		Main.run(args.toArray(new String[] { }));		
+	}
+	
+	@Test public void testImportsFromDirectoryCollide() throws Exception {
+		args.add("tests-negative/warnings/imports-from-directory-collide/testing/Test.shadow");
+		enforce(Error.IMPORT_COLLIDES);		
 	}
 }

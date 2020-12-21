@@ -1,0 +1,17 @@
+import testing:almonds;
+import testing:walnuts;
+import shadow:io;
+
+class testing@Test
+{
+	public main() => ()
+	{
+		Nut nut = Nut:create();
+		Orgeat orgeat = Orgeat:create();
+		Toasted toasted = Toasted:create();
+		
+		Console.printLine(#nut);
+		Console.printLine(#orgeat);
+		Console.printLine(#toasted);		
+	}
+}

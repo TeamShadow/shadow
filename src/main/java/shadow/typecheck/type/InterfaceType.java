@@ -151,6 +151,8 @@ public class InterfaceType extends Type
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 			
+			replaced.setInnerTypes(getInnerTypes());
+			
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.replace(values, replacements));
 			
@@ -194,11 +196,13 @@ public class InterfaceType extends Type
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
+			
+			replaced.setInnerTypes(getInnerTypes());
 						
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.partiallyReplace(values, replacements));
 						
-			//only constant non-parameterized fields in an interface
+			// Only constant non-parameterized fields in an interface
 			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
 			
 			for( String name : fields.keySet() ) {
@@ -214,7 +218,7 @@ public class InterfaceType extends Type
 					replaced.addMethod(replacedSignature);					
 				}
 			
-			if( isParameterized() )
+			if(isParameterized())
 				for( ModifiedType modifiedParameter : getTypeParameters() )	{
 					Type parameter = modifiedParameter.getType();
 					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
@@ -238,6 +242,9 @@ public class InterfaceType extends Type
 				if( node != null )
 					node.setType(signature.getMethodType());				
 			}
+		
+		for(Type inner : getInnerTypes().values())		
+			inner.updateFieldsAndMethods();
 		
 		if( isParameterized() )
 			getTypeParameters().updateFieldsAndMethods();

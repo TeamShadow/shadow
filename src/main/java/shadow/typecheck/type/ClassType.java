@@ -16,8 +16,7 @@ import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 
 public class ClassType extends Type {
-	private ClassType extendType;	
-	private HashMap<String, ClassType> innerClasses;
+	private ClassType extendType;
 	private SequenceType dependencyList;
 	
 	public ClassType(String typeName, ClassType parent) {
@@ -26,11 +25,8 @@ public class ClassType extends Type {
 	}
 	
 	public ClassType(String typeName, Modifiers modifiers, 
-			Documentation documentation, Type outer) 
-	{		
+			Documentation documentation, Type outer) {		
 		super(typeName, modifiers, documentation, outer);
-		
-		innerClasses = new HashMap<String, ClassType>();
 	}
 	
 	public void setExtendType(ClassType extendType) {
@@ -131,26 +127,6 @@ public class ClassType extends Type {
 			return false;		
 		
 		return getExtendType().recursivelyContainsMethod(symbol);
-	}
-	
-	public boolean recursivelyContainsInnerClass(String className) {
-		if( containsInnerClass(className) )
-			return true;
-		
-		if( getExtendType() == null )
-			return false;		
-		
-		return getExtendType().recursivelyContainsInnerClass(className);
-	}
-	
-	public ClassType recursivelyGetInnerClass(String className) {
-		if( containsInnerClass(className) )
-			return getInnerClass(className);
-		
-		if( getExtendType() == null )
-			return null;
-				
-		return getExtendType().recursivelyGetInnerClass(className);
 	}
 
 	public Context recursivelyGetField(String fieldName) {
@@ -288,9 +264,9 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter());
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
-			replaced.innerClasses = innerClasses;
-			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
+			
+			replaced.setInnerTypes(getInnerTypes());
 
 			replaced.setExtendType(getExtendType().replace(values, replacements));			
 			
@@ -340,9 +316,9 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter() );
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
-			replaced.innerClasses = innerClasses;
-			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
+			
+			replaced.setInnerTypes(getInnerTypes());
 			
 			replaced.setExtendType(getExtendType().partiallyReplace(values, replacements));			
 			
@@ -421,22 +397,14 @@ public class ClassType extends Type {
 					node.setType(signature.getMethodType());
 			}
 
-		for( ClassType inner : getInnerClasses().values() )		
+		for(Type inner : getInnerTypes().values())		
 			inner.updateFieldsAndMethods();
 		
 		if( isParameterized() )
 			getTypeParameters().updateFieldsAndMethods();
 		
 		invalidateHashName();
-	}
-	
-	//necessary?
-	/*
-	@Override
-	public boolean equals(Type type) {		
-		return super.equals(type);
-	}
-	*/	
+	}	
 	
 	@Override
 	public boolean isSubtype(Type t) {
@@ -514,54 +482,6 @@ public class ClassType extends Type {
 		return false;
 	}
 
-	// TODO: Fold into Type#getInnerTypes and refactor related methods into Type
-	public Map<String, ClassType> getInnerClasses() {
-		return innerClasses;
-	}
-
-	@Override
-	public Set<Type> getInnerTypes() {
-		return new HashSet<>(innerClasses.values());
-	}
-	
-	public void addInnerClass(String name, ClassType innerClass) {
-		innerClasses.put( name, innerClass );
-		innerClass.setOuter(this);
-	}
-	
-	public boolean containsInnerClass(String className) {
-		return innerClasses.containsKey(className);
-	}
-	
-	public boolean containsInnerClass(Type type) {
-		return innerClasses.containsValue(type);		
-	}
-	
-	public boolean recursivelyContainsInnerClass(Type type) {
-		if( innerClasses.containsValue(type) )
-			return true;
-		
-		for( ClassType innerClass : innerClasses.values() )
-			if( innerClass.recursivelyContainsInnerClass(type) )
-				return true;
-		
-		return false;
-	}
-	
-	public ClassType getInnerClass(String className) {
-		if( className.contains(":")) {
-			int colon = className.indexOf(':');
-			String prefix = className.substring(0, colon);
-			ClassType inner = innerClasses.get(prefix);
-			if( inner != null )
-				return inner.getInnerClass(className.substring(colon + 1));
-			else
-				return null;
-		}			
-		
-		return innerClasses.get(className);
-	}
-	
 	@Override
 	public ClassType getTypeWithoutTypeArguments() {
 		return (ClassType)super.getTypeWithoutTypeArguments();
@@ -691,21 +611,19 @@ public class ClassType extends Type {
 		for( List<MethodSignature> list: getMethodMap().values() )		
 			for( MethodSignature signature : list ) {
 				Modifiers modifiers = signature.getModifiers();
-				if( (modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()) && !signature.isCopy() )
-				{				
+				if((modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()) && !signature.isCopy()) {				
 					out.println(indent + signature + ";");
 					newLine = true;
 				}
 			}
-		if( newLine && getInnerClasses().size() > 0 )
+		
+		if(newLine && getInnerTypes().size() > 0)
 			out.println();
 		
-		//inner classes
-		for( Type _class : getInnerClasses().values() )
+		// Inner types
+		for( Type _class : getInnerTypes().values() )
 				_class.printMetaFile(out, indent);		
-		
-		//if( !hasOuter() )
-			//printGenerics( out, indent );				
+					
 		out.println(linePrefix + "}");	
 	}
 }

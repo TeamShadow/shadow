@@ -1,0 +1,12 @@
+import shadow:io@Console;
+import different@Other:Inner;
+
+class testing@Test
+{
+	public main() => ()
+	{		
+		Console.printLine("No problems here!");
+		var inner = Inner:create();
+		Console.printLine(inner->x);
+	}
+}

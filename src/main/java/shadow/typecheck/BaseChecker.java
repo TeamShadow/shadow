@@ -380,14 +380,13 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 			Type current = outer;
 			while( current != null ) {			
 				// Then check inner classes
-				if( current instanceof ClassType )
-					type = ((ClassType)current).getInnerClass(name);
+				type = current.getInnerType(name);
 
 				if( type != null )
 					return type;
 
 				// Then check outer class itself
-				if( current.getTypeName().equals(name) )
+				if(current.getTypeName().equals(name))
 					return current;
 
 				current = current.getOuter();					
@@ -422,8 +421,8 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 		else if( name.contains(":")) {  //this case handles partially qualified names (perhaps leaving off outermost classes)
 			int colon = name.indexOf(':');
 			Type outer = lookupType(ctx, name.substring(0, colon));
-			if( outer != null && outer instanceof ClassType )
-				return ((ClassType)outer).getInnerClass(name.substring(colon + 1));
+			if( outer != null )
+				return outer.getInnerType(name.substring(colon + 1));
 			else
 				return null;
 		}
@@ -531,11 +530,17 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 	 * @param currentType	type where code is currently executing
 	 * @return				<code>true</code> if type is accessible
 	 */
-	public static boolean classIsAccessible( Type type, Type currentType ) {
-		// Public classes and outermost classes are always accessible.
+	public static boolean typeIsAccessible( Type type, Type currentType ) {
+		// Outermost classes are always accessible.
 		// So are direct inner classes.
-		if( type.getModifiers().isPublic() || !type.hasOuter() ||
-				type.getOuter().equals( currentType ) || type instanceof TypeParameter )
+		if( !type.hasOuter() || type.getOuter().equals( currentType ) || type instanceof TypeParameter )
+			return true;
+		
+		// If it's public all the way up, it's accessible
+		Type current = type;
+		while(current.hasOuter() && current.getModifiers().isPublic())
+			current = current.getOuter();
+		if(!current.hasOuter()) // It was public all the way
 			return true;
 
 		// If any outer class of type is also an outer class of typeToAccess, it's visible.
@@ -550,13 +555,16 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 		if( currentType instanceof ClassType ) {
 			ClassType parent = ((ClassType)currentType).getExtendType();			
 			while( parent != null ) {
-				if( type.getOuter() == parent ) {
-					if( type.getModifiers().isPrivate())
-						return false;
-					else
-						return true;
-				}
-
+				if(parent.recursivelyContainsInnerType(type)) {
+					Type test = type;
+					while(test != parent) {
+						if(test.getModifiers().isPrivate())
+							return false;
+					}
+					
+					return true;
+				}				
+				
 				outer = parent.getOuter();				
 				while( outer != null ) {
 					if( outer == type.getOuter() )
@@ -567,6 +575,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 				parent = parent.getExtendType();
 			}
 		}		
+		
 		return false;
 	}
 

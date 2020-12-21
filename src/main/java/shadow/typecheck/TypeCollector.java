@@ -356,28 +356,39 @@ public class TypeCollector extends ScopedChecker {
 			collector.setCurrentFile(currentFile, node);
 			collector.visit(node);				
 
-			if( canonical.equals(main) )
-				mainType = node.getType();
+			
 
 			fileTable.put(canonical, node);
+			
+			if( canonical.equals(main) ) {
+				mainType = node.getType();
+				// Put the main type in the package tree first
+				try {
+					packageTree.addQualifiedPackage( mainType.getPackage().toString() ).addType( mainType);
+				} catch (PackageException e) {
+					addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));	
+				}	
+			}	
 
 			/* Copy types from other collector into our package tree. */	
 			for( Type type : collector.packageTree ) {
-				try {				
-					packageTree.addQualifiedPackage( type.getPackage().toString() ).addType( type );					
-					if( mainType != null && type.getPackage() == packageTree &&
-							mainType.getPackage() != packageTree ) {
-						// Imported class has default package but the main type doesn't.
-						// The only classes without a package that will be imported will be
-						// in the same directory as the main type.
-						// Implication: classes in the same directory have different packages.
-					
-						addError(new TypeCheckException(Error.MISMATCHED_PACKAGE, "Type " + type +
-								" belongs to the default package, but types defined in the same directory belong to other packages"));
-					}											
-				}
-				catch(PackageException e) {
-					addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));				
+				if(type != mainType) {
+					try {				
+						packageTree.addQualifiedPackage( type.getPackage().toString() ).addType( type );					
+						if( mainType != null && type.getPackage() == packageTree &&
+								mainType.getPackage() != packageTree ) {
+							// Imported class has default package but the main type doesn't.
+							// The only classes without a package that will be imported will be
+							// in the same directory as the main type.
+							// Implication: classes in the same directory have different packages.
+						
+							addError(new TypeCheckException(Error.MISMATCHED_PACKAGE, "Type " + type +
+									" belongs to the default package, but types defined in the same directory belong to other packages"));
+						}											
+					}
+					catch(PackageException e) {
+						addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));				
+					}
 				}
 			}
 
@@ -481,7 +492,7 @@ public class TypeCollector extends ScopedChecker {
 					
 					if(file.toString().endsWith(".shadow") || 
 					  (file.toString().endsWith(".meta")  && !Files.exists(file.resolveSibling(typeName + ".shadow")))) {
-						if(!addImport(file, context))
+						if(!addImport(file, context, true))
 							success = false;
 					}
 				}					
@@ -499,20 +510,33 @@ public class TypeCollector extends ScopedChecker {
 	 * Returns true if successful.
 	 * Returns false if that type name was already imported.
 	 */
-	private boolean addImport(Path file, NameContext context) {
+	private boolean addImport(Path file, NameContext context, boolean directory) {
 		String filePath = stripExtension(Main.canonicalize(file));
-		String typeName = stripExtension(file.getFileName().toString());
+		String typeName;
+		if(context == null || directory)
+			typeName = stripExtension(file.getFileName().toString());
+		else
+			// Last identifier is type name
+			typeName = context.Identifier(context.Identifier().size() - 1).getText();
+		
 		// Put in list of imported types and see if anything else has the same name
 		PathWithContext oldPathWithContext = importedTypes.put(typeName, new PathWithContext(filePath, context));
 		
-		// For .meta files, an import signals that the type was actually used
-		if(currentFile.getFileName().toString().endsWith(".meta"))
-			usedTypes.add(filePath);
-				
 		// If something else had the same name and also had a context, two imports are colliding
 		// (Automatic imports like the standard library and the current directory don't have import contexts)
-		if(oldPathWithContext != null && oldPathWithContext.context != null)
+		if(oldPathWithContext != null && oldPathWithContext.context != null) {
+			// If it's a directory, put the old thing back.
+			// Because it would otherwise be annoying, directory imports that happen to have a collision won't overwrite the existing.
+			// Likewise, the compiler will issue a warning instead of an error.
+			if(directory)
+				importedTypes.put(typeName, oldPathWithContext);			
+			
 			return false;
+		}
+		
+		// For .meta files, an import signals that the type was actually used
+		if(currentFile.getFileName().toString().endsWith(".meta"))
+			usedTypes.add(filePath);	
 				
 		return true;
 	}
@@ -671,9 +695,8 @@ public class TypeCollector extends ScopedChecker {
 			}
 
 			// Put new type inside of outer type, if it exists.
-			if( currentType != null && currentType instanceof ClassType &&					
-					(kind.equals("class") || kind.equals("enum") || kind.equals("exception")) )					
-				((ClassType)currentType).addInnerClass(name, (ClassType)type); 
+			if(currentType != null)					
+				currentType.addInnerType(name, (ClassType)type); 
 
 			// Special case for standard types needed in the compiler.			
 			if( currentPackage.getQualifiedName().equals("shadow:standard")) {	
@@ -780,7 +803,12 @@ public class TypeCollector extends ScopedChecker {
 		if( separator.equals("\\"))		   // Hack for Windows to deal with backslash escaping.
 			separator = "\\\\";
 
-		boolean isDirectory = !name.contains("@");
+		int atIndex = name.indexOf('@');
+		boolean isDirectory = atIndex == -1;
+		// If there's a colon after the @, we're importing an inner type,
+		// but we only need the outer class for the file name
+		if(atIndex != -1 && name.indexOf(':', atIndex + 1) != -1)
+			name = name.substring(0, name.indexOf(':', atIndex + 1));
 		
 		String path = name.replaceAll(":", separator);
 		if(path.startsWith("default@"))
@@ -868,7 +896,7 @@ public class TypeCollector extends ScopedChecker {
 			Path file = findPath(name);
 			if(file == null)
 				addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
-			else if(!addImport(file, ctx))
+			else if(!addImport(file, ctx, false))
 				addError(ctx, Error.IMPORT_COLLIDES, "Type " + name + " collides with existing import");
 		}
 		// Whole package
@@ -877,7 +905,7 @@ public class TypeCollector extends ScopedChecker {
 			if(directory == null)			
 				addError(ctx, Error.INVALID_IMPORT, "No directory found for package " + name);
 			else if(!addImports(directory, ctx))
-				addError(ctx, Error.IMPORT_COLLIDES, "One or more types in package " + name + " collide with an existing import");
+				addWarning(ctx, Error.IMPORT_COLLIDES, "One or more types in package " + name + " collide with an existing import");
 		}
 
 		return null;
@@ -928,7 +956,7 @@ public class TypeCollector extends ScopedChecker {
 			String path = entry.getValue().path;
 			NameContext context = entry.getValue().context;
 			if(usedTypes.contains(path)) {
-				items.put(entry.getKey(), new Type.ImportInformation(path));
+				items.put(entry.getKey(), new Type.ImportInformation(path, context));
 				if(context != null && context.unqualifiedName() == null)
 					usedDirectories.add(context);
 			}

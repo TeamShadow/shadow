@@ -514,4 +514,14 @@ public class NegativeTests {
 		args.add("tests-negative/import/mismatched-package/package/Test1.shadow");
 		enforce(Error.MISMATCHED_PACKAGE);		
 	}
+	
+	@Test public void testInnerClassImportDoesNotExist() throws Exception {
+		args.add("tests-negative/import/inner-class-import-does-not-exist/testing/Test.shadow");
+		enforce(Error.INVALID_IMPORT);		
+	}
+	
+	@Test public void testInnerClassImportNotAccessible() throws Exception {
+		args.add("tests-negative/import/inner-class-import-not-accessible/testing/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);		
+	}
 }

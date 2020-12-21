@@ -16,7 +16,6 @@
  */
 package shadow.typecheck;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -1108,11 +1107,7 @@ public class StatementChecker extends ScopedChecker {
 
 		for( int i = 1; type != null && i < ctx.Identifier().size(); ++i ) {
 			typeName = ctx.Identifier(i).getText();
-
-			if( type instanceof ClassType ) 
-				type = ((ClassType)type).getInnerClass(typeName);
-			else
-				type = null;
+			type = type.getInnerType(typeName);
 		}
 
 		if( type == null ) {
@@ -1121,7 +1116,7 @@ public class StatementChecker extends ScopedChecker {
 			return null;
 		}
 
-		if( !classIsAccessible( type, currentType ) )		
+		if( !typeIsAccessible( type, currentType ) )		
 			addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
 					" not accessible from this context", type);
 
@@ -2377,19 +2372,18 @@ public class StatementChecker extends ScopedChecker {
 					ctx.addModifiers(Modifiers.ASSIGNABLE);					
 			}
 		}
-		else if( prefixType instanceof ClassType && ((ClassType)prefixType).containsInnerClass(name) ) {
-			ClassType classType = (ClassType) prefixType;
-			ClassType innerClass = classType.getInnerClass(name);
+		else if( prefixType.containsInnerType(name) ) {
+			Type innerType = prefixType.getInnerType(name);
 			
-			if( !classIsAccessible( innerClass, currentType ) )
-				addError(ctx, Error.ILLEGAL_ACCESS, "Class " + innerClass + " is not accessible from this context", innerClass);
+			if( !currentType.canSee(innerType) )
+				addError(ctx, Error.ILLEGAL_ACCESS, "Type " + innerType + " is not accessible from this context", innerType);
 			else {
-				ctx.setType( innerClass );						
+				ctx.setType(innerType);						
 				ctx.addModifiers(Modifiers.TYPE_NAME);					
 			}					
 		}
 		else
-			addError(ctx, Error.UNDEFINED_SYMBOL, "Field or inner class " + name + " not defined in this context");
+			addError(ctx, Error.UNDEFINED_SYMBOL, "Field or inner type " + name + " not defined in this context");
 
 		
 		if( ctx.getType() == null )

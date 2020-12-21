@@ -58,6 +58,18 @@ public class ImportTests {
 		args.add("tests/import/fully-qualified-type/Test.shadow");
 		Main.run(args.toArray(new String[] { }));
 	}
+	
+	// Type imports inner class in the same package
+	@Test public void testInnerClassInSamePackage() throws Exception {
+		args.add("tests/import/inner-class-in-same-package/testing/Test.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
+	
+	// Type imports inner class in a diffewrent package
+	@Test public void testInnerClassInDifferentPackage() throws Exception {
+		args.add("tests/import/inner-class-in-different-package/testing/Test.shadow");
+		Main.run(args.toArray(new String[] { }));
+	}
 
 	@Test public void testAllImports() throws Exception {
 		String file = "tests/import/all-imports/Test.shadow";

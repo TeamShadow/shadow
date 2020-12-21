@@ -1,0 +1,8 @@
+class Test
+{
+	public method() => ()
+	{
+		int a = 5;;
+	
+	}
+}

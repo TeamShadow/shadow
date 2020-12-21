@@ -36,6 +36,7 @@ import shadow.parse.ShadowParser.DecoratorContext;
 import shadow.parse.ShadowParser.DecoratorExpressionContext;
 import shadow.parse.ShadowParser.MethodDeclarationContext;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
+import shadow.parse.ShadowParser.NameContext;
 import shadow.parse.ShadowParser.TypeContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
@@ -85,18 +86,32 @@ public class TypeUpdater extends BaseChecker {
 	public TypeUpdater(Package packageTree, ErrorReporter reporter, Map<String, Context> fileTable) {
 		super(packageTree, reporter);
 		
-		// Update so that all the imported names map to types instead of paths to the class files
+		// Update so that all the imported names map to types
 		for(Type type : packageTree) {
-			//Maps from name to path
+			// Maps from name to path
 			Map<String, ImportInformation> imports = type.getImportedItems();
 			for(ImportInformation information : imports.values() ) {
-				String path = information.getImportPath();
 				Context context = fileTable.get(information.getImportPath());
 				// If the file table has the path
 				if(context != null) {
 					// Add type information
-					//TODO: fix for imported inner types
-					information.setType(context.getType());
+					NameContext nameContext = information.getImportName();
+					Type importType = context.getType();
+					// There's a context and it has a qualified name (meaning that it's not a directory)
+					if(nameContext != null && nameContext.unqualifiedName() != null) {
+						// Deal with imported inner types (skipping first name)
+						for(int i = 1; i < nameContext.Identifier().size(); ++i) {
+							String name = nameContext.Identifier(i).getText();
+							if(importType.containsInnerType(name)) {
+								importType = importType.getInnerType(name);
+								if(!type.canSee(importType))
+									addError(nameContext, Error.ILLEGAL_ACCESS, "Type " + importType.toString(Type.PACKAGES) + " is not accessible from type " + type);
+							}
+							else
+								addError(nameContext, Error.INVALID_IMPORT, "Type " + importType.toString(Type.PACKAGES) + " does not contain inner type " + name);
+						}
+					}					
+					information.setType(importType);
 				}				
 			}
 		}
@@ -681,7 +696,7 @@ public class TypeUpdater extends BaseChecker {
 
 			// Only bother to test inner classes (relative to the method's
 			// containing class)
-			if (parent.recursivelyContainsInnerClass(type)) {
+			if (parent.recursivelyContainsInnerType(type)) {
 				Type outer = type;
 
 				// Climb through nested inner types looking for any lesser
@@ -706,7 +721,7 @@ public class TypeUpdater extends BaseChecker {
 
 			// Only bother to test inner classes (relative to the method's
 			// containing class)
-			if (parent.recursivelyContainsInnerClass(type)) {
+			if (parent.recursivelyContainsInnerType(type)) {
 				Type outer = type;
 
 				// Climb through nested inner types looking for any lesser
@@ -1320,7 +1335,7 @@ public class TypeUpdater extends BaseChecker {
 			if (currentType.containsField(symbol))
 				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol
 						+ " already declared on line " + currentType.getField(symbol).getStart().getLine());
-			else if (currentType instanceof ClassType && ((ClassType) currentType).containsInnerClass(symbol))
+			else if (currentType instanceof ClassType && ((ClassType) currentType).containsInnerType(symbol))
 				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL,
 						"Field name " + symbol + " already declared as inner class");
 			else
@@ -1444,18 +1459,14 @@ public class TypeUpdater extends BaseChecker {
 
 		for (int i = 1; type != null && i < ctx.Identifier().size(); ++i) {
 			typeName = ctx.Identifier(i).getText();
-
-			if (type instanceof ClassType)
-				type = ((ClassType) type).getInnerClass(typeName);
-			else
-				type = null;
+			type = type.getInnerType(typeName);
 		}
 
 		if (type == null) {
 			addError(ctx, Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in current context");
 			type = Type.UNKNOWN;
 		} else {
-			if (!isMeta && !classIsAccessible(type, declarationType))
+			if (!isMeta && !declarationType.canSee(type))
 				addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
 
 			if (ctx.typeArguments() != null) { // Contains type arguments.
@@ -1470,8 +1481,7 @@ public class TypeUpdater extends BaseChecker {
 							"Type arguments supplied for non-parameterized type " + type);
 					type = Type.UNKNOWN;
 				}
-			} else if (type.isParameterized()) { // Parameterized but no type
-													// arguments.
+			} else if (type.isParameterized()) { // Parameterized but no type arguments.
 				addError(ctx, Error.MISSING_TYPE_ARGUMENTS,
 						"Type arguments not supplied for parameterized type " + typeName);
 				type = Type.UNKNOWN;

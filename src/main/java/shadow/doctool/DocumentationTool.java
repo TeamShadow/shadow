@@ -30,7 +30,6 @@ import shadow.doctool.output.StandardTemplate;
 import shadow.parse.ParseException;
 import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException;
-import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.Type;
 
 public class DocumentationTool {
@@ -128,10 +127,9 @@ public class DocumentationTool {
 		// Capture visible inner classes for documentation
 		List<Type> outerClasses = new ArrayList<Type>(typesToDocument);
 		for (Type outer : outerClasses)
-			if (outer instanceof ClassType)
-				for (Type inner : ((ClassType)outer).getInnerClasses().values())
-					if (inner.getModifiers().isPublic() || inner.getModifiers().isProtected())
-						typesToDocument.add(inner);
+			for (Type inner : outer.getInnerTypes().values())
+				if (inner.getModifiers().isPublic() || inner.getModifiers().isProtected())
+					typesToDocument.add(inner);
 		
 		// Capture all packages of classes being documented
 		for (Type type : typesToDocument)

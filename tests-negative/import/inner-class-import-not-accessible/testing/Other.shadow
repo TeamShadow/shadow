@@ -1,0 +1,12 @@
+class testing@Other
+{
+	private class Inner
+	{
+		get int x = 5;
+	}
+	
+	public readonly toString() => (String)
+	{
+		return "other";
+	}
+}
