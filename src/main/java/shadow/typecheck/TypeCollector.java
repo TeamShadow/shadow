@@ -362,12 +362,15 @@ public class TypeCollector extends ScopedChecker {
 			
 			if( canonical.equals(main) ) {
 				mainType = node.getType();
-				// Put the main type in the package tree first
-				try {
-					packageTree.addQualifiedPackage( mainType.getPackage().toString() ).addType( mainType);
-				} catch (PackageException e) {
-					addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));	
-				}	
+				// Put the main type in the package tree first (if it exists)
+				if(mainType != Type.UNKNOWN) {					
+					try {
+						packageTree.addQualifiedPackage( mainType.getPackage().toString() ).addType( mainType);
+					}
+					catch (PackageException e) {
+						addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));	
+					}
+				}
 			}	
 
 			/* Copy types from other collector into our package tree. */	
@@ -375,12 +378,12 @@ public class TypeCollector extends ScopedChecker {
 				if(type != mainType) {
 					try {				
 						packageTree.addQualifiedPackage( type.getPackage().toString() ).addType( type );					
+						// Imported class has default package but the main type doesn't.
+						// The only classes without a package that will be imported will be
+						// in the same directory as the main type.
+						// Implication: classes in the same directory have different packages.
 						if( mainType != null && type.getPackage() == packageTree &&
-								mainType.getPackage() != packageTree ) {
-							// Imported class has default package but the main type doesn't.
-							// The only classes without a package that will be imported will be
-							// in the same directory as the main type.
-							// Implication: classes in the same directory have different packages.
+								mainType.getPackage() != packageTree ) {							
 						
 							addError(new TypeCheckException(Error.MISMATCHED_PACKAGE, "Type " + type +
 									" belongs to the default package, but types defined in the same directory belong to other packages"));
@@ -924,7 +927,6 @@ public class TypeCollector extends ScopedChecker {
 		Type type = createType(ctx, ctx.getModifiers(), ctx.getDocumentation(), ctx.getChild(0).getText(), packageName, ctx.Identifier().getText() );
 
 		addMembers(ctx.classOrInterfaceBody().classOrInterfaceBodyDeclaration());
-		addTypeParameters();
 
 		visitChildren(ctx); 
 
@@ -936,7 +938,6 @@ public class TypeCollector extends ScopedChecker {
 			((Context)ctx.getParent()).setType(type);		
 
 		removeMembers();
-		removeTypeParameters();
 		
 		if(!type.hasOuter())
 			updateImports(type);
@@ -975,14 +976,6 @@ public class TypeCollector extends ScopedChecker {
 		}		
 	}
 
-	private void addTypeParameters() {
-		typeParameters.addFirst(new HashSet<>());		
-	}
-
-	private void removeTypeParameters() {
-		typeParameters.removeFirst();
-	}
-
 	/*
 	 * Records the fields and methods so that we can later determine whether
 	 * an identifier is a field, a method, or a type.
@@ -1013,12 +1006,16 @@ public class TypeCollector extends ScopedChecker {
 		fields.addFirst(fieldSet);
 		methods.addFirst(methodSet);
 		localTypes.addFirst(typeSet);
+		
+		typeParameters.addFirst(new HashSet<>());		
 	}
 
 	private void removeMembers() {
 		fields.removeFirst();
 		methods.removeFirst();
 		localTypes.removeFirst();
+		
+		typeParameters.removeFirst();
 	}
 
 	private boolean isMethod(String symbol) {
