@@ -23,16 +23,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
@@ -93,13 +85,57 @@ public class TypeCollector extends ScopedChecker {
 
 	private Path currentFile;
 	private Type mainType = null;
-	private String currentName = "";	
+	private String currentName = "";
 
-	private final LinkedList<Set<String>> methods = new LinkedList<>();
-	private final LinkedList<Set<String>> fields = new LinkedList<>();
-	private final LinkedList<Set<String>> localTypes = new LinkedList<>();
-	// Current type parameters for the current class
-	private final LinkedList<Set<String>> typeParameters = new LinkedList<>();
+	// A stack of metadata about the currently enclosing class declarations
+	private final Deque<TypeDeclaration> typeDeclarations = new LinkedList<>();
+
+	/**
+	 * Metadata associated with a class-like type declaration - includes the names of fields,
+	 * methods, inner types, and type parameters.
+	 *
+	 * "Class-like" types include interfaces, enums, and the outermost compilation unit.
+	 */
+	private static class TypeDeclaration {
+		private final Set<String> methods = new HashSet<>();
+		private final Set<String> fields = new HashSet<>();
+		private final Set<String> localTypes = new HashSet<>();
+		private final Set<String> typeParameters = new HashSet<>();
+
+		public TypeDeclaration() {}
+
+		public void addMethod(String method) {
+			methods.add(method);
+		}
+
+		public void addField(String field) {
+			fields.add(field);
+		}
+
+		public void addLocalType(String type) {
+			localTypes.add(type);
+		}
+
+		public void addTypeParameter(String type) {
+			typeParameters.add(type);
+		}
+
+		public boolean containsMethod(String method) {
+			return methods.contains(method);
+		}
+
+		public boolean containsField(String field) {
+			return fields.contains(field);
+		}
+
+		public boolean containsLocalType(String type) {
+			return localTypes.contains(type);
+		}
+
+		public boolean containsTypeParameter(String type) {
+			return typeParameters.contains(type);
+		}
+	}
 	
 	// Java is stupid
 	private static class PathWithContext {
@@ -860,10 +896,7 @@ public class TypeCollector extends ScopedChecker {
 		fileTable.clear();
 		importedTypes.clear();
 
-		methods.clear();
-		fields.clear();
-		localTypes.clear();
-		typeParameters.clear();
+		typeDeclarations.clear();
 
 		Type.clearTypes();
 	}
@@ -875,15 +908,19 @@ public class TypeCollector extends ScopedChecker {
 		currentPackage = packageTree;
 
 		currentName = "";
-		
-		Set<String> typeSet = new HashSet<>();
-		if(ctx.classOrInterfaceDeclaration() != null)		
-			typeSet.add(ctx.classOrInterfaceDeclaration().Identifier().getText());
-		else if(ctx.enumDeclaration() != null)
-			typeSet.add(ctx.enumDeclaration().Identifier().getText());		
-		localTypes.addFirst(typeSet);
+
+		// Special TypeDeclaration to keep track of the outermost type in a file
+		TypeDeclaration compilationUnit = new TypeDeclaration();
+
+		if(ctx.classOrInterfaceDeclaration() != null) {
+			compilationUnit.addLocalType(ctx.classOrInterfaceDeclaration().Identifier().getText());
+		} else if(ctx.enumDeclaration() != null) {
+			compilationUnit.addLocalType(ctx.enumDeclaration().Identifier().getText());
+		}
+
+		typeDeclarations.addFirst(compilationUnit);
 		visitChildren(ctx);
-		localTypes.removeFirst();
+		typeDeclarations.removeFirst();
 		
 		return null;
 	}
@@ -982,53 +1019,42 @@ public class TypeCollector extends ScopedChecker {
 	 * Also adds inner classes so that we don't go looking for them elsewhere.
 	 */	
 	private void addMembers(List<ClassOrInterfaceBodyDeclarationContext> declarations) {
-		Set<String> fieldSet = new HashSet<>();
-		Set<String> methodSet = new HashSet<>();
-		Set<String> typeSet = new HashSet<>();
-		
+		TypeDeclaration enclosingClass = new TypeDeclaration();
 
 		for(ClassOrInterfaceBodyDeclarationContext context : declarations) {
 			if(context.fieldDeclaration() != null) {
 				for(VariableDeclaratorContext declarator : context.fieldDeclaration().variableDeclarator())
-					fieldSet.add(declarator.generalIdentifier().getText());
+					enclosingClass.addField(declarator.generalIdentifier().getText());
 			}
 			else if(context.methodDeclaration() != null) {
-				methodSet.add(context.methodDeclaration().methodDeclarator().generalIdentifier().getText());
+				enclosingClass.addMethod(context.methodDeclaration().methodDeclarator().generalIdentifier().getText());
 			}		
 			else if(context.classOrInterfaceDeclaration() != null) {
-				typeSet.add(context.classOrInterfaceDeclaration().Identifier().getText());
+				enclosingClass.addLocalType(context.classOrInterfaceDeclaration().Identifier().getText());
 			}
 			else if(context.enumDeclaration() != null) {
-				typeSet.add(context.enumDeclaration().Identifier().getText());
+				enclosingClass.addLocalType(context.enumDeclaration().Identifier().getText());
 			}
 		}
 
-		fields.addFirst(fieldSet);
-		methods.addFirst(methodSet);
-		localTypes.addFirst(typeSet);
-		
-		typeParameters.addFirst(new HashSet<>());		
+		typeDeclarations.addFirst(enclosingClass);
 	}
 
 	private void removeMembers() {
-		fields.removeFirst();
-		methods.removeFirst();
-		localTypes.removeFirst();
-		
-		typeParameters.removeFirst();
+		typeDeclarations.removeFirst();
 	}
 
 	private boolean isMethod(String symbol) {
-		return methods.getFirst().contains(symbol);
+		return typeDeclarations.getFirst().containsMethod(symbol);
 	}
 
 	private boolean isField(String symbol) {
-		return fields.getFirst().contains(symbol);
+		return typeDeclarations.getFirst().containsField(symbol);
 	}
 	
 	private boolean isLocalType(String symbol) {
-		for(Set<String> types : localTypes)
-			if(types.contains(symbol))
+		for(TypeDeclaration typeDeclaration : typeDeclarations)
+			if(typeDeclaration.containsLocalType(symbol))
 				return true;
 		
 		return false;		
@@ -1085,7 +1111,7 @@ public class TypeCollector extends ScopedChecker {
 
 	@Override
 	public Void visitTypeParameter(ShadowParser.TypeParameterContext ctx) {
-		typeParameters.getFirst().add(ctx.Identifier().getText());
+		typeDeclarations.getFirst().addTypeParameter(ctx.Identifier().getText());
 
 		visitChildren(ctx);
 
@@ -1117,7 +1143,7 @@ public class TypeCollector extends ScopedChecker {
 	}
 
 	private boolean isTypeParameter(String typeName) {
-		return typeParameters.getFirst().contains(typeName);
+		return typeDeclarations.getFirst().containsTypeParameter(typeName);
 	}
 
 	@Override public Void visitPrimaryExpression(ShadowParser.PrimaryExpressionContext ctx) { 
