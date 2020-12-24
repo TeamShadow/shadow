@@ -983,10 +983,8 @@ public class TypeCollector extends ScopedChecker {
 	}
 	
 	private void updateImports(Type type) {
-
 		// Let type know what it has imported.
 		// Imported items should be empty at this point.
-		Map<String, Type.ImportInformation> items = type.getImportedItems();
 		Set<NameContext> usedDirectories = new HashSet<>();
 		Set<NameContext> potentiallyUnusedDirectories = new HashSet<>();
 		for(Entry<String, PathWithContext> entry : importedTypes.entrySet()) {
@@ -994,7 +992,7 @@ public class TypeCollector extends ScopedChecker {
 			String path = entry.getValue().path;
 			NameContext context = entry.getValue().context;
 			if(usedTypes.contains(path)) {
-				items.put(entry.getKey(), new Type.ImportInformation(path, context));
+				type.addImportedItem(entry.getKey(), new Type.ImportInformation(path, context));
 				if(context != null && context.unqualifiedName() == null)
 					usedDirectories.add(context);
 			}

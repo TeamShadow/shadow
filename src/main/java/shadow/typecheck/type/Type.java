@@ -3,6 +3,7 @@ package shadow.typecheck.type;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -1560,7 +1561,11 @@ public abstract class Type implements Comparable<Type> {
 
 
 	public Map<String, ImportInformation> getImportedItems() {
-		return importedItems;		
+		return Collections.unmodifiableMap(importedItems);
+	}
+
+	public void addImportedItem(String name, ImportInformation importInfo) {
+		importedItems.put(name, importInfo);
 	}
 
 	@Override
