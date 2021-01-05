@@ -45,6 +45,7 @@ public abstract class Type implements Comparable<Type> {
 	//a linked hash maps iterates over the elements in the order they were added
 	//this feature is needed to for walking the fields in order in constructors
 	private LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> fieldTable = new LinkedHashMap<String, ShadowParser.VariableDeclaratorContext>();
+	private Map<String, ShadowParser.VariableDeclaratorContext> constantTable = new HashMap<>();
 
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> usedTypes = new HashSet<Type>();
@@ -612,7 +613,32 @@ public abstract class Type implements Comparable<Type> {
 
 		return false;
 	}
-
+	
+	public boolean recursivelyContainsConstant(String fieldName) {
+		if( containsConstant(fieldName) )
+			return true;
+		
+		for(InterfaceType interface_ : interfaces) {
+			if(interface_.recursivelyContainsConstant(fieldName))
+				return true;
+		}
+		
+		return false;		
+	}
+	
+	public boolean recursivelyContainsMethod( String symbol ) {
+		if( containsMethod(symbol))
+			return true;		
+		
+		//check extends		
+		for( InterfaceType parent : getInterfaces() )
+			if( parent.recursivelyContainsMethod(symbol ) )
+					return true;			 		
+		
+		return false;
+	}
+	
+	
 	public Type getInnerType(String className) {
 		if( className.contains(":")) {
 			int colon = className.indexOf(':');
@@ -1015,10 +1041,19 @@ public abstract class Type implements Comparable<Type> {
 
 	public boolean containsField(String fieldName) {
 		return fieldTable.containsKey(fieldName);
-	}	
+	}
+	
+	public boolean containsConstant(String fieldName) {
+		return constantTable.containsKey(fieldName);
+	}
 
 	public void addField(String fieldName, ShadowParser.VariableDeclaratorContext node) {
 		fieldTable.put(fieldName, node);
+		node.setEnclosingType(this);
+	}
+	
+	public void addConstant(String fieldName, ShadowParser.VariableDeclaratorContext node) {
+		constantTable.put(fieldName, node);
 		node.setEnclosingType(this);
 	}
 
@@ -1026,9 +1061,42 @@ public abstract class Type implements Comparable<Type> {
 	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
 		return fieldTable.get(fieldName);
 	}
+	
+	public ShadowParser.VariableDeclaratorContext getConstant(String fieldName) {
+		return constantTable.get(fieldName);
+	}
+	
+	public ShadowParser.VariableDeclaratorContext recursivelyGetConstant(String fieldName) {
+		ShadowParser.VariableDeclaratorContext context = getConstant(fieldName);
+		if(context != null)
+			return context;
+		
+		// Check outer types
+		Type outer = this.getOuter();
+		while(outer != null && context == null) {
+			context = outer.getConstant(fieldName);
+			outer = outer.getOuter();
+		}
+		
+		if(context != null)
+			return context;
+			
+		// Check interfaces
+		for(InterfaceType interface_ : interfaces) {
+			context = interface_.recursivelyGetConstant(fieldName);
+			if(context != null)
+				return context;
+		}		
+		
+		return context;
+	}
 
 	public LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> getFields() {
 		return fieldTable;
+	}
+	
+	public Map<String, ShadowParser.VariableDeclaratorContext> getConstants() {
+		return constantTable;
 	}
 
 	public boolean containsMethod(String symbol)

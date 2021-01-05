@@ -1,10 +1,8 @@
 package shadow.interpreter;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,24 +13,11 @@ import shadow.Loggers;
 import shadow.ShadowException;
 import shadow.interpreter.InterpreterException.Error;
 import shadow.parse.Context;
-import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;
 import shadow.typecheck.TypeChecker;
-import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.PropertyType;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
-import shadow.typecheck.type.SingletonType;
-import shadow.typecheck.type.SubscriptType;
 import shadow.typecheck.type.Type;
-import shadow.typecheck.type.UnboundMethodType;
 
 /**
  * A lightweight wrapper around {@link ASTInterpreter} that evaluates compile-time constant fields.
@@ -41,9 +26,6 @@ import shadow.typecheck.type.UnboundMethodType;
  * references exist.
  */
 public class ConstantFieldInterpreter extends ASTInterpreter {
-
-	/* Stack for current prefix (needed for arbitrarily long chains of expressions). */
-	private LinkedList<Context> curPrefix = new LinkedList<>();
 
 	private final Map<FieldKey, VariableDeclaratorContext> allFields;
 
@@ -101,8 +83,15 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 		.map(Context::getType)
 		.map(Type::recursivelyGetInnerTypes)
 		.forEach(typesIncludingInner::addAll);
+		
+		
+		Map<FieldKey, VariableDeclaratorContext> constantFields = new HashMap<>();
 
-		Map<FieldKey, VariableDeclaratorContext> constantFields = getConstantFields(typesIncludingInner);
+		for (Type type : typesIncludingInner) {
+			for (Map.Entry<String, VariableDeclaratorContext> entry : type.getConstants().entrySet()) {
+				constantFields.put(new FieldKey(type, entry.getKey()), entry.getValue());
+			}
+		}
 
 		ConstantFieldInterpreter visitor =
 				new ConstantFieldInterpreter(
@@ -121,20 +110,6 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 		visitor.printAndReportErrors();
 	}
 
-	private static Map<FieldKey, VariableDeclaratorContext> getConstantFields(List<Type> types) {
-		Map<FieldKey, VariableDeclaratorContext> constantFields = new HashMap<>();
-
-		for (Type type : types) {
-			for (String fieldName : type.getFields().keySet()) {
-				VariableDeclaratorContext fieldCtx = type.getField(fieldName);
-				if (fieldCtx.getModifiers().isConstant()) {
-					constantFields.put(new FieldKey(type, fieldName), fieldCtx);
-				}
-			}
-		}
-
-		return constantFields;
-	}
 
 	public void visitRootField(FieldKey rootFieldKey, VariableDeclaratorContext rootFieldCtx) {
 		// TODO: Consider calling BaseChecker#clear (but make sure errors are reported before clearing)

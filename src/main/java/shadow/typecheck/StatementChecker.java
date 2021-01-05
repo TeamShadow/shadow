@@ -448,15 +448,13 @@ public class StatementChecker extends ScopedChecker {
 		}			
 	}
 	
-	@Override public Void visitFieldDeclaration(ShadowParser.FieldDeclarationContext ctx)
-	{ 
+	@Override public Void visitFieldDeclaration(ShadowParser.FieldDeclarationContext ctx) { 
 		visitChildren(ctx);
 		checkInitializers(ctx.variableDeclarator()); //check all initializers
 		return null;
 	}	
 	
-	public boolean setTypeFromContext( Context node, String name, Type context )
-	{
+	public boolean setTypeFromContext( Context node, String name, Type context ) {
 		if( context instanceof TypeParameter ) {
 			TypeParameter typeParameter = (TypeParameter) context;
 			for( Type type : typeParameter.getBounds() )
@@ -465,37 +463,21 @@ public class StatementChecker extends ScopedChecker {
 			
 			return setTypeFromContext( node, name, typeParameter.getClassBound());			
 		}		
-		else if( context instanceof InterfaceType ) {			
-			InterfaceType interfaceType = (InterfaceType)context;			
-			if( interfaceType.recursivelyContainsMethod( name ) ) {
-				node.setType( new UnboundMethodType( name, interfaceType ) );				
-				return true;
-			}			
-		}		
-		else if( context instanceof ClassType  ) {
-			ClassType classType;
+		else {			
 			Modifiers methodModifiers = Modifiers.NO_MODIFIERS;
-			if( !currentMethod.isEmpty() )
+			if(!currentMethod.isEmpty())
 				methodModifiers = currentMethod.getFirst().getModifiers();
-			
-				classType = (ClassType)context;
-					
-			if(classType.recursivelyContainsField(name)) {
-				Context field = classType.recursivelyGetField(name);
+		
+			// Check fields first
+			if(context.containsField(name)) {
+				Context field = context.getField(name);
 				node.setType(field.getType());
 				node.addModifiers(field.getModifiers());
 				
-				if( !fieldIsAccessible( field, currentType ) )
+				if(!fieldIsAccessible(field, currentType))
 					addError(field, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
-				else
-				{						
-					if( field.getModifiers().isConstant() )
-					{
-						if( currentMethod.isEmpty() ) //constants are only assignable in declarations
-							node.addModifiers(Modifiers.ASSIGNABLE);
-					}
-					//creates and declarations are not marked immutable or readonly
-					else if( methodModifiers.isImmutable() || methodModifiers.isReadonly() )						
+				else {						
+					if( methodModifiers.isImmutable() || methodModifiers.isReadonly() )						
 						node.getModifiers().upgradeToTemporaryReadonly();
 					else
 						node.addModifiers(Modifiers.ASSIGNABLE);
@@ -503,16 +485,29 @@ public class StatementChecker extends ScopedChecker {
 				
 				return true;			
 			}
-				
-			if( classType.recursivelyContainsMethod(name)) {
-				node.setType( new UnboundMethodType( name, classType ) );	
-				if( methodModifiers != null && methodModifiers.isImmutable() )
+			
+			// Next check methods
+			if(context.recursivelyContainsMethod(name)) {
+				node.setType( new UnboundMethodType( name, context ) );	
+				if(methodModifiers != null && methodModifiers.isImmutable() )
 					node.addModifiers(Modifiers.IMMUTABLE);
-				else if( methodModifiers != null && methodModifiers.isReadonly() )
+				else if(methodModifiers != null && methodModifiers.isReadonly() )
 					node.addModifiers(Modifiers.READONLY);
 				return true;
 			}
-		}
+			
+			// Finally check constants
+			if(context.recursivelyContainsConstant(name)) {
+				Context field = context.recursivelyGetConstant(name);
+				node.setType(field.getType());
+				node.addModifiers(field.getModifiers());
+				
+				if(!fieldIsAccessible(field, currentType))
+					addError(field, Error.ILLEGAL_ACCESS, "Constant " + name + " not accessible from this context");
+				
+				return true;
+			}
+		}			
 
 		return false;
 	}
@@ -2342,9 +2337,6 @@ public class StatementChecker extends ScopedChecker {
 			if( !fieldIsAccessible( field, currentType )) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
 			}					
-			else if( field.getModifiers().isConstant() && !isTypeName ) {
-				addError(ctx, Error.ILLEGAL_ACCESS, "Constant " + name + " requires type name for access");
-			}
 			else if( !field.getModifiers().isConstant() && isTypeName ) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Field " + name + " is only accessible from an object reference");
 			}
@@ -2371,6 +2363,15 @@ public class StatementChecker extends ScopedChecker {
 				if( ctx.getModifiers().isMutable() || insideCreate )
 					ctx.addModifiers(Modifiers.ASSIGNABLE);					
 			}
+		}
+		else if(prefixType.recursivelyContainsConstant(name)) {
+			Context constant = prefixType.recursivelyGetConstant(name);
+			
+			if(!isTypeName )
+				addError(ctx, Error.ILLEGAL_ACCESS, "Constant " + name + " requires type name for access");
+			
+			ctx.setType(constant.getType());
+			ctx.addModifiers(constant.getModifiers());
 		}
 		else if( prefixType.containsInnerType(name) ) {
 			Type innerType = prefixType.getInnerType(name);
@@ -2600,7 +2601,7 @@ public class StatementChecker extends ScopedChecker {
 	
 	public static boolean fieldIsAccessible( Context field, Type type )
 	{
-		//constants are no longer all public
+		// constants are no longer all public
 		if ( field.getModifiers().isPublic() ) 
 			return true;		
 		

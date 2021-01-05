@@ -23,7 +23,7 @@ public class LLVMOutput extends AbstractOutput {
 	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
 	private int classCounter = 0;
 	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
-	private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
+	//private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
 
 	private Set<String> genericClasses = new TreeSet<String>();
 	private Set<String> arrayClasses = new TreeSet<String>();
@@ -600,11 +600,13 @@ public class LLVMOutput extends AbstractOutput {
 	public void endFile(TACModule module) throws ShadowException {
 
 		//print only the constant fields that are used
+		/*
 		for( TACConstantRef constant : usedConstants )
 			writer.write("@" + 				
 					constant.getPrefixType().toString(Type.MANGLE) + "_C" + //c for constant 
 					constant.getName() + " = external constant " + type(constant.getType()));
 		writer.write();
+		*/
 
 		//print only the (mostly private) methods that are called directly
 		for( MethodSignature method : usedSignatures )
@@ -1339,6 +1341,7 @@ public class LLVMOutput extends AbstractOutput {
 			writer.write(nextTemp(node) + " = load " + type(fieldRef) + ", " +
 					typeText(fieldRef, back1, true));
 		}
+		/*
 		else if( reference instanceof TACConstantRef ) {
 			TACConstantRef constant = (TACConstantRef)reference;
 			writer.write(nextTemp(node) + " = load " + type(constant) + ", " +
@@ -1346,6 +1349,7 @@ public class LLVMOutput extends AbstractOutput {
 			if( !module.getType().encloses(constant.getPrefixType()) )
 				usedConstants.add(constant);		
 		}
+		*/
 		else if( reference instanceof TACGlobalRef ) {
 			TACGlobalRef global = (TACGlobalRef) reference;
 			writer.write(nextTemp(node) + " = load " + type(global) + ", " + type(global) + "* " + global.getName());
@@ -2025,10 +2029,12 @@ public class LLVMOutput extends AbstractOutput {
 		return '%' + store.getVariable().getName() + '.' + store.getNumber();
 	}
 
+	/*
 	private static String name(TACConstantRef constant) {
 		return new StringBuilder("@").
 				append(raw(constant.getPrefixType(), "_C" + constant.getName())).toString();
 	}
+	*/
 
 	private static String name(TACConstant constant) {
 		return new StringBuilder("@").

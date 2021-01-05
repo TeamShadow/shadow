@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 
 public class ClassType extends Type {
 	private ClassType extendType;
@@ -109,14 +110,15 @@ public class ClassType extends Type {
 		return false;
 	}
 	
-	public boolean recursivelyContainsField(String fieldName) {
-		if( containsField(fieldName) )
+	@Override
+	public boolean recursivelyContainsConstant(String fieldName) {
+		if(super.recursivelyContainsConstant(fieldName))
 			return true;
 
-		if( getExtendType() == null )
-			return false;
-		
-		return getExtendType().recursivelyContainsField(fieldName);
+		if(getExtendType() != null )
+			return getExtendType().recursivelyContainsConstant(fieldName);
+			
+		return false;
 	}	
 	
 	public boolean recursivelyContainsMethod(String symbol) {
@@ -129,14 +131,35 @@ public class ClassType extends Type {
 		return getExtendType().recursivelyContainsMethod(symbol);
 	}
 
-	public Context recursivelyGetField(String fieldName) {
-		if( containsField(fieldName) )
-			return getField(fieldName);
-
-		if( getExtendType() == null )
-			return null;
-				
-		return getExtendType().recursivelyGetField(fieldName);
+	@Override
+	public VariableDeclaratorContext recursivelyGetConstant(String fieldName) {
+		ShadowParser.VariableDeclaratorContext context = getConstant(fieldName);
+		if(context != null)
+			return context;
+		
+		// Check outer types
+		Type outer = this.getOuter();
+		while(outer != null && context == null) {
+			context = outer.getConstant(fieldName);
+			outer = outer.getOuter();
+		}		
+		if(context != null)
+			return context;
+		
+		// Check parents
+		if(getExtendType() != null )
+			context = getExtendType().recursivelyGetConstant(fieldName);
+		if(context != null)
+			return context;
+			
+		// Check interfaces
+		for(InterfaceType interface_ : getInterfaces()) {
+			context = interface_.recursivelyGetConstant(fieldName);
+			if(context != null)
+				return context;
+		}		
+		
+		return context;
 	}
 	
 	//get methods from all visible sources, adds outer classes too
@@ -187,6 +210,15 @@ public class ClassType extends Type {
 			return fieldIndexCache.size() + extendFieldSize;		
 	}
 	
+	@Override
+	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
+		ShadowParser.VariableDeclaratorContext field = super.getField(fieldName);
+		if( field == null && getExtendType() != null )
+			return getExtendType().getField(fieldName);
+		else
+			return field;
+	}
+	
 	
 	public int getFieldIndex( String fieldName ) {
 		// Lazily load cache
@@ -207,17 +239,7 @@ public class ClassType extends Type {
 		if ( getExtendType() != null )
 			getExtendType().recursivelyOrderAllFields(fieldList);		
 		fieldList.addAll(sortFields());
-	}	
-
-	@Override
-	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
-		ShadowParser.VariableDeclaratorContext field = super.getField(fieldName);
-		if( field == null && getExtendType() != null )
-			return getExtendType().getField(fieldName);
-		else
-			return field;
 	}
-	
 	
 	public Set<Entry<String, ? extends ModifiedType>> sortFields() {
 		Set<Entry<String, ? extends ModifiedType>> set = new TreeSet<Entry<String, ? extends ModifiedType>>(new Comparator<Entry<String, ? extends ModifiedType>>() {
@@ -233,7 +255,7 @@ public class ClassType extends Type {
 		//constants live in the class
 		//singletons don't need references stored
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
-			if (!field.getValue().getModifiers().isConstant() && !(field.getValue().getType() instanceof SingletonType))
+			if (!(field.getValue().getType() instanceof SingletonType))
 				set.add(field);
 		
 		return set;
@@ -577,12 +599,13 @@ public class ClassType extends Type {
 		String indent = linePrefix + "\t";		
 		boolean newLine;
 		
-		//constants		
+		// Constants		
 		newLine = false;
-		for (String fieldName : getFields().keySet()) {
-			ShadowParser.VariableDeclaratorContext field = getField(fieldName);
+		for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> entry : getConstants().entrySet()) {
+			String fieldName = entry.getKey();
+			ShadowParser.VariableDeclaratorContext field = entry.getValue();
 			Modifiers modifiers = field.getModifiers();
-			if (modifiers.isConstant() && (modifiers.isPublic() || modifiers.isProtected())) {
+			if (modifiers.isPublic() || modifiers.isProtected()) {
 				String visibility = modifiers.isPublic() ? "public" : "protected";
 				out.println(
 						indent + visibility + " constant "
@@ -606,7 +629,7 @@ public class ClassType extends Type {
 		if( newLine )
 			out.println();		
 
-		//methods
+		// Methods
 		newLine = false;
 		for( List<MethodSignature> list: getMethodMap().values() )		
 			for( MethodSignature signature : list ) {

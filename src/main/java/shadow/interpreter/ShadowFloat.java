@@ -5,8 +5,9 @@ import java.math.BigInteger;
 import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
+import shadow.interpreter.InterpreterException.Error;
 
-public class ShadowFloat extends ShadowNumber
+public class ShadowFloat extends ShadowNumeric
 {
 	private float value;
 	public ShadowFloat(float value)
@@ -22,6 +23,23 @@ public class ShadowFloat extends ShadowNumber
 	public float getValue()
 	{
 		return value;
+	}
+	
+	@Override
+    public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
+		try {		
+			if(arguments.length == 0) {
+				switch(method) {				
+				case "ceiling": return ceiling();
+				case "floor": return floor();
+				case "round": return round();
+				}				
+			}
+		}
+		catch(ShadowException e) {
+		}
+		
+		return super.callMethod(method, arguments);
 	}
 
 	@Override
@@ -70,7 +88,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowFloat(value + input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -82,7 +100,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowFloat(value - input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -94,7 +112,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowFloat(value * input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -106,7 +124,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowFloat(value / input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -118,7 +136,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowFloat(value % input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -130,7 +148,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowBoolean(value == input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -142,7 +160,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowBoolean(value <= input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -154,7 +172,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowBoolean(value <= input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -166,7 +184,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowBoolean(value > input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -178,7 +196,7 @@ public class ShadowFloat extends ShadowNumber
 			return new ShadowBoolean(value >= input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override

@@ -70,19 +70,6 @@ public class InterfaceType extends Type
 		return false;
 	}
 
-	public boolean recursivelyContainsMethod( String symbol ) {
-		if( containsMethod(symbol))
-			return true;		
-		
-		//check extends		
-		for( InterfaceType parent : getInterfaces() )
-			if( parent.recursivelyContainsMethod(symbol ) )
-					return true;			 		
-		
-		return false;
-	}
-
-	
 	
 	protected void recursivelyGetAllMethods( List<MethodSignature> methodList  ) {	
 		for ( InterfaceType parent : getInterfaces() )
@@ -319,15 +306,20 @@ public class InterfaceType extends Type
 		String indent = linePrefix + "\t";		
 		boolean newLine;
 				
-		//constants are the only fields in interfaces
+		// Constants		
 		newLine = false;
-		for( Map.Entry<String, ShadowParser.VariableDeclaratorContext> field : getFields().entrySet() )
-			if( field.getValue().getModifiers().isConstant() ) {
-				out.println(indent + field.getValue().getType() + " " + field.getKey() + ";");
-				newLine = true;
-			}
+		for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> entry : getConstants().entrySet()) {
+			String fieldName = entry.getKey();
+			ShadowParser.VariableDeclaratorContext field = entry.getValue();				
+			out.println(
+					indent + " constant "
+							+ field.getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE)
+							+ " " + fieldName + " = " + field.getInterpretedValue().toLiteral() + ";");
+			newLine = true;				
+			
+		}
 		if( newLine )
-			out.println();	
+			out.println();
 
 		//methods
 		newLine = false;

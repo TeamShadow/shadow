@@ -1,0 +1,89 @@
+import shadow:io@Console;
+
+class Test
+{
+	public constant int A = 0x7;
+	private constant int B = A + C;
+	protected constant int C = -41;
+	
+	public constant short D = 1200s;
+	private constant short E = D - F;
+	protected constant short F = -5s;
+	
+	public constant long G = 2000000000;
+	private constant long H = G * A;
+	protected constant long I = (G + C) * F - D;
+		
+	public constant byte J = 120y;
+	private constant byte K = L + J;
+	protected constant byte L = 8y;
+	
+	public constant code M = cast<code>(N.toInt() + 2);
+	private constant code N = 'A';
+	protected constant code O = P[3];
+	
+	public constant String P = "Goats";
+	private constant String Q = P # R;
+	protected constant String R = S.substring(1,3);
+	public constant String S = "Stack";
+	
+	public constant uint A1 = 7u;
+	private constant uint B1 = A1 + C1;
+	protected constant uint C1 = 41u;
+	
+	public constant ushort D1 = 1200us;
+	private constant ushort E1 = D1 - F1;
+	protected constant ushort F1 = 5us;
+	
+	public constant ulong G1 = 2000000000uL;
+	private constant ulong H1 = G1 * A1;
+	protected constant ulong I1 = (G1 + C1) * F1 - D1;
+		
+	public constant ubyte J1 = 120uy;
+	private constant ubyte K1 = J1 + L1;
+	protected constant ubyte L1 = 8uy;
+	
+    public main(String[] args) => ()
+    {
+    	Console.printLine(A);
+		Console.printLine(B);
+		Console.printLine(C);
+		
+		Console.printLine(D);
+		Console.printLine(E);
+		Console.printLine(F);
+		
+		Console.printLine(G);
+		Console.printLine(H);
+		Console.printLine(I);
+		
+		Console.printLine(J);
+		Console.printLine(K);
+		Console.printLine(L);
+		
+		Console.printLine(M);
+		Console.printLine(N);
+		Console.printLine(O);
+		
+		Console.printLine(P);
+		Console.printLine(Q);
+		Console.printLine(R);
+		Console.printLine(S);
+		
+		Console.printLine(A1);
+		Console.printLine(B1);
+		Console.printLine(C1);
+		
+		Console.printLine(D1);
+		Console.printLine(E1);
+		Console.printLine(F1);
+		
+		Console.printLine(G1);
+		Console.printLine(H1);
+		Console.printLine(I1);
+		
+		Console.printLine(J1);
+		Console.printLine(K1);
+		Console.printLine(L1);
+    }
+}

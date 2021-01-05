@@ -24,6 +24,8 @@ import shadow.tac.nodes.TACStore;
 import shadow.tac.nodes.TACUnary;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
+import shadow.interpreter.InterpreterException.Error;
+
 /**
  * Interpreter that walks TAC nodes in order to determine the values for members marked constant.
  * At present, method calls for primitive types and strings are hardcoded, but a future version of the
@@ -120,7 +122,7 @@ public class TACInterpreter extends TACAbstractVisitor {
 						( left instanceof ShadowNull && right instanceof ShadowNull ) )
 					data = left.equal(right); 
 				else
-					throw new InterpreterException("Interpreter cannot perform reference comparison on non-primitive types");
+					throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Interpreter cannot perform reference comparison on non-primitive types");
 				break;				
 			case "!=":
 				data = left.notEqual(right); break;
@@ -136,13 +138,13 @@ public class TACInterpreter extends TACAbstractVisitor {
 			break;
 
 		case "<<":
-			data = left.leftShift(right); break;			
+			data = left.bitShiftLeft(right); break;			
 		case ">>":
-			data = left.rightShift(right); break;
+			data = left.bitShiftRight(right); break;
 		case "<<<":
-			data = left.leftRotate(right); break;
+			data = left.bitRotateLeft(right); break;
 		case ">>>":
-			data = left.rightRotate(right); break;			
+			data = left.bitRotateRight(right); break;			
 
 		case "or":
 			data = left.or(right); break;			
@@ -195,7 +197,7 @@ public class TACInterpreter extends TACAbstractVisitor {
 			String name = constant.getPrefixType().toString() + ":" + constant.getName();
 			ShadowValue data = constants.get(name);
 			if( data == null )
-				throw new InterpreterException("Initialization dependencies prevent the value of constant " + name + " from being used here");
+				throw new InterpreterException(Error.CIRCULAR_REFERENCE, "Initialization dependencies prevent the value of constant " + name + " from being used here");
 			node.setData(data);
 		}
 		//should never happen
@@ -228,7 +230,7 @@ public class TACInterpreter extends TACAbstractVisitor {
 
 				//must be String
 				if( !signature.getOuter().equals(Type.STRING) )
-					throw new InterpreterException("Cannot call method " + signature);
+					throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Cannot call method " + signature);
 				else {
 					if( parameters.size() == 1 )
 						node.setData(new ShadowString(""));
@@ -237,10 +239,10 @@ public class TACInterpreter extends TACAbstractVisitor {
 						if( value instanceof ShadowString ) 
 							node.setData(value);
 						else
-							throw new InterpreterException("Cannot call method " + signature);
+							throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Cannot call method " + signature);
 					}
 					else
-						throw new InterpreterException("Cannot call method " + signature);
+						throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Cannot call method " + signature);
 				}
 			}
 			else {
@@ -249,12 +251,15 @@ public class TACInterpreter extends TACAbstractVisitor {
 				for( int i = 1; i < parameters.size(); i++ )			
 					arguments[i - 1] = value(parameters.get(i)); //first argument is always the prefix
 
-				ShadowValue data = null;
-				Type type = null;
+				
+				
+				
+				ShadowValue data = prefix.callMethod(method.getName(), arguments);
+				/*
 
 				//don't know how to deal with any ShadowObject methods yet
 				if( prefix instanceof ShadowObject )
-					throw new InterpreterException("Cannot call method " + method.getName());
+					throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Cannot call method " + method.getName());
 
 				switch( method.getName() )
 				{
@@ -368,16 +373,16 @@ public class TACInterpreter extends TACAbstractVisitor {
 				case "bitShiftRight": data = prefix.rightShift(arguments[0]); break;		
 
 				case "toUnsigned": 
-				case "abs": data = ((ShadowNumber)prefix).abs(); break;
-				case "cos": data = ((ShadowNumber)prefix).cos(); break;
-				case "sin": data = ((ShadowNumber)prefix).sin(); break;
-				case "power": data = ((ShadowNumber)prefix).power((ShadowNumber)arguments[0]); break;
-				case "squareRoot": data = ((ShadowNumber)prefix).squareRoot(); break;
-				case "logBase10": data = ((ShadowNumber)prefix).logBase10(); break;
-				case "logBase2": data = ((ShadowNumber)prefix).logBase2(); break;
-				case "logBaseE": data = ((ShadowNumber)prefix).logBaseE(); break;
-				case "max": data = ((ShadowNumber)prefix).max((ShadowNumber)arguments[0]); break;
-				case "min": data = ((ShadowNumber)prefix).min((ShadowNumber)arguments[0]); break;
+				case "abs": data = ((ShadowNumeric)prefix).abs(); break;
+				case "cos": data = ((ShadowNumeric)prefix).cos(); break;
+				case "sin": data = ((ShadowNumeric)prefix).sin(); break;
+				case "power": data = ((ShadowNumeric)prefix).power((ShadowNumber)arguments[0]); break;
+				case "squareRoot": data = ((ShadowNumeric)prefix).squareRoot(); break;
+				case "logBase10": data = ((ShadowNumeric)prefix).logBase10(); break;
+				case "logBase2": data = ((ShadowNumeric)prefix).logBase2(); break;
+				case "logBaseE": data = ((ShadowNumeric)prefix).logBaseE(); break;
+				case "max": data = ((ShadowNumeric)prefix).max((ShadowNumber)arguments[0]); break;
+				case "min": data = ((ShadowNumeric)prefix).min((ShadowNumber)arguments[0]); break;
 
 				case "floor":
 					if( prefix instanceof ShadowDouble )
@@ -415,18 +420,19 @@ public class TACInterpreter extends TACAbstractVisitor {
 						data = ((ShadowInteger)prefix).flipEndian();
 					break;				
 				}
+				*/
 
 				node.setData(data);
 			}
 		}
 		else
-			throw new InterpreterException("Cannot call method reference " + methodRef.toString());
+			throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Cannot call method reference " + methodRef.toString());
 	}
 
 	@Override
 	public void visit(TACNewObject node) throws ShadowException { 
 		if( !node.getClassType().equals(Type.STRING)  )
-			throw new InterpreterException("Cannot create non-String type " + node.getClassType());
+			throw new InterpreterException(Error.INVALID_CREATE, "Cannot create non-String type " + node.getClassType());
 	}
 
 
@@ -434,6 +440,6 @@ public class TACInterpreter extends TACAbstractVisitor {
 		Object value = node.getData();
 		if (value instanceof ShadowValue)
 			return (ShadowValue)value;
-		throw new InterpreterException("Operand does not contain a value");
+		throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Operand does not contain a value");
 	}
 }

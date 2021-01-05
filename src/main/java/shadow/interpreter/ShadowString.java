@@ -14,6 +14,7 @@ import shadow.tac.nodes.TACMethodName;
 import shadow.tac.nodes.TACOperand;
 import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
+import shadow.interpreter.InterpreterException.Error;
 
 public class ShadowString extends ShadowValue {
 	private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -33,7 +34,7 @@ public class ShadowString extends ShadowValue {
 	@Override
 	public ShadowValue cast(Type type) throws ShadowException {
 		if( !type.equals(Type.STRING) )
-			throw new UnsupportedOperationException("Cannot convert type " + Type.STRING + " to " + type);
+			throw new InterpreterException(Error.MISMATCHED_TYPE, "Cannot convert type " + Type.STRING + " to " + type);
 		
 		return this;
 	}
@@ -63,7 +64,7 @@ public class ShadowString extends ShadowValue {
 		else if( type.equals(Type.FLOAT) )
 			return new ShadowFloat( Float.parseFloat(value));
 		
-		throw new UnsupportedOperationException("Cannot convert type " + Type.STRING + " to " + type);		
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Cannot convert type " + Type.STRING + " to " + type);		
 	}
 	
 	
@@ -83,7 +84,7 @@ public class ShadowString extends ShadowValue {
 			code += Math.abs(data[i]);
 		}
 		
-		return new ShadowInteger( BigInteger.valueOf(code), 4, false);		
+		return new ShadowInteger( BigInteger.valueOf(code), 8, false);		
 	}
 
 	@Override
@@ -186,6 +187,68 @@ public class ShadowString extends ShadowValue {
 		return false;
 	}
 	
+	@Override
+    public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
+		try {		
+			if(arguments.length == 0) {
+				switch(method) {				
+				case "size": return new ShadowInteger(value.length()); 
+				case "isEmpty": return new ShadowBoolean(value.isEmpty());
+				case "toLowerCase":	return new ShadowString(value.toLowerCase());
+				case "toUpperCase": return new ShadowString(value.toUpperCase());
+				case "toString":  return this;
+				case "toByte": return convert(Type.BYTE);
+				case "toUByte": return convert(Type.UBYTE);
+				case "toShort": return convert(Type.SHORT);
+				case "toUShort": return convert(Type.USHORT);
+				case "toInt": return convert(Type.INT);
+				case "toUInt": return convert(Type.UINT);
+				case "toLong": return convert(Type.LONG);
+				case "toULong": return convert(Type.ULONG);
+				case "toFloat": return convert(Type.FLOAT);
+				case "toDouble": return convert(Type.DOUBLE);
+				}				
+			}
+			else if(arguments.length == 1) {
+				switch(method) {				
+				case "index": {
+					if(arguments[0] instanceof ShadowInteger) {
+						int index = ((ShadowInteger)arguments[0]).getValue().intValue();
+						return new ShadowInteger(BigInteger.valueOf(value.getBytes(UTF8)[index]), 1, false);
+					}
+				}
+				case "substring":
+					if(arguments[0] instanceof ShadowInteger) {
+						byte[] bytes = value.getBytes(UTF8);
+						int firstIndex = ((ShadowInteger)arguments[0]).getValue().intValue();
+						int secondIndex = bytes.length;
+						bytes = Arrays.copyOfRange(bytes, firstIndex, secondIndex);
+						return new ShadowString(new String(bytes, UTF8));			
+					}
+				case "concatenate": 
+					return new ShadowString(value + arguments[0].unaryCat().getValue());
+				}
+			}
+			else if(arguments.length == 2) {
+				switch(method) {				
+				case "substring":
+					if(arguments[0] instanceof ShadowInteger && arguments[1] instanceof ShadowInteger) {
+						byte[] bytes = value.getBytes(UTF8);
+						int firstIndex = ((ShadowInteger)arguments[0]).getValue().intValue();
+						int secondIndex = ((ShadowInteger)arguments[1]).getValue().intValue();
+						bytes = Arrays.copyOfRange(bytes, firstIndex, secondIndex);
+						return new ShadowString(new String(bytes, UTF8));
+					}				
+				}
+			}
+		}
+		catch(ShadowException e) {
+		}
+		
+		return super.callMethod(method, arguments);
+	}
+	
+	
 	public ShadowValue callMethod(TACCall call) throws ShadowException {
 		MethodSignature signature = ((TACMethodName)call.getMethodRef()).getSignature();
 		
@@ -202,9 +265,9 @@ public class ShadowString extends ShadowValue {
 			switch( signature.getSymbol() ) {
 			case "index": {
 				int index = ((ShadowInteger)parameters.get(0)).getValue().intValue();
-				return new ShadowInteger(BigInteger.valueOf(value.getBytes(UTF8)[index]), 1, true);
+				return new ShadowInteger(BigInteger.valueOf(value.getBytes(UTF8)[index]), 1, false);
 			}
-			case "size": return new ShadowInteger(value.length()); 
+			case "size": return new ShadowInteger(value.getBytes(UTF8).length); 
 			case "isEmpty": return new ShadowBoolean(value.isEmpty());
 			case "substring":
 			{
@@ -237,6 +300,6 @@ public class ShadowString extends ShadowValue {
 		catch(Exception e)
 		{}
 		
-		throw new InterpreterException("Evaluation of String method " + signature.getSymbol() + signature.getMethodType() + " failed");
+		throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Evaluation of String method " + signature.getSymbol() + signature.getMethodType() + " failed");
 	}	
 }

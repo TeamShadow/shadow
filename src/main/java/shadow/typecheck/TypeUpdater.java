@@ -1335,9 +1335,14 @@ public class TypeUpdater extends BaseChecker {
 			if (currentType.containsField(symbol))
 				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol
 						+ " already declared on line " + currentType.getField(symbol).getStart().getLine());
-			else if (currentType instanceof ClassType && ((ClassType) currentType).containsInnerType(symbol))
+			else if(currentType.containsConstant(symbol))
+				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL, "Constant name " + symbol
+						+ " already declared on line " + currentType.getField(symbol).getStart().getLine());
+			else if (currentType.containsInnerType(symbol))
 				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL,
-						"Field name " + symbol + " already declared as inner class");
+						"Field name " + symbol + " already declared as inner type");
+			else if(declarator.getModifiers().isConstant())
+				currentType.addConstant(symbol, declarator);
 			else
 				currentType.addField(symbol, declarator);
 

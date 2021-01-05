@@ -14,8 +14,12 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 
 import shadow.Configuration;
-import shadow.interpreter.*;
 import shadow.interpreter.ConstantFieldInterpreter.FieldKey;
+import shadow.interpreter.ShadowBoolean;
+import shadow.interpreter.ShadowInteger;
+import shadow.interpreter.ShadowNull;
+import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowUndefined;
 import shadow.parse.Context;
 import shadow.parse.ShadowBaseVisitor;
 import shadow.parse.ShadowParser;
@@ -41,7 +45,6 @@ import shadow.tac.nodes.TACChangeReferenceCount;
 import shadow.tac.nodes.TACClass;
 import shadow.tac.nodes.TACCleanupPad;
 import shadow.tac.nodes.TACCleanupRet;
-import shadow.tac.nodes.TACConstantRef;
 import shadow.tac.nodes.TACCopyMemory;
 import shadow.tac.nodes.TACDummyNode;
 import shadow.tac.nodes.TACFieldRef;
@@ -1135,11 +1138,17 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				} else {
 					if (ctx.getModifiers().isConstant()) { //constant
 						// TODO: Replace this TACLoad with a TACLiteral since the value is known
+						
 						Type thisType = method.getSignature().getOuter();
-						//figure out type that defines constant
-						while( !thisType.containsField(name))
+						
+						
+						/*
+						// Figure out type that defines constant
+						while( !thisType.containsConstant(name))
 							thisType = thisType.getOuter();
 						prefix = new TACLoad(anchor, new TACConstantRef(thisType, name));
+						*/
+						prefix = new TACLiteral(anchor, thisType.recursivelyGetConstant(name).getInterpretedValue());
 					}
 					else { //field
 						ModifiedType thisRef = method.getThis();
@@ -1222,13 +1231,23 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		else
 			return expression.primaryPrefix();
 	}
+	
+	public static Context getPreviousSuffix(ShadowParser.PrimarySuffixContext ctx) {
+        ShadowParser.PrimaryExpressionContext primaryExpression =
+                (ShadowParser.PrimaryExpressionContext) ctx.getParent();
+
+        int index = primaryExpression.primarySuffix().indexOf(ctx);
+        return index == 0 ? primaryExpression.primaryPrefix() : primaryExpression.primarySuffix(index - 1);
+    }
 
 	@Override public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx) {
 		visitChildren(ctx);
 		if (ctx.getModifiers().isConstant()) {
 			// TODO: Replace this TACLoad with a TACLiteral since the value is known
-			Type parentType = ASTInterpreter.getPreviousSuffix((PrimarySuffixContext) ctx.getParent()).getType();
-			prefix = new TACLoad(anchor, new TACConstantRef(parentType, ctx.Identifier().getText()));
+			Type parentType = getPreviousSuffix((PrimarySuffixContext) ctx.getParent()).getType();
+			//prefix = new TACLoad(anchor, new TACConstantRef(parentType, ctx.Identifier().getText()));
+			Context constant = parentType.recursivelyGetConstant(ctx.Identifier().getText());
+			prefix = new TACLiteral(anchor, constant.getInterpretedValue()); // should work?
 		} else if (ctx.getType() instanceof SingletonType) {
 			prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType) ctx.getType()));
 		} else if (!ctx.getModifiers().isTypeName()) { //doesn't do anything at this stage if it's just a type name

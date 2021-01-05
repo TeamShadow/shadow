@@ -75,8 +75,6 @@ public class TACBinary extends TACUpdate
 		
 		//reference comparison requires exactly the same types
 		if( op.equals("===") ) {
-			Type realFirstType = firstType.getType();
-			Type realSecondType = secondType.getType();
 			second = secondOperand;			
 			if (firstType.getType().isSubtype(secondType.getType()))
 				first = check(first, second);

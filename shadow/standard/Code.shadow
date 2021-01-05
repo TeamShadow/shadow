@@ -187,6 +187,26 @@ and CanHash
 	[ImportNative]
 	public toDouble() => (double);
 	
+	/** 
+	 * Finds the minimum of the current value and another {@code code}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
+	public min(code other) => (code)
+	{
+		return this < other ? this, other;
+	}
+	
+	/** 
+	 * Finds the maximum of the current value and another {@code code}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
+	public max(code other) => (code)
+	{
+		return this > other ? this, other;
+	}
+	
 	// Methods for Integer<code>
 	
 	/** 
