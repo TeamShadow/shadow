@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import shadow.CompileException;
 import shadow.Main;
 import shadow.interpreter.InterpreterException;
 import shadow.interpreter.InterpreterException.Error;

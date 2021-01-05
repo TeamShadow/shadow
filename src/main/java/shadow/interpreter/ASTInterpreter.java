@@ -3,7 +3,6 @@ package shadow.interpreter;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,15 +14,6 @@ import shadow.interpreter.InterpreterException.Error;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
-import shadow.tac.TACVariable;
-import shadow.tac.nodes.TACBinary;
-import shadow.tac.nodes.TACCall;
-import shadow.tac.nodes.TACCast;
-import shadow.tac.nodes.TACLiteral;
-import shadow.tac.nodes.TACLocalLoad;
-import shadow.tac.nodes.TACLocalStore;
-import shadow.tac.nodes.TACMethodName;
-import shadow.tac.nodes.TACOperand;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;

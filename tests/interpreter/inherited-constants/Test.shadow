@@ -1,0 +1,14 @@
+import shadow:io@Console;
+
+class Test is Parent:Inner
+{
+	public constant int Y = 10;
+	
+    public main(String[] args) => ()
+    {
+    	Console.printLine(X);
+		Console.printLine(Y);
+		Console.printLine(Z);
+		Console.printLine(getValue());		
+    }
+}

@@ -614,30 +614,13 @@ public abstract class Type implements Comparable<Type> {
 		return false;
 	}
 	
-	public boolean recursivelyContainsConstant(String fieldName) {
-		if( containsConstant(fieldName) )
-			return true;
-		
-		for(InterfaceType interface_ : interfaces) {
-			if(interface_.recursivelyContainsConstant(fieldName))
-				return true;
-		}
-		
-		return false;		
+	final public boolean recursivelyContainsConstant(String fieldName) {
+		return recursivelyGetConstant(fieldName) != null;		
 	}
 	
-	public boolean recursivelyContainsMethod( String symbol ) {
-		if( containsMethod(symbol))
-			return true;		
-		
-		//check extends		
-		for( InterfaceType parent : getInterfaces() )
-			if( parent.recursivelyContainsMethod(symbol ) )
-					return true;			 		
-		
-		return false;
+	final public boolean recursivelyContainsMethod( String symbol ) {
+		return getAllMethods(symbol).size() > 0;
 	}
-	
 	
 	public Type getInnerType(String className) {
 		if( className.contains(":")) {

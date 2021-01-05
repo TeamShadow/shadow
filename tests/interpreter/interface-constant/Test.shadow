@@ -1,0 +1,10 @@
+import shadow:io@Console;
+
+class Test
+{
+
+    public main(String[] args) => ()
+    {
+		Console.printLine(Interface:VALUE);
+    }
+}

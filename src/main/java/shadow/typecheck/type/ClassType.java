@@ -110,26 +110,6 @@ public class ClassType extends Type {
 		return false;
 	}
 	
-	@Override
-	public boolean recursivelyContainsConstant(String fieldName) {
-		if(super.recursivelyContainsConstant(fieldName))
-			return true;
-
-		if(getExtendType() != null )
-			return getExtendType().recursivelyContainsConstant(fieldName);
-			
-		return false;
-	}	
-	
-	public boolean recursivelyContainsMethod(String symbol) {
-		if( containsMethod(symbol) )
-			return true;
-
-		if( getExtendType() == null )
-			return false;		
-		
-		return getExtendType().recursivelyContainsMethod(symbol);
-	}
 
 	@Override
 	public VariableDeclaratorContext recursivelyGetConstant(String fieldName) {

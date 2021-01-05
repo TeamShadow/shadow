@@ -1,0 +1,5 @@
+class Test
+{
+	get set int x;
+	public constant double x;
+}

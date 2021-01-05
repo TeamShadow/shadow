@@ -819,7 +819,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 
 			node.getModifiers().addModifier(Modifiers.PUBLIC);
-			node.getType().addModifier(Modifiers.PUBLIC);
+			//node.getType().addModifier(Modifiers.PUBLIC);  //What was this supposed to do?
 		} else if (visibilityModifiers == 0) {
 			addError(node, Error.INVALID_MODIFIER,
 					"Every class " + kind + " must be specified as public, private, or protected");

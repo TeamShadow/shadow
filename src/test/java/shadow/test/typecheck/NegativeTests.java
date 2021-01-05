@@ -187,6 +187,12 @@ public class NegativeTests {
 		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
 	}
 	
+	@Test public void testFieldConstantCollision() throws Exception
+	{
+		args.add("tests-negative/typechecker/field-constant-collision/Test.shadow"); 
+		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
+	}
+	
 	@Test public void testFieldFieldCollision() throws Exception
 	{
 		args.add("tests-negative/typechecker/field-field-collision/Test.shadow"); 
@@ -498,6 +504,11 @@ public class NegativeTests {
 	@Test public void testMethodIsNotReadonlyButInterfaceMethodIs() throws Exception {
 		args.add("tests-negative/typechecker/method-is-not-readonly-but-interface-method-is/Test.shadow");
 		enforce(Error.MISSING_INTERFACE);		
+	}
+	
+	@Test public void testUnexpectedTypePromotion() throws Exception {
+		args.add("tests-negative/typechecker/unexpected-type-promotion/Test.shadow");
+		enforce(Error.INVALID_ASSIGNMENT);		
 	}
 	
 	@Test public void testImportsCollide() throws Exception {
