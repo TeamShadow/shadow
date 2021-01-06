@@ -1011,7 +1011,8 @@ public class OutputTests {
 				"9999999005\n" + 
 				"120\n" + 
 				"128\n" + 
-				"8\n");
+				"8\n" +
+				"5\n");
 	}
 	
 	@Test public void testMatrix() throws Exception {

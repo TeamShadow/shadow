@@ -43,6 +43,8 @@ class Test
 	private constant ubyte K1 = J1 + L1;
 	protected constant ubyte L1 = 8uy;
 	
+	protected constant int M1 = P->size;
+	
     public main(String[] args) => ()
     {
     	Console.printLine(A);
@@ -85,5 +87,7 @@ class Test
 		Console.printLine(J1);
 		Console.printLine(K1);
 		Console.printLine(L1);
+		
+		Console.printLine(M1);
     }
 }

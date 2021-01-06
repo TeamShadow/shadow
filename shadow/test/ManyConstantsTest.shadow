@@ -1,6 +1,6 @@
 import shadow:io@Console;
 
-class ManyConstantsTest
+class shadow:test@ManyConstantsTest
 {
 	public constant int A = 0x7; 		// 7
 	private constant int B = A + C; 	// -34
@@ -42,6 +42,8 @@ class ManyConstantsTest
 	public constant ubyte J1 = 120uy;		// 120
 	private constant ubyte K1 = J1 + L1;	//128
 	protected constant ubyte L1 = 8uy;		//8
+	
+	protected constant int M1 = P->size;	//5
 	
     public main(String[] args) => ()
     {
@@ -85,5 +87,7 @@ class ManyConstantsTest
 		Console.printLine(J1);
 		Console.printLine(K1);
 		Console.printLine(L1);
+		
+		Console.printLine(M1);
     }
 }
