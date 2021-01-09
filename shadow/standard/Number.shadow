@@ -84,4 +84,20 @@ is
 	 * @return {@code double} value 
 	 */
 	readonly toDouble() => (double);
+	
+	/** 
+	 * Method that returns the smaller of the current object and
+	 * another object.
+	 * @param other object to compare with
+	 * @return smaller value
+	 */
+	readonly min(T other) => (T);
+	
+	/** 
+	 * Method that returns the larger of the current object and
+	 * another object.
+	 * @param other object to compare with
+	 * @return larger value
+	 */
+	readonly max(T other) => (T);
 }

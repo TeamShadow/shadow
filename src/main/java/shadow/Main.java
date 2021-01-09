@@ -22,6 +22,8 @@ import java.util.Set;
 import org.apache.logging.log4j.Logger;
 
 import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.interpreter.ASTInterpreter;
+import shadow.interpreter.ConstantFieldInterpreter;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
@@ -34,11 +36,7 @@ import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.TypeChecker;
-import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.Type;
+import shadow.typecheck.type.*;
 
 /**
  * @author Bill Speirs
@@ -428,11 +426,23 @@ public class Main {
 		Path mainFile = currentJob.getMainFile();
 		String mainFileName = BaseChecker.stripExtension(canonicalize(mainFile));
 
+		ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
+
+		// TypeChecker generates a list of AST nodes corresponding to
+		// classes needing compilation
+		TypeChecker.TypeCheckerOutput typecheckerOutput =
+				TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
+
+		ConstantFieldInterpreter.evaluateConstants(
+				typecheckerOutput.packageTree, typecheckerOutput.nodes);
+
+		// As an optimization, print .meta files for the .shadow files being checked
+		typecheckerOutput.nodes.stream()
+				.filter((node) -> !node.isFromMetaFile())
+				.forEach(TypeChecker::printMetaFile);
+
 		try {
-			ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
-			// TypeChecker generates a list of AST nodes corresponding to
-			// classes needing compilation
-			for (Context node : TypeChecker.typeCheck(mainFile, currentJob.isForceRecompile(), reporter)) {
+			for (Context node : typecheckerOutput.nodes) {
 				Path file = node.getPath();
 
 				if (currentJob.isCheckOnly()) {
@@ -440,7 +450,7 @@ public class Main {
 					// no dead code, etc.
 					// no need to check interfaces or .meta files (no code in
 					// either case)
-					if (!file.toString().endsWith(".meta"))
+					if (!node.isFromMetaFile())
 						optimizeTAC(new TACBuilder().build(node), reporter, true);
 				} else {
 					String name = BaseChecker.stripExtension(file.getFileName().toString());
@@ -474,7 +484,7 @@ public class Main {
 
 					// if the LLVM bitcode didn't exist, the full .shadow file would
 					// have been used
-					if( file.toString().endsWith(".meta") ) {
+					if(node.isFromMetaFile()) {
 						logger.info("Using pre-existing LLVM code for " + name);
 						if (Files.exists(bitcodeFile))
 							linkCommand.add(canonicalize(bitcodeFile));

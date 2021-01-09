@@ -21,15 +21,17 @@ import org.junit.runner.RunWith;
 
 import junit.framework.TestCase;
 import shadow.test.doctool.DocumentationTests;
+import shadow.test.interpreter.InterpreterTests;
 import shadow.test.output.OutputTests;
 import shadow.test.output.TACTests;
 import shadow.test.typecheck.StandardLibraryTests;
 import shadow.test.typecheck.TypeCheckerTests;
 import shadow.test.typecheck.UtilityTests;
 import shadow.test.typecheck.WarningTests;
+import shadow.test.typecheck.ImportTests;
 
 @RunWith(JUnitPlatform.class)
-@SelectClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.output.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class })
+@SelectClasses({DocumentationTests.class, OutputTests.class, TACTests.class, shadow.test.interpreter.NegativeTests.class, shadow.test.parse.NegativeTests.class, shadow.test.typecheck.NegativeTests.class, UtilityTests.class, StandardLibraryTests.class, TypeCheckerTests.class, WarningTests.class, ImportTests.class, InterpreterTests.class })
 public class AllTest extends TestCase {
 
 	@AfterAll
@@ -37,7 +39,7 @@ public class AllTest extends TestCase {
 		ClassLoader classLoader = AllTest.class.getClassLoader();
         File file;
 		try {
-			file = new File( URLDecoder.decode( classLoader.getResource("chime.wav").getFile(), "UTF-8" ) );
+			file = new File( URLDecoder.decode( classLoader.getResource("resources/chime.wav").getFile(), "UTF-8" ) );
 			playClip( file );		
 		} catch ( IOException | UnsupportedAudioFileException | LineUnavailableException | InterruptedException e) {
 			e.printStackTrace();

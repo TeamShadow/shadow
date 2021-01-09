@@ -17,6 +17,7 @@ public class NegativeTests {
 	public void setup() throws Exception {
 		//args.add("-v");
 		args.add("--typecheck");
+		//args.add("--force-recompile");
 
 		String os = System.getProperty("os.name").toLowerCase();
 		
@@ -183,6 +184,12 @@ public class NegativeTests {
 	@Test public void testFieldClassCollision() throws Exception
 	{
 		args.add("tests-negative/typechecker/field-class-collision/Test.shadow"); 
+		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
+	}
+	
+	@Test public void testFieldConstantCollision() throws Exception
+	{
+		args.add("tests-negative/typechecker/field-constant-collision/Test.shadow"); 
 		enforce(Error.MULTIPLY_DEFINED_SYMBOL);		
 	}
 	
@@ -497,5 +504,35 @@ public class NegativeTests {
 	@Test public void testMethodIsNotReadonlyButInterfaceMethodIs() throws Exception {
 		args.add("tests-negative/typechecker/method-is-not-readonly-but-interface-method-is/Test.shadow");
 		enforce(Error.MISSING_INTERFACE);		
+	}
+	
+	@Test public void testUnexpectedTypePromotion() throws Exception {
+		args.add("tests-negative/typechecker/unexpected-type-promotion/Test.shadow");
+		enforce(Error.INVALID_ASSIGNMENT);		
+	}
+	
+	@Test public void testImportsCollide() throws Exception {
+		args.add("tests-negative/import/imports-collide/testing/Test.shadow");
+		enforce(Error.IMPORT_COLLIDES);		
+	}
+	
+	@Test public void testImportNotFound() throws Exception {
+		args.add("tests-negative/import/import-not-found/testing/Test.shadow");
+		enforce(Error.INVALID_IMPORT);		
+	}
+	
+	@Test public void testMismatchedPackage() throws Exception {
+		args.add("tests-negative/import/mismatched-package/package/Test1.shadow");
+		enforce(Error.MISMATCHED_PACKAGE);		
+	}
+	
+	@Test public void testInnerClassImportDoesNotExist() throws Exception {
+		args.add("tests-negative/import/inner-class-import-does-not-exist/testing/Test.shadow");
+		enforce(Error.INVALID_IMPORT);		
+	}
+	
+	@Test public void testInnerClassImportNotAccessible() throws Exception {
+		args.add("tests-negative/import/inner-class-import-not-accessible/testing/Test.shadow");
+		enforce(Error.ILLEGAL_ACCESS);		
 	}
 }

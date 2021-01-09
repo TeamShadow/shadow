@@ -14,10 +14,10 @@ import java.util.TreeSet;
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
+import shadow.parse.ShadowParser.VariableDeclaratorContext;
 
 public class ClassType extends Type {
-	private ClassType extendType;	
-	private HashMap<String, ClassType> innerClasses;
+	private ClassType extendType;
 	private SequenceType dependencyList;
 	
 	public ClassType(String typeName, ClassType parent) {
@@ -26,11 +26,8 @@ public class ClassType extends Type {
 	}
 	
 	public ClassType(String typeName, Modifiers modifiers, 
-			Documentation documentation, Type outer) 
-	{		
+			Documentation documentation, Type outer) {		
 		super(typeName, modifiers, documentation, outer);
-		
-		innerClasses = new HashMap<String, ClassType>();
 	}
 	
 	public void setExtendType(ClassType extendType) {
@@ -113,54 +110,36 @@ public class ClassType extends Type {
 		return false;
 	}
 	
-	public boolean recursivelyContainsField(String fieldName) {
-		if( containsField(fieldName) )
-			return true;
 
-		if( getExtendType() == null )
-			return false;
+	@Override
+	public VariableDeclaratorContext recursivelyGetConstant(String fieldName) {
+		ShadowParser.VariableDeclaratorContext context = getConstant(fieldName);
+		if(context != null)
+			return context;
 		
-		return getExtendType().recursivelyContainsField(fieldName);
-	}	
-	
-	public boolean recursivelyContainsMethod(String symbol) {
-		if( containsMethod(symbol) )
-			return true;
-
-		if( getExtendType() == null )
-			return false;		
+		// Check outer types
+		Type outer = this.getOuter();
+		while(outer != null && context == null) {
+			context = outer.getConstant(fieldName);
+			outer = outer.getOuter();
+		}		
+		if(context != null)
+			return context;
 		
-		return getExtendType().recursivelyContainsMethod(symbol);
-	}
-	
-	public boolean recursivelyContainsInnerClass(String className) {
-		if( containsInnerClass(className) )
-			return true;
+		// Check parents
+		if(getExtendType() != null )
+			context = getExtendType().recursivelyGetConstant(fieldName);
+		if(context != null)
+			return context;
+			
+		// Check interfaces
+		for(InterfaceType interface_ : getInterfaces()) {
+			context = interface_.recursivelyGetConstant(fieldName);
+			if(context != null)
+				return context;
+		}		
 		
-		if( getExtendType() == null )
-			return false;		
-		
-		return getExtendType().recursivelyContainsInnerClass(className);
-	}
-	
-	public ClassType recursivelyGetInnerClass(String className) {
-		if( containsInnerClass(className) )
-			return getInnerClass(className);
-		
-		if( getExtendType() == null )
-			return null;
-				
-		return getExtendType().recursivelyGetInnerClass(className);
-	}
-
-	public Context recursivelyGetField(String fieldName) {
-		if( containsField(fieldName) )
-			return getField(fieldName);
-
-		if( getExtendType() == null )
-			return null;
-				
-		return getExtendType().recursivelyGetField(fieldName);
+		return context;
 	}
 	
 	//get methods from all visible sources, adds outer classes too
@@ -211,6 +190,15 @@ public class ClassType extends Type {
 			return fieldIndexCache.size() + extendFieldSize;		
 	}
 	
+	@Override
+	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
+		ShadowParser.VariableDeclaratorContext field = super.getField(fieldName);
+		if( field == null && getExtendType() != null )
+			return getExtendType().getField(fieldName);
+		else
+			return field;
+	}
+	
 	
 	public int getFieldIndex( String fieldName ) {
 		// Lazily load cache
@@ -231,17 +219,7 @@ public class ClassType extends Type {
 		if ( getExtendType() != null )
 			getExtendType().recursivelyOrderAllFields(fieldList);		
 		fieldList.addAll(sortFields());
-	}	
-
-	@Override
-	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
-		ShadowParser.VariableDeclaratorContext field = super.getField(fieldName);
-		if( field == null && getExtendType() != null )
-			return getExtendType().getField(fieldName);
-		else
-			return field;
 	}
-	
 	
 	public Set<Entry<String, ? extends ModifiedType>> sortFields() {
 		Set<Entry<String, ? extends ModifiedType>> set = new TreeSet<Entry<String, ? extends ModifiedType>>(new Comparator<Entry<String, ? extends ModifiedType>>() {
@@ -257,7 +235,7 @@ public class ClassType extends Type {
 		//constants live in the class
 		//singletons don't need references stored
 		for (Entry<String, ? extends ModifiedType> field : getFields().entrySet())
-			if (!field.getValue().getModifiers().isConstant() && !(field.getValue().getType() instanceof SingletonType))
+			if (!(field.getValue().getType() instanceof SingletonType))
 				set.add(field);
 		
 		return set;
@@ -288,9 +266,9 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter());
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
-			replaced.innerClasses = innerClasses;
-			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
+			
+			replaced.setInnerTypes(getInnerTypes());
 
 			replaced.setExtendType(getExtendType().replace(values, replacements));			
 			
@@ -340,9 +318,9 @@ public class ClassType extends Type {
 					getDocumentation(), (ClassType)getOuter() );
 			replaced.setPackage(getPackage());
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
-			replaced.innerClasses = innerClasses;
-			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
+			
+			replaced.setInnerTypes(getInnerTypes());
 			
 			replaced.setExtendType(getExtendType().partiallyReplace(values, replacements));			
 			
@@ -421,22 +399,14 @@ public class ClassType extends Type {
 					node.setType(signature.getMethodType());
 			}
 
-		for( ClassType inner : getInnerClasses().values() )		
+		for(Type inner : getInnerTypes().values())		
 			inner.updateFieldsAndMethods();
 		
 		if( isParameterized() )
 			getTypeParameters().updateFieldsAndMethods();
 		
 		invalidateHashName();
-	}
-	
-	//necessary?
-	/*
-	@Override
-	public boolean equals(Type type) {		
-		return super.equals(type);
-	}
-	*/	
+	}	
 	
 	@Override
 	public boolean isSubtype(Type t) {
@@ -513,49 +483,7 @@ public class ClassType extends Type {
 		}
 		return false;
 	}
-	
-	public Map<String, ClassType> getInnerClasses() {
-		return innerClasses;
-	}
-	
-	public void addInnerClass(String name, ClassType innerClass) {
-		innerClasses.put( name, innerClass );
-		innerClass.setOuter(this);
-	}
-	
-	public boolean containsInnerClass(String className) {
-		return innerClasses.containsKey(className);
-	}
-	
-	public boolean containsInnerClass(Type type) {
-		return innerClasses.containsValue(type);		
-	}
-	
-	public boolean recursivelyContainsInnerClass(Type type) {
-		if( innerClasses.containsValue(type) )
-			return true;
-		
-		for( ClassType innerClass : innerClasses.values() )
-			if( innerClass.recursivelyContainsInnerClass(type) )
-				return true;
-		
-		return false;
-	}
-	
-	public ClassType getInnerClass(String className) {
-		if( className.contains(":")) {
-			int colon = className.indexOf(':');
-			String prefix = className.substring(0, colon);
-			ClassType inner = innerClasses.get(prefix);
-			if( inner != null )
-				return inner.getInnerClass(className.substring(colon + 1));
-			else
-				return null;
-		}			
-		
-		return innerClasses.get(className);
-	}
-	
+
 	@Override
 	public ClassType getTypeWithoutTypeArguments() {
 		return (ClassType)super.getTypeWithoutTypeArguments();
@@ -651,13 +579,18 @@ public class ClassType extends Type {
 		String indent = linePrefix + "\t";		
 		boolean newLine;
 		
-		//constants		
+		// Constants		
 		newLine = false;
-		for( Map.Entry<String, ? extends ModifiedType> field : getFields().entrySet() ) {
-			Modifiers modifiers = field.getValue().getModifiers(); 
-			if( modifiers.isConstant() && (modifiers.isPublic() || modifiers.isProtected())) {
+		for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> entry : getConstants().entrySet()) {
+			String fieldName = entry.getKey();
+			ShadowParser.VariableDeclaratorContext field = entry.getValue();
+			Modifiers modifiers = field.getModifiers();
+			if (modifiers.isPublic() || modifiers.isProtected()) {
 				String visibility = modifiers.isPublic() ? "public" : "protected";
-				out.println(indent + visibility + " constant " + field.getValue().getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE) + " " + field.getKey() + ";");
+				out.println(
+						indent + visibility + " constant "
+								+ field.getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE)
+								+ " " + fieldName + " = " + field.getInterpretedValue().toLiteral() + ";");
 				newLine = true;				
 			}
 		}
@@ -676,26 +609,24 @@ public class ClassType extends Type {
 		if( newLine )
 			out.println();		
 
-		//methods
+		// Methods
 		newLine = false;
 		for( List<MethodSignature> list: getMethodMap().values() )		
 			for( MethodSignature signature : list ) {
 				Modifiers modifiers = signature.getModifiers();
-				if( (modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()) && !signature.isCopy() )
-				{				
+				if((modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()) && !signature.isCopy()) {				
 					out.println(indent + signature + ";");
 					newLine = true;
 				}
 			}
-		if( newLine && getInnerClasses().size() > 0 )
+		
+		if(newLine && getInnerTypes().size() > 0)
 			out.println();
 		
-		//inner classes
-		for( Type _class : getInnerClasses().values() )
+		// Inner types
+		for( Type _class : getInnerTypes().values() )
 				_class.printMetaFile(out, indent);		
-		
-		//if( !hasOuter() )
-			//printGenerics( out, indent );				
+					
 		out.println(linePrefix + "}");	
 	}
 }

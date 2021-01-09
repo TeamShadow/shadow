@@ -1,0 +1,4 @@
+class String
+{
+	get set int secret = 7;
+}

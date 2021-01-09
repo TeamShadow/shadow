@@ -11,7 +11,9 @@ import shadow.parse.Context;
 public abstract class ShadowException extends Exception {
 	private static final long serialVersionUID = 750991826899853128L;
 	private static final String EOL = System.getProperty("line.separator", "\n");
-	private final Context context;
+
+	private Context context;
+	private final ShadowExceptionErrorKind kind;
 
 	public ShadowException(String message) {
 		this(message, null);
@@ -19,8 +21,85 @@ public abstract class ShadowException extends Exception {
 	
 	public ShadowException(String message, Context context) {
 		super(message);
-		this.context = context;		
-	}	
+		this.context = context;
+		this.kind = null;
+	}
+
+	public ShadowException(ShadowExceptionErrorKind kind, Context context) {
+		this(kind, kind.getDefaultMessage(), context);
+	}
+
+
+	public ShadowException(ShadowExceptionErrorKind kind, String message) {
+		this(kind, message, null);
+	}
+
+	public ShadowException(ShadowExceptionErrorKind kind, String message, Context context) {
+		super(message);
+		this.kind = kind;
+		this.context = context;
+	}
+	
+	public ShadowException setContext(Context context) {
+		this.context = context;
+		return this;
+	}
+	
+	@Override
+	public String getMessage() {
+		StringBuilder message = new StringBuilder();
+		
+		if( context != null ) {
+			if( context.getPath() != null )
+				message.append("(" + context.getPath().getFileName().toString() + ")");
+	
+			if( context.lineStart() != -1 && context.columnStart() != -1 )
+				message.append("[" + context.lineStart() + ":" + context.columnStart() + "] ");
+			else
+				message.append(" ");
+			
+			if( kind != null )
+				message.append(kind.getName() + ": ");
+			message.append(super.getMessage());
+			
+			message.append(showCode(context.getPath(), context.lineStart(), context.lineEnd(), context.columnStart(), context.columnEnd() ));
+		}
+		else {
+			if( kind != null )
+				message.append(kind.getName() + ": ");
+			message.append(super.getMessage());
+		}
+		
+		return message.toString();
+	}
+	
+	@Override
+	public String getLocalizedMessage() {
+		StringBuilder message = new StringBuilder();
+		
+		if( context != null ) {
+			if( context.getPath() != null )
+				message.append("(" + context.getPath().getFileName().toString() + ")");
+	
+			if( context.lineStart() != -1 && context.columnStart() != -1 )
+				message.append("[" + context.lineStart() + ":" + context.columnStart() + "] ");
+			else
+				message.append(" ");
+			
+			if( kind != null )
+				message.append(kind.getName() + ": ");
+			message.append(super.getLocalizedMessage());
+			
+			message.append(showCode(context.getPath(), context.lineStart(), context.lineEnd(), context.columnStart(), context.columnEnd() ));
+		}
+		else {
+			if( kind != null )
+				message.append(kind.getName() + ": ");
+			message.append(super.getLocalizedMessage());
+		}
+		
+		return message.toString();
+	}
 
 	/**
 	 * Gets starting line where error happened.
@@ -77,8 +156,7 @@ public abstract class ShadowException extends Exception {
 		return -1;
 	}
 	
-	public boolean isInside(ShadowException other)
-	{
+	public boolean isInside(ShadowException other) {
 		if( context != null && other.context != null ) {			
 			Path path1 = context.getPath();
 			Path path2 = other.context.getPath();			
@@ -90,43 +168,6 @@ public abstract class ShadowException extends Exception {
 					(lineEnd() < other.lineEnd() || columnEnd() <= other.columnEnd() );
 		}
 		return false;			
-	}
-	
-	/**
-	 * Creates a formatted message for an error or warning, including file name and
-	 * line and column numbers and possibly text from the file itself where the error is.
-	 * File, line, and column values may be special defaults which will cause
-	 * them to be ignored in the return message.
-	 * @param kind				kind of error or warning		
-	 * @param message			message explaining the error or warning
-	 * @param context			context where problem is occurring
-	 * @return					formatted message
-	 */
-	public static String makeMessage( ShadowExceptionFactory kind, String message, Context context ) {
-		StringBuilder error = new StringBuilder();
-		
-		if( context != null ) {
-			if( context.getPath() != null )
-				error.append("(" + context.getPath().getFileName().toString() + ")");
-	
-			if( context.lineStart() != -1 && context.columnStart() != -1 )
-				error.append("[" + context.lineStart() + ":" + context.columnStart() + "] ");
-			else
-				error.append(" ");
-			
-			if( kind != null )
-				error.append(kind.getName() + ": ");
-			error.append(message);
-			
-			error.append(showCode(context.getPath(), context.lineStart(), context.lineEnd(), context.columnStart(), context.columnEnd() ));
-		}
-		else {
-			if( kind != null )
-				error.append(kind.getName() + ": ");
-			error.append(message);
-		}
-		
-		return error.toString();
 	}
 	
 	public static String showCode( Path path, int lineStart, int lineEnd, int columnStart, int columnEnd ) {
@@ -168,5 +209,7 @@ public abstract class ShadowException extends Exception {
 		return error.toString();		
 	}
 	
-	public abstract ShadowExceptionFactory getError();
+	public ShadowExceptionErrorKind getError() {
+		return kind;
+	};
 }

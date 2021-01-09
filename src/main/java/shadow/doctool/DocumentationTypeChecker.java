@@ -19,6 +19,7 @@ package shadow.doctool;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,9 +62,13 @@ public class DocumentationTypeChecker {
 		ErrorReporter reporter = new ErrorReporter(Loggers.DOC_TOOL);
 		
 		/* Collector looks over all files and creates types for everything needed. */
-		TypeCollector collector = new TypeCollector( packageTree, reporter, true );
+		TypeCollector collector = new TypeCollector( packageTree, reporter, true, false);
 		/* Its return value maps all the types to their AST nodes. */		
 		Map<Type, Context> typeTable = collector.collectTypes( files );
+
+		// Maps file names to nodes.
+		Map<String, Context> fileTable = collector.getFileTable();
+		
 		
 		/* Updates types, adding:
 		 *  Fields and methods
@@ -71,13 +76,11 @@ public class DocumentationTypeChecker {
 		 *  All types with type parameters (except for declarations) are UninitializedTypes
 		 *  Extends and implements lists
 		 */	
-		TypeUpdater updater = new TypeUpdater( packageTree, reporter );
+		TypeUpdater updater = new TypeUpdater( packageTree, reporter, fileTable );
 		typeTable = updater.update( typeTable );
 		
 		/* Filter out only those types associated with the files being documented. */		
 		Set<Type> types = new TreeSet<Type>();
-		// Maps file names to nodes.
-		Map<String, Context> fileTable = collector.getFileTable();
 		for( Path file : files ) {
 			Context node = fileTable.get( BaseChecker.stripExtension( Main.canonicalize(file) ) );
 			if( node != null )

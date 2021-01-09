@@ -1,0 +1,16 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		uint a = 4u;
+		int b = 5;
+		
+		long c = a + b; // fine
+		int d = a + b; // not fine
+
+		Console.printLine(c);
+		Console.printLine(d);
+	}
+}

@@ -1,0 +1,12 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		var deque = shadow:utility@ArrayDeque<String>:create();
+		deque.addLast("pig");
+		deque.addLast("meet");
+		Console.printLine(deque->size);
+	}
+}

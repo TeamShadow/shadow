@@ -5,8 +5,9 @@ import java.math.BigInteger;
 import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
+import shadow.interpreter.InterpreterException.Error;
 
-public class ShadowDouble extends ShadowNumber
+public class ShadowDouble extends ShadowNumeric
 {
 	private double value;
 	public ShadowDouble(double value)
@@ -23,6 +24,23 @@ public class ShadowDouble extends ShadowNumber
 	{
 		return value;
 	}
+	
+	@Override
+    public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
+		try {		
+			if(arguments.length == 0) {
+				switch(method) {				
+				case "ceiling": return ceiling();
+				case "floor": return floor();
+				case "round": return round();
+				}				
+			}
+		}
+		catch(ShadowException e) {
+		}
+		
+		return super.callMethod(method, arguments);
+	}
 
 	@Override
 	public ShadowDouble negate() throws ShadowException
@@ -31,8 +49,7 @@ public class ShadowDouble extends ShadowNumber
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException
-	{
+	public ShadowValue cast(Type type) throws ShadowException {
 		BigInteger integer = BigInteger.valueOf(Math.round(value));
 		if (type.equals(Type.BYTE))
 			return new ShadowInteger(integer, 1, true);
@@ -68,7 +85,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value + input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -80,7 +97,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value - input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -92,7 +109,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value * input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -104,7 +121,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value / input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -116,7 +133,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowDouble(value % input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -128,7 +145,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value == input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -140,7 +157,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value <= input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -152,7 +169,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value <= input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -164,7 +181,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value > input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -176,7 +193,7 @@ public class ShadowDouble extends ShadowNumber
 			return new ShadowBoolean(value >= input.value);
 		}
 
-		throw new InterpreterException("Type " + getType() + " does not match " + other.getType());
+		throw new InterpreterException(Error.MISMATCHED_TYPE, "Type " + getType() + " does not match " + other.getType());
 	}
 
 	@Override
@@ -190,10 +207,29 @@ public class ShadowDouble extends ShadowNumber
 	{
 		return new ShadowDouble(getValue());
 	}
+
+	@Override
+	public String toLiteral() {
+		double value = getValue();
+
+		// These special values cannot be represented as a single literal
+		if (Double.isNaN(value)) {
+			return "0d / 0d";
+		} else if (Double.isInfinite(value)) {
+			if (value > 0) {
+				return "1d / 0d";
+			} else {
+				return "-1d / 0d";
+			}
+		}
+
+		return Double.toString(getValue());
+	}
+
 	@Override
 	public String toString()
 	{
-		return Double.toString(getValue());
+		return toLiteral();
 	}
 	@Override
 	public ShadowDouble abs()

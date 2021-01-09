@@ -3,6 +3,7 @@ package shadow.interpreter;
 import java.math.BigInteger;
 
 import shadow.ShadowException;
+import shadow.interpreter.InterpreterException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
@@ -12,6 +13,10 @@ import shadow.typecheck.type.Type;
  * An abstract class that is the base of all values (array, boolean, code, number, object, string) in Shadow.
  */
 public abstract class ShadowValue implements ModifiedType {
+
+    // Exposed here for convenience
+    public static final ShadowInvalid INVALID = ShadowInvalid.INVALID;
+
     private Modifiers modifiers;
 
     protected ShadowValue() {
@@ -32,16 +37,77 @@ public abstract class ShadowValue implements ModifiedType {
         throw new UnsupportedOperationException();
     }
 
+    /** Applies the specified binary operation to this {@link ShadowValue} and another */
+    public final ShadowValue apply(BinaryOperator operator, ShadowValue right) throws ShadowException {
+        if (this instanceof ShadowInvalid || right instanceof ShadowInvalid) {
+            return INVALID;
+        }
+
+        switch (operator) {
+            case COALESCE: return coalesce(right);
+            case OR: return or(right);
+            case XOR: return xor(right);
+            case AND: return and(right);
+            case BITWISE_OR: return bitwiseOr(right);
+            case BITWISE_XOR: return bitwiseXor(right);
+            case BITWISE_AND: return bitwiseAnd(right);
+            case EQUAL: return equal(right);
+            case NOT_EQUAL: return notEqual(right);
+            case REFERENCE_EQUAL: return referenceEqual(right);
+            case REFERENCE_NOT_EQUAL: return referenceNotEqual(right);
+            case LESS_THAN: return lessThan(right);
+            case GREATER_THAN: return greaterThan(right);
+            case LESS_THAN_OR_EQUAL: return lessThanOrEqual(right);
+            case GREATER_THAN_OR_EQUAL: return greaterThanOrEqual(right);
+            case CAT: return cat(right);
+            case RIGHT_SHIFT: return bitShiftRight(right);
+            case LEFT_SHIFT: return bitShiftLeft(right);
+            case RIGHT_ROTATE: return bitRotateRight(right);
+            case LEFT_ROTATE: return bitRotateLeft(right);
+            case ADD: return add(right);
+            case SUBTRACT: return subtract(right);
+            case MULTIPLY: return multiply(right);
+            case DIVIDE: return divide(right);
+            case MODULUS: return modulus(right);
+            default: throw new InterpreterException(Error.UNSUPPORTED_OPERATION,
+                    "Unexpected binary operator " + operator.getName());
+        }
+    }
+
+    /** Applies the specified unary operation to this {@link ShadowValue} */
+    public final ShadowValue apply(UnaryOperator operator) throws ShadowException {
+        if (this instanceof ShadowInvalid) {
+            return INVALID;
+        }
+
+        switch (operator) {
+            case CAT: return unaryCat();
+            case BITWISE_COMPLEMENT: return bitwiseComplement();
+            case NOT: return not();
+            case NEGATE: return negate();
+            default: throw new UnsupportedOperationException(
+                    "Unexpected unary operator " + operator.getName());
+        }
+    }
+
+    public ShadowString unaryCat() throws ShadowException {
+        return new ShadowString(toString());
+    }
+
     public ShadowValue negate() throws ShadowException {
-        throw new UnsupportedOperationException("Negate operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Negate operation not supported");
     }
 
     public ShadowValue bitwiseComplement() throws ShadowException {
-        throw new UnsupportedOperationException("Bitwise complement operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Bitwise complement operation not supported");
     }
 
     public ShadowBoolean not() throws ShadowException {
-        throw new UnsupportedOperationException("Not operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Not operation not supported");
+    }
+
+    public final ShadowValue coalesce(ShadowValue value) throws ShadowException {
+        return (this instanceof ShadowNull) ? value : this;
     }
 
     public ShadowValue cat(ShadowValue value) throws ShadowException {
@@ -50,43 +116,43 @@ public abstract class ShadowValue implements ModifiedType {
 
     // binary operations
     public ShadowValue add(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Add operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Add operation not supported");
     }
 
     public ShadowValue subtract(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Subtract operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Subtract operation not supported");
     }
 
     public ShadowValue multiply(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Multiply operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Multiply operation not supported");
     }
 
     public ShadowValue divide(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Divide operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Divide operation not supported");
     }
 
     public ShadowValue modulus(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Modulus operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Modulus operation not supported");
     }
 
-    public ShadowValue leftShift(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Left shift operation not supported");
+    public ShadowValue bitShiftLeft(ShadowValue value) throws ShadowException {
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Left shift operation not supported");
     }
 
-    public ShadowValue rightShift(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Right shift operation not supported");
+    public ShadowValue bitShiftRight(ShadowValue value) throws ShadowException {
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Right shift operation not supported");
     }
 
-    public ShadowValue leftRotate(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Left rotate operation not supported");
+    public ShadowValue bitRotateLeft(ShadowValue value) throws ShadowException {
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Left rotate operation not supported");
     }
 
-    public ShadowValue rightRotate(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Right rotate operation not supported");
+    public ShadowValue bitRotateRight(ShadowValue value) throws ShadowException {
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Right rotate operation not supported");
     }
 
     public ShadowBoolean equal(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Equal operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Equal operation not supported");
     }
 
     public final ShadowBoolean notEqual(ShadowValue value) throws ShadowException {
@@ -94,49 +160,62 @@ public abstract class ShadowValue implements ModifiedType {
             final ShadowBoolean result = equal(value);
             return new ShadowBoolean(!result.getValue());
         } catch (Exception e) {
-            throw new UnsupportedOperationException("Not equal operation not supported");
+            throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Not equal operation not supported");
+        }
+    }
+
+    public ShadowBoolean referenceEqual(ShadowValue value) throws ShadowException {
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Reference equal operation not supported");
+    }
+
+    public final ShadowBoolean referenceNotEqual(ShadowValue value) throws ShadowException {
+        try {
+            ShadowBoolean result = this.referenceEqual(value);
+            return new ShadowBoolean(!result.getValue());
+        } catch (Exception e) {
+            throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Reference not equal operation not supported");
         }
     }
 
     public ShadowBoolean lessThan(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Less than operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Less than operation not supported");
     }
 
     public ShadowBoolean lessThanOrEqual(ShadowValue value)
             throws ShadowException {
-        throw new UnsupportedOperationException("Less than or equal operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Less than or equal operation not supported");
     }
 
     public ShadowBoolean greaterThan(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Greater than operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Greater than operation not supported");
     }
 
     public ShadowBoolean greaterThanOrEqual(ShadowValue value)throws ShadowException {
-        throw new UnsupportedOperationException("Greater than or equal operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Greater than or equal operation not supported");
     }
 
     public ShadowBoolean or(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Or operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Or operation not supported");
     }
 
     public ShadowBoolean xor(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Exclusive or operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Exclusive or operation not supported");
     }
 
     public ShadowBoolean and(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("And operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "And operation not supported");
     }
 
     public ShadowValue bitwiseAnd(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Bitwise and operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Bitwise and operation not supported");
     }
 
     public ShadowValue bitwiseOr(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Bitwise or operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Bitwise or operation not supported");
     }
 
     public ShadowValue bitwiseXor(ShadowValue value) throws ShadowException {
-        throw new UnsupportedOperationException("Bitwise xor operation not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Bitwise xor operation not supported");
     }
 
     public final boolean isSubtype(ShadowValue other) {
@@ -191,11 +270,11 @@ public abstract class ShadowValue implements ModifiedType {
             return new ShadowArray(arrayType, 0);
         }
         
-        throw new InterpreterException("Unsupported type " + type.getType());
+        throw new InterpreterException(Error.INVALID_TYPE, "Unsupported type " + type.getType());
     }
 
     public ShadowInteger hash() throws ShadowException {
-        throw new UnsupportedOperationException("Hash not supported");
+        throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Hash not supported");
     }
 
     /**
@@ -282,6 +361,67 @@ public abstract class ShadowValue implements ModifiedType {
             }
         }
 
-        throw new UnsupportedOperationException("Cannot compare types " + first.getType() + " and " + second.getType());
+        throw new InterpreterException(Error.MISMATCHED_TYPE, "Cannot compare types " + first.getType() + " and " + second.getType());
+    }
+
+    /** Returns a valid Shadow literal representation of the value */
+    public abstract String toLiteral();
+    
+    public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
+    	try {
+    		
+			if(arguments.length == 0) {
+				switch(method) {
+				case "bitwiseComplement": return bitwiseComplement();
+				case "hash": return hash();
+				case "negate": return negate();
+				case "not": return not();				
+				case "toString": return new ShadowString(toLiteral());
+				}				
+			}
+			else if(arguments.length == 1) {
+				ShadowValue value = arguments[0];
+				switch(method) {
+				case "add": return add(value);
+				case "and": return and(value);
+				case "bitRotateLeft": return bitRotateLeft(value);
+				case "bitRotateRight": return bitRotateRight(value);
+				case "bitShiftLeft": return bitShiftLeft(value);				
+				case "bitShiftRight": return bitShiftRight(value);
+				case "bitwiseAnd": return bitwiseAnd(value);
+				case "bitwiseOr": return bitwiseOr(value);
+				case "bitwiseXor": return bitwiseXor(value);
+				case "compareTo": return new ShadowInteger(compareTo(value));
+				case "divide": return divide(value);
+				case "equal": return equal(value);
+				case "greaterThan": return greaterThan(value);
+				case "greaterThanOrEqual": return greaterThanOrEqual(value);
+				case "lessThan": return lessThan(value);
+				case "lessThanOrEqual": return lessThanOrEqual(value);
+				case "modulus": return modulus(value);
+				case "multiply": return multiply(value);
+				case "notEqual": return notEqual(value);
+				case "or": return or(value);
+				case "referenceEqual": return referenceEqual(value);
+				case "referenceNotEqual": return referenceNotEqual(value);
+				case "subtract": return subtract(value);
+				case "xor": return xor(value);
+				}
+			}
+		}
+		catch(ShadowException e) {
+		}    	
+    	
+    	StringBuilder builder = new StringBuilder("(");
+    	boolean first = true;
+    	for(ShadowValue value : arguments) {
+    		if(first)
+    			first = false;
+    		else
+    			builder.append(", ");
+    		builder.append(value);
+    	}
+    	builder.append(")");
+    	throw new InterpreterException(Error.UNSUPPORTED_OPERATION, "Method " + method + " not supported with arguments " + builder.toString());  	
     }
 }

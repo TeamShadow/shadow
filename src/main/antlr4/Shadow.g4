@@ -281,35 +281,35 @@ conditionalExpression
 	;
 
 coalesceExpression
-	:  conditionalOrExpression  ('??' conditionalOrExpression )* ('??' throwStatement)?
+	:  conditionalOrExpression  ( operators+='??' conditionalOrExpression )* ('??' throwStatement)?
 	;
 
 conditionalOrExpression
-  	: conditionalExclusiveOrExpression ( 'or' conditionalExclusiveOrExpression )*
+  	: conditionalExclusiveOrExpression ( operators+='or' conditionalExclusiveOrExpression )*
 	;
 
 conditionalExclusiveOrExpression
-	: conditionalAndExpression ( 'xor' conditionalAndExpression )*
+	: conditionalAndExpression ( operators+='xor' conditionalAndExpression )*
 	;
 
 conditionalAndExpression
-	: bitwiseOrExpression ( 'and' bitwiseOrExpression )*
+	: bitwiseOrExpression ( operators+='and' bitwiseOrExpression )*
 	;
 
 bitwiseOrExpression
-	: bitwiseExclusiveOrExpression ( '|' bitwiseExclusiveOrExpression )*
+	: bitwiseExclusiveOrExpression ( operators+='|' bitwiseExclusiveOrExpression )*
 	;
 
 bitwiseExclusiveOrExpression
-	: bitwiseAndExpression ( '^' bitwiseAndExpression )*
+	: bitwiseAndExpression ( operators+='^' bitwiseAndExpression )*
 	;
 
 bitwiseAndExpression
-	: equalityExpression ( '&' equalityExpression )*
+	: equalityExpression ( operators+='&' equalityExpression )*
 	;
 
 equalityExpression
-	: isExpression (( '==' | '===' | '!=' | '!==' ) isExpression )*
+	: isExpression ( operators+=( '==' | '===' | '!=' | '!==' ) isExpression )*
 	;
 	
 isExpression
@@ -317,12 +317,11 @@ isExpression
 	;
 
 relationalExpression
-	: concatenationExpression (( '<' | '>' | '<=' | '>='  ) concatenationExpression )*
+	: concatenationExpression( operators+=( '<' | '>' | '<=' | '>='  ) concatenationExpression )*
 	;
 
-
 concatenationExpression
-	: shiftExpression ( '#' shiftExpression )*
+	: shiftExpression ( operators+='#' shiftExpression )*
 	;
 	
 rightShift
@@ -341,29 +340,41 @@ rightRotateAssign
 	: first='>' second='>' third='>=' {$first.index + 1 == $second.index && $second.index + 1 == $third.index}?
 	;
 
+// Would be inlined into shiftExpression, except ANLTR can't determine the type
+// of "operator" in "operator+=('<<' | rightShift)"
+shift
+    : '<<' | rightShift
+    ;
+
+// Would be inlined into rotateExpression, except ANLTR can't determine the type
+// of "operator" in "operator+=('<<<' | rightRotate)"
+rotate
+    : '<<<' | rightRotate
+    ;
+
 shiftExpression
-	: rotateExpression (( '<<' | rightShift ) rotateExpression )*
+	: rotateExpression ( operators+=shift rotateExpression )*
 	;
 
 rotateExpression
-	: additiveExpression ( ( '<<<' | rightRotate ) additiveExpression )*
+	: additiveExpression ( operators+=rotate additiveExpression )*
 	;
 
 additiveExpression
-	: multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )*
+	: multiplicativeExpression ( operators+=( '+' | '-' ) multiplicativeExpression )*
 	;
 
 multiplicativeExpression
-	: unaryExpression (( '*' | '/' | '%' ) unaryExpression )*
+	: unaryExpression ( operators+=( '*' | '/' | '%' ) unaryExpression )*
 	;
 
 // Unary + is not in Shadow since it's useless.
 //-- is legal since it's two negations
 unaryExpression
-	: '#' unaryExpression
-	| '~' unaryExpression
-	| '!' unaryExpression
-	| '-' unaryExpression
+	: operator='#' unaryExpression
+	| operator='~' unaryExpression
+	| operator='!' unaryExpression
+	| operator='-' unaryExpression
 	| inlineMethodDefinition
 	| primaryExpression	
 	;
@@ -508,7 +519,6 @@ methodCall
 	;
 
 literal
-locals [ShadowValue value]
 	: ByteLiteral
 	| CodeLiteral
 	| ShortLiteral

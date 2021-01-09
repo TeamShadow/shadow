@@ -70,19 +70,6 @@ public class InterfaceType extends Type
 		return false;
 	}
 
-	public boolean recursivelyContainsMethod( String symbol ) {
-		if( containsMethod(symbol))
-			return true;		
-		
-		//check extends		
-		for( InterfaceType parent : getInterfaces() )
-			if( parent.recursivelyContainsMethod(symbol ) )
-					return true;			 		
-		
-		return false;
-	}
-
-	
 	
 	protected void recursivelyGetAllMethods( List<MethodSignature> methodList  ) {	
 		for ( InterfaceType parent : getInterfaces() )
@@ -151,6 +138,8 @@ public class InterfaceType extends Type
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
 			
+			replaced.setInnerTypes(getInnerTypes());
+			
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.replace(values, replacements));
 			
@@ -194,11 +183,13 @@ public class InterfaceType extends Type
 			replaced.typeWithoutTypeArguments = typeWithoutTypeArguments;
 			
 			typeWithoutTypeArguments.addInstantiation(this, values, replacements, replaced);
+			
+			replaced.setInnerTypes(getInnerTypes());
 						
 			for( InterfaceType _interface : getInterfaces() )
 				replaced.addInterface(_interface.partiallyReplace(values, replacements));
 						
-			//only constant non-parameterized fields in an interface
+			// Only constant non-parameterized fields in an interface
 			Map<String, ShadowParser.VariableDeclaratorContext> fields = getFields(); 
 			
 			for( String name : fields.keySet() ) {
@@ -214,7 +205,7 @@ public class InterfaceType extends Type
 					replaced.addMethod(replacedSignature);					
 				}
 			
-			if( isParameterized() )
+			if(isParameterized())
 				for( ModifiedType modifiedParameter : getTypeParameters() )	{
 					Type parameter = modifiedParameter.getType();
 					replaced.addTypeParameter( new SimpleModifiedType(parameter.partiallyReplace(values, replacements), modifiedParameter.getModifiers()) );
@@ -238,6 +229,9 @@ public class InterfaceType extends Type
 				if( node != null )
 					node.setType(signature.getMethodType());				
 			}
+		
+		for(Type inner : getInnerTypes().values())		
+			inner.updateFieldsAndMethods();
 		
 		if( isParameterized() )
 			getTypeParameters().updateFieldsAndMethods();
@@ -312,15 +306,20 @@ public class InterfaceType extends Type
 		String indent = linePrefix + "\t";		
 		boolean newLine;
 				
-		//constants are the only fields in interfaces
+		// Constants		
 		newLine = false;
-		for( Map.Entry<String, ShadowParser.VariableDeclaratorContext> field : getFields().entrySet() )
-			if( field.getValue().getModifiers().isConstant() ) {
-				out.println(indent + field.getValue().getType() + " " + field.getKey() + ";");
-				newLine = true;
-			}
+		for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> entry : getConstants().entrySet()) {
+			String fieldName = entry.getKey();
+			ShadowParser.VariableDeclaratorContext field = entry.getValue();				
+			out.println(
+					indent + " constant "
+							+ field.getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE)
+							+ " " + fieldName + " = " + field.getInterpretedValue().toLiteral() + ";");
+			newLine = true;				
+			
+		}
 		if( newLine )
-			out.println();	
+			out.println();
 
 		//methods
 		newLine = false;

@@ -1,0 +1,14 @@
+class Parent
+{
+	public constant int X = -2;
+	
+	public class Inner
+	{
+		public constant int Z = 15;
+		
+		public getValue() => (int)
+		{
+			return X + 2;
+		}
+	}
+}

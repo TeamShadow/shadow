@@ -1,0 +1,4 @@
+interface shadow:test@Interface
+{
+	constant int VALUE = 13;
+}

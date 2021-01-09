@@ -1,0 +1,17 @@
+import shadow:io;
+import shadow:utility; // Unused
+
+class Test
+{
+	public main() => ()
+	{
+		int[] numbers = int:create[10];
+		numbers[5] = 7;
+		Console.printLine(numbers->size); 
+	}
+	
+	public other() => (int)
+	{
+		return 10;
+	}
+}

@@ -1,0 +1,15 @@
+import shadow:io@Console;
+import shadow:utility@Map;
+
+class Test
+{
+	public main() => ()
+	{
+		Console.printLine(other());
+	}
+	
+	public other() => (int)
+	{
+		return 10;
+	}
+}

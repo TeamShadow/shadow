@@ -876,6 +876,16 @@ public class OutputTests {
 			"{0, 1, 169, 100, 64, 36, 196, 9, 225, 289, 16, 324, 256, 49, 81, 25, 144, 361, 121}\n");
 	}
 	
+	@Test public void testInheritedConstants() throws Exception {
+		args.add("shadow/test/InheritedConstantsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],		
+			"-2\n" + 
+			"10\n" +
+			"15\n" +
+			"6\n");
+	}
+	
 	@Test public void testInterface() throws Exception {
 		args.add("shadow/test/InterfaceTest.shadow");
 		Main.run(args.toArray(new String[] { }));
@@ -886,6 +896,13 @@ public class OutputTests {
 			"shadow:test@Tortoise runs slow and steady.\n" +
 			"shadow:test@Cheetah runs at 75 mph.\n" +
 			"shadow:test@Hare runs at 40 mph.\n");
+	}
+	
+	@Test public void testInterfaceConstant() throws Exception {
+		args.add("shadow/test/InterfaceConstantTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],		
+			"13\n");
 	}
 	
 	@Test public void testInterfaceCreate() throws Exception {
@@ -958,6 +975,44 @@ public class OutputTests {
 			"before return first\n" +
 			"finally outer\n" +			
 			"return first\n");
+	}
+	
+	@Test public void testManyConstants() throws Exception {
+		args.add("shadow/test/ManyConstantsTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0],
+				"7\n" + 
+				"-34\n" + 
+				"-41\n" + 
+				"1200\n" + 
+				"1205\n" + 
+				"-5\n" + 
+				"2000000000\n" + 
+				"14000000000\n" + 
+				"-10000000995\n" + 
+				"120\n" + 
+				"-128\n" + 
+				"8\n" + 
+				"C\n" + 
+				"A\n" + 
+				"t\n" + 
+				"Goats\n" + 
+				"Goatsta\n" + 
+				"ta\n" + 
+				"Stack\n" + 
+				"7\n" + 
+				"48\n" + 
+				"41\n" + 
+				"1200\n" + 
+				"64341\n" + 
+				"5\n" + 
+				"2000000000\n" + 
+				"14000000000\n" + 
+				"9999999005\n" + 
+				"120\n" + 
+				"128\n" + 
+				"8\n" +
+				"5\n");
 	}
 	
 	@Test public void testMatrix() throws Exception {

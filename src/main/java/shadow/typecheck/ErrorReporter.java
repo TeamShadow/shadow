@@ -7,9 +7,8 @@ import org.apache.logging.log4j.Logger;
 
 import shadow.Main;
 import shadow.ShadowException;
-import shadow.ShadowExceptionFactory;
+import shadow.ShadowExceptionErrorKind;
 import shadow.parse.Context;
-import shadow.parse.ParseException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SequenceType;
@@ -57,12 +56,12 @@ public class ErrorReporter {
 	 * @param message			message explaining error
 	 * @param errorTypes		types associated with error
 	 */
-	public void addError(Context ctx, ShadowExceptionFactory error, String message, Type... errorTypes) {
+	public void addError(Context ctx, ShadowExceptionErrorKind error, String message, Type... errorTypes) {
 		if( containsUnknown(errorTypes) )
 			return; // Don't add error if it has an unknown type in it.
 			
 		if( ctx != null ) 			
-			errorList.add(error.generateException(message, ctx));		
+			errorList.add(error.getException(message, ctx));
 	}
 	
 	/**
@@ -92,11 +91,11 @@ public class ErrorReporter {
 	 * @param warning			kind of warning
 	 * @param message			message explaining warning
 	 */
-	public void addWarning(Context ctx, ShadowExceptionFactory warning, String message) {
+	public void addWarning(Context ctx, ShadowExceptionErrorKind warning, String message) {
 		if( Main.getJob() != null && Main.getJob().treatWarningsAsErrors() )
 			addError(ctx, warning, message);
 		else if( ctx != null )	
-			warningList.add(warning.generateException(message, ctx));		
+			warningList.add(warning.getException(message, ctx));
 	}
 	
 	/**
@@ -165,13 +164,13 @@ public class ErrorReporter {
 	 * @param reason		message explaining error
 	 * @param errorTypes	types of errors involved, used for suppressing redundant errors
 	 */
-	public static void addError( List<ShadowException> errors, ShadowExceptionFactory error,
+	public static void addError( List<ShadowException> errors, ShadowExceptionErrorKind error,
 			String reason, Type... errorTypes ) {
 		// Don't add an error if it has an Unknown Type in it.
 		if( containsUnknown( errorTypes ) )
 			return; 		
 		if( errors != null )
-			errors.add( error.generateException(reason, null) );		
+			errors.add( error.getException(reason, null) );
 	}
 
 	public void addAll(ErrorReporter other)

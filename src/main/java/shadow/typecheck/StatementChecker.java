@@ -17,7 +17,6 @@
 package shadow.typecheck;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +32,7 @@ import shadow.interpreter.ShadowFloat;
 import shadow.interpreter.ShadowInteger;
 import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowString;
+import shadow.interpreter.ShadowValue;
 import shadow.parse.Context;
 import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
@@ -65,34 +65,23 @@ import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UnboundMethodType;
 import shadow.typecheck.type.UninstantiatedType;
 
-public class StatementChecker extends BaseChecker {
+public class StatementChecker extends ScopedChecker {
 	/* Stack for current prefix (needed for arbitrarily long chains of expressions). */
-	private LinkedList<Context> curPrefix = null;
-	/* List of scopes with a hash of symbols & types for each scope. */
-	private LinkedList<HashMap<String, ModifiedType>> symbolTable;
-	/* Keeps track of the method associated with each scope (sometimes null). */
-	private LinkedList<Context> scopeMethods;
-	
-	private boolean decoratorScope;
-	
+	private LinkedList<Context> curPrefix = new LinkedList<>();
+
 	public StatementChecker( Package packageTree, ErrorReporter reporter ) {
-		super(packageTree, reporter);		
-		symbolTable = new LinkedList<HashMap<String, ModifiedType>>();
-		curPrefix = new LinkedList<Context>();
-		scopeMethods = new LinkedList<Context>();
+		super(packageTree, reporter);
 	}
 	
-	public void check(Context node) throws ShadowException
-	{
-		// now go through and check the whole class
+	public void check(Context node) throws ShadowException {
+		// Check the whole class
 		visit(node);		
 		printAndReportErrors();		
 	}
 	
-	//Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
+	// Important!  Set the current type on entering the body, not the declaration, otherwise extends and imports are improperly checked with the wrong outer class
 	
-	@Override public Void visitClassOrInterfaceBody(ShadowParser.ClassOrInterfaceBodyContext ctx)
-	{
+	@Override public Void visitClassOrInterfaceBody(ShadowParser.ClassOrInterfaceBodyContext ctx) {
 		currentType = ((Context)ctx.getParent()).getType(); //get type from declaration
 		
 		for( InterfaceType interfaceType : currentType.getInterfaces() )
@@ -200,25 +189,7 @@ public class StatementChecker extends BaseChecker {
 		openScope();
 	}
 
-	private void openScope() 
-	{
-		// we have a new scope, so we need a new HashMap in the linked list
-		symbolTable.addFirst(new HashMap<String, ModifiedType>());
-		
-		if( currentMethod.isEmpty() )
-			scopeMethods.addFirst(null);
-		else
-			scopeMethods.addFirst(currentMethod.getFirst());		
-	}
-	
-	private void closeScope() 
-	{		
-		symbolTable.removeFirst();
-		scopeMethods.removeFirst();
-	}
-	
-	@Override public Void visitSwitchStatement(ShadowParser.SwitchStatementContext ctx)
-	{ 		
+	@Override public Void visitSwitchStatement(ShadowParser.SwitchStatementContext ctx) { 		
 		visitChildren(ctx);
 		
 		int defaultCounter = 0;
@@ -333,60 +304,9 @@ public class StatementChecker extends BaseChecker {
 		return null; 
 	}
 	
-	private void addSymbol( String name, ModifiedType node )
-	{	
-		if( symbolTable.size() == 0 ) {
-			if( node instanceof Context)
-				addError((Context)node, Error.INVALID_STRUCTURE, "Declaration of " + name + " is illegal outside of a defined scope");
-			else
-				addError(new TypeCheckException(Error.INVALID_STRUCTURE, "Declaration of " + name + " is illegal outside of a defined scope"));
-		}
-		else {
-			boolean found = false;
-		
-			for( HashMap<String, ModifiedType> scope : symbolTable ) {			
-				if( scope.containsKey( name ) ) { //we look at all enclosing scopes
-					if( node instanceof Context)
-						addError((Context)node, Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + name + " cannot be redefined in this context");
-					else
-						addError(new TypeCheckException(Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + name + " cannot be redefined in this context"));
-					found = true;
-					break;
-				}
-			}
-			
-			if( !found )			
-				symbolTable.getFirst().put(name, node);  //uses node for modifiers
-		}
-	}
 	
-	private ModifiedType findSymbol( String name ) {
-		ModifiedType node = null;
-		for( int i = 0; i < symbolTable.size(); i++ ) {
-			HashMap<String,ModifiedType> map = symbolTable.get(i);		
-			if( (node = map.get(name)) != null )
-			{
-				Context method = scopeMethods.get(i);
-				if( method != null && method != currentMethod.getFirst() )
-				{
-					//situation where we are pulling a variable from an outer method
-					//it must be final!
-					//local method declarations don't count
-					
-					//TODO: add a check to deal with this, even without final
-					
-					//if( !(node instanceof ASTLocalMethodDeclaration) && !node.getModifiers().isFinal() )
-					//	addError(Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
-				}
-				return node;
-			}
-		}		
-		
-		return node;
-	}
 	
-	@Override public Void visitFormalParameter(ShadowParser.FormalParameterContext ctx)
-	{ 		
+	@Override public Void visitFormalParameter(ShadowParser.FormalParameterContext ctx) { 		
 		visitChildren(ctx); 
 
 		Type type = ctx.type().getType();			
@@ -431,8 +351,7 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}
 	
-	@Override public Void visitCreateBlock(ShadowParser.CreateBlockContext ctx)
-	{ 
+	@Override public Void visitCreateBlock(ShadowParser.CreateBlockContext ctx) { 
 		openScope();
 		visitChildren(ctx);
 		closeScope();
@@ -468,8 +387,7 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}	
 	
-	@Override public Void visitLocalVariableDeclaration(ShadowParser.LocalVariableDeclarationContext ctx)
-	{ 
+	@Override public Void visitLocalVariableDeclaration(ShadowParser.LocalVariableDeclarationContext ctx) { 
 		visitChildren(ctx);
 		
 		Type type;
@@ -477,17 +395,17 @@ public class StatementChecker extends BaseChecker {
 		
 		if( ctx.type() != null )			
 			type = ctx.type().getType();
-		else {//var type
+		else {	// var type
 			type = Type.VAR;
 			isVar = true;
 		}
 				
 		ctx.setType(type);		
 		
-		//add variables
+		// Add variables
 		for( ShadowParser.VariableDeclaratorContext declarator : ctx.variableDeclarator() ) {
 			if( isVar ) {
-				if( declarator.conditionalExpression() != null ) {//has initializer						
+				if( declarator.conditionalExpression() != null ) {	// Has initializer						
 					type = declarator.conditionalExpression().getType();
 				}
 				else {
@@ -530,15 +448,13 @@ public class StatementChecker extends BaseChecker {
 		}			
 	}
 	
-	@Override public Void visitFieldDeclaration(ShadowParser.FieldDeclarationContext ctx)
-	{ 
+	@Override public Void visitFieldDeclaration(ShadowParser.FieldDeclarationContext ctx) { 
 		visitChildren(ctx);
 		checkInitializers(ctx.variableDeclarator()); //check all initializers
 		return null;
 	}	
 	
-	public boolean setTypeFromContext( Context node, String name, Type context )
-	{
+	public boolean setTypeFromContext( Context node, String name, Type context ) {
 		if( context instanceof TypeParameter ) {
 			TypeParameter typeParameter = (TypeParameter) context;
 			for( Type type : typeParameter.getBounds() )
@@ -547,37 +463,21 @@ public class StatementChecker extends BaseChecker {
 			
 			return setTypeFromContext( node, name, typeParameter.getClassBound());			
 		}		
-		else if( context instanceof InterfaceType ) {			
-			InterfaceType interfaceType = (InterfaceType)context;			
-			if( interfaceType.recursivelyContainsMethod( name ) ) {
-				node.setType( new UnboundMethodType( name, interfaceType ) );				
-				return true;
-			}			
-		}		
-		else if( context instanceof ClassType  ) {
-			ClassType classType;
+		else {			
 			Modifiers methodModifiers = Modifiers.NO_MODIFIERS;
-			if( !currentMethod.isEmpty() )
+			if(!currentMethod.isEmpty())
 				methodModifiers = currentMethod.getFirst().getModifiers();
-			
-				classType = (ClassType)context;
-					
-			if(classType.recursivelyContainsField(name)) {
-				Context field = classType.recursivelyGetField(name);
+		
+			// Check fields first
+			if(context.containsField(name)) {
+				Context field = context.getField(name);
 				node.setType(field.getType());
 				node.addModifiers(field.getModifiers());
 				
-				if( !fieldIsAccessible( field, currentType ) )
+				if(!fieldIsAccessible(field, currentType))
 					addError(field, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
-				else
-				{						
-					if( field.getModifiers().isConstant() )
-					{
-						if( currentMethod.isEmpty() ) //constants are only assignable in declarations
-							node.addModifiers(Modifiers.ASSIGNABLE);
-					}
-					//creates and declarations are not marked immutable or readonly
-					else if( methodModifiers.isImmutable() || methodModifiers.isReadonly() )						
+				else {						
+					if( methodModifiers.isImmutable() || methodModifiers.isReadonly() )						
 						node.getModifiers().upgradeToTemporaryReadonly();
 					else
 						node.addModifiers(Modifiers.ASSIGNABLE);
@@ -585,16 +485,29 @@ public class StatementChecker extends BaseChecker {
 				
 				return true;			
 			}
-				
-			if( classType.recursivelyContainsMethod(name)) {
-				node.setType( new UnboundMethodType( name, classType ) );	
-				if( methodModifiers != null && methodModifiers.isImmutable() )
+			
+			// Next check methods
+			if(context.recursivelyContainsMethod(name)) {
+				node.setType( new UnboundMethodType( name, context ) );	
+				if(methodModifiers != null && methodModifiers.isImmutable() )
 					node.addModifiers(Modifiers.IMMUTABLE);
-				else if( methodModifiers != null && methodModifiers.isReadonly() )
+				else if(methodModifiers != null && methodModifiers.isReadonly() )
 					node.addModifiers(Modifiers.READONLY);
 				return true;
 			}
-		}
+			
+			// Finally check constants
+			if(context.recursivelyContainsConstant(name)) {
+				Context field = context.recursivelyGetConstant(name);
+				node.setType(field.getType());
+				node.addModifiers(field.getModifiers());
+				
+				if(!fieldIsAccessible(field, currentType))
+					addError(field, Error.ILLEGAL_ACCESS, "Constant " + name + " not accessible from this context");
+				
+				return true;
+			}
+		}			
 
 		return false;
 	}
@@ -874,8 +787,8 @@ public class StatementChecker extends BaseChecker {
 		visitBinary(ctx);
 		
 		return null;
-	}	
-		
+	}
+
 	private Type visitUnary( ShadowParser.UnaryExpressionContext node, String method, String operator, InterfaceType interfaceType ) {
 		Type type = node.unaryExpression().getType();
 		
@@ -1189,11 +1102,7 @@ public class StatementChecker extends BaseChecker {
 
 		for( int i = 1; type != null && i < ctx.Identifier().size(); ++i ) {
 			typeName = ctx.Identifier(i).getText();
-
-			if( type instanceof ClassType ) 
-				type = ((ClassType)type).getInnerClass(typeName);
-			else
-				type = null;
+			type = type.getInnerType(typeName);
 		}
 
 		if( type == null ) {
@@ -1202,7 +1111,7 @@ public class StatementChecker extends BaseChecker {
 			return null;
 		}
 
-		if( !classIsAccessible( type, currentType ) )		
+		if( !typeIsAccessible( type, currentType ) )		
 			addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type +
 					" not accessible from this context", type);
 
@@ -1528,8 +1437,7 @@ public class StatementChecker extends BaseChecker {
 		return null;	
 	}
 	
-	@Override public Void visitSequenceVariable(ShadowParser.SequenceVariableContext ctx)
-	{ 
+	@Override public Void visitSequenceVariable(ShadowParser.SequenceVariableContext ctx) { 
 		visitChildren(ctx);
 		
 		if( ctx.type() != null )
@@ -1600,8 +1508,7 @@ public class StatementChecker extends BaseChecker {
 	}
 
 	
-	@Override public Void visitForeachStatement(ShadowParser.ForeachStatementContext ctx)
-	{ 
+	@Override public Void visitForeachStatement(ShadowParser.ForeachStatementContext ctx) { 
 		openScope();
 		visitChildren(ctx);
 		closeScope();
@@ -1609,8 +1516,7 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}
 	
-	@Override public Void visitForeachInit(ShadowParser.ForeachInitContext ctx)
-	{ 
+	@Override public Void visitForeachInit(ShadowParser.ForeachInitContext ctx) { 
 		visitChildren(ctx);		
 		
 		Type collectionType = ctx.conditionalExpression().getType();
@@ -1673,8 +1579,7 @@ public class StatementChecker extends BaseChecker {
 		return null;
 	}
 	
-	@Override public Void visitForStatement(ShadowParser.ForStatementContext ctx)
-	{ 
+	@Override public Void visitForStatement(ShadowParser.ForStatementContext ctx) { 
 		openScope();
 		visitChildren(ctx);
 		closeScope();
@@ -1722,7 +1627,7 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitCatchStatement(ShadowParser.CatchStatementContext ctx)
 	{ 
-		openScope(); //for catch parameter
+		openScope(); // For catch parameter
 		visitChildren(ctx);
 		closeScope();
 		
@@ -1913,8 +1818,9 @@ public class StatementChecker extends BaseChecker {
 		}	
 		else if( ctx.generalIdentifier() != null ) {
 			boolean success = setTypeFromName( ctx, image );
-			if(!success && decoratorScope)
-				success = setTypeFromName(ctx, image + "Decorator");
+			/* //Screwing around with ignoring or adding "Decorator" on the end of type names isn't a good idea.
+			if(!success && isDecoratorScope())
+				success = setTypeFromName(ctx, image + "Decorator"); */
 			
 			if(!success) {
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
@@ -1925,8 +1831,8 @@ public class StatementChecker extends BaseChecker {
 			ctx.setType(ctx.conditionalExpression().getType());
 			ctx.addModifiers(ctx.conditionalExpression().getModifiers());
 		}
-		//literal, check expression, copy expression, cast expression,
-		//primitive and function types, and array initializer
+		// literal, check expression, copy expression, cast expression,
+		// primitive and function types, and array initializer
 		else {			
 			Context child = (Context) ctx.getChild(0);
 			ctx.setType(child.getType());
@@ -2431,9 +2337,6 @@ public class StatementChecker extends BaseChecker {
 			if( !fieldIsAccessible( field, currentType )) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
 			}					
-			else if( field.getModifiers().isConstant() && !isTypeName ) {
-				addError(ctx, Error.ILLEGAL_ACCESS, "Constant " + name + " requires type name for access");
-			}
 			else if( !field.getModifiers().isConstant() && isTypeName ) {
 				addError(ctx, Error.ILLEGAL_ACCESS, "Field " + name + " is only accessible from an object reference");
 			}
@@ -2461,19 +2364,27 @@ public class StatementChecker extends BaseChecker {
 					ctx.addModifiers(Modifiers.ASSIGNABLE);					
 			}
 		}
-		else if( prefixType instanceof ClassType && ((ClassType)prefixType).containsInnerClass(name) ) {
-			ClassType classType = (ClassType) prefixType;
-			ClassType innerClass = classType.getInnerClass(name);
+		else if(prefixType.recursivelyContainsConstant(name)) {
+			Context constant = prefixType.recursivelyGetConstant(name);
 			
-			if( !classIsAccessible( innerClass, currentType ) )
-				addError(ctx, Error.ILLEGAL_ACCESS, "Class " + innerClass + " is not accessible from this context", innerClass);
+			if(!isTypeName )
+				addError(ctx, Error.ILLEGAL_ACCESS, "Constant " + name + " requires type name for access");
+			
+			ctx.setType(constant.getType());
+			ctx.addModifiers(constant.getModifiers());
+		}
+		else if( prefixType.containsInnerType(name) ) {
+			Type innerType = prefixType.getInnerType(name);
+			
+			if( !currentType.canSee(innerType) )
+				addError(ctx, Error.ILLEGAL_ACCESS, "Type " + innerType + " is not accessible from this context", innerType);
 			else {
-				ctx.setType( innerClass );						
+				ctx.setType(innerType);						
 				ctx.addModifiers(Modifiers.TYPE_NAME);					
 			}					
 		}
 		else
-			addError(ctx, Error.UNDEFINED_SYMBOL, "Field or inner class " + name + " not defined in this context");
+			addError(ctx, Error.UNDEFINED_SYMBOL, "Field or inner type " + name + " not defined in this context");
 
 		
 		if( ctx.getType() == null )
@@ -2690,7 +2601,7 @@ public class StatementChecker extends BaseChecker {
 	
 	public static boolean fieldIsAccessible( Context field, Type type )
 	{
-		//constants are no longer all public
+		// constants are no longer all public
 		if ( field.getModifiers().isPublic() ) 
 			return true;		
 		
@@ -2826,57 +2737,69 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitLiteral(ShadowParser.LiteralContext ctx)
 	{ 
-		//no children visited		
+		//no children visited
 		Type type = literalToType(ctx);
 		ctx.setType(type);
-		if( type != Type.NULL ) {
+		if(type != Type.NULL) {
 			currentType.addUsedType(type);
 		}
+
+		ctx.setInterpretedValue(processLiteral(ctx, getErrorReporter()));
 		
-		// ugly but needed to find negation		
+		return null;		
+	}
+
+	/**
+	 * Initializes a {@link ShadowValue} corresponding to the given literal node.
+	 *
+	 * Also sets the appropriate {@link Type} on the node.
+	 */
+	public static ShadowValue processLiteral(ShadowParser.LiteralContext ctx, ErrorReporter reporter) {
+		// ugly but needed to find negation
 		ParserRuleContext greatGrandparent = ctx.getParent().getParent().getParent();
 		boolean negated = false;
 
-		if( greatGrandparent instanceof ShadowParser.UnaryExpressionContext ) {
+		if (greatGrandparent instanceof ShadowParser.UnaryExpressionContext) {
 			ParserRuleContext greatGreat = greatGrandparent.getParent();
-			
-			if( greatGreat instanceof ShadowParser.UnaryExpressionContext && greatGreat.getChild(0).getText().equals("-") ) {
+
+			if (greatGreat instanceof ShadowParser.UnaryExpressionContext && greatGreat.getChild(0).getText().equals("-")) {
 				negated = true;
 			}
 		}
-		
+
 		String literal = ctx.getText();
 		String lower = literal.toLowerCase();
 		int length = literal.length();
 
-		try {		
-			if (literal.equals("null"))
-				ctx.value = new ShadowNull(Type.NULL);
-			else if (literal.startsWith("\'") && literal.endsWith("\'"))
-				ctx.value = ShadowCode.parseCode(literal);			
-			else if (literal.startsWith("\"") && literal.endsWith("\""))
-				ctx.value = ShadowString.parseString(literal);
-			else if (literal.equals("true"))
-				ctx.value = new ShadowBoolean(true);
-			else if (literal.equals("false"))
-				ctx.value = new ShadowBoolean(false);
-			else if (lower.endsWith("f") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
-				ctx.value = ShadowFloat.parseFloat(lower.substring(0,  length - 1));
-			else if (lower.endsWith("d") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )
-				ctx.value = ShadowDouble.parseDouble(lower.substring(0, length - 1));
-			else if (literal.indexOf('.') != -1 || (lower.indexOf('e') != -1 && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") ))
-				ctx.value = ShadowDouble.parseDouble(lower);
-			else
-				ctx.value = ShadowInteger.parseNumber(lower, negated);
+		try {
+			if (literal.equals("null")) {
+				return new ShadowNull(Type.NULL);
+			} else if (literal.startsWith("\'") && literal.endsWith("\'")) {
+				return ShadowCode.parseCode(literal);
+			} else if (literal.startsWith("\"") && literal.endsWith("\"")) {
+				return ShadowString.parseString(literal);
+			} else if (literal.equals("true")) {
+				return new ShadowBoolean(true);
+			} else if (literal.equals("false")) {
+				return new ShadowBoolean(false);
+			} else if (lower.endsWith("f") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b")) {
+				return ShadowFloat.parseFloat(lower.substring(0, length - 1));
+			} else if (lower.endsWith("d") && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") ) {
+				return ShadowDouble.parseDouble(lower.substring(0, length - 1));
+			} else if (literal.indexOf('.') != -1 || (lower.indexOf('e') != -1 && !lower.startsWith("0x") && !lower.startsWith("0c") && !lower.startsWith("0b") )) {
+				return ShadowDouble.parseDouble(lower);
+			} else {
+				return ShadowInteger.parseNumber(lower, negated);
+			}
 		}
-		catch(NumberFormatException e) {
-			addError(ctx, Error.INVALID_LITERAL, "Value out of range: " + ctx.getText());
+		catch (NumberFormatException e) {
+			reporter.addError(ctx, Error.INVALID_LITERAL, "Value out of range: " + ctx.getText());
 		}
-		catch(IllegalArgumentException e) {
-			addError(ctx, Error.INVALID_LITERAL, e.getLocalizedMessage());
+		catch (IllegalArgumentException e) {
+			reporter.addError(ctx, Error.INVALID_LITERAL, e.getLocalizedMessage());
 		}
-		
-		return null;		
+
+		return ShadowValue.INVALID;
 	}
 	
 	@Override public Void visitPrimitiveType(ShadowParser.PrimitiveTypeContext ctx)
@@ -3083,18 +3006,18 @@ public class StatementChecker extends BaseChecker {
 	
 	@Override public Void visitMethodDeclarator(ShadowParser.MethodDeclaratorContext ctx)
 	{ 
-		//non-local methods have already been handled in the type updater
+		// Non-local methods have already been handled in the type updater
 		if( ctx.getParent() instanceof ShadowParser.LocalMethodDeclarationContext ) {
 			visitChildren(ctx);
 			
 			ShadowParser.LocalMethodDeclarationContext parent = (LocalMethodDeclarationContext) ctx.getParent();
 			MethodSignature signature = parent.getSignature();
 			
-			//add parameters
+			// Add parameters
 			for( ShadowParser.FormalParameterContext parameter : ctx.formalParameters().formalParameter() )				
 				signature.addParameter(parameter.Identifier().getText(), parameter);
 			
-			//add return types
+			// Add return types
 			for( ShadowParser.ResultTypeContext result : ctx.resultTypes().resultType() ) 
 				signature.addReturn(result);
 			
@@ -3181,11 +3104,11 @@ public class StatementChecker extends BaseChecker {
 		
 		setTypeFromContext(ctx, "create", actualType);
 		
-		decoratorScope = true;
+		setDecoratorScope(true);
 		curPrefix.addFirst(ctx);
 		visitChildren(ctx);
 		curPrefix.removeFirst();
-		decoratorScope = false;
+		setDecoratorScope(false);
 		
 		return null;
 	}

@@ -36,6 +36,7 @@ import shadow.parse.ShadowParser.DecoratorContext;
 import shadow.parse.ShadowParser.DecoratorExpressionContext;
 import shadow.parse.ShadowParser.MethodDeclarationContext;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
+import shadow.parse.ShadowParser.NameContext;
 import shadow.parse.ShadowParser.TypeContext;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.DirectedGraph.CycleFoundException;
@@ -55,6 +56,7 @@ import shadow.typecheck.type.SequenceType;
 import shadow.typecheck.type.SimpleModifiedType;
 import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
+import shadow.typecheck.type.Type.ImportInformation;
 import shadow.typecheck.type.TypeParameter;
 import shadow.typecheck.type.UninstantiatedClassType;
 import shadow.typecheck.type.UninstantiatedInterfaceType;
@@ -73,14 +75,46 @@ public class TypeUpdater extends BaseChecker {
 
 	private boolean isMeta = false;
 
+
 	/**
 	 * Creates a new <code>TypeUpdater</code> with the given tree of packages.
 	 * 
 	 * @param packageTree
 	 *            root of all packages
+	 * @param fileTable 
 	 */
-	public TypeUpdater(Package packageTree, ErrorReporter reporter) {
+	public TypeUpdater(Package packageTree, ErrorReporter reporter, Map<String, Context> fileTable) {
 		super(packageTree, reporter);
+		
+		// Update so that all the imported names map to types
+		for(Type type : packageTree) {
+			// Maps from name to path
+			Map<String, ImportInformation> imports = type.getImportedItems();
+			for(ImportInformation information : imports.values() ) {
+				Context context = fileTable.get(information.getImportPath());
+				// If the file table has the path
+				if(context != null) {
+					// Add type information
+					NameContext nameContext = information.getImportName();
+					Type importType = context.getType();
+					// There's a context and it has a qualified name (meaning that it's not a directory)
+					if(nameContext != null && nameContext.unqualifiedName() != null) {
+						// Deal with imported inner types (skipping first name)
+						for(int i = 1; i < nameContext.Identifier().size(); ++i) {
+							String name = nameContext.Identifier(i).getText();
+							if(importType.containsInnerType(name)) {
+								importType = importType.getInnerType(name);
+								if(!type.canSee(importType))
+									addError(nameContext, Error.ILLEGAL_ACCESS, "Type " + importType.toString(Type.PACKAGES) + " is not accessible from type " + type);
+							}
+							else
+								addError(nameContext, Error.INVALID_IMPORT, "Type " + importType.toString(Type.PACKAGES) + " does not contain inner type " + name);
+						}
+					}					
+					information.setType(importType);
+				}				
+			}
+		}
 	}
 
 	/**
@@ -94,10 +128,10 @@ public class TypeUpdater extends BaseChecker {
 	 * @throws TypeCheckException
 	 */
 	public Map<Type, Context> update(Map<Type, Context> typeTable) throws ShadowException {
-
+		
 		/* Add fields and methods. */
 		for (Context declarationNode : typeTable.values()) {
-			isMeta = declarationNode.getPath().toString().endsWith(".meta");
+			isMeta = declarationNode.isFromMetaFile();
 			// Only walk outer types since inner ones will be walked
 			// automatically.
 			if (!declarationNode.getType().hasOuter())
@@ -234,15 +268,16 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.UBYTE);
 			type.addUsedType(Type.UINT);
 			type.addUsedType(Type.ULONG);
-			type.addUsedType(Type.USHORT);
+			type.addUsedType(Type.USHORT);		
+			
 
 			/*
-			 * Update imports for meta files, since they won't have statement
+			 * Update used items for meta files, since they won't have statement
 			 * checking. Note that imports in meta files have been optimized to
-			 * include only the originally imported classes that are referenced.
+			 * include only referenced types.
 			 */
-			if (declarationNode.getPath().toString().endsWith(".meta")) {
-				for (Object item : type.getImportedItems())
+			if (declarationNode.isFromMetaFile()) {
+				for (Object item : type.getImportedItems().values())
 					if (item instanceof Type) {
 						Type importType = (Type) item;
 						type.addUsedType(importType);
@@ -661,7 +696,7 @@ public class TypeUpdater extends BaseChecker {
 
 			// Only bother to test inner classes (relative to the method's
 			// containing class)
-			if (parent.recursivelyContainsInnerClass(type)) {
+			if (parent.recursivelyContainsInnerType(type)) {
 				Type outer = type;
 
 				// Climb through nested inner types looking for any lesser
@@ -686,7 +721,7 @@ public class TypeUpdater extends BaseChecker {
 
 			// Only bother to test inner classes (relative to the method's
 			// containing class)
-			if (parent.recursivelyContainsInnerClass(type)) {
+			if (parent.recursivelyContainsInnerType(type)) {
 				Type outer = type;
 
 				// Climb through nested inner types looking for any lesser
@@ -784,7 +819,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 
 			node.getModifiers().addModifier(Modifiers.PUBLIC);
-			node.getType().addModifier(Modifiers.PUBLIC);
+			//node.getType().addModifier(Modifiers.PUBLIC);  //What was this supposed to do?
 		} else if (visibilityModifiers == 0) {
 			addError(node, Error.INVALID_MODIFIER,
 					"Every class " + kind + " must be specified as public, private, or protected");
@@ -832,28 +867,28 @@ public class TypeUpdater extends BaseChecker {
 
 				for (DecoratorExpressionContext t : decoratorCtx.decoratorExpression()) {
 					Type actualType = t.type().getType();
-					String typeName = actualType.getTypeName().toLowerCase();
-
-					if (importExportType != null && (typeName.startsWith("import") || typeName.startsWith("export"))) {
-						addError(node, Error.INVALID_TYPE,
-								"Only one import or export decorator can be present on a method at all times.");
-					} else {
-						importExportType = actualType;
+					if (importExportType != null && 
+							(actualType == Type.IMPORT_ASSEMBLY || actualType == Type.IMPORT_METHOD || actualType == Type.IMPORT_NATIVE ||
+							 actualType == Type.EXPORT_ASSEMBLY || actualType == Type.EXPORT_METHOD || actualType == Type.EXPORT_NATIVE) ) {
+						addError(node, Error.INVALID_TYPE, "Only one import or export decorator can be present on a method at all times.");
 					}
+					else
+						importExportType = actualType;
+
 				}
 
 				if (importExportType != null) {
-					if (importExportType == Type.IMPORT_NATIVE_DECORATOR) {
+					if (importExportType == Type.IMPORT_NATIVE) {
 						signature.setImportType(MethodSignature.IMPORT_NATIVE);
-					} else if (importExportType == Type.IMPORT_ASSEMBLY_DECORATOR) {
+					} else if (importExportType == Type.IMPORT_ASSEMBLY) {
 						signature.setImportType(MethodSignature.IMPORT_ASSEMBLY);
-					} else if (importExportType == Type.IMPORT_METHOD_DECORATOR) {
+					} else if (importExportType == Type.IMPORT_METHOD) {
 						signature.setImportType(MethodSignature.IMPORT_METHOD);
-					} else if (importExportType == Type.EXPORT_ASSEMBLY_DECORATOR) {
+					} else if (importExportType == Type.EXPORT_ASSEMBLY) {
 						signature.setExportType(MethodSignature.EXPORT_ASSEMBLY);
-					} else if (importExportType == Type.EXPORT_METHOD_DECORATOR) {
+					} else if (importExportType == Type.EXPORT_METHOD) {
 						signature.setExportType(MethodSignature.EXPORT_METHOD);
-					} else if(importExportType == Type.EXPORT_NATIVE_DECORATOR) {
+					} else if(importExportType == Type.EXPORT_NATIVE) {
 						signature.setExportType(MethodSignature.EXPORT_NATIVE);						
 					}
 				}
@@ -862,7 +897,7 @@ public class TypeUpdater extends BaseChecker {
 
 		// only imports and exports that are meant to be called to and from C are allowed to start with _
 		if (!signature.isImportAssembly() && !signature.isExportAssembly() && signature.getSymbol().startsWith("_")) {
-			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getMessage());
+			addError(node, Error.INVALID_METHOD_IDENTIFIER, Error.INVALID_METHOD_IDENTIFIER.getDefaultMessage());
 		}
 
 		// checks for method imports
@@ -1041,13 +1076,13 @@ public class TypeUpdater extends BaseChecker {
 		currentPackage = packageTree;
 		return visitChildren(ctx);
 	}
+	
+	/*
 
 	private void updateImports(Context node) {
-		/* Changing these items updates the imports inside the type. */
-		List<Object> importedItems = node.getType().getImportedItems();
-		for (int i = 0; i < importedItems.size(); i++) {
-			Object thing = importedItems.get(i);
-			String item = (String) thing;
+		// Changing these items updates the imports inside the type.
+		Set<String> importedItems = node.getType().getImportedItems();
+		for (String path : importedItems) {
 			if (item.contains("@")) { // Single class.
 				Type type = lookupType(node, item);
 				// shouldn't fail
@@ -1064,6 +1099,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 		}
 	}
+	*/
 
 	@Override
 	public Void visitLiteral(ShadowParser.LiteralContext ctx) {
@@ -1082,7 +1118,7 @@ public class TypeUpdater extends BaseChecker {
 	private void visitDeclaration(Context node, ShadowParser.IsListContext list) {
 		declarationType = node.getType();
 		currentPackage = declarationType.getPackage();
-		updateImports(node);
+		//updateImports(node);
 
 		visitChildren(node);
 
@@ -1183,12 +1219,14 @@ public class TypeUpdater extends BaseChecker {
 
 		// Any decorator class or interface definition needs to end with
 		// Decorator
+		/*  //Don't like it.
 		if (declarationType != null && declarationType.hasInterface(Type.DECORATOR)
 				&& !declarationType.getTypeName().endsWith("Decorator")) {
 			addError(node, Error.INVALID_LITERAL,
 					"Any class or interface that derives from the Decorator interface needs to end with the 'Decorator' literal, as such: "
 							+ declarationType.getTypeName() + "Decorator");
 		}
+		*/
 	}
 
 	@Override
@@ -1297,9 +1335,14 @@ public class TypeUpdater extends BaseChecker {
 			if (currentType.containsField(symbol))
 				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL, "Field name " + symbol
 						+ " already declared on line " + currentType.getField(symbol).getStart().getLine());
-			else if (currentType instanceof ClassType && ((ClassType) currentType).containsInnerClass(symbol))
+			else if(currentType.containsConstant(symbol))
+				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL, "Constant name " + symbol
+						+ " already declared on line " + currentType.getField(symbol).getStart().getLine());
+			else if (currentType.containsInnerType(symbol))
 				addError(declarator, Error.MULTIPLY_DEFINED_SYMBOL,
-						"Field name " + symbol + " already declared as inner class");
+						"Field name " + symbol + " already declared as inner type");
+			else if(declarator.getModifiers().isConstant())
+				currentType.addConstant(symbol, declarator);
 			else
 				currentType.addField(symbol, declarator);
 
@@ -1399,6 +1442,7 @@ public class TypeUpdater extends BaseChecker {
 		// Note that all type arguments are on the last class
 		String typeName = ctx.Identifier(0).getText();
 
+		/*  // Don't like it.
 		if (isDecorator) {
 			String _decoratorStr = "Decorator";
 
@@ -1412,6 +1456,7 @@ public class TypeUpdater extends BaseChecker {
 				typeName += _decoratorStr;
 			}
 		}
+		*/
 
 		if (ctx.unqualifiedName() != null)
 			typeName = ctx.unqualifiedName().getText() + "@" + typeName;
@@ -1419,18 +1464,14 @@ public class TypeUpdater extends BaseChecker {
 
 		for (int i = 1; type != null && i < ctx.Identifier().size(); ++i) {
 			typeName = ctx.Identifier(i).getText();
-
-			if (type instanceof ClassType)
-				type = ((ClassType) type).getInnerClass(typeName);
-			else
-				type = null;
+			type = type.getInnerType(typeName);
 		}
 
 		if (type == null) {
 			addError(ctx, Error.UNDEFINED_TYPE, "Type " + typeName + " not defined in current context");
 			type = Type.UNKNOWN;
 		} else {
-			if (!isMeta && !classIsAccessible(type, declarationType))
+			if (!isMeta && !declarationType.canSee(type))
 				addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
 
 			if (ctx.typeArguments() != null) { // Contains type arguments.
@@ -1445,8 +1486,7 @@ public class TypeUpdater extends BaseChecker {
 							"Type arguments supplied for non-parameterized type " + type);
 					type = Type.UNKNOWN;
 				}
-			} else if (type.isParameterized()) { // Parameterized but no type
-													// arguments.
+			} else if (type.isParameterized()) { // Parameterized but no type arguments.
 				addError(ctx, Error.MISSING_TYPE_ARGUMENTS,
 						"Type arguments not supplied for parameterized type " + typeName);
 				type = Type.UNKNOWN;

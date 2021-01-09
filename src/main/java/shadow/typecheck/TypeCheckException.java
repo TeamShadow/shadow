@@ -18,7 +18,7 @@
 package shadow.typecheck;
 
 import shadow.ShadowException;
-import shadow.ShadowExceptionFactory;
+import shadow.ShadowExceptionErrorKind;
 import shadow.parse.Context;
 
 /**
@@ -34,9 +34,10 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 	 *  Constants for each kind of supported error, with default error messages.
 	 *  Listing all supported errors increases consistency.
 	 */
-	public static enum Error implements ShadowExceptionFactory {		
+	public enum Error implements ShadowExceptionErrorKind {
 		CIRCULAR_CREATE("Circular create", "Create calls are circular"),
 		ILLEGAL_ACCESS("Illegal access", "Class, member, method, or property not accessible from this context"),
+		IMPORT_COLLIDES("Import collides", "Import collides with existing import"),
 		INVALID_ARGUMENTS("Invalid arguments", "Supplied method arguments do not match parameters"),
 		INVALID_ASSIGNMENT("Invalid assignment", "Right hand side cannot be assigned to left hand side"),
 		INVALID_CAST("Invalid cast", "Result type cannot be cast to specified type"),
@@ -86,7 +87,8 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 		UNNECESSARY_TYPE_ARGUMENTS("Unnecessary type arguments", "Type arguments supplied for non-parameterized type"),
 		UNINITIALIZED_FIELD("Uninitialized field", "Non-nullable field may not be initialized by a create"),
 		UNREACHABLE_CODE("Unreachable code", "Code cannot be reached"),
-		UNUSED_FIELD("Unused field", "Field is never used"),		
+		UNUSED_FIELD("Unused field", "Field is never used"),
+		UNUSED_IMPORT("Unused import", "Import is never used"),
 		UNUSED_METHOD("Unused method", "Method is never used"),
 		UNUSED_VARIABLE("Unused variable", "Local variable is never used"),
 		INVALID_METHOD_IDENTIFIER("Invalid identifier", "Only assembly import methods can start with an underscore."),
@@ -95,35 +97,34 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 		private final String name;
 		private final String message;		
 		
-		Error( String name, String message ) {
+		Error(String name, String message) {
 			this.name = name;
 			this.message = message;
 		}
-		
+
+		@Override
 		public String getName() {
 			return name;
 		}
-		
-		public String getMessage() {
+
+		@Override
+		public String getDefaultMessage() {
 			return message;			
 		}
 		
 		@Override
-		public TypeCheckException generateException(String message, Context context) {
+		public TypeCheckException getException(String message, Context context) {
 			return new TypeCheckException(this, message, context);
 		}
 	}
-	
-	private final Error error;
 	
 	/**
 	 * Creates a <code>TypeCheckException</code> with a specified kind of error and a message.
 	 * @param kind			kind of error
 	 * @param message		explanatory error message
 	 */
-	public TypeCheckException( Error kind, String message ) {
-		super( message );
-		error = kind;		
+	public TypeCheckException(Error kind, String message) {
+		super(kind, message);
 	}
 	
 	/**
@@ -133,9 +134,8 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 	 * @param message		explanatory error message
 	 * @param ctx			context of error
 	 */
-	public TypeCheckException( Error kind, String message, Context ctx ) {
-		super( makeMessage( kind, message, ctx ), ctx );
-		error = kind;		
+	public TypeCheckException(Error kind, String message, Context ctx) {
+		super(kind, message, ctx);
 	}	
 	
 	/**
@@ -144,13 +144,12 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
 	 */
 	@Override
 	public Error getError() {	
-		return error;
+		return (Error) super.getError();
 	}
-	
 	
 	@Override
 	public int compareTo(TypeCheckException other) {		
-		int difference = error.ordinal() - other.error.ordinal();
+		int difference = getError().ordinal() - other.getError().ordinal();
 		if( difference == 0 )
 			difference = getMessage().compareTo(other.getMessage());
 		return difference;

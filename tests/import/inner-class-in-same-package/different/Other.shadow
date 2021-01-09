@@ -1,0 +1,12 @@
+class different@Other
+{
+	public class Inner
+	{
+		get int x = 5;
+	}
+	
+	public readonly toString() => (String)
+	{
+		return "other";
+	}
+}

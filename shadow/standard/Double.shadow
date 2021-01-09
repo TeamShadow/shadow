@@ -340,6 +340,25 @@ and	CanHash
 		return (this->raw & EXPONENT_MASK) != EXPONENT_MASK;
 	}
 	
+	/** 
+	 * Finds the minimum of the current value and another {@code double}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
+	public min(double other) => (double)
+	{
+		return this < other ? this, other;
+	}
+	
+	/** 
+	 * Finds the maximum of the current value and another {@code double}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
+	public max(double other) => (double)
+	{
+		return this > other ? this, other;
+	}
 	
 	/** 
 	 * Returns a {@code String} representation of the value, in base 10, with

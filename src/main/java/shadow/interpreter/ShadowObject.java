@@ -8,15 +8,14 @@ import shadow.ShadowException;
 import shadow.typecheck.type.ClassType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
+import shadow.interpreter.InterpreterException.Error;
 
-public class ShadowObject extends ShadowValue
-{
-	private ClassType type;
+public class ShadowObject extends ShadowValue {
+	private Type type;
 	private Map<String, ShadowReference> fields;
-	public ShadowObject(ClassType type) throws ShadowException
-	{
+	public ShadowObject(Type type) throws ShadowException {
 		if (type.isPrimitive())
-			throw new InterpreterException("Cannot create an object with a " +
+			throw new InterpreterException(Error.INVALID_TYPE, "Cannot create an object with a " +
 					"primitive type");
 		Map<String, ShadowReference> fields =
 				new HashMap<String, ShadowReference>(type.getFields().size());
@@ -27,34 +26,33 @@ public class ShadowObject extends ShadowValue
 		this.fields = fields;
 	}
 	@Override
-	public ClassType getType()
-	{
+	public Type getType() {
 		return type;
 	}
 
-	public ShadowReference field(String name) throws ShadowException
-	{
+	public ShadowReference field(String name) throws ShadowException {
 		ShadowReference field = fields.get(name);
 		if (field != null)
 			return field;
-		throw new InterpreterException("type " + getType() + " does not contain " +
+		throw new InterpreterException(Error.UNDEFINED_SYMBOL, "Type " + getType() + " does not contain " +
 				"field " + name);
 	}
 
 	@Override
-	public ShadowValue copy() throws ShadowException
-	{
+	public ShadowValue copy() throws ShadowException {
 		ShadowObject copy = new ShadowObject(getType());
 		for (String field : getType().getFields().keySet())
 			copy.field(field).setValue(field(field).getValue());
 		return copy;
 	}
+
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException
-	{
-		if( type instanceof ClassType )
-			return new ShadowObject((ClassType)type);
-		
-		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
+	public String toLiteral() {
+		throw new UnsupportedOperationException("Cannot convert an arbitrary object to a literal");
+	}
+
+	@Override
+	public ShadowValue cast(Type type) throws ShadowException {
+		return new ShadowObject((ClassType)type);
 	}
 }

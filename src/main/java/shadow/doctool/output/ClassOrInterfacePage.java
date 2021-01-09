@@ -268,28 +268,28 @@ public class ClassOrInterfacePage extends Page
 			out.closeLine();
 		}
 		
-		if (type instanceof ClassType) {
-			TreeSet<ClassType> innerClasses = new TreeSet<ClassType>();
-			for( ClassType current : ((ClassType)type).getInnerClasses().values() ) {
-				if( !current.getModifiers().isPrivate() )
-					innerClasses.add(current);
-			}			
+		
+		TreeSet<Type> innerTypes = new TreeSet<>();
+		for( Type current : type.getInnerTypes().values() ) {
+			if( !current.getModifiers().isPrivate() )
+				innerTypes.add(current);
+		}			
+		
+		
+		if (!innerTypes.isEmpty())
+			out.fullLine("h4", "Visible inner classes");
+		out.open("p");
+		int i = 0;
+		for (Type current : innerTypes) {
+			if (i > 0)
+				out.add(", ");
 			
-			
-			if (!innerClasses.isEmpty())
-				out.fullLine("h4", "Visible inner classes");
-			out.open("p");
-			int i = 0;
-			for (Type current : innerClasses) {
-				if (i > 0)
-					out.add(", ");
-				
-				// List the name, optionally attempting a link
-				writeCrossLink(current, Type.PACKAGES | Type.TYPE_PARAMETERS, out);
-				i++;
-			}
-			out.closeLine();
+			// List the name, optionally attempting a link
+			writeCrossLink(current, Type.PACKAGES | Type.TYPE_PARAMETERS, out);
+			i++;
 		}
+		out.closeLine();
+		
 	}
 
 	private void writeInheritanceSection(HtmlWriter out) 

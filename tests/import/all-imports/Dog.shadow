@@ -1,0 +1,4 @@
+class Dog
+{
+	get set String name = "Dog";
+}

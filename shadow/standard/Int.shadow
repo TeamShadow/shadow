@@ -752,6 +752,66 @@ and	CanHash
 	{
 		return this > other ? this, other;
 	}
+	
+	/** 
+	 * Finds the minimum of the current value and a {@code long}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
+	public min(long other) => (long)
+	{
+		return this < other ? this, other;
+	}
+	
+	/** 
+	 * Finds the maximum of the current value and a {@code long}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
+	public max(long other) => (long)
+	{
+		return this > other ? this, other;
+	}
+	
+	/** 
+	 * Finds the minimum of the current value and a {@code float}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
+	public min(float other) => (float)
+	{
+		return this < other ? this, other;
+	}
+	
+	/** 
+	 * Finds the maximum of the current value and a {@code float}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
+	public max(float other) => (float)
+	{
+		return this > other ? this, other;
+	}
+	
+		/** 
+	 * Finds the minimum of the current value and a {@code double}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
+	public min(double other) => (double)
+	{
+		return this < other ? this, other;
+	}
+	
+	/** 
+	 * Finds the maximum of the current value and a {@code double}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
+	public max(double other) => (double)
+	{
+		return this > other ? this, other;
+	}
 
 	/**
 	 * Returns an unsigned version of the current value, underflowing if negative.

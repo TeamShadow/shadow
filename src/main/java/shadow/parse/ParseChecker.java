@@ -12,7 +12,6 @@ import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
@@ -262,7 +261,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	@Override public Void visitEmptyStatement(ShadowParser.EmptyStatementContext ctx)
 	{
 		if( ctx.getChild(0).getText().equals(";") )
-			addError(ctx, Error.EMPTY_STATMENT, "An empty statement requires the skip keyword" );
+			addError(ctx, Error.EMPTY_STATEMENT, "An empty statement requires the skip keyword" );
 		
 		return null;		
 	}

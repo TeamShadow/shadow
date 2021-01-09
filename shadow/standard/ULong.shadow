@@ -511,6 +511,26 @@ and	CanHash
 	{
 		return this > other ? this, other;
 	}
+	
+	/** 
+	 * Finds the minimum of the current value and a {@code double}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
+	public min(double other) => (double)
+	{
+		return this < other ? this, other;
+	}
+	
+	/** 
+	 * Finds the maximum of the current value and a {@code double}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
+	public max(double other) => (double)
+	{
+		return this > other ? this, other;
+	}
 
 	/**
 	 * Returns a signed version of the current value, overflowing if too large.

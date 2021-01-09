@@ -1,0 +1,10 @@
+import testing:marathon@Run;
+import testing:river@Run;
+
+class testing@Test
+{
+	public method() => ()
+	{
+		int a = 5;	
+	}
+}

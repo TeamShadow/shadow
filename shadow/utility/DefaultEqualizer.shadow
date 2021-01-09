@@ -1,6 +1,3 @@
-import shadow:io;
-import shadow:utility;
-
 class shadow:utility@
 	DefaultEqualizer<T>
 is Equate<T>

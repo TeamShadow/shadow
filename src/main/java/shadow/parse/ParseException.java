@@ -18,7 +18,7 @@
 package shadow.parse;
 
 import shadow.ShadowException;
-import shadow.ShadowExceptionFactory;
+import shadow.ShadowExceptionErrorKind;
 
 /**
  * Exception to capture various standard errors than can occur during type-checking.
@@ -35,8 +35,8 @@ public class ParseException extends ShadowException {
 	 *  Constants for each kind of supported error, with default error messages.
 	 *  Listing all supported errors increases consistency.
 	 */
-	public static enum Error implements ShadowExceptionFactory  {		
-		EMPTY_STATMENT("Empty statement", "An empty statement requires the skip keyword"),
+	public enum Error implements ShadowExceptionErrorKind {
+		EMPTY_STATEMENT("Empty statement", "An empty statement requires the skip keyword"),
 		INCOMPLETE_TRY("Incomplete try", "Given try statement is not followed by catch, recover, or finally statements"),
 		ILLEGAL_MODIFIER("Illegal modifiers", "Cannot apply modifier in given context"),
 		ILLEGAL_OPERATOR("Illegal operator", "Illegal operator used"),
@@ -47,7 +47,7 @@ public class ParseException extends ShadowException {
 		private final String name;
 		private final String message;		
 		
-		Error( String name, String message ) {
+		Error(String name, String message) {
 			this.name = name;
 			this.message = message;
 		}
@@ -56,18 +56,18 @@ public class ParseException extends ShadowException {
 		public String getName() {
 			return name;
 		}
-		
-		public String getMessage() {
+
+		@Override
+		public String getDefaultMessage() {
 			return message;			
 		}
 
 		@Override
-		public ShadowException generateException(String message, Context context) {
+		public ShadowException getException(String message, Context context) {
 			return new ParseException(this, message, context);
 		}
 	}
-	
-	private final Error error;
+
 	private final int lineStart;
 	private final int lineEnd;
 	private final int columnStart;
@@ -80,9 +80,8 @@ public class ParseException extends ShadowException {
 	 * @param kind			kind of error
 	 * @param message		explanatory error message
 	 */
-	public ParseException( Error kind, String message, int line, int column, int startCharacter, int stopCharacter ) {
-		super( message );
-		error = kind;
+	public ParseException(Error kind, String message, int line, int column, int startCharacter, int stopCharacter) {
+		super(kind, message);
 		lineStart = lineEnd = line;
 		columnStart = columnEnd = column;
 		this.startCharacter = startCharacter;
@@ -97,8 +96,7 @@ public class ParseException extends ShadowException {
 	 * @param context		context where error occurs
 	 */
 	public ParseException( Error kind, String message, Context context ) {
-		super( makeMessage( kind, message, context ), context );
-		error = kind;		
+		super(kind, message, context);
 		lineStart = context.getStart().getLine();
 		lineEnd = context.getStop().getLine();
 		columnStart = context.getStart().getCharPositionInLine();
@@ -112,7 +110,7 @@ public class ParseException extends ShadowException {
 	 * @return			kind of error
 	 */
 	public Error getError() {	
-		return error;
+		return (Error) super.getError();
 	}
 	
 	/**

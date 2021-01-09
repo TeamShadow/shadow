@@ -1,7 +1,7 @@
 package shadow.doctool;
 
 import shadow.ShadowException;
-import shadow.ShadowExceptionFactory;
+import shadow.ShadowExceptionErrorKind;
 
 @SuppressWarnings("serial")
 public class DocumentationException extends ShadowException
@@ -12,7 +12,7 @@ public class DocumentationException extends ShadowException
 	}
 
 	@Override
-	public ShadowExceptionFactory getError() {
+	public ShadowExceptionErrorKind getError() {
 		return null;
 	}
 }
