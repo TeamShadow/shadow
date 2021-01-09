@@ -613,6 +613,10 @@ public abstract class Type implements Comparable<Type> {
 
 		return false;
 	}
+
+	final public boolean recursivelyContainsField(String fieldName) {
+		return recursivelyGetField(fieldName) != null;
+	}
 	
 	final public boolean recursivelyContainsConstant(String fieldName) {
 		return recursivelyGetConstant(fieldName) != null;		
@@ -1044,7 +1048,32 @@ public abstract class Type implements Comparable<Type> {
 	public ShadowParser.VariableDeclaratorContext getField(String fieldName) {
 		return fieldTable.get(fieldName);
 	}
-	
+
+	public ShadowParser.VariableDeclaratorContext recursivelyGetField(String fieldName) {
+		ShadowParser.VariableDeclaratorContext context = getField(fieldName);
+		if(context != null)
+			return context;
+
+		// Check outer types
+		Type outer = this.getOuter();
+		while(outer != null && context == null) {
+			context = outer.getConstant(fieldName);
+			outer = outer.getOuter();
+		}
+
+		if(context != null)
+			return context;
+
+		// Check interfaces
+		for(InterfaceType interface_ : interfaces) {
+			context = interface_.recursivelyGetField(fieldName);
+			if(context != null)
+				return context;
+		}
+
+		return context;
+	}
+
 	public ShadowParser.VariableDeclaratorContext getConstant(String fieldName) {
 		return constantTable.get(fieldName);
 	}

@@ -654,7 +654,16 @@ public class ASTInterpreter extends BaseChecker {
 			else if (ctx.generalIdentifier() != null) {
 				if (ctx.unqualifiedName() == null) {
 					String fieldName = ctx.generalIdentifier().getText();
-					value = dereferenceField(currentType.recursivelyGetConstant(fieldName).getEnclosingType(), fieldName, ctx);
+					ShadowParser.VariableDeclaratorContext fieldCtx = currentType.recursivelyGetConstant(fieldName);
+					if (fieldCtx == null) {
+						// It's either not constant or an unknown reference (the latter probably can't happen)
+						addError(ctx,
+								currentType.recursivelyGetField(fieldName) == null
+										? Error.UNKNOWN_REFERENCE
+										: Error.NON_CONSTANT_REFERENCE);
+					} else {
+						value = dereferenceField(fieldCtx.getEnclosingType(), fieldName, ctx);
+					}
 				}
 			}
 			else if( ctx.conditionalExpression() != null )
