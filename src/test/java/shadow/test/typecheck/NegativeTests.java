@@ -62,9 +62,21 @@ public class NegativeTests {
 	}
 
 	@Test
+	public void testAttributeInvocationFieldSelfReference() throws Exception {
+		args.add("tests-negative/typechecker/attribute-invocation-field-self-reference/Test.shadow");
+		enforce(Error.UNDEFINED_SYMBOL);
+	}
+
+	@Test
 	public void testAttributeInvocationRepeatedField() throws Exception {
 		args.add("tests-negative/typechecker/attribute-invocation-repeated-field/Test.shadow");
 		enforce(Error.REPEATED_ASSIGNMENT);
+	}
+
+	@Test
+	public void testAttributeInvocationUnknownField() throws Exception {
+		args.add("tests-negative/typechecker/attribute-invocation-unknown-field/Test.shadow");
+		enforce(Error.UNDEFINED_SYMBOL);
 	}
 
 	@Test

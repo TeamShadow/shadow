@@ -92,14 +92,8 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 		Map<FieldKey, VariableDeclaratorContext> constantFields = new HashMap<>();
 
 		for (Type type : typesIncludingInner) {
-			if (type instanceof AttributeType) {
-				for (Map.Entry<String, VariableDeclaratorContext> entry : ((AttributeType) type).getInitializedFields().entrySet()) {
-					constantFields.put(new FieldKey(type, entry.getKey()), entry.getValue());
-				}
-			} else {
-				for (Map.Entry<String, VariableDeclaratorContext> entry : type.getConstants().entrySet()) {
-					constantFields.put(new FieldKey(type, entry.getKey()), entry.getValue());
-				}
+			for (Map.Entry<String, VariableDeclaratorContext> entry : type.getConstants().entrySet()) {
+				constantFields.put(new FieldKey(type, entry.getKey()), entry.getValue());
 			}
 		}
 
@@ -117,15 +111,31 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 			visitor.visitRootField(fieldKey, fieldCtx);
 		}
 
+		evaluateAttributeFields(typesIncludingInner, visitor);
+
 		visitor.printAndReportErrors();
 	}
 
-	private void evaluateAttributeInvocations(List<Type> typesIncludingInner, ConstantFieldInterpreter visitor) {
-		List<AttributeInvocation> attributeInvocations = typesIncludingInner.stream().map(Type::getAllMethods).flatMap(Collection::stream).map(MethodSignature::getAttributes).flatMap(Collection::stream).collect(Collectors.toList());
+	// Evaluates fields on attribute types and attribute invocations. We don't store these in the
+	// constantFields because they can't be referenced by each other or by other constants.
+	private static void evaluateAttributeFields(List<Type> typesIncludingInner, ConstantFieldInterpreter visitor) {
+		for (Type type : typesIncludingInner) {
+			if (type instanceof AttributeType) {
+				for (Map.Entry<String, VariableDeclaratorContext> field : ((AttributeType) type).getInitializedFields().entrySet()) {
+					visitor.visitRootField(new FieldKey(type, field.getKey()), field.getValue());
+				}
+			}
+		}
 
+		List<AttributeInvocation> attributeInvocations =
+				typesIncludingInner.stream()
+						.map(Type::getAllMethods).flatMap(Collection::stream)
+						.map(MethodSignature::getAttributes).flatMap(Collection::stream)
+						.collect(Collectors.toList());
 		for (AttributeInvocation attributeInvocation : attributeInvocations) {
-			for ( : attributeInvocation.)
-			visitor.visitRootField();
+			for (Map.Entry<String, VariableDeclaratorContext> field : attributeInvocation.getFieldAssignments().entrySet()) {
+				visitor.visitRootField(new FieldKey(attributeInvocation.getType(), field.getKey()), field.getValue());
+			}
 		}
 	}
 

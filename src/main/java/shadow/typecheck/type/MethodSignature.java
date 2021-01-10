@@ -457,7 +457,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
     private void attachAttribute(
     		ShadowParser.AttributeInvocationContext ctx, ShadowVisitorErrorReporter errorReporter) {
-		AttributeInvocation attribute = new AttributeInvocation(ctx, errorReporter);
+		AttributeInvocation attribute = new AttributeInvocation(ctx, errorReporter, this);
 		AttributeType type = attribute.getType();
 
     	if (attributes.containsKey(type)) {

@@ -14,14 +14,16 @@ import java.util.*;
 public class AttributeInvocation {
     private final AttributeType type;
     private final AttributeInvocationContext invocationCtx; // The AST node for this invocation
+    private final Type enclosingType;
 
     // Note that this does not contain the default expressions provided in the attribute declaration
     private final Map<String, ShadowParser.VariableDeclaratorContext> fieldExpressions = new HashMap<>();
 
-    public AttributeInvocation(AttributeInvocationContext ctx, ShadowVisitorErrorReporter errorReporter) {
+    public AttributeInvocation(AttributeInvocationContext ctx, ShadowVisitorErrorReporter errorReporter, MethodSignature attachedTo) {
         // TypeUpdater.visitClassOrInterfaceType() should guarantee this is an AttributeType
         type = (AttributeType) ctx.getType();
         invocationCtx = ctx;
+        enclosingType = attachedTo.getOuter();
 
         for (ShadowParser.VariableDeclaratorContext assignmentCtx : ctx.variableDeclarator()) {
             addFieldAssignment(assignmentCtx, errorReporter);
@@ -46,8 +48,20 @@ public class AttributeInvocation {
         fieldExpressions.put(fieldName, ctx);
     }
 
-    /** Must be called after type updating to ensure the fields of this attribute will all have values. */
-    public void checkForMissingFields(ShadowVisitorErrorReporter errorReporter) {
+    /** Must be called after type updating to ensure the fields of the AttributeType are populated. */
+    public void updateFieldTypes(ShadowVisitorErrorReporter errorReporter) {
+        for (String fieldName : fieldExpressions.keySet()) {
+            ShadowParser.VariableDeclaratorContext fieldCtx = fieldExpressions.get(fieldName);
+
+            // Statement checker reports an error if this isn't true
+            if (type.containsField(fieldName)) {
+                // Enclosing type should match the method's enclosing type, not the attribute's
+                fieldCtx.setEnclosingType(enclosingType);
+                fieldCtx.setType(type.getField(fieldName).getType());
+            }
+        }
+
+        // Check for missing fields (i.e. required by AttributeType but not provided in this invocation)
         for (String requiredFieldName : type.getUninitializedFields()) {
             if (!fieldExpressions.containsKey(requiredFieldName)) {
                 errorReporter.addError(
