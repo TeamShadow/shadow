@@ -90,8 +90,12 @@ public class AttributeType extends Type {
         out.println(linePrefix + "{");
 
         // Fields
-        for (Map.Entry<String, ? extends ModifiedType> field : getFields().entrySet()) {
-            out.println(linePrefix + "\t" + field.getValue().getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE) + " " + field.getKey() + ";");
+        for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> field : getFields().entrySet()) {
+            out.print(linePrefix + "\t" + field.getValue().getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE) + " " + field.getKey());
+            if (!uninitializedFields.contains(field.getKey())) {
+                out.print(" = " + field.getValue().getInterpretedValue().toLiteral());
+            }
+            out.println(";");
         }
 
         if (!getFields().isEmpty()) {

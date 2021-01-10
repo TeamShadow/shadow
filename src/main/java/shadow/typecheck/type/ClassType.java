@@ -2,6 +2,7 @@ package shadow.typecheck.type;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
@@ -614,7 +616,14 @@ public class ClassType extends Type {
 		for( List<MethodSignature> list: getMethodMap().values() )		
 			for( MethodSignature signature : list ) {
 				Modifiers modifiers = signature.getModifiers();
-				if((modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()) && !signature.isCopy()) {				
+				if((modifiers.isPublic() || modifiers.isProtected() || signature.isCreate()) && !signature.isCopy()) {
+					if (!signature.getAttributes().isEmpty()) {
+						String attributesText = signature.getAttributes().stream()
+								.map(AttributeInvocation::getMetaFileText)
+								.collect(Collectors.joining(", "));
+						out.println(indent + "<" + attributesText + ">");
+					}
+
 					out.println(indent + signature + ";");
 					newLine = true;
 				}

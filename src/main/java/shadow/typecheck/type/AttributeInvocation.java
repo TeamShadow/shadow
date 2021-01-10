@@ -6,6 +6,7 @@ import shadow.parse.ShadowVisitorErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Represents a particular invocation of an attribute type, including any fields set during that invocation. E.g.
@@ -77,5 +78,17 @@ public class AttributeInvocation {
 
     public AttributeType getType() {
         return type;
+    }
+
+    public String getMetaFileText() {
+        String text = type.toString(Type.PACKAGES);
+        if (!fieldExpressions.isEmpty()) {
+            text += "(";
+            text += fieldExpressions.entrySet().stream()
+                    .map(f -> f.getKey() + " = " + f.getValue().getInterpretedValue().toLiteral())
+                    .collect(Collectors.joining(", "));
+            text += ")";
+        }
+        return text;
     }
 }
