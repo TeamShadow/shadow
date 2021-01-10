@@ -321,7 +321,7 @@ public class StatementChecker extends ScopedChecker {
 					//explicit invocations are handled separately
 					//for native creates, we have to trust the author of the native code
 					boolean foundDefault = false;
-					for( MethodSignature method : parentType.getMethods("create") ) {
+					for( MethodSignature method : parentType.getMethodOverloads("create") ) {
 						if( method.getParameterTypes().isEmpty() ) {
 							foundDefault = true;
 							break;
@@ -1368,7 +1368,7 @@ public class StatementChecker extends ScopedChecker {
 			MethodSignature candidate = null;
 			Type outer = unboundMethod.getOuter();			
 			
-			for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) {				
+			for( MethodSignature signature : outer.recursivelyGetMethodOverloads(unboundMethod.getTypeName()) ) {
 				MethodType methodType = signature.getMethodType();			
 				
 				//the list of method signatures starts with the closest (current class) and then adds parents and outer classes
@@ -1744,7 +1744,7 @@ public class StatementChecker extends ScopedChecker {
 				//don't add a singleton to itself, could cause infinite recursion
 				if( !currentType.equals(type) )
 					//add to all creates (since it must be declared outside a method)
-					for( MethodSignature signature : currentType.getAllMethods("create"))				
+					for( MethodSignature signature : currentType.recursivelyGetMethodOverloads("create"))
 						signature.addSingleton(singletonType);
 			}
 			else {				
@@ -2156,7 +2156,7 @@ public class StatementChecker extends ScopedChecker {
 			addError(curPrefix.getFirst(), Error.INVALID_TYPE, "Method cannot be called on a sequence result");
 		}
 		else if(prefixType != null) {				
-			List<MethodSignature> methods = prefixType.getAllMethods(methodName);
+			List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(methodName);
 			
 			//unbound method (it gets bound when you supply arguments)
 			if( methods != null && methods.size() > 0 )			
@@ -2207,7 +2207,7 @@ public class StatementChecker extends ScopedChecker {
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Interfaces cannot be created");						
 		else if( prefixType instanceof SingletonType )			
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Singletons cannot be created");
-		else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.getAllMethods("create").isEmpty()))
+		else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.recursivelyGetMethodOverloads("create").isEmpty()))
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Type " + prefixType + " cannot be created", prefixType);				
 		else if( !prefixNode.getModifiers().isTypeName() )
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Only a type can be created");
@@ -2396,7 +2396,7 @@ public class StatementChecker extends ScopedChecker {
 			ctx.setType( Type.UNKNOWN );
 		}	
 		else {				
-			List<MethodSignature> methods = prefixType.getAllMethods(propertyName);	
+			List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(propertyName);
 			if( prefixNode.getModifiers().isImmutable() )
 				ctx.addModifiers(Modifiers.IMMUTABLE);
 			else if( prefixNode.getModifiers().isReadonly() )

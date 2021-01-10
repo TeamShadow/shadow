@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import shadow.ShadowException;
 import shadow.doctool.Documentation;
@@ -48,6 +49,7 @@ public abstract class Type implements Comparable<Type> {
 	private LinkedHashMap<String, ShadowParser.VariableDeclaratorContext> fieldTable = new LinkedHashMap<String, ShadowParser.VariableDeclaratorContext>();
 	private Map<String, ShadowParser.VariableDeclaratorContext> constantTable = new HashMap<>();
 
+	// A map from methodName -> list of all overloads for that method
 	private HashMap<String, List<MethodSignature> > methodTable = new HashMap<String, List<MethodSignature>>();	
 	private Set<Type> usedTypes = new HashSet<Type>();
 	private Set<Type> mentionedTypes = new HashSet<Type>();
@@ -626,7 +628,7 @@ public abstract class Type implements Comparable<Type> {
 	}
 	
 	final public boolean recursivelyContainsMethod( String symbol ) {
-		return getAllMethods(symbol).size() > 0;
+		return recursivelyGetMethodOverloads(symbol).size() > 0;
 	}
 	
 	public Type getInnerType(String className) {
@@ -843,7 +845,7 @@ public abstract class Type implements Comparable<Type> {
 		boolean hasTypeArguments = typeArguments != null;
 		MethodSignature candidate = null;		
 
-		for( MethodSignature signature : getAllMethods(methodName) ) 
+		for( MethodSignature signature : recursivelyGetMethodOverloads(methodName) )
 		{				
 			MethodType methodType = signature.getMethodType();			
 
@@ -1142,8 +1144,12 @@ public abstract class Type implements Comparable<Type> {
 		return methodTable;
 	}
 
+	public Set<MethodSignature> getAllMethods() {
+		return Collections.unmodifiableSet(
+				methodTable.values().stream().flatMap(Collection::stream).collect(Collectors.toSet()));
+	}
 
-	public List<MethodSignature> getMethods(String methodName)
+	public List<MethodSignature> getMethodOverloads(String methodName)
 	{
 		List<MethodSignature> signatures = methodTable.get(methodName);
 		if( signatures == null )
@@ -1154,7 +1160,7 @@ public abstract class Type implements Comparable<Type> {
 
 	protected void includeMethods( String methodName, List<MethodSignature> list )
 	{		
-		for( MethodSignature signature : getMethods(methodName) )
+		for( MethodSignature signature : getMethodOverloads(methodName) )
 			if( !list.contains( signature ) )
 				list.add(signature);		
 	}
@@ -1545,7 +1551,8 @@ public abstract class Type implements Comparable<Type> {
 		throw new UnsupportedOperationException();
 	}
 
-	public List<MethodSignature> getAllMethods(String methodName)
+	/** Returns all overloads for the given method found both in this type and its outer types */
+	public List<MethodSignature> recursivelyGetMethodOverloads(String methodName)
 	{
 		throw new UnsupportedOperationException();
 	}

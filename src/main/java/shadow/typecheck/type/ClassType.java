@@ -67,7 +67,7 @@ public class ClassType extends Type {
 	}
 
 	private boolean containsInterfaceMethod(MethodSignature signature) {
-		List<MethodSignature> list = getMethods(signature.getSymbol());
+		List<MethodSignature> list = getMethodOverloads(signature.getSymbol());
 		
 		if( list != null )
 			for(MethodSignature existing : list )
@@ -143,8 +143,8 @@ public class ClassType extends Type {
 	}
 	
 	//get methods from all visible sources, adds outer classes too
-	public List<MethodSignature> getAllMethods(String methodName) {
-		List<MethodSignature> list = new ArrayList<MethodSignature>(getMethods(methodName));
+	public List<MethodSignature> recursivelyGetMethodOverloads(String methodName) {
+		List<MethodSignature> list = new ArrayList<MethodSignature>(getMethodOverloads(methodName));
 				
 		if( !methodName.equals("create")  ) {	
 			//first the parents

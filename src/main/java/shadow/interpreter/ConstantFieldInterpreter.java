@@ -1,6 +1,7 @@
 package shadow.interpreter;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,9 @@ import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;
 import shadow.typecheck.TypeChecker;
+import shadow.typecheck.type.AttributeInvocation;
+import shadow.typecheck.type.AttributeType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
 
 /**
@@ -88,8 +92,14 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 		Map<FieldKey, VariableDeclaratorContext> constantFields = new HashMap<>();
 
 		for (Type type : typesIncludingInner) {
-			for (Map.Entry<String, VariableDeclaratorContext> entry : type.getConstants().entrySet()) {
-				constantFields.put(new FieldKey(type, entry.getKey()), entry.getValue());
+			if (type instanceof AttributeType) {
+				for (Map.Entry<String, VariableDeclaratorContext> entry : ((AttributeType) type).getInitializedFields().entrySet()) {
+					constantFields.put(new FieldKey(type, entry.getKey()), entry.getValue());
+				}
+			} else {
+				for (Map.Entry<String, VariableDeclaratorContext> entry : type.getConstants().entrySet()) {
+					constantFields.put(new FieldKey(type, entry.getKey()), entry.getValue());
+				}
 			}
 		}
 
@@ -110,6 +120,14 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 		visitor.printAndReportErrors();
 	}
 
+	private void evaluateAttributeInvocations(List<Type> typesIncludingInner, ConstantFieldInterpreter visitor) {
+		List<AttributeInvocation> attributeInvocations = typesIncludingInner.stream().map(Type::getAllMethods).flatMap(Collection::stream).map(MethodSignature::getAttributes).flatMap(Collection::stream).collect(Collectors.toList());
+
+		for (AttributeInvocation attributeInvocation : attributeInvocations) {
+			for ( : attributeInvocation.)
+			visitor.visitRootField();
+		}
+	}
 
 	public void visitRootField(FieldKey rootFieldKey, VariableDeclaratorContext rootFieldCtx) {
 		// TODO: Consider calling BaseChecker#clear (but make sure errors are reported before clearing)

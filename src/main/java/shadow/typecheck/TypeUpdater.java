@@ -313,7 +313,7 @@ public class TypeUpdater extends BaseChecker {
 		if (type instanceof ClassType) {
 			ClassType classType = (ClassType) type;
 			/* If no creates are present, add the default one. */
-			if (classType.getMethods("create").isEmpty()) {
+			if (classType.getMethodOverloads("create").isEmpty()) {
 				// might be a terrible idea to create a dummy node
 				ShadowParser.CreateDeclarationContext createNode = new ShadowParser.CreateDeclarationContext(null, -1);
 				createNode.start = createNode.stop = makeDummyToken(declaration);
@@ -325,7 +325,7 @@ public class TypeUpdater extends BaseChecker {
 			}
 
 			/* If no destroy is present, add the default one. */
-			if (classType.getMethods("destroy").isEmpty()) {
+			if (classType.getMethodOverloads("destroy").isEmpty()) {
 				// might be a terrible idea to create a dummy node
 				ShadowParser.DestroyDeclarationContext destroyNode = new ShadowParser.DestroyDeclarationContext(null,
 						-1);
@@ -354,7 +354,7 @@ public class TypeUpdater extends BaseChecker {
 				Modifiers fieldModifiers = node.getModifiers();
 
 				if (fieldModifiers.isGet() || fieldModifiers.isSet()) {
-					List<MethodSignature> methods = classType.getMethods(field.getKey());
+					List<MethodSignature> methods = classType.getMethodOverloads(field.getKey());
 					int getterCount = 0;
 					int setterCount = 0;
 					int getterCollision = 0;

@@ -115,13 +115,13 @@ public class InterfaceType extends Type
 	}
 	
 	//get methods from interface and ancestors
-	public List<MethodSignature> getAllMethods(String methodName) {
+	public List<MethodSignature> recursivelyGetMethodOverloads(String methodName) {
 		List<MethodSignature> list = new ArrayList<MethodSignature>();		
 		addAllMethods( methodName, list );	
 		
 		//get from Object, too
 		if( !methodName.equals("create") )
-			list.addAll( Type.OBJECT.getAllMethods(methodName));
+			list.addAll( Type.OBJECT.recursivelyGetMethodOverloads(methodName));
 		return list;
 	}
 	

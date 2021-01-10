@@ -128,6 +128,12 @@ public class ASTInterpreter extends BaseChecker {
 		return null;
 	}
 
+	/** attributeFieldAssignment is similar to variableDeclarator, but doesn't support
+	@Override
+	public Void visitAttributeFieldAssignment(ShadowParser.AttributeFieldAssignmentContext ctx) {
+		return super.visitAttributeFieldAssignment(ctx);
+	} */
+
 	@Override
 	public Void visitConditionalExpression(ShadowParser.ConditionalExpressionContext ctx) {
 		// coalesceExpression ('?' throwOrConditionalExpression ',' throwOrConditionalExpression)?

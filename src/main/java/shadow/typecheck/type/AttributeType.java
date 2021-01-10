@@ -66,6 +66,14 @@ public class AttributeType extends Type {
         return Collections.unmodifiableSet(uninitializedFields);
     }
 
+    public Map<String, ShadowParser.VariableDeclaratorContext> getInitializedFields() {
+        Map<String, ShadowParser.VariableDeclaratorContext> initializedFields = new HashMap<>(getFields());
+        for (String fieldName : uninitializedFields) {
+            initializedFields.remove(fieldName);
+        }
+        return Collections.unmodifiableMap(initializedFields);
+    }
+
     @Override
     public void printMetaFile(PrintWriter out, String linePrefix) {
         printImports(out, linePrefix);

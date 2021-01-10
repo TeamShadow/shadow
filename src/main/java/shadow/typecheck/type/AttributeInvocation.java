@@ -57,6 +57,10 @@ public class AttributeInvocation {
         }
     }
 
+    public Map<String, ShadowParser.VariableDeclaratorContext> getFieldAssignments() {
+        return Collections.unmodifiableMap(fieldExpressions);
+    }
+
     public AttributeType getType() {
         return type;
     }
