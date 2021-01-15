@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import shadow.interpreter.ShadowValue;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.AttributeInvocationContext;
 import shadow.parse.ShadowVisitorErrorReporter;
@@ -78,6 +79,16 @@ public class AttributeInvocation {
 
     public AttributeType getType() {
         return type;
+    }
+
+    /**
+     * Gets the interpreted value of the given field - only safe to call after constant interpretation
+     * has occurred.
+     */
+    public ShadowValue getFieldValue(String fieldName) {
+        return fieldExpressions.containsKey(fieldName)
+                ? fieldExpressions.get(fieldName).getInterpretedValue()
+                : type.getField(fieldName).getInterpretedValue();
     }
 
     public String getMetaFileText() {

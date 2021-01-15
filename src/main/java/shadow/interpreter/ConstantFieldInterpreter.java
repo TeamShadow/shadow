@@ -127,16 +127,19 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 			}
 		}
 
-		List<AttributeInvocation> attributeInvocations =
-				typesIncludingInner.stream()
-						.map(Type::getAllMethods).flatMap(Collection::stream)
-						.map(MethodSignature::getAttributes).flatMap(Collection::stream)
-						.collect(Collectors.toList());
+		List<MethodSignature> allMethods = typesIncludingInner.stream()
+				.map(Type::getAllMethods).flatMap(Collection::stream)
+				.collect(Collectors.toList());
+		List<AttributeInvocation> attributeInvocations = allMethods.stream()
+				.map(MethodSignature::getAttributes).flatMap(Collection::stream)
+				.collect(Collectors.toList());
 		for (AttributeInvocation attributeInvocation : attributeInvocations) {
 			for (Map.Entry<String, VariableDeclaratorContext> field : attributeInvocation.getFieldAssignments().entrySet()) {
 				visitor.visitRootField(new FieldKey(attributeInvocation.getType(), field.getKey()), field.getValue());
 			}
 		}
+
+		allMethods.forEach(MethodSignature::processAttributeValues);
 	}
 
 	public void visitRootField(FieldKey rootFieldKey, VariableDeclaratorContext rootFieldCtx) {

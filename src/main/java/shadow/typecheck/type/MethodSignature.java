@@ -483,7 +483,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	// Performs any required operations based on the attached attribute types AND the values of
 	// their fields. Runs relatively late, after compile-time constants can be evaluated.
-	private void processAttributeValues() {
-
+	public void processAttributeValues() {
+		System.out.print(outer.toString() + ":" + symbol + "() -> ");
+		for (AttributeInvocation attribute : attributes) {
+			
+		}
 	}
 }
