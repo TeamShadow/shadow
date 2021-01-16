@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.interpreter.InterpreterException.Error;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ClassType;
@@ -12,28 +11,24 @@ import shadow.typecheck.type.Type;
 public class ShadowClass extends ShadowObject {
 	private final Type type;
 
-	public ShadowClass(Type type) throws ShadowException {
+	public ShadowClass(Type type) throws InterpreterException {
 		super(type.isParameterized() ? Type.GENERIC_CLASS : Type.CLASS);
 		this.type = type;
 	}
 
 	@Override
     public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
-		try {		
-			if(arguments.length == 0) {
-				switch(method) {				
-				case "isArray": return isArray();
-				case "isGeneric": return isGeneric();
-				case "isInterface": return isInterface();
-				case "isMethod": return isMethod();
-				case "isPrimitive": return isPrimitive();
-				case "isSingleton": return isSingleton();
-				case "name": return name();
-				case "parent": return parent();
-				}				
+		if(arguments.length == 0) {
+			switch(method) {
+			case "isArray": return isArray();
+			case "isGeneric": return isGeneric();
+			case "isInterface": return isInterface();
+			case "isMethod": return isMethod();
+			case "isPrimitive": return isPrimitive();
+			case "isSingleton": return isSingleton();
+			case "name": return name();
+			case "parent": return parent();
 			}
-		}
-		catch(ShadowException e) {
 		}
 		
 		return super.callMethod(method, arguments);
@@ -43,7 +38,7 @@ public class ShadowClass extends ShadowObject {
 		return new ShadowString(type.toString());
 	}
 	
-	public ShadowValue parent() throws ShadowException {
+	public ShadowValue parent() throws InterpreterException {
 		if(type instanceof ClassType) {
 			ClassType classType = (ClassType) type;
 			if(classType.getExtendType() == null)
@@ -85,7 +80,7 @@ public class ShadowClass extends ShadowObject {
 	}
 
 
-	 public ShadowBoolean equal(ShadowValue value) throws ShadowException {
+	 public ShadowBoolean equal(ShadowValue value) throws InterpreterException {
 	        if(value instanceof ShadowClass) {
 	        	ShadowClass other = (ShadowClass) value;
 	        	return new ShadowBoolean(type.equals(other.type));
@@ -108,7 +103,7 @@ public class ShadowClass extends ShadowObject {
 		return type.toString();
 	}	
 	
-	public ShadowInteger hash() throws ShadowException {
+	public ShadowInteger hash() throws InterpreterException {
 		return new ShadowString(toString()).hash();
 	}
 	
@@ -118,7 +113,7 @@ public class ShadowClass extends ShadowObject {
 	}
 	
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException {
+	public ShadowValue cast(Type type) throws InterpreterException {
 		if(type.equals(getType()))
 			return this;
 		else if(type.isSubtype(getType()) || getType().isSubtype(type))

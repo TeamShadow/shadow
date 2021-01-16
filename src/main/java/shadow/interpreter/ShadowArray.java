@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.ArrayType;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.SimpleModifiedType;
@@ -10,7 +9,7 @@ public class ShadowArray extends ShadowValue
 {
 	private ArrayType type;
 	private ShadowReference[] data;	
-	public ShadowArray(ArrayType type, int length) throws ShadowException
+	public ShadowArray(ArrayType type, int length) throws InterpreterException
 	{
 		ShadowReference[] data = new ShadowReference[length];
 		ModifiedType baseType = new SimpleModifiedType(type.getBaseType());
@@ -39,7 +38,7 @@ public class ShadowArray extends ShadowValue
 	}
 
 	@Override
-	public ShadowValue copy() throws ShadowException
+	public ShadowValue copy() throws InterpreterException
 	{
 		ShadowArray copy = new ShadowArray(getType(), data.length);
 		for ( int i = 0; i < data.length; ++i )
@@ -53,7 +52,7 @@ public class ShadowArray extends ShadowValue
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws InterpreterException
 	{
 		return this;
 	}

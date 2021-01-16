@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.interpreter.InterpreterException.Error;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.UnboundMethodType;
@@ -25,14 +24,14 @@ public class ShadowUnboundMethod extends ShadowValue {
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException {
+	public ShadowValue cast(Type type) throws InterpreterException {
 		if(type instanceof UnboundMethodType)
 			return this;		
 		throw new InterpreterException(Error.MISMATCHED_TYPE, "Cannot cast " + getType() + " to " + type);
 	}
 
 	@Override
-	public ShadowValue copy() throws ShadowException {
+	public ShadowValue copy() throws InterpreterException {
 		return new ShadowUnboundMethod(object, type);
 	}
 

@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
@@ -14,7 +13,7 @@ public class ShadowReference implements ModifiedType {
     private ModifiedType type; /* The type of the reference */
     private ShadowValue value; /* The value of the reference */
 
-    public ShadowReference(ModifiedType type) throws ShadowException {
+    public ShadowReference(ModifiedType type) throws InterpreterException {
         this.type = type;
         this.value = ShadowValue.getDefault(type);
     }
@@ -38,7 +37,7 @@ public class ShadowReference implements ModifiedType {
         return this.value;
     }
 
-    public void setValue(ShadowValue value) throws ShadowException {
+    public void setValue(ShadowValue value) throws InterpreterException {
         if (value.getModifiers().isNullable() && !getModifiers().isNullable())
             throw new InterpreterException(Error.INVALID_ASSIGNMENT, "Cannot store a nullable value to a non-nullable reference");
         if (value.getModifiers().isReadonly() && !getModifiers().isReadonly())
@@ -54,7 +53,7 @@ public class ShadowReference implements ModifiedType {
         this.value = value;
     }
     
-    public ShadowReference copy() throws ShadowException {
+    public ShadowReference copy() throws InterpreterException {
     	ShadowReference reference = new ShadowReference(type);
     	reference.value = value.copy();
     	return reference;

@@ -8,7 +8,6 @@ import java.util.List;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 
-import shadow.ShadowException;
 import shadow.interpreter.InterpreterException.Error;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
@@ -79,7 +78,7 @@ public class ASTInterpreter extends BaseChecker {
 
 			return current;
 		}
-		catch(ShadowException e) {
+		catch(InterpreterException e) {
 			addError(e.setContext(parent));
 			return ShadowValue.INVALID;
 		}
@@ -115,13 +114,15 @@ public class ASTInterpreter extends BaseChecker {
 
 		visitChildren(ctx);
 
-		// This cast seems wacky, but if we don't do it, then constant long X = 5; stores 5 into X, not 5L
+		ShadowValue value = ShadowValue.INVALID;
 		try {
-			ctx.setInterpretedValue(ctx.conditionalExpression().getInterpretedValue().cast(ctx.getType()));
+			// This cast seems wacky, but if we don't do it, then constant long X = 5; stores 5 into X, not 5L
+			value = ctx.conditionalExpression().getInterpretedValue().cast(ctx.getType());
 		}
-		catch(ShadowException e) {
+		catch(InterpreterException e) {
 			addError(e.setContext(ctx));
 		}
+		ctx.setInterpretedValue(value);
 
 		currentType = oldType;
 		return null;
@@ -135,7 +136,7 @@ public class ASTInterpreter extends BaseChecker {
 
 		try {
 			if (ctx.getChildCount() > 1) {
-				if(value instanceof ShadowBoolean) {
+				if(ctx.coalesceExpression().getInterpretedValue() instanceof ShadowBoolean) {
 					boolean condition = ((ShadowBoolean) ctx.coalesceExpression().getInterpretedValue()).getValue();
 					value = ctx.throwOrConditionalExpression(condition ? 0 : 1).getInterpretedValue().cast(ctx.getType());
 				}
@@ -145,7 +146,7 @@ public class ASTInterpreter extends BaseChecker {
 			else
 				value = ctx.coalesceExpression().getInterpretedValue();
 		}
-		catch(ShadowException e) {
+		catch(InterpreterException e) {
 			addError(e.setContext(ctx));
 		}
 
@@ -176,12 +177,11 @@ public class ASTInterpreter extends BaseChecker {
 		try {
 			value = value.cast(type);
 		}
-		catch(ShadowException e) {
+		catch(InterpreterException e) {
 			addError(e.setContext(ctx));
 		}
 
-		ctx.setInterpretedValue(value);   	
-
+		ctx.setInterpretedValue(value);
 		return null;
 	}
 
@@ -213,6 +213,7 @@ public class ASTInterpreter extends BaseChecker {
 		// Always part of a suffix, thus always has a prefix			
 		ModifiedType prefixNode = curPrefix.getFirst();
 		Type prefixType = prefixNode.getType();
+		ShadowValue value = ShadowValue.INVALID;
 
 		if( ctx.typeArguments() != null ) { // has type arguments											
 			ShadowParser.TypeArgumentsContext arguments = ctx.typeArguments();
@@ -225,22 +226,23 @@ public class ASTInterpreter extends BaseChecker {
 				currentType.addPartiallyInstantiatedClass(replacedType);
 
 				try {
-					ctx.setInterpretedValue(new ShadowClass(replacedType));
-				} catch (ShadowException e) {
+					value = new ShadowClass(replacedType);
+				} catch (InterpreterException e) {
 					addError(e.setContext(ctx));
 				}
-
 			} catch (InstantiationException e) {
 				// Should have already been caught in the typechecker
 			}
 		}
 		else {				
 			try {
-				ctx.setInterpretedValue(new ShadowClass(prefixType));
-			} catch (ShadowException e) {
+				value = new ShadowClass(prefixType);
+			} catch (InterpreterException e) {
 				addError(e.setContext(ctx));
 			}
 		}
+
+		ctx.setInterpretedValue(value);
 
 		return null;
 	}
@@ -573,9 +575,6 @@ public class ASTInterpreter extends BaseChecker {
 			catch(InterpreterException e) {
 				addError(e.setContext(ctx));
 			}
-			catch(ShadowException e) {
-				addError(e.setContext(ctx));
-			}
 		}			
 		else if(prefixType instanceof MethodReferenceType) // only happens with method pointers and local methods		
 			addError(ctx, Error.INVALID_STRUCTURE, "Method reference cannot be called inside a compile-time constant");
@@ -583,7 +582,6 @@ public class ASTInterpreter extends BaseChecker {
 			addError(Error.UNSUPPORTED_OPERATION.getException(ctx));	
 	
 		ctx.setInterpretedValue(value);
-		
 		return null;
 	}
 
@@ -608,7 +606,7 @@ public class ASTInterpreter extends BaseChecker {
 			UnaryOperator operator = UnaryOperator.fromString(ctx.operator.getText());
 			try {
 				value = ctx.unaryExpression().getInterpretedValue().apply(operator);
-			} catch (ShadowException e) {
+			} catch (InterpreterException e) {
 				addError(e.setContext(ctx));
 			}
 		} else if (ctx.primaryExpression() != null) {
@@ -722,7 +720,6 @@ public class ASTInterpreter extends BaseChecker {
 		}
 
 		ctx.setInterpretedValue(value);
-
 		return null;
 	}	
 
@@ -748,7 +745,7 @@ public class ASTInterpreter extends BaseChecker {
 					value = array.get(index).getValue();
 			}
 			// Shouldn't happen
-			catch(ShadowException e) {
+			catch(InterpreterException e) {
 				addError(e.setContext(ctx));
 			}
 		}						

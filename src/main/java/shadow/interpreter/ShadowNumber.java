@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Type;
 
 public abstract class ShadowNumber extends ShadowValue {
@@ -15,83 +14,78 @@ public abstract class ShadowNumber extends ShadowValue {
 	
 	@Override
     public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
-		try {
-		
-			if(arguments.length == 0) {
-				switch(method) {
-				case "toByte": return toByte();
-				case "toUByte": return toUByte();
-				case "toShort": return toShort();
-				case "toUShort": return toUShort();
-				case "toInt": return toInt();
-				case "toLong": return toLong();
-				case "toULong": return toULong();
-				case "toCode": return toCode();
-				case "toFloat": return toFloat();
-				case "toDouble": return toDouble();
-				}				
-			}
-			else if(arguments.length == 1 && arguments[0] instanceof ShadowNumber) {
-				ShadowNumber number = (ShadowNumber)(arguments[0].cast(getType()));
-				switch(method) {
-				case "max": return max(number);
-				case "min": return min(number);
-				}
+		if(arguments.length == 0) {
+			switch(method) {
+			case "toByte": return toByte();
+			case "toUByte": return toUByte();
+			case "toShort": return toShort();
+			case "toUShort": return toUShort();
+			case "toInt": return toInt();
+			case "toLong": return toLong();
+			case "toULong": return toULong();
+			case "toCode": return toCode();
+			case "toFloat": return toFloat();
+			case "toDouble": return toDouble();
 			}
 		}
-		catch(ShadowException e) {
+		else if(arguments.length == 1 && arguments[0] instanceof ShadowNumber) {
+			ShadowNumber number = (ShadowNumber)(arguments[0].cast(getType()));
+			switch(method) {
+			case "max": return max(number);
+			case "min": return min(number);
+			}
 		}
 		
 		return super.callMethod(method, arguments);
 	}
 	
 
-	public ShadowNumber toByte() throws ShadowException {
+	public ShadowNumber toByte() throws InterpreterException {
 		return (ShadowNumber) cast(Type.BYTE);
 	}
 
-	public ShadowNumber toUByte() throws ShadowException {
+	public ShadowNumber toUByte() throws InterpreterException {
 		return (ShadowNumber) cast(Type.UBYTE);
 	}
 
-	public ShadowNumber toShort() throws ShadowException {
+	public ShadowNumber toShort() throws InterpreterException {
 		return (ShadowNumber) cast(Type.SHORT);
 	}
 
-	public ShadowNumber toUShort() throws ShadowException {
+	public ShadowNumber toUShort() throws InterpreterException {
 		return (ShadowNumber) cast(Type.USHORT);
 	}
 
-	public ShadowNumber toInt() throws ShadowException {
+	public ShadowNumber toInt() throws InterpreterException {
 		return (ShadowNumber) cast(Type.INT);
 	}
 	
-	public ShadowNumber toUInit() throws ShadowException {
+	public ShadowNumber toUInt() throws InterpreterException {
 		return (ShadowNumber) cast(Type.UINT);
 	}
 
-	public ShadowNumber toLong() throws ShadowException {
+	public ShadowNumber toLong() throws InterpreterException {
 		return (ShadowNumber) cast(Type.LONG);
 	}
 
-	public ShadowNumber toULong() throws ShadowException {
+	public ShadowNumber toULong() throws InterpreterException {
 		return (ShadowNumber) cast(Type.ULONG);
 	}
 
-	public ShadowNumber toCode() throws ShadowException {
+	public ShadowNumber toCode() throws InterpreterException {
 		return (ShadowNumber) cast(Type.CODE);
 	}
 
-	public ShadowNumber toFloat() throws ShadowException {
+	public ShadowNumber toFloat() throws InterpreterException {
 		return (ShadowNumber) cast(Type.FLOAT);
 	}
 
-	public ShadowNumber toDouble() throws ShadowException {
+	public ShadowNumber toDouble() throws InterpreterException {
 		return (ShadowNumber) cast(Type.DOUBLE);
 	}
 	
 	
-	public ShadowNumber max(ShadowNumber number) throws ShadowException {
+	public ShadowNumber max(ShadowNumber number) throws InterpreterException {
 		ShadowNumber first = this;
 		ShadowNumber second = number;
         if (first.isStrictSubtype(second))
@@ -105,7 +99,7 @@ public abstract class ShadowNumber extends ShadowValue {
 			return second;
 	}
 	
-	public ShadowNumber min(ShadowNumber number) throws ShadowException {
+	public ShadowNumber min(ShadowNumber number) throws InterpreterException {
 		ShadowNumber first = this;
 		ShadowNumber second = number;
         if (first.isStrictSubtype(second))

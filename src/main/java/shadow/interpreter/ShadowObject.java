@@ -1,19 +1,12 @@
 package shadow.interpreter;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import shadow.ShadowException;
-import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.ModifiedType;
 import shadow.typecheck.type.Type;
 import shadow.interpreter.InterpreterException.Error;
 
 public class ShadowObject extends ShadowValue {
 	private Type type;
 
-	public ShadowObject(Type type) throws ShadowException {
+	public ShadowObject(Type type) throws InterpreterException {
 		if (type.isPrimitive())
 			throw new InterpreterException(Error.INVALID_TYPE, "Cannot create an object with a " +
 					"primitive type");
@@ -25,7 +18,7 @@ public class ShadowObject extends ShadowValue {
 	}
 
 	@Override
-	public ShadowValue copy() throws ShadowException {
+	public ShadowValue copy() throws InterpreterException {
 		return new ShadowObject(getType());
 	}
 
@@ -35,7 +28,7 @@ public class ShadowObject extends ShadowValue {
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException {
+	public ShadowValue cast(Type type) throws InterpreterException {
 		return new ShadowObject(type);
 	}
 }

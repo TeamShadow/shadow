@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Type;
 
 /**
@@ -13,12 +12,12 @@ public class ShadowInvalid extends ShadowValue {
     public static final ShadowInvalid INVALID = new ShadowInvalid();
 
     @Override
-    public ShadowValue cast(Type type) throws ShadowException {
+    public ShadowValue cast(Type type) throws InterpreterException {
         return INVALID;
     }
 
     @Override
-    public ShadowValue copy() throws ShadowException {
+    public ShadowValue copy() throws InterpreterException {
         return INVALID;
     }
 

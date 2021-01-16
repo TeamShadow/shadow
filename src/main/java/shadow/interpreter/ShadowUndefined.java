@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Type;
 
 /**
@@ -20,12 +19,12 @@ public class ShadowUndefined extends ShadowValue {
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException {
+	public ShadowValue cast(Type type) throws InterpreterException {
 		return new ShadowUndefined(type);
 	}
 
 	@Override
-	public ShadowValue copy() throws ShadowException {		
+	public ShadowValue copy() throws InterpreterException {
 		return new ShadowUndefined(type);
 	}
 	
