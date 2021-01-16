@@ -10,7 +10,7 @@ import shadow.typecheck.type.SingletonType;
 import shadow.typecheck.type.Type;
 
 public class ShadowClass extends ShadowObject {
-	private Type type;
+	private final Type type;
 
 	public ShadowClass(Type type) throws ShadowException {
 		super(type.isParameterized() ? Type.GENERIC_CLASS : Type.CLASS);
