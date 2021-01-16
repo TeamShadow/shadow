@@ -1,9 +1,12 @@
 package shadow.typecheck.type;
 
+import shadow.CompileException;
 import shadow.doctool.Documentation;
 import shadow.parse.ShadowParser;
+import shadow.typecheck.TypeCheckException;
 
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**

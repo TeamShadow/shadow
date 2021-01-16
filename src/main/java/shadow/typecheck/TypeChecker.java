@@ -180,7 +180,6 @@ public class TypeChecker {
 	private static void addStandardTypes( Set<Type> types ) {
 		Package standard = Type.OBJECT.getPackage(); // shadow:standard package
 		types.addAll( standard.getTypes() );
-		types.addAll( standard.getChild("decorators").getTypes() );
 		
 		/* A few io classes are absolutely necessary for a console program. */
 		Package io = standard.getParent().getChild("io");

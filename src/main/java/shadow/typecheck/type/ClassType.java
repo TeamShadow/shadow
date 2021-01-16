@@ -621,7 +621,7 @@ public class ClassType extends Type {
 						String attributesText = signature.getAttributes().stream()
 								.map(AttributeInvocation::getMetaFileText)
 								.collect(Collectors.joining(", "));
-						out.println(indent + "<" + attributesText + ">");
+						out.println(indent + "[" + attributesText + "]");
 					}
 
 					out.println(indent + signature + ";");

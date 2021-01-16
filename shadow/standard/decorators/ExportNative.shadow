@@ -1,4 +1,0 @@
-locked class shadow:standard:decorators@
-	ExportNative is CompilerDecorator {
-		protected create() {}
-}

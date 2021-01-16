@@ -744,7 +744,7 @@ public class TypeCollector extends ScopedChecker {
 				break;
 			case "attribute":
 				AttributeType attributeType = new AttributeType(name, documentation, currentType);
-				if (currentPackage.getQualifiedName().equals("shadow:attributes")) {
+				if (currentPackage.getQualifiedName().equals("shadow:standard:attributes")) {
 					captureAttributeType(attributeType, typeName);
 				}
 				type = attributeType;
@@ -809,28 +809,11 @@ public class TypeCollector extends ScopedChecker {
 				}
 			}
 
-			if (currentPackage.getQualifiedName().equals("shadow:standard:decorators")) {
-				switch( typeName ) {
-				case "Decorator": Type.DECORATOR = (InterfaceType)type; break;
-				case "MethodDecorator": Type.METHOD_DECORATOR = (InterfaceType)type; break;
-				case "CompilerDecorator": Type.COMPILER_DECORATOR = (InterfaceType)type; break;
-
-				case "ImportAssembly": Type.IMPORT_ASSEMBLY = (ClassType)type; break;
-				case "ImportNative": Type.IMPORT_NATIVE = (ClassType)type; break;
-				case "ImportMethod": Type.IMPORT_METHOD = (ClassType)type; break;
-
-				case "ExportNative": Type.EXPORT_NATIVE = (ClassType)type; break;
-				case "ExportAssembly": Type.EXPORT_ASSEMBLY = (ClassType)type; break;
-				case "ExportMethod": Type.EXPORT_METHOD = (ClassType)type; break;
-				}
-			}
-
 			if( currentPackage.getQualifiedName().equals("shadow:natives") ) {
 				switch( typeName ) {
 				case "Pointer": Type.POINTER = (ClassType)type; break;
 				}
 			}
-
 
 			// Put new type in its package.
 			try	{			

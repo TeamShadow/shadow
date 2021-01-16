@@ -15,9 +15,6 @@ import shadow.typecheck.type.ModifiedType;
 public abstract class ScopedChecker extends BaseChecker {
 	private final Deque<Scope> scopes = new LinkedList<>();
 
-	/* Whether or not we are currently inside a decorator. */
-	private boolean decoratorScope;
-
 	/** Contains all metadata associated with a given scope */
 	private static class Scope {
 		private final Map<String, ModifiedType> symbolTable = new HashMap<>();
@@ -119,13 +116,5 @@ public abstract class ScopedChecker extends BaseChecker {
 		}
 
 		return null;
-	}
-	
-	protected void setDecoratorScope(boolean value) {
-		decoratorScope = value;
-	}
-	
-	protected boolean isDecoratorScope() {
-		return decoratorScope;
 	}
 }

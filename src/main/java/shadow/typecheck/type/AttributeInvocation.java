@@ -7,7 +7,10 @@ import shadow.parse.ShadowVisitorErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Represents a particular invocation of an attribute type, including any fields set during that invocation. E.g.
@@ -89,6 +92,10 @@ public class AttributeInvocation {
         return fieldExpressions.containsKey(fieldName)
                 ? fieldExpressions.get(fieldName).getInterpretedValue()
                 : type.getField(fieldName).getInterpretedValue();
+    }
+
+    public Set<String> getFieldNames() {
+        return type.getFields().keySet();
     }
 
     public String getMetaFileText() {

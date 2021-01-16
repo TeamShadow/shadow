@@ -32,8 +32,6 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.ClassOrInterfaceBodyDeclarationContext;
-import shadow.parse.ShadowParser.DecoratorContext;
-import shadow.parse.ShadowParser.DecoratorExpressionContext;
 import shadow.parse.ShadowParser.MethodDeclarationContext;
 import shadow.parse.ShadowParser.MethodDeclaratorContext;
 import shadow.parse.ShadowParser.NameContext;
@@ -865,40 +863,6 @@ public class TypeUpdater extends BaseChecker {
 
 			// Attach and pre-process attributes
 			signature.attachAndProcessAttributes(outerCtx.attributeInvocations(), /* errorReporter= */ this);
-
-			DecoratorContext decoratorCtx = ((ClassOrInterfaceBodyDeclarationContext) node.getParent()).decorator();
-
-			if (decoratorCtx != null) {
-				Type importExportType = null;
-
-				for (DecoratorExpressionContext t : decoratorCtx.decoratorExpression()) {
-					Type actualType = t.type().getType();
-					if (importExportType != null &&
-							(actualType == Type.IMPORT_ASSEMBLY || actualType == Type.IMPORT_METHOD || actualType == Type.IMPORT_NATIVE ||
-							 actualType == Type.EXPORT_ASSEMBLY || actualType == Type.EXPORT_METHOD || actualType == Type.EXPORT_NATIVE) ) {
-						addError(node, Error.INVALID_TYPE, "Only one import or export decorator can be present on a method at all times.");
-					}
-					else
-						importExportType = actualType;
-
-				}
-
-				if (importExportType != null) {
-					if (importExportType == Type.IMPORT_NATIVE) {
-						signature.setImportType(MethodSignature.IMPORT_NATIVE);
-					} else if (importExportType == Type.IMPORT_ASSEMBLY) {
-						signature.setImportType(MethodSignature.IMPORT_ASSEMBLY);
-					} else if (importExportType == Type.IMPORT_METHOD) {
-						signature.setImportType(MethodSignature.IMPORT_METHOD);
-					} else if (importExportType == Type.EXPORT_ASSEMBLY) {
-						signature.setExportType(MethodSignature.EXPORT_ASSEMBLY);
-					} else if (importExportType == Type.EXPORT_METHOD) {
-						signature.setExportType(MethodSignature.EXPORT_METHOD);
-					} else if(importExportType == Type.EXPORT_NATIVE) {
-						signature.setExportType(MethodSignature.EXPORT_NATIVE);						
-					}
-				}
-			}
 		}
 
 		// only imports and exports that are meant to be called to and from C are allowed to start with _
@@ -915,19 +879,6 @@ public class TypeUpdater extends BaseChecker {
 			
 			if (!signature.getModifiers().isPrivate()) {
 				addError(node, Error.INVALID_MODIFIER, "A method import should be private.");
-			}
-		}
-
-		if (node instanceof MethodDeclarationContext) {
-			MethodDeclaratorContext declaratorCtx = ((MethodDeclarationContext) node).methodDeclarator();
-
-			if (!declaratorCtx.type().isEmpty() && !signature.isExportMethod()) {
-				addError(node, Error.INVALID_METHOD,
-						"Methods listing allowable export classes need to be marked with ExportMethod decorator.");
-			} else {
-				for(TypeContext typeCtx : declaratorCtx.type()) {
-					signature.addExportType(typeCtx.getType());
-				}
 			}
 		}
 
@@ -1228,17 +1179,6 @@ public class TypeUpdater extends BaseChecker {
 		}
 
 		declarationType = declarationType.getOuter();
-
-		// Any decorator class or interface definition needs to end with
-		// Decorator
-		/*  //Don't like it.
-		if (declarationType != null && declarationType.hasInterface(Type.DECORATOR)
-				&& !declarationType.getTypeName().endsWith("Decorator")) {
-			addError(node, Error.INVALID_LITERAL,
-					"Any class or interface that derives from the Decorator interface needs to end with the 'Decorator' literal, as such: "
-							+ declarationType.getTypeName() + "Decorator");
-		}
-		*/
 	}
 
 	@Override
@@ -1446,29 +1386,11 @@ public class TypeUpdater extends BaseChecker {
 	public Void visitClassOrInterfaceType(ShadowParser.ClassOrInterfaceTypeContext ctx) {
 		visitChildren(ctx);
 
-		boolean isDecorator = (ctx.getParent().getParent().getParent() instanceof DecoratorExpressionContext);
-
 		// (unqualifiedName '@')? Identifier ( ':' Identifier )* typeArguments?
 		// Type can be complex: package@Container:Stuff<T, List<String>, String,
 		// Thing<K>>
 		// Note that all type arguments are on the last class
 		String typeName = ctx.Identifier(0).getText();
-
-		/*  // Don't like it.
-		if (isDecorator) {
-			String _decoratorStr = "Decorator";
-
-			if (typeName.endsWith(_decoratorStr)) {
-				addError(ctx, Error.INVALID_TYPE,
-						String.format("Incorrect use of decorators: %s should be used instead of %s",
-								typeName.substring(0, typeName.length() - _decoratorStr.length()), typeName));
-			} else {
-				// A decorator class or interface definition always ends with
-				// the Decorator literal
-				typeName += _decoratorStr;
-			}
-		}
-		*/
 
 		if (ctx.unqualifiedName() != null)
 			typeName = ctx.unqualifiedName().getText() + "@" + typeName;

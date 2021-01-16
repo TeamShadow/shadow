@@ -11,7 +11,7 @@ locked class shadow:standard@
 	Thread
 is CanIndex<int, Thread>
 {
-	[ImportAssembly("assembly", ImportAssembly:ASSEMBLY)]
+	[ImportAssembly]
 	private readonly __ShadowThread_Spawn(Thread instance) => (Pointer);
 	
 	[ImportNative]
@@ -203,8 +203,8 @@ is CanIndex<int, Thread>
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
-	[ExportMethod]
-	private [CurrentThread] interrupting() => (boolean)
+	[ExportMethod(exportedTo = CurrentThread:class)]
+	private interrupting() => (boolean)
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -214,8 +214,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	[ExportMethod]
-	private [CurrentThread] sleep(TimeSpan timeout) => ()
+	[ExportMethod(exportedTo = CurrentThread:class)]
+	private sleep(TimeSpan timeout) => ()
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -225,8 +225,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	[ExportMethod]
-	private [CurrentThread] sleep(int millisecondsTimeout) => ()
+	[ExportMethod(exportedTo = CurrentThread:class)]
+	private sleep(int millisecondsTimeout) => ()
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -241,8 +241,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	*/
-	[ExportMethod]
-	protected [Object] receiveFirst(Class expectedType) => (Object, Thread)
+	[ExportMethod(exportedTo = Object:class)]
+	protected receiveFirst(Class expectedType) => (Object, Thread)
 	{
 		throw UnsupportedOperationException:create();
 	}
@@ -258,8 +258,8 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	*/
-	[ExportMethod]
-	protected [Object] receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	[ExportMethod(exportedTo = Object:class)]
+	protected receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
 		throw UnsupportedOperationException:create();
 	}

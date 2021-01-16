@@ -102,12 +102,6 @@ public abstract class Type implements Comparable<Type> {
 
 	public static ClassType POINTER = null;
 	public static ClassType THREAD = null;
-	public static ClassType IMPORT_NATIVE = null;
-	public static ClassType IMPORT_ASSEMBLY = null;
-	public static ClassType IMPORT_METHOD = null;
-	public static ClassType EXPORT_ASSEMBLY = null;
-	public static ClassType EXPORT_METHOD = null;
-	public static ClassType EXPORT_NATIVE = null;
 
 	public static final ClassType UNKNOWN = new ClassType("Unknown Type", new Modifiers(), null, null); // UNKNOWN type used for placeholder when typechecking goes wrong
 	public static final ClassType NULL = new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
@@ -136,9 +130,6 @@ public abstract class Type implements Comparable<Type> {
 	public static InterfaceType CAN_MODULUS = null;
 	public static InterfaceType CAN_NEGATE = null;	
 	public static InterfaceType CAN_RUN = null;
-	public static InterfaceType DECORATOR = null;
-	public static InterfaceType METHOD_DECORATOR = null;
-	public static InterfaceType COMPILER_DECORATOR = null;
 
 	//constants used for options in toString()
 	private static int bits = 0;
@@ -340,17 +331,6 @@ public abstract class Type implements Comparable<Type> {
 		POINTER = null;
 		CAN_RUN = null;
 		THREAD = null;
-
-		DECORATOR = null;
-		METHOD_DECORATOR = null;
-		COMPILER_DECORATOR = null;
-		IMPORT_NATIVE = null;
-		IMPORT_ASSEMBLY = null;
-		IMPORT_METHOD = null;
-
-		EXPORT_NATIVE = null;
-		EXPORT_ASSEMBLY = null;
-		EXPORT_METHOD = null;
 
 		exceptionType = null;
 

@@ -141,7 +141,7 @@ classOrInterfaceBodyDeclaration
 	  	( classOrInterfaceDeclaration /*{$ctx.classOrInterfaceDeclaration().setDocumentation($documentation);}*/
 	    | enumDeclaration 
 	    | fieldDeclaration) 
-	  	| (attributeInvocations? decorator? modifiers (methodDeclaration | createDeclaration | destroyDeclaration))
+	  	| (attributeInvocations? modifiers (methodDeclaration | createDeclaration | destroyDeclaration))
 	  )
 	;
 	
@@ -159,7 +159,7 @@ arrayInitializer
 	;
 
 methodDeclarator
-	: ('[' type ( ',' type )* ']')? generalIdentifier formalParameters '=>' resultTypes
+	: generalIdentifier formalParameters '=>' resultTypes
 	;
 
 generalIdentifier
@@ -207,9 +207,8 @@ explicitCreateInvocation
 	'(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ';'
 	;
 
-// TODO(Brinsky): Switch to square braces after decorates are removed
 attributeInvocations
-    : '<' attributeInvocation ( ',' attributeInvocation )* '>'
+    : '[' attributeInvocation ( ',' attributeInvocation )* ']'
     ;
 
 // Parentheses are disallowed unless at least one field is being initialized. Each
@@ -218,14 +217,6 @@ attributeInvocations
 attributeInvocation
     : classOrInterfaceType ( '(' variableDeclarator ( ',' variableDeclarator )* ')' )?
     ;
-
-decorator
-	: '[' decoratorExpression (',' decoratorExpression)? ']'
-	;
-
-decoratorExpression
-	: type methodCall?
-	;
 
 type
 	: referenceType 

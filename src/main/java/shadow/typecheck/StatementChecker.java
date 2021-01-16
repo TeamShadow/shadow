@@ -38,7 +38,6 @@ import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.CatchStatementsContext;
 import shadow.parse.ShadowParser.ConditionalExpressionContext;
-import shadow.parse.ShadowParser.DecoratorExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
@@ -117,11 +116,6 @@ public class StatementChecker extends ScopedChecker {
 		}
 		
 		for( ModifiedType modifiedType : signature.getParameterTypes() ) {
-			Type type = modifiedType.getType();
-			if(signature.getOuter().hasInterface(Type.COMPILER_DECORATOR) && signature.isCreate() && !type.isIntegral() && !type.isString() && !(type instanceof EnumType)) {
-				addError(node, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in compiler decorator, only integral, String, and enum types allowed", type);
-			}
-			
 			currentType.addUsedType(modifiedType.getType());
 		}
 		
@@ -153,22 +147,7 @@ public class StatementChecker extends ScopedChecker {
 			if(method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
 				addError(node, Error.INVALID_METHOD_IMPORT, "No matching method was found for method '" + signature.getSymbol() + "' in class '" + sourceClass + "'");
 			} else {
-				// we found the method, but we still need to check if the method is allowed to be
-				// imported by this class
-				boolean found = false;
-				Type destinationClass = signature.getOuter();
-
-				List<Type> exportTypes = method.getExportTypes();
-				for(int i = 0; !found && i < exportTypes.size(); ++i) {
-					Type allowedType = exportTypes.get(i);
-					if(destinationClass.equals(allowedType)) {
-						found = true;
-					}
-				}
-				
-				if(!found) {
-					addError(node, Error.INVALID_METHOD_IMPORT, "The '" + signature.getSymbol() + "' method in '" + sourceClass +"' is not allowed to be shared with '" + destinationClass + "'");
-				}
+				signature.setImportSource(method);
 			}
 		}
 		
@@ -1804,12 +1783,7 @@ public class StatementChecker extends ScopedChecker {
 			}
 		}	
 		else if( ctx.generalIdentifier() != null ) {
-			boolean success = setTypeFromName( ctx, image );
-			/* //Screwing around with ignoring or adding "Decorator" on the end of type names isn't a good idea.
-			if(!success && isDecoratorScope())
-				success = setTypeFromName(ctx, image + "Decorator"); */
-			
-			if(!success) {
+			if(!setTypeFromName( ctx, image )) {
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 				ctx.setType(Type.UNKNOWN);
 			}			
@@ -2488,8 +2462,7 @@ public class StatementChecker extends ScopedChecker {
 		if( signature == null )
 			addErrors(node, errors);
 		else {
-			// TODO: Decorator needs to be fixed
-			if(!signature.getOuter().hasInterface(Type.DECORATOR) && !methodIsAccessible( signature, currentType ))
+			if(!methodIsAccessible( signature, currentType ))
 				addError(node, Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");						
 			
 			//if any arguments have an UnboundMethodType, note down what their true MethodSignature must be
@@ -2534,14 +2507,6 @@ public class StatementChecker extends ScopedChecker {
 				for( ModifiedType modifiedType : signature.getReturnTypes() ) {
 					currentType.addUsedType(modifiedType.getType());
 				}
-			}
-			
-			// decorators without arguments should not have method call structure
-			// [ImportAssembly()] is incorrect syntax and only [ImportAssembly]
-			// is correct. However, [ImportAssembly(true)] is valid (if there is
-			// a constructor in the form create(boolean))
-			if (outer.hasInterface(Type.DECORATOR) && arguments.isEmpty()) {
-				addError(ctx, Error.INVALID_ARGUMENTS, "A decorator with no arguments should not have the method call structure; use [T] instead of [T()]");
 			}
 			
 			if( signature != null &&  prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  ) {
@@ -3077,25 +3042,6 @@ public class StatementChecker extends ScopedChecker {
 				ctx.setType(sendSignature.getReturnTypes()); // void
 			}
 		}
-		
-		return null;
-	}
-	
-	@Override
-	public Void visitDecoratorExpression(DecoratorExpressionContext ctx) {		
-		Type actualType = ctx.type().getType();
-		if (!actualType.hasInterface(Type.METHOD_DECORATOR) || !(actualType instanceof ClassType)) {
-			addError(ctx, Error.INVALID_TYPE,
-					"A method decorator must be a class that derives from the MethodDecorator interface.");
-		}
-		
-		setTypeFromContext(ctx, "create", actualType);
-		
-		setDecoratorScope(true);
-		curPrefix.addFirst(ctx);
-		visitChildren(ctx);
-		curPrefix.removeFirst();
-		setDecoratorScope(false);
 		
 		return null;
 	}

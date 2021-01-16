@@ -97,9 +97,9 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 			}
 		}
 
+		ErrorReporter errorReporter = new ErrorReporter(Loggers.AST_INTERPRETER);
 		ConstantFieldInterpreter visitor =
-				new ConstantFieldInterpreter(
-						packageTree, new ErrorReporter(Loggers.AST_INTERPRETER), constantFields);
+				new ConstantFieldInterpreter(packageTree, errorReporter, constantFields);
 		for (FieldKey fieldKey : constantFields.keySet()) {
 			VariableDeclaratorContext fieldCtx = constantFields.get(fieldKey);
 
@@ -111,14 +111,14 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 			visitor.visitRootField(fieldKey, fieldCtx);
 		}
 
-		evaluateAttributeFields(typesIncludingInner, visitor);
+		evaluateAttributeFields(typesIncludingInner, visitor, errorReporter);
 
 		visitor.printAndReportErrors();
 	}
 
 	// Evaluates fields on attribute types and attribute invocations. We don't store these in the
 	// constantFields because they can't be referenced by each other or by other constants.
-	private static void evaluateAttributeFields(List<Type> typesIncludingInner, ConstantFieldInterpreter visitor) {
+	private static void evaluateAttributeFields(List<Type> typesIncludingInner, ConstantFieldInterpreter visitor, ErrorReporter errorReporter) {
 		for (Type type : typesIncludingInner) {
 			if (type instanceof AttributeType) {
 				for (Map.Entry<String, VariableDeclaratorContext> field : ((AttributeType) type).getInitializedFields().entrySet()) {
@@ -139,7 +139,9 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 			}
 		}
 
-		allMethods.forEach(MethodSignature::processAttributeValues);
+		for (MethodSignature method : allMethods) {
+			method.processAttributeValues(errorReporter);
+		}
 	}
 
 	public void visitRootField(FieldKey rootFieldKey, VariableDeclaratorContext rootFieldCtx) {
