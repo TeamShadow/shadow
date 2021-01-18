@@ -1,0 +1,17 @@
+import shadow:io@Console;
+
+class shadow:test@ImportExportNativeTest
+{
+    [ExportNative]
+    private add(int a, int b) => (int) {
+        return a + b;
+    }
+
+    [ImportNative]
+    private subtract(int a, int b) => (int);
+
+	public main(String[] args) => ()
+	{
+		Console.printLine(subtract(25, 13));
+	}
+}

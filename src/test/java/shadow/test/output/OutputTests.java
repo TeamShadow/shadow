@@ -1478,7 +1478,24 @@ public class OutputTests {
 				"Test 7\n" + 
 				"7\n");		
 	}
-	
+
+	@Test public void testImportExportMethod() throws Exception {
+		args.add("shadow/test/ImportExportMethodA.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "Test\n");
+	}
+
+	@Test public void testImportExportAssembly() throws Exception {
+		args.add("shadow/test/ImportExportAssemblyTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "15\n");
+	}
+
+	@Test public void testImportExportNative() throws Exception {
+		args.add("shadow/test/ImportExportNativeTest.shadow");
+		Main.run(args.toArray(new String[] { }));
+		run(new String[0], "12\n");
+	}
 	
 	/*@Test public void testMessageQueue() throws Exception {
 		args.add("shadow/test/MessageQueueTest.shadow");

@@ -1,6 +1,6 @@
 class Test {
 
-    <Attribute(test = 5)>
+    [Attribute(test = 5)]
     public methodA() => () {
 
     }

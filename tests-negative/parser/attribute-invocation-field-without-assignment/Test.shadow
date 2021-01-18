@@ -1,6 +1,6 @@
 class Test
 {
-    <Attribute(test)>
+    [Attribute(test)]
     public main(String[] args) => ()
     {
 

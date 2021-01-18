@@ -1,7 +1,7 @@
 class Test {
 
     // 'fake' is note declared on Attribute
-    <Attribute(fake = 10)>
+    [Attribute(fake = 10)]
     public main() => () {
     }
 }

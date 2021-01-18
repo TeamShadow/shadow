@@ -1,7 +1,7 @@
 class Test {
 
     // Attribute is never declared
-    <Attribute>
+    [Attribute]
     public main() => () {
     }
 }

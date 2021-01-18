@@ -1,6 +1,6 @@
 class Test {
 
-    <Attribute(test = test)>
+    [Attribute(test = test)]
     public main() => () {
     }
 }

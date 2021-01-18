@@ -1,11 +1,11 @@
 class Attributes {
 
-    <Attribute1(required = 3.5), Attribute2>
+    [Attribute1(required = 3.5), Attribute2]
     public method1() => () {
 
     }
 
-    <Attribute1(optional = 2, required = 3.5)>
+    [Attribute1(optional = 2, required = 3.5)]
     public method2() => () {
 
     }
