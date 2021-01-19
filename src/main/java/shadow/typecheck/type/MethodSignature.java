@@ -6,7 +6,6 @@ import shadow.doctool.Documentation;
 import shadow.interpreter.ShadowClass;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
-import shadow.parse.ShadowVisitorErrorReporter;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException;
 
@@ -416,30 +415,16 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		importSource = method;
 	}
 
+	public Collection<AttributeInvocation> getAttributes() {
+		return Collections.unmodifiableCollection(attributes.values());
+	}
+
 	public AttributeInvocation getAttributeInvocation(AttributeType type) {
 		return attributes.get(type);
 	}
 
-	/**
-	 * Associates any attribute invocations and their fields with this method signature. Triggers
-	 * "early" attribute processing logic (i.e. prior to fields being evaluated).
-	 */
-	public void attachAndProcessAttributes(
-			ShadowParser.AttributeInvocationsContext ctx, ShadowVisitorErrorReporter errorReporter) {
-		if (ctx == null) {
-			return;
-		}
-
-		for (ShadowParser.AttributeInvocationContext attributeCtx : ctx.attributeInvocation()) {
-			attachAttribute(attributeCtx, errorReporter);
-		}
-
-		processAttributeTypes(errorReporter);
-	}
-
-
-    private void attachAttribute(
-    		ShadowParser.AttributeInvocationContext ctx, ShadowVisitorErrorReporter errorReporter) {
+    public void attachAttribute(
+    		ShadowParser.AttributeInvocationContext ctx, ErrorReporter errorReporter) {
 		AttributeInvocation attribute = new AttributeInvocation(ctx, errorReporter, this);
 		AttributeType type = attribute.getType();
 
@@ -454,13 +439,11 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		}
     }
 
-    public Collection<AttributeInvocation> getAttributes() {
-		return Collections.unmodifiableCollection(attributes.values());
-	}
-
-	// Performs any required operations based on the attached attribute types, prior to those
-	// attributes having their fields evaluated
-	private void processAttributeTypes(ShadowVisitorErrorReporter errorReporter) {
+	/**
+	 * Performs any required operations based on the attached attribute types, prior to those
+	 * attributes having their fields evaluated.
+	 */
+	public void processAttributeTypes(ErrorReporter errorReporter) {
 		for (AttributeType attributeType : attributes.keySet()) {
 			if (attributeType.equals(AttributeType.IMPORT_NATIVE)) {
 				processImportExportAttributes(true, ImportExportMode.NATIVE, errorReporter);
@@ -478,7 +461,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		}
 	}
 
-	private void processImportExportAttributes(boolean isImport, ImportExportMode mode, ShadowVisitorErrorReporter errorReporter) {
+	private void processImportExportAttributes(boolean isImport, ImportExportMode mode, ErrorReporter errorReporter) {
 		if (!(importMode == ImportExportMode.NONE && exportMode == ImportExportMode.NONE)) {
 			errorReporter.addError(node, TypeCheckException.Error.INVALID_TYPE, "Only one import or export attribute can be present on a method at all times.");
 			return;
@@ -491,8 +474,10 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		}
 	}
 
-	// Performs any required operations based on the attached attribute types AND the values of
-	// their fields. Runs relatively late, after compile-time constants can be evaluated.
+	/**
+	 * Performs any required operations based on the attached attribute types AND the values of
+	 * their fields. Runs relatively late, after compile-time constants can be evaluated.
+	 */
 	public void processAttributeValues(ErrorReporter errorReporter) {
 		for (AttributeType attributeType : attributes.keySet()) {
 			if (attributeType.equals(AttributeType.IMPORT_METHOD)) {

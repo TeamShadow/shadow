@@ -862,7 +862,12 @@ public class TypeUpdater extends BaseChecker {
 			ClassOrInterfaceBodyDeclarationContext outerCtx = ((ClassOrInterfaceBodyDeclarationContext) node.getParent());
 
 			// Attach and pre-process attributes
-			signature.attachAndProcessAttributes(outerCtx.attributeInvocations(), /* errorReporter= */ this);
+			if (outerCtx.attributeInvocations() != null) {
+				for (ShadowParser.AttributeInvocationContext attributeCtx : outerCtx.attributeInvocations().attributeInvocation()) {
+					signature.attachAttribute(attributeCtx, this.getErrorReporter());
+				}
+			}
+			signature.processAttributeTypes(this.getErrorReporter());
 		}
 
 		// only imports and exports that are meant to be called to and from C are allowed to start with _

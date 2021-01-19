@@ -1,12 +1,9 @@
 package shadow.typecheck.type;
 
-import shadow.CompileException;
 import shadow.doctool.Documentation;
 import shadow.parse.ShadowParser;
-import shadow.typecheck.TypeCheckException;
 
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -114,7 +111,7 @@ public class AttributeType extends Type {
         return false;
     }
 
-    // TODO(Brinsky): See if default implementations for the below methods can be provided by Type
+    // Type-parameter related methods (not currently supported by attributes)
 
     @Override
     public Type replace(List<ModifiedType> values, List<ModifiedType> replacements) {

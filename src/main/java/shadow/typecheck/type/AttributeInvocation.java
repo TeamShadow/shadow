@@ -3,14 +3,11 @@ package shadow.typecheck.type;
 import shadow.interpreter.ShadowValue;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.AttributeInvocationContext;
-import shadow.parse.ShadowVisitorErrorReporter;
+import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.TypeCheckException.Error;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toMap;
 
 /**
  * Represents a particular invocation of an attribute type, including any fields set during that invocation. E.g.
@@ -24,7 +21,7 @@ public class AttributeInvocation {
     // Note that this does not contain the default expressions provided in the attribute declaration
     private final Map<String, ShadowParser.VariableDeclaratorContext> fieldExpressions = new HashMap<>();
 
-    public AttributeInvocation(AttributeInvocationContext ctx, ShadowVisitorErrorReporter errorReporter, MethodSignature attachedTo) {
+    public AttributeInvocation(AttributeInvocationContext ctx, ErrorReporter errorReporter, MethodSignature attachedTo) {
         // TypeUpdater.visitClassOrInterfaceType() should guarantee this is an AttributeType
         type = (AttributeType) ctx.getType();
         invocationCtx = ctx;
@@ -37,7 +34,7 @@ public class AttributeInvocation {
 
     /** Associates the given field assignment with its parent attribute invocation and performs sanity checks. */
     public void addFieldAssignment(
-            ShadowParser.VariableDeclaratorContext ctx, ShadowVisitorErrorReporter errorReporter) {
+            ShadowParser.VariableDeclaratorContext ctx, ErrorReporter errorReporter) {
         String fieldName = ctx.generalIdentifier().getText();
 
         // Repeated field assignment
@@ -54,7 +51,7 @@ public class AttributeInvocation {
     }
 
     /** Must be called after type updating to ensure the fields of the AttributeType are populated. */
-    public void updateFieldTypes(ShadowVisitorErrorReporter errorReporter) {
+    public void updateFieldTypes(ErrorReporter errorReporter) {
         for (String fieldName : fieldExpressions.keySet()) {
             ShadowParser.VariableDeclaratorContext fieldCtx = fieldExpressions.get(fieldName);
 
@@ -92,10 +89,6 @@ public class AttributeInvocation {
         return fieldExpressions.containsKey(fieldName)
                 ? fieldExpressions.get(fieldName).getInterpretedValue()
                 : type.getField(fieldName).getInterpretedValue();
-    }
-
-    public Set<String> getFieldNames() {
-        return type.getFields().keySet();
     }
 
     public String getMetaFileText() {

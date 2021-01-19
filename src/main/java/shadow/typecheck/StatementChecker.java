@@ -124,7 +124,7 @@ public class StatementChecker extends ScopedChecker {
 
 		// Done here because AttributeInvocationContext doesn't have references to these AttributeInvocation objects
 		for (AttributeInvocation attribute : signature.getAttributes()) {
-			attribute.updateFieldTypes(/* errorReporter= */ this);
+			attribute.updateFieldTypes(this.getErrorReporter());
 		}
 
 		if(signature.isImportMethod()) {
