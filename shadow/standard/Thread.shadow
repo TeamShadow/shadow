@@ -19,7 +19,8 @@ is CanIndex<int, Thread>
 
 	Pointer handle;
 	CanRun runner;
-	nullable Exception threadException;
+	// TODO: Uncomment this once it is consumed/returned somewhere
+	// nullable Exception threadException;
 	
 	/**
 	* Creates a new {@code Thread} object which takes on a {@code CanRun}
@@ -291,7 +292,8 @@ is CanIndex<int, Thread>
 		try {
 			runner.run();
 		} catch(Exception e) {
-			threadException = ThreadException:create(this, e);
+	        // TODO: Uncomment this once it is consumed/returned somewhere
+			// threadException = ThreadException:create(this, e);
 		} finally {
 			handle.free();
 		}
