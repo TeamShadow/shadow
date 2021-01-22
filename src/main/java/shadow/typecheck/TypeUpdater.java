@@ -268,20 +268,6 @@ public class TypeUpdater extends BaseChecker {
 			type.addUsedType(Type.UINT);
 			type.addUsedType(Type.ULONG);
 			type.addUsedType(Type.USHORT);
-
-
-			/*
-			 * Update used items for meta files, since they won't have statement
-			 * checking. Note that imports in meta files have been optimized to
-			 * include only referenced types.
-			 */
-			if (declarationNode.isFromMetaFile()) {
-				for (Object item : type.getImportedItems().values())
-					if (item instanceof Type) {
-						Type importType = (Type) item;
-						type.addUsedType(importType);
-					}
-			}
 		}
 	}
 

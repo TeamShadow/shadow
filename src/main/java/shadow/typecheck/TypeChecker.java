@@ -96,11 +96,11 @@ public class TypeChecker {
 		/* Do type-checking of statements, i.e., actual code. */
 		StatementChecker checker = new StatementChecker(packageTree, reporter);
 		for (Context node : nodes) {
-			// We assume .meta files are already type-checked
-			if (!node.isFromMetaFile()) {
-				/* Check all statements for type safety and other features */
-				checker.check(node);
-			}
+			// Check all statements for type safety and other features.
+			// Even .meta files need this in order to:
+			//   - Populate types on nodes within constant expressions
+			//   - Collect used types for a node
+			checker.check(node);
 		}
 		
 		return new TypeCheckerOutput(nodes, packageTree);

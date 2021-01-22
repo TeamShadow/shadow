@@ -287,29 +287,28 @@ public class StatementChecker extends ScopedChecker {
 	{		
 		visitMethodPre(ctx);		
 		visitChildren(ctx);
-		
-		if( currentType instanceof ClassType ) {
+
+		// Check for an explicit call to the parent class' create().
+		// For .meta files and imports, we trust that the create() is properly implemented elsewhere
+		if(currentType instanceof ClassType && !ctx.getSignature().isImport() && !ctx.isFromMetaFile()) {
 			ClassType classType = (ClassType) currentType;
 			ClassType parentType = classType.getExtendType();
 			
 			boolean explicitCreate = ctx.createBlock() != null && ctx.createBlock().explicitCreateInvocation() != null;
 			
-			if( parentType != null ) {
-				if( !explicitCreate && !ctx.getSignature().isImport() ) { 
-					//only worry if there is no explicit invocation
-					//explicit invocations are handled separately
-					//for native creates, we have to trust the author of the native code
-					boolean foundDefault = false;
-					for( MethodSignature method : parentType.getMethodOverloads("create") ) {
-						if( method.getParameterTypes().isEmpty() ) {
-							foundDefault = true;
-							break;
-						}
+			if(!explicitCreate && parentType != null) {
+				//only worry if there is no explicit invocation
+				//explicit invocations are handled separately
+				boolean foundDefault = false;
+				for( MethodSignature method : parentType.getMethodOverloads("create") ) {
+					if( method.getParameterTypes().isEmpty() ) {
+						foundDefault = true;
+						break;
 					}
-				
-					if( !foundDefault )
-						addError(ctx, Error.MISSING_CREATE, "Explicit create invocation is missing, and parent class " + parentType + " does not implement the default create", parentType);
 				}
+
+				if( !foundDefault )
+					addError(ctx, Error.MISSING_CREATE, "Explicit create invocation is missing, and parent class " + parentType + " does not implement the default create", parentType);
 			}
 		}
 		
@@ -3073,6 +3072,12 @@ public class StatementChecker extends ScopedChecker {
 			}
 		}
 
+		return null;
+	}
+
+	@Override
+	public Void visitDependencyList(ShadowParser.DependencyListContext ctx) {
+		// These only appear in .meta files and don't require statement-checking
 		return null;
 	}
 }
