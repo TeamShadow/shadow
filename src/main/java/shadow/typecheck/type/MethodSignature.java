@@ -1,23 +1,15 @@
 package shadow.typecheck.type;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import shadow.doctool.Documentation;
+import shadow.interpreter.ShadowClass;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
+import shadow.typecheck.ErrorReporter;
+import shadow.typecheck.TypeCheckException;
 
 public class MethodSignature implements Comparable<MethodSignature> {
-	public static final int IMPORT_NATIVE = 0;
-	public static final int IMPORT_ASSEMBLY = 1;
-	public static final int IMPORT_METHOD = 2;
-	
-	public static final int EXPORT_NATIVE = 0;
-	public static final int EXPORT_ASSEMBLY = 1;
-	public static final int EXPORT_METHOD = 2;
 	
 	protected final MethodType type;
 	protected final String symbol;
@@ -26,11 +18,23 @@ public class MethodSignature implements Comparable<MethodSignature> {
 	private MethodSignature signatureWithoutTypeArguments;
 	private Type outer;
 	private Set<SingletonType> singletons = new HashSet<>();
-	private int importType = -1;
-	private int exportType = -1;
-	private List<Type> allowedExports;
-	
-	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped) 
+
+	public enum ImportExportMode {
+		NONE, // Default for all methods - normal Shadow visibility rules
+		NATIVE, // Native LLVM IR code
+		ASSEMBLY, // Linked assembly code (e.g. compiled C code)
+		METHOD, // Shadow code shared between classes (outside of inheritance)
+	}
+
+	private ImportExportMode importMode = ImportExportMode.NONE;
+	private ImportExportMode exportMode = ImportExportMode.NONE;
+
+	// Only applies for ImportMethod signatures - points to the corresponding exported method
+	private MethodSignature importSource;
+
+	private final Map<AttributeType, AttributeInvocation> attributes = new HashMap<>();
+
+	private MethodSignature(MethodType type, String symbol, Type outer, Context node, MethodSignature wrapped)
 	{
 		this.type = type;
 		this.symbol = symbol;
@@ -156,16 +160,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getModifiers().toString());
-		/*
-		// TODO: Uncomment when decorators are generated in .meta
-		if(isExportMethod() && getExportTypes() != null) {
-			sb.append("[");
-			for(Type t : getExportTypes()) {
-				sb.append(t.getTypeName());
-			}
-			sb.append("] ");
-		}*/
-		
 		sb.append(symbol);
 		
 		//nothing more for destroy
@@ -384,57 +378,118 @@ public class MethodSignature implements Comparable<MethodSignature> {
 		return type.getModifiers().isAbstract();
 	}
 	
-	public void setImportType(int type) {
-		this.importType = type;
-	}
-	
-	public void setExportType(int type) {
-		this.exportType = type;
-	}
-	
 	public boolean isImport() {
-		return importType != -1;
+		return importMode != ImportExportMode.NONE;
 	}
 	
 	public boolean isImportNative() {
-		return importType == IMPORT_NATIVE;
+		return importMode == ImportExportMode.NATIVE;
 	}
 	
 	public boolean isImportAssembly() {
-		return importType == IMPORT_ASSEMBLY;
+		return importMode == ImportExportMode.ASSEMBLY;
 	}
 	
 	public boolean isImportMethod() {
-		return importType == IMPORT_METHOD;
+		return importMode == ImportExportMode.METHOD;
 	}
 	
 	public boolean isExport() {
-		return exportType != -1;
+		return exportMode != ImportExportMode.NONE;
 	}
 	
 	public boolean isExportNative() {
-		return exportType == EXPORT_NATIVE;
+		return exportMode == ImportExportMode.NATIVE;
 	}
 	
 	public boolean isExportAssembly() {
-		return exportType == EXPORT_ASSEMBLY;
+		return exportMode == ImportExportMode.ASSEMBLY;
 	}
 	
 	public boolean isExportMethod() {
-		return exportType == EXPORT_METHOD;
-	}
-	
-	// TODO: Find a better name for this
-	public void addExportType(Type type) {
-		if(allowedExports == null) {
-			allowedExports = new ArrayList<>();
-		}
-		
-		allowedExports.add(type);
+		return exportMode == ImportExportMode.METHOD;
 	}
 
-	// TODO: Find a better name for this
-	public List<Type> getExportTypes() {
-		return allowedExports;
+	public void setImportSource(MethodSignature method) {
+		// TODO: Assert that the import mode is IMPORT_METHOD
+		importSource = method;
+	}
+
+	public Collection<AttributeInvocation> getAttributes() {
+		return Collections.unmodifiableCollection(attributes.values());
+	}
+
+	public AttributeInvocation getAttributeInvocation(AttributeType type) {
+		return attributes.get(type);
+	}
+
+    public void attachAttribute(
+    		ShadowParser.AttributeInvocationContext ctx, ErrorReporter errorReporter) {
+		AttributeInvocation attribute = new AttributeInvocation(ctx, errorReporter, this);
+		AttributeType type = attribute.getType();
+
+    	if (attributes.containsKey(type)) {
+			errorReporter.addError(
+				ctx,
+				TypeCheckException.Error.REPEATED_ATTRIBUTE,
+				type.getTypeName() + " appears more than once on the same method",
+				type);
+		} else {
+			attributes.put(type, attribute);
+		}
+    }
+
+	/**
+	 * Performs any required operations based on the attached attribute types, prior to those
+	 * attributes having their fields evaluated.
+	 */
+	public void processAttributeTypes(ErrorReporter errorReporter) {
+		for (AttributeType attributeType : attributes.keySet()) {
+			if (attributeType.equals(AttributeType.IMPORT_NATIVE)) {
+				processImportExportAttributes(true, ImportExportMode.NATIVE, errorReporter);
+			} else if (attributeType.equals(AttributeType.IMPORT_ASSEMBLY)) {
+				processImportExportAttributes(true, ImportExportMode.ASSEMBLY, errorReporter);
+			} else if (attributeType.equals(AttributeType.IMPORT_METHOD)) {
+				processImportExportAttributes(true, ImportExportMode.METHOD, errorReporter);
+			} else if (attributeType.equals(AttributeType.EXPORT_NATIVE)) {
+				processImportExportAttributes(false, ImportExportMode.NATIVE, errorReporter);
+			} else if (attributeType.equals(AttributeType.EXPORT_ASSEMBLY)) {
+				processImportExportAttributes(false, ImportExportMode.ASSEMBLY, errorReporter);
+			} else if (attributeType.equals(AttributeType.EXPORT_METHOD)) {
+				processImportExportAttributes(false, ImportExportMode.METHOD, errorReporter);
+			}
+		}
+	}
+
+	private void processImportExportAttributes(boolean isImport, ImportExportMode mode, ErrorReporter errorReporter) {
+		if (!(importMode == ImportExportMode.NONE && exportMode == ImportExportMode.NONE)) {
+			errorReporter.addError(node, TypeCheckException.Error.INVALID_TYPE, "Only one import or export attribute can be present on a method at all times.");
+			return;
+		}
+
+		if (isImport) {
+			importMode = mode;
+		} else {
+			exportMode = mode;
+		}
+	}
+
+	/**
+	 * Performs any required operations based on the attached attribute types AND the values of
+	 * their fields. Runs relatively late, after compile-time constants can be evaluated.
+	 */
+	public void processAttributeValues(ErrorReporter errorReporter) {
+		for (AttributeType attributeType : attributes.keySet()) {
+			if (attributeType.equals(AttributeType.IMPORT_METHOD)) {
+				AttributeInvocation export = importSource.getAttributeInvocation(AttributeType.EXPORT_METHOD);
+				if (export != null) {
+					Type exportType = ((ShadowClass) export.getFieldValue("exportedTo")).getRepresentedType();
+					if (outer.equals(exportType)) {
+						continue;
+					}
+				}
+				errorReporter.addError(node, TypeCheckException.Error.INVALID_METHOD_IMPORT, "The '" + importSource.getSymbol() + "' method in '" + importSource.getOuter() + "' is not allowed to be shared with '" + outer + "'");
+			}
+		}
 	}
 }

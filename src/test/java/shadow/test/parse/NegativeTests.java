@@ -46,7 +46,24 @@ public class NegativeTests {
 			throw new Exception("Test failed");
 		}
 	}
+
+	@Test
+	public void testAttributeFieldModifiers() throws Exception {
+		args.add("tests-negative/parser/attribute-field-modifiers/Test.shadow");
+		enforce(Error.ILLEGAL_MODIFIER);
+	}
 	
+	@Test
+	public void testAttributeModifiers() throws Exception {
+		args.add("tests-negative/parser/attribute-modifiers/Test.shadow");
+		enforce(Error.ILLEGAL_MODIFIER);
+	}
+
+	@Test
+	public void testAttributeStandaloneParentheses() throws Exception {
+		args.add("tests-negative/parser/attribute-standalone-parentheses/Test.shadow");
+		enforce(Error.SYNTAX_ERROR);
+	}
 
 	@Test public void testEmptyStatement() throws Exception
 	{
@@ -101,5 +118,11 @@ public class NegativeTests {
 	{
 		args.add("tests-negative/parser/unterminated-string/Test.shadow");
 		enforce(Error.SYNTAX_ERROR);
+	}
+
+	@Test public void testAttributeInvocationFieldWithoutAssignment() throws Exception
+	{
+		args.add("tests-negative/parser/attribute-invocation-field-without-assignment/Test.shadow");
+		enforce(Error.MISSING_ASSIGNMENT);
 	}
 }

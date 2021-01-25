@@ -1,9 +1,6 @@
 package shadow.typecheck;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import shadow.parse.Context;
 import shadow.typecheck.TypeCheckException.Error;
@@ -16,44 +13,53 @@ import shadow.typecheck.type.ModifiedType;
  * @author Barry Wittman
  */
 public abstract class ScopedChecker extends BaseChecker {
+	private final Deque<Scope> scopes = new LinkedList<>();
 
-	/* List of scopes with a hash of symbols & types for each scope. */
-	private LinkedList<Map<String, ModifiedType>> symbolTable;
-	/* Keeps track of the method associated with each scope (sometimes null). */
-	private LinkedList<Context> scopeMethods;
-	/* Whether or not we are currently inside a decorator. */
-	private boolean decoratorScope;
+	/** Contains all metadata associated with a given scope */
+	private static class Scope {
+		private final Map<String, ModifiedType> symbolTable = new HashMap<>();
+
+		/* Keeps track of the method associated with each scope (sometimes null). */
+		private final Context enclosingMethod;
+
+		public Scope(Context enclosingMethod) {
+			this.enclosingMethod = enclosingMethod;
+		}
+
+		public Context getEnclosingMethod() {
+			return enclosingMethod;
+		}
+
+		public boolean containsSymbol(String name) {
+			return symbolTable.containsKey(name);
+		}
+
+		public ModifiedType getSymbol(String name) {
+			return symbolTable.get(name);
+		}
+
+		public void addSymbol(String name, ModifiedType type) {
+			symbolTable.put(name, type);
+		}
+	}
 	
 	
 	public ScopedChecker(Package packageTree, ErrorReporter reporter) {
 		super(packageTree, reporter);
-		symbolTable = new LinkedList<>();
-		scopeMethods = new LinkedList<>();
 	}
 	
 	/**
 	 * Open a new scope inside the current scope.
 	 */
 	protected void openScope() {
-		// We have a new scope, so we need a new HashMap in the linked list.
-		symbolTable.addFirst(new HashMap<String, ModifiedType>());
-		
-		if( currentMethod.isEmpty() )
-			scopeMethods.addFirst(null);
-		else
-			scopeMethods.addFirst(currentMethod.getFirst());		
+		scopes.addFirst(new Scope(currentMethod.isEmpty() ? null : currentMethod.getFirst()));
 	}
 	
 	/**
 	 * Close the current scope.
 	 */
-	protected void closeScope() {		
-		symbolTable.removeFirst();
-		scopeMethods.removeFirst();
-	}
-	
-	protected List<Map<String,ModifiedType>> getSymbolTable() {
-		return symbolTable;
+	protected void closeScope() {
+		scopes.pop();
 	}
 	
 	/**
@@ -64,28 +70,24 @@ public abstract class ScopedChecker extends BaseChecker {
 	 * @param type the modified type of the symbol
 	 */
 	protected void addSymbol( String name, ModifiedType type ) {	
-		if( symbolTable.size() == 0 ) {
+		if(scopes.isEmpty()) {
 			if( type instanceof Context)
 				addError((Context)type, Error.INVALID_STRUCTURE, "Declaration of " + name + " is illegal outside of a defined scope");
 			else
 				addError(new TypeCheckException(Error.INVALID_STRUCTURE, "Declaration of " + name + " is illegal outside of a defined scope"));
 		}
 		else {
-			boolean found = false;
-		
-			for( Map<String, ModifiedType> scope : symbolTable ) {			
-				if( scope.containsKey( name ) ) { //we look at all enclosing scopes
+			for(Scope scope : scopes) {
+				if( scope.containsSymbol( name ) ) { //we look at all enclosing scopes
 					if( type instanceof Context)
 						addError((Context)type, Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + name + " cannot be redefined in this context");
 					else
 						addError(new TypeCheckException(Error.MULTIPLY_DEFINED_SYMBOL, "Symbol " + name + " cannot be redefined in this context"));
-					found = true;
-					break;
+					return;
 				}
 			}
-			
-			if( !found )			
-				symbolTable.getFirst().put(name, type);  // Uses node for modifiers
+
+			scopes.getFirst().addSymbol(name, type);
 		}
 	}
 	
@@ -97,33 +99,22 @@ public abstract class ScopedChecker extends BaseChecker {
 	 * @return modified type (usually Context AST node) associated with the symbol or null if not found 
 	 */
 	protected ModifiedType findSymbol( String name ) {
-		ModifiedType type = null;
-		for( int i = 0; i < symbolTable.size(); i++ ) {
-			Map<String,ModifiedType> map = symbolTable.get(i);		
-			if( (type = map.get(name)) != null ) {
-				Context method = scopeMethods.get(i);
-				if( method != null && method != currentMethod.getFirst() ) {
+		for (Scope scope : scopes) {
+			if (scope.containsSymbol(name)) {
+				if (scope.getEnclosingMethod() != null && scope.getEnclosingMethod() != scopes.getFirst().getEnclosingMethod()) {
 					//situation where we are pulling a variable from an outer method
 					//it must be final!
 					//local method declarations don't count
-					
+
 					//TODO: add a check to deal with this, even without final
-					
+
 					//if( !(node instanceof ASTLocalMethodDeclaration) && !node.getModifiers().isFinal() )
 					//	addError(Error.INVL_TYP, "Variables accessed by local methods from outer methods must be marked final");
 				}
-				return type;
+				return scope.getSymbol(name);
 			}
-		}		
-		
-		return type;
-	}
-	
-	protected void setDecoratorScope(boolean value) {
-		decoratorScope = value;
-	}
-	
-	protected boolean isDecoratorScope() {
-		return decoratorScope;
+		}
+
+		return null;
 	}
 }

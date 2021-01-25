@@ -1,0 +1,7 @@
+class Test {
+    // Cannot use attributes outside of attaching them to methods
+    Attribute a;
+
+    public main() => () {
+    }
+}

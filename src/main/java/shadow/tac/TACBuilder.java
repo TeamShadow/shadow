@@ -198,8 +198,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		}		
 
 		return null; //no children
-	}	
-
+	}
 
 	@Override public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx)
 	{ 
@@ -267,7 +266,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 			new TACBranch(anchor, new TACBinary(anchor, instance, new TACLiteral(anchor, new ShadowNull(instance.getType()))), initLabel, doneLabel);
 			initLabel.insertBefore(anchor);
 
-			TACMethodRef methodRef = new TACMethodName(anchor, type.getMethods("create").get(0));
+			TACMethodRef methodRef = new TACMethodName(anchor, type.getMethodOverloads("create").get(0));
 			TACOperand object = new TACNewObject(anchor, type);
 			TACCall call = new TACCall(anchor, methodRef, object );			
 			new TACStore(anchor, reference, call ); 				
@@ -893,7 +892,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 				last = convertToString(last);
 
 			TACOperand next = convertToString(ctx.shiftExpression(i).appendBefore(anchor));
-			last = new TACCall(anchor, new TACMethodName(anchor, Type.STRING.getMethods("concatenate").get(0)),
+			last = new TACCall(anchor, new TACMethodName(anchor, Type.STRING.getMethodOverloads("concatenate").get(0)),
 					Arrays.asList(last, next));
 		}
 
@@ -1081,7 +1080,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		params.add(prefix);
 		params.add(new TACLiteral(anchor, new ShadowNull(new ArrayType(Type.OBJECT))));
 
-		MethodSignature signature = Type.METHOD.getAllMethods("create").get(0);
+		MethodSignature signature = Type.METHOD.recursivelyGetMethodOverloads("create").get(0);
 		//internally sets prefix
 		return callCreate(signature, params, signature.getOuter());
 	}

@@ -1,0 +1,12 @@
+import shadow:test@ImportExportMethodB;
+
+class shadow:test@ImportExportMethodA
+{
+    [ImportMethod]
+    private test(ImportExportMethodB b) => ();
+
+	public main(String[] args) => ()
+	{
+		test(ImportExportMethodB:create());
+	}
+}

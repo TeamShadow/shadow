@@ -1,0 +1,8 @@
+class Test {
+
+    // Parentheses shouldn't be allowed without fields being listed
+    [Attribute()]
+    public methodA() => () {
+
+    }
+}

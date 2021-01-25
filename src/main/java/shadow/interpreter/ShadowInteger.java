@@ -2,7 +2,6 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 import shadow.interpreter.InterpreterException.Error;
@@ -173,26 +172,22 @@ public class ShadowInteger extends ShadowNumeric {
 	
 	@Override
     public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
-		try {		
-			if(arguments.length == 0) {
-				switch(method) {				
-				case "flipEndian": return flipEndian();
-				case "leadingZeroes": return leadingZeroes();
-				case "ones": return ones();
-				case "trailingZeroes": return trailingZeroes();
-				case "toSigned": return toSigned();
-				case "toUnsigned": return toUnsigned();
-				}				
+		if(arguments.length == 0) {
+			switch(method) {
+			case "flipEndian": return flipEndian();
+			case "leadingZeroes": return leadingZeroes();
+			case "ones": return ones();
+			case "trailingZeroes": return trailingZeroes();
+			case "toSigned": return toSigned();
+			case "toUnsigned": return toUnsigned();
 			}
-		}
-		catch(ShadowException e) {
 		}
 		
 		return super.callMethod(method, arguments);
 	}
 
 	@Override
-	public ShadowInteger negate() throws ShadowException {
+	public ShadowInteger negate() throws InterpreterException {
 		if( signed )
 			return new ShadowInteger(value.negate(), size, signed);
 
@@ -200,13 +195,13 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-	public ShadowInteger bitwiseComplement() throws ShadowException {
+	public ShadowInteger bitwiseComplement() throws InterpreterException {
 		return new ShadowInteger(value.negate().subtract(BigInteger.ONE), size, signed);
 	}
 
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws InterpreterException
 	{
 		if(type.equals(getType()))
 			return this;		
@@ -236,7 +231,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger add(ShadowValue other) throws ShadowException {
+    public ShadowInteger add(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.add(input.value), size, signed);
@@ -246,7 +241,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger subtract(ShadowValue other) throws ShadowException {
+    public ShadowInteger subtract(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.subtract(input.value), size, signed);
@@ -256,7 +251,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger multiply(ShadowValue other) throws ShadowException {
+    public ShadowInteger multiply(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.multiply(input.value), size, signed);
@@ -266,7 +261,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger divide(ShadowValue other) throws ShadowException {
+    public ShadowInteger divide(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.divide(input.value), size, signed);
@@ -276,7 +271,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger modulus(ShadowValue other) throws ShadowException {
+    public ShadowInteger modulus(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.mod(input.value), size, signed);
@@ -286,7 +281,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger bitShiftLeft(ShadowValue other) throws ShadowException {
+    public ShadowInteger bitShiftLeft(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.shiftLeft(input.value.mod(new BigInteger("64")).intValue()), size, signed);
@@ -296,7 +291,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger bitShiftRight(ShadowValue other) throws ShadowException {
+    public ShadowInteger bitShiftRight(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.shiftRight(input.value.mod(new BigInteger("64")).intValue()), size, signed);
@@ -306,7 +301,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger bitRotateLeft(ShadowValue other) throws ShadowException {
+    public ShadowInteger bitRotateLeft(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger)other;
 			int shift = input.value.mod(new BigInteger("64")).intValue();
@@ -324,7 +319,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger bitRotateRight(ShadowValue other) throws ShadowException {
+    public ShadowInteger bitRotateRight(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger)other;
 			int shift = input.value.mod(new BigInteger("64")).intValue();
@@ -342,7 +337,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowBoolean equal(ShadowValue other) throws ShadowException {
+    public ShadowBoolean equal(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.equals(input.value));
@@ -352,7 +347,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowBoolean lessThan(ShadowValue other) throws ShadowException {
+    public ShadowBoolean lessThan(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) < 0);
@@ -362,7 +357,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowBoolean lessThanOrEqual(ShadowValue other) throws ShadowException {
+    public ShadowBoolean lessThanOrEqual(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) <= 0);
@@ -372,7 +367,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowBoolean greaterThan(ShadowValue other) throws ShadowException {
+    public ShadowBoolean greaterThan(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) > 0);
@@ -382,7 +377,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws ShadowException {
+    public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowInteger ) {
 			ShadowInteger input = (ShadowInteger) other;
 			return new ShadowBoolean(value.compareTo(input.value) >= 0);
@@ -392,7 +387,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger bitwiseAnd(ShadowValue other) throws ShadowException {
+    public ShadowInteger bitwiseAnd(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.and(input.value), size, signed);
@@ -402,7 +397,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger bitwiseOr(ShadowValue other) throws ShadowException {
+    public ShadowInteger bitwiseOr(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.or(input.value), size, signed);
@@ -412,7 +407,7 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-    public ShadowInteger bitwiseXor(ShadowValue other) throws ShadowException {
+    public ShadowInteger bitwiseXor(ShadowValue other) throws InterpreterException {
 		if( getType().equals(other.getType()) ) {
 			ShadowInteger input = (ShadowInteger)other;
 			return new ShadowInteger( value.xor(input.value), size, signed);
@@ -423,12 +418,12 @@ public class ShadowInteger extends ShadowNumeric {
 
 
 	@Override
-	public ShadowInteger copy() throws ShadowException {
+	public ShadowInteger copy() throws InterpreterException {
 		return new ShadowInteger(value, size, signed);
 	}
 
 	@Override
-    public ShadowInteger hash() throws ShadowException {
+    public ShadowInteger hash() throws InterpreterException {
 		if( size < 8 )
 			return (ShadowInteger)cast(Type.UINT);
 
@@ -484,41 +479,41 @@ public class ShadowInteger extends ShadowNumeric {
 	}
 
 	@Override
-	public ShadowInteger abs() {
+	public ShadowInteger abs() throws InterpreterException {
 		return new ShadowInteger(value.abs(), size, false);
 	}
 
 	@Override
-	public ShadowDouble cos() throws ShadowException {
+	public ShadowDouble cos() throws InterpreterException {
 		return new ShadowDouble(Math.cos(value.doubleValue()));
 	}
 	@Override
-	public ShadowDouble sin() throws ShadowException {
+	public ShadowDouble sin() throws InterpreterException {
 		return new ShadowDouble(Math.sin(value.doubleValue()));
 	}
 	@Override
-	public ShadowDouble power(ShadowNumber number) throws ShadowException {
+	public ShadowDouble power(ShadowNumber number) throws InterpreterException {
 		double exponent = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.pow(value.doubleValue(), exponent));
 	}
 	@Override
-	public ShadowDouble squareRoot() throws ShadowException {
+	public ShadowDouble squareRoot() throws InterpreterException {
 		return new ShadowDouble(Math.sqrt(value.doubleValue()));
 	}
 	@Override
-	public ShadowDouble logBase10() throws ShadowException {
+	public ShadowDouble logBase10() throws InterpreterException {
 		return new ShadowDouble(Math.log10(value.doubleValue()));
 	}
 	@Override
-	public ShadowDouble logBase2() throws ShadowException {
+	public ShadowDouble logBase2() throws InterpreterException {
 		return new ShadowDouble(Math.log(value.doubleValue())/Math.log(2.0));
 	}
 	@Override
-	public ShadowDouble logBaseE() throws ShadowException {
+	public ShadowDouble logBaseE() throws InterpreterException {
 		return new ShadowDouble(Math.log(value.doubleValue()));
 	}
 
-	public ShadowInteger ones() throws ShadowException {
+	public ShadowInteger ones() throws InterpreterException {
 		int count = 0;
 		if( value.compareTo(BigInteger.ZERO) < 0 )
 			count = value.bitLength() + 1 + (value.bitLength() - value.bitCount());
@@ -528,7 +523,7 @@ public class ShadowInteger extends ShadowNumeric {
 		return new ShadowInteger( BigInteger.valueOf(count), size, signed);
 	}
 
-	public ShadowInteger trailingZeroes() throws ShadowException {
+	public ShadowInteger trailingZeroes() throws InterpreterException {
 		int count = 0;
 		if( value.compareTo(BigInteger.ZERO) == 0 )
 			count = 8 * size;
@@ -540,7 +535,7 @@ public class ShadowInteger extends ShadowNumeric {
 		return new ShadowInteger( BigInteger.valueOf(count), size, signed);
 	}
 
-	public ShadowInteger leadingZeroes() throws ShadowException {
+	public ShadowInteger leadingZeroes() throws InterpreterException {
 		int count = 0;
 		 if( value.compareTo(BigInteger.ZERO) < 0 )
 			count = 0;
@@ -551,7 +546,7 @@ public class ShadowInteger extends ShadowNumeric {
 
 	}
 
-	public ShadowInteger flipEndian() throws ShadowException {
+	public ShadowInteger flipEndian() throws InterpreterException {
 		BigInteger result = BigInteger.ZERO;
 		BigInteger mask = BigInteger.valueOf(0xFF);
 
@@ -562,11 +557,11 @@ public class ShadowInteger extends ShadowNumeric {
 		return new ShadowInteger( result, size, signed);
 	}
 	
-	public ShadowInteger toSigned() throws ShadowException {
+	public ShadowInteger toSigned() throws InterpreterException {
 		return new ShadowInteger(value, size, true, preferredBase);
 	}
 	
-	public ShadowInteger toUnsigned() throws ShadowException {
+	public ShadowInteger toUnsigned() throws InterpreterException {
 		return new ShadowInteger(value, size, false, preferredBase);
 	}
 }

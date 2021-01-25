@@ -38,32 +38,13 @@ import shadow.parse.Context.AssignmentKind;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.CatchStatementsContext;
 import shadow.parse.ShadowParser.ConditionalExpressionContext;
-import shadow.parse.ShadowParser.DecoratorExpressionContext;
 import shadow.parse.ShadowParser.LocalMethodDeclarationContext;
 import shadow.parse.ShadowParser.PrimaryExpressionContext;
 import shadow.parse.ShadowParser.SendStatementContext;
 import shadow.parse.ShadowParser.ThrowOrConditionalExpressionContext;
 import shadow.typecheck.TypeCheckException.Error;
-import shadow.typecheck.type.ArrayType;
-import shadow.typecheck.type.ClassType;
-import shadow.typecheck.type.EnumType;
-import shadow.typecheck.type.ExceptionType;
+import shadow.typecheck.type.*;
 import shadow.typecheck.type.InstantiationException;
-import shadow.typecheck.type.InterfaceType;
-import shadow.typecheck.type.MethodReferenceType;
-import shadow.typecheck.type.MethodSignature;
-import shadow.typecheck.type.MethodType;
-import shadow.typecheck.type.ModifiedType;
-import shadow.typecheck.type.Modifiers;
-import shadow.typecheck.type.PropertyType;
-import shadow.typecheck.type.SequenceType;
-import shadow.typecheck.type.SimpleModifiedType;
-import shadow.typecheck.type.SingletonType;
-import shadow.typecheck.type.SubscriptType;
-import shadow.typecheck.type.Type;
-import shadow.typecheck.type.TypeParameter;
-import shadow.typecheck.type.UnboundMethodType;
-import shadow.typecheck.type.UninstantiatedType;
 
 public class StatementChecker extends ScopedChecker {
 	/* Stack for current prefix (needed for arbitrarily long chains of expressions). */
@@ -135,16 +116,16 @@ public class StatementChecker extends ScopedChecker {
 		}
 		
 		for( ModifiedType modifiedType : signature.getParameterTypes() ) {
-			Type type = modifiedType.getType();
-			if(signature.getOuter().hasInterface(Type.COMPILER_DECORATOR) && signature.isCreate() && !type.isIntegral() && !type.isString() && !(type instanceof EnumType)) {
-				addError(node, Error.INVALID_TYPE, "Supplied type " + type + " cannot be used in compiler decorator, only integral, String, and enum types allowed", type);
-			}
-			
 			currentType.addUsedType(modifiedType.getType());
 		}
 		
 		for( ModifiedType modifiedType : signature.getReturnTypes() )
 			currentType.addUsedType(modifiedType.getType());
+
+		// Done here because AttributeInvocationContext doesn't have references to these AttributeInvocation objects
+		for (AttributeInvocation attribute : signature.getAttributes()) {
+			attribute.updateFieldTypes(this.getErrorReporter());
+		}
 
 		if(signature.isImportMethod()) {
 			if(signature.getModifiers().isPublic()) {
@@ -166,22 +147,7 @@ public class StatementChecker extends ScopedChecker {
 			if(method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
 				addError(node, Error.INVALID_METHOD_IMPORT, "No matching method was found for method '" + signature.getSymbol() + "' in class '" + sourceClass + "'");
 			} else {
-				// we found the method, but we still need to check if the method is allowed to be
-				// imported by this class
-				boolean found = false;
-				Type destinationClass = signature.getOuter();
-
-				List<Type> exportTypes = method.getExportTypes();
-				for(int i = 0; !found && i < exportTypes.size(); ++i) {
-					Type allowedType = exportTypes.get(i);
-					if(destinationClass.equals(allowedType)) {
-						found = true;
-					}
-				}
-				
-				if(!found) {
-					addError(node, Error.INVALID_METHOD_IMPORT, "The '" + signature.getSymbol() + "' method in '" + sourceClass +"' is not allowed to be shared with '" + destinationClass + "'");
-				}
+				signature.setImportSource(method);
 			}
 		}
 		
@@ -321,29 +287,28 @@ public class StatementChecker extends ScopedChecker {
 	{		
 		visitMethodPre(ctx);		
 		visitChildren(ctx);
-		
-		if( currentType instanceof ClassType ) {
+
+		// Check for an explicit call to the parent class' create().
+		// For .meta files and imports, we trust that the create() is properly implemented elsewhere
+		if(currentType instanceof ClassType && !ctx.getSignature().isImport() && !ctx.isFromMetaFile()) {
 			ClassType classType = (ClassType) currentType;
 			ClassType parentType = classType.getExtendType();
 			
 			boolean explicitCreate = ctx.createBlock() != null && ctx.createBlock().explicitCreateInvocation() != null;
 			
-			if( parentType != null ) {
-				if( !explicitCreate && !ctx.getSignature().isImport() ) { 
-					//only worry if there is no explicit invocation
-					//explicit invocations are handled separately
-					//for native creates, we have to trust the author of the native code
-					boolean foundDefault = false;
-					for( MethodSignature method : parentType.getMethods("create") ) {
-						if( method.getParameterTypes().isEmpty() ) {
-							foundDefault = true;
-							break;
-						}
+			if(!explicitCreate && parentType != null) {
+				//only worry if there is no explicit invocation
+				//explicit invocations are handled separately
+				boolean foundDefault = false;
+				for( MethodSignature method : parentType.getMethodOverloads("create") ) {
+					if( method.getParameterTypes().isEmpty() ) {
+						foundDefault = true;
+						break;
 					}
-				
-					if( !foundDefault )
-						addError(ctx, Error.MISSING_CREATE, "Explicit create invocation is missing, and parent class " + parentType + " does not implement the default create", parentType);
 				}
+
+				if( !foundDefault )
+					addError(ctx, Error.MISSING_CREATE, "Explicit create invocation is missing, and parent class " + parentType + " does not implement the default create", parentType);
 			}
 		}
 		
@@ -1381,7 +1346,7 @@ public class StatementChecker extends ScopedChecker {
 			MethodSignature candidate = null;
 			Type outer = unboundMethod.getOuter();			
 			
-			for( MethodSignature signature : outer.getAllMethods(unboundMethod.getTypeName()) ) {				
+			for( MethodSignature signature : outer.recursivelyGetMethodOverloads(unboundMethod.getTypeName()) ) {
 				MethodType methodType = signature.getMethodType();			
 				
 				//the list of method signatures starts with the closest (current class) and then adds parents and outer classes
@@ -1757,7 +1722,7 @@ public class StatementChecker extends ScopedChecker {
 				//don't add a singleton to itself, could cause infinite recursion
 				if( !currentType.equals(type) )
 					//add to all creates (since it must be declared outside a method)
-					for( MethodSignature signature : currentType.getAllMethods("create"))				
+					for( MethodSignature signature : currentType.recursivelyGetMethodOverloads("create"))
 						signature.addSingleton(singletonType);
 			}
 			else {				
@@ -1817,12 +1782,7 @@ public class StatementChecker extends ScopedChecker {
 			}
 		}	
 		else if( ctx.generalIdentifier() != null ) {
-			boolean success = setTypeFromName( ctx, image );
-			/* //Screwing around with ignoring or adding "Decorator" on the end of type names isn't a good idea.
-			if(!success && isDecoratorScope())
-				success = setTypeFromName(ctx, image + "Decorator"); */
-			
-			if(!success) {
+			if(!setTypeFromName( ctx, image )) {
 				addError(ctx, Error.UNDEFINED_SYMBOL, "Symbol " + image + " not defined in this context");
 				ctx.setType(Type.UNKNOWN);
 			}			
@@ -2169,7 +2129,7 @@ public class StatementChecker extends ScopedChecker {
 			addError(curPrefix.getFirst(), Error.INVALID_TYPE, "Method cannot be called on a sequence result");
 		}
 		else if(prefixType != null) {				
-			List<MethodSignature> methods = prefixType.getAllMethods(methodName);
+			List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(methodName);
 			
 			//unbound method (it gets bound when you supply arguments)
 			if( methods != null && methods.size() > 0 )			
@@ -2220,7 +2180,7 @@ public class StatementChecker extends ScopedChecker {
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Interfaces cannot be created");						
 		else if( prefixType instanceof SingletonType )			
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Singletons cannot be created");
-		else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.getAllMethods("create").isEmpty()))
+		else if(!( prefixType instanceof ClassType) && !(prefixType instanceof TypeParameter && !prefixType.recursivelyGetMethodOverloads("create").isEmpty()))
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Type " + prefixType + " cannot be created", prefixType);				
 		else if( !prefixNode.getModifiers().isTypeName() )
 			addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Only a type can be created");
@@ -2409,7 +2369,7 @@ public class StatementChecker extends ScopedChecker {
 			ctx.setType( Type.UNKNOWN );
 		}	
 		else {				
-			List<MethodSignature> methods = prefixType.getAllMethods(propertyName);	
+			List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(propertyName);
 			if( prefixNode.getModifiers().isImmutable() )
 				ctx.addModifiers(Modifiers.IMMUTABLE);
 			else if( prefixNode.getModifiers().isReadonly() )
@@ -2501,8 +2461,7 @@ public class StatementChecker extends ScopedChecker {
 		if( signature == null )
 			addErrors(node, errors);
 		else {
-			// TODO: Decorator needs to be fixed
-			if(!signature.getOuter().hasInterface(Type.DECORATOR) && !methodIsAccessible( signature, currentType ))
+			if(!methodIsAccessible( signature, currentType ))
 				addError(node, Error.ILLEGAL_ACCESS, signature.getSymbol() + signature.getMethodType() + " is not accessible from this context");						
 			
 			//if any arguments have an UnboundMethodType, note down what their true MethodSignature must be
@@ -2547,14 +2506,6 @@ public class StatementChecker extends ScopedChecker {
 				for( ModifiedType modifiedType : signature.getReturnTypes() ) {
 					currentType.addUsedType(modifiedType.getType());
 				}
-			}
-			
-			// decorators without arguments should not have method call structure
-			// [ImportAssembly()] is incorrect syntax and only [ImportAssembly]
-			// is correct. However, [ImportAssembly(true)] is valid (if there is
-			// a constructor in the form create(boolean))
-			if (outer.hasInterface(Type.DECORATOR) && arguments.isEmpty()) {
-				addError(ctx, Error.INVALID_ARGUMENTS, "A decorator with no arguments should not have the method call structure; use [T] instead of [T()]");
 			}
 			
 			if( signature != null &&  prefixNode.getModifiers().isImmutable() && signature.getModifiers().isMutable()  ) {
@@ -3094,25 +3045,6 @@ public class StatementChecker extends ScopedChecker {
 		return null;
 	}
 	
-	@Override
-	public Void visitDecoratorExpression(DecoratorExpressionContext ctx) {		
-		Type actualType = ctx.type().getType();
-		if (!actualType.hasInterface(Type.METHOD_DECORATOR) || !(actualType instanceof ClassType)) {
-			addError(ctx, Error.INVALID_TYPE,
-					"A method decorator must be a class that derives from the MethodDecorator interface.");
-		}
-		
-		setTypeFromContext(ctx, "create", actualType);
-		
-		setDecoratorScope(true);
-		curPrefix.addFirst(ctx);
-		visitChildren(ctx);
-		curPrefix.removeFirst();
-		setDecoratorScope(false);
-		
-		return null;
-	}
-	
 	/*@Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) 
 	{
 		visitChildren(ctx);
@@ -3120,4 +3052,32 @@ public class StatementChecker extends ScopedChecker {
 		
 		return null;
 	}*/
+
+	@Override
+	public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx) {
+		// Must happen first to determine the types of conditional expressions
+		visitChildren(ctx);
+
+		if (ctx.getParent() instanceof ShadowParser.AttributeInvocationContext) {
+			Type attributeType = ((ShadowParser.AttributeInvocationContext) ctx.getParent()).getType();
+			String fieldName = ctx.generalIdentifier().getText();
+			if (!attributeType.getFields().containsKey(fieldName)) {
+				addError(
+						ctx,
+						Error.UNDEFINED_SYMBOL,
+						"Field \"" + fieldName + "\" is not declared in " + attributeType.getTypeName(),
+						attributeType);
+			} else {
+				addErrors(ctx, isValidInitialization(attributeType.getField(fieldName), ctx.conditionalExpression()));
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public Void visitDependencyList(ShadowParser.DependencyListContext ctx) {
+		// These only appear in .meta files and don't require statement-checking
+		return null;
+	}
 }

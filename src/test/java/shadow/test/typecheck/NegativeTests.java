@@ -48,6 +48,66 @@ public class NegativeTests {
 			throw new Exception("Test failed");
 		}
 	}
+
+	@Test
+	public void testAttributeInvalidFieldInitialization() throws Exception {
+		args.add("tests-negative/typechecker/attribute-invalid-field-initialization/Test.shadow");
+		enforce(Error.INVALID_ASSIGNMENT);
+	}
+
+	@Test
+	public void testAttributeInvalidLocation() throws Exception {
+		args.add("tests-negative/typechecker/attribute-invalid-location/Test.shadow");
+		enforce(Error.INVALID_TYPE);
+	}
+
+	@Test
+	public void testAttributeInvocationFieldSelfReference() throws Exception {
+		args.add("tests-negative/typechecker/attribute-invocation-field-self-reference/Test.shadow");
+		enforce(Error.UNDEFINED_SYMBOL);
+	}
+
+	@Test
+	public void testAttributeInvocationRepeatedField() throws Exception {
+		args.add("tests-negative/typechecker/attribute-invocation-repeated-field/Test.shadow");
+		enforce(Error.REPEATED_ASSIGNMENT);
+	}
+
+	@Test
+	public void testAttributeInvocationUnknownField() throws Exception {
+		args.add("tests-negative/typechecker/attribute-invocation-unknown-field/Test.shadow");
+		enforce(Error.UNDEFINED_SYMBOL);
+	}
+
+	@Test
+	public void testAttributeRepeatedOnMethod() throws Exception {
+		args.add("tests-negative/typechecker/attribute-repeated-on-method/Test.shadow");
+		enforce(Error.REPEATED_ATTRIBUTE);
+	}
+
+	@Test
+	public void testAttributeUndeclaredField() throws Exception {
+		args.add("tests-negative/typechecker/attribute-undeclared-field/Test.shadow");
+		enforce(Error.UNDEFINED_SYMBOL);
+	}
+
+	@Test
+	public void testAttributeUninitializedField() throws Exception {
+		args.add("tests-negative/typechecker/attribute-uninitialized-field/Test.shadow");
+		enforce(Error.UNINITIALIZED_FIELD);
+	}
+
+	@Test
+	public void testAttributeUnknown() throws Exception {
+		args.add("tests-negative/typechecker/attribute-unknown/Test.shadow");
+		enforce(Error.UNDEFINED_TYPE);
+	}
+
+	@Test
+	public void testNonAttributeUsedAsAttribute() throws Exception {
+		args.add("tests-negative/typechecker/non-attribute-used-as-attribute/Test.shadow");
+		enforce(Error.INVALID_TYPE);
+	}
 	
 	@Test public void testPackage() throws Exception
 	{

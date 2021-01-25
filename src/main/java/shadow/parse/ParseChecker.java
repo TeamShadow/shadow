@@ -116,15 +116,17 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 	@Override public Void visitCompilationUnit(ShadowParser.CompilationUnitContext ctx)
 	{	
 		visitChildren(ctx);
-		
+
 		Modifiers modifiers = ctx.modifiers().getModifiers();
 		
 		if( ctx.classOrInterfaceDeclaration() != null )
+			// TODO: Determine if this is redundant with the same check in visitClassOrInterfaceDeclaration
 			checkClassOrInterfaceDeclaration( ctx.classOrInterfaceDeclaration(), ctx.modifiers());		
 		else if( ctx.enumDeclaration() != null ) {
+			// TODO: Add enum case to getModifiers instead of calling addModifiers here
 			ctx.enumDeclaration().addModifiers(modifiers);
 			addErrors(ctx.modifiers(), modifiers.checkEnumModifiers(ctx));
-		}	
+		}
 		
 		return null;
 	}
@@ -135,12 +137,17 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 			ShadowParser.ClassOrInterfaceBodyDeclarationContext declaration = (ClassOrInterfaceBodyDeclarationContext) parent;
 			return declaration.modifiers();
 		}
+		else if (parent instanceof ShadowParser.AttributeBodyDeclarationContext) {
+			ShadowParser.AttributeBodyDeclarationContext declaration = (ShadowParser.AttributeBodyDeclarationContext) parent;
+			return declaration.modifiers();
+		}
 		else if( parent instanceof ShadowParser.CompilationUnitContext ) {
 			ShadowParser.CompilationUnitContext unit = (CompilationUnitContext) parent;
 			return unit.modifiers();
 		}
 		
-		return null;
+		// TODO: Choose a more specific exception type
+		throw new RuntimeException("Unexpected getModifiers() call for a context that doesn't support modifiers");
 	}
 	
 	@Override public Void visitCreateDeclaration(ShadowParser.CreateDeclarationContext ctx)
@@ -217,7 +224,18 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		
 		return visitChildren(ctx);
 	}
-	
+
+	@Override
+	public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
+		addDocumentation(ctx);
+		ctx.setDocumentation(getDocumentation());
+
+		ShadowParser.ModifiersContext modifiersCtx = getModifiers(ctx);
+		addErrors(modifiersCtx, modifiersCtx.getModifiers().checkAttributeModifiers(ctx));
+
+		return visitChildren(ctx);
+	}
+
 	@Override public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx)
 	{
 		addDocumentation(ctx);
@@ -230,7 +248,19 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 		
 		return visitChildren(ctx);		
 	}
-	
+
+	@Override
+	public Void visitAttributeInvocation(ShadowParser.AttributeInvocationContext ctx) {
+		for (ShadowParser.VariableDeclaratorContext fieldAssignmentCtx : ctx.variableDeclarator()) {
+			if (fieldAssignmentCtx.conditionalExpression() == null) {
+				addError(fieldAssignmentCtx, Error.MISSING_ASSIGNMENT,
+						"Field \"" + fieldAssignmentCtx.generalIdentifier() + "\" must have a value assigned or be omitted");
+			}
+		}
+
+		return visitChildren(ctx);
+	}
+
 	@Override public Void visitFieldDeclaration(ShadowParser.FieldDeclarationContext ctx)
 	{
 		addDocumentation(ctx);

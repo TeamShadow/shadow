@@ -2,7 +2,6 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 import shadow.interpreter.InterpreterException.Error;
@@ -27,29 +26,25 @@ public class ShadowFloat extends ShadowNumeric
 	
 	@Override
     public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
-		try {		
-			if(arguments.length == 0) {
-				switch(method) {				
-				case "ceiling": return ceiling();
-				case "floor": return floor();
-				case "round": return round();
-				}				
+		if(arguments.length == 0) {
+			switch(method) {
+			case "ceiling": return ceiling();
+			case "floor": return floor();
+			case "round": return round();
 			}
-		}
-		catch(ShadowException e) {
 		}
 		
 		return super.callMethod(method, arguments);
 	}
 
 	@Override
-	public ShadowFloat negate() throws ShadowException
+	public ShadowFloat negate() throws InterpreterException
 	{
 		return new ShadowFloat(-value);
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws InterpreterException
 	{
 		BigInteger integer = BigInteger.valueOf(Math.round((double)value));
 
@@ -80,7 +75,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowFloat add(ShadowValue other) throws ShadowException
+	public ShadowFloat add(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -92,7 +87,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowFloat subtract(ShadowValue other) throws ShadowException
+	public ShadowFloat subtract(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -104,7 +99,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowFloat multiply(ShadowValue other) throws ShadowException
+	public ShadowFloat multiply(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -116,7 +111,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowFloat divide(ShadowValue other) throws ShadowException
+	public ShadowFloat divide(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -128,7 +123,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowFloat modulus(ShadowValue other) throws ShadowException
+	public ShadowFloat modulus(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -140,7 +135,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean equal(ShadowValue other) throws ShadowException
+	public ShadowBoolean equal(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -152,7 +147,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean lessThan(ShadowValue other) throws ShadowException
+	public ShadowBoolean lessThan(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -164,7 +159,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean lessThanOrEqual(ShadowValue other) throws ShadowException
+	public ShadowBoolean lessThanOrEqual(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -176,7 +171,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean greaterThan(ShadowValue other) throws ShadowException
+	public ShadowBoolean greaterThan(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -188,7 +183,7 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws ShadowException
+	public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowFloat )
 		{
@@ -200,14 +195,14 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowInteger hash() throws ShadowException
+	public ShadowInteger hash() throws InterpreterException
 	{
 		return new ShadowInteger(BigInteger.valueOf(Float.floatToIntBits(getValue())), 4, false);
 	}
 
 
 	@Override
-	public ShadowValue copy() throws ShadowException
+	public ShadowValue copy() throws InterpreterException
 	{
 		return new ShadowFloat(getValue());
 	}
@@ -237,62 +232,62 @@ public class ShadowFloat extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowFloat abs()
+	public ShadowFloat abs() throws InterpreterException
 	{
 		return new ShadowFloat(Math.abs(value));
 	}
 
 	@Override
-	public ShadowFloat cos() throws ShadowException {
+	public ShadowFloat cos() throws InterpreterException {
 		return new ShadowFloat((float)Math.cos(value));
 	}
 	@Override
-	public ShadowFloat sin() throws ShadowException {
+	public ShadowFloat sin() throws InterpreterException {
 		return new ShadowFloat((float)Math.sin(value));
 	}
 	@Override
-	public ShadowFloat power(ShadowNumber number) throws ShadowException {
+	public ShadowFloat power(ShadowNumber number) throws InterpreterException {
 		double exponent = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowFloat((float)Math.pow(value, exponent));
 	}
 	@Override
-	public ShadowFloat squareRoot() throws ShadowException {
+	public ShadowFloat squareRoot() throws InterpreterException {
 		return new ShadowFloat((float)Math.sqrt(value));
 	}
 	@Override
-	public ShadowFloat logBase10() throws ShadowException {
+	public ShadowFloat logBase10() throws InterpreterException {
 		return new ShadowFloat((float)Math.log10(value));
 	}
 	@Override
-	public ShadowFloat logBase2() throws ShadowException {
+	public ShadowFloat logBase2() throws InterpreterException {
 		return new ShadowFloat((float)(Math.log(value)/Math.log(2.0)));
 	}
 	@Override
-	public ShadowFloat logBaseE() throws ShadowException {
+	public ShadowFloat logBaseE() throws InterpreterException {
 		return new ShadowFloat((float)Math.log(value));
 	}
 	@Override
-	public ShadowFloat max(ShadowNumber number) throws ShadowException {
+	public ShadowFloat max(ShadowNumber number) throws InterpreterException {
 		float other = ((ShadowFloat)number.cast(Type.FLOAT)).getValue();
 		return new ShadowFloat(Math.max(value, other));
 	}
 	@Override
-	public ShadowFloat min(ShadowNumber number) throws ShadowException {
+	public ShadowFloat min(ShadowNumber number) throws InterpreterException {
 		float other = ((ShadowFloat)number.cast(Type.FLOAT)).getValue();
 		return new ShadowFloat(Math.min(value, other));
 	}
 
-	public ShadowFloat floor() throws ShadowException
+	public ShadowFloat floor() throws InterpreterException
 	{
 		return new ShadowFloat((float)Math.floor(value));
 	}
 
-	public ShadowFloat ceiling() throws ShadowException
+	public ShadowFloat ceiling() throws InterpreterException
 	{
 		return new ShadowFloat((float)Math.ceil(value));
 	}
 
-	public ShadowFloat round() throws ShadowException
+	public ShadowFloat round() throws InterpreterException
 	{
 		return new ShadowFloat(Math.round(value));
 	}

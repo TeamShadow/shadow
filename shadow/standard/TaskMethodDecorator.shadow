@@ -1,5 +1,0 @@
-interface shadow:standard@
-	TaskMethodDecorator<T> is MethodDecorator {
-		executeBefore(T instance, String methodName) => ();
-		executeAfter(T instance, String methodName) => ();
-}

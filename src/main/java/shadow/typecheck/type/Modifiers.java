@@ -7,6 +7,7 @@ import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
 import shadow.parse.ParseException.Error;
+import shadow.parse.ShadowParser;
 
 /**
  * Class to hold modifiers.
@@ -303,8 +304,24 @@ public final class Modifiers
 		return checkModifiers( new Modifiers(PUBLIC | PROTECTED | PRIVATE), "An enum", ctx);
 	}
 
+	public List<ShadowException> checkAttributeModifiers(Context ctx) {
+		List<ShadowException> exceptions = new ArrayList<>();
+
+		if (!equals(NO_MODIFIERS)) {
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "An attribute declaration cannot have modifiers", ctx));
+		}
+
+		return exceptions;
+	}
+
 	public List<ShadowException> checkFieldModifiers(Context ctx) 
 	{
+		if (ctx.getParent() instanceof ShadowParser.AttributeBodyDeclarationContext && !equals(NO_MODIFIERS)) {
+			List<ShadowException> exceptions = new ArrayList<>();
+			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field within an attribute cannot have modifiers", ctx));
+			return exceptions;
+		}
+
 		List<ShadowException> exceptions = checkModifiers( new Modifiers(READONLY | CONSTANT | IMMUTABLE | GET | SET | WEAK | NULLABLE | PUBLIC | PRIVATE | PROTECTED | LOCKED ), "A field", ctx);
 		if( isReadonly() && isImmutable() )
 			exceptions.add(new ParseException(Error.ILLEGAL_MODIFIER, "A field cannot be marked both readonly and immutable", ctx));

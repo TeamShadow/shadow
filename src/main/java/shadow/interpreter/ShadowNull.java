@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 import shadow.interpreter.InterpreterException.Error;
@@ -17,16 +16,16 @@ public class ShadowNull extends ShadowValue {
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException {
+	public ShadowValue cast(Type type) throws InterpreterException {
 		return new ShadowNull(type);
 	}
 	@Override
-	public ShadowValue copy() throws ShadowException {
+	public ShadowValue copy() throws InterpreterException {
 		return new ShadowNull(type);
 	}
 	
 	@Override
-    public ShadowBoolean equal(ShadowValue other) throws ShadowException {
+    public ShadowBoolean equal(ShadowValue other) throws InterpreterException {
 		if( other instanceof ShadowNull )
 			return new ShadowBoolean(true);
 

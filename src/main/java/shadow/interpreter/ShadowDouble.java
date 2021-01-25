@@ -2,7 +2,6 @@ package shadow.interpreter;
 
 import java.math.BigInteger;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 import shadow.interpreter.InterpreterException.Error;
@@ -27,29 +26,25 @@ public class ShadowDouble extends ShadowNumeric
 	
 	@Override
     public ShadowValue callMethod(String method, ShadowValue ... arguments) throws InterpreterException {
-		try {		
-			if(arguments.length == 0) {
-				switch(method) {				
-				case "ceiling": return ceiling();
-				case "floor": return floor();
-				case "round": return round();
-				}				
+		if(arguments.length == 0) {
+			switch(method) {
+			case "ceiling": return ceiling();
+			case "floor": return floor();
+			case "round": return round();
 			}
-		}
-		catch(ShadowException e) {
 		}
 		
 		return super.callMethod(method, arguments);
 	}
 
 	@Override
-	public ShadowDouble negate() throws ShadowException
+	public ShadowDouble negate() throws InterpreterException
 	{
 		return new ShadowDouble(-value);
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException {
+	public ShadowValue cast(Type type) throws InterpreterException {
 		BigInteger integer = BigInteger.valueOf(Math.round(value));
 		if (type.equals(Type.BYTE))
 			return new ShadowInteger(integer, 1, true);
@@ -77,7 +72,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowDouble add(ShadowValue other) throws ShadowException
+	public ShadowDouble add(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -89,7 +84,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowDouble subtract(ShadowValue other) throws ShadowException
+	public ShadowDouble subtract(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -101,7 +96,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowDouble multiply(ShadowValue other) throws ShadowException
+	public ShadowDouble multiply(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -113,7 +108,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowDouble divide(ShadowValue other) throws ShadowException
+	public ShadowDouble divide(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -125,7 +120,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowDouble modulus(ShadowValue other) throws ShadowException
+	public ShadowDouble modulus(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -137,7 +132,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean equal(ShadowValue other) throws ShadowException
+	public ShadowBoolean equal(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -149,7 +144,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean lessThan(ShadowValue other) throws ShadowException
+	public ShadowBoolean lessThan(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -161,7 +156,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean lessThanOrEqual(ShadowValue other) throws ShadowException
+	public ShadowBoolean lessThanOrEqual(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -173,7 +168,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean greaterThan(ShadowValue other) throws ShadowException
+	public ShadowBoolean greaterThan(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -185,7 +180,7 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws ShadowException
+	public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws InterpreterException
 	{
 		if( other instanceof ShadowDouble )
 		{
@@ -197,13 +192,13 @@ public class ShadowDouble extends ShadowNumeric
 	}
 
 	@Override
-	public ShadowInteger hash() throws ShadowException
+	public ShadowInteger hash() throws InterpreterException
 	{
 		return new ShadowInteger(BigInteger.valueOf(Double.doubleToLongBits(getValue())), 8, false).hash();
 	}
 
 	@Override
-	public ShadowValue copy() throws ShadowException
+	public ShadowValue copy() throws InterpreterException
 	{
 		return new ShadowDouble(getValue());
 	}
@@ -232,61 +227,61 @@ public class ShadowDouble extends ShadowNumeric
 		return toLiteral();
 	}
 	@Override
-	public ShadowDouble abs()
+	public ShadowDouble abs() throws InterpreterException
 	{
 		return new ShadowDouble(Math.abs(value));
 	}
 	@Override
-	public ShadowDouble cos() throws ShadowException {
+	public ShadowDouble cos() throws InterpreterException {
 		return new ShadowDouble(Math.cos(value));
 	}
 	@Override
-	public ShadowDouble sin() throws ShadowException {
+	public ShadowDouble sin() throws InterpreterException {
 		return new ShadowDouble(Math.sin(value));
 	}
 	@Override
-	public ShadowDouble power(ShadowNumber number) throws ShadowException {
+	public ShadowDouble power(ShadowNumber number) throws InterpreterException {
 		double exponent = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.pow(value, exponent));
 	}
 	@Override
-	public ShadowDouble squareRoot() throws ShadowException {
+	public ShadowDouble squareRoot() throws InterpreterException {
 		return new ShadowDouble(Math.sqrt(value));
 	}
 	@Override
-	public ShadowDouble logBase10() throws ShadowException {
+	public ShadowDouble logBase10() throws InterpreterException {
 		return new ShadowDouble(Math.log10(value));
 	}
 	@Override
-	public ShadowDouble logBase2() throws ShadowException {
+	public ShadowDouble logBase2() throws InterpreterException {
 		return new ShadowDouble(Math.log(value)/Math.log(2.0));
 	}
 	@Override
-	public ShadowDouble logBaseE() throws ShadowException {
+	public ShadowDouble logBaseE() throws InterpreterException {
 		return new ShadowDouble(Math.log(value));
 	}
 	@Override
-	public ShadowDouble max(ShadowNumber number) throws ShadowException {
+	public ShadowDouble max(ShadowNumber number) throws InterpreterException {
 		double other = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.max(value, other));
 	}
 	@Override
-	public ShadowDouble min(ShadowNumber number) throws ShadowException {
+	public ShadowDouble min(ShadowNumber number) throws InterpreterException {
 		double other = ((ShadowDouble)number.cast(Type.DOUBLE)).getValue();
 		return new ShadowDouble(Math.min(value, other));
 	}
 
-	public ShadowDouble floor() throws ShadowException
+	public ShadowDouble floor() throws InterpreterException
 	{
 		return new ShadowDouble(Math.floor(value));
 	}
 
-	public ShadowDouble ceiling() throws ShadowException
+	public ShadowDouble ceiling() throws InterpreterException
 	{
 		return new ShadowDouble(Math.ceil(value));
 	}
 
-	public ShadowDouble round() throws ShadowException
+	public ShadowDouble round() throws InterpreterException
 	{
 		return new ShadowDouble(Math.round(value));
 	}

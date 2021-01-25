@@ -165,18 +165,18 @@ public class TypeParameter extends Type {
 		return builder.toString();
 	}	
 	
-	public List<MethodSignature> getAllMethods(String methodName) {
-		return getMethods(methodName);
+	public List<MethodSignature> recursivelyGetMethodOverloads(String methodName) {
+		return getMethodOverloads(methodName);
 	}
 	
-	public List<MethodSignature> getMethods(String methodName) {
+	public List<MethodSignature> getMethodOverloads(String methodName) {
 		Set<MethodSignature> signatures = new HashSet<MethodSignature>();
 		
 		if( !methodName.equals("create") )
-			signatures.addAll(classBound.getAllMethods(methodName));
+			signatures.addAll(classBound.recursivelyGetMethodOverloads(methodName));
 		
 		for(InterfaceType bound : getInterfaces() )					
-			signatures.addAll(bound.getAllMethods(methodName));
+			signatures.addAll(bound.recursivelyGetMethodOverloads(methodName));
 		
 		return new ArrayList<MethodSignature>(signatures);
 	}

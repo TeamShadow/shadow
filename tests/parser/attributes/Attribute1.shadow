@@ -1,0 +1,4 @@
+attribute Attribute1 {
+    double required;
+    int optional = 4;
+}

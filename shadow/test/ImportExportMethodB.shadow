@@ -1,0 +1,10 @@
+import shadow:test@ImportExportMethodA;
+import shadow:io@Console;
+
+class shadow:test@ImportExportMethodB
+{
+    [ExportMethod(exportedTo = ImportExportMethodA:class)]
+    private test() => () {
+		Console.printLine("Test");
+	}
+}

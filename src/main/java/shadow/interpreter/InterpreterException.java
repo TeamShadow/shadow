@@ -38,7 +38,8 @@ public class InterpreterException extends ShadowException {
 		UNDEFINED_SYMBOL("Undefined symbol", "Symbol has not been defined in this context"),
 		UNKNOWN_REFERENCE("Unknown reference", "This symbol could not be resolved"),
 		UNNECESSARY_TYPE_ARGUMENTS("Unnecessary type arguments", "Type arguments supplied for non-parameterized type"),
-		UNSUPPORTED_OPERATION("Unsupported operation", "This operation is not supported in compile-time constant expressions");
+		UNSUPPORTED_OPERATION("Unsupported operation", "This operation is not supported in compile-time constant expressions"),
+		NON_CONSTANT_REFERENCE("Reference to non-constant value", "Only other constants can be referenced when defining a constant" );
 
 		private final String name;
 		private final String message;

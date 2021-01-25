@@ -56,4 +56,10 @@ public class NegativeTests {
 		args.add("tests-negative/interpreter/circular-constant-dependency/Test.shadow");
 		enforce(Error.CIRCULAR_REFERENCE);		
 	}
+
+	@Test public void testReferenceToNonConstant() throws Exception
+	{
+		args.add("tests-negative/interpreter/reference-to-non-constant/Test.shadow");
+		enforce(Error.NON_CONSTANT_REFERENCE);
+	}
 }

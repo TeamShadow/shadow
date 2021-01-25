@@ -105,8 +105,8 @@ public class ArrayType extends ClassType
 	}
 	
 	@Override
-	public List<MethodSignature> getAllMethods(String methodName) {
-		return convertToGeneric().getAllMethods(methodName);
+	public List<MethodSignature> recursivelyGetMethodOverloads(String methodName) {
+		return convertToGeneric().recursivelyGetMethodOverloads(methodName);
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package shadow.interpreter;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,9 @@ import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;
 import shadow.typecheck.TypeChecker;
+import shadow.typecheck.type.AttributeInvocation;
+import shadow.typecheck.type.AttributeType;
+import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
 
 /**
@@ -93,9 +97,9 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 			}
 		}
 
+		ErrorReporter errorReporter = new ErrorReporter(Loggers.AST_INTERPRETER);
 		ConstantFieldInterpreter visitor =
-				new ConstantFieldInterpreter(
-						packageTree, new ErrorReporter(Loggers.AST_INTERPRETER), constantFields);
+				new ConstantFieldInterpreter(packageTree, errorReporter, constantFields);
 		for (FieldKey fieldKey : constantFields.keySet()) {
 			VariableDeclaratorContext fieldCtx = constantFields.get(fieldKey);
 
@@ -107,9 +111,38 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 			visitor.visitRootField(fieldKey, fieldCtx);
 		}
 
+		evaluateAttributeFields(typesIncludingInner, visitor, errorReporter);
+
 		visitor.printAndReportErrors();
 	}
 
+	// Evaluates fields on attribute types and attribute invocations. We don't store these in the
+	// constantFields because they can't be referenced by each other or by other constants.
+	private static void evaluateAttributeFields(List<Type> typesIncludingInner, ConstantFieldInterpreter visitor, ErrorReporter errorReporter) {
+		for (Type type : typesIncludingInner) {
+			if (type instanceof AttributeType) {
+				for (Map.Entry<String, VariableDeclaratorContext> field : ((AttributeType) type).getInitializedFields().entrySet()) {
+					visitor.visitRootField(new FieldKey(type, field.getKey()), field.getValue());
+				}
+			}
+		}
+
+		List<MethodSignature> allMethods = typesIncludingInner.stream()
+				.map(Type::getAllMethods).flatMap(Collection::stream)
+				.collect(Collectors.toList());
+		List<AttributeInvocation> attributeInvocations = allMethods.stream()
+				.map(MethodSignature::getAttributes).flatMap(Collection::stream)
+				.collect(Collectors.toList());
+		for (AttributeInvocation attributeInvocation : attributeInvocations) {
+			for (Map.Entry<String, VariableDeclaratorContext> field : attributeInvocation.getFieldAssignments().entrySet()) {
+				visitor.visitRootField(new FieldKey(attributeInvocation.getType(), field.getKey()), field.getValue());
+			}
+		}
+
+		for (MethodSignature method : allMethods) {
+			method.processAttributeValues(errorReporter);
+		}
+	}
 
 	public void visitRootField(FieldKey rootFieldKey, VariableDeclaratorContext rootFieldCtx) {
 		// TODO: Consider calling BaseChecker#clear (but make sure errors are reported before clearing)

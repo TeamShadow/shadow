@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.ShadowException;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
@@ -22,20 +21,20 @@ public class ShadowBoolean extends ShadowValue
 		return value;
 	}
 	
-	public ShadowBoolean not() throws ShadowException
+	public ShadowBoolean not() throws InterpreterException
 	{	
 		return new ShadowBoolean(!value);
 	}
 
 	@Override
-	public ShadowValue cast(Type type) throws ShadowException
+	public ShadowValue cast(Type type) throws InterpreterException
 	{
 		if (type.equals(Type.BOOLEAN))
 			return this;
 		throw new UnsupportedOperationException("Cannot cast " + getType() + " to " + type);
 	}
 	@Override
-	public ShadowValue copy() throws ShadowException
+	public ShadowValue copy() throws InterpreterException
 	{
 		return new ShadowBoolean(value);
 	}

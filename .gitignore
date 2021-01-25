@@ -34,3 +34,7 @@ hs_err_pid*
 !/target/shadow.xml
 !/target/windows.xml
 /target/
+
+# Ignore IntelliJ IDEA project files because the configuration is generated on importing the Maven project
+.idea/
+*.iml

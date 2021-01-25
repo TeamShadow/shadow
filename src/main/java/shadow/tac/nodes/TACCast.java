@@ -294,7 +294,7 @@ public class TACCast extends TACUpdate
 			throw new IllegalArgumentException("Unknown source type: " + sourceType);
 				
 		TACMethodName methodRef = new TACMethodName(this, srcClass,
-				Type.CLASS.getMethods("interfaceData").get(0));
+				Type.CLASS.getMethodOverloads("interfaceData").get(0));
 		TACOperand destClass = new TACClass(this, destination).getClassData();					
 		return new TACCall(this, methodRef, methodRef.getPrefix(), destClass);
 	}
