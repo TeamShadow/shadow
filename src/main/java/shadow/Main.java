@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 
 import shadow.doctool.tag.TagManager.BlockTagType;
-import shadow.interpreter.ASTInterpreter;
 import shadow.interpreter.ConstantFieldInterpreter;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -199,17 +199,12 @@ public class Main {
 		// Begin the checking/compilation process
 		long startTime = System.currentTimeMillis();
 
-		List<String> linkCommand = new ArrayList<>();
-		linkCommand.add(config.getLlvmLink()); // usually llvm-link
-		
-		linkCommand.add("-");
+		List<String> assembleCommand = new ArrayList<>(config.getLinkCommand(currentJob));
 		List<Path> cFiles = new ArrayList<>();
 
-		generateLLVM(cFiles, linkCommand);
+		generateObjectFiles(cFiles, assembleCommand);
 
 		if (isCompile) {
-			List<String> assembleCommand = new ArrayList<String>(config.getLinkCommand(currentJob));
-
 			// compile and add the C source files to the assembler
 			if (!compileCSourceFiles(system.resolve(Paths.get("shadow", "c-source")).normalize(), cFiles,
 					assembleCommand)) {
@@ -236,7 +231,6 @@ public class Main {
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 
-			Process link = new ProcessBuilder(linkCommand).redirectError(Redirect.INHERIT).start();			
 			// usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
 					/*"--filetype=obj",*/ config.getOptimizationLevel())
@@ -247,10 +241,9 @@ public class Main {
 					//.redirectError(Redirect.INHERIT).start();
 
 			try {
-				new Pipe(link.getInputStream(), compile.getOutputStream()).start();
 				new Pipe(compile.getInputStream(), assemble.getOutputStream()).start();
 				String line = main.readLine();
-				final OutputStream out = link.getOutputStream();
+				final OutputStream out = compile.getOutputStream();
 
 				while (line != null) {
 					line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
@@ -260,17 +253,12 @@ public class Main {
 
 				try {
 					main.close();
-					link.getOutputStream().flush();
-					link.getOutputStream().close();
+					compile.getOutputStream().flush();
+					compile.getOutputStream().close();
 				} catch (IOException ex) {
 				}
 
 				long sectionStart = System.currentTimeMillis();
-				if (link.waitFor() != 0)
-					throw new CompileException("FAILED TO LINK");
-				logger.info("LLVM link finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
-
-				sectionStart = System.currentTimeMillis();
 				if (compile.waitFor() != 0)
 					throw new CompileException("FAILED TO COMPILE");
 				logger.info("LLVM compilation finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
@@ -282,7 +270,6 @@ public class Main {
 
 			} catch (InterruptedException ex) {
 			} finally {
-				link.destroy();				
 				compile.destroy();
 				assemble.destroy();
 			}
@@ -291,17 +278,39 @@ public class Main {
 		}
 	}
 
+	// Assumes compileCommand contains two empty slots at the end:
+	// The first is for the output file name
+	// The last is for the input file name
+	private static boolean compileCSourceFile(Path cFile, List<String> compileCommand, List<String> assembleCommand) throws IOException {
+		String inputFile = canonicalize(cFile);
+		String outputFile = inputFile + ".s";
+		Path outputPath = Paths.get(outputFile);
+
+		assembleCommand.add(outputFile);
+
+		if (currentJob.isForceRecompile() || !Files.exists(outputPath) || Files.getLastModifiedTime(outputPath)
+				.compareTo(Files.getLastModifiedTime(cFile)) < 0) {
+			logger.info("Generating assembly code for " + cFile.getFileName());
+			compileCommand.set(compileCommand.size() - 2, outputFile);
+			compileCommand.set(compileCommand.size() - 1, inputFile);
+			return runCCompiler(compileCommand, cFile.getParent());
+		}
+
+		logger.info("Using pre-existing assembly code for " + cFile.getFileName());
+		return true;
+	}
+
 	private static boolean compileCSourceFiles(Path cSourcePath, List<Path> cShadowFiles, List<String> assembleCommand)
 			throws IOException, ConfigurationException {
 
-		// no need to compile anything if there are no c-source files
+		// No need to compile anything if there are no c-source files
 		if( !Files.exists(cSourcePath) ) {
 			logger.error("The c-source directory was not found and is necessary for the Shadow runtime.");
 			return false;
 		}
 
-		// compile the files to assembly, to be ready for linkage
-		List<String> compileCommand = new ArrayList<String>();
+		// Compile the files to assembly, to be ready for linkage
+		List<String> compileCommand = new ArrayList<>();
 
 		if (Configuration.getConfiguration().getOs().equals("Mac")) {
 			compileCommand.add("clang");
@@ -326,51 +335,30 @@ public class Main {
 		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include", "platform", "Arch" + config.getArch()))
 		.toFile().getCanonicalPath());
 
+		compileCommand.add("-o");
+		compileCommand.add(null);	// Location for output name
+		compileCommand.add(null);	// Location for .c file
+
 		/*
-		 * The compiling of the C files is done in two stages: 1. We traverse
-		 * the `c-source` directory looking for `.c` files, and we add those to
-		 * the coreCFiles list. All those files are compiled in one gcc (clang) run, and
-		 * the corresponding .s files are generated next to the .c files, with
-		 * the same name. 2. The cFiles list contains all the .c files found
+		 * The compiling of the C files is done in two stages:
+		 * 1. We traverse the `c-source` directory looking for `.c` files
+		 * and compile them.
+		 * 2. The cFiles list contains all the .c files found
 		 * while generating LLVM for .shadow files. Each `.c` file is compiled
 		 * using a gcc run. So, if there are 100 .c files, we will run gcc (clang) 100
 		 * times.
 		 */
 
-		// we create a new compileCommand list to compile only the core .c
-		// files, we use the original compileCommand
-		// later on for the separate .c files.
-		List<String> coreCompileCommand = new ArrayList<>(compileCommand);
-
-		// the filter to only find .c files in the `c-source` folder.		
+		// The filter to find .c files in the `c-source` folder.
 		try (DirectoryStream<Path> paths = Files.newDirectoryStream(cSourcePath, "*.c")) {
-			for (Path cFile : paths) {
-				if (shouldCompileCFile(cFile, assembleCommand)) {
-					coreCompileCommand.add(canonicalize(cFile));
-				}				
-			}
-		}		
-
-		// if any files were to be compiled, we run the compiler, otherwise, we
-		// skip.
-		if (coreCompileCommand.size() > compileCommand.size()) {
-			if (!runCCompiler(coreCompileCommand, cSourcePath)) {
-				return false;
-			}
+			for (Path cFile : paths)
+				if (!compileCSourceFile(cFile, compileCommand, assembleCommand))
+					return false;
 		}
 
-		compileCommand.add(null);
-		// we compile each Shadow c file on its own
 		for (Path cFile : cShadowFiles) {
-			// checks if the files should be compiled, and add the .s file path
-			// to the assembleCommand
-			// list whether or not the file needs to be compiled.
-			if (shouldCompileCFile(cFile, assembleCommand)) {
-				compileCommand.set(compileCommand.size() - 1, canonicalize(cFile));
-				if (!runCCompiler(compileCommand, cFile.getParent())) {
-					return false;
-				}
-			}
+			if (!compileCSourceFile(cFile, compileCommand, assembleCommand))
+				return false;
 		}
 
 		return true;
@@ -386,19 +374,7 @@ public class Main {
 		return false;
 	}
 
-	public static boolean shouldCompileCFile(Path currentFile, List<String> assembleCommand) throws IOException {
-		Path assemblyPath = Paths.get(BaseChecker.stripExtension(currentFile.toString()) + ".s").normalize();
-		assembleCommand.add(assemblyPath.toAbsolutePath().toString());
 
-		if (currentJob.isForceRecompile() || !Files.exists(assemblyPath) || Files.getLastModifiedTime(assemblyPath)
-				.compareTo(Files.getLastModifiedTime(currentFile)) < 0) {
-			logger.info("Generating Assembly code for " + currentFile.getFileName());
-			return true;
-		}
-
-		logger.info("Using pre-existing Assembly code for " + currentFile.getFileName());
-		return false;
-	}
 
 	/*
 	 * Ensures that LLVM code exists for all dependencies of a main-method-
@@ -406,7 +382,7 @@ public class Main {
 	 * (which has been updated more recently than the corresponding source file)
 	 * or building a new one
 	 */
-	private static void generateLLVM(List<Path> cFiles, List<String> linkCommand) throws IOException, ShadowException,
+	private static void generateObjectFiles(List<Path> cFiles, List<String> linkCommand) throws IOException, ShadowException,
 	ParseException, ConfigurationException, TypeCheckException, CompileException {
 
 		Path shadow = config.getSystemImport().resolve("shadow");
@@ -483,31 +459,31 @@ public class Main {
 						cFiles.add(cFile);
 
 
-					Path bitcodeFile = file.getParent().resolve(className + ".bc");
+					Path objectFile = file.getParent().resolve(className + ".s");
 					Path llvmFile = file.getParent().resolve(className + ".ll");
 					Path nativeFile = file.getParent().resolve(className + ".native.ll");
-					Path nativeBitcodeFile = file.getParent().resolve(className + ".native.bc");
+					Path nativeObjectFile = file.getParent().resolve(className + ".native.s");
 
 					// if the LLVM bitcode didn't exist, the full .shadow file would
 					// have been used
 					if(node.isFromMetaFile()) {
 						logger.info("Using pre-existing LLVM code for " + name);
-						if (Files.exists(bitcodeFile))
-							linkCommand.add(canonicalize(bitcodeFile));
+						if (Files.exists(objectFile))
+							linkCommand.add(canonicalize(objectFile));
 						else if( Files.exists(llvmFile) )
 							linkCommand.add(optimizeLLVMFile(llvmFile));
 						else
-							throw new CompileException("File not found: " + bitcodeFile);
+							throw new CompileException("File not found: " + objectFile);
 					}
 					else {
 						logger.info("Generating LLVM code for " + name);
 						// gets top level class						
 						TACModule module = optimizeTAC(new TACBuilder().build(node), reporter, false);
-						linkCommand.add(optimizeShadowFile(file, module));						
+						linkCommand.add(compileShadowFile(file, module));
 					}
 
-					if( Files.exists(nativeBitcodeFile))
-						linkCommand.add(canonicalize(nativeBitcodeFile));
+					if( Files.exists(nativeObjectFile))
+						linkCommand.add(canonicalize(nativeObjectFile));
 					else if( Files.exists(nativeFile) )
 						linkCommand.add(optimizeLLVMFile(nativeFile));					
 				}
@@ -521,58 +497,84 @@ public class Main {
 		}
 	}
 
-	private static String optimizeLLVMFile(Path LLVMPath) throws CompileException {
-		String LLVMFile = canonicalize(LLVMPath);
-		String path = BaseChecker.stripExtension(LLVMFile);
-		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = canonicalize(bitcodePath); 
+	private static String compileLLVMStream(InputStream stream, String path, Path LLVMPath) throws CompileException {
+		Path objectPath = Paths.get(path + ".s");
+		String objectFile = canonicalize(objectPath);
 
 		boolean success = false;
-		Process optimize = null;
+		Process compile = null;
 
 		try {
-			optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-					config.getLLVMOptimizationLevel(), config.getDataLayout(), LLVMFile, "-o", bitcodeFile)
-					.redirectError(Redirect.INHERIT).start();
-			if( optimize.waitFor() != 0 )
-				throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
-
-			success = true;			
-		} 
+			compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
+					config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/ "--filetype=asm", "-o", objectFile).start();
+			new Pipe(stream, compile.getOutputStream()).start();
+			if( compile.waitFor() != 0 )
+				throw new CompileException("FAILED TO COMPILE " + LLVMPath);
+			success = true;
+		}
 		catch (IOException | InterruptedException e) {
-			throw new CompileException("FAILED TO OPTIMIZE " + LLVMFile);
+			throw new CompileException("FAILED TO COMPILE " + LLVMPath);
 		}
 		finally {
 			if( !success ) {
 				try {
-					Files.deleteIfExists(bitcodePath);
+					Files.deleteIfExists(objectPath);
 				} catch (IOException e) {}
 			}
 
+			if( compile != null )
+				compile.destroy();
+		}
+
+		return objectFile;
+	}
+
+	private static String optimizeLLVMStream(InputStream stream, String path, Path LLVMPath) throws CompileException {
+		Process optimize = null;
+		try {
+			optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
+					config.getLLVMOptimizationLevel(), config.getDataLayout())
+					.redirectError(Redirect.INHERIT).start();
+			new Pipe(stream, optimize.getOutputStream()).start();
+			String objectFile = compileLLVMStream(optimize.getInputStream(), path, LLVMPath);
+			if(optimize.waitFor() != 0)
+				throw new CompileException("FAILED TO OPTIMIZE " + LLVMPath);
+
+			return objectFile;
+		}
+		catch (IOException | InterruptedException e) {
+			throw new CompileException("FAILED TO OPTIMIZE " + LLVMPath);
+		}
+		finally {
 			if( optimize != null )
 				optimize.destroy();
 		}
-
-		return bitcodeFile;
 	}
 
-	private static String optimizeShadowFile(Path shadowPath, TACModule module) throws CompileException {
+	private static String optimizeLLVMFile(Path LLVMPath) throws CompileException {
+		String LLVMFile = canonicalize(LLVMPath);
+		String path = BaseChecker.stripExtension(LLVMFile);
+		try {
+			return optimizeLLVMStream(Files.newInputStream(LLVMPath), path, LLVMPath);
+		} catch (IOException e) {
+			throw new CompileException("FAILED TO OPTIMIZE " + LLVMPath);
+		}
+	}
+
+	private static String compileShadowFile(Path shadowPath, TACModule module) throws CompileException {
 		String shadowFile = canonicalize(shadowPath);
 		String path = BaseChecker.stripExtension(shadowFile);
-		Path bitcodePath = Paths.get(path + ".bc");
-		String bitcodeFile = canonicalize(bitcodePath); 
-		boolean success = false;
 		Process optimize = null;
 
 		try {			
 			LLVMOutput output = null;
-			OutputStream out = null;
+			OutputStream out;
 
 			if( currentJob.isHumanReadable() )
 				out = Files.newOutputStream(Paths.get(path + ".ll"));
 			else {
 				optimize = new ProcessBuilder(config.getOpt(), "-mtriple", config.getTarget(),
-						config.getLLVMOptimizationLevel(), config.getDataLayout(), "-o", bitcodeFile)
+						config.getLLVMOptimizationLevel(), config.getDataLayout())
 						.redirectError(Redirect.INHERIT).start();
 				out = optimize.getOutputStream();
 			}
@@ -590,32 +592,22 @@ public class Main {
 					output.close();
 			}
 
-			if( currentJob.isHumanReadable() ) {
-				success = true;
+			if( currentJob.isHumanReadable() )
 				return optimizeLLVMFile(Paths.get(path + ".ll"));
+			else {
+				String objectFile = compileLLVMStream(optimize.getInputStream(), path, shadowPath);
+				if (optimize.waitFor() != 0)
+					throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
+				return objectFile;
 			}
-			else if (optimize.waitFor() != 0)
-				throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
-
-			success = true;
-
-		} 
+		}
 		catch (IOException | InterruptedException e) {
-			throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
+				throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
 		}
 		finally {
-			if( !success ) {
-				try {
-					Files.deleteIfExists(bitcodePath);
-				} catch (IOException e) {}
-			}
-
 			if( optimize != null )
 				optimize.destroy();
-
 		}
-
-		return bitcodeFile;
 	}
 
 	/*
@@ -626,15 +618,15 @@ public class Main {
 
 		if (!(module.getType() instanceof InterfaceType)) {
 			List<TACModule> innerClasses = module.getAllInnerClasses();
-			List<TACModule> modules = new ArrayList<TACModule>(innerClasses.size() + 1);
+			List<TACModule> modules = new ArrayList<>(innerClasses.size() + 1);
 			modules.add(module);
 			modules.addAll(innerClasses);
 
 			List<ControlFlowGraph> graphs = module.optimizeTAC(reporter, checkOnly);
 
 			// get all used fields and all used private methods
-			Map<Type, Set<String>> allUsedFields = new HashMap<Type, Set<String>>();
-			Set<MethodSignature> allUsedPrivateMethods = new HashSet<MethodSignature>();
+			Map<Type, Set<String>> allUsedFields = new HashMap<>();
+			Set<MethodSignature> allUsedPrivateMethods = new HashSet<>();
 			for (ControlFlowGraph graph : graphs) {
 				if( !graph.getMethod().getSignature().isCopy() && !graph.getMethod().getSignature().isDestroy() ) {				
 					Map<Type, Set<String>> usedFields = graph.getUsedFields();
@@ -761,8 +753,7 @@ public class Main {
 	}
 
 
-	public static String canonicalize(Path path)
-	{
+	public static String canonicalize(Path path) {
 		Path absolute = path.toAbsolutePath();
 		Path normalized = absolute.normalize();
 		String result = normalized.toString();

@@ -361,10 +361,10 @@ public class TypeCollector extends ScopedChecker {
 			String source = activeFiles.get(canonicalFile);
 
 			// Depending on the circumstances, the compiler may choose to either
-			// compile/recompile source files, or rely on existing binaries/IR.
+			// compile/recompile source files, or rely on existing binaries.
 			if( Files.exists(canonicalFile) ) {											
 				Path meta = Paths.get(canonical + ".meta");
-				Path llvm = Paths.get(canonical + ".bc");
+				Path object = Paths.get(canonical + ".o");
 
 				// If source compilation was not requested and the binaries exist
 				// that are newer than the source, use those binaries.
@@ -375,8 +375,8 @@ public class TypeCollector extends ScopedChecker {
 						(!typeCheckOnly || !hasMain || !files.get(0).equals(canonicalFile)) &&
 						// Only use .meta if it's newer than .shadow
 						Files.exists(meta) && Files.getLastModifiedTime(meta).compareTo(Files.getLastModifiedTime(canonicalFile)) >= 0 &&
-						// Also, only use .meta if we're not going to need to recompile it into an LLVM
-						(typeCheckOnly || (Files.exists(llvm) && Files.getLastModifiedTime(llvm).compareTo(Files.getLastModifiedTime(meta)) >= 0)))
+						// Also, only use .meta if we're not going to need to recompile it into an object file
+						(typeCheckOnly || (Files.exists(object) && Files.getLastModifiedTime(object).compareTo(Files.getLastModifiedTime(meta)) >= 0)))
 					canonicalFile = meta;				
 				else
 					mustRecompile.add(canonical);

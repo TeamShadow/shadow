@@ -4,6 +4,7 @@ bin/
 *.bc
 *.ll
 *.s
+*.o
 !*.native.ll
 *.exe
 *.out

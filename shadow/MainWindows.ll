@@ -53,7 +53,7 @@
 @shadow.io..Console_methods = external constant %shadow.io..Console_methods
 @shadow.io..Console_class = external constant %shadow.standard..Class
 %shadow.io..Console = type opaque
-@shadow.io..Console_instance = external global %shadow.io..Console*
+@shadow.io..Console_instance = external thread_local global %shadow.io..Console*
 
 declare %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object*)
 declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
@@ -161,7 +161,8 @@ entry:
 }
 
 declare i32 @__exceptionFilter(i8*, i8*, %shadow.standard..Class*)
-define linkonce_odr i32 @_exceptionMethodshadow.standard..Exception(i8* %0, i8* %1) {
+$_exceptionMethodshadow.standard..Exception = comdat any
+define linkonce_odr i32 @_exceptionMethodshadow.standard..Exception(i8* %0, i8* %1) comdat {
     %3 = call i32 @__exceptionFilter(i8* %0, i8* %1, %shadow.standard..Class* @shadow.standard..Exception_class)
     ret i32 %3
 }

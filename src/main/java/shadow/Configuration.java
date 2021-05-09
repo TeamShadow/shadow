@@ -209,9 +209,9 @@ public class Configuration {
 
 			if(getOs().equals("Mac")) {
 				linkCommand.add("clang");				
-				linkCommand.add("-x");
-				linkCommand.add("assembler");
-				linkCommand.add("-");
+				//linkCommand.add("-x");
+				//linkCommand.add("assembler");
+				//linkCommand.add("-");
 				linkCommand.add("-lm");
 				linkCommand.add("-lSystem");
 			}			
@@ -223,7 +223,7 @@ public class Configuration {
 					linkCommand.add("-m32");
 				else
 					linkCommand.add("-m64");
-				linkCommand.add("-");							
+				linkCommand.add("-");
 				/*linkCommand.add("lld-link");
 				linkCommand.add("/subsystem:CONSOLE");
 				linkCommand.add("-defaultlib:libcmt");
@@ -243,9 +243,9 @@ public class Configuration {
 			else if(getOs().equals("Linux")) {
 				//linkCommand.add("gcc");
 				linkCommand.add("clang++");
-				linkCommand.add("-x");
-				linkCommand.add("assembler");
-				linkCommand.add("-");
+				//linkCommand.add("-x");
+				//linkCommand.add("assembler");
+				//linkCommand.add("-");
 				linkCommand.add("-lm");
 				linkCommand.add("-lrt");
 				linkCommand.add("-pthread");

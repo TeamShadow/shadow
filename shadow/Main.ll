@@ -53,7 +53,7 @@
 @shadow.io..Console_methods = external constant %shadow.io..Console_methods
 @shadow.io..Console_class = external constant %shadow.standard..Class
 %shadow.io..Console = type opaque
-@shadow.io..Console_instance = external global %shadow.io..Console*
+@shadow.io..Console_instance = external thread_local global %shadow.io..Console*
 
 declare %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object*)
 declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)

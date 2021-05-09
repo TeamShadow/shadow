@@ -19,15 +19,14 @@ import java.util.Map.Entry;
 
 public class LLVMOutput extends AbstractOutput {
 	private int tempCounter = 0;
-	private List<String> stringLiterals = new LinkedList<String>();	
-	private HashSet<Type> unparameterizedGenerics = new HashSet<Type>();
+	private List<String> stringLiterals = new LinkedList<>();
+	private HashSet<Type> unparameterizedGenerics = new HashSet<>();
 	private int classCounter = 0;
-	private HashSet<MethodSignature> usedSignatures = new HashSet<MethodSignature>();
-	//private HashSet<TACConstantRef> usedConstants = new HashSet<TACConstantRef>();
+	private HashSet<MethodSignature> usedSignatures = new HashSet<>();
 
-	private Set<String> genericClasses = new TreeSet<String>();
-	private Set<String> arrayClasses = new TreeSet<String>();
-	private Set<ExceptionType> exceptions = new TreeSet<ExceptionType>();
+	private Set<String> genericClasses = new TreeSet<>();
+	private Set<String> arrayClasses = new TreeSet<>();
+	private Set<ExceptionType> exceptions = new TreeSet<>();
 
 	private TACModule module;
 	private boolean skipMethod = false;	
@@ -40,12 +39,10 @@ public class LLVMOutput extends AbstractOutput {
 		super(stream);
 	}
 
-	private String temp(int offset)
-	{
+	private String temp(int offset) {
 		return '%' + Integer.toString(tempCounter - offset - 1);
 	}
-	private String nextTemp()
-	{
+	private String nextTemp() {
 		return '%' + Integer.toString(tempCounter++);
 	}
 
@@ -94,7 +91,7 @@ public class LLVMOutput extends AbstractOutput {
 		Type moduleType = module.getType();
 
 		//type references for regular types
-		HashSet<Type> definedGenerics = new HashSet<Type>();
+		HashSet<Type> definedGenerics = new HashSet<>();
 		for (Type type : moduleType.getUsedTypes()) {			
 			if( !type.isParameterized() && !(type instanceof ArrayType) && !(type instanceof MethodReferenceType) ) {
 				writeTypeDefinition(type);
@@ -108,7 +105,7 @@ public class LLVMOutput extends AbstractOutput {
 								" = external constant " + methodTableType(type, false));					
 					if (type instanceof SingletonType) //never parameterized
 						writer.write('@' + raw(type, "_instance") +
-								" = external global " + type(type));
+								" = external thread_local global " + type(type));
 				}
 			}
 			
@@ -393,7 +390,8 @@ public class LLVMOutput extends AbstractOutput {
 		//@"??_7type_info@@6B@" = external global i8*
 		
 		for(ExceptionType exceptionType : exceptions) {
-			writer.write("define linkonce_odr i32 " + exceptionMethod(exceptionType) + "(i8* %0, i8* %1) {");
+			writer.write(exceptionComdat(exceptionType) + " = comdat any");
+			writer.write("define linkonce_odr i32 " + exceptionMethod(exceptionType) + "(i8* %0, i8* %1) comdat {");
 			writer.indent();
 				writer.write("%3 = call i32 @__exceptionFilter(i8* %0, i8* %1, " + type(Type.CLASS) + " " + classOf(exceptionType) + ")");
 				writer.write("ret i32 %3");
@@ -406,8 +404,8 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	private void writeGenericClasses(Set<Type> definedGenerics) throws ShadowException {	
-		Set<Type> genericClasses = new HashSet<Type>();
-		TreeSet<Type> startingClasses = new TreeSet<Type>();
+		Set<Type> genericClasses = new HashSet<>();
+		TreeSet<Type> startingClasses = new TreeSet<>();
 		Type moduleType = module.getType();
 		startingClasses.addAll(moduleType.getUsedTypes());
 		
@@ -1756,7 +1754,11 @@ public class LLVMOutput extends AbstractOutput {
 	private static String interfaceData(Type type) {
 		return "@_interfaceData" + type.toString(Type.MANGLE);
 	}
-	
+
+	private static String exceptionComdat(ExceptionType type) {
+		return "$_exceptionMethod" + type.toString(Type.MANGLE);
+	}
+
 	private static String exceptionMethod(ExceptionType type) {
 		return "@_exceptionMethod" + type.toString(Type.MANGLE);
 	}
@@ -2249,7 +2251,11 @@ public class LLVMOutput extends AbstractOutput {
 	*/
 	
 
-	private void writeGenericClass(Type generic) throws ShadowException {				
+	private void writeGenericClass(Type generic) throws ShadowException {
+
+		// This comdat stuff is supposed to allow generic classes to be defined in multiple files and merged at link time
+		writer.write( "$" + withGenerics(generic, "_class") + " = comdat any");
+
 		Type genericAsObject;
 		
 		if( generic instanceof ArrayType )
@@ -2308,6 +2314,7 @@ public class LLVMOutput extends AbstractOutput {
 		else
 			name = generic.toString(Type.PACKAGES);
 
+
 		writer.write(classOf(generic) + " = linkonce_odr unnamed_addr constant  %" +
 				raw(Type.GENERIC_CLASS) + " { " + 
 				
@@ -2330,11 +2337,12 @@ public class LLVMOutput extends AbstractOutput {
 				"@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS) + " to " + type(Type.ARRAY)+ "), " + //parameters
 
 				type(Type.ARRAY) + " bitcast ( { %ulong, " + type(Type.GENERIC_CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "]}* " +
-				"@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS) + " to " + type(Type.ARRAY) + ")} " ); //tables
+				"@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS) + " to " + type(Type.ARRAY) + ")}, comdat" ); //tables
 	}
 
-	private void writeGenericClassSupportingMaterial(Type generic) throws ShadowException {				
-		 
+	private void writeGenericClassSupportingMaterial(Type generic) throws ShadowException {
+
+
 		boolean first;
 		Type genericAsObject;
 		if( generic instanceof ArrayType )
@@ -2358,8 +2366,9 @@ public class LLVMOutput extends AbstractOutput {
 					sb.append(typeText(Type.CLASS, classOf(_interface)));							
 			}
 
-			sb.append("]}");					
+			sb.append("]}, comdat");
 
+			writer.write("$_interfaces" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS) + " = comdat any");
 			writer.write(genericInterfaces(generic) +
 					" = linkonce_odr unnamed_addr constant {%ulong, " + type(Type.GENERIC_CLASS) + ", " + methodTableType(Type.ARRAY) + ", " + type(Type.LONG) + ", [" + interfaces.size() + " x " + type(Type.CLASS) + "]} " + sb.toString());
 		}
@@ -2424,13 +2433,18 @@ public class LLVMOutput extends AbstractOutput {
 				}
 		}
 
-		parameters.append("]}");
-		tables.append("]}");
+		parameters.append("]}, comdat");
+		tables.append("]}, comdat");
 
-		writer.write("@_parameters" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS) +
+
+		// This comdat stuff is supposed to allow generic classes to be defined in multiple files and merged at link time
+		String mangledGeneric = generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS);
+		writer.write( "$_parameters" + mangledGeneric  + " = comdat any");
+		writer.write("@_parameters" + mangledGeneric +
 				" = linkonce_odr unnamed_addr constant { %ulong, " + type(Type.GENERIC_CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + classListSize + " x " + type(Type.CLASS) + "] } " + parameters.toString());
-		
-		writer.write("@_tables" + generic.toString(Type.MANGLE | Type.TYPE_PARAMETERS) +
+
+		writer.write( "$_tables" + mangledGeneric + " = comdat any");
+		writer.write("@_tables" + mangledGeneric +
 				" = linkonce_odr unnamed_addr constant { %ulong, " + type(Type.GENERIC_CLASS) + ", " + methodTableType(Type.ARRAY) + ", %long, [" + parameterList.size() + " x " + type(Type.METHOD_TABLE) + "] } " + tables.toString());
 	}	
 

@@ -47,7 +47,7 @@
 @shadow.io..Console_methods = external constant %shadow.io..Console_methods
 @shadow.io..Console_class = external constant %shadow.standard..Class
 %shadow.io..Console = type opaque
-@shadow.io..Console_instance = external global %shadow.io..Console*
+@shadow.io..Console_instance = external thread_local global %shadow.io..Console*
 
 declare %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object*)
 declare %shadow.io..Console* @shadow.io..Console_MprintError_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
@@ -57,7 +57,7 @@ declare %shadow.io..Console* @shadow.io..Console_MprintErrorLine_shadow.standard
 
 ;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
 ;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
 
 declare i32 @strlen(i8* nocapture)
 
@@ -69,7 +69,7 @@ declare %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object*
 declare void @shadow.test..Test_Mmain(%shadow.test..Test*)
 
 declare i32 @__C_specific_handler(...)
-@__exceptionStorage = external global %shadow.standard..Exception*
+@__exceptionStorage = external thread_local global %shadow.standard..Exception*
 
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
@@ -78,12 +78,12 @@ declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %longElements, %boolean %nullable)
 
 define i32 @main(i32, i8**) personality i32 (...)* @__C_specific_handler {			
-    %ex = alloca %shadow.standard..Exception*	
+    %ex = alloca %shadow.standard..Exception*
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console_class, %shadow.standard..Object_methods* bitcast(%shadow.io..Console_methods* @shadow.io..Console_methods to %shadow.standard..Object_methods*) )
 	%console = call %shadow.io..Console* @shadow.io..Console_Mcreate(%shadow.standard..Object* %uninitializedConsole)
-    store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance		
+	store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console_instance
 	%object = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.test..Test_class, %shadow.standard..Object_methods* bitcast(%shadow.test..Test_methods* @shadow.test..Test_methods to %shadow.standard..Object_methods*))		
-	%initialized = call %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object* %object)	
+	%initialized = call %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object* %object)
 	invoke void @callMain(%shadow.test..Test* %initialized)
 			to label %_success unwind label %_exception
 _success:	
@@ -122,7 +122,8 @@ entry:
 }
 
 declare i32 @__exceptionFilter(i8*, i8*, %shadow.standard..Class*)
-define linkonce_odr i32 @_exceptionMethodshadow.standard..Exception(i8* %0, i8* %1) {
+$_exceptionMethodshadow.standard..Exception = comdat any
+define linkonce_odr i32 @_exceptionMethodshadow.standard..Exception(i8* %0, i8* %1) comdat {
     %3 = call i32 @__exceptionFilter(i8* %0, i8* %1, %shadow.standard..Class* @shadow.standard..Exception_class)
     ret i32 %3
 }
