@@ -208,7 +208,8 @@ public class Configuration {
 			linkCommand = new ArrayList<String>();
 
 			if(getOs().equals("Mac")) {
-				linkCommand.add("clang");				
+				linkCommand.add("clang");
+
 				//linkCommand.add("-x");
 				//linkCommand.add("assembler");
 				//linkCommand.add("-");
@@ -217,13 +218,6 @@ public class Configuration {
 			}			
 			else if(getOs().equals("Windows")){
 				linkCommand.add("clang");
-				linkCommand.add("-x");
-				linkCommand.add("assembler");
-				if(arch == 32)
-					linkCommand.add("-m32");
-				else
-					linkCommand.add("-m64");
-				linkCommand.add("-");
 				/*linkCommand.add("lld-link");
 				linkCommand.add("/subsystem:CONSOLE");
 				linkCommand.add("-defaultlib:libcmt");
@@ -250,6 +244,11 @@ public class Configuration {
 				linkCommand.add("-lrt");
 				linkCommand.add("-pthread");
 			}
+
+			if(arch == 32)
+				linkCommand.add("-m32");
+			else
+				linkCommand.add("-m64");
 		}
 
 		if( systemPath == null )

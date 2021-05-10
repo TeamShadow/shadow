@@ -231,9 +231,13 @@ public class Main {
 			mainLL = system.resolve(mainLL);
 			BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 
+			assembleCommand.add("-x");
+			assembleCommand.add("assembler");
+			assembleCommand.add("-");
+
 			// usually llc
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
-					/*"--filetype=obj",*/ config.getOptimizationLevel())
+					"--filetype=asm", config.getOptimizationLevel())
 					/* .redirectOutput(new File("a.s")) */.redirectError(Redirect.INHERIT).start();
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT)
 					.redirectError(Redirect.INHERIT).start();
@@ -283,7 +287,7 @@ public class Main {
 	// The last is for the input file name
 	private static boolean compileCSourceFile(Path cFile, List<String> compileCommand, List<String> assembleCommand) throws IOException {
 		String inputFile = canonicalize(cFile);
-		String outputFile = inputFile + ".s";
+		String outputFile = inputFile + ".o";
 		Path outputPath = Paths.get(outputFile);
 
 		assembleCommand.add(outputFile);
@@ -326,7 +330,7 @@ public class Main {
 		compileCommand.add("-O3");
 
 
-		compileCommand.add("-S");
+		compileCommand.add("-c");
 
 		// include directories to be in the search path of gcc
 		compileCommand.add("-I" + cSourcePath.resolve(Paths.get("include")).toFile().getCanonicalPath());
@@ -459,10 +463,10 @@ public class Main {
 						cFiles.add(cFile);
 
 
-					Path objectFile = file.getParent().resolve(className + ".s");
+					Path objectFile = file.getParent().resolve(className + ".o");
 					Path llvmFile = file.getParent().resolve(className + ".ll");
 					Path nativeFile = file.getParent().resolve(className + ".native.ll");
-					Path nativeObjectFile = file.getParent().resolve(className + ".native.s");
+					Path nativeObjectFile = file.getParent().resolve(className + ".native.o");
 
 					// if the LLVM bitcode didn't exist, the full .shadow file would
 					// have been used
@@ -498,7 +502,7 @@ public class Main {
 	}
 
 	private static String compileLLVMStream(InputStream stream, String path, Path LLVMPath) throws CompileException {
-		Path objectPath = Paths.get(path + ".s");
+		Path objectPath = Paths.get(path + ".o");
 		String objectFile = canonicalize(objectPath);
 
 		boolean success = false;
@@ -506,7 +510,7 @@ public class Main {
 
 		try {
 			compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
-					config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/ "--filetype=asm", "-o", objectFile).start();
+					config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/ "--filetype=obj", "-o", objectFile).start();
 			new Pipe(stream, compile.getOutputStream()).start();
 			if( compile.waitFor() != 0 )
 				throw new CompileException("FAILED TO COMPILE " + LLVMPath);
