@@ -28,7 +28,7 @@ public class OutputTests {
 	private static final String executableName = Job.properExecutableName("OutputTest");
 	private static final Path executable = Paths.get("shadow", "test", executableName);
 
-	private ArrayList<String> args = new ArrayList<String>();
+	private ArrayList<String> args = new ArrayList<>();
 	
 	@BeforeEach
 	public void setup() throws Exception {
@@ -48,7 +48,7 @@ public class OutputTests {
 		else
 			args.add("linux.xml");
 		
-		args.add("-r");
+		//args.add("-r");
 		//args.add("-f");
 	}
 	
@@ -57,7 +57,7 @@ public class OutputTests {
 		
 		// Try to remove the unit test executable
 		try {			
-			//Files.delete(executable);
+			Files.delete(executable);
 		}
 		catch(Exception e) {}
 	}
@@ -77,7 +77,7 @@ public class OutputTests {
 		
 		Path fullExecutable = config.getSystemImport().resolve(executable);
 		
-		List<String> programCommand = new ArrayList<String>();
+		List<String> programCommand = new ArrayList<>();
 		programCommand.add(Main.canonicalize(fullExecutable));
 		
 		for (String arg : programArgs)

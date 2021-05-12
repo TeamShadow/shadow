@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 class shadow:test@NullableArrayInMethods
 {
 	public makeArray(int value) => (nullable Object[])
@@ -15,7 +13,4 @@ class shadow:test@NullableArrayInMethods
 	
 		return #string;	
 	}
-	
-	
-	
 }

@@ -200,6 +200,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 		return null; //no children
 	}
 
+	@Override public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
+		Type type = ctx.getType();
+		TACModule newModule = new TACModule(type);
+
+		moduleStack.push(newModule);
+
+		ShadowParser.AttributeBodyContext body = ctx.attributeBody();
+		for( ShadowParser.AttributeBodyDeclarationContext declaration : body.attributeBodyDeclaration() ) {
+			// TODO: Do something one day
+		}
+
+		return null; //no children
+	}
+
 	@Override public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx)
 	{ 
 		visitChildren(ctx);

@@ -19,7 +19,7 @@ public class TACTests {
 	private static final String executableName = Job.properExecutableName("TACTest");
 	private static final Path executable = Paths.get("shadow", "test", executableName);
 	
-	private ArrayList<String> args = new ArrayList<String>();
+	private ArrayList<String> args = new ArrayList<>();
 	
 	@BeforeEach
 	public void setup() throws Exception {		

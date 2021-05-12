@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 class shadow:test@CanCreateFactory<T is CanCreate>
 {
 	public generate() => (T)

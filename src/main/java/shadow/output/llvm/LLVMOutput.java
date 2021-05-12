@@ -69,7 +69,7 @@ public class LLVMOutput extends AbstractOutput {
 	}
 
 	// Class type flags
-	public static final int INTERFACE = 1, PRIMITIVE = 2, GENERIC = 4, ARRAY = 8, SINGLETON = 16, METHOD = 32;
+	public static final int INTERFACE = 1, PRIMITIVE = 2, GENERIC = 4, ARRAY = 8, SINGLETON = 16, METHOD = 32, ATTRIBUTE = 64;
 
 	private void writePrimitiveTypes() throws ShadowException {
 		writer.write("%boolean = type i1");
@@ -293,6 +293,8 @@ public class LLVMOutput extends AbstractOutput {
 			flags |= PRIMITIVE;
 		if( moduleType instanceof SingletonType )
 			flags |= SINGLETON;
+		if(moduleType instanceof  AttributeType)
+			flags |= ATTRIBUTE;
 		if (module.isClass()) {
 			//add in methods that are inherited from parent classes
 			for( MethodSignature signature : methods)			
@@ -337,7 +339,7 @@ public class LLVMOutput extends AbstractOutput {
 					" }" );
 			}
 		}
-		else {
+		else if(!(moduleType instanceof  AttributeType)) {
 			flags |= INTERFACE;
 
 			//nothing will ever be the raw, unparameterized class
@@ -493,7 +495,7 @@ public class LLVMOutput extends AbstractOutput {
 		if(Configuration.isWindows()) {
 			writer.write("declare i32 @__C_specific_handler(...)");
 			//writer.write("declare i32 @__CxxFrameHandler3 (...)"); 
-			writer.write("@__exceptionStorage = external global " + type(Type.EXCEPTION));			
+			writer.write("@__exceptionStorage = external thread_local global " + type(Type.EXCEPTION));
 		}
 		else {
 			writer.write("declare i32 @__shadow_personality_v0(...)");
@@ -1929,6 +1931,8 @@ public class LLVMOutput extends AbstractOutput {
 			return type((MethodTableType)type);
 		if( type instanceof PointerType )
 			return type((PointerType)type);
+		if(type instanceof AttributeType)
+			return type((AttributeType)type);
 
 		throw new IllegalArgumentException("Unknown type.");
 	}
@@ -1954,6 +1958,10 @@ public class LLVMOutput extends AbstractOutput {
 
 	private static String type(PointerType type) {		
 		return "i8*";
+	}
+
+	private static String type(AttributeType type) {
+		return '%' + type.toString(Type.MANGLE) + '*';
 	}
 
 	private static String type(ClassType type, boolean nullable) {		
@@ -2412,6 +2420,7 @@ public class LLVMOutput extends AbstractOutput {
 		}
 		
 		//handle extra class dependencies
+
 		if( genericAsObject instanceof ClassType ) {
 			ClassType classType = (ClassType) genericAsObject;
 			if( classType.hasDependencyList() )
@@ -2432,6 +2441,7 @@ public class LLVMOutput extends AbstractOutput {
 						parameters.append(classOf(parameterType));
 				}
 		}
+
 
 		parameters.append("]}, comdat");
 		tables.append("]}, comdat");

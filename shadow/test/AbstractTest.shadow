@@ -1,5 +1,3 @@
-import shadow:io@Console;
-
 class shadow:test@AbstractTest
 {
 	public main( String[] args ) => ()   

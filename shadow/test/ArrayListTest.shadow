@@ -1,4 +1,3 @@
-import shadow:utility@List;
 import shadow:utility@ArrayList;
 import shadow:io@Console;
 

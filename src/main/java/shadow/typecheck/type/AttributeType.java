@@ -61,6 +61,16 @@ public class AttributeType extends Type {
         super.addField(fieldName, node);
     }
 
+    @Override
+    protected List<MethodSignature> recursivelyOrderAllMethods( List<MethodSignature> methodList ) {
+        return methodList;
+    }
+
+    @Override
+    protected List<MethodSignature> recursivelyOrderMethods( List<MethodSignature> methodList ) {
+        return methodList;
+    }
+
     /** Returns the names of the fields of this attribute for which default values were not provided. */
     public Set<String> getUninitializedFields() {
         return Collections.unmodifiableSet(uninitializedFields);

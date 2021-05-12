@@ -149,8 +149,14 @@ public class MethodType extends Type {
 		for( int i = 0; i < parameterTypes.size(); i++ ) {
 			if( i != 0 )
 				sb.append(", ");
-			sb.append( parameterTypes.get(i).getModifiers() );
-			sb.append(parameterTypes.get(i).getType());
+			Modifiers modifiers = parameterTypes.get(i).getModifiers();
+			sb.append(modifiers);
+			Type type = parameterTypes.get(i).getType();
+			// Don't duplicate the nullable that's already in the modifiers
+			if (type instanceof ArrayType && modifiers.isNullable())
+				sb.append(type.toString(Type.NO_NULLABLE));
+			else
+				sb.append(type);
 			sb.append(" ");
 			sb.append(parameterNames.get(i));			
 		}	

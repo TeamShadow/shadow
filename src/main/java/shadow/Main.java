@@ -453,9 +453,11 @@ public class Main {
 
 					// For now, we don't generate modules for attributes - they exist only during typechecking.
 					// This will change at some point to allow inspecting attributes at runtime.
+					/*
 					if (type instanceof AttributeType) {
 						continue;
 					}
+					*/
 
 					String className = typeToFileName(type);
 					Path cFile = file.getParent().resolve(className + ".c").normalize();
@@ -648,6 +650,10 @@ public class Main {
 			}
 
 			for (TACModule class_ : modules) {
+				// No attribute member checking for now
+				if(class_.getType() instanceof AttributeType)
+					continue;
+
 				// check field initialization
 				class_.checkFieldInitialization(reporter, graphs);
 

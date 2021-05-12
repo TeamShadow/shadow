@@ -76,7 +76,7 @@ declare %shadow.test..Test* @shadow.test..Test_Mcreate(%shadow.standard..Object*
 declare void @shadow.test..Test_Mmain_shadow.standard..String_A(%shadow.test..Test*, %shadow.standard..Array*)
 
 declare i32 @__C_specific_handler(...)
-@__exceptionStorage = external global %shadow.standard..Exception*
+@__exceptionStorage = external thread_local global %shadow.standard..Exception*
 
 ;declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare void @__incrementRef(%shadow.standard..Object*) nounwind

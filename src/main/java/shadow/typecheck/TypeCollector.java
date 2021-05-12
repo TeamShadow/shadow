@@ -201,9 +201,9 @@ public class TypeCollector extends ScopedChecker {
 	 */
 	public Map<Type, Context> collectTypes( Path mainFile )
 			throws ParseException, ShadowException, TypeCheckException, IOException, ConfigurationException {
-		List<Path> initialFiles = new ArrayList<Path>();
+		List<Path> initialFiles = new ArrayList<>();
 		initialFiles.add( mainFile );
-		return collectTypes( initialFiles, new HashMap<Path, String>(), true );
+		return collectTypes( initialFiles, new HashMap<>(), true );
 	}
 
 	/**
@@ -215,6 +215,7 @@ public class TypeCollector extends ScopedChecker {
 	 * @throws IOException
 	 * @throws ConfigurationException
 	 */
+	/*
 	public Map<Type, Context> collectTypes( String source, Path mainFile )
 			throws ShadowException, IOException, ConfigurationException {
 		List<Path> initialFiles = new ArrayList<Path>();
@@ -224,6 +225,8 @@ public class TypeCollector extends ScopedChecker {
 		activeFiles.put(mainFile, source);
 		return collectTypes( initialFiles, activeFiles, true );
 	}
+	*/
+
 
 
 	/**
@@ -266,39 +269,44 @@ public class TypeCollector extends ScopedChecker {
 	 * Calls the full <code>collectTypes</code> and might call it a second time
 	 * if needed to determine what should be recompiled.
 	 */
-	private Map<Type, Context> collectTypes( List<Path> files, Map<Path,String> activeFiles, boolean hasMain ) throws ShadowException, IOException, ConfigurationException {
-		Set<String> mustRecompile = new HashSet<String>();
-		Map<String, TreeSet<String>> dependencies = new HashMap<String, TreeSet<String>>();
+	private Map<Type, Context> collectTypes(List<Path> files, Map<Path,String> activeFiles, boolean hasMain) throws ShadowException, IOException, ConfigurationException {
+		Set<String> mustCompile = new HashSet<>();
+		Map<String, TreeSet<String>> dependencies = new HashMap<>();
+
+		//clear();
 
 		// Initial type collection
-		collectTypes( files, hasMain, activeFiles, mustRecompile, dependencies );
+		collectTypes(files, hasMain, activeFiles, mustCompile, dependencies);
 
-		// Files needing recompilation may trigger other files to get recompiled.
-		// Figure out which ones and redo the whole type collection process.
-		if( getErrorReporter().getErrorList().size() == 0 && !useSourceFiles && mustRecompile.size() > 0 ) {
+		/* Classes needing recompilation may trigger other files to get
+		 * recompiled. Changes in the number or organization of methods
+		 * or class information could invalidate compiled code.  Here, we
+		 * figure out which files need (re)compilation and redo the whole type
+		 * collection process.
+		 */
+		if( getErrorReporter().getErrorList().size() == 0 && !useSourceFiles && mustCompile.size() > 0 ) {
 			// Create a new set, otherwise adding new recompilations can trigger unnecessary ones.
-			Set<String> updatedMustRecompile = new HashSet<String>(mustRecompile);
+			Set<String> updatedMustRecompile = new HashSet<>(mustCompile);
 
 			// For all files that do not already need to be recompiled,
 			// check to see if their dependencies do.
-			for(Map.Entry<String, TreeSet<String>> entry : dependencies.entrySet() )
-				if( !updatedMustRecompile.contains(entry.getKey()) )
-					for( String dependency : entry.getValue() )
-						if( mustRecompile.contains(dependency) ) {
+			for(Map.Entry<String, TreeSet<String>> entry : dependencies.entrySet())
+				if(!updatedMustRecompile.contains(entry.getKey()))
+					for(String dependency : entry.getValue())
+						if(mustCompile.contains(dependency)) {
 							updatedMustRecompile.add(entry.getKey());
 							break;
 						}
 
-			mustRecompile = updatedMustRecompile;
+			mustCompile = updatedMustRecompile;
 			clear(); // Clears out all internal representations and types.
 
 			// Collect types again with updated recompilation requirements.
-			collectTypes( files, hasMain, activeFiles, mustRecompile, null );
-		}        
+			collectTypes(files, hasMain, activeFiles, mustCompile, null );
+		}
 
 		// Check packages for errors.
 		checkPackageDirectories(packageTree);
-
 		printAndReportErrors();		
 
 		// Return a table of all the types and their corresponding nodes.
@@ -312,10 +320,10 @@ public class TypeCollector extends ScopedChecker {
 	 * comes from a file being edited in an IDE.
 	 */
 	private void collectTypes(List<Path> files, boolean hasMain, Map<Path,String> activeFiles,
-			Set<String> mustRecompile, Map<String,TreeSet<String>> dependencies)
+			Set<String> mustCompile, Map<String,TreeSet<String>> dependencies)
 					throws ShadowException, IOException, ConfigurationException {
 		// Create and fill the initial set of files to be checked.
-		TreeSet<String> uncheckedFiles = new TreeSet<String>();
+		TreeSet<String> uncheckedFiles = new TreeSet<>();
 
 		String main = null; // May or may not be null, based on hasMain.
 		if (files.isEmpty())
@@ -337,7 +345,7 @@ public class TypeCollector extends ScopedChecker {
 		if( !Files.exists(standard) )
 			throw new ConfigurationException("Invalid path to shadow:standard: " + Main.canonicalize(standard));
 
-		TreeSet<String> standardDependencies = new TreeSet<String>(); 
+		TreeSet<String> standardDependencies = new TreeSet<>();
 
 		// Adds all files in the standard directory (including sub-directories)
 		recursivelyAddFiles(standard, uncheckedFiles, standardDependencies);
@@ -353,7 +361,7 @@ public class TypeCollector extends ScopedChecker {
 		uncheckedFiles.add(stripExtension(Main.canonicalize(io.resolve("Path.shadow"))));
 
 		/* As long as there are unchecked files, remove one and process it. */
-		while( !uncheckedFiles.isEmpty() ) {			
+		while(!uncheckedFiles.isEmpty()) {
 			String canonical = uncheckedFiles.first();
 			uncheckedFiles.remove(canonical);	
 
@@ -368,18 +376,22 @@ public class TypeCollector extends ScopedChecker {
 
 				// If source compilation was not requested and the binaries exist
 				// that are newer than the source, use those binaries.
-				if( !useSourceFiles &&
-						!mustRecompile.contains(canonical) &&
+				if(!useSourceFiles &&
+						!mustCompile.contains(canonical) &&
 						source == null &&
 						// Always do the full .shadow file for the main file if typechecking
 						(!typeCheckOnly || !hasMain || !files.get(0).equals(canonicalFile)) &&
 						// Only use .meta if it's newer than .shadow
 						Files.exists(meta) && Files.getLastModifiedTime(meta).compareTo(Files.getLastModifiedTime(canonicalFile)) >= 0 &&
 						// Also, only use .meta if we're not going to need to recompile it into an object file
-						(typeCheckOnly || (Files.exists(object) && Files.getLastModifiedTime(object).compareTo(Files.getLastModifiedTime(meta)) >= 0)))
-					canonicalFile = meta;				
-				else
-					mustRecompile.add(canonical);
+						(typeCheckOnly || (Files.exists(object) && Files.getLastModifiedTime(object).compareTo(Files.getLastModifiedTime(meta)) >= 0))) {
+					canonicalFile = meta;
+					//Loggers.SHADOW.info("Using meta file: " + meta);
+				}
+				else {
+					mustCompile.add(canonical);
+					//Loggers.SHADOW.info("Using Shadow file: " + canonical);
+				}
 			}
 			else if (!useSourceFiles)
 				canonicalFile  = Paths.get(canonical + ".meta");
@@ -399,7 +411,7 @@ public class TypeCollector extends ScopedChecker {
 
 			// Make another collector to walk the current file.
 			TypeCollector collector = new TypeCollector( new Package(), getErrorReporter(), useSourceFiles, typeCheckOnly );
-			// Keeping a current files gives us a file whose directory we can check against.
+			// Keeping a current file gives us a file whose directory we can check against.
 			collector.setCurrentFile(currentFile, node);
 			collector.visit(node);				
 
@@ -450,7 +462,7 @@ public class TypeCollector extends ScopedChecker {
 			TreeSet<String> dependencySet = null;
 
 			if( dependencies != null ) {
-				dependencySet = new TreeSet<String>( standardDependencies );
+				dependencySet = new TreeSet<>( standardDependencies );
 				dependencies.put( canonical, dependencySet );
 			}
 
