@@ -239,6 +239,7 @@ public class Main {
 			Process compile = new ProcessBuilder(config.getLlc(), "-mtriple", config.getTarget(),
 					"--filetype=asm", config.getOptimizationLevel())
 					/* .redirectOutput(new File("a.s")) */.redirectError(Redirect.INHERIT).start();
+			//logger.info("Assemble command: " + assembleCommand);
 			Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(Redirect.INHERIT)
 					.redirectError(Redirect.INHERIT).start();
 			//Process assemble = new ProcessBuilder(assembleCommand).redirectOutput(currentJob.getOutputFile().toFile())

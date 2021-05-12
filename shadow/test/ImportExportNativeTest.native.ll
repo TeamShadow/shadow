@@ -23,9 +23,7 @@
 %shadow.standard..Class = type opaque
 
 ; ImportExportNativeTest
-%shadow.test..ImportExportNativeTest_methods = type opaque
-%shadow.test..ImportExportNativeTest = type { %ulong, %shadow.standard..Class*, %shadow.test..ImportExportNativeTest_methods* , %long, %boolean }
-
+%shadow.test..ImportExportNativeTest = type opaque
 ;---------------------
 ; Method Declarations
 ;---------------------
@@ -35,7 +33,7 @@ declare %int @shadow.test..ImportExportNativeTest_Madd_int_int(%shadow.test..Imp
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
-define %int @shadow.test..ImportExportNativeTest_Msubtract_int_int(%shadow.test..ImportExportNativeTest* %0, %int %1, %int %2) {
+define %int @shadow.test..ImportExportNativeTest_Msubtract_int_int(%shadow.test..ImportExportNativeTest*, %int, %int) {
     %neg = sub %int 0, %2
     %return = call %int @shadow.test..ImportExportNativeTest_Madd_int_int(%shadow.test..ImportExportNativeTest* %0, %int %1, %int %neg)
     ret %int %return

@@ -30,7 +30,7 @@
 ;---------
 ; Globals
 ;---------
-@shadow.standard..Thread_TLS_currentThread = external global %shadow.standard..Thread*
+@shadow.standard..Thread_TLS_currentThread = external thread_local global %shadow.standard..Thread*
 
 ;---------------------------
 ; Shadow Method Definitions
