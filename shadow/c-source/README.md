@@ -1,29 +1,50 @@
 # C Framework Documentation
+
 - Last updated: 04/25/2017
 
 This documentation will attempt to explain the current features available in the C Framework.
 
 ## Folder Structure
-Only the core features should be included in the `c-source` folder. The `.c` files that implement core features are put in the root directory,
-while header files are put in the `include` folder. The header files in the `include` folder should only contain methods intented to be used
-by developers on the global level of Shadow. `extern` methods needed to be implemented in C should be put in the same directory as the `.shadow`
-file which requires the methods to be implemented. For example, if `Wombat.shadow` requires an `extern` method to be implemented, a `Wombat.c`
+
+Only the core features should be included in the `c-source` folder. The `.c` files that implement core features are put
+in the root directory, while header files are put in the `include` folder. The header files in the `include` folder
+should only contain methods intented to be used by developers on the global level of Shadow. `extern` methods needed to
+be implemented in C should be put in the same directory as the `.shadow`
+file which requires the methods to be implemented. For example, if `Wombat.shadow` requires an `extern` method to be
+implemented, a `Wombat.c`
 file should be added in the same directory.
 
 ## C Includes
-The compiler automatically references all `.h` files in the `include` folder.
-This means that whether you're in the root of the `c-source` folder, or in a platform specific one, any `.c` 
-file could have a direct `#include` to the header files. For example, if we need to use `ShadowArray` features, 
-we would simply `#include "ShadowArray.h"` and it will be included as expected at compile time.
+
+The compiler automatically references all `.h` files in the `include` folder. This means that whether you're in the root
+of the `c-source` folder, or in a platform specific one, any `.c`
+file could have a direct `#include` to the header files. For example, if we need to use `ShadowArray` features, we would
+simply `#include "ShadowArray.h"` and it will be included as expected at compile time.
 
 ## Shadow Classes/Objects/Singletons
-Most of the `.c` files in the `c-source` folder, have a one-to-one representation with Shadow. For example, we have a class called `ShadowPointer` and we also have a `ShadowPointer.c`. Since C does not know anything about Shadow objects, we represent the classes simply as a `void*`. This allows us to still be able to pass the Shadow object back to Shadow from C code even if we cannot perform operations on it. An example of this could be seen in `ShadowThread.c` where the reference of the `Thread` object is passed to the newly spawned thread. The definition of the `ShadowThread` in C is simply `typedef void* ShadowThread;`.
+
+Most of the `.c` files in the `c-source` folder, have a one-to-one representation with Shadow. For example, we have a
+class called `ShadowPointer` and we also have a `ShadowPointer.c`. Since C does not know anything about Shadow objects,
+we represent the classes simply as a `void*`. This allows us to still be able to pass the Shadow object back to Shadow
+from C code even if we cannot perform operations on it. An example of this could be seen in `ShadowThread.c` where the
+reference of the `Thread` object is passed to the newly spawned thread. The definition of the `ShadowThread` in C is
+simply `typedef void* ShadowThread;`.
 
 ## ShadowTypes.h
-Shadow promises a specific length for each data structure type. A `byte` is guaranteed to be 8 bits, a `short` is guaranteed to be 16 bits, and so on... C is a little sloppy with those sizes, so predefined types which match the Shadow promises are supplied. Whenever data is exchanged between Shadow and C, we use the predefined types defined in `ShadowTypes.h`. 
+
+Shadow promises a specific length for each data structure type. A `byte` is guaranteed to be 8 bits, a `short` is
+guaranteed to be 16 bits, and so on... C is a little sloppy with those sizes, so predefined types which match the Shadow
+promises are supplied. Whenever data is exchanged between Shadow and C, we use the predefined types defined
+in `ShadowTypes.h`.
 
 ## ShadowArray
-Shadow uses a specific structure for arrays which are complicated and incompatible with C code. When we would like to perform operations on Shadow arrays, we first need to get a pointer to the array from Shadow code, some way or another (this can be seen in action in `ShadowString.c`), and then we could convert that pointer to a usable C struct using `UnpackShadowArray(ShadowArray, VoidArray*)` method. The first argument, `ShadowArray` is a pointer to the Shadow array, supplied from Shadow code. The `VoidArray` is a struct defined as:
+
+Shadow uses a specific structure for arrays which are complicated and incompatible with C code. When we would like to
+perform operations on Shadow arrays, we first need to get a pointer to the array from Shadow code, some way or another (
+this can be seen in action in `ShadowString.c`), and then we could convert that pointer to a usable C struct
+using `UnpackShadowArray(ShadowArray, VoidArray*)` method. The first argument, `ShadowArray` is a pointer to the Shadow
+array, supplied from Shadow code. The `VoidArray` is a struct defined as:
+
 ```C
 
 typedef struct {
@@ -32,7 +53,9 @@ typedef struct {
 					 // to the desired data structure.
 } VoidArray;
 ```
+
 ###### Example
+
 ```C
 #include "ShadowArray.h"
 typedef struct {
@@ -54,9 +77,14 @@ printf("%d\n", total); // prints 100
 ```
 
 ## ShadowString
-A Shadow String can be directly passed from Shadow to C code. The framework supplies two different methods to manipulate strings in C. `char* UnpackShadowStringToCStr(ShadowString)` and `void UnpackShadowString(ShadowString, ShadowStringData*)`.
-The `UnpackShadowStringToCStr` method clones the string data and returns a null-terminated C string. The `UnpackShadowString` method on the other hand, stores the data in the pointer which is passed as the second argument as it is; thus, if the string is modified in C, it will also be modified in Shadow.
-The structure of the struct is as follows:
+
+A Shadow String can be directly passed from Shadow to C code. The framework supplies two different methods to manipulate
+strings in C. `char* UnpackShadowStringToCStr(ShadowString)`
+and `void UnpackShadowString(ShadowString, ShadowStringData*)`. The `UnpackShadowStringToCStr` method clones the string
+data and returns a null-terminated C string. The `UnpackShadowString` method on the other hand, stores the data in the
+pointer which is passed as the second argument as it is; thus, if the string is modified in C, it will also be modified
+in Shadow. The structure of the struct is as follows:
+
 ```C
 typedef struct {
 	ShadowInt size;
@@ -64,7 +92,9 @@ typedef struct {
 	ShadowBoolean ascii;
 } ShadowStringData;
 ```
+
 ###### Example
+
 ```C
 // Shadow side
 private extern __PrintFromC(String str) => ();
@@ -92,13 +122,23 @@ void __PrintFromC(ShadowString strRef) {
 ```
 
 ## ShadowPointer
-Shadow does not support direct pointer manipulation. For cross-platform compatibility, we sometimes need to allocate memory in C code, and store that pointer in Shadow. `ShadowPointer` is a managed wrapper, which stores the address of the pointer and can be passed around in Shadow. Shadow can perform several operations on it such as freeing this block of memory, and checking whether the pointer is valid.
-When a block of memory is allocated in C, for example using `malloc/calloc`, we can store that pointer in Shadow to use it later. The managed `ShadowPointer` could be allocated using `ShadowPointer CreateShadowPointer(void* ptr, ShadowPointerType type);`
+
+Shadow does not support direct pointer manipulation. For cross-platform compatibility, we sometimes need to allocate
+memory in C code, and store that pointer in Shadow. `ShadowPointer` is a managed wrapper, which stores the address of
+the pointer and can be passed around in Shadow. Shadow can perform several operations on it such as freeing this block
+of memory, and checking whether the pointer is valid. When a block of memory is allocated in C, for example
+using `malloc/calloc`, we can store that pointer in Shadow to use it later. The managed `ShadowPointer` could be
+allocated using `ShadowPointer CreateShadowPointer(void* ptr, ShadowPointerType type);`
 
 1. The first argument is the pointer allocated in C.
-2. The second argument specifies whether Shadow code can free the pointer using `free()` or not. `SHADOW_CANNOT_FREE` specifies that calling `ShadowPointer.free()` would only invalidate the `ShadowPointer`. `SHADOW_CAN_FREE` speficies that calling `ShadowPointer.free()` would call the C `free()` and then would invalidate the `ShadowPointer`. Invalidating the `ShadowPointer` means that `ShadowPointer->isValid` would return `false` after calling `ShadowPointer.free()`. Calling `ShadowPointer.free()` more than once has no effect.
+2. The second argument specifies whether Shadow code can free the pointer using `free()` or not. `SHADOW_CANNOT_FREE`
+   specifies that calling `ShadowPointer.free()` would only invalidate the `ShadowPointer`. `SHADOW_CAN_FREE` speficies
+   that calling `ShadowPointer.free()` would call the C `free()` and then would invalidate the `ShadowPointer`.
+   Invalidating the `ShadowPointer` means that `ShadowPointer->isValid` would return `false` after
+   calling `ShadowPointer.free()`. Calling `ShadowPointer.free()` more than once has no effect.
 
 ###### Example
+
 ```C
 // Shadow side
 private extern __allocateAnInteger(int i) => (ShadowPointer);

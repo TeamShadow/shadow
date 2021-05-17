@@ -431,7 +431,7 @@ spawnRunnerCreateCall
 
 primaryExpression
 locals [boolean action = false]
-	: '++'? primaryPrefix primarySuffix* //The ++ is actually an error, but caught in the ParseChecker 
+	: '++'? primaryPrefix primarySuffix* // The ++ is actually an error but caught in the ParseChecker
 	;
 
 rightSide
@@ -517,11 +517,11 @@ create
 	;
 
 classSpecifier
-	: typeArguments? ':' 'class' //field, constant, or class
+	: typeArguments? ':' 'class' // field, constant, or class
 	;
 
 scopeSpecifier
-	: ':' Identifier //field, constant, or inner class
+	: ':' Identifier // field, constant, or inner class
 	;
 	
 destroy
@@ -610,7 +610,7 @@ localVariableDeclaration
 	;
 	
 emptyStatement
-	: ';' // actually an error in Shadow, caught in the ParseChecker 
+	: ';' // Actually an error in Shadow, caught in the ParseChecker
 	| 'skip' ';'
 	;
 	

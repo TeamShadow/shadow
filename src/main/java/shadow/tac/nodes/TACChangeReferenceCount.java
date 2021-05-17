@@ -1,68 +1,55 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
-import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
-import shadow.tac.TACMethod.TACFinallyFunction;
 
 public class TACChangeReferenceCount extends TACNode {
 
-	private TACVariable variable;
-	private TACFieldRef field;
-	private boolean increment;
-	private TACOperand classData; //only used for array decrements
+  private TACVariable variable;
+  private TACFieldRef field;
+  private final boolean increment;
 
-	public TACChangeReferenceCount(TACNode node, TACVariable variable, boolean increment) {
-		super(node);
-		this.variable = variable;
-		this.increment = increment;	
-	}
-	
-	public TACChangeReferenceCount(TACNode node, TACFieldRef field, boolean increment) {
-		super(node);
-		this.field = field;
-		this.increment = increment;
-	}	
-	
-	public boolean isField() {
-		return field != null;
-	}
-	
-	public boolean isIncrement()
-	{
-		return increment;
-	}
+  public TACChangeReferenceCount(TACNode node, TACVariable variable, boolean increment) {
+    super(node);
+    this.variable = variable;
+    this.increment = increment;
+  }
 
-	@Override
-	public int getNumOperands() 
-	{
-		return 0;
-	}
+  public TACChangeReferenceCount(TACNode node, TACFieldRef field, boolean increment) {
+    super(node);
+    this.field = field;
+    this.increment = increment;
+  }
 
-	public TACVariable getVariable()
-	{
-		return variable;
-	}
+  public boolean isField() {
+    return field != null;
+  }
 
-	@Override
-	public TACOperand getOperand(int num) 
-	{
-		throw new IndexOutOfBoundsException("" + num);
-	}
+  public boolean isIncrement() {
+    return increment;
+  }
 
-	@Override
-	public void accept(TACVisitor visitor) throws ShadowException 
-	{
-		visitor.visit(this);
-	}
+  @Override
+  public int getNumOperands() {
+    return 0;
+  }
 
-	public TACOperand getClassData()
-	{
-		return classData;
-	}
+  public TACVariable getVariable() {
+    return variable;
+  }
 
-	public TACFieldRef getField() {
-		return field;
-	}	
+  @Override
+  public TACOperand getOperand(int num) {
+    throw new IndexOutOfBoundsException("" + num);
+  }
+
+  @Override
+  public void accept(TACVisitor visitor) throws ShadowException {
+    visitor.visit(this);
+  }
+
+  public TACFieldRef getField() {
+    return field;
+  }
 }

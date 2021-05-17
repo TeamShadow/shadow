@@ -9,5 +9,5 @@
         <Root level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Root>
-    </Loggers>    
+    </Loggers>
 </Configuration>
