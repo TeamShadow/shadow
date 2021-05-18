@@ -71,6 +71,18 @@
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
+                        <fileset>
+                            <directory>src/main/java/shadow/parse</directory>
+                            <includes>
+                                <include>*.tokens</include>
+                                <include>*.interp</include>
+                                <include>ShadowBaseVisitor.java</include>
+                                <include>ShadowLexer.java</include>
+                                <include>ShadowParser.java</include>
+                                <include>ShadowVisitor.java</include>
+                            </includes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
                     </filesets>
                 </configuration>
             </plugin>
@@ -145,7 +157,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.7</version>
+                <version>4.9.2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -175,7 +187,7 @@
                                     <pluginExecutionFilter>
                                         <groupId>org.antlr</groupId>
                                         <artifactId>antlr4-maven-plugin</artifactId>
-                                        <versionRange>[4.7,)</versionRange>
+                                        <versionRange>[4.9.2,)</versionRange>
                                         <goals>
                                             <goal>antlr4</goal>
                                         </goals>
@@ -220,7 +232,7 @@
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
-            <version>4.7</version>
+            <version>4.9.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>

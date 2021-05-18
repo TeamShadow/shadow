@@ -6,3 +6,5 @@
 /ShadowVisitor.java
 /Shadow.tokens
 /ShadowLexer.tokens
+/Shadow.interp
+/ShadowLexer.interp
