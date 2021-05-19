@@ -153,6 +153,8 @@ public class Main {
       throws ShadowException, IOException, org.apache.commons.cli.ParseException,
           ConfigurationException {
 
+    long timing = System.currentTimeMillis();
+
     // Detect and establish the current settings and arguments
     Arguments compilerArgs = new Arguments(args);
 
@@ -181,6 +183,8 @@ public class Main {
     boolean isCompile = !currentJob.isCheckOnly() && !currentJob.isNoLink();
 
     if (isCompile) checkLLVMVersion();
+
+    logger.info("Configuration took: " + (System.currentTimeMillis() - timing) + "ms");
 
     // Begin the checking/compilation process
     long startTime = System.currentTimeMillis();
@@ -251,14 +255,14 @@ public class Main {
         } catch (IOException ignored) {
         }
 
-        long sectionStart = System.currentTimeMillis();
+        timing = System.currentTimeMillis();
         if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE");
         logger.info(
-            "LLVM compilation finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
+            "Compilation of main file took: " + (System.currentTimeMillis() - timing) + "ms");
 
-        sectionStart = System.currentTimeMillis();
-        if (link.waitFor() != 0) throw new CompileException("FAILED TO ASSEMBLE");
-        logger.info("Assembly finished in " + (System.currentTimeMillis() - sectionStart) + "ms");
+        timing = System.currentTimeMillis();
+        if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
+        logger.info("Linking took: " + (System.currentTimeMillis() - timing) + "ms");
 
       } catch (InterruptedException ignored) {
       } finally {
@@ -406,19 +410,30 @@ public class Main {
 
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
+    long timing = System.currentTimeMillis();
+
     // TypeChecker generates a list of AST nodes corresponding to
     // classes needing compilation
     TypeChecker.TypeCheckerOutput typecheckerOutput =
         TypeChecker.typeCheck(
             mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
+    logger.info("Type-checking took: " + (System.currentTimeMillis() - timing) + "ms");
+    timing = System.currentTimeMillis();
+
     ConstantFieldInterpreter.evaluateConstants(
         typecheckerOutput.packageTree, typecheckerOutput.nodes);
+
+    logger.info("Constant evaluation took: " + (System.currentTimeMillis() - timing) + "ms");
+    timing = System.currentTimeMillis();
 
     // As an optimization, print .meta files for the .shadow files being checked
     typecheckerOutput.nodes.stream()
         .filter((node) -> !node.isFromMetaFile())
         .forEach(TypeChecker::printMetaFile);
+
+    logger.info("Meta file generation took: " + (System.currentTimeMillis() - timing) + "ms");
+    timing = System.currentTimeMillis();
 
     try {
       for (Context node : typecheckerOutput.nodes) {
@@ -430,7 +445,7 @@ public class Main {
           // No need to check interfaces, attributes, or .meta files (no code in
           // those cases)
           if (!node.isFromMetaFile() && !(node.getType() instanceof AttributeType))
-            optimizeTAC(new TACBuilder().build(node), reporter, true);
+            optimizeTAC(new TACBuilder().build(node), reporter);
         } else {
           String name = BaseChecker.stripExtension(file.getFileName().toString());
           String path = BaseChecker.stripExtension(canonicalize(file));
@@ -468,7 +483,7 @@ public class Main {
           } else {
             logger.info("Generating LLVM code for " + name);
             // gets top level class
-            TACModule module = optimizeTAC(new TACBuilder().build(node), reporter, false);
+            TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
             linkCommand.add(compileShadowFile(file, module));
           }
 
@@ -476,6 +491,8 @@ public class Main {
           else if (Files.exists(nativeFile)) linkCommand.add(optimizeLLVMFile(nativeFile));
         }
       }
+
+      logger.info("Building object files took: " + (System.currentTimeMillis() - timing) + "ms");
 
       reporter.printAndReportErrors();
 
@@ -611,7 +628,7 @@ public class Main {
    * This method contains all the Shadow-specific TAC optimization, including
    * constant propagation, control flow analysis, and data flow analysis.
    */
-  public static TACModule optimizeTAC(TACModule module, ErrorReporter reporter, boolean checkOnly) {
+  public static TACModule optimizeTAC(TACModule module, ErrorReporter reporter) {
 
     if (!(module.getType() instanceof InterfaceType)) {
       List<TACModule> innerClasses = module.getAllInnerClasses();
@@ -708,7 +725,7 @@ public class Main {
     public void run() {
       try {
         try {
-          byte[] buffer = new byte[1024];
+          byte[] buffer = new byte[8096];
           int read = input.read(buffer);
           while (read >= 0) {
             output.write(buffer, 0, read);
