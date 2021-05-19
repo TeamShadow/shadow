@@ -307,6 +307,10 @@ public class TypeCollector extends ScopedChecker {
     // Create and fill the initial set of files to be checked.
     TreeSet<String> uncheckedFiles = new TreeSet<>();
 
+    Loggers.SHADOW.info("Type Collection Pass " + (dependencies == null ? 2 : 1));
+
+    long setupTime = System.currentTimeMillis();
+
     String main = null; // May or may not be null, based on hasMain.
     if (files.isEmpty()) throw new ConfigurationException("No files provided for typechecking");
     else if (hasMain) {
@@ -341,8 +345,15 @@ public class TypeCollector extends ScopedChecker {
     uncheckedFiles.add(stripExtension(Main.canonicalize(io.resolve("IOException.shadow"))));
     uncheckedFiles.add(stripExtension(Main.canonicalize(io.resolve("Path.shadow"))));
 
+    setupTime = System.currentTimeMillis() - setupTime;
+    long fileDecisionTime = 0;
+    long parsingTime = 0;
+    long collectionTime = 0;
+    long copyTime = 0;
+
     /* As long as there are unchecked files, remove one and process it. */
     while (!uncheckedFiles.isEmpty()) {
+      long timing = System.currentTimeMillis();
       String canonical = uncheckedFiles.first();
       uncheckedFiles.remove(canonical);
 
@@ -384,6 +395,9 @@ public class TypeCollector extends ScopedChecker {
 
       currentFile = canonicalFile;
 
+      fileDecisionTime += System.currentTimeMillis() - timing;
+      timing = System.currentTimeMillis();
+
       // Use the semantic checker to parse the file
       ParseChecker checker = new ParseChecker(new ErrorReporter(Loggers.PARSER));
       CompilationUnitContext node;
@@ -393,12 +407,18 @@ public class TypeCollector extends ScopedChecker {
       else node = checker.getCompilationUnit(currentFile);
       checker.printAndReportErrors();
 
+      parsingTime += System.currentTimeMillis() - timing;
+      timing = System.currentTimeMillis();
+
       // Make another collector to walk the current file.
       TypeCollector collector =
           new TypeCollector(new Package(), getErrorReporter(), useSourceFiles, typeCheckOnly);
       // Keeping a current file gives us a file whose directory we can check against.
       collector.setCurrentFile(currentFile, node);
       collector.visit(node);
+
+      collectionTime += System.currentTimeMillis() - timing;
+      timing = System.currentTimeMillis();
 
       fileTable.put(canonical, node);
 
@@ -465,7 +485,15 @@ public class TypeCollector extends ScopedChecker {
           typeTable.put(type, otherNode);
         }
       }
+
+      copyTime += System.currentTimeMillis() - timing;
     }
+
+    Loggers.SHADOW.info("Set up time: " + setupTime  + "ms");
+    Loggers.SHADOW.info("File decision time: " + fileDecisionTime  + "ms");
+    Loggers.SHADOW.info("Parsing time: " + parsingTime  + "ms");
+    Loggers.SHADOW.info("Collection time: " + collectionTime  + "ms");
+    Loggers.SHADOW.info("Copy time: " + copyTime  + "ms");
   }
 
   private void setCurrentFile(Path currentFile, CompilationUnitContext node) throws IOException {
