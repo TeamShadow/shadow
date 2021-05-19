@@ -410,16 +410,13 @@ public class Main {
 
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
-    long timing = System.currentTimeMillis();
-
     // TypeChecker generates a list of AST nodes corresponding to
     // classes needing compilation
     TypeChecker.TypeCheckerOutput typecheckerOutput =
         TypeChecker.typeCheck(
             mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
-    logger.info("Type-checking took: " + (System.currentTimeMillis() - timing) + "ms");
-    timing = System.currentTimeMillis();
+    long timing = System.currentTimeMillis();
 
     ConstantFieldInterpreter.evaluateConstants(
         typecheckerOutput.packageTree, typecheckerOutput.nodes);

@@ -67,6 +67,8 @@ public class TypeChecker {
     Type.clearTypes();
     Package packageTree = new Package(); // Root of all packages, storing all types
 
+    long timing = System.currentTimeMillis();
+
     /* Collector looks over all files and creates types for everything needed. */
     TypeCollector collector =
         new TypeCollector(packageTree, reporter, useSourceFiles, typeCheckOnly);
@@ -74,6 +76,9 @@ public class TypeChecker {
     /* Its return value maps all the types to the nodes that need compiling. */
     Map<Type, Context> nodeTable = collector.collectTypes(mainFile);
     Map<String, Context> fileTable = collector.getFileTable();
+
+    Loggers.SHADOW.info("Type collection took: " + (System.currentTimeMillis() - timing) + "ms");
+    timing = System.currentTimeMillis();
 
     /* Updates types, adding:
      *  Fields and methods
@@ -83,6 +88,9 @@ public class TypeChecker {
      */
     TypeUpdater updater = new TypeUpdater(packageTree, reporter, fileTable);
     nodeTable = updater.update(nodeTable);
+
+    Loggers.SHADOW.info("Type updating took: " + (System.currentTimeMillis() - timing) + "ms");
+    timing = System.currentTimeMillis();
 
     /* Select only nodes corresponding to outer types. */
     List<Context> nodes = new ArrayList<>();
@@ -97,6 +105,8 @@ public class TypeChecker {
       //   - Collect used types for a node
       checker.check(node);
     }
+
+    Loggers.SHADOW.info("Type checking took: " + (System.currentTimeMillis() - timing) + "ms");
 
     return new TypeCheckerOutput(nodes, packageTree);
   }
