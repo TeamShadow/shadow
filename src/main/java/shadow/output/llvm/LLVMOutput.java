@@ -596,24 +596,22 @@ public class LLVMOutput extends AbstractOutput {
   public void startFile(TACModule module) throws ShadowException {
     this.module = module;
 
-    // write all regular types including (non-generic) class objects and method tables
+    // Write all regular types including (non-generic) class objects and method tables
     Set<Type> definedGenerics = writeUsedTypes();
 
-    // write generic and array classes
+    // Write generic and array classes
     writeGenericClasses(definedGenerics);
 
-    // write types that are mentioned but whose internals are never used, allowing them to be
+    // Write types that are mentioned but whose internals are never used, allowing them to be
     // written as opaque
     writeMentionedTypes(definedGenerics);
 
     // Methods for exception handling
     if (Configuration.isWindows()) {
       writer.write("declare i32 @__C_specific_handler(...)");
-      // writer.write("declare i32 @__CxxFrameHandler3 (...)");
       writer.write("@__exceptionStorage = external thread_local global " + type(Type.EXCEPTION));
     } else {
       writer.write("declare i32 @__shadow_personality_v0(...)");
-
       writer.write("declare " + type(Type.EXCEPTION) + " @__shadow_catch(i8* nocapture) nounwind");
       writer.write("declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone");
     }

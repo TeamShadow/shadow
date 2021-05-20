@@ -17,10 +17,7 @@
 
 package shadow.doctool;
 
-import shadow.ConfigurationException;
-import shadow.Loggers;
-import shadow.Main;
-import shadow.ShadowException;
+import shadow.*;
 import shadow.parse.Context;
 import shadow.typecheck.Package;
 import shadow.typecheck.*;

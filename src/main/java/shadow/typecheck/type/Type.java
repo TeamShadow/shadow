@@ -41,8 +41,7 @@ public abstract class Type implements Comparable<Type> {
   private final Map<String, ShadowParser.VariableDeclaratorContext> constantTable = new HashMap<>();
 
   // A map from methodName -> list of all overloads for that method
-  private final HashMap<String, List<MethodSignature>> methodTable =
-      new HashMap<>();
+  private final HashMap<String, List<MethodSignature>> methodTable = new HashMap<>();
   private final Set<Type> usedTypes = new HashSet<>();
   private final Set<Type> mentionedTypes = new HashSet<>();
   private final Set<Type> partiallyInstantiatedClasses = new TreeSet<>();
@@ -105,7 +104,7 @@ public abstract class Type implements Comparable<Type> {
       new ClassType("null", new Modifiers(Modifiers.IMMUTABLE), null, null);
   public static final VarType VAR =
       new VarType(); // VAR type used for placeholder for variables declared with var, until type is
-                     // known
+  // known
 
   /*
    * Predefined interfaces needed for Shadow
@@ -149,7 +148,8 @@ public abstract class Type implements Comparable<Type> {
     public String toString() {
       if (instantiatedType != null) return instantiatedType.toString();
       else {
-        StringBuilder result = new StringBuilder(argument == null ? "[ROOT]" : argument.getType().toString());
+        StringBuilder result =
+            new StringBuilder(argument == null ? "[ROOT]" : argument.getType().toString());
         if (children != null) {
           result.append(" children: ");
           for (TypeArgumentCache cache : children)
@@ -528,7 +528,7 @@ public abstract class Type implements Comparable<Type> {
     else if (this.equals(LONG) || this.equals(ULONG) || this.equals(DOUBLE)) return 8;
 
     return 6; // for objects?  So that they're always considered between 4 and 8 bytes and not equal
-              // to any primitive?
+    // to any primitive?
   }
 
   public boolean isSimpleReference() {
@@ -618,7 +618,6 @@ public abstract class Type implements Comparable<Type> {
       type.recursivelyGetInnerTypes(allInnerTypes);
     }
   }
-
 
   // For math
   public final boolean isNumerical() {
@@ -1068,8 +1067,9 @@ public abstract class Type implements Comparable<Type> {
   }
 
   public Set<MethodSignature> getAllMethods() {
-    return Collections.unmodifiableSet(
-        methodTable.values().stream().flatMap(Collection::stream).collect(Collectors.toSet()));
+    return methodTable.values().stream()
+        .flatMap(Collection::stream)
+        .collect(Collectors.toUnmodifiableSet());
   }
 
   public List<MethodSignature> getMethodOverloads(String methodName) {
@@ -1110,8 +1110,7 @@ public abstract class Type implements Comparable<Type> {
     int parentSize = methodList.size();
     List<MethodSignature> result = add ? methodList : new ArrayList<>();
     List<MethodSignature> original = new ArrayList<>(methodList);
-    for (List<MethodSignature> methods :
-        new TreeMap<>(getMethodMap()).values())
+    for (List<MethodSignature> methods : new TreeMap<>(getMethodMap()).values())
       for (MethodSignature method : methods)
         if (!method.getModifiers().isPrivate()) {
           SequenceType parameters = method.getParameterTypes();

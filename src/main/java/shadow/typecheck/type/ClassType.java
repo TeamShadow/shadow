@@ -122,7 +122,7 @@ public class ClassType extends Type {
       if (context != null) return context;
     }
 
-    return context;
+    return null;
   }
 
   // get methods from all visible sources, adds outer classes too

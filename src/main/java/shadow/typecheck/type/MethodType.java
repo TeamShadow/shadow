@@ -35,23 +35,9 @@ public class MethodType extends Type {
     return copiedType;
   }
 
-  // used to copy a MethodType with different modifiers
+  /** Used to copy a MethodType with different modifiers */
   public MethodType copy(Modifiers modifiers) {
     return copy(super.getOuter(), modifiers);
-  }
-
-  // this method is used to see if particular return values inside the method can be given back as
-  // return values
-  public boolean canReturn(SequenceType returnTypes) {
-    return returns.canAccept(returnTypes);
-  }
-
-  public boolean canReturn(ModifiedType type) {
-    return returns.canAccept(type);
-  }
-
-  public boolean returnsNothing() {
-    return returns.isEmpty();
   }
 
   public boolean canAccept(SequenceType argumentTypes) {

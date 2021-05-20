@@ -58,12 +58,9 @@ public class TypeCollector extends ScopedChecker {
   // Paths where we can search for imports.
   private final List<Path> importPaths = new ArrayList<>();
 
-  // private final Set<Object> importedItems = new HashSet<>();
-
-  // Types already known that don't need to be looked up again
-  // private final Set<String> knownTypes = new HashSet<>();
-
-  private final Configuration config;
+  // Store standard imports once for efficiency
+  private final Map<String, PathWithContext> standardImportedTypes;
+  private final Path standardPath;
 
   private Path currentFile;
   private Type mainType = null;
@@ -129,21 +126,41 @@ public class TypeCollector extends ScopedChecker {
       this.context = context;
     }
   }
-
   /**
    * Creates a new <code>TypeCollector</code> with the given tree of packages.
    *
    * @param p package tree
    * @param useSourceFiles if true, always use <tt>.shadow</tt> instead of <tt>.meta</tt> files
-   * @throws ConfigurationException thrown if there's a problem with Configuration
    */
   public TypeCollector(
       Package p, ErrorReporter reporter, boolean useSourceFiles, boolean typeCheckOnly)
-      throws ConfigurationException {
+      throws ConfigurationException, IOException {
     super(p, reporter);
     this.useSourceFiles = useSourceFiles;
     this.typeCheckOnly = typeCheckOnly;
-    config = Configuration.getConfiguration();
+
+    standardPath = getStandardPath(Configuration.getConfiguration());
+    standardImportedTypes = getStandardImports(standardPath);
+  }
+
+  private TypeCollector(
+      Package p,
+      Path standardPath,
+      Map<String, PathWithContext> standardImportedTypes,
+      ErrorReporter reporter,
+      boolean useSourceFiles,
+      boolean typeCheckOnly) {
+    super(p, reporter);
+    this.useSourceFiles = useSourceFiles;
+    this.typeCheckOnly = typeCheckOnly;
+
+    // Standard imports
+    this.standardPath = standardPath;
+    this.standardImportedTypes = standardImportedTypes;
+  }
+
+  public static Path getStandardPath(Configuration config) {
+    return config.getSystemImport().resolve("shadow").resolve("standard").normalize();
   }
 
   /**
@@ -182,8 +199,8 @@ public class TypeCollector extends ScopedChecker {
   }
 
   /**
-   * Calls <code>collectTypes</code> with one main file, whose source is given in source.
-   * Used for type-checking files currently being edited in an IDE.
+   * Calls <code>collectTypes</code> with one main file, whose source is given in source. Used for
+   * type-checking files currently being edited in an IDE.
    *
    * @param source the complete source code to check
    * @param mainFile main file to be type-checked or compiled
@@ -215,28 +232,6 @@ public class TypeCollector extends ScopedChecker {
   public Map<Type, Context> collectTypes(List<Path> files)
       throws ShadowException, IOException, ConfigurationException {
     return collectTypes(files, new HashMap<>(), false);
-  }
-
-  private static void recursivelyAddFiles(
-      Path start, Set<String> uncheckedFiles, Set<String> standardDependencies) throws IOException {
-    List<Path> directories = new LinkedList<>();
-
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(start)) {
-      for (Path file : stream) {
-        if (Files.isDirectory(file)) {
-          // Watch out for . and .. entries
-          if (!Files.isSameFile(file, start) && !Files.isSameFile(file, start.getParent()))
-            directories.add(file);
-        } else if (file.toString().endsWith(".shadow")) {
-          String name = stripExtension(Main.canonicalize(file));
-          uncheckedFiles.add(name);
-          standardDependencies.add(name);
-        }
-      }
-    }
-
-    for (Path directory : directories)
-      recursivelyAddFiles(directory, uncheckedFiles, standardDependencies);
   }
 
   /*
@@ -307,10 +302,6 @@ public class TypeCollector extends ScopedChecker {
     // Create and fill the initial set of files to be checked.
     TreeSet<String> uncheckedFiles = new TreeSet<>();
 
-    Loggers.SHADOW.info("Type Collection Pass " + (dependencies == null ? 2 : 1));
-
-    long setupTime = System.currentTimeMillis();
-
     String main = null; // May or may not be null, based on hasMain.
     if (files.isEmpty()) throw new ConfigurationException("No files provided for typechecking");
     else if (hasMain) {
@@ -325,35 +316,31 @@ public class TypeCollector extends ScopedChecker {
     }
 
     /* Check standard imports. */
-    Path standard = config.getSystemImport().resolve("shadow").resolve("standard").normalize();
-    if (!Files.exists(standard))
+    if (!Files.exists(standardPath))
       throw new ConfigurationException(
-          "Invalid path to shadow:standard: " + Main.canonicalize(standard));
+          "Invalid path to shadow:standard: " + Main.canonicalize(standardPath));
 
     TreeSet<String> standardDependencies = new TreeSet<>();
 
     // Adds all files in the standard directory (including sub-directories)
-    recursivelyAddFiles(standard, uncheckedFiles, standardDependencies);
+    for (Map.Entry<String, PathWithContext> entry : standardImportedTypes.entrySet()) {
+      String file = entry.getValue().path;
+      uncheckedFiles.add(file);
+      standardDependencies.add(file);
+    }
 
     /* A few io classes are absolutely necessary for a console program. */
-    Path io = config.getSystemImport().resolve("shadow").resolve("io").normalize();
+    Path io = standardPath.getParent().resolve("io").normalize();
     if (!Files.exists(io))
       throw new ConfigurationException("Invalid path to io: " + Main.canonicalize(io));
 
-    uncheckedFiles.add(stripExtension(Main.canonicalize(io.resolve("Console.shadow"))));
-    uncheckedFiles.add(stripExtension(Main.canonicalize(io.resolve("File.shadow"))));
-    uncheckedFiles.add(stripExtension(Main.canonicalize(io.resolve("IOException.shadow"))));
-    uncheckedFiles.add(stripExtension(Main.canonicalize(io.resolve("Path.shadow"))));
-
-    setupTime = System.currentTimeMillis() - setupTime;
-    long fileDecisionTime = 0;
-    long parsingTime = 0;
-    long collectionTime = 0;
-    long copyTime = 0;
+    uncheckedFiles.add(Main.canonicalize(io.resolve("Console")));
+    uncheckedFiles.add(Main.canonicalize(io.resolve("File")));
+    uncheckedFiles.add(Main.canonicalize(io.resolve("IOException")));
+    uncheckedFiles.add(Main.canonicalize(io.resolve("Path")));
 
     /* As long as there are unchecked files, remove one and process it. */
     while (!uncheckedFiles.isEmpty()) {
-      long timing = System.currentTimeMillis();
       String canonical = uncheckedFiles.first();
       uncheckedFiles.remove(canonical);
 
@@ -395,9 +382,6 @@ public class TypeCollector extends ScopedChecker {
 
       currentFile = canonicalFile;
 
-      fileDecisionTime += System.currentTimeMillis() - timing;
-      timing = System.currentTimeMillis();
-
       // Use the semantic checker to parse the file
       ParseChecker checker = new ParseChecker(new ErrorReporter(Loggers.PARSER));
       CompilationUnitContext node;
@@ -407,18 +391,18 @@ public class TypeCollector extends ScopedChecker {
       else node = checker.getCompilationUnit(currentFile);
       checker.printAndReportErrors();
 
-      parsingTime += System.currentTimeMillis() - timing;
-      timing = System.currentTimeMillis();
-
       // Make another collector to walk the current file.
       TypeCollector collector =
-          new TypeCollector(new Package(), getErrorReporter(), useSourceFiles, typeCheckOnly);
+          new TypeCollector(
+              new Package(),
+              standardPath,
+              standardImportedTypes,
+              getErrorReporter(),
+              useSourceFiles,
+              typeCheckOnly);
       // Keeping a current file gives us a file whose directory we can check against.
       collector.setCurrentFile(currentFile, node);
       collector.visit(node);
-
-      collectionTime += System.currentTimeMillis() - timing;
-      timing = System.currentTimeMillis();
 
       fileTable.put(canonical, node);
 
@@ -485,25 +469,15 @@ public class TypeCollector extends ScopedChecker {
           typeTable.put(type, otherNode);
         }
       }
-
-      copyTime += System.currentTimeMillis() - timing;
     }
-
-    Loggers.SHADOW.info("Set up time: " + setupTime  + "ms");
-    Loggers.SHADOW.info("File decision time: " + fileDecisionTime  + "ms");
-    Loggers.SHADOW.info("Parsing time: " + parsingTime  + "ms");
-    Loggers.SHADOW.info("Collection time: " + collectionTime  + "ms");
-    Loggers.SHADOW.info("Copy time: " + copyTime  + "ms");
   }
 
-  private void setCurrentFile(Path currentFile, CompilationUnitContext node) throws IOException {
+  private void setCurrentFile(Path currentFile, CompilationUnitContext node)
+      throws ConfigurationException {
     this.currentFile = currentFile;
-    importedTypes.clear();
-
-    // Standard imports
-    Path standard = config.getSystemImport().resolve("shadow").resolve("standard").normalize();
 
     // Possible sources for imports (order matters)
+    importedTypes.clear();
     importPaths.clear();
 
     // If the file has package information, back up so that the import root is the above the package
@@ -526,11 +500,11 @@ public class TypeCollector extends ScopedChecker {
     }
 
     importPaths.add(parent.normalize());
-    importPaths.addAll(config.getImports());
-    importPaths.add(standard);
+    importPaths.addAll(Configuration.getConfiguration().getImports());
+    importPaths.add(standardPath);
 
-    // Actually import everything from the standard library
-    recursivelyAddImports(standard);
+    // Import everything from the standard library
+    importedTypes.putAll(standardImportedTypes);
 
     // And everything from the current directory
     addImports(currentFile.getParent(), null);
@@ -545,10 +519,11 @@ public class TypeCollector extends ScopedChecker {
       for (Path file : stream) {
         // Watch out for . and .. entries
         if (!Files.isDirectory(file)) {
-          String typeName = stripExtension(file.getFileName().toString());
+          String fileName = file.getFileName().toString();
+          String typeName = stripExtension(fileName);
 
-          if (file.toString().endsWith(".shadow")
-              || (file.toString().endsWith(".meta")
+          if (fileName.endsWith(".shadow")
+              || (fileName.endsWith(".meta")
                   && !Files.exists(file.resolveSibling(typeName + ".shadow")))) {
             if (!addImport(file, context, true)) success = false;
           }
@@ -597,7 +572,15 @@ public class TypeCollector extends ScopedChecker {
     return true;
   }
 
-  private void recursivelyAddImports(Path path) throws IOException {
+  public static Map<String, PathWithContext> getStandardImports(Path standardPath)
+      throws IOException {
+    Map<String, PathWithContext> standardImports = new HashMap<>();
+    recursivelyAddImports(standardImports, standardPath);
+    return Map.copyOf(standardImports);
+  }
+
+  private static void recursivelyAddImports(Map<String, PathWithContext> imports, Path path)
+      throws IOException {
     List<Path> directories = new LinkedList<>();
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
@@ -607,14 +590,14 @@ public class TypeCollector extends ScopedChecker {
           if (!Files.isSameFile(file, path) && !Files.isSameFile(file, path.getParent()))
             directories.add(file.normalize());
         } else if (file.toString().endsWith(".shadow")) {
-          String filePath = stripExtension(file.toAbsolutePath().normalize().toString());
+          String filePath = stripExtension(Main.canonicalize(file));
           String typeName = stripExtension(file.getFileName().toString());
-          importedTypes.put(typeName, new PathWithContext(filePath, null));
+          imports.put(typeName, new PathWithContext(filePath, null));
         }
       }
     }
 
-    for (Path directory : directories) recursivelyAddImports(directory);
+    for (Path directory : directories) recursivelyAddImports(imports, directory);
   }
 
   /*
@@ -755,7 +738,8 @@ public class TypeCollector extends ScopedChecker {
           type = new EnumType(name, modifiers, documentation, currentType);
           break;
         case "exception":
-          ExceptionType exceptionType = new ExceptionType(name, modifiers, documentation, currentType);
+          ExceptionType exceptionType =
+              new ExceptionType(name, modifiers, documentation, currentType);
           captureExceptionType(exceptionType, typeName);
           type = exceptionType;
           break;
@@ -958,8 +942,7 @@ public class TypeCollector extends ScopedChecker {
           Type.THREAD = classType;
           break;
       }
-    }
-    else if (currentPackage.getQualifiedName().equals("shadow:natives")) {
+    } else if (currentPackage.getQualifiedName().equals("shadow:natives")) {
       if ("Pointer".equals(typeName)) {
         Type.POINTER = classType;
       }
@@ -1058,6 +1041,7 @@ public class TypeCollector extends ScopedChecker {
 
   @Override
   public Void visitCompilationUnit(ShadowParser.CompilationUnitContext ctx) {
+
     currentPackage = packageTree;
 
     currentName = "";
@@ -1109,12 +1093,12 @@ public class TypeCollector extends ScopedChecker {
   @Override
   public Void visitClassOrInterfaceDeclaration(
       ShadowParser.ClassOrInterfaceDeclarationContext ctx) {
+
     String packageName = null;
     if (ctx.unqualifiedName() != null) packageName = ctx.unqualifiedName().getText();
 
     if (ctx.isList() == null) { // no is list, so mark Object as used
-      Path object =
-          config.getSystemImport().resolve("shadow").resolve("standard").resolve("Object");
+      Path object = standardPath.resolve("Object");
       usedTypes.add(Main.canonicalize(object));
     }
 
@@ -1207,6 +1191,7 @@ public class TypeCollector extends ScopedChecker {
    */
   private void addMembers(ShadowParser.AttributeDeclarationContext ctx) {
     TypeDeclaration attributeDeclaration = new TypeDeclaration();
+    // Is this the most readable way to write this?
     ctx.attributeBody().attributeBodyDeclaration().stream()
         .map(ShadowParser.AttributeBodyDeclarationContext::fieldDeclaration)
         .map(ShadowParser.FieldDeclarationContext::variableDeclarator)
@@ -1267,6 +1252,7 @@ public class TypeCollector extends ScopedChecker {
 
   @Override
   public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
+
     String packageName = null;
     if (ctx.unqualifiedName() != null) packageName = ctx.unqualifiedName().getText();
 

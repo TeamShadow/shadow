@@ -1,9 +1,6 @@
 package shadow.test.output;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Job;
@@ -1499,14 +1496,18 @@ public class OutputTests {
     run(new String[0], "12\n");
   }
 
-  /*@Test public void testMessageQueue() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testMessageQueue() throws Exception {
   	args.add("shadow/test/MessageQueueTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0], "FullListException\n" +
   						"10\n");
   }
 
-  @Test public void testMutex() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testMutex() throws Exception {
   args.add("shadow/test/MutexTest.shadow");
   Main.run(args.toArray(new String[] { }));
   run(new String[0],  formatOutputString(
@@ -1518,7 +1519,9 @@ public class OutputTests {
   	);
   }
 
-  @Test public void testSignaler() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testSignaler() throws Exception {
   	args.add("shadow/test/SignalerTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0],
@@ -1535,7 +1538,9 @@ public class OutputTests {
   			);
   }
 
-  @Test public void testThreadSleep() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testThreadSleep() throws Exception {
   	args.add("shadow/test/ThreadSleepTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0],
@@ -1547,7 +1552,9 @@ public class OutputTests {
   		    "true\n");
   }
 
-  @Test public void testMailbox() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testMailbox() throws Exception {
   	args.add("shadow/test/MailboxTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0], formatOutputString(
@@ -1579,13 +1586,17 @@ public class OutputTests {
   	);
   }
 
-  @Test public void testMessagePassing() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testMessagePassing() throws Exception {
   	args.add("shadow/test/MessagePassingTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0], formatOutputString("9592"));
   }
 
-  @Test public void testInterrupt() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testInterrupt() throws Exception {
   	args.add("shadow/test/InterruptTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0], formatOutputString(
@@ -1601,7 +1612,9 @@ public class OutputTests {
   		);
   }
 
-  @Test public void testThread() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testThread() throws Exception {
   	args.add("shadow/test/ThreadTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0],
@@ -1633,7 +1646,9 @@ public class OutputTests {
   		);
   }
 
-  @Test public void testTLSThread() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testTLSThread() throws Exception {
   	args.add("shadow/test/TLSTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0],
@@ -1641,7 +1656,9 @@ public class OutputTests {
   			"1\n");
   }
 
-  @Test public void testThreadIsolatedRunner() throws Exception {
+  @Test
+  @Disabled // Needs support for threads
+  public void testThreadIsolatedRunner() throws Exception {
   	args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0],
@@ -1649,5 +1666,5 @@ public class OutputTests {
   			"1 1\n" +
   			"1 1\n" +
   			"0\n");
-  }*/
+  }
 }

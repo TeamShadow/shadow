@@ -153,8 +153,6 @@ public class Main {
       throws ShadowException, IOException, org.apache.commons.cli.ParseException,
           ConfigurationException {
 
-    long timing = System.currentTimeMillis();
-
     // Detect and establish the current settings and arguments
     Arguments compilerArgs = new Arguments(args);
 
@@ -183,8 +181,6 @@ public class Main {
     boolean isCompile = !currentJob.isCheckOnly() && !currentJob.isNoLink();
 
     if (isCompile) checkLLVMVersion();
-
-    logger.info("Configuration took: " + (System.currentTimeMillis() - timing) + "ms");
 
     // Begin the checking/compilation process
     long startTime = System.currentTimeMillis();
@@ -255,14 +251,8 @@ public class Main {
         } catch (IOException ignored) {
         }
 
-        timing = System.currentTimeMillis();
         if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE");
-        logger.info(
-            "Compilation of main file took: " + (System.currentTimeMillis() - timing) + "ms");
-
-        timing = System.currentTimeMillis();
         if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
-        logger.info("Linking took: " + (System.currentTimeMillis() - timing) + "ms");
 
       } catch (InterruptedException ignored) {
       } finally {
@@ -416,21 +406,13 @@ public class Main {
         TypeChecker.typeCheck(
             mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
-    long timing = System.currentTimeMillis();
-
     ConstantFieldInterpreter.evaluateConstants(
         typecheckerOutput.packageTree, typecheckerOutput.nodes);
-
-    logger.info("Constant evaluation took: " + (System.currentTimeMillis() - timing) + "ms");
-    timing = System.currentTimeMillis();
 
     // As an optimization, print .meta files for the .shadow files being checked
     typecheckerOutput.nodes.stream()
         .filter((node) -> !node.isFromMetaFile())
         .forEach(TypeChecker::printMetaFile);
-
-    logger.info("Meta file generation took: " + (System.currentTimeMillis() - timing) + "ms");
-    timing = System.currentTimeMillis();
 
     try {
       for (Context node : typecheckerOutput.nodes) {
@@ -488,8 +470,6 @@ public class Main {
           else if (Files.exists(nativeFile)) linkCommand.add(optimizeLLVMFile(nativeFile));
         }
       }
-
-      logger.info("Building object files took: " + (System.currentTimeMillis() - timing) + "ms");
 
       reporter.printAndReportErrors();
 
