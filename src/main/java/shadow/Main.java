@@ -177,7 +177,7 @@ public class Main {
     }
 
     // Important settings
-    Path system = config.getSystemImport();
+    Path system = config.getSystem();
     boolean isCompile = !currentJob.isCheckOnly() && !currentJob.isNoLink();
 
     if (isCompile) checkLLVMVersion();
@@ -309,7 +309,7 @@ public class Main {
       // compileCommand.add("-Wall");
     } else compileCommand.add("clang");
 
-    compileCommand.add("-m" + Configuration.getConfiguration().getArch());
+    compileCommand.add("-m" + Configuration.getConfiguration().getArchitecture());
 
     compileCommand.add("-O3");
 
@@ -327,7 +327,7 @@ public class Main {
     compileCommand.add(
         "-I"
             + cSourcePath
-                .resolve(Paths.get("include", "platform", "Arch" + config.getArch()))
+                .resolve(Paths.get("include", "platform", "Arch" + config.getArchitecture()))
                 .toFile()
                 .getCanonicalPath());
 
@@ -382,12 +382,12 @@ public class Main {
   private static void generateObjectFiles(List<Path> cFiles, List<String> linkCommand)
       throws IOException, ShadowException, ConfigurationException {
 
-    Path shadow = config.getSystemImport().resolve("shadow");
+    Path shadow = config.getSystem().resolve("shadow");
 
     // Add architecture-dependent exception handling code
     if (Configuration.getConfiguration().getOs().equals("Windows"))
-      linkCommand.add(optimizeLLVMFile(shadow.resolve("UnwindWindows" + config.getArch() + ".ll")));
-    else linkCommand.add(optimizeLLVMFile(shadow.resolve("Unwind" + config.getArch() + ".ll")));
+      linkCommand.add(optimizeLLVMFile(shadow.resolve("UnwindWindows" + config.getArchitecture() + ".ll")));
+    else linkCommand.add(optimizeLLVMFile(shadow.resolve("Unwind" + config.getArchitecture() + ".ll")));
 
     // Add platform-specific system code
     linkCommand.add(optimizeLLVMFile(shadow.resolve(config.getOs() + ".ll")));

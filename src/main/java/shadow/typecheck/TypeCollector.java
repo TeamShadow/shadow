@@ -160,7 +160,7 @@ public class TypeCollector extends ScopedChecker {
   }
 
   public static Path getStandardPath(Configuration config) {
-    return config.getSystemImport().resolve("shadow").resolve("standard").normalize();
+    return config.getSystem().resolve("shadow").resolve("standard").normalize();
   }
 
   /**
@@ -500,7 +500,7 @@ public class TypeCollector extends ScopedChecker {
     }
 
     importPaths.add(parent.normalize());
-    importPaths.addAll(Configuration.getConfiguration().getImports());
+    importPaths.addAll(Configuration.getConfiguration().getImport());
     importPaths.add(standardPath);
 
     // Import everything from the standard library

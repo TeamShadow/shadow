@@ -23,9 +23,9 @@ public class WarningTests {
     String os = System.getProperty("os.name").toLowerCase();
 
     args.add("-c");
-    if (os.contains("windows")) args.add("windows.xml");
-    else if (os.contains("mac")) args.add("mac.xml");
-    else args.add("linux.xml");
+    if (os.contains("windows")) args.add("windows.json");
+    else if (os.contains("mac")) args.add("mac.json");
+    else args.add("linux.json");
   }
 
   private void enforce(Error type) throws Exception {

@@ -33,9 +33,9 @@ public class OutputTests {
     String os = System.getProperty("os.name").toLowerCase();
 
     args.add("-c");
-    if (os.contains("windows")) args.add("windows.xml");
-    else if (os.contains("mac")) args.add("mac.xml");
-    else args.add("linux.xml");
+    if (os.contains("windows")) args.add("windows.json");
+    else if (os.contains("mac")) args.add("mac.json");
+    else args.add("linux.json");
 
     // args.add("-r");
     // args.add("-f");
@@ -73,7 +73,7 @@ public class OutputTests {
     // Should be initialized at this point by call to Main.run()
     Configuration config = Configuration.getConfiguration();
 
-    Path fullExecutable = config.getSystemImport().resolve(executable);
+    Path fullExecutable = config.getSystem().resolve(executable);
 
     List<String> programCommand = new ArrayList<>();
     programCommand.add(Main.canonicalize(fullExecutable));

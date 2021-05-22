@@ -1,10 +1,17 @@
 package shadow;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.logging.log4j.Logger;
-import shadow.jaxb.Shadow;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,34 +20,135 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Represents the current compiler settings/configuration. This is a globally accessible singleton.
- */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+  "system",
+  "import",
+  "target",
+  "architecture",
+  "os",
+  "opt",
+  "llc",
+  "link",
+  "parent"
+})
 public class Configuration {
 
-  public static final String DEFAULT_CONFIG_NAME = "shadow.xml";
+  // Deserializes paths relative to the config file
+  private static class PathDeserializer extends StdDeserializer<Path> {
+    private final Path configFile;
+
+    public PathDeserializer(Path configFile) {
+      this(null, configFile);
+    }
+
+    public PathDeserializer(Class<?> vc, Path configFile) {
+      super(vc);
+      this.configFile = configFile;
+    }
+
+    @Override
+    public Path deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+      JsonNode node = jp.getCodec().readTree(jp);
+      Path path = Paths.get(node.asText());
+      return configFile.getParent().resolve(path);
+    }
+  }
+
+  public static final String DEFAULT_CONFIG_NAME = "shadow.json";
 
   private static Configuration globalConfig;
 
   private static final Logger logger = Loggers.SHADOW;
 
-  private final Path configFile;
+  // private Path configFile;
   private String dataLayout;
 
-  // Configuration fields
-  private int arch;
-  private String os;
+  @JsonProperty("system")
+  private Path system;
+
+  @JsonProperty("import")
+  private List<Path> _import = null;
+
+  @JsonProperty("target")
   private String target;
-  private Path systemPath;
-  private String llc;
+
+  @JsonProperty("architecture")
+  private int architecture;
+
+  @JsonProperty("os")
+  private String os;
+
+  @JsonProperty("opt")
   private String opt;
-  private List<Path> importPaths;
-  private List<String> linkCommand;
+
+  @JsonProperty("llc")
+  private String llc;
+
+  @JsonProperty("link")
+  private List<String> link;
+
+  @JsonProperty("parent")
+  private Path parent;
+
+  @JsonProperty("system")
+  public Path getSystem() {
+    return system;
+  }
+
+  @JsonProperty("import")
+  public List<Path> getImport() {
+    return _import;
+  }
+
+  @JsonProperty("target")
+  public String getTarget() {
+    return target;
+  }
+
+  @JsonProperty("target")
+  public void setTarget(String target) {
+    this.target = target;
+  }
+
+  @JsonProperty("architecture")
+  public int getArchitecture() {
+    return architecture;
+  }
+
+  @JsonProperty("os")
+  public String getOs() {
+    return os;
+  }
+
+  @JsonProperty("os")
+  public void setOs(String os) {
+    this.os = os;
+  }
+
+  @JsonProperty("opt")
+  public String getOpt() {
+    return opt;
+  }
+
+  @JsonProperty("opt")
+  public void setOpt(String opt) {
+    this.opt = opt;
+  }
+
+  @JsonProperty("llc")
+  public String getLlc() {
+    return llc;
+  }
+
+  @JsonProperty("link")
+  public List<String> getLink() {
+    return link;
+  }
 
   /**
    * Builds the Configuration if necessary. Must be run at least once before getConfiguration() is
@@ -51,7 +159,7 @@ public class Configuration {
       throws ConfigurationException, IOException {
 
     if (globalConfig == null || forceRebuild)
-      globalConfig = new Configuration(mainFilePath, configFilePath);
+      globalConfig = readConfiguration(mainFilePath, configFilePath);
 
     return globalConfig;
   }
@@ -65,16 +173,19 @@ public class Configuration {
     return globalConfig;
   }
 
-  /* Hidden constructor for instantiating the Configuration */
-  private Configuration(String mainFilePath, String configFilePath)
+  private static Configuration readConfiguration(String mainFilePath, String configFilePath)
       throws ConfigurationException, IOException {
     // Attempt to locate hierarchy of config files
-    configFile = locateConfig(mainFilePath, configFilePath);
+    Path configFile = locateConfig(mainFilePath, configFilePath);
+
+    Configuration configuration;
 
     // If a config file was located, parse it
-    if (configFile != null) parse(configFile);
+    if (configFile != null) configuration = parse(configFile);
+    else configuration = new Configuration();
 
-    inferSettings(); // Auto-fill any empty fields
+    configuration.inferSettings(); // Auto-fill any empty fields
+    return configuration;
   }
 
   /*
@@ -91,7 +202,7 @@ public class Configuration {
    * 3. A file in the running directory with the default name
    * 4. A file in the working directory with the default name
    */
-  private Path locateConfig(String mainFilePath, String configFilePath)
+  private static Path locateConfig(String mainFilePath, String configFilePath)
       throws FileNotFoundException, ConfigurationException {
 
     // Get the various search directories
@@ -164,10 +275,9 @@ public class Configuration {
   /* Auto-detects values for unfilled fields */
   private void inferSettings() throws ConfigurationException {
 
-    // TODO: Consider moving default value code into the individual getters
-    if (arch == 0) {
-      if (System.getProperty("os.arch").contains("64")) arch = 64;
-      else arch = 32;
+    if (architecture == 0) {
+      if (System.getProperty("os.arch").contains("64")) architecture = 64;
+      else architecture = 32;
     }
 
     if (os == null) {
@@ -191,129 +301,68 @@ public class Configuration {
 
     if (target == null) target = getDefaultTarget();
 
-    if (linkCommand == null) {
-      linkCommand = new ArrayList<>();
+    if (link == null) {
+      link = new ArrayList<>();
 
       switch (getOs()) {
         case "Mac":
           // Does Mac work at all now?  What about the new M chips?
-          linkCommand.add("clang");
-          linkCommand.add("-lm");
-          linkCommand.add("-lSystem");
+          link.add("clang");
+          link.add("-lm");
+          link.add("-lSystem");
           break;
         case "Windows":
           // If properly set up, clang uses Visual Studio to link default Windows libraries
-          linkCommand.add("clang");
+          link.add("clang");
           break;
         case "Linux":
-          linkCommand.add("clang++");
-          linkCommand.add("-lm");
-          linkCommand.add("-lrt");
-          linkCommand.add("-pthread");
+          link.add("clang++");
+          link.add("-lm");
+          link.add("-lrt");
+          link.add("-pthread");
           break;
       }
 
-      if (arch == 32) linkCommand.add("-m32");
-      else linkCommand.add("-m64");
+      if (architecture == 32) link.add("-m32");
+      else link.add("-m64");
     }
 
-    if (systemPath == null) systemPath = getRunningDirectory();
+    if (system == null) system = getRunningDirectory();
 
-    if (importPaths == null) importPaths = new ArrayList<>();
+    if (_import == null) _import = new ArrayList<>();
 
     // The import paths list must contain an "empty" path that can later be
     // resolved against source files
-    importPaths.add(Paths.get("." + File.separator));
+    _import.add(Paths.get("." + File.separator));
   }
 
   /* Parses a config file and fills the corresponding fields */
-  private void parse(Path configFile) {
+  private static Configuration parse(Path configFile) throws IOException {
     try {
-      JAXBContext jaxbContext = JAXBContext.newInstance(Shadow.class);
-      Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-      Shadow configuration = (Shadow) jaxbUnmarshaller.unmarshal(configFile.toFile());
+      ObjectMapper mapper =
+          new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+      SimpleModule module = new SimpleModule();
+      module.addDeserializer(Path.class, new PathDeserializer(configFile));
+      mapper.registerModule(module);
+      Configuration configuration = mapper.readValue(configFile.toFile(), Configuration.class);
 
-      Integer arch = configuration.getArch();
-      if (arch != null) this.arch = arch;
+      if (configuration.parent != null) {
+        Configuration parent = parse(configuration.parent);
+        if (configuration.system == null) configuration.system = parent.system;
+        if (configuration._import == null) configuration._import = parent._import;
+        if (configuration.target == null) configuration.target = parent.target;
+        if (configuration.architecture == 0) configuration.architecture = parent.architecture;
+        if (configuration.os == null) configuration.os = parent.os;
+        if (configuration.opt == null) configuration.opt = parent.opt;
+        if (configuration.llc == null) configuration.llc = parent.llc;
+        if (configuration.link == null) configuration.link = parent.link;
+      }
 
-      addImports(configuration.getImport());
-
-      String linkCommand = configuration.getLink();
-      if (linkCommand != null) setLinkCommand(linkCommand);
-
-      os = configuration.getOs();
-      target = configuration.getTarget();
-      llc = configuration.getLlc();
-      opt = configuration.getOpt();
-
-      String systemPath = configuration.getSystem();
-      if (systemPath != null) setSystemImport(systemPath);
-    } catch (Exception e) {
+      return configuration;
+    } catch (IOException e) {
       System.err.println("ERROR PARSING CONFIGURATION FILE: " + configFile.toAbsolutePath());
-      e.printStackTrace();
+      throw e;
     }
-  }
-
-  public int getArch() {
-    return arch;
-  }
-
-  public void setOs(String os) {
-    if (this.os == null) this.os = os;
-  }
-
-  public String getOs() {
-    return os;
-  }
-
-  public void addImports(List<String> paths) {
-    for (String path : paths) addImport(path);
-  }
-
-  public void addImport(String importPath) {
-    if (importPaths == null) importPaths = new ArrayList<>();
-
-    Path newImportPath = Paths.get(importPath);
-    newImportPath = configFile.getParent().resolve(newImportPath);
-
-    importPaths.add(newImportPath);
-  }
-
-  public List<Path> getImports() {
-    return importPaths;
-  }
-
-  public void setSystemImport(String systemImportPath) {
-    if (systemPath == null) {
-      systemPath = Paths.get(systemImportPath);
-      systemPath = configFile.getParent().resolve(systemPath);
-    }
-  }
-
-  public Path getSystemImport() {
-    return systemPath;
-  }
-
-  public void setLinkCommand(String linkCommand) {
-    if (this.linkCommand == null) {
-      this.linkCommand = new ArrayList<>();
-      // TODO: What happens here if there are spaces in a path name?
-      this.linkCommand.addAll(Arrays.asList(linkCommand.split("\\s+")));
-    }
-  }
-
-  public List<String> getLinkCommand(Job currentJob) {
-    // Merge the output commands with the linker commands
-    linkCommand.addAll(currentJob.getOutputCommand());
-    return linkCommand;
-  }
-
-  public void setTarget(String target) {
-    if (this.target == null) this.target = target;
-  }
-
-  public String getTarget() {
-    return target;
   }
 
   /** Gets the directory within which the compiler is currently running */
@@ -329,12 +378,11 @@ public class Configuration {
     }
   }
 
-  public String getOpt() {
-    return opt;
-  }
-
-  public String getLlc() {
-    return llc;
+  public List<String> getLinkCommand(Job currentJob) {
+    // Merge the output commands with the linker commands
+    List<String> linkCommand = new ArrayList<>(link);
+    linkCommand.addAll(currentJob.getOutputCommand());
+    return linkCommand;
   }
 
   /** Returns the target platform to be used by the LLVM compiler */
@@ -454,10 +502,11 @@ public class Configuration {
           break;
       }
 
-      String pointerAlignment = "p:" + getArch() + ":" + getArch() + ":" + getArch();
+      String pointerAlignment =
+          "p:" + getArchitecture() + ":" + getArchitecture() + ":" + getArchitecture();
       String dataAlignment =
           "i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f16:16:16-f32:32:32-f64:64:64-f80:128";
-      String aggregateAlignment = "a:0:" + getArch();
+      String aggregateAlignment = "a:0:" + getArchitecture();
       String nativeIntegers = "n8:16:32:64";
       String stackAlignment = "S128";
       dataLayout =
