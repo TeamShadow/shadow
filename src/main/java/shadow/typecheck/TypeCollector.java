@@ -29,9 +29,14 @@ import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.*;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The <code>TypeCollector</code> class is central to the first stage of type-checking. It is given
@@ -514,26 +519,23 @@ public class TypeCollector extends ScopedChecker {
    * Add all the files in a directory as imports.
    */
   private boolean addImports(Path directory, NameContext context) {
-    boolean success = true;
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
-      for (Path file : stream) {
-        // Watch out for . and .. entries
-        if (!Files.isDirectory(file)) {
-          String fileName = file.getFileName().toString();
-          String typeName = stripExtension(fileName);
-
-          if (fileName.endsWith(".shadow")
-              || (fileName.endsWith(".meta")
-                  && !Files.exists(file.resolveSibling(typeName + ".shadow")))) {
-            if (!addImport(file, context, true)) success = false;
-          }
-        }
-      }
+    try (Stream<Path> stream = Files.list(directory)) {
+      return stream
+          .filter(
+              file -> {
+                String fileName = file.getFileName().toString();
+                if (fileName.endsWith(".shadow")) return true;
+                if (fileName.endsWith(".meta")) {
+                  String typeName = stripExtension(fileName);
+                  return !Files.exists(file.resolveSibling(typeName + ".shadow"));
+                }
+                return false;
+              })
+          // Yucky stream way to make sure that calling adImport() on all files succeeds
+          .allMatch(file -> addImport(file, context, true));
     } catch (IOException e) {
-      success = false;
+      return false;
     }
-
-    return success;
   }
 
   /*
@@ -574,30 +576,16 @@ public class TypeCollector extends ScopedChecker {
 
   public static Map<String, PathWithContext> getStandardImports(Path standardPath)
       throws IOException {
-    Map<String, PathWithContext> standardImports = new HashMap<>();
-    recursivelyAddImports(standardImports, standardPath);
-    return Map.copyOf(standardImports);
-  }
-
-  private static void recursivelyAddImports(Map<String, PathWithContext> imports, Path path)
-      throws IOException {
-    List<Path> directories = new LinkedList<>();
-
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
-      for (Path file : stream) {
-        // Watch out for . and .. entries
-        if (Files.isDirectory(file)) {
-          if (!Files.isSameFile(file, path) && !Files.isSameFile(file, path.getParent()))
-            directories.add(file.normalize());
-        } else if (file.toString().endsWith(".shadow")) {
-          String filePath = stripExtension(Main.canonicalize(file));
-          String typeName = stripExtension(file.getFileName().toString());
-          imports.put(typeName, new PathWithContext(filePath, null));
-        }
-      }
+    try (Stream<Path> stream = Files.walk(standardPath)) {
+      return stream
+          .filter(file -> file.toString().endsWith(".shadow"))
+          .collect(
+              Collectors.toUnmodifiableMap(
+                  // type name
+                  file -> stripExtension(file.getFileName().toString()),
+                  // path
+                  file -> new PathWithContext(stripExtension(Main.canonicalize(file)), null)));
     }
-
-    for (Path directory : directories) recursivelyAddImports(imports, directory);
   }
 
   /*
