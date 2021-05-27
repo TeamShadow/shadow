@@ -14,36 +14,36 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type opaque
-%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
-%shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
-%shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
-%shadow.standard..Iterator_methods = type opaque
+%shadow.standard..Object._methods = type opaque
+%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object._methods*  }
+%shadow.standard..Class._methods = type opaque
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..GenericClass._methods = type opaque
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
+%shadow.standard..Iterator._methods = type opaque
 %shadow.standard..String = type opaque
-%shadow.standard..AddressMap_methods = type opaque
+%shadow.standard..AddressMap._methods = type opaque
 %shadow.standard..AddressMap = type opaque
-%shadow.standard..MethodTable_methods = type opaque
+%shadow.standard..MethodTable._methods = type opaque
 %shadow.standard..MethodTable = type opaque
-%shadow.standard..Array_methods = type opaque
+%shadow.standard..Array._methods = type opaque
 %shadow.standard..Array = type opaque
-%shadow.standard..ArrayNullable_methods = type opaque
+%shadow.standard..ArrayNullable._methods = type opaque
 %shadow.standard..ArrayNullable = type opaque
 
 %shadow.io..Console = type opaque
 
-declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
+declare %shadow.io..Console* @shadow.io..Console..print_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+declare %shadow.io..Console* @shadow.io..Console..printLine(%shadow.io..Console*)
 
-define %shadow.standard..Class* @shadow.standard..Object_MgetClass(%shadow.standard..Object*) {
+define %shadow.standard..Class* @shadow.standard..Object..getClass(%shadow.standard..Object*) {
 	%2 = getelementptr %shadow.standard..Object, %shadow.standard..Object* %0, i32 0, i32 1
 	%3 = load %shadow.standard..Class*, %shadow.standard..Class** %2	
 	; No increment since classes are never GCed
 	ret %shadow.standard..Class* %3
 }
 
-define void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*) {
+define void @shadow.standard..Object..destroy(%shadow.standard..Object*) {
 	; Nothing to do since classes are never GCed, so no decrement of class
     ret void
 }

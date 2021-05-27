@@ -69,7 +69,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
     }
 
     if (getErrorReporter().getErrorList().size() == 0) visit(context);
-
+    
     return context;
   }
 

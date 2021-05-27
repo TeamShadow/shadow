@@ -18,56 +18,56 @@ declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare i32 @llvm.eh.typeid.for(i8*) nounwind readnone
 
 ; standard definitions
-%shadow.standard..Object_methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
-%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
-%shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
-%shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
-%shadow.standard..Iterator_methods = type opaque
-%shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , %shadow.standard..Array*, %boolean }
-%shadow.standard..AddressMap_methods = type opaque
+%shadow.standard..Object._methods = type { %shadow.standard..Object* (%shadow.standard..Object*, %shadow.standard..AddressMap*)*, void (%shadow.standard..Object*)*, %shadow.standard..Class* (%shadow.standard..Object*)*, %shadow.standard..String* (%shadow.standard..Object*)* }
+%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object._methods*  }
+%shadow.standard..Class._methods = type opaque
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..GenericClass._methods = type opaque
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
+%shadow.standard..Iterator._methods = type opaque
+%shadow.standard..String._methods = type opaque
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String._methods* , %shadow.standard..Array*, %boolean }
+%shadow.standard..AddressMap._methods = type opaque
 %shadow.standard..AddressMap = type opaque
-%shadow.standard..MethodTable_methods = type opaque
+%shadow.standard..MethodTable._methods = type opaque
 %shadow.standard..MethodTable = type opaque
-%shadow.standard..Array_methods = type opaque
-%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
-%shadow.standard..ArrayNullable_methods = type opaque
-%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %long }
+%shadow.standard..Array._methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array._methods* , %long }
+%shadow.standard..ArrayNullable._methods = type opaque
+%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable._methods* , %long }
 
-%shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
-%shadow.standard..OutOfMemoryException_methods = type opaque
-%shadow.standard..OutOfMemoryException = type { %ulong, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException_methods* , %shadow.standard..String* }
+%shadow.standard..Exception._methods = type opaque
+%shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception._methods* , %shadow.standard..String* }
+%shadow.standard..OutOfMemoryException._methods = type opaque
+%shadow.standard..OutOfMemoryException = type { %ulong, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException._methods* , %shadow.standard..String* }
 
 @shadow.standard..Object_class = external constant %shadow.standard..Class
-@shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
-@shadow.standard..Class_class = external constant %shadow.standard..Class
-@shadow.standard..String_methods = external constant %shadow.standard..String_methods
-@shadow.standard..String_class = external constant %shadow.standard..Class
-@shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
-@shadow.standard..Exception_class = external constant %shadow.standard..Class
-@shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
-@shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
-@shadow.standard..MethodTable_class = external constant %shadow.standard..Class
+@shadow.standard..Class._methods = external constant %shadow.standard..Class._methods
+@shadow.standard..Class.class = external constant %shadow.standard..Class
+@shadow.standard..String._methods = external constant %shadow.standard..String._methods
+@shadow.standard..String.class = external constant %shadow.standard..Class
+@shadow.standard..Exception._methods = external constant %shadow.standard..Exception._methods
+@shadow.standard..Exception.class = external constant %shadow.standard..Class
+@shadow.standard..OutOfMemoryException.class = external constant %shadow.standard..Class
+@shadow.standard..OutOfMemoryException._methods = external constant %shadow.standard..OutOfMemoryException._methods
+@shadow.standard..MethodTable.class = external constant %shadow.standard..Class
 
 declare void @free(i8*) nounwind
-declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryException_Mcreate(%shadow.standard..Object*)
-declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
-declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
+declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryException..create(%shadow.standard..Object*)
+declare %int @shadow.standard..Class..width(%shadow.standard..Class*)
+declare void @shadow.standard..Object..destroy(%shadow.standard..Object*)
 
 ;%shadow.io..Console = type opaque
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
-;declare void @shadow.io..Console_MdebugPrint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-;@byte_A_class = external constant %shadow.standard..GenericClass
-;@shadow.standard..Array_methods = external constant %shadow.standard..Array_methods
+;declare %shadow.io..Console* @shadow.io..Console..print_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;declare %shadow.io..Console* @shadow.io..Console..printLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console..printLine_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;declare %shadow.io..Console* @shadow.io..Console..printLine(%shadow.io..Console*) 
+;declare %shadow.io..Console* @shadow.io..Console..debugPrint.int(%shadow.io..Console*, %int)
+;declare void @shadow.io..Console..debugPrint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;@ubyte._A.class = external constant %shadow.standard..GenericClass
+;@shadow.standard..Array._methods = external constant %shadow.standard..Array._methods
 
-define %int @shadow.standard..Class_MpointerSize(%shadow.standard..Class*) alwaysinline nounwind readnone {
+define %int @shadow.standard..Class..pointerSize(%shadow.standard..Class*) alwaysinline nounwind readnone {
 		%2 = ptrtoint %shadow.standard..Object** getelementptr (%shadow.standard..Object*, %shadow.standard..Object** null, i32 1) to i32
 		ret %int %2
 }
@@ -76,7 +76,7 @@ define void @__decrementRef(%shadow.standard..Object* %object) nounwind {
 	%isNull = icmp eq %shadow.standard..Object* %object, null
 	br i1 %isNull, label %_exit, label %_check
 _check:
-	;call void @shadow.io..Console_MdebugPrint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string0)
+	;call void @shadow.io..Console..debugPrint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string0)
 	; get reference count
 	%countRef = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 0
 	%count = load %ulong, %ulong* %countRef
@@ -92,8 +92,8 @@ _checkPassed:
 _freeLabel:	
 	; call destroy before free	
 	%methodsRef = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 2
-    %methods = load %shadow.standard..Object_methods*, %shadow.standard..Object_methods** %methodsRef
-    %destroyRef = getelementptr inbounds %shadow.standard..Object_methods, %shadow.standard..Object_methods* %methods, i32 0, i32 1
+    %methods = load %shadow.standard..Object._methods*, %shadow.standard..Object._methods** %methodsRef
+    %destroyRef = getelementptr inbounds %shadow.standard..Object._methods, %shadow.standard..Object._methods* %methods, i32 0, i32 1
     %destroy = load void (%shadow.standard..Object*)*, void (%shadow.standard..Object*)** %destroyRef
 
     call void %destroy(%shadow.standard..Object* %object)
@@ -103,7 +103,7 @@ _freeLabel:
 	tail call void @free(i8* %address) nounwind
 	ret void
 _exit:	
-	;call void @shadow.io..Console_MdebugPrint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string1)
+	;call void @shadow.io..Console..debugPrint_shadow.standard..String(%shadow.io..Console* null, %shadow.standard..String* @_string1)
 	ret void
 }
 

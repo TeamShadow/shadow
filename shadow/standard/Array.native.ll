@@ -14,84 +14,84 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type opaque
-%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
-%shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
-%shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
-%shadow.standard..Iterator_methods = type opaque
+%shadow.standard..Object._methods = type opaque
+%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object._methods*  }
+%shadow.standard..Class._methods = type opaque
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..GenericClass._methods = type opaque
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
+%shadow.standard..Iterator._methods = type opaque
 %shadow.standard..String = type opaque
-%shadow.standard..AddressMap_methods = type opaque
+%shadow.standard..AddressMap._methods = type opaque
 %shadow.standard..AddressMap = type opaque
-%shadow.standard..MethodTable_methods = type opaque
+%shadow.standard..MethodTable._methods = type opaque
 %shadow.standard..MethodTable = type opaque
-%shadow.standard..Array_methods = type opaque
-%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
-%shadow.standard..ArrayNullable_methods = type opaque
-%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %long }
+%shadow.standard..Array._methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array._methods* , %long }
+%shadow.standard..ArrayNullable._methods = type opaque
+%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable._methods* , %long }
 
-@shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
-@shadow.standard..Class_class = external constant %shadow.standard..Class
+@shadow.standard..Class._methods = external constant %shadow.standard..Class._methods
+@shadow.standard..Class.class = external constant %shadow.standard..Class
 
 %shadow.standard..Exception = type opaque
 %shadow.standard..IndexOutOfBoundsException = type opaque
-%shadow.standard..IndexOutOfBoundsException_methods = type opaque
+%shadow.standard..IndexOutOfBoundsException._methods = type opaque
 
-@shadow.standard..IndexOutOfBoundsException_class = external constant %shadow.standard..Class
-@shadow.standard..IndexOutOfBoundsException_methods = external constant %shadow.standard..IndexOutOfBoundsException_methods
+@shadow.standard..IndexOutOfBoundsException.class = external constant %shadow.standard..Class
+@shadow.standard..IndexOutOfBoundsException._methods = external constant %shadow.standard..IndexOutOfBoundsException._methods
 
 @shadow.standard..Object_class = external constant %shadow.standard..Class
 @shadow.standard..Array_class = external constant %shadow.standard..Class
-@shadow.standard..Array_methods = external constant %shadow.standard..Array_methods
+@shadow.standard..Array._methods = external constant %shadow.standard..Array._methods
 @shadow.standard..ArrayNullable_class = external constant %shadow.standard..Class
-@shadow.standard..ArrayNullable_methods = external constant %shadow.standard..ArrayNullable_methods
-@shadow.standard..MethodTable_class = external constant %shadow.standard..Class
+@shadow.standard..ArrayNullable._methods = external constant %shadow.standard..ArrayNullable._methods
+@shadow.standard..MethodTable.class = external constant %shadow.standard..Class
 
-declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)
+declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object._methods* %methods)
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %longElements, %boolean %nullable)
-declare %shadow.standard..Object* @shadow.standard..Object_Mcreate(%shadow.standard..Object*)
-declare void @shadow.standard..Object_Mdestroy(%shadow.standard..Object*)
-declare %shadow.standard..MethodTable* @shadow.standard..Class_MinterfaceData_shadow.standard..Class(%shadow.standard..Class* %class, %shadow.standard..Class* %interface)
+declare %shadow.standard..Object* @shadow.standard..Object..create(%shadow.standard..Object*)
+declare void @shadow.standard..Object..destroy(%shadow.standard..Object*)
+declare %shadow.standard..MethodTable* @shadow.standard..Class..interfaceData_shadow.standard..Class(%shadow.standard..Class* %class, %shadow.standard..Class* %interface)
 
-declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate(%shadow.standard..Object*)
-declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate_long(%shadow.standard..Object*, %long)
+declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException..create(%shadow.standard..Object*)
+declare %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException..create.long(%shadow.standard..Object*, %long)
 
 declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
-declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
-declare %shadow.standard..String* @shadow.standard..Class_MmakeName_shadow.standard..String_shadow.standard..Class_A(%shadow.standard..Class*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong })
+declare %int @shadow.standard..Class..width(%shadow.standard..Class*)
+declare %shadow.standard..String* @shadow.standard..Class..makeName_shadow.standard..String_shadow.standard..Class._A(%shadow.standard..Class*, %shadow.standard..String*, {{%ulong, %shadow.standard..Class*}*, %shadow.standard..Class*, %ulong })
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
 
 ; it's not really a long there at the end, but we need something big enough for all the possibilities
-%__primitive = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*, %long  }
+%__primitive = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object._methods*, %long  }
 
 ; aliases used by ArrayNullable
-@shadow.standard..ArrayNullable_Mcreate = alias %shadow.standard..Array* (%shadow.standard..Object*), %shadow.standard..Array* (%shadow.standard..Object*)* @shadow.standard..Array_Mcreate
-@shadow.standard..ArrayNullable_Mdestroy = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array_Mdestroy
-@shadow.standard..ArrayNullable_MisNullable = alias %boolean(%shadow.standard..Array*), %boolean(%shadow.standard..Array*)* @shadow.standard..Array_MisNullable
-@shadow.standard..ArrayNullable_Msubarray_long_long = alias %shadow.standard..Array* (%shadow.standard..Array*, %long, %long), %shadow.standard..Array* (%shadow.standard..Array*, %long, %long)* @shadow.standard..Array_Msubarray_long_long
-@shadow.standard..ArrayNullable_Mindex_long_TT = alias void (%shadow.standard..Array*, %long, %shadow.standard..Object*), void (%shadow.standard..Array*, %long, %shadow.standard..Object*)* @shadow.standard..Array_Mindex_long_TT
-@shadow.standard..ArrayNullable_Mindex_long = alias %shadow.standard..Object* (%shadow.standard..Array*, %long), %shadow.standard..Object* (%shadow.standard..Array*, %long)* @shadow.standard..Array_Mindex_long
+@shadow.standard..ArrayNullable..create = alias %shadow.standard..Array* (%shadow.standard..Object*), %shadow.standard..Array* (%shadow.standard..Object*)* @shadow.standard..Array..create
+@shadow.standard..ArrayNullable..destroy = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array..destroy
+@shadow.standard..ArrayNullable..isNullable = alias %boolean(%shadow.standard..Array*), %boolean(%shadow.standard..Array*)* @shadow.standard..Array..isNullable
+@shadow.standard..ArrayNullable..subarray.long.long = alias %shadow.standard..Array* (%shadow.standard..Array*, %long, %long), %shadow.standard..Array* (%shadow.standard..Array*, %long, %long)* @shadow.standard..Array..subarray.long.long
+@shadow.standard..ArrayNullable..index.long_T._T = alias void (%shadow.standard..Array*, %long, %shadow.standard..Object*), void (%shadow.standard..Array*, %long, %shadow.standard..Object*)* @shadow.standard..Array..index.long_T._T
+@shadow.standard..ArrayNullable..index.long = alias %shadow.standard..Object* (%shadow.standard..Array*, %long), %shadow.standard..Object* (%shadow.standard..Array*, %long)* @shadow.standard..Array..index.long
 
 ; alias used by C code
-@__destroyArray = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array_Mdestroy
+@__destroyArray = alias void (%shadow.standard..Array*), void (%shadow.standard..Array*)* @shadow.standard..Array..destroy
 
 declare void @__shadow_throw(%shadow.standard..Object*) noreturn
 
 ;%shadow.io..Console = type opaque
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*)
-;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
+;declare %shadow.io..Console* @shadow.io..Console..print_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;declare %shadow.io..Console* @shadow.io..Console..printLine_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console..printLine(%shadow.io..Console*)
+;declare %shadow.io..Console* @shadow.io..Console..debugPrint.int(%shadow.io..Console*, %int)
 
 ; Never expected to be called
-define %shadow.standard..Array* @shadow.standard..Array_Mcreate(%shadow.standard..Object* %object) {
+define %shadow.standard..Array* @shadow.standard..Array..create(%shadow.standard..Object* %object) {
 	%array = bitcast %shadow.standard..Object* %object to %shadow.standard..Array*
 	ret %shadow.standard..Array* %array
 }
 
-define void @shadow.standard..Array_Mdestroy(%shadow.standard..Array* %array) {	
+define void @shadow.standard..Array..destroy(%shadow.standard..Array* %array) {	
 	%sizeRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
 	%size = load %long, %long* %sizeRef
 	
@@ -104,7 +104,7 @@ define void @shadow.standard..Array_Mdestroy(%shadow.standard..Array* %array) {
 	%flag = load i32, i32* %flagRef
 	%primitiveFlag = and i32 %flag, 2	
 	%notPrimitive = icmp eq i32 %primitiveFlag, 0
-	%notMethodTable = icmp ne %shadow.standard..Class* %baseClass, @shadow.standard..MethodTable_class
+	%notMethodTable = icmp ne %shadow.standard..Class* %baseClass, @shadow.standard..MethodTable.class
 	%notZero = icmp sgt %long %size, 0
 	%notPrimitiveOrMethodTable = and i1 %notPrimitive, %notMethodTable	
 	%notPrimitiveOrMethodTableOrZero = and i1 %notPrimitiveOrMethodTable, %notZero
@@ -147,7 +147,7 @@ _exit:
 	ret void
 }
 
-; %shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
+; %shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
 
 define %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) nounwind alwaysinline {
 	%genericClass = bitcast %shadow.standard..Class* %class to %shadow.standard..GenericClass*
@@ -159,7 +159,7 @@ define %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) n
 	ret %shadow.standard..Class* %baseClass
 }
 
-define %shadow.standard..Object* @shadow.standard..Array_Mindex_long(%shadow.standard..Array* %array, %ulong %index ) {	
+define %shadow.standard..Object* @shadow.standard..Array..index.long(%shadow.standard..Array* %array, %ulong %index ) {	
 	%sizeRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
 	%size = load %long, %long* %sizeRef	
 	%inRange = icmp ult %long %index, %size
@@ -190,10 +190,10 @@ _checkInterface:
 	br i1 %notInterface, label %_object, label %_interface
 
 _interface:
-	%interfaceRefBase = bitcast %shadow.standard..Array* %arrayData to { %shadow.standard..Object_methods*, %shadow.standard..Object* }*
-	%interfaceRef = getelementptr { %shadow.standard..Object_methods*, %shadow.standard..Object* }, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %interfaceRefBase, %ulong %index
-	%interface = load { %shadow.standard..Object_methods*, %shadow.standard..Object* }, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %interfaceRef
-	%interfaceObject = extractvalue { %shadow.standard..Object_methods*, %shadow.standard..Object* } %interface, 1
+	%interfaceRefBase = bitcast %shadow.standard..Array* %arrayData to { %shadow.standard..Object._methods*, %shadow.standard..Object* }*
+	%interfaceRef = getelementptr { %shadow.standard..Object._methods*, %shadow.standard..Object* }, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %interfaceRefBase, %ulong %index
+	%interface = load { %shadow.standard..Object._methods*, %shadow.standard..Object* }, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %interfaceRef
+	%interfaceObject = extractvalue { %shadow.standard..Object._methods*, %shadow.standard..Object* } %interface, 1
 	
 	; increment ref by one (since all methods up their return value by 1)
 	call void @__incrementRef(%shadow.standard..Object* %interfaceObject) nounwind		
@@ -203,7 +203,7 @@ _object:
 	%objectRefBase = bitcast %shadow.standard..Array* %arrayData to %shadow.standard..Object**
 	%objectRef = getelementptr %shadow.standard..Object*, %shadow.standard..Object** %objectRefBase, %ulong %index
 	%object = load %shadow.standard..Object*, %shadow.standard..Object** %objectRef
-	%notMethodTable = icmp ne %shadow.standard..Class* %baseClass, @shadow.standard..MethodTable_class	
+	%notMethodTable = icmp ne %shadow.standard..Class* %baseClass, @shadow.standard..MethodTable.class	
 	; if primitive or method table elements, no elements to decrement
 	br i1 %notMethodTable, label %_increment, label %_returnObject		
 _increment:
@@ -221,16 +221,16 @@ _foundPrimitive:
 	%tableArrayRef = getelementptr %shadow.standard..GenericClass, %shadow.standard..GenericClass* %genericClass, i32 0, i32 10
 	%tableArray = load %shadow.standard..Array*, %shadow.standard..Array** %tableArrayRef
 	%dataRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %tableArray, i32 1
-	%methodTableRef = bitcast %shadow.standard..Array* %dataRef to %shadow.standard..Object_methods**
-	%methodTable = load %shadow.standard..Object_methods*, %shadow.standard..Object_methods** %methodTableRef	
-	%wrapper = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %baseClass, %shadow.standard..Object_methods* %methodTable)
+	%methodTableRef = bitcast %shadow.standard..Array* %dataRef to %shadow.standard..Object._methods**
+	%methodTable = load %shadow.standard..Object._methods*, %shadow.standard..Object._methods** %methodTableRef	
+	%wrapper = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %baseClass, %shadow.standard..Object._methods* %methodTable)
 	
 	; copy primitive value into new object
 	%wrapperAsPrimitive = bitcast %shadow.standard..Object* %wrapper to %__primitive*
 	%data = getelementptr inbounds %__primitive, %__primitive* %wrapperAsPrimitive, i32 0, i32 3
 	%dataAsBytes = bitcast %long* %data to i8*
 
-	%widthInt = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %baseClass)
+	%widthInt = call %int @shadow.standard..Class..width(%shadow.standard..Class* %baseClass)
 	%width = zext %uint %widthInt to %ulong
 	%offset = mul %ulong %index, %width
 		
@@ -241,15 +241,15 @@ _foundPrimitive:
 	ret %shadow.standard..Object* %wrapper
 	
 _throw:
-	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..IndexOutOfBoundsException_methods* @shadow.standard..IndexOutOfBoundsException_methods to %shadow.standard..Object_methods*))
-	%ex.ex = call %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate_long(%shadow.standard..Object* %ex.obj, %long %index)
+	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException.class, %shadow.standard..Object._methods* bitcast(%shadow.standard..IndexOutOfBoundsException._methods* @shadow.standard..IndexOutOfBoundsException._methods to %shadow.standard..Object._methods*))
+	%ex.ex = call %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException..create.long(%shadow.standard..Object* %ex.obj, %long %index)
 	call void @__shadow_throw(%shadow.standard..Object* %ex.obj) noreturn
 	unreachable	
 }
 
-; %shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long }
+; %shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array._methods*, %long }
 
-define void @shadow.standard..Array_Mindex_long_TT(%shadow.standard..Array* %array, %ulong %index, %shadow.standard..Object* %object) {	
+define void @shadow.standard..Array..index.long_T._T(%shadow.standard..Array* %array, %ulong %index, %shadow.standard..Object* %object) {	
 	%sizeRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
 	%size = load %long, %long* %sizeRef
 	%inRange = icmp ult %long %index, %size
@@ -281,25 +281,25 @@ _checkInterface:
 	br i1 %notInterface, label %_object, label %_interface
 
 _interface:
-	%interfaceRefBase = bitcast %shadow.standard..Array* %arrayData to { %shadow.standard..Object_methods*, %shadow.standard..Object* }*
-	%interfaceRef = getelementptr { %shadow.standard..Object_methods*, %shadow.standard..Object* }, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %interfaceRefBase, %ulong %index
-	%oldInterace = load { %shadow.standard..Object_methods*, %shadow.standard..Object* }, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %interfaceRef
-	%oldInterfaceObject = extractvalue { %shadow.standard..Object_methods*, %shadow.standard..Object* } %oldInterace, 1
+	%interfaceRefBase = bitcast %shadow.standard..Array* %arrayData to { %shadow.standard..Object._methods*, %shadow.standard..Object* }*
+	%interfaceRef = getelementptr { %shadow.standard..Object._methods*, %shadow.standard..Object* }, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %interfaceRefBase, %ulong %index
+	%oldInterace = load { %shadow.standard..Object._methods*, %shadow.standard..Object* }, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %interfaceRef
+	%oldInterfaceObject = extractvalue { %shadow.standard..Object._methods*, %shadow.standard..Object* } %oldInterace, 1
 	call void @__decrementRef(%shadow.standard..Object* %oldInterfaceObject) nounwind
 
 	%null = icmp eq %shadow.standard..Object* %object, null
 	br i1 %null, label %_null, label %_notNull
 _null:
-	store { %shadow.standard..Object_methods*, %shadow.standard..Object* } zeroinitializer, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %interfaceRef
+	store { %shadow.standard..Object._methods*, %shadow.standard..Object* } zeroinitializer, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %interfaceRef
 	ret void
 _notNull:
 	%objectClassRef = getelementptr %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 1
 	%objectClass = load %shadow.standard..Class*, %shadow.standard..Class** %objectClassRef
-	%methodTable = call %shadow.standard..MethodTable* @shadow.standard..Class_MinterfaceData_shadow.standard..Class(%shadow.standard..Class* %objectClass, %shadow.standard..Class* %baseClass)
-	%methods = bitcast %shadow.standard..MethodTable* %methodTable to %shadow.standard..Object_methods*
-	%interface1 = insertvalue { %shadow.standard..Object_methods*, %shadow.standard..Object* } zeroinitializer, %shadow.standard..Object_methods* %methods, 0
-	%interface2 = insertvalue { %shadow.standard..Object_methods*, %shadow.standard..Object* } %interface1, %shadow.standard..Object* %object, 1
-	store { %shadow.standard..Object_methods*, %shadow.standard..Object* } %interface2, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %interfaceRef
+	%methodTable = call %shadow.standard..MethodTable* @shadow.standard..Class..interfaceData_shadow.standard..Class(%shadow.standard..Class* %objectClass, %shadow.standard..Class* %baseClass)
+	%methods = bitcast %shadow.standard..MethodTable* %methodTable to %shadow.standard..Object._methods*
+	%interface1 = insertvalue { %shadow.standard..Object._methods*, %shadow.standard..Object* } zeroinitializer, %shadow.standard..Object._methods* %methods, 0
+	%interface2 = insertvalue { %shadow.standard..Object._methods*, %shadow.standard..Object* } %interface1, %shadow.standard..Object* %object, 1
+	store { %shadow.standard..Object._methods*, %shadow.standard..Object* } %interface2, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %interfaceRef
 	ret void
 
 _object:
@@ -311,7 +311,7 @@ _object:
 	ret void
 
 _primitive:
-	%widthInt = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %baseClass)
+	%widthInt = call %int @shadow.standard..Class..width(%shadow.standard..Class* %baseClass)
 	%width = zext %int %widthInt to %ulong
 	%offset = mul %ulong %index, %width
 	%arrayAsBytes = bitcast %shadow.standard..Array* %arrayData to i8*
@@ -323,13 +323,13 @@ _primitive:
 	ret void
 
 _throw:
-	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..IndexOutOfBoundsException_methods* @shadow.standard..IndexOutOfBoundsException_methods to %shadow.standard..Object_methods*))
-	%ex.ex = call %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate_long(%shadow.standard..Object* %ex.obj, %long %index)
+	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException.class, %shadow.standard..Object._methods* bitcast(%shadow.standard..IndexOutOfBoundsException._methods* @shadow.standard..IndexOutOfBoundsException._methods to %shadow.standard..Object._methods*))
+	%ex.ex = call %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException..create.long(%shadow.standard..Object* %ex.obj, %long %index)
 	call void @__shadow_throw(%shadow.standard..Object* %ex.obj) noreturn
 	unreachable	
 }
 
-define noalias %shadow.standard..Array* @shadow.standard..Array_Msubarray_long_long(%shadow.standard..Array* %array, %long %first, %long %second) {
+define noalias %shadow.standard..Array* @shadow.standard..Array..subarray.long.long(%shadow.standard..Array* %array, %long %first, %long %second) {
 	; check sizes first
 	%sizeRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 3
 	%size = load %long, %long* %sizeRef
@@ -345,7 +345,7 @@ _firstLessThanSecond:
 
 	; get difference between indexes
 	%difference = sub %long %second, %first
-	%isNull = call %boolean @shadow.standard..Array_MisNullable(%shadow.standard..Array* %array)
+	%isNull = call %boolean @shadow.standard..Array..isNullable(%shadow.standard..Array* %array)
 	
 	; allocate new array
 	%newArray = call noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..Class* %class, %ulong %difference, %boolean %isNull )
@@ -360,7 +360,7 @@ _firstLessThanSecond:
 	
 	; get element width
 	%baseClass =  call %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) nounwind
-	%widthInt = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %baseClass)
+	%widthInt = call %int @shadow.standard..Class..width(%shadow.standard..Class* %baseClass)
 	%width = zext %int %widthInt to %ulong
 
 	; multiply starting point by width
@@ -378,7 +378,7 @@ _firstLessThanSecond:
 	
 	; if not primitive or method table, increment array elements
 	%notPrimitive = icmp eq i32 %primitiveFlag, 0
-	%notMethodTable = icmp ne %shadow.standard..Class* %baseClass, @shadow.standard..MethodTable_class
+	%notMethodTable = icmp ne %shadow.standard..Class* %baseClass, @shadow.standard..MethodTable.class
 	%notPrimitiveOrMethodTable = and i1 %notPrimitive, %notMethodTable	
 	br i1 %notPrimitiveOrMethodTable, label %_incrementArray, label %_done
 	
@@ -389,16 +389,16 @@ _incrementArray:
 
 	; array of interfaces
 _loopStartInterface:
-	%newArrayAsInterface = bitcast i8* %newArrayAsChar to { %shadow.standard..Object_methods*, %shadow.standard..Object* }*
+	%newArrayAsInterface = bitcast i8* %newArrayAsChar to { %shadow.standard..Object._methods*, %shadow.standard..Object* }*
 	br label %_loopTestInterface
 _loopTestInterface:
 	%i1 = phi %ulong [ 0, %_loopStartInterface ], [%incremented1, %_loopBodyInterface]
 	%less1 = icmp ult %ulong %i1, %difference
 	br i1 %less1, label %_loopBodyInterface, label %_done
 _loopBodyInterface:
-	%elementAsInterfaceRef = getelementptr { %shadow.standard..Object_methods*, %shadow.standard..Object* }, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %newArrayAsInterface, %ulong %i1
-	%elementAsInterface = load { %shadow.standard..Object_methods*, %shadow.standard..Object* }, { %shadow.standard..Object_methods*, %shadow.standard..Object* }* %elementAsInterfaceRef
-	%elementAsInterfaceObj = extractvalue { %shadow.standard..Object_methods*, %shadow.standard..Object* } %elementAsInterface, 1
+	%elementAsInterfaceRef = getelementptr { %shadow.standard..Object._methods*, %shadow.standard..Object* }, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %newArrayAsInterface, %ulong %i1
+	%elementAsInterface = load { %shadow.standard..Object._methods*, %shadow.standard..Object* }, { %shadow.standard..Object._methods*, %shadow.standard..Object* }* %elementAsInterfaceRef
+	%elementAsInterfaceObj = extractvalue { %shadow.standard..Object._methods*, %shadow.standard..Object* } %elementAsInterface, 1
 	call void @__incrementRef(%shadow.standard..Object* %elementAsInterfaceObj) nounwind
 	%incremented1 = add %ulong %i1, 1
 	br label %_loopTestInterface
@@ -421,17 +421,17 @@ _loopBodyObj:
 _done:
 	ret %shadow.standard..Array* %newArray
 _throw:
-	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException_class, %shadow.standard..Object_methods* bitcast(%shadow.standard..IndexOutOfBoundsException_methods* @shadow.standard..IndexOutOfBoundsException_methods to %shadow.standard..Object_methods*))
-	%ex.ex = call %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException_Mcreate(%shadow.standard..Object* %ex.obj)
+	%ex.obj = call %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.standard..IndexOutOfBoundsException.class, %shadow.standard..Object._methods* bitcast(%shadow.standard..IndexOutOfBoundsException._methods* @shadow.standard..IndexOutOfBoundsException._methods to %shadow.standard..Object._methods*))
+	%ex.ex = call %shadow.standard..IndexOutOfBoundsException* @shadow.standard..IndexOutOfBoundsException..create(%shadow.standard..Object* %ex.obj)
 	call void @__shadow_throw(%shadow.standard..Object* %ex.obj) noreturn
 	unreachable
 }
 
-define %boolean @shadow.standard..Array_MisNullable(%shadow.standard..Array* %array) alwaysinline nounwind {
+define %boolean @shadow.standard..Array..isNullable(%shadow.standard..Array* %array) alwaysinline nounwind {
 	%methodsRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 2
-	%methods = load %shadow.standard..Array_methods*, %shadow.standard..Array_methods** %methodsRef
-	; methods will be @shadow.standard..ArrayNullable_methods if nullable
-	%isNull = icmp ne %shadow.standard..Array_methods* %methods, @shadow.standard..Array_methods
+	%methods = load %shadow.standard..Array._methods*, %shadow.standard..Array._methods** %methodsRef
+	; methods will be @shadow.standard..ArrayNullable._methods if nullable
+	%isNull = icmp ne %shadow.standard..Array._methods* %methods, @shadow.standard..Array._methods
 	ret %boolean %isNull
 }
 

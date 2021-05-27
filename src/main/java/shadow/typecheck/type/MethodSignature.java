@@ -185,7 +185,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
     sb.append(getParameterTypes().get(0).getType().toString(Type.MANGLE));
     else sb.append(getOuter().toString(Type.MANGLE));
 
-    sb.append("_M")
+    sb.append("..")
         .append(Type.mangle(symbol))
         .append(
             type.getTypeWithoutTypeArguments()
@@ -195,7 +195,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
                         | (isImportMethod() ? Type.MANGLE_IMPORT_METHOD : 0)));
 
     if (isWrapper())
-      sb.append("_W_").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
+      sb.append("._W").append(getOuter().toString(Type.MANGLE | Type.TYPE_PARAMETERS));
 
     return sb.toString();
   }

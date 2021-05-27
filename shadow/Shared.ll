@@ -30,13 +30,13 @@
 %shadow.natives..Pointer = type opaque
 
 ; Array
-%shadow.standard..Array_methods = type opaque
-%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
+%shadow.standard..Array._methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array._methods* , %long }
 
 
 ; String
-%shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , %shadow.standard..Array*, %boolean }
+%shadow.standard..String._methods = type opaque
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String._methods* , %shadow.standard..Array*, %boolean }
 
 ;---------------------------
 ; Custom Method Definitions

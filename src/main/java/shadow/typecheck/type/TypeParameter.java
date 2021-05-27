@@ -117,9 +117,9 @@ public class TypeParameter extends Type {
     StringBuilder builder = new StringBuilder();
 
     if ((options & MANGLE) != 0) {
-      builder.append("T").append(mangle(getTypeName()));
-      // T is added in cases someone used A as a type parameter
-      // A is used in mangling to mark arrays
+      builder.append(mangle(getTypeName())).append("._T");
+      // ._T is added in cases someone used A as a type parameter
+      // ._A is used in mangling to mark arrays
     } else {
       builder.append(getTypeName());
       if ((options & PARAMETER_BOUNDS) != 0) {

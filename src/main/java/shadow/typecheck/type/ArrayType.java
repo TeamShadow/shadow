@@ -67,8 +67,8 @@ public class ArrayType extends ClassType {
     if ((options & MANGLE) != 0) {
       String baseName =
           baseType.isPrimitive() ? baseType.getTypeName() : baseType.toString(options);
-      if (nullable) return baseName + "_NA";
-      else return baseName + "_A";
+      if (nullable) return baseName + "._NA";
+      else return baseName + "._A";
     }
 
     boolean printNullable =

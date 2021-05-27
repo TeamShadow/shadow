@@ -249,8 +249,6 @@ public class TypeCollector extends ScopedChecker {
     Set<String> mustCompile = new HashSet<>();
     Map<String, TreeSet<String>> dependencies = new HashMap<>();
 
-    // clear();
-
     // Initial type collection
     collectTypes(files, hasMain, activeFiles, mustCompile, dependencies);
 

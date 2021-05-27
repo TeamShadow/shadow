@@ -36,7 +36,7 @@
 ; Shadow Method Definitions
 ;---------------------------
 ; get currentThread() => (Thread);
-define %shadow.standard..Thread* @shadow.standard..CurrentThread_McurrentThread(%shadow.standard..CurrentThread*) {
+define %shadow.standard..Thread* @shadow.standard..CurrentThread..currentThread(%shadow.standard..CurrentThread*) {
 entry:
 	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
 	ret %shadow.standard..Thread* %currentThread

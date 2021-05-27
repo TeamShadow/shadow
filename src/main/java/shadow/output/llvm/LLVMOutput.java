@@ -106,7 +106,7 @@ public class LLVMOutput extends AbstractOutput {
                 methodTable(type) + " = external constant " + methodTableType(type, false));
           if (type instanceof SingletonType) // never parameterized
           writer.write(
-                '@' + raw(type, "_instance") + " = external thread_local global " + type(type));
+                '@' + raw(type, ".singleton") + " = external thread_local global " + type(type));
         }
       }
 
@@ -203,7 +203,7 @@ public class LLVMOutput extends AbstractOutput {
       ClassType classType = (ClassType) moduleType;
       writer.write("; 0: reference count (ulong)");
       writer.write("; 1: class (Class)");
-      writer.write("; 2: _methods");
+      writer.write("; 2: ._methods");
       int counter = 3;
       for (Entry<String, ? extends ModifiedType> field : (classType).orderAllFields()) {
 
@@ -475,7 +475,7 @@ public class LLVMOutput extends AbstractOutput {
     if (moduleType instanceof SingletonType)
       writer.write(
           '@'
-              + raw(moduleType, "_instance")
+              + raw(moduleType, ".singleton")
               + " = thread_local global "
               + type(moduleType)
               + " null");
@@ -631,7 +631,7 @@ public class LLVMOutput extends AbstractOutput {
 
     // allocation
     writer.write(
-        "declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods)");
+        "declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object._methods* %methods)");
     writer.write(
         "declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* %class, %ulong %longElements, %boolean %nullable)");
 
@@ -1253,7 +1253,7 @@ public class LLVMOutput extends AbstractOutput {
     TACOperand methods = node.getMethodTable();
 
     // this is pretty ugly, but if we retrieved a generic type parameter's method table, it'll be
-    // stored as MethodTable*, not an Object_methods*
+    // stored as MethodTable*, not an Object._methods*
     if (type instanceof TypeParameter) {
       TypeParameter parameter = (TypeParameter) type;
       writer.write(
@@ -1264,7 +1264,7 @@ public class LLVMOutput extends AbstractOutput {
               + symbol(methods)
               + " to "
               + methodTableType(parameter.getClassBound()));
-      // any other method table will be of the correct type but needs cast to Object_methods* for
+      // any other method table will be of the correct type but needs cast to Object._methods* for
       // compatibility with allocate()
     } else
       writer.write(
@@ -1721,7 +1721,7 @@ public class LLVMOutput extends AbstractOutput {
               + " = load "
               + type(singleton)
               + ", "
-              + typeText(singleton, '@' + raw(singleton.getType(), "_instance"), true));
+              + typeText(singleton, '@' + raw(singleton.getType(), ".singleton"), true));
 
     } else if (reference instanceof TACArrayRef) {
       TACArrayRef arrayRef = (TACArrayRef) reference; // has type of result
@@ -1801,7 +1801,7 @@ public class LLVMOutput extends AbstractOutput {
           "store "
               + typeSymbol(node.getValue())
               + ", "
-              + typeText(singleton, '@' + raw(singleton.getType(), "_instance"), true));
+              + typeText(singleton, '@' + raw(singleton.getType(), ".singleton"), true));
     } else if (reference instanceof TACArrayRef) {
       TACArrayRef arrayRef = (TACArrayRef) reference; // has type of result
       ArrayType arrayType = (ArrayType) arrayRef.getArray().getType();
@@ -2289,20 +2289,20 @@ public class LLVMOutput extends AbstractOutput {
   }
 
   public static String classOf(Type type) {
-    if (type.isPrimitive()) return '@' + type.getTypeName() + "_class";
-    else if (type.isFullyInstantiated()) return '@' + withGenerics(type, "_class");
-    else return '@' + raw(type, "_class");
+    if (type.isPrimitive()) return '@' + type.getTypeName() + ".class";
+    else if (type.isFullyInstantiated()) return '@' + withGenerics(type, ".class");
+    else return '@' + raw(type, ".class");
   }
 
   public static String methodTable(Type type) {
     if (type instanceof InterfaceType && type.isFullyInstantiated())
-      return "@" + withGenerics(type, "_methods");
+      return "@" + withGenerics(type, "._methods");
     else if (type instanceof ArrayType) {
       ArrayType arrayType = (ArrayType) type;
       if (arrayType.isNullable()) return methodTable(Type.ARRAY_NULLABLE);
       else return methodTable(Type.ARRAY);
     }
-    return "@" + raw(type, "_methods");
+    return "@" + raw(type, "._methods");
   }
 
   private static String methodTableType(Type type) {
@@ -2316,7 +2316,7 @@ public class LLVMOutput extends AbstractOutput {
       else return methodTableType(Type.ARRAY, reference);
     }
 
-    return "%" + raw(type, reference ? "_methods*" : "_methods");
+    return "%" + raw(type, reference ? "._methods*" : "._methods");
   }
 
   private static String methodType(TACMethodName method) {
@@ -2659,7 +2659,7 @@ public class LLVMOutput extends AbstractOutput {
 
     // This comdat stuff is supposed to allow generic classes to be defined in multiple files and
     // merged at link time
-    writer.write("$" + withGenerics(generic, "_class") + " = comdat any");
+    writer.write("$" + withGenerics(generic, ".class") + " = comdat any");
 
     Type genericAsObject;
 

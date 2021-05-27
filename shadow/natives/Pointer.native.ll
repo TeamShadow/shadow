@@ -28,13 +28,13 @@
 %shadow.standard..Class = type opaque
 
 ; Pointer
-%shadow.natives..Pointer_methods = type opaque
-%shadow.natives..Pointer = type { %ulong, %shadow.standard..Class*, %shadow.natives..Pointer_methods* , %long, %boolean }
+%shadow.natives..Pointer._methods = type opaque
+%shadow.natives..Pointer = type { %ulong, %shadow.standard..Class*, %shadow.natives..Pointer._methods* , %long, %boolean }
 
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
-define void @shadow.natives..Pointer_MinvalidateAddress(%shadow.natives..Pointer*)
+define void @shadow.natives..Pointer..invalidateAddress(%shadow.natives..Pointer*)
 {
 entry:
 	%ptr = getelementptr inbounds %shadow.natives..Pointer, %shadow.natives..Pointer* %0, i32 0, i32 3

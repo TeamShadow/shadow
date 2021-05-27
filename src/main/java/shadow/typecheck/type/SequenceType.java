@@ -10,6 +10,7 @@ import shadow.typecheck.TypeCheckException.Error;
 
 import java.util.*;
 
+@SuppressWarnings("NullableProblems")
 public class SequenceType extends Type implements Iterable<ModifiedType>, List<ModifiedType> {
   private final List<ModifiedType> types;
   /** List of return types */
@@ -120,15 +121,21 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 
     for (; i < types.size(); ++i) {
       ModifiedType modifiedType = types.get(i);
-      if ((options & MANGLE) != 0) builder.append("_");
-      else if (first) first = false;
-      else builder.append(",");
-
       Type type = modifiedType.getType();
       Modifiers modifiers = modifiedType.getModifiers();
 
       if ((options & MANGLE) != 0) {
-        // raw primitive types
+        // Raw primitive types get a . before them, to avoid collisions
+        Type baseType = type;
+        if (type instanceof ArrayType)
+          baseType = ((ArrayType)type).recursivelyGetBaseType();
+        if (baseType.isPrimitive() && !modifiers.isNullable()) builder.append(".");
+        else builder.append("_");
+      } else if (first) first = false;
+      else builder.append(",");
+
+      if ((options & MANGLE) != 0) {
+        // Raw primitive types
         if (type.isPrimitive() && !modifiers.isNullable()) builder.append(type.getTypeName());
         else builder.append(type.toString(options));
       } else if (type != null) {

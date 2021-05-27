@@ -28,13 +28,13 @@
 ; Method Declarations
 ;---------------------
 ; add(int a, int b) => (int);
-declare %int @shadow.test..ImportExportNativeTest_Madd_int_int(%shadow.test..ImportExportNativeTest*, %int, %int)
+declare %int @shadow.test..ImportExportNativeTest..add.int.int(%shadow.test..ImportExportNativeTest*, %int, %int)
 
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
-define %int @shadow.test..ImportExportNativeTest_Msubtract_int_int(%shadow.test..ImportExportNativeTest*, %int, %int) {
+define %int @shadow.test..ImportExportNativeTest..subtract.int.int(%shadow.test..ImportExportNativeTest*, %int, %int) {
     %neg = sub %int 0, %2
-    %return = call %int @shadow.test..ImportExportNativeTest_Madd_int_int(%shadow.test..ImportExportNativeTest* %0, %int %1, %int %neg)
+    %return = call %int @shadow.test..ImportExportNativeTest..add.int.int(%shadow.test..ImportExportNativeTest* %0, %int %1, %int %neg)
     ret %int %return
 }

@@ -14,48 +14,47 @@
 %double = type double
 
 ; standard definitions
-%shadow.standard..Object_methods = type opaque
-%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object_methods*  }
-%shadow.standard..Class_methods = type opaque
-%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
-%shadow.standard..GenericClass_methods = type opaque
-%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass_methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
-%shadow.standard..Iterator_methods = type opaque
-%shadow.standard..String_methods = type opaque
-%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String_methods* , %shadow.standard..Array*, %boolean }
-%shadow.standard..AddressMap_methods = type opaque
+%shadow.standard..Object._methods = type opaque
+%shadow.standard..Object = type { %ulong, %shadow.standard..Class*, %shadow.standard..Object._methods*  }
+%shadow.standard..Class._methods = type opaque
+%shadow.standard..Class = type { %ulong, %shadow.standard..Class*, %shadow.standard..Class._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int }
+%shadow.standard..GenericClass._methods = type opaque
+%shadow.standard..GenericClass = type { %ulong, %shadow.standard..Class*, %shadow.standard..GenericClass._methods* , %shadow.standard..Array*, %shadow.standard..Array*, %shadow.standard..String*, %shadow.standard..Class*, %int, %int, %shadow.standard..Array*, %shadow.standard..Array* }
+%shadow.standard..Iterator._methods = type opaque
+%shadow.standard..String._methods = type opaque
+%shadow.standard..String = type { %ulong, %shadow.standard..Class*, %shadow.standard..String._methods* , %shadow.standard..Array*, %boolean }
+%shadow.standard..AddressMap._methods = type opaque
 %shadow.standard..AddressMap = type opaque
-%shadow.standard..MethodTable_methods = type opaque
+%shadow.standard..MethodTable._methods = type opaque
 %shadow.standard..MethodTable = type opaque
-%shadow.standard..Array_methods = type opaque
-%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array_methods* , %long }
-%shadow.standard..ArrayNullable_methods = type opaque
-%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable_methods* , %long }
+%shadow.standard..Array._methods = type opaque
+%shadow.standard..Array = type { %ulong, %shadow.standard..Class*, %shadow.standard..Array._methods* , %long }
+%shadow.standard..ArrayNullable._methods = type opaque
+%shadow.standard..ArrayNullable = type { %ulong, %shadow.standard..Class*, %shadow.standard..ArrayNullable._methods* , %long }
 
-%shadow.standard..Exception_methods = type opaque
-%shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception_methods* , %shadow.standard..String* }
-%shadow.standard..OutOfMemoryException_methods = type opaque
-%shadow.standard..OutOfMemoryException = type { %ulong, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException_methods* , %shadow.standard..String* }
+%shadow.standard..Exception._methods = type opaque
+%shadow.standard..Exception = type { %ulong, %shadow.standard..Class*, %shadow.standard..Exception._methods* , %shadow.standard..String* }
+%shadow.standard..OutOfMemoryException._methods = type opaque
+%shadow.standard..OutOfMemoryException = type { %ulong, %shadow.standard..Class*, %shadow.standard..OutOfMemoryException._methods* , %shadow.standard..String* }
 
-@shadow.standard..Class_methods = external constant %shadow.standard..Class_methods
-@shadow.standard..Class_class = external constant %shadow.standard..Class
-@shadow.standard..String_methods = external constant %shadow.standard..String_methods
-@shadow.standard..String_class = external constant %shadow.standard..Class
-@ubyte_A_class = external constant %shadow.standard..Class
+@shadow.standard..Class._methods = external constant %shadow.standard..Class._methods
+@shadow.standard..Class.class = external constant %shadow.standard..Class
+@shadow.standard..String._methods = external constant %shadow.standard..String._methods
+@shadow.standard..String.class = external constant %shadow.standard..Class
+@shadow.standard..Exception._methods = external constant %shadow.standard..Exception._methods
+@shadow.standard..Exception.class = external constant %shadow.standard..Class
+@shadow.standard..OutOfMemoryException.class = external constant %shadow.standard..Class
+@shadow.standard..OutOfMemoryException._methods = external constant %shadow.standard..OutOfMemoryException._methods
+@ubyte._A.class = external constant %shadow.standard..Class ; Actually GenericClass, but this keeps LLVM happy
 
-@shadow.standard..Array_methods = external constant %shadow.standard..Array_methods
-@shadow.standard..ArrayNullable_methods = external constant %shadow.standard..Array_methods
+@shadow.standard..Array._methods = external constant %shadow.standard..Array._methods
+; ArrayNullable methods aren't the same as regular Array methods, but it keeps LLVM happy to pretend that they are
+@shadow.standard..ArrayNullable._methods = external constant %shadow.standard..Array._methods
 
-@shadow.standard..Exception_methods = external constant %shadow.standard..Exception_methods
-@shadow.standard..Exception_class = external constant %shadow.standard..Class
-@shadow.standard..OutOfMemoryException_class = external constant %shadow.standard..Class
-@shadow.standard..OutOfMemoryException_methods = external constant %shadow.standard..OutOfMemoryException_methods
+declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryException..create(%shadow.standard..Object*)
+declare %int @shadow.standard..Class..width(%shadow.standard..Class*)
 
-
-declare %shadow.standard..OutOfMemoryException* @shadow.standard..OutOfMemoryException_Mcreate(%shadow.standard..Object*)
-declare %int @shadow.standard..Class_Mwidth(%shadow.standard..Class*)
-
-declare i1 @shadow.standard..Class_MisSubtype_shadow.standard..Class(%shadow.standard..Class*, %shadow.standard..Class*)
+declare i1 @shadow.standard..Class..isSubtype_shadow.standard..Class(%shadow.standard..Class*, %shadow.standard..Class*)
 
 declare %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %class) nounwind alwaysinline
 
@@ -113,10 +112,10 @@ declare void @abort() noreturn nounwind
 declare void @exit(i32) noreturn nounwind
 
 ;%shadow.io..Console = type opaque
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
-;declare %shadow.io..Console* @shadow.io..Console_MprintLine(%shadow.io..Console*) 
-;declare %shadow.io..Console* @shadow.io..Console_MdebugPrint_int(%shadow.io..Console*, %int)
-;declare %shadow.io..Console* @shadow.io..Console_Mprint_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
+;declare %shadow.io..Console* @shadow.io..Console..print_shadow.standard..String(%shadow.io..Console*, %shadow.standard..String*)
+;declare %shadow.io..Console* @shadow.io..Console..printLine(%shadow.io..Console*) 
+;declare %shadow.io..Console* @shadow.io..Console..debugPrint.int(%shadow.io..Console*, %int)
+;declare %shadow.io..Console* @shadow.io..Console..print_shadow.standard..Object(%shadow.io..Console*, %shadow.standard..Object*)
 
 
 @shadow.exception.class = private unnamed_addr constant [8 x i8] c"Shadow\00\00", align 8
@@ -479,7 +478,7 @@ find.catch.check:
 	%p.15 = call i8* @read_encoded_value_with_base(i8 %ttype.encoding, %_Unwind_Ptr %ttype_base, i8* %catch.type.pointer, %_Unwind_Ptr* %temp) nounwind
 	%catch.class.pointer = load %_Unwind_Ptr, %_Unwind_Ptr* %temp, align 4
 	%catch.class = bitcast %_Unwind_Ptr %catch.class.pointer to %shadow.standard..Class*
-	%thrown.is_subtype = call i1 @shadow.standard..Class_MisSubtype_shadow.standard..Class(%shadow.standard..Class* %thrown.class, %shadow.standard..Class* %catch.class)
+	%thrown.is_subtype = call i1 @shadow.standard..Class..isSubtype_shadow.standard..Class(%shadow.standard..Class* %thrown.class, %shadow.standard..Class* %catch.class)
 	br i1 %thrown.is_subtype, label %found.catch, label %find.catch.next
 find.catch.next:
 	%p.16 = call i8* @read_sleb128(i8* %p.14, %_Unwind_Sword* %temp.sword) nounwind
@@ -522,7 +521,7 @@ entry:
 	tail call void @abort() noreturn nounwind unreachable
 }
 
-define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object_methods* %methods) {	
+define noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object._methods* %methods) {	
 	%sizeRef = getelementptr inbounds %shadow.standard..Class, %shadow.standard..Class* %class, i32 0, i32 8
 	%size = load %uint, %uint* %sizeRef		
 	%memory = call noalias i8* @calloc(%uint 1, %uint %size) nounwind
@@ -540,14 +539,14 @@ _success:
 	%object.class = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 1
     store %shadow.standard..Class* %class, %shadow.standard..Class** %object.class
     %object.methods = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 2
-    store %shadow.standard..Object_methods* %methods, %shadow.standard..Object_methods** %object.methods
+    store %shadow.standard..Object._methods* %methods, %shadow.standard..Object._methods** %object.methods
 	
 	ret %shadow.standard..Object* %object
 }
 define noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* %class, %ulong %longElements, %boolean %nullable) {	
 	%classAsClass =  bitcast %shadow.standard..GenericClass* %class to %shadow.standard..Class*
 	%baseClass =  call %shadow.standard..Class* @getBaseClass(%shadow.standard..Class* %classAsClass)
-	%perObject = call %int @shadow.standard..Class_Mwidth(%shadow.standard..Class* %baseClass)		
+	%perObject = call %int @shadow.standard..Class..width(%shadow.standard..Class* %baseClass)		
 	%elements = trunc %ulong %longElements to %uint
 	%size = mul %int %perObject, %elements
 	
@@ -582,14 +581,14 @@ _success:
 _isNullable:
 	; store methods
 	%nullableMethodRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 2
-	store %shadow.standard..Array_methods* @shadow.standard..ArrayNullable_methods,  %shadow.standard..Array_methods** %nullableMethodRef
+	store %shadow.standard..Array._methods* @shadow.standard..ArrayNullable._methods,  %shadow.standard..Array._methods** %nullableMethodRef
 	
 	ret %shadow.standard..Array* %array
 	
 _notNullable:
 	; store methods
 	%methodRef = getelementptr %shadow.standard..Array, %shadow.standard..Array* %array, i32 0, i32 2
-	store %shadow.standard..Array_methods* @shadow.standard..Array_methods,  %shadow.standard..Array_methods** %methodRef
+	store %shadow.standard..Array._methods* @shadow.standard..Array._methods,  %shadow.standard..Array._methods** %methodRef
 		
 	ret %shadow.standard..Array* %array
 }
@@ -605,6 +604,6 @@ entry:
 }
 
 
-@_array0 = private unnamed_addr constant {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %ubyte]} {%ulong -1, %shadow.standard..Class* @ubyte_A_class, %shadow.standard..Array_methods* @shadow.standard..Array_methods, %long 20, [20 x %ubyte] c"Heap space exhausted"}
-@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String_class, %shadow.standard..String_methods* @shadow.standard..String_methods, %shadow.standard..Array* bitcast ( {%ulong, %shadow.standard..Class*, %shadow.standard..Array_methods*, %long, [20 x %ubyte]}* @_array0 to %shadow.standard..Array*), %boolean true }
-@_OutOfMemoryException = private constant %shadow.standard..OutOfMemoryException { %ulong -1, %shadow.standard..Class* @shadow.standard..OutOfMemoryException_class, %shadow.standard..OutOfMemoryException_methods* @shadow.standard..OutOfMemoryException_methods, %shadow.standard..String* @_string0 }
+@_array0 = private unnamed_addr constant {%ulong, %shadow.standard..Class*, %shadow.standard..Array._methods*, %long, [20 x %ubyte]} {%ulong -1, %shadow.standard..Class* @ubyte._A.class, %shadow.standard..Array._methods* @shadow.standard..Array._methods, %long 20, [20 x %ubyte] c"Heap space exhausted"}
+@_string0 = private unnamed_addr constant %shadow.standard..String { %ulong -1, %shadow.standard..Class* @shadow.standard..String.class, %shadow.standard..String._methods* @shadow.standard..String._methods, %shadow.standard..Array* bitcast ( {%ulong, %shadow.standard..Class*, %shadow.standard..Array._methods*, %long, [20 x %ubyte]}* @_array0 to %shadow.standard..Array*), %boolean true }
+@_OutOfMemoryException = private constant %shadow.standard..OutOfMemoryException { %ulong -1, %shadow.standard..Class* @shadow.standard..OutOfMemoryException.class, %shadow.standard..OutOfMemoryException._methods* @shadow.standard..OutOfMemoryException._methods, %shadow.standard..String* @_string0 }
