@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +61,7 @@ public class Configuration {
   }
 
   public static final String DEFAULT_CONFIG_NAME = "shadow.json";
+  public static final String SHADOW_HOME = "SHADOW_HOME";
 
   private static Configuration globalConfig;
 
@@ -178,11 +180,7 @@ public class Configuration {
     // Attempt to locate hierarchy of config files
     Path configFile = locateConfig(mainFilePath, configFilePath);
 
-    Configuration configuration;
-
-    // If a config file was located, parse it
-    if (configFile != null) configuration = parse(configFile);
-    else configuration = new Configuration();
+    Configuration configuration = parse(configFile);
 
     configuration.inferSettings(); // Auto-fill any empty fields
     return configuration;
@@ -201,6 +199,7 @@ public class Configuration {
    * 2. A file in the source directory with the default name
    * 3. A file in the running directory with the default name
    * 4. A file in the working directory with the default name
+   * 5. A file in the SHADOW_HOME directory with the default name
    */
   private static Path locateConfig(String mainFilePath, String configFilePath)
       throws FileNotFoundException, ConfigurationException {
@@ -252,7 +251,8 @@ public class Configuration {
                 + configFile
                 + ". This should usually only be expected during testing");
         return runningDir.resolve(configFile);
-      } else {
+      }
+      else {
         throw new FileNotFoundException("Configuration file " + configFile + " does not exist");
       }
     }
@@ -267,9 +267,17 @@ public class Configuration {
     /// 4: Default config file, local to the working directory
     else if (Files.exists(workingDir.resolve(defaultFile))) {
       return workingDir.resolve(defaultFile);
-    } else {
-      return null;
     }
+    /// 5. A file in the SHADOW_HOME directory with the default name
+    Map<String, String> environment = System.getenv();
+    if (environment.containsKey(SHADOW_HOME)) {
+      Path homeDir = Paths.get(environment.get(SHADOW_HOME)).toAbsolutePath();
+      if (Files.exists(homeDir.resolve(defaultFile)))
+        return homeDir.resolve(defaultFile);
+    }
+
+    throw new FileNotFoundException("Configuration file does not exist");
+
   }
 
   /* Auto-detects values for unfilled fields */
