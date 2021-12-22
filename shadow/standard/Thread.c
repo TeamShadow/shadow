@@ -19,10 +19,10 @@ void* _shadowThread_ThreadStart(shadow_Thread_t*);
 
 // *to be implemented*
 /// The method called from Shadow to spawn a new thread
-shadow_Pointer_t* __ShadowThread_Spawn(shadow_Thread_t*);
+shadow_Pointer_t* __shadowThread_spawn(shadow_Thread_t*);
 // METHOD SIGNATURES //
 
-shadow_Pointer_t* __ShadowThread_Spawn(shadow_Thread_t* _this)
+shadow_Pointer_t* __shadowThread_spawn(shadow_Thread_t* _this)
 {
-	return shadowPointer_Create(malloc(1), SHADOW_CAN_FREE);
+	return shadowPointer_create(malloc(1), SHADOW_CAN_FREE);
 }

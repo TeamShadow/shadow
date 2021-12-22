@@ -12,12 +12,31 @@ and CanClose
 	/// handle contains OS-specific file handle information 
 	long handle = -1L;
 	get Path path;
+
+	public constant int READ = 1 << 0;
+	public constant int WRITE = 1 << 1;
 	
 	[ImportAssembly]
-	private readonly __shadowFile_Exists(String path) => (boolean);
+	private readonly __shadowIoFile_exists(String path) => (boolean);
 	[ImportAssembly]
-	private readonly __shadowFile_Close(long handle) => ();
-	
+	private readonly __shadowIoFile_open(String path, int mode) => (long);
+	[ImportAssembly]
+    private readonly __shadowIoFile_delete(String path) => ();
+	[ImportAssembly]
+	private readonly __shadowIoFile_close(long handle) => ();
+	[ImportAssembly]
+    private readonly __shadowIoFile_positionGet(long handle) => ( long );
+    [ImportAssembly]
+    private readonly __shadowIoFile_positionSet(long handle, long position) => ();
+    [ImportAssembly]
+    private readonly __shadowIoFile_sizeGet(String path) => ( long );
+    [ImportAssembly]
+    private readonly __shadowIoFile_sizeSet(long handle, long size) => ();
+    [ImportAssembly]
+    private readonly __shadowIoFile_read(long handle, ubyte[] array) => (long);
+    [ImportAssembly]
+    private readonly __shadowIoFile_write(long handle, readonly ubyte[] array) => (long);
+
 	/**
 	 * Creates a {@code File} object associated with the file on the given
 	 * path.
@@ -61,45 +80,79 @@ and CanClose
 	 */	
 	public readonly get exists() => ( boolean )
 	{
-		return __shadowFile_Exists(#path);
+		return __shadowIoFile_exists(#path);
 	}
+
+    /**
+     * Opens or creates a file in the operating system with the path of
+     * this {@code File} object.
+     */
+    public open() => ()
+    {
+        open(READ | WRITE);
+    }
 	
 	/**
-	 * Creates or deletes a file in the operating system with the path of 
+	 * Opens or creates a file in the operating system with the path of
 	 * this {@code File} object.
-	 * @param createOrDelete {@code true} if the file should be created,
-	 * {@code false} if it should be deleted
-	 */	
-	[ImportNative]
-	public set exists( boolean createOrDelete ) => ();
+	 */
+	public open( int mode ) => ()
+	{
+	    close();
+	    if ((mode & READ) == 0 and (mode & WRITE) == 0)
+	        throw IOException:create("File must be opened for reading, writing, or both");
+	    handle = __shadowIoFile_open(#path, mode);
+	}
+
+	public delete() => ()
+	{
+	    close();
+	    __shadowIoFile_delete(#path);
+	}
 	
 	/**
 	 * Gets the current position of the read/write pointer inside the file. 
 	 * @return position in file
-	 */	
-	[ImportNative]
-	public get readonly position() => ( long );
+	 */
+	public get readonly position() => ( long )
+	{
+	    return __shadowIoFile_positionGet(handle);
+	}
 	
 	/**
 	 * Sets the current position of the read/write pointer inside the file. 
 	 * @param position in file
 	 */
-	[ImportNative]
-	public set position( long position ) => ();
+	public set position( long position ) => ()
+	{
+	    __shadowIoFile_positionSet(handle, position);
+	}
 	
 	/**
 	 * Gets the size of the file in bytes. 
 	 * @return file size
 	 */
-	[ImportNative]
-	public get readonly size() => ( long );
+	public get readonly size() => ( long )
+	{
+        return __shadowIoFile_sizeGet(#path);
+	}
 	
 	/**
 	 * Sets the size of the file in bytes, extending or truncating it. 
 	 * @param new file size
 	 */
-	[ImportNative]
-	public set size( long size ) => ();
+	public set size( long size ) => ()
+	{
+	    boolean closed = handle == -1L;
+	    // POSIX has truncate, but Windows requires an open file for resizing.
+	    if (closed)
+	        open (WRITE);
+
+	    __shadowIoFile_sizeSet(handle, size);
+
+        if (closed)
+            close();
+	}
 	
 	/**
 	 * Reads data from the file into the buffer and updates the read pointer
@@ -108,8 +161,10 @@ and CanClose
 	 * @return number of {@code byte} values successfully read, always less
 	 * than or equal the length of the buffer
 	 */
-	[ImportNative]
-	public readonly read( ubyte[] buffer ) => ( long );
+	public readonly read( ubyte[] buffer ) => ( long )
+	{
+	    return __shadowIoFile_read(handle,buffer);
+	}
 	
 	/**
 	 * Writes data from the buffer into the file and updates the write pointer
@@ -117,8 +172,10 @@ and CanClose
 	 * @param buffer array of {@code byte} values to be written
 	 * @return number of {@code byte} values successfully written
 	 */
-	[ImportNative]
-	public write( readonly ubyte[] buffer ) => ( long );
+	public write( readonly ubyte[] buffer ) => ( long )
+	{
+	    return __shadowIoFile_write(handle,buffer);
+	}
 	
 	/**
 	 * Closes the file.
@@ -126,15 +183,23 @@ and CanClose
 	public close() => ()
 	{
 		if(handle != -1L) {
-			__shadowFile_Close(handle);
+			__shadowIoFile_close(handle);
 			handle = -1L;
 		}
 	}
-	
+
+    [ExportAssembly]
+    private _shadowIoFile_throwException(String message) => ()
+    {
+        throw IOException:create(message);
+    }
+
+	/*
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowFile_SetHandle(long handle) => ()
+	private _shadowIoFile_setHandle(long handle) => ()
 	{
 		this:handle = handle;
 	}
+	*/
 }

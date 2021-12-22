@@ -9,20 +9,20 @@
 singleton shadow:io@Console
 {
 	[ImportAssembly]
-	private readonly __ShadowConsole_Initialize() => ();
+	private readonly __shadowIoConsole_initialize() => ();
 	
 	[ImportAssembly]
-	private readonly __ShadowConsole_Print(String str) => ();
+	private readonly __shadowIoConsole_print(String str) => ();
 	[ImportAssembly]
-	private readonly __ShadowConsole_PrintLine() => ();
+	private readonly __shadowIoConsole_printLine() => ();
 	
 	[ImportAssembly]
-	private readonly __ShadowConsole_PrintError(String str) => ();
+	private readonly __shadowIoConsole_printError(String str) => ();
 	[ImportAssembly]
-	private readonly __ShadowConsole_PrintErrorLine() => ();
+	private readonly __shadowIoConsole_printErrorLine() => ();
 	
 	[ImportAssembly]
-	private readonly __ShadowConsole_ReadBuffer(ubyte[] buffer) => (int);
+	private readonly __shadowIoConsole_readBuffer(ubyte[] buffer) => (int);
 	
 	ubyte[] buffer = ubyte:create[1024];
 	int start = 0;
@@ -33,7 +33,7 @@ singleton shadow:io@Console
 	 */
 	public create()
 	{
-		__ShadowConsole_Initialize();
+		__shadowIoConsole_initialize();
 	}
 
 	/**
@@ -158,7 +158,7 @@ singleton shadow:io@Console
 		}
 		else
 		{			
-			end = __ShadowConsole_ReadBuffer(buffer);
+			end = __shadowIoConsole_readBuffer(buffer);
 			if(end == 0)
 				return (0uy, true);
 			
@@ -201,7 +201,7 @@ singleton shadow:io@Console
 	 */
 	public print(String value) => (Console)
 	{
-		__ShadowConsole_Print(value);
+		__shadowIoConsole_print(value);
 		return this;
 	}
 	
@@ -211,7 +211,7 @@ singleton shadow:io@Console
 	 */
 	public printLine() => (Console)
 	{
-		__ShadowConsole_PrintLine();
+		__shadowIoConsole_printLine();
 		return this;
 	}
 	
@@ -243,7 +243,7 @@ singleton shadow:io@Console
 	 */
 	public printError(String value) => (Console)
 	{
-		__ShadowConsole_PrintError(value);
+		__shadowIoConsole_printError(value);
 		return this;
 	}
 	
@@ -253,7 +253,7 @@ singleton shadow:io@Console
 	 */
 	public printErrorLine() => (Console)
 	{
-		__ShadowConsole_PrintErrorLine();
+		__shadowIoConsole_printErrorLine();
 		return this;
 	}
 	
@@ -274,13 +274,13 @@ singleton shadow:io@Console
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowConsole_PrintLine(Object value) => ()
+	private _shadowConsole_printLine(Object value) => ()
 	{
 		Console.printLine(value);
 	}
 	
 	[ExportAssembly]
-	private _shadowConsole_PrintErrorLine(Object value) => ()
+	private _shadowConsole_printErrorLine(Object value) => ()
 	{
 		Console.printErrorLine(value);
 	}

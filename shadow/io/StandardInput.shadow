@@ -1,0 +1,11 @@
+/**
+ * Class {@code File} provides utilities for interacting with a file in the
+ * operating system, such as creating a new file, deleting an existing file,
+ * reading from a file, and writing to a file.
+ */
+class shadow:io@
+	StandardInput
+is	CanRead
+{
+
+}

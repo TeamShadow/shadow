@@ -3,16 +3,17 @@
  */
 #include <Shadow.h>
 #include <io/Console.h>
+#include <standard/String.h>
 
 // METHOD SIGNATURES //
-void __ShadowConsole_Initialize(void);
-void __ShadowConsole_ReadByte(shadow_byte_t*, shadow_boolean_t*);
+void __shadowIoConsole_initialize(void);
+void __shadowIoConsole_readByte(shadow_byte_t*, shadow_boolean_t*);
 
-void __ShadowConsole_Print(shadow_String_t*);
-void __ShadowConsole_PrintError(shadow_String_t*);
+void __shadowIoConsole_print(shadow_String_t*);
+void __shadowIoConsole_printError(shadow_String_t*);
 
-void __ShadowConsole_PrintLine(void);
-void __ShadowConsole_PrintErrorLine(void);
+void __shadowIoConsole_printLine(void);
+void __shadowIoConsole_printErrorLine(void);
 // METHOD SIGNATURES //
 
 
@@ -21,16 +22,16 @@ void __ShadowConsole_PrintErrorLine(void);
 	
 	static char newLine[2] = { '\r', '\n' };
 
-	void __ShadowConsole_Initialize(void)
+	void __shadowIoConsole_initialize(void)
 	{
 		SetConsoleCP(65001);
 		SetConsoleOutputCP(65001);
 	}
 	
-	int __ShadowConsole_ReadBuffer(shadow_Array_t* array)
+	int __shadowIoConsole_readBuffer(shadow_Array_t* array)
 	{
 		ArrayData buffer;
-		shadowArray_GetData(array, &buffer);
+		shadowArray_getData(array, &buffer);
 		DWORD bytesRead = 0;
 		ReadFile(GetStdHandle(STD_INPUT_HANDLE), buffer.data, buffer.size, &bytesRead, NULL);
 		
@@ -38,7 +39,7 @@ void __ShadowConsole_PrintErrorLine(void);
 	}
 
 	/*
-	void __ShadowConsole_ReadByte(shadow_byte_t* value, shadow_boolean_t* eof)
+	void __shadowIoConsole_ReadByte(shadow_byte_t* value, shadow_boolean_t* eof)
 	{
 		DWORD bytesRead = 0;
 		ReadFile(GetStdHandle(STD_INPUT_HANDLE), value, 1, &bytesRead, NULL);
@@ -55,18 +56,18 @@ void __ShadowConsole_PrintErrorLine(void);
 	static void printString(int handleId, shadow_String_t* stringRef)
 	{
 		StringData str; // { size, chars, ascii }
-		shadowString_GetData(stringRef, &str);
+		shadowString_getData(stringRef, &str);
 		
 		DWORD bytesWritten = 0;
 		WriteFile(GetStdHandle(handleId), str.chars, str.size, &bytesWritten, NULL);
 	}
 
-	void __ShadowConsole_Print(shadow_String_t* stringRef)
+	void __shadowIoConsole_print(shadow_String_t* stringRef)
 	{
 		printString(STD_OUTPUT_HANDLE, stringRef);
 	}
 
-	void __ShadowConsole_PrintError(shadow_String_t* stringRef)
+	void __shadowIoConsole_printError(shadow_String_t* stringRef)
 	{
 		printString(STD_ERROR_HANDLE, stringRef);
 	}
@@ -77,12 +78,12 @@ void __ShadowConsole_PrintErrorLine(void);
 		WriteFile(GetStdHandle(handleId), newLine, sizeof(newLine), &bytesWritten, NULL);
 	}
 
-	void __ShadowConsole_PrintLine(void)
+	void __shadowIoConsole_printLine(void)
 	{
 		printLine(STD_OUTPUT_HANDLE);
 	}
 
-	void __ShadowConsole_PrintErrorLine(void)
+	void __shadowIoConsole_printErrorLine(void)
 	{
 		printLine(STD_ERROR_HANDLE);
 	}
@@ -91,9 +92,9 @@ void __ShadowConsole_PrintErrorLine(void);
 
 	static char newLine[1] = { '\n' };
 
-	void __ShadowConsole_Initialize(void) { }
+	void __shadowIoConsole_initialize(void) { }
 	
-	int __ShadowConsole_ReadBuffer(shadow_Array_t* array)
+	int __shadowIoConsole_readBuffer(shadow_Array_t* array)
 	{
 		ArrayData buffer;
 		shadowArray_GetData(array, &buffer);
@@ -103,7 +104,7 @@ void __ShadowConsole_PrintErrorLine(void);
 	}
 
 	/*
-	void __ShadowConsole_ReadByte(shadow_byte_t* value, shadow_boolean_t* eof)
+	void __shadowIoConsole_ReadByte(shadow_byte_t* value, shadow_boolean_t* eof)
 	{
 		ssize_t bytesRead = read(0, value, 1);
 		
@@ -124,12 +125,12 @@ void __ShadowConsole_PrintErrorLine(void);
 		write(fd, str.chars, str.size);
 	}
 
-	void __ShadowConsole_Print(shadow_String_t* stringRef)
+	void __shadowIoConsole_print(shadow_String_t* stringRef)
 	{
 		printString(STDOUT_FILENO, stringRef);
 	}
 
-	void __ShadowConsole_PrintError(shadow_String_t* stringRef)
+	void __shadowIoConsole_printError(shadow_String_t* stringRef)
 	{
 		printString(STDERR_FILENO, stringRef);
 	}
@@ -139,12 +140,12 @@ void __ShadowConsole_PrintErrorLine(void);
 		write(fd, newLine, sizeof(newLine));
 	}
 
-	void __ShadowConsole_PrintLine(void)
+	void __shadowIoConsole_printLine(void)
 	{
 		printLine(STDOUT_FILENO);
 	}
 
-	void __ShadowConsole_PrintErrorLine(void)
+	void __shadowIoConsole_printErrorLine(void)
 	{
 		printLine(STDERR_FILENO);
 	}

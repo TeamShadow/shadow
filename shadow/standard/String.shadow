@@ -648,7 +648,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowString_CreateBytes(ubyte[] data) => (String)
+	private _shadowString_createBytes(ubyte[] data) => (String)
 	{
 		return String:create(data);
 	}

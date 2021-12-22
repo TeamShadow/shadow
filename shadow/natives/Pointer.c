@@ -5,10 +5,10 @@
 #include <stdlib.h>
 
 // METHOD SIGNATURES //
-void __ShadowPointer_Free(void* ptr);
+void __shadowPointer_free(void* ptr);
 // METHOD SIGNATURES //
 
-void __ShadowPointer_Free(void* ptr)
+void __shadowPointer_free(void* ptr)
 {
 	free(ptr);
 }

@@ -2,18 +2,18 @@ import shadow:io;
 
 class shadow:test@FileTest
 {
-	public main( String[] args ) => ()
+	public main (String[] args) => ()
 	{	
-		if( args->size == 0 )
+		if (args->size == 0)
 			throw Exception:create("No file specified!");
 
 		try 
 		{
-			File file = File:create(args[0]);
+			var file = File:create(args[0]);
 			
 			try 
 			{	
-				file->exists = true;
+				file.open();
 			} 
 			catch ( IOException ex )
 			{				
@@ -22,20 +22,30 @@ class shadow:test@FileTest
 								
 			readonly ubyte[] chars = "Hello World!"->chars;
 			file.write(chars);
-						
-			file->size = file->position;
 			file.close();
-			
+
+			try
+            {
+                file.open(File:READ);
+            }
+            catch (IOException ex)
+            {
+                Console.printLine("catch ( " # ex # " )");
+            }
+
 			ubyte[] buffer = ubyte:create[chars->size];
 			file.read(buffer);
-			
-			Console.printLine(String:create(buffer));
 			file.close();
+
+			Console.printLine(String:create(buffer)); // "Hello World!"
+			Console.printLine(file->size); // "Hello World!" -> 12 characters
+			Console.printLine(file->exists); // Should be true
 			
-			file->exists = false;
-			
+			file.delete();
+
+			Console.printLine(file->exists); // Should be false
 		}
-		catch ( IOException ex )
+		catch (IOException ex)
 		{
 			Console.printLine(ex);
 		}

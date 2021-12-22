@@ -32,9 +32,9 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
-declare void @__ShadowConsole_ReadByte(%byte*, %boolean*)
-declare void @__ShadowConsole_Print(%shadow.standard..String*)
-declare void @__ShadowConsole_PrintLine()
+declare void @__shadowIoConsole_readByte(%byte*, %boolean*)
+declare void @__shadowIoConsole_print(%shadow.standard..String*)
+declare void @__shadowIoConsole_printLine()
 declare i32 @printf(i8*, ...)
 
 @debugPrint = private global %boolean 1
@@ -44,8 +44,8 @@ entry:
 	%debug = load %boolean, %boolean* @debugPrint
 	br i1 %debug, label %_print, label %_exit
 _print:
-	call void @__ShadowConsole_Print(%shadow.standard..String* %string)
-	call void @__ShadowConsole_PrintLine()
+	call void @__shadowIoConsole_print(%shadow.standard..String* %string)
+	call void @__shadowIoConsole_printLine()
 	ret void
 _exit:
 	ret void
@@ -60,7 +60,7 @@ entry:
 	br i1 %debug, label %_print, label %_exit
 _print:
 	call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @pointer, i64 0, i64 0), %shadow.standard..Object* %obj)
-	call void @__ShadowConsole_PrintLine()
+	call void @__shadowIoConsole_printLine()
 	ret void
 _exit:
 	ret void
@@ -72,7 +72,7 @@ entry:
 	br i1 %debug, label %_print, label %_exit
 _print:
 	call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @integer, i64 0, i64 0), %int %value)
-	call void @__ShadowConsole_PrintLine()
+	call void @__shadowIoConsole_printLine()
 	ret void
 _exit:
 	ret void

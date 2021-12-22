@@ -37,8 +37,8 @@ public class OutputTests {
     else if (os.contains("mac")) args.add("mac.json");
     else args.add("linux.json");
 
-    // args.add("-r");
-    // args.add("-f");
+    //args.add("-r");
+    //args.add("-f");
   }
 
   @AfterEach
@@ -1427,7 +1427,7 @@ public class OutputTests {
   public void testFile() throws Exception {
     args.add("shadow/test/FileTest.shadow");
     Main.run(args.toArray(new String[] {}));
-    run(new String[] {"FileTest.txt"}, formatOutputString("Hello World!"));
+    run(new String[] {"FileTest.txt"}, formatOutputString("Hello World!", "12", "true", "false"));
   }
 
   @Test

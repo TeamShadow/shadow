@@ -35,7 +35,7 @@ typedef struct {
  * in the C usable format, in ArrayData* array. If data is modified here,
  * the data is also modified in Shadow.
  */
-ArrayData* shadowArray_GetData(shadow_Array_t* shadowArray, ArrayData* array);
+ArrayData* shadowArray_getData(shadow_Array_t* shadowArray, ArrayData* array);
 
 /**
  * Creates a Shadow Array which can be passed to Shadow methods.
@@ -46,12 +46,12 @@ ArrayData* shadowArray_GetData(shadow_Array_t* shadowArray, ArrayData* array);
  * param data - this is a block of memory initialized using calloc(num, size)
  *				and is the actual data that Shadow will use. So index through that.
  */
-shadow_Array_t* shadowArray_Create(size_t num, shadow_Class_t* class, bool nullable, void** data);
+shadow_Array_t* shadowArray_create(size_t num, shadow_Class_t* class, bool nullable, void** data);
 
 /**
  * Frees the array that was created using shadowArray_Create();
  */
-void shadowArray_Free(shadow_Array_t* array);
+void shadowArray_free(shadow_Array_t* array);
 
 
 #endif
