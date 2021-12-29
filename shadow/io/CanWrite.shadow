@@ -6,9 +6,10 @@
 interface shadow:io@CanWrite
 {
 	/**
-	 * Method called to write data.
-	 * @param buffer array of {@code ubyte} values to write data from
-	 * @return number of {@code ubyte} values successfully written 
-	 */
-	write( ubyte[] buffer ) => ( long );
+     * Method called to write data.
+     * @param buffer array of {@code ubyte} values to write data from
+     * @param bytes total number of bytes to write
+     * @return number of {@code ubyte} values successfully written
+     */
+    write(ubyte[] buffer, long bytes) => ( long );
 }

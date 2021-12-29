@@ -1,0 +1,44 @@
+/**
+ * Class {@code StandardOutput} provides methods for writing to {@code stdout} and {@code stderr}.
+ */
+class shadow:io@
+	StandardOutput
+is	CanWrite
+{
+    long handle = -1L;
+
+    [ImportAssembly]
+    private readonly __shadowIoStandardOutput_setUp(boolean error) => (long);
+
+    // Use the write function from File
+    [ImportAssembly]
+    private readonly __shadowIoFile_write(long handle, readonly ubyte[] array, long bytes) => (long);
+
+    /**
+	 * Creates a {@code StandardOutput} object that writes to {@code stdout}.
+	 */
+	public create()
+	{
+        this(false);
+	}
+
+	/**
+     * Creates a {@code StandardOutput} object.
+     * @param error is {@code true} for {@code stderr} and {@code false} for {@code stdout}.
+     */
+    public create(boolean error)
+    {
+        handle = __shadowIoStandardOutput_setUp(error);
+    }
+
+   	/**
+   	 * Writes data from the buffer to {@code stdout} or {@code stderr} as appropriate.
+   	 * @param buffer array of {@code ubyte} values to be written
+   	 * @param bytes total number of bytes to write
+   	 * @return number of {@code byte} values successfully written
+   	 */
+   	public write( readonly ubyte[] buffer, long bytes) => ( long )
+   	{
+   	    return __shadowIoFile_write(handle, buffer, bytes);
+   	}
+}

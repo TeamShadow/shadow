@@ -582,7 +582,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private shadowLong_GetClass() => (Class)
+	private _shadowLong_getClass() => (Class)
 	{
 		return long:class;
 	}

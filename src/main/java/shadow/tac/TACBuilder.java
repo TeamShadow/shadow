@@ -789,21 +789,26 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     if (ctx.type() != null) {
       Type comparisonType = ctx.type().getType();
 
-      TACOperand comparisonClass = new TACClass(anchor, comparisonType).getClassData();
+      // We know it's a subtype, so replace with true
+      if (ctx.relationalExpression().getType().isSubtype(comparisonType))
+        ctx.setOperand(new TACLiteral(anchor, new ShadowBoolean(true)));
+      else {
+        TACOperand comparisonClass = new TACClass(anchor, comparisonType).getClassData();
 
-      // get class from object
-      TACMethodName methodName =
-          new TACMethodName(
-              anchor, value, Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));
-      TACOperand valueClass = new TACCall(anchor, methodName, methodName.getPrefix());
+        // Get class from object
+        TACMethodName methodName =
+            new TACMethodName(
+                anchor, value, Type.OBJECT.getMatchingMethod("getClass", new SequenceType()));
+        TACOperand valueClass = new TACCall(anchor, methodName, methodName.getPrefix());
 
-      methodName =
-          new TACMethodName(
-              anchor,
-              valueClass,
-              Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
+        methodName =
+            new TACMethodName(
+                anchor,
+                valueClass,
+                Type.CLASS.getMatchingMethod("isSubtype", new SequenceType(Type.CLASS)));
 
-      ctx.setOperand(new TACCall(anchor, methodName, methodName.getPrefix(), comparisonClass));
+        ctx.setOperand(new TACCall(anchor, methodName, methodName.getPrefix(), comparisonClass));
+      }
     }
 
     return null;
@@ -2069,10 +2074,20 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
         Type type = rightSide.getType();
 
         if (type instanceof SequenceType) {
-          TACSequence sequence = (TACSequence) rightSide;
           SequenceType sequenceType = (SequenceType) type;
-          for (int i = 0; i < sequenceType.size(); ++i)
-            new TACLocalStore(anchor, method.getLocal("_return" + i), sequence.get(i));
+          if (rightSide instanceof TACSequence) {
+            TACSequence sequence = (TACSequence) rightSide;
+            for (int i = 0; i < sequenceType.size(); ++i)
+              new TACLocalStore(anchor, method.getLocal("_return" + i), sequence.get(i));
+          }
+          // If it's not a TACSequence, it's got to be a call
+          // TODO: Is this necessary, or can directly returned items have the garbage collection increment/decrement skipped?
+          else {
+            TACCall call = (TACCall) rightSide;
+            for (int i = 0; i < sequenceType.size(); ++i) {
+              new TACLocalStore(anchor, method.getLocal("_return" + i), new TACSequenceElement(anchor, call, i));
+            }
+          }
         } else new TACLocalStore(anchor, method.getLocal("return"), rightSide);
       }
     }

@@ -1,11 +1,34 @@
 /**
- * Class {@code File} provides utilities for interacting with a file in the
- * operating system, such as creating a new file, deleting an existing file,
- * reading from a file, and writing to a file.
+ * Class {@code StandardInput} provides methods for reading from {@code stdin}.
  */
 class shadow:io@
 	StandardInput
 is	CanRead
 {
+    long handle = -1L;
 
+    [ImportAssembly]
+    private readonly __shadowIoStandardInput_setUp() => (long);
+
+    // Use the read function from File
+    [ImportAssembly]
+    private readonly __shadowIoFile_read(long handle, ubyte[] array) => (long);
+
+    /**
+	 * Creates a {@code StandardInput} object.
+	 */
+	public create()
+	{
+        handle = __shadowIoStandardInput_setUp();
+	}
+
+    /**
+     * Method called to read data from {@code stdin}.
+     * @param buffer array of {@code ubyte} values to read data into
+     * @return number of {@code ubyte} values successfully read
+     */
+    public read( ubyte[] buffer ) => ( long )
+    {
+        return __shadowIoFile_read(handle,buffer);
+    }
 }

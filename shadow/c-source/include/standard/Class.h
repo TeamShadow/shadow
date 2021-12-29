@@ -25,18 +25,22 @@ typedef struct shadow_Class_t
 }
 shadow_Class_t;
 
-shadow_Class_t* shadowULong_getClass();
-shadow_Class_t* shadowLong_getClass();
-shadow_Class_t* shadowByte_getClass();
-shadow_Class_t* shadowUByteArray_getClass();
-shadow_Class_t* shadowInt_getClass();
-shadow_Class_t* shadowUInt_getClass();
-shadow_Class_t* shadowBoolean_getClass();
-shadow_Class_t* shadowCode_getClass();
-shadow_Class_t* shadowFloat_getClass();
-shadow_Class_t* shadowShort_getClass();
-shadow_Class_t* shadowUByte_getClass();
-shadow_Class_t* shadowUShort_getClass();
-shadow_Class_t* shadowDouble_getClass();
+/* In theory, all of these should have a parameter,
+ * but the functions don't need a parameter to get
+ * the appropriate class.
+ */
+shadow_Class_t* _shadowULong_getClass();
+shadow_Class_t* _shadowLong_getClass();
+shadow_Class_t* _shadowByte_getClass();
+shadow_Class_t* _shadowUByteArray_getClass();
+shadow_Class_t* _shadowInt_getClass();
+shadow_Class_t* _shadowUInt_getClass();
+shadow_Class_t* _shadowBoolean_getClass();
+shadow_Class_t* _shadowCode_getClass();
+shadow_Class_t* _shadowFloat_getClass();
+shadow_Class_t* _shadowShort_getClass();
+shadow_Class_t* _shadowUByte_getClass();
+shadow_Class_t* _shadowUShort_getClass();
+shadow_Class_t* _shadowDouble_getClass();
 
 #endif

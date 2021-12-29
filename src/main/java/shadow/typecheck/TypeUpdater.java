@@ -1048,8 +1048,8 @@ public class TypeUpdater extends BaseChecker {
 
     Type type = ctx.type().getType();
     ctx.setType(type);
-    if (type instanceof SingletonType)
-      addError(ctx, Error.INVALID_TYPE, "Parameter cannot be defined with singleton type " + type);
+    //if (type instanceof SingletonType)
+      //addError(ctx, Error.INVALID_TYPE, "Parameter cannot be defined with singleton type " + type);
 
     return null;
   }

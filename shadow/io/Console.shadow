@@ -6,34 +6,29 @@
  * reporting uncaught exceptions. Some {@code Console} behavior is platform
  * specific.
  */
-singleton shadow:io@Console
+singleton shadow:io@
+    Console
 {
-	[ImportAssembly]
-	private readonly __shadowIoConsole_initialize() => ();
-	
-	[ImportAssembly]
-	private readonly __shadowIoConsole_print(String str) => ();
-	[ImportAssembly]
-	private readonly __shadowIoConsole_printLine() => ();
-	
-	[ImportAssembly]
-	private readonly __shadowIoConsole_printError(String str) => ();
-	[ImportAssembly]
-	private readonly __shadowIoConsole_printErrorLine() => ();
-	
-	[ImportAssembly]
-	private readonly __shadowIoConsole_readBuffer(ubyte[] buffer) => (int);
-	
-	ubyte[] buffer = ubyte:create[1024];
-	int start = 0;
-	int end = 0;
+	TextInput input;
+	TextOutput output;
+	TextOutput error;
+
+    [ImportAssembly]
+    private readonly __shadowIoConsole_initialize() => ();
 	
 	/**
 	 * Creates a new {@code Console}.
 	 */
 	public create()
 	{
+	    input = TextInput:create(StandardInput:create());
+        output = TextOutput:create(StandardOutput:create());
+	    error = TextOutput:create(StandardOutput:create(true));
 		__shadowIoConsole_initialize();
+	}
+
+	public destroy
+	{
 	}
 
 	/**
@@ -44,21 +39,7 @@ singleton shadow:io@Console
 	 */
 	public readLine() => ( String, boolean eof )
 	{
-		var string = MutableString:create();
-		( code c, boolean eof ) = readCode();
-		while ( c != '\n' and c != '\r' and !eof )
-		{
-			string.append(c);
-			( c, eof ) = readCode();
-		}
-		
-		if(!eof and c == '\r') // Try to consume CR after LF
-		{
-			(ubyte b, eof) = readByte();
-			if(!eof and b != '\n') // If it wasn't a CR, back up
-				start -= 1;		
-		}
-		return ( #string, eof );
+		return input.readLine();
 	}
 	
 	/**
@@ -69,19 +50,7 @@ singleton shadow:io@Console
 	 */
 	public readString() => ( String, boolean eof )
 	{
-		var string = MutableString:create();
-		( code c, boolean eof ) = readCode();
-		while( !eof and (c == '\n' or c == '\r' or c == ' ' or c == '\t'))
-			( c, eof ) = readCode();
-		while( !eof and c != '\n' and c != '\r' and c != ' ' and c != '\t')
-		{
-			string.append(c);
-			( c, eof ) = readCode();
-		}
-
-		if(!eof) // Back up to the whitespace
-			start -= 1;
-		return ( #string, eof );
+		return input.readString();
 	}
 	
 	/**
@@ -93,8 +62,7 @@ singleton shadow:io@Console
 	 */
 	public readInt() => ( int )
 	{
-		(String text, ) = readString();
-		return text.toInt();
+		return input.readInt();
 	}
 	
 	/**
@@ -106,9 +74,8 @@ singleton shadow:io@Console
 	 */
 	public readDouble() => ( double )
 	{
-		(String text, ) = readString();
-		return text.toDouble();
-	}	
+		return input.readDouble();
+	}
 	
 	
 	/**
@@ -118,54 +85,17 @@ singleton shadow:io@Console
 	 */
 	public readCode() => ( code, boolean eof )
 	{
-		uint value;
-		boolean eof;
-		( value, eof ) = readByte();
-		if ( value < 0 )
-		{
-			int bytes = 0;
-			ubyte mask = 1uy << 7 >> 1;
-			while ( value >= mask )
-			{
-				bytes += 1;
-				mask >>= 1;
-			}
-			value &= ~mask;
-			while ( bytes > 0 )
-			{
-				value <<= 6;
-				ubyte b;
-				( b, eof ) = readByte();
-				value |= b & 0b00111111uy;
-				bytes -= 1;
-			}
-		}
-		return ( cast<code>(value), eof );
+		return input.readCode();
 	}
 	
 	/**
-	 * Reads the next byte from {@code stdin}.	 	 
-	 * @return next byte
+	 * Reads the next unsigned byte from {@code stdin}.
+	 * @return next unsigned byte
 	 * @return {@code true} if the end of the file was reached 
 	 */
 	public readByte() => (ubyte, boolean eof)
 	{
-		if(start < end)
-		{
-			ubyte value = buffer[start];
-			start += 1;
-			return (value, false);
-		}
-		else
-		{			
-			end = __shadowIoConsole_readBuffer(buffer);
-			if(end == 0)
-				return (0uy, true);
-			
-			ubyte value = buffer[0];
-			start = 1;
-			return (value, false);		
-		}			
+		return input.readByte();
 	}
 
 	/**
@@ -173,9 +103,11 @@ singleton shadow:io@Console
 	 * @param value object to print
 	 * @return {@code Console} object 
 	 */
-	public print( nullable Object value ) => ( Console )
+	public print(nullable Object value) => ( Console )
 	{
-		return print(#value);
+		output.write(#value);
+		output.flush();
+		return this;
 	}
 	
 	/**
@@ -188,22 +120,18 @@ singleton shadow:io@Console
 	{
 		return print(value).printLine();
 	}
-	
-	public printLine(String value) => (Console)
-	{
-		return print(value).printLine();
-	}
-	
-	/**
-	 * Prints a {@code String} value to {@code stdout}.	 	 
-	 * @param value {@code String} to print
-	 * @return {@code Console} object 
-	 */
-	public print(String value) => (Console)
-	{
-		__shadowIoConsole_print(value);
-		return this;
-	}
+
+	[ExportAssembly]
+    public _shadowIoConsole_printLine(nullable Object value) => (Console)
+    {
+        return printLine(value);
+    }
+
+    [ExportAssembly]
+    public _shadowIoConsole_printErrorLine(nullable Object value) => (Console)
+    {
+        return printErrorLine(value);
+    }
 	
 	/**
 	 * Prints a new line character to {@code stdout}.
@@ -211,7 +139,8 @@ singleton shadow:io@Console
 	 */
 	public printLine() => (Console)
 	{
-		__shadowIoConsole_printLine();
+		output.writeLine();
+		output.flush();
 		return this;
 	}
 	
@@ -222,7 +151,9 @@ singleton shadow:io@Console
 	 */
 	public printError( nullable Object value ) => ( Console )
 	{
-		return printError(#value);
+		error.write(#value);
+		error.flush();
+		return this;
 	}
 	
 	/**
@@ -235,53 +166,22 @@ singleton shadow:io@Console
 	{
 		return printError(value).printErrorLine();
 	}
-	
+
 	/**
-	 * Prints a {@code String} value to {@code stderr}.	 	 
-	 * @param value {@code String} to print
-	 * @return {@code Console} object 
-	 */
-	public printError(String value) => (Console)
-	{
-		__shadowIoConsole_printError(value);
-		return this;
-	}
-	
-	/**
-	 * Prints a new line character to {@code stdout}.
+	 * Prints a new line character to {@code stderr}.
 	 * @return {@code Console} object 
 	 */
 	public printErrorLine() => (Console)
 	{
-		__shadowIoConsole_printErrorLine();
+		error.writeLine();
+		error.flush();
 		return this;
 	}
-	
-	/*
-	[ImportNative]
-	public debugPrint(String data) => ();
-	
-	[ImportNative]
-	public debugPrint(int data) => ();
-	
-	[ImportNative]
-	public printAddress(Object object) => ();
-	
-	[ImportNative]
-	public setDebug(boolean debug) => ();
-	*/
-	
-	
-	// C FRAMEWORK EXTENSIONS
+
 	[ExportAssembly]
-	private _shadowConsole_printLine(Object value) => ()
-	{
-		Console.printLine(value);
-	}
-	
-	[ExportAssembly]
-	private _shadowConsole_printErrorLine(Object value) => ()
-	{
-		Console.printErrorLine(value);
-	}
+    private _shadowIoConsole_getInstance() => (Console)
+    {
+        Console console;
+        return console;
+    }
 }

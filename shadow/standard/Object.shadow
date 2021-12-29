@@ -29,13 +29,13 @@ class shadow:standard@Object
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private shadowObject_GetClass() => (Class)
+	private _shadowObject_getClass() => (Class)
 	{
 		return this.getClass();
 	}
 	
 	[ExportAssembly]
-	private shadowObject_ToString() => (String)
+	private _shadowObject_toString() => (String)
 	{
 		return #this;
 	}

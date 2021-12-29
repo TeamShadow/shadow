@@ -89,7 +89,7 @@ _start:
     %ex = alloca %shadow.standard..Exception*
 	%uninitializedConsole = call noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* @shadow.io..Console.class, %shadow.standard..Object._methods* bitcast(%shadow.io..Console._methods* @shadow.io..Console._methods to %shadow.standard..Object._methods*) )
 	%console = call %shadow.io..Console* @shadow.io..Console..create(%shadow.standard..Object* %uninitializedConsole)
-    store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console.singleton	
+    store %shadow.io..Console* %console, %shadow.io..Console** @shadow.io..Console.singleton
 	%countInt = sub i32 %argc, 1	
 	%count = zext %int %countInt to %long
 	%array = call %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* @shadow.standard..String._A.class, %long %count, %boolean false)

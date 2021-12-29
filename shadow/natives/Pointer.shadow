@@ -46,9 +46,8 @@ locked immutable class shadow:natives@
 	*/
 	public assertValid(String className) => ()
 	{
-		if(!isValid()) {
+		if(!isValid())
 			throw FreedResourceException:create(className);
-		}
 	}
 	
 	/**
@@ -57,8 +56,10 @@ locked immutable class shadow:natives@
 	*/
 	public free() => ()
 	{
-		if(isValid()) {
-			if(shouldFree) {
+		if(isValid())
+		{
+			if(shouldFree)
+			{
 				__shadowPointer_free(address);
 			}
 			
@@ -81,9 +82,8 @@ locked immutable class shadow:natives@
 	[ExportAssembly]
 	private _shadowPointer_extract() => (long)
 	{
-		if(!isValid()) {
+		if(!isValid())
 			throw FreedResourceException:create("Pointer");
-		}
 
 		return address;
 	}

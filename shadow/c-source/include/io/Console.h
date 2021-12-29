@@ -8,10 +8,8 @@
 
 typedef void* shadow_io_Console_t;
 
-void _shadowIoConsole_printLine(shadow_io_Console_t*, shadow_Object_t*);
-void _shadowIoConsole_printErrorLine(shadow_io_Console_t*, shadow_Object_t*);
-
-#define shadowIoConsole_printLine(obj) _shadowIoConsole_printLine(0, obj)
-#define shadowIoConsole_printErrorLine(obj) _shadowIoConsole_printErrorLine(0, obj)
+shadow_io_Console_t* _shadowIoConsole_printLine(shadow_io_Console_t*, shadow_Object_t*);
+shadow_io_Console_t* _shadowIoConsole_printErrorLine(shadow_io_Console_t*, shadow_Object_t*);
+shadow_io_Console_t* _shadowIoConsole_getInstance(shadow_io_Console_t*);
 
 #endif

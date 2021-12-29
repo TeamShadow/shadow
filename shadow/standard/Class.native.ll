@@ -89,8 +89,10 @@ _checkPassed:
 	; if old count was 1, call destroy and deallocate (prevents double free in multithreaded situations)
 	%free = icmp eq %ulong %oldCount, 1
 	br i1 %free, label %_freeLabel, label %_exit
-_freeLabel:	
-	; call destroy before free	
+_freeLabel:
+    ; store -1 in reference count to avoid reference count changes during the free process
+    store %ulong -1, %ulong* %countRef
+	; call destroy before free
 	%methodsRef = getelementptr inbounds %shadow.standard..Object, %shadow.standard..Object* %object, i32 0, i32 2
     %methods = load %shadow.standard..Object._methods*, %shadow.standard..Object._methods** %methodsRef
     %destroyRef = getelementptr inbounds %shadow.standard..Object._methods, %shadow.standard..Object._methods* %methods, i32 0, i32 1

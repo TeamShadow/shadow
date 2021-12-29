@@ -7,14 +7,12 @@ class shadow:io@
 	File
 is	CanRead
 and CanWrite
+and CanOpen
 and CanClose
 {
 	/// handle contains OS-specific file handle information 
 	long handle = -1L;
 	get Path path;
-
-	public constant int READ = 1 << 0;
-	public constant int WRITE = 1 << 1;
 	
 	[ImportAssembly]
 	private readonly __shadowIoFile_exists(String path) => (boolean);
@@ -35,7 +33,7 @@ and CanClose
     [ImportAssembly]
     private readonly __shadowIoFile_read(long handle, ubyte[] array) => (long);
     [ImportAssembly]
-    private readonly __shadowIoFile_write(long handle, readonly ubyte[] array) => (long);
+    private readonly __shadowIoFile_write(long handle, readonly ubyte[] array, long bytes) => (long);
 
 	/**
 	 * Creates a {@code File} object associated with the file on the given
@@ -104,10 +102,11 @@ and CanClose
 	    handle = __shadowIoFile_open(#path, mode);
 	}
 
-	public delete() => ()
+	public delete() => (File)
 	{
 	    close();
 	    __shadowIoFile_delete(#path);
+	    return this;
 	}
 	
 	/**
@@ -159,7 +158,7 @@ and CanClose
 	 * location.	     
 	 * @param buffer array of {@code byte} values to hold file data
 	 * @return number of {@code byte} values successfully read, always less
-	 * than or equal the length of the buffer
+	 * than or equal the length of the buffer, or -1 if end of file has been reached
 	 */
 	public readonly read( ubyte[] buffer ) => ( long )
 	{
@@ -169,13 +168,23 @@ and CanClose
 	/**
 	 * Writes data from the buffer into the file and updates the write pointer
 	 * location.	     
-	 * @param buffer array of {@code byte} values to be written
+	 * @param buffer array of {@code ubyte} values to be written
+	 * @param bytes total number of bytes to write
 	 * @return number of {@code byte} values successfully written
 	 */
-	public write( readonly ubyte[] buffer ) => ( long )
+	public write( readonly ubyte[] buffer, long bytes) => ( long )
 	{
-	    return __shadowIoFile_write(handle,buffer);
+	    return __shadowIoFile_write(handle, buffer, bytes);
 	}
+
+	/**
+	 * Gets whether the file is open. This method does not distinguish between
+	 * open for reading and open for writing.
+	 */
+    public get isOpen() => (boolean)
+    {
+        return handle != -1L;
+    }
 	
 	/**
 	 * Closes the file.

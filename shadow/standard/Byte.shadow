@@ -1070,7 +1070,7 @@ and	CanHash
 
 	// C FRAMEWORK EXTENSIONS	
 	[ExportAssembly]
-	private shadowByte_GetClass() => (Class)
+	private _shadowByte_getClass() => (Class)
 	{
 		return byte:class;
 	}

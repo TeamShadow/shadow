@@ -6,46 +6,47 @@ class shadow:test@ExternalsTest
 	// uses shadow_ToString() to get the Shadow String, then extracts it to a C String and
 	// prints it to the console using printf()
 	[ImportAssembly]
-	private readonly __shadowExternalTest_PrintfToString(ExternalsTest ref) => ();
+	private readonly __shadowTestExternalTest_printfToString(ExternalsTest ref) => ();
 
-	// creates a Shadow String from a C String and prints it using Shadow Console
+	// creates a Shadow String from C code
 	[ImportAssembly]
-	private readonly __shadowExternalTest_CreateString() => ();
+	private readonly __shadowTestExternalTest_createString() => (String);
 
 	// creates a Pointer which holds the number passed as a parameter for later use
 	[ImportAssembly]
-	private readonly __shadowExternalTest_InitPointer(int start) => (Pointer);
+	private readonly __shadowTestExternalTest_initPointer(int start) => (Pointer);
 	// prints the number passed earlier to the console, then calls Shadow code to print the number + offset
 	[ImportAssembly]
-	private readonly __shadowExternalTest_PrintPointerData(ExternalsTest instance, Pointer ptr) => ();
+	private readonly __shadowTestExternalTest_printPointerData(ExternalsTest instance, Pointer ptr) => ();
 	
 	// prints the string representation of the Class object for ExternalsTest and all primitives
 	[ImportAssembly]
-	private readonly __shadowExternalTest_PrintClasses(ExternalsTest instance) => ();	
+	private readonly __shadowTestExternalTest_printClasses(ExternalsTest instance) => ();
 	
 	immutable Pointer ptr;
 	int offset = 1000;
 	
 	public create()
 	{
-		ptr = __shadowExternalTest_InitPointer(2500);
+		ptr = __shadowTestExternalTest_initPointer(2500);
 	}
 	
 	public main(String[] args) => ()
 	{
-		__shadowExternalTest_PrintfToString(this);
-		__shadowExternalTest_CreateString();
-		__shadowExternalTest_PrintPointerData(this, ptr);
-		__shadowExternalTest_PrintClasses(this);
+	    __shadowTestExternalTest_printfToString(this);
+		String string = __shadowTestExternalTest_createString();
+		Console.printLine(string);
+		__shadowTestExternalTest_printPointerData(this, ptr);
+		__shadowTestExternalTest_printClasses(this);
 	}
 	
 	public readonly toString() => (String)
 	{
-		return "This is the result from running shadow_ToString(ref) from C!!";
+		return "This is the result from running _shadowObject_toString(ref) from C!";
 	}
 	
 	[ExportAssembly]
-	private _shadowExternalsTest_PrintNumberWithOffset(int number) => ()
+	private _shadowTestExternalsTest_printNumberWithOffset(int number) => ()
 	{
 		Console.printLine(number + offset);
 	}

@@ -5,15 +5,11 @@
 #include <io/File.h>
 #include <standard/String.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
-// METHOD SIGNATURES //
-
-// HELPERS
+// EXPORTED METHODS
 void _shadowIoFile_throwException(shadow_io_File_t* file, shadow_String_t* message);
-
-// METHOD SIGNATURES //
 
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
@@ -22,7 +18,7 @@ void _shadowIoFile_throwException(shadow_io_File_t* file, shadow_String_t* messa
 	#include <fcntl.h>
 #endif
 
-static void reportError()
+static void reportError(char* error)
 {
     shadow_String_t* message = NULL;
 #ifdef SHADOW_WINDOWS
@@ -39,18 +35,39 @@ static void reportError()
             0, NULL );
 
     if(messageBuffer != NULL) {
-        message = shadowString_create(messageBuffer);
+        rsize_t totalLength = strlen(error) + strlen(": ") + strlen(messageBuffer);
+        char* buffer = malloc(totalLength + 1);
+        sprintf_s(buffer, totalLength + 1, "%s: %s", error, messageBuffer);
+        int length = strlen(buffer);
+        // Trim off trailing newlines
+        while (length > 0 && (buffer[length - 1] == '\r' || buffer[length - 1] == '\n')) {
+            buffer[length - 1] = '\0';
+            --length;
+        }
+        message = shadowString_create(buffer);
+        free(buffer);
         LocalFree(messageBuffer);
     }
     else
-        message = shadowString_create("");
+        message = shadowString_create(error);
     _shadowIoFile_throwException(NULL, message);
 #else
     char messageBuffer[1024];
-    if (strerror_r(errno, messageBuffer, sizeof(messageBuffer)) == 0)
-        message = shadowString_create(messageBuffer);
+    if (strerror_r(errno, messageBuffer, sizeof(messageBuffer)) == 0) {
+        rsize_t totalLength = strlen(error) + strlen(": ") + strlen(messageBuffer);
+        char* buffer = malloc(totalLength + 1);
+        sprintf_s(buffer, totalLength + 1, "%s: %s", error, messageBuffer);
+        int length = strlen(buffer);
+        // Trim off trailing newlines
+        while (length > 0 && (buffer[length - 1] == '\r' || buffer[length - 1] == '\n')) {
+            buffer[length - 1] = '\0';
+            --length;
+        }
+        message = shadowString_create(buffer);
+        free(buffer);
+    }
     else
-        message = shadowString_create("");
+        message = shadowString_create(error);
 #endif
     _shadowIoFile_throwException(NULL, message);
 }
@@ -113,7 +130,7 @@ shadow_long_t __shadowIoFile_open(shadow_String_t* str, shadow_int_t mode)
     // Free the allocated string
     free(path);
     if (error)
-        reportError();
+        reportError("Open file error");
     return result;
 }
 
@@ -131,7 +148,7 @@ void __shadowIoFile_delete(shadow_String_t* str)
     // Free the allocated string
     free(path);
     if (error)
-        reportError();
+        reportError("Delete file error");
 }
 
 shadow_long_t __shadowIoFile_positionGet(shadow_long_t handle)
@@ -158,7 +175,7 @@ shadow_long_t __shadowIoFile_positionGet(shadow_long_t handle)
 #endif
 
     if (error)
-        reportError();
+        reportError("Get position error");
 
     return result;
 }
@@ -180,7 +197,7 @@ void __shadowIoFile_positionSet(shadow_long_t handle, shadow_long_t position)
 #endif
 
     if (error)
-        reportError();
+        reportError("Set position error");
 }
 
 shadow_long_t __shadowIoFile_sizeGet(shadow_String_t* str)
@@ -202,7 +219,7 @@ shadow_long_t __shadowIoFile_sizeGet(shadow_String_t* str)
     // Free the allocated string
     free(path);
     if (error)
-        reportError();
+        reportError("Get file size error");
 
     return size;
 }
@@ -225,7 +242,7 @@ void __shadowIoFile_sizeSet(shadow_long_t handle, shadow_long_t size)
 #endif
 
     if (error)
-        reportError();
+        reportError("Set file size error");
 }
 
 void __shadowIoFile_close(shadow_long_t handle)
@@ -246,36 +263,49 @@ shadow_long_t __shadowIoFile_read(shadow_long_t handle, shadow_Array_t* array)
 #ifdef SHADOW_WINDOWS
     DWORD bytesRead;
     error = !ReadFile((HANDLE)handle, data.data, (DWORD)data.size, &bytesRead, NULL);
-    result = (shadow_long_t)bytesRead;
+    DWORD lastError = GetLastError();
+    // End of file is not an error, return -1
+    if (bytesRead == 0 && (lastError == ERROR_HANDLE_EOF || lastError == ERROR_BROKEN_PIPE)) {
+        result = -1L;
+        error = false;
+    }
+    else
+        result = (shadow_long_t)bytesRead;
 #else
     ssize_t bytesRead = read((int)handle, data.data, (size_t)data.size);
     error = bytesRead == -1;
-    result = (shadow_long_t)bytesRead;
+    if (bytesRead == 0)
+        result = -1L;
+    else
+        result = (shadow_long_t)bytesRead;
 #endif
 
     if (error)
-        reportError();
+        reportError("Read error");
 
     return result;
 }
-shadow_long_t __shadowIoFile_write(shadow_long_t handle, shadow_Array_t* array)
+shadow_long_t __shadowIoFile_write(shadow_long_t handle, shadow_Array_t* array, shadow_long_t bytes)
 {
     ArrayData data;
     shadowArray_getData(array, &data);
+    // Never exceed the array length
+    if (bytes > data.size)
+        bytes = data.size;
     bool error;
     shadow_long_t result = 0;
 #ifdef SHADOW_WINDOWS
     DWORD bytesWritten;
-    error = !WriteFile((HANDLE)handle, data.data, (DWORD)data.size, &bytesWritten, NULL);
+    error = !WriteFile((HANDLE)handle, data.data, (DWORD)bytes, &bytesWritten, NULL);
     result = (shadow_long_t)bytesWritten;
 #else
-    ssize_t bytesWritten = write((int)handle, data.data, (size_t)data.size);
+    ssize_t bytesWritten = write((int)handle, data.data, (size_t)bytes);
     error = bytesWritten == -1;
     result = (shadow_long_t)bytesWritten;
 #endif
 
     if (error)
-        reportError();
+        reportError("Write error");
 
     return result;
 }

@@ -7,7 +7,7 @@ class shadow:test@FileTest
 		if (args->size == 0)
 			throw Exception:create("No file specified!");
 
-		try 
+    	try
 		{
 			var file = File:create(args[0]);
 			
@@ -21,8 +21,9 @@ class shadow:test@FileTest
 			}
 								
 			readonly ubyte[] chars = "Hello World!"->chars;
-			file.write(chars);
+			file.write(chars, chars->size);
 			file.close();
+
 
 			try
             {

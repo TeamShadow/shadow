@@ -1401,7 +1401,8 @@ public class StatementChecker extends ScopedChecker {
       Type t1 = ctx.relationalExpression().getType();
       Type t2 = ctx.type().getType();
 
-      if (t1.isSubtype(t2) || t2.isSubtype(t1)) ctx.setType(Type.BOOLEAN);
+      if (t1.isSubtype(t2) || t2.isSubtype(t1) || t1 instanceof InterfaceType || t2 instanceof InterfaceType)
+        ctx.setType(Type.BOOLEAN);
       else {
         addError(
             ctx,
@@ -1548,7 +1549,8 @@ public class StatementChecker extends ScopedChecker {
       // subclasses of each other
       // for convenience, all numerical types should be castable
       ctx.setType(t1);
-    else if (t1.isSubtype(t2) || t2.isSubtype(t1)) ctx.setType(t1);
+    else if (t1.isSubtype(t2) || t2.isSubtype(t1) || t1 instanceof InterfaceType || t2 instanceof  InterfaceType)
+      ctx.setType(t1);
     else {
       addError(
           ctx,
