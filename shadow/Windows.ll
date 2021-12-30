@@ -69,38 +69,6 @@ declare %long @shadow.standard..Array..sizeLong(%shadow.standard..Array* %array)
 ;declare %shadow.io..Console* @shadow.io..Console..printLine(%shadow.io..Console*)
 ;declare %shadow.io..Console* @shadow.io..Console..debugPrint.int(%shadow.io..Console*, %int)
 
-declare void @__shadow_throw(%shadow.standard..Object*) noreturn
-declare void @llvm.memcpy.p0i8.p0i8.i64(i8*, i8*, i64, i32, i1)
-
-declare noalias i8* @malloc(%size_t nocapture) nounwind
-declare void @free(i8*) nounwind
-
-declare x86_stdcallcc i8* @GetStdHandle(i32)
-declare x86_stdcallcc i32 @GetFileType(i8*)
-declare x86_stdcallcc i32 @GetConsoleMode(i8*, i32*)
-declare x86_stdcallcc i32 @SetConsoleMode(i8*, i32)
-declare x86_stdcallcc i32 @SetConsoleCP(i32)
-declare x86_stdcallcc i32 @SetConsoleOutputCP(i32)
-declare x86_stdcallcc i32 @WriteConsoleA(i8*, i8*, i32, i32*, i8*)
-declare x86_stdcallcc i32 @WriteConsoleW(i8*, i8*, i32, i32*, i8*)
-declare x86_stdcallcc i32 @FlushFileBuffers(i8*)
-
-declare x86_stdcallcc i32 @GetLastError()
-declare x86_stdcallcc i32 @GetFileAttributesA(i8*)
-declare x86_stdcallcc i32 @SetFilePointerEx(i8*, i64, i64*, i32)
-declare x86_stdcallcc i32 @SetEndOfFile(i8*)
-declare x86_stdcallcc i32 @GetFileSizeEx(i8*, i64*)
-declare x86_stdcallcc i8* @CreateFileA(i8*, i32, i32, i8*, i32, i32, i8*)
-declare x86_stdcallcc i32 @ReadFile(i8*, i8*, i32, i32*, i8*)
-declare x86_stdcallcc i32 @WriteFile(i8*, i8*, i32, i32*, i8*)
-declare x86_stdcallcc i32 @DeleteFileA(i8*)
-declare x86_stdcallcc i32 @CloseHandle(i8*)
-
-declare x86_stdcallcc i32 @MultiByteToWideChar(i32, i32, i8*, i32, i16*, i32)
-declare x86_stdcallcc i32 @FormatMessageA(i32, i8*, i32, i32, i8**, i32, i8*)
-
-declare i8* @strncpy(i8*, i8* nocapture, %size_t) nounwind
-
 define i32 @shadow.io..Path..separator(%shadow.io..Path*) alwaysinline {
 	ret i32 92
 }

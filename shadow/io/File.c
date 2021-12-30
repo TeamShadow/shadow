@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 // EXPORTED METHODS
 void _shadowIoFile_throwException(shadow_io_File_t* file, shadow_String_t* message);
@@ -16,6 +17,9 @@ void _shadowIoFile_throwException(shadow_io_File_t* file, shadow_String_t* messa
 #else
 	#include <unistd.h>
 	#include <fcntl.h>
+	#include <errno.h>
+	#include <sys/types.h>
+    #include <sys/stat.h>
 #endif
 
 static void reportError(char* error)
@@ -54,10 +58,10 @@ static void reportError(char* error)
 #else
     char messageBuffer[1024];
     if (strerror_r(errno, messageBuffer, sizeof(messageBuffer)) == 0) {
-        rsize_t totalLength = strlen(error) + strlen(": ") + strlen(messageBuffer);
+        size_t totalLength = strlen(error) + strlen(": ") + strlen(messageBuffer);
         char* buffer = malloc(totalLength + 1);
-        sprintf_s(buffer, totalLength + 1, "%s: %s", error, messageBuffer);
-        int length = strlen(buffer);
+        sprintf(buffer, "%s: %s", error, messageBuffer);
+        size_t length = strlen(buffer);
         // Trim off trailing newlines
         while (length > 0 && (buffer[length - 1] == '\r' || buffer[length - 1] == '\n')) {
             buffer[length - 1] = '\0';
@@ -238,7 +242,7 @@ void __shadowIoFile_sizeSet(shadow_long_t handle, shadow_long_t size)
     	    !SetEndOfFile ((HANDLE)handle) ||
     	    !SetFilePointerEx ((HANDLE)handle, (LARGE_INTEGER)currentPosition, NULL, FILE_BEGIN);
 #else
-    error = ftruncate((int)handle, (off_t)size) = -1;
+    error = ftruncate((int)handle, (off_t)size) == -1;
 #endif
 
     if (error)
