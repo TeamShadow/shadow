@@ -7,6 +7,7 @@ import org.junit.platform.suite.api.SuiteDisplayName;
 /**
  * Class that runs all JUnit tests.
  */
+
 @Suite
 @SuiteDisplayName("Full Shadow Test Suite")
 @SelectPackages({"shadow.test.doctool", "shadow.test.interpreter", "shadow.test.output", "shadow.test.parse", "shadow.test.typecheck" })

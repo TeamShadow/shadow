@@ -133,7 +133,7 @@ public class Main {
     }
   }
 
-  private static int compareVersions(String v1, String v2) {
+  public static int compareVersions(String v1, String v2) {
     String[] strings1 = v1.split("\\.");
     String[] strings2 = v2.split("\\.");
     int size = Math.max(strings1.length, strings2.length);
@@ -211,20 +211,20 @@ public class Main {
       mainLL = system.resolve(mainLL);
       BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
 
-      linkCommand.add("-x");
-      linkCommand.add("assembler");
-      linkCommand.add("-");
+      // Read main and compile into temporary object
+      Path temporaryMain = Files.createTempFile(currentJob.getMainFile().getParent(),"main", null);
+      StringBuilder builder = new StringBuilder();
+      String line = main.readLine();
 
-      // Usually llc
-      Process compile =
-          new ProcessBuilder(
-                  config.getLlc(),
-                  "-mtriple",
-                  config.getTarget(),
-                  "--filetype=asm",
-                  config.getOptimizationLevel())
-              .redirectError(Redirect.INHERIT)
-              .start();
+      while (line != null) {
+        line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
+        builder.append(line);
+        line = main.readLine();
+      }
+      main.close();
+
+      String compiledMain = optimizeLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), canonicalize(temporaryMain), temporaryMain);
+      linkCommand.add(compiledMain);
 
       // Usually clang or clang++
       Process link =
@@ -232,32 +232,13 @@ public class Main {
               .redirectOutput(Redirect.INHERIT)
               .redirectError(Redirect.INHERIT)
               .start();
-
-      try {
-        new Pipe(compile.getInputStream(), link.getOutputStream()).start();
-        String line = main.readLine();
-        final OutputStream out = compile.getOutputStream();
-
-        while (line != null) {
-          line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
-          out.write(line.getBytes());
-          line = main.readLine();
-        }
-
-        try {
-          main.close();
-          compile.getOutputStream().flush();
-          compile.getOutputStream().close();
-        } catch (IOException ignored) {
-        }
-
-        if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE");
+      try{
         if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
-
       } catch (InterruptedException ignored) {
       } finally {
-        compile.destroy();
         link.destroy();
+        Files.delete(temporaryMain);
+        Files.delete(Paths.get(compiledMain));
       }
 
       logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");

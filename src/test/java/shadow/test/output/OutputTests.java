@@ -1,10 +1,8 @@
 package shadow.test.output;
 
+import com.sun.jna.platform.win32.WinReg;
 import org.junit.jupiter.api.*;
-import shadow.Configuration;
-import shadow.ConfigurationException;
-import shadow.Job;
-import shadow.Main;
+import shadow.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -46,7 +44,7 @@ public class OutputTests {
 
     // Try to remove the unit test executable
     try {
-      Files.delete(executable);
+     Files.delete(executable);
     } catch (Exception ignored) {
     }
   }
@@ -1186,6 +1184,31 @@ public class OutputTests {
             + "Welcome, bedula\n"
             + "That's the magic word!\n"
             + "separate scopes\n");
+  }
+
+  @Test
+  public void testSystem() throws Exception {
+    args.add("shadow/test/SystemTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    String os = System.getProperty("os.name");
+    boolean isWindows = os.toLowerCase().contains("windows");
+    String version;
+    if (isWindows) {
+      os = RegistryAccess.readString(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName");
+      int major = RegistryAccess.readInt(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentMajorVersionNumber");
+      int minor = RegistryAccess.readInt(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentMinorVersionNumber");
+      version = major + "." + minor;
+    }
+    else
+       version = System.getProperty("os.version");
+
+    String path = System.getenv("PATH");
+    if (path == null)
+      path = "";
+
+    // Time since Unix epoch rounded to nearest 10 second chunk
+    String time = "" + Math.round(System.currentTimeMillis() / 10000.0);
+    run(new String[0], isWindows + "\n" + path + "\n" + os + "\n" + version + "\n" + time + "\n");
   }
 
   @Test

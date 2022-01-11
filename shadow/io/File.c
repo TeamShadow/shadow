@@ -1,5 +1,5 @@
 /**
- * Author: Claude Abounegm
+ * Authors: Claude Abounegm and Barry Wittman
  */
 #include <Shadow.h>
 #include <io/File.h>

@@ -10,6 +10,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.WinBase;
+import com.sun.jna.platform.win32.WinReg;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
@@ -20,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -31,10 +35,13 @@ import java.util.regex.Pattern;
   "import",
   "target",
   "architecture",
+  "cc",
   "os",
   "opt",
   "llc",
   "link",
+  "libraryPaths",
+  "libraries",
   "parent"
 })
 public class Configuration {
@@ -63,6 +70,25 @@ public class Configuration {
   public static final String DEFAULT_CONFIG_NAME = "shadow.json";
   public static final String SHADOW_HOME = "SHADOW_HOME";
 
+  // Reasonable collection of common Windows libraries
+  // Some are included with Visual Studio, and others are in the SDK
+  public static final String[] WINDOWS_LIBRARIES = {
+    // "libucrt.lib",
+    // "ucrt.lib", //Dynamic linking?
+    "kernel32.lib",
+    // "user32.lib",
+    // "gdi32.lib",
+    // "winspool.lib",
+    // "comdlg32.lib",
+    "advapi32.lib",
+    // "shell32.lib",
+    /// "ole32.lib",
+    // "oleaut32.lib",
+    // "uuid.lib",
+    // "odbc32.lib",
+    // "odbccp32.lib"
+  };
+
   private static Configuration globalConfig;
 
   private static final Logger logger = Loggers.SHADOW;
@@ -82,6 +108,9 @@ public class Configuration {
   @JsonProperty("architecture")
   private int architecture;
 
+  @JsonProperty("cc")
+  private String cc;
+
   @JsonProperty("os")
   private String os;
 
@@ -91,11 +120,19 @@ public class Configuration {
   @JsonProperty("llc")
   private String llc;
 
-  @JsonProperty("link")
-  private List<String> link;
+  @JsonProperty("linker")
+  private String linker;
+
+  @JsonProperty("libraryPaths")
+  private List<String> libraryPaths;
+
+  @JsonProperty("libraries")
+  private List<String> libraries;
 
   @JsonProperty("parent")
   private Path parent;
+
+  private List<String> linkCommand = new ArrayList<>();
 
   @JsonProperty("system")
   public Path getSystem() {
@@ -115,6 +152,11 @@ public class Configuration {
   @JsonProperty("target")
   public void setTarget(String target) {
     this.target = target;
+  }
+
+  @JsonProperty("cc")
+  public String getCC() {
+    return cc;
   }
 
   @JsonProperty("architecture")
@@ -147,9 +189,19 @@ public class Configuration {
     return llc;
   }
 
-  @JsonProperty("link")
-  public List<String> getLink() {
-    return link;
+  @JsonProperty("linker")
+  public String getLinker() {
+    return linker;
+  }
+
+  @JsonProperty("libraryPaths")
+  public List<String> getLibraryPaths() {
+    return libraryPaths;
+  }
+
+  @JsonProperty("libraries")
+  public List<String> getLibraries() {
+    return libraries;
   }
 
   /**
@@ -251,8 +303,7 @@ public class Configuration {
                 + configFile
                 + ". This should usually only be expected during testing");
         return runningDir.resolve(configFile);
-      }
-      else {
+      } else {
         throw new FileNotFoundException("Configuration file " + configFile + " does not exist");
       }
     }
@@ -272,12 +323,10 @@ public class Configuration {
     Map<String, String> environment = System.getenv();
     if (environment.containsKey(SHADOW_HOME)) {
       Path homeDir = Paths.get(environment.get(SHADOW_HOME)).toAbsolutePath();
-      if (Files.exists(homeDir.resolve(defaultFile)))
-        return homeDir.resolve(defaultFile);
+      if (Files.exists(homeDir.resolve(defaultFile))) return homeDir.resolve(defaultFile);
     }
 
     throw new FileNotFoundException("Configuration file does not exist");
-
   }
 
   /* Auto-detects values for unfilled fields */
@@ -307,32 +356,63 @@ public class Configuration {
 
     if (opt == null) opt = "opt";
 
+    if (cc == null) {
+      if (os.equals("Windows")) cc = "clang-cl";
+      else cc = "clang";
+    }
+
     if (target == null) target = getDefaultTarget();
 
-    if (link == null) {
-      link = new ArrayList<>();
+    if (libraryPaths == null) {
+      libraryPaths = new ArrayList<>();
+
+      if (os.equals("Windows")) addWindowsLibraryPaths(libraryPaths);
+    }
+
+    if (libraries == null) {
+      libraries = new ArrayList<>();
 
       switch (getOs()) {
         case "Mac":
-          // Does Mac work at all now?  What about the new M chips?
-          link.add("clang");
-          link.add("-lm");
-          link.add("-lSystem");
+          libraries.add("m");
+          libraries.add("System");
+          libraries.add("pthread");
           break;
         case "Windows":
-          // If properly set up, clang uses Visual Studio to link default Windows libraries
-          link.add("clang");
+          libraries.addAll(Arrays.asList(WINDOWS_LIBRARIES));
           break;
         case "Linux":
-          link.add("clang++");
-          link.add("-lm");
-          link.add("-lrt");
-          link.add("-pthread");
+          libraries.add("m");
+          libraries.add("rt");
+          libraries.add("pthread");
+          break;
+      }
+    }
+
+    if (linker == null) {
+      switch (getOs()) {
+        case "Windows":
+          // linker = "lld-link";
+          linker = "clang";
+          break;
+        case "Mac":
+          // Does Mac work at all now?  What about the new M chips?
+          linker = "clang";
+          break;
+        default:
+          linker = "clang++";
           break;
       }
 
-      if (architecture == 32) link.add("-m32");
-      else link.add("-m64");
+      // Build link command
+      linkCommand.add(linker);
+
+      if (architecture == 32) linkCommand.add("-m32");
+      else linkCommand.add("-m64");
+
+      for (String path : libraryPaths) linkCommand.add("-L" + path);
+
+      for (String library : libraries) linkCommand.add("-l" + library);
     }
 
     if (system == null) system = getRunningDirectory();
@@ -362,8 +442,11 @@ public class Configuration {
         if (configuration.architecture == 0) configuration.architecture = parent.architecture;
         if (configuration.os == null) configuration.os = parent.os;
         if (configuration.opt == null) configuration.opt = parent.opt;
+        if (configuration.cc == null) configuration.cc = parent.cc;
         if (configuration.llc == null) configuration.llc = parent.llc;
-        if (configuration.link == null) configuration.link = parent.link;
+        if (configuration.linker == null) configuration.linker = parent.linker;
+        if (configuration.libraryPaths == null) configuration.libraryPaths = parent.libraryPaths;
+        if (configuration.libraries == null) configuration.libraries = parent.libraries;
       }
 
       return configuration;
@@ -388,7 +471,7 @@ public class Configuration {
 
   public List<String> getLinkCommand(Job currentJob) {
     // Merge the output commands with the linker commands
-    List<String> linkCommand = new ArrayList<>(link);
+    List<String> linkCommand = new ArrayList<>(this.linkCommand);
     linkCommand.addAll(currentJob.getOutputCommand());
     return linkCommand;
   }
@@ -534,6 +617,121 @@ public class Configuration {
     }
 
     return dataLayout;
+  }
+
+  private static Path getChildWithLargestVersion(Path path) {
+    if (Files.isDirectory(path)) {
+      try {
+        // Get largest version number
+        Path largest = null;
+        for (Path child : Files.newDirectoryStream(path)) {
+          if (largest == null
+              || Main.compareVersions(
+                      child.getFileName().toString(), largest.getFileName().toString())
+                  > 0) largest = child;
+        }
+        return largest;
+      } catch (IOException ignored) {
+      }
+    }
+    return null;
+  }
+
+  private boolean addWindowsLibraryPaths(List<String> paths) {
+    /* Example result:
+    paths.add("C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.18362.0\\um\\x64");
+    paths.add("C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.18362.0\\ucrt\\x64");
+    paths.add("C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.23.28105\\lib\\x64");
+    */
+    WinBase.SYSTEM_INFO info = new WinBase.SYSTEM_INFO();
+    Kernel32.INSTANCE.GetNativeSystemInfo(info);
+    boolean x86Windows =
+        info.processorArchitecture.pi.wProcessorArchitecture.intValue()
+            == 0; // PROCESSOR_ARCHITECTURE_INTEL
+
+    final String SDK_KEY;
+    if (x86Windows) // Unlikely with modern Windows
+    SDK_KEY = "SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\";
+    else SDK_KEY = "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows\\";
+
+    // First, try to find Windows SDK path in the registry
+    Path sdkPath = null;
+    if (RegistryAccess.keyExists(WinReg.HKEY_LOCAL_MACHINE, SDK_KEY)) {
+      String[] subkeys = RegistryAccess.getKeys(WinReg.HKEY_LOCAL_MACHINE, SDK_KEY);
+
+      Arrays.sort(
+          subkeys,
+          (String key1, String key2) -> {
+            if (key1.toLowerCase().startsWith("v") && key2.toLowerCase().startsWith("v"))
+              return Main.compareVersions(key1.substring(1), key2.substring(1));
+
+            return key1.compareTo(key2);
+          });
+
+      String subkey =
+          SDK_KEY + "\\" + subkeys[subkeys.length - 1]; // Last one should be highest version
+      if (RegistryAccess.keyExists(WinReg.HKEY_LOCAL_MACHINE, subkey)) {
+        String folder =
+            RegistryAccess.readString(WinReg.HKEY_LOCAL_MACHINE, subkey, "InstallationFolder");
+        sdkPath = Paths.get(folder).resolve("Lib");
+      }
+    }
+
+    // If registry didn't work, look in the usual place in the directories
+    if (sdkPath == null) {
+      if (x86Windows)
+        sdkPath =
+            getChildWithLargestVersion(Paths.get(System.getenv("ProgramFiles"), "Windows Kits"));
+      else // Weirdly, x64 needs the x86 specification
+      sdkPath =
+            getChildWithLargestVersion(
+                Paths.get(System.getenv("ProgramFiles(x86)"), "Windows Kits"));
+      if (sdkPath == null) return false;
+      sdkPath = sdkPath.resolve("Lib");
+    }
+
+    // Inside Lib, look for largest version, like 10.0.18362.0
+    sdkPath = getChildWithLargestVersion(sdkPath);
+    if (sdkPath == null) return false;
+
+    Path ucrt = sdkPath.resolve("ucrt");
+    Path um = sdkPath.resolve("um");
+    if (architecture == 32) {
+      ucrt = ucrt.resolve("x86");
+      um = um.resolve("x86");
+    } else {
+      ucrt = ucrt.resolve("x64");
+      um = um.resolve("x64");
+    }
+
+    if (!Files.isDirectory(ucrt) || !Files.isDirectory(um)) return false;
+
+    // Finally, add SDK directories to list
+    paths.add(Main.canonicalize(ucrt));
+    paths.add(Main.canonicalize(um));
+
+    /*
+      // Now add MSVC stuff
+      Path vswherePath;
+      if (x86Windows)
+        vswherePath = Paths.get(System.getenv("%ProgramFiles%"));
+      else
+        vswherePath = Paths.get(System.getenv("%ProgramFiles(x86)%"));
+      vswherePath = vswherePath.resolve("Microsoft Visual Studio\\Installer\\vswhere.exe");
+
+      // Try chocolatey
+      if (!Files.exists(vswherePath)) {
+        vswherePath =
+            Paths.get(System.getenv("%ProgramData%"))
+                .resolve("chocolatey\\lib\\vswhere\\tools\\vswhere.exe");
+      }
+
+      if (!Files.exists(vswherePath))
+        return false;
+
+      //Now that we have vswhere, we can run it and get its output
+    */
+    return true;
   }
 
   public static boolean isWindows() {

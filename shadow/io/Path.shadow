@@ -5,6 +5,12 @@
 immutable class shadow:io@Path
 {
 	String[] components;
+
+    [ImportAssembly]
+    private readonly __shadowIoPath_fileSeparator() => (code);
+    [ImportAssembly]
+    private readonly __shadowIoPath_pathSeparator() => (code);
+
 	/**
 	 * Creates a {@code Path} object corresponding to the path specified by
 	 * the given {@code String}.
@@ -13,9 +19,11 @@ immutable class shadow:io@Path
 	public create( String path )
 	{
 		int index = 0, count = 1, start = 0;
-		for ( int i = 0; i < path->size; i += 1 )
+		ubyte posixSeparator = cast<ubyte>('/');
+		ubyte windowsSeparator = cast<ubyte>('\\');
+		for (int i = 0; i < path->size; i += 1)
 		{
-			if ( path.index(i) == cast<byte>(this->separator) )
+			if (path[i] == posixSeparator or path[i] == windowsSeparator)
 			{
 				if ( i != start )
 					count += 1;
@@ -26,11 +34,11 @@ immutable class shadow:io@Path
 		components = freeze(String:create[count]);
 		
 		start = 0;
-		for ( int i = 0; i < path->size; i += 1 )
+		for (int i = 0; i < path->size; i += 1)
 		{
-			if ( path.index(i) == cast<byte>(this->separator) )
+			if (path[i] == posixSeparator or path[i] == windowsSeparator)
 			{
-				if ( i != start )
+				if (i != start)
 				{
 					components[index] = path.substring(start, i);
 					index += 1;
@@ -41,15 +49,33 @@ immutable class shadow:io@Path
 		if ( index != count )		
 			components[index] = path.substring(start);
 	}
+
+	private create(String[] components)
+	{
+	    this:components = freeze(components);
+	}
 	
 	/**
 	 * Gets the operating system-specific UTF-8 code point corresponding to
-	 * the path separator, {@code \} in Windows and {@code /} in Linux and
-	 * Mac OS X.
+	 * the file separator, {@code \} in Windows and {@code /} in Linux and
+	 * macOS.
 	 * @return separator character 
 	 */
-	[ImportNative]
-	public locked get separator() => ( code );
+	public locked get fileSeparator() => ( code )
+	{
+	    return __shadowIoPath_fileSeparator();
+	}
+
+    /**
+     * Gets the operating system-specific UTF-8 code point corresponding to
+     * the path separator, {@code ;} in Windows and {@code :} in Linux and
+     * macOS.
+     * @return separator character
+     */
+    public locked get pathSeparator() => ( code )
+    {
+        return __shadowIoPath_pathSeparator();
+    }
 	
 	/**
 	 * Returns a {@code String} representation of the path.
@@ -63,7 +89,7 @@ immutable class shadow:io@Path
 		var string = MutableString:create(components[0]);
 	
 		for ( int i = 1; i < components->size; i += 1 )
-			string.append(this->separator).append(components[i]);
+			string.append(this->fileSeparator).append(components[i]);
 		
 		return #string;
 	}
