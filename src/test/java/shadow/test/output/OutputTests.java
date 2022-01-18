@@ -22,7 +22,7 @@ public class OutputTests {
   private final ArrayList<String> args = new ArrayList<>();
 
   @BeforeEach
-  public void setup() throws Exception {
+  public void setup() {
     args.add("-o");
     args.add(executableName);
 
@@ -37,6 +37,7 @@ public class OutputTests {
 
     //args.add("-r");
     //args.add("-f");
+    //args.add("-v");
   }
 
   @AfterEach

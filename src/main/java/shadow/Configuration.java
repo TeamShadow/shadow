@@ -73,8 +73,9 @@ public class Configuration {
   // Reasonable collection of common Windows libraries
   // Some are included with Visual Studio, and others are in the SDK
   public static final String[] WINDOWS_LIBRARIES = {
-    // "libucrt.lib",
-    // "ucrt.lib", //Dynamic linking?
+    "msvcrt.lib",
+    "ucrt.lib", //Dynamic linking
+    "vcruntime.lib", // Dynamic linking
     "kernel32.lib",
     // "user32.lib",
     // "gdi32.lib",
@@ -132,7 +133,7 @@ public class Configuration {
   @JsonProperty("parent")
   private Path parent;
 
-  private List<String> linkCommand = new ArrayList<>();
+  private final List<String> linkCommand = new ArrayList<>();
 
   @JsonProperty("system")
   public Path getSystem() {
@@ -356,10 +357,8 @@ public class Configuration {
 
     if (opt == null) opt = "opt";
 
-    if (cc == null) {
-      if (os.equals("Windows")) cc = "clang-cl";
-      else cc = "clang";
-    }
+    if (cc == null) cc = "clang";
+
 
     if (target == null) target = getDefaultTarget();
 
@@ -406,6 +405,11 @@ public class Configuration {
 
       // Build link command
       linkCommand.add(linker);
+
+      if (getOs().equals("Windows")) {
+        linkCommand.add("-Wl,-nodefaultlib:libcmt");
+        linkCommand.add("-D_DLL");
+      }
 
       if (architecture == 32) linkCommand.add("-m32");
       else linkCommand.add("-m64");
@@ -641,7 +645,6 @@ public class Configuration {
     /* Example result:
     paths.add("C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.18362.0\\um\\x64");
     paths.add("C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.18362.0\\ucrt\\x64");
-    paths.add("C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.23.28105\\lib\\x64");
     */
     WinBase.SYSTEM_INFO info = new WinBase.SYSTEM_INFO();
     Kernel32.INSTANCE.GetNativeSystemInfo(info);
@@ -710,27 +713,6 @@ public class Configuration {
     paths.add(Main.canonicalize(ucrt));
     paths.add(Main.canonicalize(um));
 
-    /*
-      // Now add MSVC stuff
-      Path vswherePath;
-      if (x86Windows)
-        vswherePath = Paths.get(System.getenv("%ProgramFiles%"));
-      else
-        vswherePath = Paths.get(System.getenv("%ProgramFiles(x86)%"));
-      vswherePath = vswherePath.resolve("Microsoft Visual Studio\\Installer\\vswhere.exe");
-
-      // Try chocolatey
-      if (!Files.exists(vswherePath)) {
-        vswherePath =
-            Paths.get(System.getenv("%ProgramData%"))
-                .resolve("chocolatey\\lib\\vswhere\\tools\\vswhere.exe");
-      }
-
-      if (!Files.exists(vswherePath))
-        return false;
-
-      //Now that we have vswhere, we can run it and get its output
-    */
     return true;
   }
 
