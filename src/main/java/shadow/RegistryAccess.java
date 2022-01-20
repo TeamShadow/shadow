@@ -7,7 +7,6 @@ public class RegistryAccess {
 
   public static String readString(WinReg.HKEY topLevel, String key, String value) {
     return Advapi32Util.registryGetStringValue(topLevel, key, value);
-
   }
 
   public static int readInt(WinReg.HKEY topLevel, String key, String value) {

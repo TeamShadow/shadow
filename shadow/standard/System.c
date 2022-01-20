@@ -15,6 +15,8 @@
 #elif defined SHADOW_MAC
 	#include <mach/clock.h>
 	#include <mach/mach.h>
+	#include <stdlib.h>
+	#include <sys/utsname.h>
 
 	static shadow_long_t get_nano_time(clock_id_t id)
 	{
@@ -29,6 +31,8 @@
 	}
 #else
 	#include <time.h>
+	#include <stdlib.h>
+	#include <sys/utsname.h>
 
 	static shadow_ulong_t get_nano_time(clockid_t id)
 	{
