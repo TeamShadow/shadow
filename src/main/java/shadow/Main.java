@@ -153,6 +153,9 @@ public class Main {
       throws ShadowException, IOException, org.apache.commons.cli.ParseException,
           ConfigurationException {
 
+    System.setProperty("sun.io.useCanonCaches", "true");
+    System.setProperty("sun.io.useCanonPrefixCache", "true");
+
     // Detect and establish the current settings and arguments
     Arguments compilerArgs = new Arguments(args);
 
