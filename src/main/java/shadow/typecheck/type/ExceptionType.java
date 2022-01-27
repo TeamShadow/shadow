@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 public class ExceptionType extends ClassType {
   public ExceptionType(
       String typeName, Modifiers modifiers, Documentation documentation, Type outer) {
-    this(typeName, modifiers, documentation, outer, Type.EXCEPTION);
+    this(typeName, modifiers, documentation, outer, null);
   }
 
   public ExceptionType(

@@ -106,7 +106,7 @@ public class TypeChecker {
    * type-checking the full code.
    */
   public static void printMetaFile(Context node) {
-    String file = BaseChecker.stripExtension(Main.canonicalize(node.getPath()));
+    String file = BaseChecker.stripExtension(node.getPath());
     try {
       File shadowVersion = new File(file + ".shadow");
       File metaVersion = new File(file + ".meta");

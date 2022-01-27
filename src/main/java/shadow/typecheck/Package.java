@@ -17,6 +17,7 @@
 
 package shadow.typecheck;
 
+import org.jetbrains.annotations.NotNull;
 import shadow.doctool.Documentation;
 import shadow.typecheck.type.Type;
 
@@ -122,6 +123,12 @@ public class Package implements Comparable<Package>, Iterable<Type> {
       type.setPackage(this); // Informs type of its package
     } else
       throw new PackageException("Package " + this + " already contains type " + type);
+  }
+
+  public boolean containsType(Type type) {
+    // name doesn't include packages or type parameters
+    String name = type.toString(Type.NO_OPTIONS);
+    return types.containsKey(name);
   }
 
   /**
@@ -286,6 +293,7 @@ public class Package implements Comparable<Package>, Iterable<Type> {
   }
 
   @Override
+  @NotNull
   public Iterator<Type> iterator() {
     return new PackageIterator();
   }

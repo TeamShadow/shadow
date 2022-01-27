@@ -1,3 +1,5 @@
+target triple = "x86_64-pc-windows-msvc"
+
 ; Shadow Library
 
 %boolean = type i1

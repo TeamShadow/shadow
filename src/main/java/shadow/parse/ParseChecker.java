@@ -26,7 +26,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
   }
 
   public CompilationUnitContext getCompilationUnit(Path path) throws IOException {
-    CharStream stream = CharStreams.fromPath(path.toAbsolutePath());
+    CharStream stream = CharStreams.fromPath(path);
     return getCompilationUnit(stream);
   }
 

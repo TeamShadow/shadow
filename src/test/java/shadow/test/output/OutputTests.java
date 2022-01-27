@@ -75,7 +75,7 @@ public class OutputTests {
     Path fullExecutable = config.getSystem().resolve(executable);
 
     List<String> programCommand = new ArrayList<>();
-    programCommand.add(Main.canonicalize(fullExecutable));
+    programCommand.add(fullExecutable.toString());
 
     Collections.addAll(programCommand, programArgs);
 

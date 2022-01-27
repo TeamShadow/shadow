@@ -72,7 +72,7 @@ public class DocumentationTypeChecker {
     /* Filter out only those types associated with the files being documented. */
     Set<Type> types = new TreeSet<>();
     for (Path file : files) {
-      Context node = fileTable.get(BaseChecker.stripExtension(Main.canonicalize(file)));
+      Context node = fileTable.get(BaseChecker.stripExtension(file));
       if (node != null) types.add(node.getType());
     }
 

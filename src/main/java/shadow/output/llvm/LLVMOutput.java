@@ -1,6 +1,7 @@
 package shadow.output.llvm;
 
 import shadow.Configuration;
+import shadow.ConfigurationException;
 import shadow.ShadowException;
 import shadow.interpreter.*;
 import shadow.output.AbstractOutput;
@@ -32,7 +33,7 @@ public class LLVMOutput extends AbstractOutput {
     super(file);
   }
 
-  public LLVMOutput(OutputStream stream) throws ShadowException {
+  public LLVMOutput(OutputStream stream) {
     super(stream);
   }
 

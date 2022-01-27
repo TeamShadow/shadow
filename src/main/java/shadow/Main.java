@@ -153,9 +153,6 @@ public class Main {
       throws ShadowException, IOException, org.apache.commons.cli.ParseException,
           ConfigurationException {
 
-    System.setProperty("sun.io.useCanonCaches", "true");
-    System.setProperty("sun.io.useCanonPrefixCache", "true");
-
     // Detect and establish the current settings and arguments
     Arguments compilerArgs = new Arguments(args);
 
@@ -226,8 +223,10 @@ public class Main {
       }
       main.close();
 
-      String compiledMain = optimizeLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), canonicalize(temporaryMain), temporaryMain);
+      String compiledMain = optimizeLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain.toString());
       linkCommand.add(compiledMain);
+
+      logger.info("Linking object files...");
 
       // Usually clang or clang++
       Process link =
@@ -254,7 +253,7 @@ public class Main {
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private static boolean compileCSourceFile(
       Path cFile, List<String> compileCommand, List<String> assembleCommand) throws IOException {
-    String inputFile = canonicalize(cFile);
+    String inputFile = cFile.toString();
     String outputFile = inputFile + ".o";
     Path outputPath = Paths.get(outputFile);
 
@@ -380,7 +379,7 @@ public class Main {
     linkCommand.add(optimizeLLVMFile(shadow.resolve("Shared.ll")));
 
     Path mainFile = currentJob.getMainFile();
-    String mainFileName = BaseChecker.stripExtension(canonicalize(mainFile));
+    String mainFileName = BaseChecker.stripExtension(mainFile);
 
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
@@ -410,8 +409,8 @@ public class Main {
           if (!node.isFromMetaFile() && !(node.getType() instanceof AttributeType))
             optimizeTAC(new TACBuilder().build(node), reporter);
         } else {
-          String name = BaseChecker.stripExtension(file.getFileName().toString());
-          String path = BaseChecker.stripExtension(canonicalize(file));
+          String name = BaseChecker.stripExtension(file.getFileName());
+          String path = BaseChecker.stripExtension(file);
 
           Type type = node.getType();
 
@@ -428,7 +427,7 @@ public class Main {
           }
 
           String className = typeToFileName(type);
-          Path cFile = file.getParent().resolve(className + ".c").normalize();
+          Path cFile = file.getParent().resolve(className + ".c");
           if (Files.exists(cFile)) cFiles.add(cFile);
 
           Path objectFile = file.getParent().resolve(className + ".o");
@@ -440,7 +439,7 @@ public class Main {
           // have been used
           if (node.isFromMetaFile()) {
             logger.info("Using pre-existing LLVM code for " + name);
-            if (Files.exists(objectFile)) linkCommand.add(canonicalize(objectFile));
+            if (Files.exists(objectFile)) linkCommand.add(objectFile.toString());
             else if (Files.exists(llvmFile)) linkCommand.add(optimizeLLVMFile(llvmFile));
             else throw new CompileException("File not found: " + objectFile);
           } else {
@@ -450,8 +449,8 @@ public class Main {
             linkCommand.add(compileShadowFile(file, module));
           }
 
-          if (Files.exists(nativeObjectFile)) linkCommand.add(canonicalize(nativeObjectFile));
-          else if (Files.exists(nativeFile)) linkCommand.add(optimizeLLVMFile(nativeFile));
+          if (Files.exists(nativeObjectFile)) linkCommand.add(nativeObjectFile.toString());
+          else if (Files.exists(nativeFile)) linkCommand.add(nativeFile.toString());
         }
       }
 
@@ -463,10 +462,10 @@ public class Main {
     }
   }
 
-  private static String compileLLVMStream(InputStream stream, String path, Path LLVMPath)
+  private static String compileLLVMStream(InputStream stream, String path)
       throws CompileException {
     Path objectPath = Paths.get(path + ".o");
-    String objectFile = canonicalize(objectPath);
+    String objectFile = objectPath.toString();
 
     boolean success = false;
     Process compile = null;
@@ -483,10 +482,10 @@ public class Main {
                   objectFile)
               .start();
       new Pipe(stream, compile.getOutputStream()).start();
-      if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + LLVMPath);
+      if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + path);
       success = true;
     } catch (IOException | InterruptedException e) {
-      throw new CompileException("FAILED TO COMPILE " + LLVMPath);
+      throw new CompileException("FAILED TO COMPILE " + path);
     } finally {
       if (!success) {
         try {
@@ -501,7 +500,7 @@ public class Main {
     return objectFile;
   }
 
-  private static String optimizeLLVMStream(InputStream stream, String path, Path LLVMPath)
+  private static String optimizeLLVMStream(InputStream stream, String path)
       throws CompileException {
     Process optimize = null;
     try {
@@ -515,30 +514,29 @@ public class Main {
               .redirectError(Redirect.INHERIT)
               .start();
       new Pipe(stream, optimize.getOutputStream()).start();
-      String objectFile = compileLLVMStream(optimize.getInputStream(), path, LLVMPath);
-      if (optimize.waitFor() != 0) throw new CompileException("FAILED TO OPTIMIZE " + LLVMPath);
+      String objectFile = compileLLVMStream(optimize.getInputStream(), path);
+      if (optimize.waitFor() != 0) throw new CompileException("FAILED TO OPTIMIZE " + path);
 
       return objectFile;
     } catch (IOException | InterruptedException e) {
-      throw new CompileException("FAILED TO OPTIMIZE " + LLVMPath);
+      throw new CompileException("FAILED TO OPTIMIZE " + path);
     } finally {
       if (optimize != null) optimize.destroy();
     }
   }
 
   private static String optimizeLLVMFile(Path LLVMPath) throws CompileException {
-    String LLVMFile = canonicalize(LLVMPath);
+    String LLVMFile = LLVMPath.toString();
     String path = BaseChecker.stripExtension(LLVMFile);
     try {
-      return optimizeLLVMStream(Files.newInputStream(LLVMPath), path, LLVMPath);
+      return optimizeLLVMStream(Files.newInputStream(LLVMPath), path);
     } catch (IOException e) {
       throw new CompileException("FAILED TO OPTIMIZE " + LLVMPath);
     }
   }
 
-  private static String compileShadowFile(Path shadowPath, TACModule module)
+  private static String compileShadowFile(Path shadowFile, TACModule module)
       throws CompileException {
-    String shadowFile = canonicalize(shadowPath);
     String path = BaseChecker.stripExtension(shadowFile);
     Process optimize = null;
 
@@ -574,7 +572,7 @@ public class Main {
       if (currentJob.isHumanReadable()) return optimizeLLVMFile(Paths.get(path + ".ll"));
       else {
         @SuppressWarnings("ConstantConditions")
-        String objectFile = compileLLVMStream(optimize.getInputStream(), path, shadowPath);
+        String objectFile = compileLLVMStream(optimize.getInputStream(), path);
         if (optimize.waitFor() != 0) throw new CompileException("FAILED TO OPTIMIZE " + shadowFile);
         return objectFile;
       }
@@ -728,11 +726,5 @@ public class Main {
 
   public static Job getJob() {
     return currentJob;
-  }
-
-  public static String canonicalize(Path path) {
-    Path absolute = path.toAbsolutePath();
-    Path normalized = absolute.normalize();
-    return normalized.toString();
   }
 }

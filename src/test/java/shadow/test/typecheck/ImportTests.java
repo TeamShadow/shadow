@@ -19,7 +19,7 @@ public class ImportTests {
   private final ArrayList<String> args = new ArrayList<>();
 
   @BeforeEach
-  public void setup() throws Exception {
+  public void setup() {
     // args.add("-v");
     args.add("--typecheck");
 
@@ -76,7 +76,7 @@ public class ImportTests {
   @Test
   public void testAllImports() throws Exception {
     String file = "tests/import/all-imports/Test.shadow";
-    Path path = Paths.get(file);
+    Path path = Paths.get(file).toAbsolutePath().normalize();
     Package p = new Package();
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
     TypeCollector collector = new TypeCollector(p, reporter, false, true);

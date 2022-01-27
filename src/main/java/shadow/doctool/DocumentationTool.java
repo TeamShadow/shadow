@@ -104,8 +104,8 @@ public class DocumentationTool {
     // current working directory
     Path outputDirectory;
     if (arguments.hasOption(DocumentationArguments.OUTPUT_DIR))
-      outputDirectory = Paths.get(arguments.getOutputDirectory()).toAbsolutePath();
-    else outputDirectory = Paths.get("docs").toAbsolutePath();
+      outputDirectory = Paths.get(arguments.getOutputDirectory()).toAbsolutePath().normalize();
+    else outputDirectory = Paths.get("docs").toAbsolutePath().normalize();
 
     // Capture visible inner classes for documentation
     List<Type> outerClasses = new ArrayList<>(typesToDocument);
@@ -145,11 +145,11 @@ public class DocumentationTool {
       String[] givenPaths, Map<String, Documentation> pkgDocs) throws IOException, ShadowException {
     List<Path> sourceFiles = new ArrayList<>();
     for (String path : givenPaths) {
-      Path current = Paths.get(path).toAbsolutePath();
+      Path current = Paths.get(path).toAbsolutePath().normalize();
 
       // Ensure that the source file exists
       if (!Files.exists(current))
-        throw new FileNotFoundException("File at " + current.toAbsolutePath() + " not found");
+        throw new FileNotFoundException("File at " + current + " not found");
 
       // If the file is a directory, process it as a package
       if (Files.isDirectory(current)) sourceFiles.addAll(getPackageFiles(current, true, pkgDocs));
@@ -160,7 +160,7 @@ public class DocumentationTool {
         // Only do this for explicitly requested files
         throw new DocumentationException(
             "File at "
-                + current.toAbsolutePath()
+                + current
                 + " is not a package "
                 + "directory, "
                 + PKG_INFO_FILE

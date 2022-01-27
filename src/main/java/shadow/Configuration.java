@@ -60,10 +60,10 @@ public class Configuration {
     }
 
     @Override
-    public Path deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+    public Path deserialize(JsonParser jp, DeserializationContext context) throws IOException {
       JsonNode node = jp.getCodec().readTree(jp);
       Path path = Paths.get(node.asText());
-      return configFile.getParent().resolve(path);
+      return configFile.getParent().resolve(path).toAbsolutePath().normalize();
     }
   }
 
@@ -261,9 +261,9 @@ public class Configuration {
     Path sourceDir =
         mainFilePath == null
             ? null
-            : Paths.get(mainFilePath).toAbsolutePath().getParent().toAbsolutePath();
-    Path workingDir = Paths.get("").toAbsolutePath();
-    Path runningDir = getRunningDirectory().toAbsolutePath();
+            : Paths.get(mainFilePath).getParent().normalize();
+    Path workingDir = Paths.get("").toAbsolutePath().normalize();
+    Path runningDir = getRunningDirectory().toAbsolutePath().normalize();
 
     Path defaultFile = Paths.get(DEFAULT_CONFIG_NAME);
 
@@ -323,7 +323,7 @@ public class Configuration {
     /// 5. A file in the SHADOW_HOME directory with the default name
     Map<String, String> environment = System.getenv();
     if (environment.containsKey(SHADOW_HOME)) {
-      Path homeDir = Paths.get(environment.get(SHADOW_HOME)).toAbsolutePath();
+      Path homeDir = Paths.get(environment.get(SHADOW_HOME)).toAbsolutePath().normalize();
       if (Files.exists(homeDir.resolve(defaultFile))) return homeDir.resolve(defaultFile);
     }
 
@@ -420,12 +420,13 @@ public class Configuration {
     }
 
     if (system == null) system = getRunningDirectory();
+    system = system.toAbsolutePath().normalize();
 
     if (_import == null) _import = new ArrayList<>();
 
     // The import paths list must contain an "empty" path that can later be
     // resolved against source files
-    _import.add(Paths.get("." + File.separator));
+    _import.add(Paths.get("." + File.separator).toAbsolutePath().normalize());
   }
 
   /* Parses a config file and fills the corresponding fields */
@@ -465,7 +466,7 @@ public class Configuration {
     try {
       URL url = Main.class.getProtectionDomain().getCodeSource().getLocation();
       URI uri = url.toURI();
-      return Paths.get(uri).getParent().toAbsolutePath();
+      return Paths.get(uri).getParent().toAbsolutePath().normalize();
     } catch (SecurityException e) {
       throw new ConfigurationException("Insufficient permissions to access the running directory");
     } catch (URISyntaxException e) {
@@ -697,6 +698,8 @@ public class Configuration {
     sdkPath = getChildWithLargestVersion(sdkPath);
     if (sdkPath == null) return false;
 
+    sdkPath = sdkPath.toAbsolutePath().normalize();
+
     Path ucrt = sdkPath.resolve("ucrt");
     Path um = sdkPath.resolve("um");
     if (architecture == 32) {
@@ -710,8 +713,8 @@ public class Configuration {
     if (!Files.isDirectory(ucrt) || !Files.isDirectory(um)) return false;
 
     // Finally, add SDK directories to list
-    paths.add(Main.canonicalize(ucrt));
-    paths.add(Main.canonicalize(um));
+    paths.add(ucrt.toString());
+    paths.add(um.toString());
 
     return true;
   }

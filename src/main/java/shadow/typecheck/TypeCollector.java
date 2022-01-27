@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 public class TypeCollector extends ScopedChecker {
 
   // Map of types to the AST nodes that define them, useful for error messages.
-  private final Map<Type, Context> typeTable = new HashMap<>();
+  private final Map<Type, Context> typeTable;
   // Map of file paths (without extensions) to nodes.
   private final Map<String, Context> fileTable = new HashMap<>();
   private final boolean useSourceFiles;
@@ -60,8 +60,12 @@ public class TypeCollector extends ScopedChecker {
       new HashMap<>(); // Type name -> file path and import statement
   private final Set<String> usedTypes = new HashSet<>(); // File paths
 
-  // Paths where we can search for imports.
-  private final List<Path> importPaths = new ArrayList<>();
+  /* Paths where we can search for imports.
+   The LinkedHashSet ensures
+   1) Identical paths will only appear once
+   2) The order of insertion will be preserved, searching the first imports first
+   */
+  private final Set<Path> importPaths = new LinkedHashSet<>();
 
   // Store standard imports once for efficiency
   private final Map<String, PathWithContext> standardImportedTypes;
@@ -143,6 +147,7 @@ public class TypeCollector extends ScopedChecker {
     super(p, reporter);
     this.useSourceFiles = useSourceFiles;
     this.typeCheckOnly = typeCheckOnly;
+    typeTable = new HashMap<>();
 
     standardPath = getStandardPath(Configuration.getConfiguration());
     standardImportedTypes = getStandardImports(standardPath);
@@ -150,12 +155,14 @@ public class TypeCollector extends ScopedChecker {
 
   private TypeCollector(
       Package p,
+      Map<Type, Context> typeTable,
       Path standardPath,
       Map<String, PathWithContext> standardImportedTypes,
       ErrorReporter reporter,
       boolean useSourceFiles,
       boolean typeCheckOnly) {
     super(p, reporter);
+    this.typeTable = typeTable;
     this.useSourceFiles = useSourceFiles;
     this.typeCheckOnly = typeCheckOnly;
 
@@ -165,7 +172,7 @@ public class TypeCollector extends ScopedChecker {
   }
 
   public static Path getStandardPath(Configuration config) {
-    return config.getSystem().resolve("shadow").resolve("standard").normalize();
+    return config.getSystem().resolve("shadow").resolve("standard").normalize().toAbsolutePath();
   }
 
   /**
@@ -189,6 +196,7 @@ public class TypeCollector extends ScopedChecker {
 
   /**
    * Calls <code>collectTypes</code> with one main file.
+   * The main file should be an absolute, normalized (no redundant dots) path.
    *
    * @param mainFile main file to be type-checked or compiled
    * @return map from types to nodes
@@ -305,15 +313,14 @@ public class TypeCollector extends ScopedChecker {
     // Create and fill the initial set of files to be checked.
     TreeSet<String> uncheckedFiles = new TreeSet<>();
 
-    String main = null; // May or may not be null, based on hasMain.
     if (files.isEmpty()) throw new ConfigurationException("No files provided for typechecking");
     else if (hasMain) {
       // Assume the main file is the first and only file.
-      main = stripExtension(Main.canonicalize(files.get(0)));
+      String main = stripExtension(files.get(0));
       uncheckedFiles.add(main);
     } else {
       for (Path file : files) {
-        String path = stripExtension(Main.canonicalize(file));
+        String path = stripExtension(file);
         uncheckedFiles.add(path);
       }
     }
@@ -321,7 +328,7 @@ public class TypeCollector extends ScopedChecker {
     /* Check standard imports. */
     if (!Files.exists(standardPath))
       throw new ConfigurationException(
-          "Invalid path to shadow:standard: " + Main.canonicalize(standardPath));
+          "Invalid path to shadow:standard: " + standardPath);
 
     TreeSet<String> standardDependencies = new TreeSet<>();
 
@@ -333,14 +340,14 @@ public class TypeCollector extends ScopedChecker {
     }
 
     /* A few io classes are absolutely necessary for a console program. */
-    Path io = standardPath.getParent().resolve("io").normalize();
+    Path io = standardPath.resolveSibling("io");
     if (!Files.exists(io))
-      throw new ConfigurationException("Invalid path to io: " + Main.canonicalize(io));
+      throw new ConfigurationException("Invalid path to io: " + io);
 
-    uncheckedFiles.add(Main.canonicalize(io.resolve("Console")));
-    uncheckedFiles.add(Main.canonicalize(io.resolve("File")));
-    uncheckedFiles.add(Main.canonicalize(io.resolve("IOException")));
-    uncheckedFiles.add(Main.canonicalize(io.resolve("Path")));
+    uncheckedFiles.add(io.resolve("Console").toString());
+    uncheckedFiles.add(io.resolve("File").toString());
+    uncheckedFiles.add(io.resolve("IOException").toString());
+    uncheckedFiles.add(io.resolve("Path").toString());
 
     /* As long as there are unchecked files, remove one and process it. */
     while (!uncheckedFiles.isEmpty()) {
@@ -397,7 +404,9 @@ public class TypeCollector extends ScopedChecker {
       // Make another collector to walk the current file.
       TypeCollector collector =
           new TypeCollector(
-              new Package(),
+              //new Package(),
+              packageTree, // Use our existing package?
+              typeTable,
               standardPath,
               standardImportedTypes,
               getErrorReporter(),
@@ -409,6 +418,7 @@ public class TypeCollector extends ScopedChecker {
 
       fileTable.put(canonical, node);
 
+      /*
       if (canonical.equals(main)) {
         mainType = node.getType();
         // Put the main type in the package tree first (if it exists)
@@ -421,31 +431,35 @@ public class TypeCollector extends ScopedChecker {
         }
       }
 
-      /* Copy types from other collector into our package tree. */
+      // Copy types from other collector into our package tree.
       for (Type type : collector.packageTree) {
         if (type != mainType) {
           try {
-            packageTree.addQualifiedPackage(type.getPackage().toString()).addType(type);
-            // Imported class has default package but the main type doesn't.
-            // The only classes without a package that will be imported will be
-            // in the same directory as the main type.
-            // Implication: classes in the same directory have different packages.
-            if (mainType != null
-                && type.getPackage() == packageTree
-                && mainType.getPackage() != packageTree) {
+            Package package_ = packageTree.addQualifiedPackage(type.getPackage().toString());
+            if (!package_.containsType(type)) {
+              package_.addType(type);
+              // Imported class has default package but the main type doesn't.
+              // The only classes without a package that will be imported will be
+              // in the same directory as the main type.
+              // Implication: classes in the same directory have different packages.
+              if (mainType != null
+                      && type.getPackage() == packageTree
+                      && mainType.getPackage() != packageTree) {
 
-              addError(
-                  new TypeCheckException(
-                      Error.MISMATCHED_PACKAGE,
-                      "Type "
-                          + type
-                          + " belongs to the default package, but types defined in the same directory belong to other packages"));
+                addError(
+                        new TypeCheckException(
+                                Error.MISMATCHED_PACKAGE,
+                                "Type "
+                                        + type
+                                        + " belongs to the default package, but types defined in the same directory belong to other packages"));
+              }
             }
           } catch (PackageException e) {
             addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));
           }
         }
       }
+      */
 
       /* Track the dependencies for this file (if dependencies are being used).
        * If any of its dependencies need to be recompiled, this file will need
@@ -459,12 +473,14 @@ public class TypeCollector extends ScopedChecker {
       }
 
       for (String _import : collector.usedTypes) {
-        if (!fileTable.containsKey(_import)) uncheckedFiles.add(_import);
+        if (!fileTable.containsKey(_import))
+          uncheckedFiles.add(_import);
 
         if (dependencySet != null) dependencySet.add(_import);
       }
 
-      /* Copy file table from other collector into our table. */
+      /*
+      // Copy file table from other collector into our table.
       Map<Type, Context> otherNodeTable = collector.typeTable;
       for (Type type : otherNodeTable.keySet()) {
         if (!typeTable.containsKey(type)) {
@@ -472,6 +488,8 @@ public class TypeCollector extends ScopedChecker {
           typeTable.put(type, otherNode);
         }
       }
+
+       */
     }
   }
 
@@ -542,7 +560,7 @@ public class TypeCollector extends ScopedChecker {
    * Returns false if that type name was already imported.
    */
   private boolean addImport(Path file, NameContext context, boolean directory) {
-    String filePath = stripExtension(Main.canonicalize(file));
+    String filePath = stripExtension(file);
     String typeName;
     if (context == null || directory) typeName = stripExtension(file.getFileName().toString());
     else
@@ -582,7 +600,7 @@ public class TypeCollector extends ScopedChecker {
                   // type name
                   file -> stripExtension(file.getFileName().toString()),
                   // path
-                  file -> new PathWithContext(stripExtension(Main.canonicalize(file)), null)));
+                  file -> new PathWithContext(stripExtension(file), null)));
     }
   }
 
@@ -986,11 +1004,11 @@ public class TypeCollector extends ScopedChecker {
       // If an import path is relative, resolving it against the
       // current source file will make it absolute.
       // If it's absolute, no change will happen.
-      importPath = currentFile.getParent().resolve(importPath);
+      importPath = currentFile.resolveSibling(importPath);
 
       if (isDirectory) {
         Path directory = importPath.resolve(path);
-        if (Files.exists(directory) && Files.isDirectory(directory)) return directory;
+        if (Files.isDirectory(directory)) return directory;
       } else {
         Path shadowVersion = importPath.resolve(path + ".shadow");
         Path metaVersion = importPath.resolve(path + ".meta");
@@ -1085,7 +1103,7 @@ public class TypeCollector extends ScopedChecker {
 
     if (ctx.isList() == null) { // no is list, so mark Object as used
       Path object = standardPath.resolve("Object");
-      usedTypes.add(Main.canonicalize(object));
+      usedTypes.add(object.toString());
     }
 
     Type type =
@@ -1313,7 +1331,7 @@ public class TypeCollector extends ScopedChecker {
       name = ctx.unqualifiedName().getText() + "@" + name;
       Path file = findPath(name);
       if (file == null) addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
-      else usedTypes.add(stripExtension(Main.canonicalize(file)));
+      else usedTypes.add(stripExtension(file));
     } else if (!isTypeParameter(name) && !isLocalType(name)) {
       if (importedTypes.containsKey(name)) usedTypes.add(importedTypes.get(name).path);
       else addError(ctx, Error.UNDEFINED_TYPE, "Type " + name + " not defined in current context");
@@ -1339,7 +1357,7 @@ public class TypeCollector extends ScopedChecker {
       String name = prefix.unqualifiedName().getText() + "@" + prefix.generalIdentifier().getText();
       Path file = findPath(name);
       if (file == null) addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
-      else usedTypes.add(stripExtension(Main.canonicalize(file)));
+      else usedTypes.add(stripExtension(file));
     }
     // This case is complex:
     // There's an identifier that could be a class, but it's got to have a suffix.

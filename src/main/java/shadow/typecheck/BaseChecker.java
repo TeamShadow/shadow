@@ -28,6 +28,7 @@ import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.*;
 import shadow.typecheck.type.Type.ImportInformation;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -556,6 +557,10 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
    */
   public static String stripExtension(String file) {
     return file.substring(0, file.lastIndexOf("."));
+  }
+
+  public static String stripExtension(Path file) {
+    return stripExtension(file.toString());
   }
 
   /**

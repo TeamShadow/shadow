@@ -41,7 +41,7 @@ public class Job {
     // Locate main source file if not help or information only
     if (!compilerArgs.hasOption(Arguments.INFORMATION) && !compilerArgs.hasOption(Arguments.HELP)) {
       if (compilerArgs.getMainFileArg() != null)
-        mainFile = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath();
+        mainFile = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath().normalize();
 
       // Ensure that the main source file exists
       if (mainFile == null)
@@ -49,7 +49,7 @@ public class Job {
             "Source file at " + compilerArgs.getMainFileArg() + " not found");
       else if (!Files.exists(mainFile))
         throw new FileNotFoundException(
-            "Source file at " + mainFile.toAbsolutePath() + " not found");
+            "Source file at " + mainFile + " not found");
 
       Path outputFile;
 
@@ -58,16 +58,16 @@ public class Job {
         outputFile = Paths.get(compilerArgs.getOutputFileArg());
 
         // Resolve it if necessary
-        outputFile = mainFile.getParent().resolve(outputFile);
+        outputFile = mainFile.resolveSibling(outputFile);
       } else {
         // Determine a path to the default output file
-        String outputName = BaseChecker.stripExtension(mainFile.getFileName().toString());
-        outputFile = mainFile.getParent().resolve(properExecutableName(outputName));
+        String outputName = BaseChecker.stripExtension(mainFile.getFileName());
+        outputFile = mainFile.resolveSibling(properExecutableName(outputName));
       }
 
       // Create linker output command
       outputCommand.add("-o");
-      outputCommand.add(outputFile.toAbsolutePath().toString());
+      outputCommand.add(outputFile.toString());
 
       // deal with warning flags
       if (compilerArgs.hasOption(Arguments.WARNING)) {
