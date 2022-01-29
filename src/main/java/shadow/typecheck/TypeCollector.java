@@ -18,7 +18,10 @@
 package shadow.typecheck;
 
 import org.antlr.v4.runtime.RuleContext;
-import shadow.*;
+import shadow.Configuration;
+import shadow.ConfigurationException;
+import shadow.Loggers;
+import shadow.ShadowException;
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
 import shadow.parse.ParseChecker;
@@ -61,10 +64,10 @@ public class TypeCollector extends ScopedChecker {
   private final Set<String> usedTypes = new HashSet<>(); // File paths
 
   /* Paths where we can search for imports.
-   The LinkedHashSet ensures
-   1) Identical paths will only appear once
-   2) The order of insertion will be preserved, searching the first imports first
-   */
+  The LinkedHashSet ensures
+  1) Identical paths will only appear once
+  2) The order of insertion will be preserved, searching the first imports first
+  */
   private final Set<Path> importPaths = new LinkedHashSet<>();
 
   // Store standard imports once for efficiency
@@ -195,8 +198,8 @@ public class TypeCollector extends ScopedChecker {
   }
 
   /**
-   * Calls <code>collectTypes</code> with one main file.
-   * The main file should be an absolute, normalized (no redundant dots) path.
+   * Calls <code>collectTypes</code> with one main file. The main file should be an absolute,
+   * normalized (no redundant dots) path.
    *
    * @param mainFile main file to be type-checked or compiled
    * @return map from types to nodes
@@ -313,10 +316,11 @@ public class TypeCollector extends ScopedChecker {
     // Create and fill the initial set of files to be checked.
     TreeSet<String> uncheckedFiles = new TreeSet<>();
 
+    String main = null;
     if (files.isEmpty()) throw new ConfigurationException("No files provided for typechecking");
     else if (hasMain) {
       // Assume the main file is the first and only file.
-      String main = stripExtension(files.get(0));
+      main = stripExtension(files.get(0));
       uncheckedFiles.add(main);
     } else {
       for (Path file : files) {
@@ -327,8 +331,7 @@ public class TypeCollector extends ScopedChecker {
 
     /* Check standard imports. */
     if (!Files.exists(standardPath))
-      throw new ConfigurationException(
-          "Invalid path to shadow:standard: " + standardPath);
+      throw new ConfigurationException("Invalid path to shadow:standard: " + standardPath);
 
     TreeSet<String> standardDependencies = new TreeSet<>();
 
@@ -341,8 +344,7 @@ public class TypeCollector extends ScopedChecker {
 
     /* A few io classes are absolutely necessary for a console program. */
     Path io = standardPath.resolveSibling("io");
-    if (!Files.exists(io))
-      throw new ConfigurationException("Invalid path to io: " + io);
+    if (!Files.exists(io)) throw new ConfigurationException("Invalid path to io: " + io);
 
     uncheckedFiles.add(io.resolve("Console").toString());
     uncheckedFiles.add(io.resolve("File").toString());
@@ -404,8 +406,7 @@ public class TypeCollector extends ScopedChecker {
       // Make another collector to walk the current file.
       TypeCollector collector =
           new TypeCollector(
-              //new Package(),
-              packageTree, // Use our existing package?
+              packageTree, // Use our existing package
               typeTable,
               standardPath,
               standardImportedTypes,
@@ -418,48 +419,9 @@ public class TypeCollector extends ScopedChecker {
 
       fileTable.put(canonical, node);
 
-      /*
       if (canonical.equals(main)) {
         mainType = node.getType();
-        // Put the main type in the package tree first (if it exists)
-        if (mainType != Type.UNKNOWN) {
-          try {
-            packageTree.addQualifiedPackage(mainType.getPackage().toString()).addType(mainType);
-          } catch (PackageException e) {
-            addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));
-          }
-        }
       }
-
-      // Copy types from other collector into our package tree.
-      for (Type type : collector.packageTree) {
-        if (type != mainType) {
-          try {
-            Package package_ = packageTree.addQualifiedPackage(type.getPackage().toString());
-            if (!package_.containsType(type)) {
-              package_.addType(type);
-              // Imported class has default package but the main type doesn't.
-              // The only classes without a package that will be imported will be
-              // in the same directory as the main type.
-              // Implication: classes in the same directory have different packages.
-              if (mainType != null
-                      && type.getPackage() == packageTree
-                      && mainType.getPackage() != packageTree) {
-
-                addError(
-                        new TypeCheckException(
-                                Error.MISMATCHED_PACKAGE,
-                                "Type "
-                                        + type
-                                        + " belongs to the default package, but types defined in the same directory belong to other packages"));
-              }
-            }
-          } catch (PackageException e) {
-            addError(new TypeCheckException(Error.INVALID_PACKAGE, e.getMessage()));
-          }
-        }
-      }
-      */
 
       /* Track the dependencies for this file (if dependencies are being used).
        * If any of its dependencies need to be recompiled, this file will need
@@ -473,23 +435,28 @@ public class TypeCollector extends ScopedChecker {
       }
 
       for (String _import : collector.usedTypes) {
-        if (!fileTable.containsKey(_import))
-          uncheckedFiles.add(_import);
+        if (!fileTable.containsKey(_import)) uncheckedFiles.add(_import);
 
         if (dependencySet != null) dependencySet.add(_import);
       }
+    }
 
-      /*
-      // Copy file table from other collector into our table.
-      Map<Type, Context> otherNodeTable = collector.typeTable;
-      for (Type type : otherNodeTable.keySet()) {
-        if (!typeTable.containsKey(type)) {
-          Context otherNode = otherNodeTable.get(type);
-          typeTable.put(type, otherNode);
-        }
+    Collection<Type> packageLessTypes = packageTree.getTypes();
+    if (mainType != null && packageLessTypes.size() > 0 && !packageLessTypes.contains(mainType)) {
+      // Imported class has default package but the main type doesn't.
+      // The only classes without a package that will be imported will be
+      // in the same directory as the main type.
+      // Implication: classes in the same directory have different packages.
+
+      for (Type type : packageLessTypes) {
+
+        addError(
+            new TypeCheckException(
+                Error.MISMATCHED_PACKAGE,
+                "Type "
+                    + type
+                    + " belongs to the default package, but types defined in the same directory belong to other packages"));
       }
-
-       */
     }
   }
 

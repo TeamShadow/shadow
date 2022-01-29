@@ -2,6 +2,7 @@ package shadow.test.typecheck;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import shadow.Configuration;
 import shadow.Loggers;
 import shadow.Main;
 import shadow.typecheck.ErrorReporter;
@@ -75,7 +76,21 @@ public class ImportTests {
 
   @Test
   public void testAllImports() throws Exception {
+    String os = System.getProperty("os.name").toLowerCase();
+
+    String config;
+    if (os.contains("windows"))
+      config = "windows.json";
+    else if (os.contains("mac"))
+      config = "mac.json";
+    else
+      config = "linux.json";
+
     String file = "tests/import/all-imports/Test.shadow";
+
+    Configuration.buildConfiguration(
+            file, config, false);
+
     Path path = Paths.get(file).toAbsolutePath().normalize();
     Package p = new Package();
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
