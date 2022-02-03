@@ -50,6 +50,7 @@ public class Package implements Comparable<Package>, Iterable<Type> {
   private final HashMap<String, Package> children = new HashMap<>();
   private final String name;
   private final Package parent;
+  private String mangledName = null;
 
   // Types inside the current package
   private final HashMap<String, Type> types = new HashMap<>();
@@ -157,9 +158,14 @@ public class Package implements Comparable<Package>, Iterable<Type> {
    * @return mangled package name
    */
   public String getMangledName() {
-    if (parent == null || parent.getName().isEmpty()) return Type.mangle(getName());
-
-    return parent.getMangledName() + '.' + Type.mangle(getName());
+    // Added a cached mangled name since the profiler reported this method in heavy rotation
+    if (mangledName == null) {
+      if (parent == null || parent.getName().isEmpty())
+        mangledName = Type.mangle(getName());
+      else
+        mangledName = parent.getMangledName() + '.' + Type.mangle(getName());
+    }
+    return mangledName;
   }
 
   /**

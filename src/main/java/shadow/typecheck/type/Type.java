@@ -13,6 +13,7 @@ import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException.Error;
 
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -162,17 +163,17 @@ public abstract class Type implements Comparable<Type> {
   }
 
   public static class ImportInformation {
-    private final String importPath;
+    private final Path importPath;
     private final NameContext
         importName; // Doesn't include package information, since it's needed only for inner classes
     private Type type;
 
-    public ImportInformation(String importPath, NameContext importName) {
+    public ImportInformation(Path importPath, NameContext importName) {
       this.importPath = importPath;
       this.importName = importName;
     }
 
-    public String getImportPath() {
+    public Path getImportPath() {
       return importPath;
     }
 

@@ -223,7 +223,7 @@ public class Main {
       }
       main.close();
 
-      String compiledMain = optimizeLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain.toString());
+      String compiledMain = optimizeLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain);
       linkCommand.add(compiledMain);
 
       logger.info("Linking object files...");
@@ -254,8 +254,8 @@ public class Main {
   private static boolean compileCSourceFile(
       Path cFile, List<String> compileCommand, List<String> assembleCommand) throws IOException {
     String inputFile = cFile.toString();
-    String outputFile = inputFile + ".o";
-    Path outputPath = Paths.get(outputFile);
+    Path outputPath = BaseChecker.addExtension(cFile, ".o");
+    String outputFile = outputPath.toString();
 
     assembleCommand.add(outputFile);
 
@@ -379,7 +379,7 @@ public class Main {
     linkCommand.add(optimizeLLVMFile(shadow.resolve("Shared.ll")));
 
     Path mainFile = currentJob.getMainFile();
-    String mainFileName = BaseChecker.stripExtension(mainFile);
+    Path mainFileName = BaseChecker.stripExtension(mainFile);
 
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
@@ -409,8 +409,9 @@ public class Main {
           if (!node.isFromMetaFile() && !(node.getType() instanceof AttributeType))
             optimizeTAC(new TACBuilder().build(node), reporter);
         } else {
-          String name = BaseChecker.stripExtension(file.getFileName());
-          String path = BaseChecker.stripExtension(file);
+          Path path = BaseChecker.stripExtension(file);
+          Path name = path.getFileName();
+
 
           Type type = node.getType();
 
@@ -462,9 +463,9 @@ public class Main {
     }
   }
 
-  private static String compileLLVMStream(InputStream stream, String path)
+  private static String compileLLVMStream(InputStream stream, Path path)
       throws CompileException {
-    Path objectPath = Paths.get(path + ".o");
+    Path objectPath = BaseChecker.addExtension(path, ".o");
     String objectFile = objectPath.toString();
 
     boolean success = false;
@@ -500,7 +501,7 @@ public class Main {
     return objectFile;
   }
 
-  private static String optimizeLLVMStream(InputStream stream, String path)
+  private static String optimizeLLVMStream(InputStream stream, Path path)
       throws CompileException {
     Process optimize = null;
     try {
@@ -526,8 +527,7 @@ public class Main {
   }
 
   private static String optimizeLLVMFile(Path LLVMPath) throws CompileException {
-    String LLVMFile = LLVMPath.toString();
-    String path = BaseChecker.stripExtension(LLVMFile);
+    Path path = BaseChecker.stripExtension(LLVMPath);
     try {
       return optimizeLLVMStream(Files.newInputStream(LLVMPath), path);
     } catch (IOException e) {
@@ -537,14 +537,14 @@ public class Main {
 
   private static String compileShadowFile(Path shadowFile, TACModule module)
       throws CompileException {
-    String path = BaseChecker.stripExtension(shadowFile);
+    Path path = BaseChecker.stripExtension(shadowFile);
     Process optimize = null;
 
     try {
       LLVMOutput output = null;
       OutputStream out;
 
-      if (currentJob.isHumanReadable()) out = Files.newOutputStream(Paths.get(path + ".ll"));
+      if (currentJob.isHumanReadable()) out = Files.newOutputStream(BaseChecker.addExtension(path, ".ll"));
       else {
         optimize =
             new ProcessBuilder(

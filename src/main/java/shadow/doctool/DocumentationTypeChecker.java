@@ -58,7 +58,7 @@ public class DocumentationTypeChecker {
     Map<Type, Context> typeTable = collector.collectTypes(files);
 
     // Maps file names to nodes.
-    Map<String, Context> fileTable = collector.getFileTable();
+    Map<Path, Context> fileTable = collector.getFileTable();
 
     /* Updates types, adding:
      *  Fields and methods

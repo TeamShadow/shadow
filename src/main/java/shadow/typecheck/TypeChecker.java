@@ -19,15 +19,14 @@ package shadow.typecheck;
 
 import shadow.ConfigurationException;
 import shadow.Loggers;
-import shadow.Main;
 import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
 import shadow.typecheck.type.Type;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -73,7 +72,7 @@ public class TypeChecker {
 
     /* Its return value maps all the types to the nodes that need compiling. */
     Map<Type, Context> nodeTable = collector.collectTypes(mainFile);
-    Map<String, Context> fileTable = collector.getFileTable();
+    Map<Path, Context> fileTable = collector.getFileTable();
 
     /* Updates types, adding:
      *  Fields and methods
@@ -106,15 +105,15 @@ public class TypeChecker {
    * type-checking the full code.
    */
   public static void printMetaFile(Context node) {
-    String file = BaseChecker.stripExtension(node.getPath());
+    Path file = BaseChecker.stripExtension(node.getPath());
     try {
-      File shadowVersion = new File(file + ".shadow");
-      File metaVersion = new File(file + ".meta");
+      Path shadowVersion = BaseChecker.addExtension(file, ".shadow");
+      Path metaVersion = BaseChecker.addExtension(file, ".meta");
       /* Add meta file if an updated one doesn't already exist. */
-      if (!metaVersion.exists()
-          || (shadowVersion.exists()
-              && shadowVersion.lastModified() >= metaVersion.lastModified())) {
-        PrintWriter out = new PrintWriter(metaVersion);
+      if (!Files.exists(metaVersion)
+          || (Files.exists(shadowVersion)
+              && Files.getLastModifiedTime(shadowVersion).compareTo(Files.getLastModifiedTime(metaVersion)) > 0)) {
+        PrintWriter out = new PrintWriter(metaVersion.toFile());
         node.getType().printMetaFile(out, "");
         out.close();
       }

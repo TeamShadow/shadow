@@ -32,6 +32,7 @@ import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.*;
 import shadow.typecheck.type.Type.ImportInformation;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -53,7 +54,7 @@ public class TypeUpdater extends BaseChecker {
    * @param packageTree root of all packages
    * @param fileTable map from file names to AST nodes
    */
-  public TypeUpdater(Package packageTree, ErrorReporter reporter, Map<String, Context> fileTable) {
+  public TypeUpdater(Package packageTree, ErrorReporter reporter, Map<Path, Context> fileTable) {
     super(packageTree, reporter);
 
     // Update so that all the imported names map to types

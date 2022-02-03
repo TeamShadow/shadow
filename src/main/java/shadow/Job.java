@@ -61,8 +61,8 @@ public class Job {
         outputFile = mainFile.resolveSibling(outputFile);
       } else {
         // Determine a path to the default output file
-        String outputName = BaseChecker.stripExtension(mainFile.getFileName());
-        outputFile = mainFile.resolveSibling(properExecutableName(outputName));
+        Path outputName = BaseChecker.stripExtension(mainFile);
+        outputFile = properExecutableName(outputName);
       }
 
       // Create linker output command
@@ -112,8 +112,8 @@ public class Job {
   }
 
   /** Takes a file name without extension and outputs it in an OS-appropriate form. */
-  public static String properExecutableName(String executableName) {
-    if (System.getProperty("os.name").contains("Windows")) return executableName + ".exe";
+  public static Path properExecutableName(Path executableName) {
+    if (System.getProperty("os.name").contains("Windows")) return BaseChecker.addExtension(executableName, ".exe");
     else return executableName;
   }
 }

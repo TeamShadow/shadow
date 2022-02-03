@@ -16,15 +16,14 @@ import java.util.concurrent.TimeoutException;
 
 public class OutputTests {
   // To simplify removal, every unit test executable will have the same name
-  private static final String executableName = Job.properExecutableName("OutputTest");
-  private static final Path executable = Paths.get("shadow", "test", executableName);
+  private static final Path executable = Job.properExecutableName(Paths.get("shadow", "test", "OutputTest"));
 
   private final ArrayList<String> args = new ArrayList<>();
 
   @BeforeEach
   public void setup() {
     args.add("-o");
-    args.add(executableName);
+    args.add(executable.getFileName().toString());
 
     System.out.println("Working Directory = " + System.getProperty("user.dir"));
 

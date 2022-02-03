@@ -14,15 +14,14 @@ import java.util.ArrayList;
 public class TACTests {
 
   // To simplify removal, every unit test executable will have the same name
-  private static final String executableName = Job.properExecutableName("TACTest");
-  private static final Path executable = Paths.get("shadow", "test", executableName);
+  private static final Path executable = Job.properExecutableName(Paths.get("TacTest"));
 
   private final ArrayList<String> args = new ArrayList<>();
 
   @BeforeEach
-  public void setup() throws Exception {
+  public void setup() {
     args.add("-o");
-    args.add(executableName);
+    args.add(executable.getFileName().toString());
 
     System.out.println("Working Directory = " + System.getProperty("user.dir"));
 

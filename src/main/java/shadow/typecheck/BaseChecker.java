@@ -556,11 +556,18 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
    * @return name without extension
    */
   public static String stripExtension(String file) {
-    return file.substring(0, file.lastIndexOf("."));
+    int index = file.lastIndexOf(".");
+    if (index < 0)
+      index = file.length();
+    return file.substring(0, index);
   }
 
-  public static String stripExtension(Path file) {
-    return stripExtension(file.toString());
+  public static Path stripExtension(Path file) {
+    return file.resolveSibling(stripExtension(file.getFileName().toString()));
+  }
+
+  public static Path addExtension(Path file, String extension) {
+    return file.resolveSibling(file.getFileName().toString() + extension);
   }
 
   /**
