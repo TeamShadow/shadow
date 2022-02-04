@@ -392,13 +392,13 @@ public class Main {
     ConstantFieldInterpreter.evaluateConstants(
         typecheckerOutput.packageTree, typecheckerOutput.nodes);
 
-    // As an optimization, print .meta files for the .shadow files being checked
-    typecheckerOutput.nodes.stream()
-        .filter((node) -> !node.isFromMetaFile())
-        .forEach(TypeChecker::printMetaFile);
 
     try {
       for (Context node : typecheckerOutput.nodes) {
+        // As an optimization, print .meta files for the .shadow files being checked
+        if (!node.isFromMetaFile())
+          TypeChecker.printMetaFile(node);
+
         Path file = node.getPath();
 
         if (currentJob.isCheckOnly()) {
@@ -411,7 +411,6 @@ public class Main {
         } else {
           Path path = BaseChecker.stripExtension(file);
           Path name = path.getFileName();
-
 
           Type type = node.getType();
 
@@ -428,15 +427,15 @@ public class Main {
           }
 
           String className = typeToFileName(type);
-          Path cFile = file.getParent().resolve(className + ".c");
+          Path cFile = file.resolveSibling(className + ".c");
           if (Files.exists(cFile)) cFiles.add(cFile);
 
-          Path objectFile = file.getParent().resolve(className + ".o");
-          Path llvmFile = file.getParent().resolve(className + ".ll");
-          Path nativeFile = file.getParent().resolve(className + ".native.ll");
-          Path nativeObjectFile = file.getParent().resolve(className + ".native.o");
+          Path objectFile = file.resolveSibling(className + ".o");
+          Path llvmFile = file.resolveSibling(className + ".ll");
+          Path nativeFile = file.resolveSibling(className + ".native.ll");
+          Path nativeObjectFile = file.resolveSibling(className + ".native.o");
 
-          // if the LLVM bitcode didn't exist, the full .shadow file would
+          // If the LLVM bitcode didn't exist, the full .shadow file would
           // have been used
           if (node.isFromMetaFile()) {
             logger.info("Using pre-existing LLVM code for " + name);
@@ -445,7 +444,7 @@ public class Main {
             else throw new CompileException("File not found: " + objectFile);
           } else {
             logger.info("Generating LLVM code for " + name);
-            // gets top level class
+            // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
             linkCommand.add(compileShadowFile(file, module));
           }
@@ -560,7 +559,7 @@ public class Main {
 
       try {
         // Generate LLVM
-        output = new LLVMOutput(out);
+        output = new LLVMOutput(new BufferedOutputStream(out));
         output.build(module);
       } catch (ShadowException e) {
         logger.error("FAILED TO COMPILE " + shadowFile);

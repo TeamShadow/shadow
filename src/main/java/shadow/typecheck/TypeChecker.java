@@ -24,6 +24,8 @@ import shadow.parse.Context;
 import shadow.parse.ParseException;
 import shadow.typecheck.type.Type;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -113,7 +115,7 @@ public class TypeChecker {
       if (!Files.exists(metaVersion)
           || (Files.exists(shadowVersion)
               && Files.getLastModifiedTime(shadowVersion).compareTo(Files.getLastModifiedTime(metaVersion)) > 0)) {
-        PrintWriter out = new PrintWriter(metaVersion.toFile());
+        PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(metaVersion.toFile())));
         node.getType().printMetaFile(out, "");
         out.close();
       }

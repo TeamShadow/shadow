@@ -21,13 +21,13 @@ public class TabbedLineWriter {
   }
 
   public TabbedLineWriter(OutputStream output) {
-    out = new OutputStreamWriter(output);
+    out = new OutputStreamWriter(new BufferedOutputStream(output));
   }
 
   @SuppressWarnings("unused")
   public TabbedLineWriter(String file) throws ShadowException {
     try {
-      out = new FileWriter(file);
+      out = new BufferedWriter(new FileWriter(file));
     } catch (IOException ex) {
       throw new OutputException(ex.getLocalizedMessage());
     }
@@ -35,7 +35,7 @@ public class TabbedLineWriter {
 
   public TabbedLineWriter(Path file) throws ShadowException {
     try {
-      out = new FileWriter(file.toFile());
+      out = new BufferedWriter(new FileWriter(file.toFile()));
     } catch (IOException ex) {
       throw new OutputException(ex.getLocalizedMessage());
     }
@@ -84,7 +84,7 @@ public class TabbedLineWriter {
     String nl = newline;
     if (nl == null) newline = nl = System.getProperty("line.separator");
     out.write(nl);
-    out.flush();
+    //out.flush();
 
     atLineStart = true;
   }

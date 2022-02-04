@@ -390,7 +390,7 @@ public class TypeCollector extends ScopedChecker {
           mustCompile.add(canonical);
           // Loggers.SHADOW.info("Using Shadow file: " + canonical);
         }
-      } else if (!useSourceFiles) canonicalFile = Paths.get(canonical + ".meta");
+      } else if (!useSourceFiles) canonicalFile = BaseChecker.addExtension(canonical, ".meta");
 
       currentFile = canonicalFile;
 

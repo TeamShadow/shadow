@@ -84,7 +84,7 @@ public class OutputTests {
 
     // Send input
     if (input != null && !input.trim().isEmpty()) {
-      PrintWriter writer = new PrintWriter(program.getOutputStream());
+      PrintWriter writer = new PrintWriter(new BufferedOutputStream(program.getOutputStream()));
       writer.print(input);
       writer.close();
     }
