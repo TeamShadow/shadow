@@ -21,7 +21,6 @@ import java.io.*;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -193,7 +192,7 @@ public class Main {
     if (isCompile) {
       // Compile and add the C source files to get linked
       if (!compileCSourceFiles(
-          system.resolve(Paths.get("shadow", "c-source")).normalize(), cFiles, linkCommand)) {
+          system.resolve("include"), cFiles, linkCommand)) {
         logger.error("Failed to compile one or more C source files.");
         throw new CompileException("FAILED TO COMPILE");
       }
@@ -250,13 +249,11 @@ public class Main {
   // Assumes compileCommand contains two empty slots at the end:
   // The first is for the output file name
   // The last is for the input file name
-  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private static boolean compileCSourceFile(
       Path cFile, List<String> compileCommand, List<String> assembleCommand) throws IOException {
-    String inputFile = cFile.toString();
     Path outputPath = BaseChecker.addExtension(cFile, ".o");
-    String outputFile = outputPath.toString();
 
+    String outputFile = outputPath.toString();
     assembleCommand.add(outputFile);
 
     if (currentJob.isForceRecompile()
@@ -264,7 +261,7 @@ public class Main {
         || Files.getLastModifiedTime(outputPath).compareTo(Files.getLastModifiedTime(cFile)) < 0) {
       logger.info("Generating assembly code for " + cFile.getFileName());
       compileCommand.set(compileCommand.size() - 2, outputFile);
-      compileCommand.set(compileCommand.size() - 1, inputFile);
+      compileCommand.set(compileCommand.size() - 1, cFile.toString());
       return runCCompiler(compileCommand, cFile.getParent());
     }
 
@@ -273,12 +270,12 @@ public class Main {
   }
 
   private static boolean compileCSourceFiles(
-      Path cSourcePath, List<Path> cShadowFiles, List<String> assembleCommand)
+      Path includePath, List<Path> cShadowFiles, List<String> assembleCommand)
       throws IOException, ConfigurationException {
 
     // No need to compile anything if there are no c-source files
-    if (!Files.exists(cSourcePath)) {
-      logger.error("The c-source directory was not found and is necessary for the Shadow runtime.");
+    if (!Files.exists(includePath)) {
+      logger.error("The include directory was not found and is necessary for the Shadow runtime.");
       return false;
     }
 
@@ -300,19 +297,15 @@ public class Main {
 
     // include directories to be in the search path of gcc
     compileCommand.add(
-        "-I" + cSourcePath.resolve(Paths.get("include")).toFile().getCanonicalPath());
+        "-I" + includePath);
     compileCommand.add(
         "-I"
-            + cSourcePath
-                .resolve(Paths.get("include", "platform", config.getOs()))
-                .toFile()
-                .getCanonicalPath());
+            + includePath
+                .resolve("platform").resolve(config.getOs()));
     compileCommand.add(
         "-I"
-            + cSourcePath
-                .resolve(Paths.get("include", "platform", "Arch" + config.getArchitecture()))
-                .toFile()
-                .getCanonicalPath());
+            + includePath
+                .resolve("platform").resolve("Arch" + config.getArchitecture()));
 
     compileCommand.add("-o");
     compileCommand.add(null); // Location for output name
@@ -328,11 +321,14 @@ public class Main {
      * times.
      */
 
+    /*
     // The filter to find .c files in the `c-source` folder.
-    try (DirectoryStream<Path> paths = Files.newDirectoryStream(cSourcePath, "*.c")) {
+    try (DirectoryStream<Path> paths = Files.newDirectoryStream(includePath, "*.c")) {
       for (Path cFile : paths)
         if (!compileCSourceFile(cFile, compileCommand, assembleCommand)) return false;
     }
+
+     */
 
     for (Path cFile : cShadowFiles) {
       if (!compileCSourceFile(cFile, compileCommand, assembleCommand)) return false;

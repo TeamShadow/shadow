@@ -63,7 +63,7 @@ public class Configuration {
     public Path deserialize(JsonParser jp, DeserializationContext context) throws IOException {
       JsonNode node = jp.getCodec().readTree(jp);
       Path path = Paths.get(node.asText());
-      return configFile.getParent().resolve(path).toAbsolutePath().normalize();
+      return configFile.resolveSibling(path).toAbsolutePath().normalize();
     }
   }
 
