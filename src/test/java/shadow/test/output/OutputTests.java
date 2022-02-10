@@ -100,6 +100,7 @@ public class OutputTests {
       line = reader.readLine();
       if (line != null) builder.append(line).append("\n");
     } while (line != null);
+    reader.close();
     String output = builder.toString();
     Assertions.assertEquals(expectedOutput, output);
 
@@ -109,6 +110,7 @@ public class OutputTests {
       line = errorReader.readLine();
       if (line != null) builder.append(line).append("\n");
     } while (line != null);
+    errorReader.close();
 
     String error = builder.toString();
     Assertions.assertEquals(expectedError, error);

@@ -491,12 +491,13 @@ public class Configuration {
     Process process = null;
     try {
       process = new ProcessBuilder(getLlc(), "--version").redirectErrorStream(true).start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
       StringBuilder versionOutput = new StringBuilder();
-      String line;
-      while ((line = reader.readLine()) != null)
-        versionOutput.append(line).append(System.lineSeparator());
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        String line;
+        while ((line = reader.readLine()) != null)
+          versionOutput.append(line).append(System.lineSeparator());
+      }
 
       // Create the regular expression required to find the target "triple"
       Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
@@ -522,12 +523,12 @@ public class Configuration {
           new ProcessBuilder(getConfiguration().getLlc(), "--version")
               .redirectErrorStream(true)
               .start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
       StringBuilder versionOutput = new StringBuilder();
-      String line;
-      while ((line = reader.readLine()) != null)
-        versionOutput.append(line).append(System.lineSeparator());
+      try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        String line;
+        while ((line = reader.readLine()) != null)
+          versionOutput.append(line).append(System.lineSeparator());
+      }
 
       // Create the regular expression required to find the version
       Pattern pattern = Pattern.compile("(LLVM version\\s)(\\d+(\\.\\d+)*)");
@@ -552,12 +553,12 @@ public class Configuration {
           new ProcessBuilder(getConfiguration().getLlc(), "-version")
               .redirectErrorStream(true)
               .start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
       StringBuilder information = new StringBuilder();
-      String line;
-      while ((line = reader.readLine()) != null && !line.isEmpty())
-        information.append(line).append(System.lineSeparator());
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))){
+        String line;
+        while ((line = reader.readLine()) != null && !line.isEmpty())
+          information.append(line).append(System.lineSeparator());
+      }
 
       return information.toString();
     } catch (IOException | ConfigurationException e) {

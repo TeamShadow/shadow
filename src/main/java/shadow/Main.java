@@ -11,10 +11,7 @@ import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.tac.analysis.ControlFlowGraph;
-import shadow.typecheck.BaseChecker;
-import shadow.typecheck.ErrorReporter;
-import shadow.typecheck.TypeCheckException;
-import shadow.typecheck.TypeChecker;
+import shadow.typecheck.*;
 import shadow.typecheck.type.*;
 
 import java.io.*;
@@ -564,7 +561,7 @@ public class Main {
         if (output != null) output.close();
       }
 
-      if (currentJob.isHumanReadable()) return optimizeLLVMFile(Paths.get(path + ".ll"));
+      if (currentJob.isHumanReadable()) return optimizeLLVMFile(TypeCollector.addExtension(path, ".ll"));
       else {
         @SuppressWarnings("ConstantConditions")
         String objectFile = compileLLVMStream(optimize.getInputStream(), path);
