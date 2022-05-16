@@ -1,0 +1,148 @@
+/**
+ * Class {@code Array<T>} is used to house methods for array objects.
+ *
+ * The use of {@code Array<T>} is handled by the compiler.
+ * Users should avoid using the {@code Array<T>} type explicitly.
+ */
+abstract locked class shadow:standard@
+	Array<T>
+is CanIndex<long,T>
+and CanIndexStore<long,T>
+and CanIterate<T>
+{
+	/**
+	 * Gets the size of the array (total number of elements) as a {@code long}.
+	 * @return size of array
+	 */
+	get long sizeLong;
+	
+	/**
+	 * Arrays are created internally by the compiler. 
+	 * This method is private to prevent a user from creating
+	 * an {@code Array<T>} object explicitly.
+	 * @unused
+	 */
+	[ImportNative]
+	private create();
+	
+	[ImportNative]
+	public destroy;
+	
+	/**
+	 * Retrieves whether or not array is nullable.
+	 * @return whether array is nullable
+	 */
+	[ImportNative]
+	public readonly isNullable() => ( boolean );	
+
+	/**
+	 * Gets the size of the array (total number of elements) as an {@code int}.
+	 * @return size of array
+	 */
+	public readonly get size() => ( int )
+	{
+		return cast<int>(sizeLong);
+	}
+
+	/* 
+	// Copy implementation based off the following code:
+	private readonly copyProxy(AddressMap addresses) => ( Array<T> )
+	{
+		Array<T> duplicate = Array<T>:create( lengths );
+		for( int i = 0; i < this->size; i += 1 )
+			duplicate.index(i, index(i).copy(addresses)));
+				
+		return duplicate;
+	}
+	*/
+	
+	/**
+	 * Copy a subarray from the given array, starting at {@code start} and
+	 * going up to but not including index {@code end}.
+	 * @param start	starting index of subarray
+	 * @param end	index after last index in subarray
+	 * @return {@code Array<T>} object containing the subarray
+	 */	
+	[ImportNative]
+	public readonly subarray( long start, long end ) => ( Array<T> );
+	
+	/**
+	 * Gets element located at the specified index.
+	 * @param index	location to read from, as a {@code long}	 
+	 * @return value at given location
+	 */	
+	[ImportNative]
+	public readonly index( long index ) => (T);
+
+	
+	/**
+	 * Sets element at the specified index to the given value.
+	 * @param index	location to store at	 
+	 * @param value value to be stored
+	 */	
+	[ImportNative]
+	public index( long index, T value ) => ();
+
+	/**
+	 * Gets formatted {@code String} representation of the array.   
+	 * @return {@code String} representation
+	 */
+	public readonly toString() => ( String )
+	{
+		if ( this->sizeLong == 0L )
+			return "[]";
+
+		MutableString string = MutableString:create("[");
+		boolean first = true;		
+		
+		foreach( T value in this )
+		{
+			if ( first )
+				first = false;
+			else
+				string.append(", ");
+				
+			string.append( #value );
+		}
+		
+		return string.append("]").toString();
+	}
+	
+	/**
+	 * Gets iterator that can iterate over all the elements of the array.   
+	 * @return iterator
+	 */
+	public readonly iterator() => (Iterator<T>)
+	{		
+		return ArrayIterator<T>:create(this);
+	} 
+	
+	private class ArrayIterator<T> is Iterator<T>
+	{
+		long position = 0L;
+		immutable long limit;
+		Array<T> array;
+		
+		public create(Array<T> array)
+		{			
+			this:array = array;
+			limit = array->sizeLong;
+		}
+		
+		public readonly hasNext() => (boolean)
+		{	
+			return position < limit;		
+		}
+		
+		public next() => (T)
+		{		
+			
+			if( position >= limit )
+				throw IndexOutOfBoundsException:create(position);			
+			T value = array.index( position );						
+			position += 1L;			
+			
+			return value;  
+		}
+	}
+}

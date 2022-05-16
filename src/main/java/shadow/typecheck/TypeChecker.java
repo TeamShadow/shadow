@@ -17,6 +17,7 @@
 
 package shadow.typecheck;
 
+import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.ShadowException;
@@ -42,10 +43,12 @@ public class TypeChecker {
   public static class TypeCheckerOutput {
     public final List<Context> nodes;
     public final Package packageTree;
+    public final Context main;
 
-    public TypeCheckerOutput(List<Context> allNodes, Package packageTree) {
+    public TypeCheckerOutput(List<Context> allNodes, Package packageTree, Context main) {
       this.nodes = Collections.unmodifiableList(allNodes);
       this.packageTree = packageTree;
+      this.main = main;
     }
   }
 
@@ -59,7 +62,7 @@ public class TypeChecker {
    * @return nodes list of AST nodes for the classes to be compile
    * @throws ShadowException thrown if something goes wrong with type-checking
    * @throws ParseException thrown if the parser has a problem
-   * @throws IOException thrown if files aren't acceissible
+   * @throws IOException thrown if files aren't accessible
    * @throws ConfigurationException thrown if there's a problem with Configuration
    */
   public static TypeCheckerOutput typeCheck(
@@ -98,7 +101,9 @@ public class TypeChecker {
       //   - Collect used types for a node
       checker.check(node);
     }
-    return new TypeCheckerOutput(nodes, packageTree);
+
+    // Note that all files in the fileTable have no extension
+    return new TypeCheckerOutput(nodes, packageTree, fileTable.get(BaseChecker.stripExtension(mainFile)));
   }
 
   /*

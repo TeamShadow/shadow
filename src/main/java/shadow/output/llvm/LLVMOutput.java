@@ -216,9 +216,10 @@ public class LLVMOutput extends AbstractOutput {
       writer.write();
     }
 
-    // constants
+    // Constants
+    // TODO: Change private constants to private?
     for (TACConstant constant : module.getConstants()) {
-      writer.write(name(constant) + " = constant " + typeLiteral(constant.getInterpretedValue()));
+      writer.write(name(constant) + " = unnamed_addr constant " + typeLiteral(constant.getInterpretedValue()));
     }
 
     // interfaces implemented (because a special object is used to map the methods correctly)
@@ -352,7 +353,7 @@ public class LLVMOutput extends AbstractOutput {
       ClassType parentType = ((ClassType) moduleType).getExtendType();
       writer.write(
           methodTable(moduleType)
-              + " = constant "
+              + " = unnamed_addr constant "
               + methodTableType(moduleType, false)
               + " { "
               + methodList(methods, true)
@@ -362,7 +363,7 @@ public class LLVMOutput extends AbstractOutput {
       if (!moduleType.isParameterized()) {
         writer.write(
             classOf(moduleType)
-                + " = constant %"
+                + " = unnamed_addr constant %"
                 + raw(Type.CLASS)
                 + " { "
                 + type(Type.ULONG)
@@ -435,7 +436,7 @@ public class LLVMOutput extends AbstractOutput {
       if (!moduleType.isParameterized()) {
         writer.write(
             classOf(moduleType)
-                + " = constant %"
+                + " = unnamed_addr constant %"
                 + raw(Type.CLASS)
                 + " { "
                 + type(Type.ULONG)

@@ -16,14 +16,19 @@ import java.util.concurrent.TimeoutException;
 
 public class OutputTests {
   // To simplify removal, every unit test executable will have the same name
-  private static final Path executable = Job.properExecutableName(Paths.get("shadow", "test", "OutputTest"));
+  private static final Path executable = Job.properExecutableName(Paths.get("bin", "shadow", "test", "OutputTest"));
 
   private final ArrayList<String> args = new ArrayList<>();
+
+  @BeforeAll
+  public static void clearConfiguration() {
+    Configuration.clearConfiguration();
+  }
 
   @BeforeEach
   public void setup() {
     args.add("-o");
-    args.add(executable.getFileName().toString());
+    args.add(executable.toString());
 
     System.out.println("Working Directory = " + System.getProperty("user.dir"));
 
@@ -50,13 +55,13 @@ public class OutputTests {
   }
 
   private void run(String[] programArgs, String expectedOutput)
-      throws IOException, ConfigurationException, InterruptedException, TimeoutException {
+      throws IOException, InterruptedException, TimeoutException {
     run(programArgs, expectedOutput, "");
   }
 
   @SuppressWarnings("SameParameterValue")
   private void run(String[] programArgs, String expectedOutput, String expectedError)
-      throws IOException, ConfigurationException, InterruptedException, TimeoutException {
+      throws IOException, InterruptedException, TimeoutException {
     run(programArgs, expectedOutput, expectedError, null, 0);
   }
 
@@ -66,21 +71,16 @@ public class OutputTests {
       String expectedError,
       String input,
       int expectedReturn)
-      throws IOException, ConfigurationException, InterruptedException, TimeoutException {
-
-    // Should be initialized at this point by call to Main.run()
-    Configuration config = Configuration.getConfiguration();
-
-    Path fullExecutable = config.getSystem().resolve(executable);
+      throws IOException, InterruptedException, TimeoutException {
 
     List<String> programCommand = new ArrayList<>();
-    programCommand.add(fullExecutable.toString());
+    programCommand.add(executable.toString());
 
     Collections.addAll(programCommand, programArgs);
 
     // Set working directory as parent of executable, in case executable makes any files
     Process program =
-        new ProcessBuilder(programCommand).directory(fullExecutable.getParent().toFile()).start();
+        new ProcessBuilder(programCommand).directory(executable.getParent().toFile()).start();
 
     // Send input
     if (input != null && !input.trim().isEmpty()) {

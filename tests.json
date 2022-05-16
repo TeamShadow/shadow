@@ -1,0 +1,4 @@
+{
+  "import": {"." : "."},
+  "system": ["src" , "include", "bin"]
+}

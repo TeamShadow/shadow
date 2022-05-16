@@ -18,10 +18,7 @@
 package shadow.typecheck;
 
 import org.antlr.v4.runtime.RuleContext;
-import shadow.Configuration;
-import shadow.ConfigurationException;
-import shadow.Loggers;
-import shadow.ShadowException;
+import shadow.*;
 import shadow.doctool.Documentation;
 import shadow.parse.Context;
 import shadow.parse.ParseChecker;
@@ -35,7 +32,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -64,16 +60,16 @@ public class TypeCollector extends ScopedChecker {
   private final Set<Path> usedTypes = new HashSet<>(); // File paths
 
   /* Paths where we can search for imports.
-  The LinkedHashSet ensures
+  The LinkedHashMap ensures
   1) Identical paths will only appear once
   2) The order of insertion will be preserved, searching the first imports first
+  3) Source paths map to binary paths
   */
-  private final Set<Path> importPaths = new LinkedHashSet<>();
+  private final List<Path> importPaths = new ArrayList<>();
 
   // Store standard imports once for efficiency
   private final Map<String, PathWithContext> standardImportedTypes;
-  private final Path standardPath;
-
+  private final Path standardSourcePath;
   private Path currentFile;
   private Type mainType = null;
   private String currentName = "";
@@ -93,7 +89,7 @@ public class TypeCollector extends ScopedChecker {
     private final Set<String> localTypes = new HashSet<>();
     private final Set<String> typeParameters = new HashSet<>();
 
-    public TypeDeclaration() {}
+     public TypeDeclaration() {}
 
     public void addMethod(String method) {
       methods.add(method);
@@ -130,11 +126,11 @@ public class TypeCollector extends ScopedChecker {
 
   // Java is stupid
   private static class PathWithContext {
-    public final Path path;
+    public final Path source;
     public final NameContext context;
 
-    public PathWithContext(Path path, NameContext context) {
-      this.path = path;
+    public PathWithContext(Path sourcePath, NameContext context) {
+      this.source = sourcePath;
       this.context = context;
     }
   }
@@ -152,14 +148,15 @@ public class TypeCollector extends ScopedChecker {
     this.typeCheckOnly = typeCheckOnly;
     typeTable = new HashMap<>();
 
-    standardPath = getStandardPath(Configuration.getConfiguration());
-    standardImportedTypes = getStandardImports(standardPath);
+    List<Path> systemPaths = Configuration.getConfiguration().getSystem();
+    standardSourcePath = systemPaths.get(Configuration.SOURCE).resolve("shadow").resolve("standard");
+    standardImportedTypes = getStandardImports(standardSourcePath);
   }
 
   private TypeCollector(
       Package p,
       Map<Type, Context> typeTable,
-      Path standardPath,
+      Path standardSourcePath,
       Map<String, PathWithContext> standardImportedTypes,
       ErrorReporter reporter,
       boolean useSourceFiles,
@@ -170,12 +167,8 @@ public class TypeCollector extends ScopedChecker {
     this.typeCheckOnly = typeCheckOnly;
 
     // Standard imports
-    this.standardPath = standardPath;
+    this.standardSourcePath = standardSourcePath;
     this.standardImportedTypes = standardImportedTypes;
-  }
-
-  public static Path getStandardPath(Configuration config) {
-    return config.getSystem().resolve("shadow").resolve("standard").normalize().toAbsolutePath();
   }
 
   /**
@@ -210,6 +203,7 @@ public class TypeCollector extends ScopedChecker {
   public Map<Type, Context> collectTypes(Path mainFile)
       throws ShadowException, IOException, ConfigurationException {
     List<Path> initialFiles = new ArrayList<>();
+    mainFile = mainFile.normalize().toAbsolutePath();
     initialFiles.add(mainFile);
     return collectTypes(initialFiles, new HashMap<>(), true);
   }
@@ -229,7 +223,7 @@ public class TypeCollector extends ScopedChecker {
   public Map<Type, Context> collectTypes(String source, Path mainFile)
       throws ShadowException, IOException, ConfigurationException {
     List<Path> initialFiles = new ArrayList<>();
-    mainFile = mainFile.toAbsolutePath().normalize();
+    mainFile = mainFile.normalize().toAbsolutePath();
     initialFiles.add(mainFile);
     Map<Path, String> activeFiles = new HashMap<>();
     activeFiles.put(mainFile, source);
@@ -316,40 +310,43 @@ public class TypeCollector extends ScopedChecker {
     // Create and fill the initial set of files to be checked.
     TreeSet<Path> uncheckedFiles = new TreeSet<>();
 
-    Path main = null;
+
+    Path mainSource = null;
     if (files.isEmpty()) throw new ConfigurationException("No files provided for typechecking");
-    else if (hasMain) {
+
+    for (Path file : files) {
+      Path path = stripExtension(file);
+      uncheckedFiles.add(path);
+
       // Assume the main file is the first and only file.
-      main = stripExtension(files.get(0));
-      uncheckedFiles.add(main);
-    } else {
-      for (Path file : files) {
-        Path path = stripExtension(file);
-        uncheckedFiles.add(path);
-      }
+      if (hasMain)
+        mainSource = path;
     }
 
+
     /* Check standard imports. */
-    if (!Files.exists(standardPath))
-      throw new ConfigurationException("Invalid path to shadow:standard: " + standardPath);
+    if (!Files.exists(standardSourcePath))
+      throw new ConfigurationException("Invalid path to shadow:standard: " + standardSourcePath);
 
     TreeSet<Path> standardDependencies = new TreeSet<>();
 
     // Adds all files in the standard directory (including sub-directories)
     for (Map.Entry<String, PathWithContext> entry : standardImportedTypes.entrySet()) {
-      Path file = entry.getValue().path;
+      Path file = entry.getValue().source;
       uncheckedFiles.add(file);
       standardDependencies.add(file);
     }
 
     /* A few io classes are absolutely necessary for a console program. */
-    Path io = standardPath.resolveSibling("io");
-    if (!Files.exists(io)) throw new ConfigurationException("Invalid path to io: " + io);
+    Path ioSource = standardSourcePath.resolveSibling("io");
+    if (!Files.exists(ioSource)) throw new ConfigurationException("Invalid path to io: " + ioSource);
 
-    uncheckedFiles.add(io.resolve("Console"));
-    uncheckedFiles.add(io.resolve("File"));
-    uncheckedFiles.add(io.resolve("IOException"));
-    uncheckedFiles.add(io.resolve("Path"));
+    uncheckedFiles.add(ioSource.resolve("Console"));
+    uncheckedFiles.add(ioSource.resolve("File"));
+    uncheckedFiles.add(ioSource.resolve("IOException"));
+    uncheckedFiles.add(ioSource.resolve("Path"));
+
+    Map<Path, Path> imports = Configuration.getConfiguration().getImport();
 
     /* As long as there are unchecked files, remove one and process it. */
     while (!uncheckedFiles.isEmpty()) {
@@ -363,7 +360,7 @@ public class TypeCollector extends ScopedChecker {
       // compile/recompile source files, or rely on existing binaries.
       if (Files.exists(canonicalFile)) {
         Path meta = BaseChecker.addExtension(canonical, ".meta");
-        Path object = BaseChecker.addExtension(canonical, ".o");
+        Path object = BaseChecker.addExtension(Main.getBinaryPath(canonical, imports), ".o");
 
         // If source compilation was not requested and the binaries exist
         // that are newer than the source, use those binaries.
@@ -408,18 +405,19 @@ public class TypeCollector extends ScopedChecker {
           new TypeCollector(
               packageTree, // Use our existing package
               typeTable,
-              standardPath,
+              standardSourcePath,
               standardImportedTypes,
               getErrorReporter(),
               useSourceFiles,
               typeCheckOnly);
+
       // Keeping a current file gives us a file whose directory we can check against.
       collector.setCurrentFile(currentFile, node);
       collector.visit(node);
 
       fileTable.put(canonical, node);
 
-      if (canonical.equals(main)) {
+      if (canonical.equals(mainSource)) {
         mainType = node.getType();
       }
 
@@ -470,26 +468,31 @@ public class TypeCollector extends ScopedChecker {
 
     // If the file has package information, back up so that the import root is the above the package
     // information
-    Path parent = currentFile.getParent();
+    Path sourceParent = currentFile.getParent();
     if (node != null) {
       UnqualifiedNameContext unqualifiedName = null;
       if (node.classOrInterfaceDeclaration() != null)
         unqualifiedName = node.classOrInterfaceDeclaration().unqualifiedName();
       else if (node.enumDeclaration() != null)
         unqualifiedName = node.enumDeclaration().unqualifiedName();
+      else if (node.attributeDeclaration().unqualifiedName() != null)
+        unqualifiedName = node.attributeDeclaration().unqualifiedName();
 
       if (unqualifiedName != null) {
         String text = unqualifiedName.getText();
         if (!text.equals("default")) {
           String[] parts = text.split(":");
-          for (int i = 0; i < parts.length; ++i) parent = parent.getParent();
+          for (int i = 0; i < parts.length; ++i) {
+            sourceParent = sourceParent.getParent();
+          }
         }
       }
     }
 
-    importPaths.add(parent.normalize());
-    importPaths.addAll(Configuration.getConfiguration().getImport());
-    importPaths.add(standardPath);
+    importPaths.add(sourceParent.normalize());
+    Configuration configuration = Configuration.getConfiguration();
+    importPaths.addAll(configuration.getImport().keySet());
+    importPaths.add(standardSourcePath);
 
     // Import everything from the standard library
     importedTypes.putAll(standardImportedTypes);
@@ -507,9 +510,12 @@ public class TypeCollector extends ScopedChecker {
           .filter(
               file -> {
                 String fileName = file.getFileName().toString();
-                if (fileName.endsWith(".shadow")) return true;
+                Path noExtension = stripExtension(file);
+                if (fileName.endsWith(".shadow")) {
+                  return true;
+                }
                 if (fileName.endsWith(".meta")) {
-                  String typeName = stripExtension(fileName);
+                  String typeName = noExtension.getFileName().toString();
                   return !Files.exists(file.resolveSibling(typeName + ".shadow"));
                 }
                 return false;
@@ -528,6 +534,7 @@ public class TypeCollector extends ScopedChecker {
    */
   private boolean addImport(Path file, NameContext context, boolean directory) {
     Path filePath = stripExtension(file);
+
     String typeName;
     if (context == null || directory) typeName = filePath.getFileName().toString();
     else
@@ -557,17 +564,18 @@ public class TypeCollector extends ScopedChecker {
     return true;
   }
 
-  public static Map<String, PathWithContext> getStandardImports(Path standardPath)
+  public Map<String, PathWithContext> getStandardImports(Path standardSourcePath)
       throws IOException {
-    try (Stream<Path> stream = Files.walk(standardPath)) {
+    // Map type names to paths
+    try (Stream<Path> stream = Files.walk(standardSourcePath)) {
       return stream
           .filter(file -> file.toString().endsWith(".shadow"))
           .collect(
               Collectors.toUnmodifiableMap(
-                  // type name
+                  // Type name
                   file -> stripExtension(file.getFileName().toString()),
-                  // path
-                  file -> new PathWithContext(stripExtension(file), null)));
+                  // Path
+                  file ->  new PathWithContext(stripExtension(file), null)));
     }
   }
 
@@ -975,12 +983,18 @@ public class TypeCollector extends ScopedChecker {
 
       if (isDirectory) {
         Path directory = importPath.resolve(path);
-        if (Files.isDirectory(directory)) return directory;
+        if (Files.isDirectory(directory)) {
+          return directory;
+        }
       } else {
         Path shadowVersion = importPath.resolve(path + ".shadow");
         Path metaVersion = importPath.resolve(path + ".meta");
-        if (Files.exists(shadowVersion)) return shadowVersion;
-        else if (Files.exists(metaVersion)) return metaVersion;
+        if (Files.exists(shadowVersion)) {
+          return shadowVersion;
+        }
+        else if (Files.exists(metaVersion)) {
+          return metaVersion;
+        }
       }
     }
 
@@ -1042,7 +1056,8 @@ public class TypeCollector extends ScopedChecker {
     // Single class
     if (name.contains("@")) {
       Path file = findPath(name);
-      if (file == null) addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
+      if (file == null)
+        addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
       else if (!addImport(file, ctx, false))
         addError(ctx, Error.IMPORT_COLLIDES, "Type " + name + " collides with existing import");
     }
@@ -1069,7 +1084,7 @@ public class TypeCollector extends ScopedChecker {
     if (ctx.unqualifiedName() != null) packageName = ctx.unqualifiedName().getText();
 
     if (ctx.isList() == null) { // no is list, so mark Object as used
-      Path object = standardPath.resolve("Object");
+      Path object = standardSourcePath.resolve("Object");
       usedTypes.add(object);
     }
 
@@ -1107,7 +1122,7 @@ public class TypeCollector extends ScopedChecker {
     Set<NameContext> potentiallyUnusedDirectories = new HashSet<>();
     for (Entry<String, PathWithContext> entry : importedTypes.entrySet()) {
       // Only import the types that were actually used
-      Path path = entry.getValue().path;
+      Path path = entry.getValue().source;
       NameContext context = entry.getValue().context;
       if (usedTypes.contains(path)) {
         type.addImportedItem(entry.getKey(), new Type.ImportInformation(path, context));
@@ -1300,7 +1315,7 @@ public class TypeCollector extends ScopedChecker {
       if (file == null) addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
       else usedTypes.add(stripExtension(file));
     } else if (!isTypeParameter(name) && !isLocalType(name)) {
-      if (importedTypes.containsKey(name)) usedTypes.add(importedTypes.get(name).path);
+      if (importedTypes.containsKey(name)) usedTypes.add(importedTypes.get(name).source);
       else addError(ctx, Error.UNDEFINED_TYPE, "Type " + name + " not defined in current context");
     }
 
@@ -1348,7 +1363,7 @@ public class TypeCollector extends ScopedChecker {
         if (suffix.classSpecifier() != null
             || suffix.scopeSpecifier() != null
             || suffix.allocation() != null) {
-          if (importedTypes.containsKey(symbol)) usedTypes.add(importedTypes.get(symbol).path);
+          if (importedTypes.containsKey(symbol)) usedTypes.add(importedTypes.get(symbol).source);
           else
             addError(
                 ctx, Error.UNDEFINED_TYPE, "Type " + symbol + " not defined in current context");
@@ -1358,7 +1373,7 @@ public class TypeCollector extends ScopedChecker {
         // since an error message here would be confusing: The programmer probably misspelled a
         // variable name.
         else if (suffix.method() != null || suffix.property() != null) {
-          if (importedTypes.containsKey(symbol)) usedTypes.add(importedTypes.get(symbol).path);
+          if (importedTypes.containsKey(symbol)) usedTypes.add(importedTypes.get(symbol).source);
         }
       }
     }

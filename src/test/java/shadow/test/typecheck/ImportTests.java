@@ -1,5 +1,6 @@
 package shadow.test.typecheck;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import shadow.Configuration;
@@ -19,6 +20,11 @@ public class ImportTests {
 
   private final ArrayList<String> args = new ArrayList<>();
 
+  @BeforeAll
+  public static void clearConfiguration() {
+    Configuration.clearConfiguration();
+  }
+
   @BeforeEach
   public void setup() {
     // args.add("-v");
@@ -27,9 +33,7 @@ public class ImportTests {
     String os = System.getProperty("os.name").toLowerCase();
 
     args.add("-c");
-    if (os.contains("windows")) args.add("windows.json");
-    else if (os.contains("mac")) args.add("mac.json");
-    else args.add("linux.json");
+    args.add("tests.json");
   }
 
   // File being compiled is fine, but there's a problem with another one in the directory
@@ -78,13 +82,7 @@ public class ImportTests {
   public void testAllImports() throws Exception {
     String os = System.getProperty("os.name").toLowerCase();
 
-    String config;
-    if (os.contains("windows"))
-      config = "windows.json";
-    else if (os.contains("mac"))
-      config = "mac.json";
-    else
-      config = "linux.json";
+    String config = "tests.json";
 
     String file = "tests/import/all-imports/Test.shadow";
 

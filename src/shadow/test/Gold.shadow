@@ -1,0 +1,8 @@
+class shadow:test@Gold is Treasure
+{
+	public create(double v)
+	{
+		super(v); 
+	}
+
+}

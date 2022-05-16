@@ -2,8 +2,10 @@ package shadow.test.doctool;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import shadow.Configuration;
 import shadow.doctool.Documentation;
 import shadow.doctool.DocumentationBuilder;
 import shadow.doctool.DocumentationException;
@@ -25,8 +27,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DocumentationTests {
-  private static final Path outputDirectory = Paths.get("shadow", "test", "doctool", "docs");
+  private static final Path outputDirectory = Paths.get("src","shadow", "test", "doctool", "docs");
   private final ArrayList<String> args = new ArrayList<>();
+
+  @BeforeAll
+  public static void clearConfiguration() {
+    Configuration.clearConfiguration();
+  }
 
   @BeforeEach
   public void setup() throws Exception {

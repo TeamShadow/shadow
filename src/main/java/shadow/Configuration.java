@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sun.jna.platform.win32.Kernel32;
@@ -22,10 +19,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +39,10 @@ import java.util.regex.Pattern;
   "parent"
 })
 public class Configuration {
+
+  public static final int SOURCE = 0;
+  public static final int INCLUDE = 1;
+  public static final int BINARY = 2;
 
   // Deserializes paths relative to the config file
   private static class PathDeserializer extends StdDeserializer<Path> {
@@ -66,6 +64,22 @@ public class Configuration {
       return configFile.resolveSibling(path).toAbsolutePath().normalize();
     }
   }
+
+  // Deserializes paths (as keys) relative to the config file
+  private static class PathKeyDeserializer extends KeyDeserializer {
+    private final Path configFile;
+
+    public PathKeyDeserializer(Path configFile) {
+      this.configFile = configFile;
+    }
+
+    @Override
+    public Path deserializeKey(String key, DeserializationContext context) {
+      Path path = Paths.get(key);
+      return configFile.resolveSibling(path).toAbsolutePath().normalize();
+    }
+  }
+
 
   public static final String DEFAULT_CONFIG_NAME = "shadow.json";
   public static final String SHADOW_HOME = "SHADOW_HOME";
@@ -98,10 +112,10 @@ public class Configuration {
   private String dataLayout;
 
   @JsonProperty("system")
-  private Path system;
+  private List<Path> system = new ArrayList<>();
 
   @JsonProperty("import")
-  private List<Path> _import = null;
+  private Map<Path, Path> _import = new LinkedHashMap<>();
 
   @JsonProperty("target")
   private String target;
@@ -136,12 +150,12 @@ public class Configuration {
   private final List<String> linkCommand = new ArrayList<>();
 
   @JsonProperty("system")
-  public Path getSystem() {
+  public List<Path> getSystem() {
     return system;
   }
 
   @JsonProperty("import")
-  public List<Path> getImport() {
+  public Map<Path, Path> getImport() {
     return _import;
   }
 
@@ -227,6 +241,12 @@ public class Configuration {
 
     return globalConfig;
   }
+
+  /** Clears the global compiler Configuration */
+  public static void clearConfiguration() {
+    globalConfig = null;
+  }
+
 
   private static Configuration readConfiguration(String mainFilePath, String configFilePath)
       throws ConfigurationException, IOException {
@@ -419,14 +439,24 @@ public class Configuration {
       for (String library : libraries) linkCommand.add("-l" + library);
     }
 
-    if (system == null) system = getRunningDirectory();
-    system = system.toAbsolutePath().normalize();
+    // Using running directory for system src, include, and bin
+    if (system.isEmpty()) {
+      Path directory = getRunningDirectory();
+      system.add(directory);
+      system.add(directory);
+      system.add(directory);
+    }
 
-    if (_import == null) _import = new ArrayList<>();
+    if (_import == null) {
+      // _import = new ArrayList<>();
 
-    // The import paths list must contain an "empty" path that can later be
-    // resolved against source files
-    _import.add(Paths.get("." + File.separator).toAbsolutePath().normalize());
+      // If there are no imports, add the current directory for both src and bin
+      Path currentDirectory = Paths.get("." + File.separator).toAbsolutePath().normalize();
+      _import.put(currentDirectory, currentDirectory);
+    }
+
+    // Always put the system src and binary in the imports (if they're not already there)
+    _import.put(system.get(SOURCE), system.get(BINARY));
   }
 
   /* Parses a config file and fills the corresponding fields */
@@ -436,6 +466,7 @@ public class Configuration {
           new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
       SimpleModule module = new SimpleModule();
       module.addDeserializer(Path.class, new PathDeserializer(configFile));
+      module.addKeyDeserializer(Path.class, new PathKeyDeserializer(configFile));
       mapper.registerModule(module);
       Configuration configuration = mapper.readValue(configFile.toFile(), Configuration.class);
 

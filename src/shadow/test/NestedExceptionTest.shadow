@@ -1,0 +1,63 @@
+import shadow:io@Console;
+
+class shadow:test@NestedExceptionTest
+{
+	public main(String[] args) => ()
+	{
+		try
+		{
+			method();
+			Console.printLine("After");
+		}
+		catch(ExceptionA e)
+		{
+			Console.printLine("Punks");
+		}		
+	}
+	
+	public method() => ()
+	{
+			try 
+			{
+				throw ExceptionA:create();
+			}
+			finally
+			{
+				try
+				{
+					throw ExceptionB:create();
+				}
+				catch(ExceptionB e)
+				{
+					Console.printLine("Dunks");
+					
+					try
+					{
+					
+						try
+						{
+							throw ExceptionC:create();
+						}
+						catch(ExceptionC e1)
+						{
+							Console.printLine("Sunks");
+						}
+					}
+					finally
+					{
+						try
+						{
+							throw ExceptionD:create();
+						}
+						catch(ExceptionD e1)
+						{
+							Console.printLine("Chunks");
+						}					
+					}
+					
+					
+					Console.printLine("Monks");
+				}
+			}
+	}
+}

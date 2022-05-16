@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a specific build/typecheck job. This representation includes information about source
@@ -29,7 +30,7 @@ public class Job {
   private boolean warningsAsErrors = false; // Treat warnings as errors
   private final boolean humanReadable;
 
-  public Job(Arguments compilerArgs) throws FileNotFoundException {
+  public Job(Arguments compilerArgs) throws FileNotFoundException, ConfigurationException {
 
     // Check relevant command line flags
     checkOnly = compilerArgs.hasOption(Arguments.TYPECHECK);
@@ -40,16 +41,20 @@ public class Job {
 
     // Locate main source file if not help or information only
     if (!compilerArgs.hasOption(Arguments.INFORMATION) && !compilerArgs.hasOption(Arguments.HELP)) {
-      if (compilerArgs.getMainFileArg() != null)
-        mainFile = Paths.get(compilerArgs.getMainFileArg()).toAbsolutePath().normalize();
+      if (compilerArgs.getMainFileArg() != null) {
+        Map<Path, Path> imports =  Configuration.getConfiguration().getImport();
+        for (Path _import : imports.keySet()) {
+          Path candidate = _import.resolve(Paths.get(compilerArgs.getMainFileArg()));
+          if (Files.exists(candidate))
+            mainFile = candidate.toAbsolutePath().normalize();
+            break;
+        }
+      }
 
       // Ensure that the main source file exists
       if (mainFile == null)
         throw new FileNotFoundException(
             "Source file at " + compilerArgs.getMainFileArg() + " not found");
-      else if (!Files.exists(mainFile))
-        throw new FileNotFoundException(
-            "Source file at " + mainFile + " not found");
 
       Path outputFile;
 
@@ -111,9 +116,10 @@ public class Job {
     return outputCommand;
   }
 
-  /** Takes a file name without extension and outputs it in an OS-appropriate form. */
+  /** Takes a file name without extension and outputs it in an OS-appropriate, absolute form. */
   public static Path properExecutableName(Path executableName) {
-    if (System.getProperty("os.name").contains("Windows")) return BaseChecker.addExtension(executableName, ".exe");
-    else return executableName;
+    if (System.getProperty("os.name").contains("Windows"))
+      executableName =  BaseChecker.addExtension(executableName, ".exe");
+    return executableName.normalize().toAbsolutePath();
   }
 }

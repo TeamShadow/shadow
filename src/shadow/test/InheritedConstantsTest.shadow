@@ -1,0 +1,14 @@
+import shadow:io@Console;
+
+class shadow:test@InheritedConstantsTest is Parent:Inner
+{
+	public constant int Y = 10;
+	
+    public main(String[] args) => ()
+    {
+    	Console.printLine(X); 	// -2
+		Console.printLine(Y);	// 10
+		Console.printLine(Z);	// 15
+		Console.printLine(getValue());	// 6		
+    }
+}

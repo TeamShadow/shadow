@@ -1,8 +1,10 @@
 package shadow.test.interpreter;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import shadow.Configuration;
 import shadow.interpreter.ShadowDouble;
 import shadow.interpreter.ShadowFloat;
 import shadow.interpreter.ShadowInteger;
@@ -10,6 +12,11 @@ import shadow.interpreter.ShadowInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ShadowValueTest {
+
+  @BeforeAll
+  public static void clearConfiguration() {
+    Configuration.clearConfiguration();
+  }
 
   @ParameterizedTest
   @ValueSource(

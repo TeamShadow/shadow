@@ -1,8 +1,10 @@
 package shadow.test.output;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import shadow.Configuration;
 import shadow.Job;
 import shadow.Main;
 
@@ -14,14 +16,19 @@ import java.util.ArrayList;
 public class TACTests {
 
   // To simplify removal, every unit test executable will have the same name
-  private static final Path executable = Job.properExecutableName(Paths.get("TacTest"));
+  private static final Path executable = Job.properExecutableName(Paths.get("bin", "shadow", "test", "TacTest"));
 
   private final ArrayList<String> args = new ArrayList<>();
+
+  @BeforeAll
+  public static void clearConfiguration() {
+    Configuration.clearConfiguration();
+  }
 
   @BeforeEach
   public void setup() {
     args.add("-o");
-    args.add(executable.getFileName().toString());
+    args.add(executable.toString());
 
     System.out.println("Working Directory = " + System.getProperty("user.dir"));
 

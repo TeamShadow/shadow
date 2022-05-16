@@ -23,7 +23,7 @@
                 <configuration>
                     <filesets>
                         <fileset>
-                            <directory>shadow</directory>
+                            <directory>src</directory>
                             <includes>
                                 <include>**/*.meta</include>
                                 <include>**/*.ll</include>
@@ -46,6 +46,13 @@
                                 <exclude>Windows.ll</exclude>
                                 <exclude>Shared.ll</exclude>
                             </excludes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                        <fileset>
+                            <directory>bin</directory>
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
                         <fileset>

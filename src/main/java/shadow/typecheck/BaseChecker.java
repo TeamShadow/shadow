@@ -570,6 +570,10 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
     return file.resolveSibling(file.getFileName().toString() + extension);
   }
 
+  public static Path changeExtension(Path file, String extension) {
+    return file.resolveSibling(stripExtension(file.getFileName().toString()) + extension);
+  }
+
   /**
    * Tests to see if one type is accessible from another.
    *

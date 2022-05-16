@@ -25,7 +25,6 @@ public class DocumentationTool {
   private static final String SRC_EXTENSION = ".shadow";
   private static final String PKG_INFO_FILE = "package-info.txt";
 
-  // ToDo; Figure out what libraries from org.slf4j.*
   private static Logger logger = Loggers.DOC_TOOL;
 
   public static void main(String[] args) {
@@ -142,14 +141,22 @@ public class DocumentationTool {
    * packages/directories. Verifies that the files actually exist
    */
   public static List<Path> getRequestedFiles(
-      String[] givenPaths, Map<String, Documentation> pkgDocs) throws IOException, ShadowException {
+      String[] givenPaths, Map<String, Documentation> pkgDocs) throws IOException, ShadowException, ConfigurationException {
     List<Path> sourceFiles = new ArrayList<>();
+    Map<Path, Path> imports =  Configuration.getConfiguration().getImport();
+    Path current = null;
     for (String path : givenPaths) {
-      Path current = Paths.get(path).toAbsolutePath().normalize();
+
+      for (Path _import : imports.keySet()) {
+        Path candidate = _import.resolve(Paths.get(path));
+        if (Files.exists(candidate))
+          current = candidate.toAbsolutePath().normalize();
+        break;
+      }
 
       // Ensure that the source file exists
-      if (!Files.exists(current))
-        throw new FileNotFoundException("File at " + current + " not found");
+      if (current == null)
+        throw new FileNotFoundException("File at " + path + " not found");
 
       // If the file is a directory, process it as a package
       if (Files.isDirectory(current)) sourceFiles.addAll(getPackageFiles(current, true, pkgDocs));
