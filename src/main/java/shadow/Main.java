@@ -11,10 +11,7 @@ import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.tac.TACBuilder;
 import shadow.tac.TACModule;
 import shadow.tac.analysis.ControlFlowGraph;
-import shadow.typecheck.BaseChecker;
-import shadow.typecheck.ErrorReporter;
-import shadow.typecheck.TypeCheckException;
-import shadow.typecheck.TypeChecker;
+import shadow.typecheck.*;
 import shadow.typecheck.type.*;
 
 import java.io.*;
@@ -148,6 +145,19 @@ public class Main {
     return 0;
   }
 
+  public static Path getBinaryPath(Path path, Map<Path, Path> sourceToBinaries)
+      throws ConfigurationException {
+    Path parent = path;
+    while (parent != null && !sourceToBinaries.containsKey(parent)) parent = parent.getParent();
+
+    if (parent == null)
+      throw new ConfigurationException("Binary path not found for source file " + path);
+
+    Path binaryParent = sourceToBinaries.get(parent);
+    Path fromParentToChild = parent.relativize(path);
+    return binaryParent.resolve(fromParentToChild);
+  }
+
   public static void run(String[] args)
       throws ShadowException, IOException, org.apache.commons.cli.ParseException,
           ConfigurationException {
@@ -188,13 +198,12 @@ public class Main {
 
     List<String> linkCommand = new ArrayList<>(config.getLinkCommand(currentJob));
     List<Path> cFiles = new ArrayList<>();
-    Set<String> filesToLink = new LinkedHashSet<>();
 
-    generateObjectFiles(cFiles, filesToLink);
+    generateObjectFiles(cFiles, linkCommand);
 
     if (isCompile) {
       // Compile and add the C source files to get linked
-      if (!compileCSourceFiles(systemInclude, cFiles, filesToLink)) {
+      if (!compileCSourceFiles(systemInclude, cFiles, linkCommand)) {
         logger.error("Failed to compile one or more C source files.");
         throw new CompileException("FAILED TO COMPILE");
       }
@@ -215,7 +224,7 @@ public class Main {
       // Read main and compile into temporary object
       Map<Path, Path> imports = config.getImport();
       Path parent = getBinaryPath(currentJob.getMainFile(), imports).getParent();
-      Path temporaryMain = Files.createTempFile(parent, "main", null);
+      Path temporaryMain = Files.createTempFile(parent, "main", ".o");
       StringBuilder builder = new StringBuilder();
       String line = main.readLine();
 
@@ -226,11 +235,7 @@ public class Main {
       }
       main.close();
 
-      String compiledMain =
-          compileLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain);
-      filesToLink.add(compiledMain);
-
-      linkCommand.addAll(filesToLink);
+      linkCommand.add(compileLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain));
 
       logger.info("Linking object files...");
 
@@ -246,7 +251,7 @@ public class Main {
       } finally {
         link.destroy();
         Files.delete(temporaryMain);
-        Files.delete(Paths.get(compiledMain));
+        //Files.delete(Paths.get(compiledMain));
       }
 
       logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
@@ -257,28 +262,27 @@ public class Main {
   // The first is for the output file name
   // The last is for the input file name
   private static boolean compileCSourceFile(
-      Path cFile, Path binaryPath, List<String> compileCommand, Set<String> filesToLink)
+      Path cFile, Path binaryPath, List<String> compileCommand, List<String> linkCommand)
       throws IOException {
-    Path outputPath = BaseChecker.addExtension(binaryPath, ".o");
 
-    String outputFile = outputPath.toString();
-    filesToLink.add(outputFile);
+    String binaryFile = binaryPath.toString();
+    linkCommand.add(binaryFile);
 
     if (currentJob.isForceRecompile()
-        || !Files.exists(outputPath)
-        || Files.getLastModifiedTime(outputPath).compareTo(Files.getLastModifiedTime(cFile)) < 0) {
+        || !Files.exists(binaryPath)
+        || Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(cFile)) < 0) {
       logger.info("Generating assembly code for " + cFile.getFileName());
-      compileCommand.set(compileCommand.size() - 2, outputFile);
+      compileCommand.set(compileCommand.size() - 2, binaryFile);
       compileCommand.set(compileCommand.size() - 1, cFile.toString());
       return runCCompiler(compileCommand, cFile.getParent());
     }
 
-    logger.info("Using pre-existing assembly code for " + outputPath.getFileName());
+    logger.info("Using pre-existing assembly code for " + binaryPath.getFileName());
     return true;
   }
 
   private static boolean compileCSourceFiles(
-      Path includePath, List<Path> cShadowFiles, Set<String> filesToLink)
+      Path includePath, List<Path> cShadowFiles, List<String> linkCommand)
       throws IOException, ConfigurationException {
 
     // No need to compile anything if there are no c-source files
@@ -316,8 +320,8 @@ public class Main {
     Map<Path, Path> imports = Configuration.getConfiguration().getImport();
 
     for (Path cFile : cShadowFiles) {
-      Path binaryPath = getBinaryPath(cFile, imports);
-      if (!compileCSourceFile(cFile, binaryPath, compileCommand, filesToLink)) return false;
+      Path binaryPath = BaseChecker.addExtension(getBinaryPath(cFile, imports), ".o");
+      if (!compileCSourceFile(cFile, binaryPath, compileCommand, linkCommand)) return false;
     }
 
     return true;
@@ -344,7 +348,7 @@ public class Main {
    * (which has been updated more recently than the corresponding source file)
    * or building a new one
    */
-  private static void generateObjectFiles(List<Path> cFiles, Set<String> filesToLink)
+  private static void generateObjectFiles(List<Path> cFiles, List<String> linkCommand)
       throws IOException, ShadowException, ConfigurationException {
 
     List<Path> system = config.getSystem();
@@ -356,17 +360,17 @@ public class Main {
         systemSource.resolve(
             "Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture() + ".ll");
     Path unwindBinary =
-        systemBinary.resolve("Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture());
-    filesToLink.add(compileLLVMFile(unwindSource, unwindBinary));
+        systemBinary.resolve("Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture() + ".o");
+    linkCommand.add(compileLLVMFile(unwindSource, unwindBinary));
 
     // Add platform-specific system code
-    filesToLink.add(
+    linkCommand.add(
         compileLLVMFile(
-            systemSource.resolve(config.getOs() + ".ll"), systemBinary.resolve(config.getOs())));
+            systemSource.resolve(config.getOs() + ".ll"), systemBinary.resolve(config.getOs() + ".o")));
 
     // Add shared code
-    filesToLink.add(
-        compileLLVMFile(systemSource.resolve("Shared.ll"), systemBinary.resolve("Shared")));
+    linkCommand.add(
+        compileLLVMFile(systemSource.resolve("Shared.ll"), systemBinary.resolve("Shared.o")));
 
     Path mainFile = currentJob.getMainFile();
 
@@ -394,17 +398,12 @@ public class Main {
             "File " + mainFile + " does not contain an appropriate main() method");
     }
 
-    // Put imports on binary search path
-    Map<Path, Path> sourceToBinaries = new HashMap<>(config.getImport());
-    // Then add system source and binary
-    sourceToBinaries.put(systemSource, systemBinary);
-
     try {
       for (Context node : typecheckerOutput.nodes) {
         // As an optimization, print .meta files for the .shadow files being checked
         if (!node.isFromMetaFile()) TypeChecker.printMetaFile(node);
 
-        Path file = node.getPath();
+        Path file = node.getSourcePath();
 
         if (currentJob.isCheckOnly()) {
           // Performs checks to make sure all paths return, there is
@@ -423,32 +422,31 @@ public class Main {
           if (Files.exists(cFile)) cFiles.add(cFile);
 
           Path llvmFile = file.resolveSibling(className + ".ll");
-          Path binaryPath = getBinaryPath(path, sourceToBinaries);
+          Path binaryPath = node.getBinaryPath();
 
           Path nativeFile = file.resolveSibling(className + ".native.ll");
-          Path nativeBinary = BaseChecker.addExtension(binaryPath, ".native");
+          Path nativeBinary = BaseChecker.changeExtension(binaryPath, ".native");
           Path nativeObject = BaseChecker.addExtension(nativeBinary, ".o");
 
           // If the LLVM bitcode didn't exist, the full .shadow file would
           // have been used
           if (node.isFromMetaFile()) {
             logger.info("Using pre-existing LLVM code for " + name);
-            Path objectFile = BaseChecker.addExtension(binaryPath, ".o");
 
-            if (Files.exists(objectFile)) filesToLink.add(objectFile.toString());
+            if (Files.exists(binaryPath)) linkCommand.add(binaryPath.toString());
             else if (Files.exists(llvmFile))
-              filesToLink.add(compileLLVMFile(llvmFile, binaryPath));
-            else throw new CompileException("File not found: " + objectFile);
+              linkCommand.add(compileLLVMFile(llvmFile, binaryPath));
+            else throw new CompileException("File not found: " + binaryPath);
           } else {
             logger.info("Generating LLVM code for " + name);
             // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
-            filesToLink.add(compileShadowFile(file, binaryPath, module));
+            linkCommand.add(compileShadowFile(file, binaryPath, module));
           }
 
-          if (Files.exists(nativeObject)) filesToLink.add(nativeObject.toString());
+          if (Files.exists(nativeObject)) linkCommand.add(nativeObject.toString());
           else if (Files.exists(nativeFile))
-            filesToLink.add(compileLLVMFile(nativeFile, nativeBinary));
+            linkCommand.add(compileLLVMFile(nativeFile, nativeObject));
         }
       }
 
@@ -458,19 +456,6 @@ public class Main {
       logger.error(mainFile + " FAILED TO TYPE CHECK");
       throw e;
     }
-  }
-
-  public static Path getBinaryPath(Path path, Map<Path, Path> sourceToBinaries)
-      throws ConfigurationException {
-    Path parent = path;
-    while (parent != null && !sourceToBinaries.containsKey(parent)) parent = parent.getParent();
-
-    if (parent == null)
-      throw new ConfigurationException("Binary path not found for source file " + path);
-
-    Path binaryParent = sourceToBinaries.get(parent);
-    Path fromParentToChild = parent.relativize(path);
-    return binaryParent.resolve(fromParentToChild);
   }
 
   private static Process getCompiler(String objectFile) throws IOException {
@@ -486,77 +471,74 @@ public class Main {
         .start();
   }
 
-  private static Path createPath(Path binaryPath) throws CompileException {
-    Path objectPath = BaseChecker.addExtension(binaryPath, ".o");
-    Path objectParent = objectPath.getParent();
-    if (!Files.isDirectory(objectParent)) {
+  private static void createDirectories(Path binaryPath) throws CompileException {
+    Path parent = binaryPath.getParent();
+    if (!Files.isDirectory(parent)) {
       try {
-        Files.createDirectories(objectParent);
+        Files.createDirectories(parent);
       } catch (IOException e) {
-        throw new CompileException("COULD NOT CREATE DIRECTORY " + objectParent);
+        throw new CompileException("COULD NOT CREATE DIRECTORY " + parent);
       }
     }
-
-    return objectPath;
   }
 
   private static String compileLLVMModule(Path shadowFile, Path binaryPath, TACModule module)
       throws CompileException {
-    Path objectPath = createPath(binaryPath);
-    String objectFile = objectPath.toString();
+    createDirectories(binaryPath);
+    String binaryFile = binaryPath.toString();
 
     boolean success = false;
     Process compile = null;
     LLVMOutput output;
 
     try {
-      compile = getCompiler(objectFile);
+      compile = getCompiler(binaryFile);
       output = new LLVMOutput(new BufferedOutputStream(compile.getOutputStream()));
       output.build(module);
       output.close();
-      if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + objectFile);
+      if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + binaryFile);
       success = true;
     } catch (IOException | InterruptedException e) {
-      throw new CompileException("FAILED TO COMPILE " + objectFile);
+      throw new CompileException("FAILED TO COMPILE " + binaryFile);
     } catch (ShadowException e) {
       logger.error("FAILED TO COMPILE " + shadowFile);
       throw new CompileException(e.getMessage());
     } finally {
       try {
-        if (!success) Files.deleteIfExists(objectPath);
+        if (!success) Files.deleteIfExists(binaryPath);
       } catch (IOException ignored) {
       }
       if (compile != null) compile.destroy();
     }
-    return objectFile;
+    return binaryFile;
   }
 
   private static String compileLLVMStream(InputStream stream, Path binaryPath)
       throws CompileException {
-    Path objectPath = createPath(binaryPath);
-    String objectFile = objectPath.toString();
+    createDirectories(binaryPath);
+    String binaryFile = binaryPath.toString();
 
     boolean success = false;
     Process compile = null;
 
     try {
-      compile = getCompiler(objectFile);
+      compile = getCompiler(binaryFile);
       new Pipe(stream, compile.getOutputStream()).start();
-      if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + objectFile);
+      if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + binaryFile);
       success = true;
     } catch (IOException | InterruptedException e) {
-      throw new CompileException("FAILED TO COMPILE " + objectFile);
+      throw new CompileException("FAILED TO COMPILE " + binaryFile);
     } finally {
       if (!success) {
         try {
-          Files.deleteIfExists(objectPath);
+          Files.deleteIfExists(binaryPath);
         } catch (IOException ignored) {
         }
       }
       if (compile != null) compile.destroy();
     }
 
-    return objectFile;
+    return binaryFile;
   }
 
   private static String compileLLVMFile(Path LLVMPath, Path binaryPath) throws CompileException {

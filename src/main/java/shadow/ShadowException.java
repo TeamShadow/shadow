@@ -3,7 +3,6 @@ package shadow;
 import shadow.parse.Context;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -49,8 +48,8 @@ public abstract class ShadowException extends Exception {
     StringBuilder message = new StringBuilder();
 
     if (context != null) {
-      if (context.getPath() != null)
-        message.append("(").append(context.getPath().getFileName().toString()).append(")");
+      if (context.getSourcePath() != null)
+        message.append("(").append(context.getSourcePath().getFileName().toString()).append(")");
 
       if (context.lineStart() != -1 && context.columnStart() != -1)
         message.append("[").append(context.lineStart()).append(":").append(context.columnStart()).append("] ");
@@ -61,7 +60,7 @@ public abstract class ShadowException extends Exception {
 
       message.append(
           showCode(
-              context.getPath(),
+              context.getSourcePath(),
               context.lineStart(),
               context.lineEnd(),
               context.columnStart(),
@@ -79,8 +78,8 @@ public abstract class ShadowException extends Exception {
     StringBuilder message = new StringBuilder();
 
     if (context != null) {
-      if (context.getPath() != null)
-        message.append("(").append(context.getPath().getFileName().toString()).append(")");
+      if (context.getSourcePath() != null)
+        message.append("(").append(context.getSourcePath().getFileName().toString()).append(")");
 
       if (context.lineStart() != -1 && context.columnStart() != -1)
         message.append("[").append(context.lineStart()).append(":").append(context.columnStart()).append("] ");
@@ -91,7 +90,7 @@ public abstract class ShadowException extends Exception {
 
       message.append(
           showCode(
-              context.getPath(),
+              context.getSourcePath(),
               context.lineStart(),
               context.lineEnd(),
               context.columnStart(),
@@ -156,8 +155,8 @@ public abstract class ShadowException extends Exception {
 
   public boolean isInside(ShadowException other) {
     if (context != null && other.context != null) {
-      Path path1 = context.getPath();
-      Path path2 = other.context.getPath();
+      Path path1 = context.getSourcePath();
+      Path path2 = other.context.getSourcePath();
       if (path1 != null && path2 != null)
         return path1.equals(path2)
             && lineStart() >= other.lineStart()

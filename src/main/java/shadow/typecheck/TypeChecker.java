@@ -17,7 +17,6 @@
 
 package shadow.typecheck;
 
-import shadow.Configuration;
 import shadow.ConfigurationException;
 import shadow.Loggers;
 import shadow.ShadowException;
@@ -112,7 +111,7 @@ public class TypeChecker {
    * type-checking the full code.
    */
   public static void printMetaFile(Context node) {
-    Path file = BaseChecker.stripExtension(node.getPath());
+    Path file = BaseChecker.stripExtension(node.getSourcePath());
     try {
       Path shadowVersion = BaseChecker.addExtension(file, ".shadow");
       Path metaVersion = BaseChecker.addExtension(file, ".meta");

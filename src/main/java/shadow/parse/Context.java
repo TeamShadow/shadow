@@ -67,6 +67,7 @@ public class Context extends ParserRuleContext implements ModifiedType {
   private List<MethodSignature> operations;
   private TACNode list;
   private TACOperand operand;
+  private Path binaryPath;
 
   /** For use when evaluation compile-time constants in {@link ASTInterpreter} */
   private ShadowValue interpretedValue;
@@ -77,13 +78,26 @@ public class Context extends ParserRuleContext implements ModifiedType {
     super(parent, invokingStateNumber);
   }
 
-  public Path getPath() {
+  public Path getSourcePath() {
     if (getStart() != null) {
       CharStream stream = getStart().getInputStream();
       return Paths.get(stream.getSourceName());
     }
 
     return null;
+  }
+
+  public void setBinaryPath(Path binaryPath) {
+    this.binaryPath = binaryPath;
+  }
+
+  public Path getBinaryPath() {
+    if (binaryPath != null)
+      return binaryPath;
+    else if(parent != null && parent instanceof Context)
+      return ((Context)parent).getBinaryPath();
+    else
+      return null;
   }
 
   public void setType(Type type) {
@@ -215,7 +229,7 @@ public class Context extends ParserRuleContext implements ModifiedType {
   }
 
   public boolean isFromMetaFile() {
-    return getPath().toString().endsWith(".meta");
+    return getSourcePath().toString().endsWith(".meta");
   }
 
   /** Sets a compile-time-interpreted value for this AST node */

@@ -293,7 +293,6 @@ public class TypeCollector extends ScopedChecker {
     // Return a table of all the types and their corresponding nodes.
     return typeTable;
   }
-
   /*
    * Does actual collection of types based on a list of files.
    * The map activeFiles contains the (perhaps updated) source of files
@@ -355,12 +354,12 @@ public class TypeCollector extends ScopedChecker {
 
       Path canonicalFile = BaseChecker.addExtension(canonical, ".shadow");
       String source = activeFiles.get(canonicalFile);
+      Path binaryPath = BaseChecker.addExtension(Main.getBinaryPath(canonical, imports), ".o");
 
       // Depending on the circumstances, the compiler may choose to either
       // compile/recompile source files, or rely on existing binaries.
       if (Files.exists(canonicalFile)) {
         Path meta = BaseChecker.addExtension(canonical, ".meta");
-        Path object = BaseChecker.addExtension(Main.getBinaryPath(canonical, imports), ".o");
 
         // If source compilation was not requested and the binaries exist
         // that are newer than the source, use those binaries.
@@ -378,8 +377,8 @@ public class TypeCollector extends ScopedChecker {
             &&
             // Also, only use .meta if we're not going to need to recompile it into an object file
             (typeCheckOnly
-                || (Files.exists(object)
-                    && Files.getLastModifiedTime(object).compareTo(Files.getLastModifiedTime(meta))
+                || (Files.exists(binaryPath)
+                    && Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(meta))
                         >= 0))) {
           canonicalFile = meta;
           // Loggers.SHADOW.info("Using meta file: " + meta);
@@ -400,6 +399,8 @@ public class TypeCollector extends ScopedChecker {
       else node = checker.getCompilationUnit(currentFile);
       checker.printAndReportErrors();
 
+      node.setBinaryPath(binaryPath);
+
       // Make another collector to walk the current file.
       TypeCollector collector =
           new TypeCollector(
@@ -417,9 +418,7 @@ public class TypeCollector extends ScopedChecker {
 
       fileTable.put(canonical, node);
 
-      if (canonical.equals(mainSource)) {
-        mainType = node.getType();
-      }
+      if (canonical.equals(mainSource)) mainType = node.getType();
 
       /* Track the dependencies for this file (if dependencies are being used).
        * If any of its dependencies need to be recompiled, this file will need
@@ -594,9 +593,9 @@ public class TypeCollector extends ScopedChecker {
         if (firstType == null) {
           firstType = type;
           // path1 = typeTable.get( type ).getFile().getParentFile();
-          path1 = typeTable.get(type).getPath().getParent();
+          path1 = typeTable.get(type).getSourcePath().getParent();
         } else {
-          Path path2 = typeTable.get(type).getPath().getParent();
+          Path path2 = typeTable.get(type).getSourcePath().getParent();
           if (!path1.equals(path2))
             addWarning(
                 new TypeCheckException(
@@ -642,8 +641,8 @@ public class TypeCollector extends ScopedChecker {
 
     /* For outer types, check that type name matches file name (if defined in a file),
      * and that the package name matches the directory path. */
-    if (currentType == null && node.getPath() != null) {
-      Path file = node.getPath();
+    if (currentType == null && node.getSourcePath() != null) {
+      Path file = node.getSourcePath();
       String fileName = stripExtension(file.getFileName().toString());
       if (!fileName.equals(name)) { // Check file name.
         addError(
