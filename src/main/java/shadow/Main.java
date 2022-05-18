@@ -214,7 +214,7 @@ public class Main {
         if (mainArguments) mainLL = Paths.get("MainWindows.ll");
         else mainLL = Paths.get("NoArgumentsWindows.ll");
       } else {
-        if (mainArguments) mainLL = Paths.get("shadow", "Main.ll");
+        if (mainArguments) mainLL = Paths.get( "Main.ll");
         else mainLL = Paths.get("NoArguments.ll");
       }
 
@@ -545,7 +545,7 @@ public class Main {
     try {
       return compileLLVMStream(Files.newInputStream(LLVMPath), binaryPath);
     } catch (IOException e) {
-      throw new CompileException("FAILED TO OPTIMIZE " + LLVMPath);
+      throw new CompileException("FAILED TO COMPILE " + LLVMPath);
     }
   }
 
