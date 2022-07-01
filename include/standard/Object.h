@@ -17,8 +17,8 @@ typedef struct
 }
 shadow_Object_t;
 
-shadow_String_t* _shadowObject_toString(shadow_Object_t* ref);
-shadow_Class_t* _shadowObject_getClass(shadow_Object_t* ref);
+shadow_String_t* _shadow_standard__Object_toString(shadow_Object_t* ref);
+shadow_Class_t* _shadow_standard__Object_getClass(shadow_Object_t* ref);
 
 void __decrementRef(shadow_Object_t* object);
 void __incrementRef(shadow_Object_t* object);

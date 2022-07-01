@@ -1218,7 +1218,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowUShort_getClass() => (Class)
+	private _shadow_standard__UShort_getClass() => (Class)
 	{
 		return ushort:class;
 	}

@@ -10,7 +10,7 @@
 #include <string.h>
 
 // EXPORTED METHODS
-void _shadowIoFile_throwException(shadow_io_File_t* file, shadow_String_t* message);
+void _shadow_io__File_throwException(shadow_io_File_t* file, shadow_String_t* message);
 
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
@@ -48,13 +48,13 @@ static void reportError(char* error)
             buffer[length - 1] = '\0';
             --length;
         }
-        message = shadowString_create(buffer);
+        message = __shadow_standard__String_create(buffer);
         free(buffer);
         LocalFree(messageBuffer);
     }
     else
-        message = shadowString_create(error);
-    _shadowIoFile_throwException(NULL, message);
+        message = __shadow_standard__String_create(error);
+    _shadow_io__File_throwException(NULL, message);
 #else
     char messageBuffer[1024];
     if (strerror_r(errno, messageBuffer, sizeof(messageBuffer)) == 0) {
@@ -73,13 +73,13 @@ static void reportError(char* error)
     else
         message = shadowString_create(error);
 #endif
-    _shadowIoFile_throwException(NULL, message);
+    _shadow_io__File_throwException(NULL, message);
 }
 
 // Add support for wide characters? Perhaps something like: https://github.com/tapika/cutf
-shadow_boolean_t __shadowIoFile_exists(shadow_String_t* str)
+shadow_boolean_t __shadow_io__File_exists(shadow_String_t* str)
 {
-	char* path = shadowString_getCString(str);
+	char* path = __shadow_standard__String_getCString(str);
 	shadow_boolean_t ret;
 #ifdef SHADOW_WINDOWS
 	ret = GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
@@ -91,9 +91,9 @@ shadow_boolean_t __shadowIoFile_exists(shadow_String_t* str)
 	return ret;
 }
 
-shadow_long_t __shadowIoFile_open(shadow_String_t* str, shadow_int_t mode)
+shadow_long_t __shadow_io__File_open(shadow_String_t* str, shadow_int_t mode)
 {
-	char* path = shadowString_getCString(str);
+	char* path = __shadow_standard__String_getCString(str);
     shadow_long_t result;
     bool error;
     int access = 0;
@@ -138,9 +138,9 @@ shadow_long_t __shadowIoFile_open(shadow_String_t* str, shadow_int_t mode)
     return result;
 }
 
-void __shadowIoFile_delete(shadow_String_t* str)
+void __shadow_io__File_delete(shadow_String_t* str)
 {
-    char* path = shadowString_getCString(str);
+    char* path = __shadow_standard__String_getCString(str);
     bool error;
 
 #ifdef SHADOW_WINDOWS
@@ -155,11 +155,11 @@ void __shadowIoFile_delete(shadow_String_t* str)
         reportError("Delete file error");
 }
 
-shadow_long_t __shadowIoFile_positionGet(shadow_long_t handle)
+shadow_long_t __shadow_io__File_positionGet(shadow_long_t handle)
 {
     if (handle == -1L) {
-        shadow_String_t* message = shadowString_create("Cannot retrieve position when file is not open");
-        _shadowIoFile_throwException(NULL, message);
+        shadow_String_t* message = __shadow_standard__String_create("Cannot retrieve position when file is not open");
+        _shadow_io__File_throwException(NULL, message);
     }
 
     shadow_long_t result;
@@ -184,11 +184,11 @@ shadow_long_t __shadowIoFile_positionGet(shadow_long_t handle)
     return result;
 }
 
-void __shadowIoFile_positionSet(shadow_long_t handle, shadow_long_t position)
+void __shadow_io__File_positionSet(shadow_long_t handle, shadow_long_t position)
 {
     if (handle == -1L) {
-        shadow_String_t* message = shadowString_create("Cannot set position when file is not open");
-        _shadowIoFile_throwException(NULL, message);
+        shadow_String_t* message = __shadow_standard__String_create("Cannot set position when file is not open");
+        _shadow_io__File_throwException(NULL, message);
     }
 
     shadow_long_t result;
@@ -204,9 +204,9 @@ void __shadowIoFile_positionSet(shadow_long_t handle, shadow_long_t position)
         reportError("Set position error");
 }
 
-shadow_long_t __shadowIoFile_sizeGet(shadow_String_t* str)
+shadow_long_t __shadow_io__File_sizeGet(shadow_String_t* str)
 {
-    char* path = shadowString_getCString(str);
+    char* path = __shadow_standard__String_getCString(str);
     bool error;
     shadow_long_t size;
 
@@ -229,12 +229,12 @@ shadow_long_t __shadowIoFile_sizeGet(shadow_String_t* str)
 }
 
 
-void __shadowIoFile_sizeSet(shadow_long_t handle, shadow_long_t size)
+void __shadow_io__File_sizeSet(shadow_long_t handle, shadow_long_t size)
 {
     bool error;
 
 #ifdef SHADOW_WINDOWS
-    shadow_long_t currentPosition = __shadowIoFile_positionGet(handle);
+    shadow_long_t currentPosition = __shadow_io__File_positionGet(handle);
     if (currentPosition < size)
         currentPosition = size;
     // Move to size, set end of file, move position back to current position
@@ -249,7 +249,7 @@ void __shadowIoFile_sizeSet(shadow_long_t handle, shadow_long_t size)
         reportError("Set file size error");
 }
 
-void __shadowIoFile_close(shadow_long_t handle)
+void __shadow_io__File_close(shadow_long_t handle)
 {
 #ifdef SHADOW_WINDOWS
 	CloseHandle((HANDLE)handle);
@@ -258,10 +258,10 @@ void __shadowIoFile_close(shadow_long_t handle)
 #endif
 }
 
-shadow_long_t __shadowIoFile_read(shadow_long_t handle, shadow_Array_t* array)
+shadow_long_t __shadow_io__File_read(shadow_long_t handle, shadow_Array_t* array)
 {
     ArrayData data;
-    shadowArray_getData(array, &data);
+    __shadow_standard__Array_getData(array, &data);
     bool error;
     shadow_long_t result = 0;
 #ifdef SHADOW_WINDOWS
@@ -289,10 +289,10 @@ shadow_long_t __shadowIoFile_read(shadow_long_t handle, shadow_Array_t* array)
 
     return result;
 }
-shadow_long_t __shadowIoFile_write(shadow_long_t handle, shadow_Array_t* array, shadow_long_t bytes)
+shadow_long_t __shadow_io__File_write(shadow_long_t handle, shadow_Array_t* array, shadow_long_t bytes)
 {
     ArrayData data;
-    shadowArray_getData(array, &data);
+    __shadow_standard__Array_getData(array, &data);
     // Never exceed the array length
     if (bytes > data.size)
         bytes = data.size;

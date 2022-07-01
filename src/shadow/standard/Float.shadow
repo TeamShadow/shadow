@@ -510,7 +510,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowFloat_getClass() => (Class)
+	private _shadow_standard__Float_getClass() => (Class)
 	{
 		return float:class;
 	}

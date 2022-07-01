@@ -574,7 +574,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowDouble_getClass() => (Class)
+	private _shadow_standard__Double_getClass() => (Class)
 	{
 		return double:class;
 	}

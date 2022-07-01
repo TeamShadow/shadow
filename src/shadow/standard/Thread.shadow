@@ -12,7 +12,7 @@ locked class shadow:standard@
 is CanIndex<int, Thread>
 {
 	[ImportAssembly]
-	private readonly __shadowThread_spawn(Thread instance) => (Pointer);
+	private readonly __shadow_standard__Thread_spawn(Thread instance) => (Pointer);
 	
 	[ImportNative]
 	private readonly get staticNextId() => (int);
@@ -67,7 +67,7 @@ is CanIndex<int, Thread>
 			//check(parent):childrenList.add(instance());
 			
 			// spawn the thread and get the Pointer
-			this:handle = __shadowThread_spawn(this);
+			this:handle = __shadow_standard__Thread_spawn(this);
 			
 			if(!this:handle->isValid) {
 				throw ThreadSpawnException:create();

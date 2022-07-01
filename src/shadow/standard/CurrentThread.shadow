@@ -20,7 +20,7 @@ is CanIndex<int, Thread>
 	private readonly sleep(Thread instance, int milliseconds) => ();
 	
 	[ImportAssembly]
-	private readonly __ShadowCurrentThread_Yield() => (boolean);
+	private readonly __shadow_standard__CurrentThread_yield() => (boolean);
 	
 	Thread current;
 	
@@ -208,7 +208,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly yield() => (boolean)
 	{
-		return __ShadowCurrentThread_Yield();
+		return __shadow_standard__CurrentThread_yield();
 	}
 	
 	/**

@@ -8,18 +8,18 @@ is	CanRead
     long handle = -1L;
 
     [ImportAssembly]
-    private readonly __shadowIoStandardInput_setUp() => (long);
+    private readonly __shadow_io__StandardInput_setUp() => (long);
 
     // Use the read function from File
     [ImportAssembly]
-    private readonly __shadowIoFile_read(long handle, ubyte[] array) => (long);
+    private readonly __shadow_io__File_read(long handle, ubyte[] array) => (long);
 
     /**
 	 * Creates a {@code StandardInput} object.
 	 */
 	public create()
 	{
-        handle = __shadowIoStandardInput_setUp();
+        handle = __shadow_io__StandardInput_setUp();
 	}
 
     /**
@@ -29,6 +29,6 @@ is	CanRead
      */
     public read( ubyte[] buffer ) => ( long )
     {
-        return __shadowIoFile_read(handle,buffer);
+        return __shadow_io__File_read(handle,buffer);
     }
 }

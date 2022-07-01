@@ -42,7 +42,7 @@
 	}
 #endif
 
-shadow_long_t __shadowSystem_getNanoTime(void)
+shadow_long_t __shadow_standard__System_getNanoTime(void)
 {
 #ifdef SHADOW_WINDOWS
 		LARGE_INTEGER freq;
@@ -62,7 +62,7 @@ shadow_long_t __shadowSystem_getNanoTime(void)
 #endif
 }
 
-shadow_long_t __shadowSystem_getEpochNanoTime(void)
+shadow_long_t __shadow_standard__System_getEpochNanoTime(void)
 {
 #ifdef SHADOW_WINDOWS
     FILETIME now;
@@ -78,7 +78,7 @@ shadow_long_t __shadowSystem_getEpochNanoTime(void)
 #endif
 }
 
-shadow_boolean_t __shadowSystem_isWindows()
+shadow_boolean_t __shadow_standard__System_isWindows()
 {
 #ifdef SHADOW_WINDOWS
     return (shadow_boolean_t)true;
@@ -87,24 +87,24 @@ shadow_boolean_t __shadowSystem_isWindows()
 #endif
 }
 
-shadow_String_t* __shadowSystem_getEnvironment(shadow_String_t* input)
+shadow_String_t* __shadow_standard__System_getEnvironment(shadow_String_t* input)
 {
-	char* variable = shadowString_getCString(input);
+	char* variable = __shadow_standard__String_getCString(input);
 	shadow_String_t* value = NULL;
 #ifdef SHADOW_WINDOWS
     char buffer[32767];
     if (GetEnvironmentVariable(variable, buffer, sizeof(buffer)) != 0)
-        value = shadowString_create(buffer);
+        value = __shadow_standard__String_create(buffer);
 #else
     char* result = getenv(variable);
     if (result != NULL)
-        value = shadowString_create(result);
+        value = __shadow_standard__String_create(result);
 #endif
     free(variable);
     return value;
 }
 
-shadow_String_t* __shadowSystem_osName()
+shadow_String_t* __shadow_standard__System_osName()
 {
     shadow_String_t* value = NULL;
 #ifdef SHADOW_WINDOWS
@@ -114,31 +114,31 @@ shadow_String_t* __shadowSystem_osName()
         unsigned char buffer[1024];
         DWORD size = sizeof(buffer);
         if (RegQueryValueExA(key, "ProductName", NULL, NULL, buffer, &size) == ERROR_SUCCESS) {
-            value = shadowString_create((const char*)buffer);
+            value = __shadow_standard__String_create((const char*)buffer);
             error = false;
         }
         RegCloseKey(key);
     }
 
     if (error)
-        value = shadowString_create("Windows");
+        value = __shadow_standard__String_create("Windows");
 #elif defined SHADOW_MAC
     struct utsname data;
     if (uname(&data) == 0)
-        value = shadowString_create(data.sysname);
+        value = __shadow_standard__String_create(data.sysname);
     else
-        value = shadowString_create("Darwin");
+        value = __shadow_standard__String_create("Darwin");
 #else
     struct utsname data;
     if (uname(&data) == 0)
-        value = shadowString_create(data.sysname);
+        value = __shadow_standard__String_create(data.sysname);
     else
-        value = shadowString_create("Linux");
+        value = __shadow_standard__String_create("Linux");
 #endif
     return value;
 }
 
-shadow_String_t* __shadowSystem_osVersion()
+shadow_String_t* __shadow_standard__System_osVersion()
 {
     shadow_String_t* value = NULL;
 #ifdef SHADOW_WINDOWS
@@ -155,13 +155,13 @@ shadow_String_t* __shadowSystem_osVersion()
     }
     char buffer[1024];
     sprintf_s(buffer, sizeof(buffer), "%d.%d", (int)major, (int)minor);
-    value = shadowString_create(buffer);
+    value = __shadow_standard__String_create(buffer);
 #else
     struct utsname data;
     if (uname(&data) == 0)
-        value = shadowString_create(data.release);
+        value = __shadow_standard__String_create(data.release);
     else
-        value = shadowString_create("0.0");
+        value = __shadow_standard__String_create("0.0");
 #endif
     return value;
 }

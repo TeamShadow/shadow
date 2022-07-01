@@ -14,7 +14,7 @@ class shadow:io@
     get String lineSeparator = "\r\n";
 
     [ImportAssembly]
-    private readonly __shadowIoTextOutput_getSeparator() => (String);
+    private readonly __shadow_io__TextOutput_getSeparator() => (String);
 
     public create(CanWrite writer)
     {
@@ -30,7 +30,7 @@ class shadow:io@
 
         this:writer = writer;
         buffer = ubyte:create[realSize];
-        lineSeparator = __shadowIoTextOutput_getSeparator();
+        lineSeparator = __shadow_io__TextOutput_getSeparator();
 
         if (writer is CanOpen)
         {

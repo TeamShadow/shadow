@@ -7,6 +7,6 @@
 #include <Shadow.h>
 
 typedef void* shadow_io_File_t;
-shadow_long_t __shadowIoFile_read(shadow_long_t handle, shadow_Array_t* array);
+shadow_long_t __shadow_io__File_read(shadow_long_t handle, shadow_Array_t* array);
 
 #endif

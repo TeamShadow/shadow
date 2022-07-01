@@ -21,8 +21,8 @@ typedef enum {
 } free_type_t;
 
 // "private" methods
-shadow_Pointer_t* _shadowPointer_create(shadow_Pointer_t* instance, void* ptr, free_type_t type);
-void* _shadowPointer_extract(shadow_Pointer_t*);
+shadow_Pointer_t* _shadow_natives__Pointer_create(shadow_Pointer_t* instance, void* ptr, free_type_t type);
+void* _shadow_natives__Pointer_extract(shadow_Pointer_t*);
 
 /**
  * Creates a shadow:natives@Pointer object, which holds the address of the passed pointer. This
@@ -35,14 +35,14 @@ void* _shadowPointer_extract(shadow_Pointer_t*);
  *
  * usage:
  *	C:
- *		shadow_Pointer_t* __ShadowTest_CreateSomethingUseful() {
- *			return shadowPointer_Create(malloc(sizeof(UsefulStruct)), SHADOW_CAN_FREE);
+ *		shadow_Pointer_t* __shadow_Test__Test_createSomethingUseful() {
+ *			return _shadow_natives__Pointer_create(malloc(sizeof(UsefulStruct)), SHADOW_CAN_FREE);
  *		}
  *
  * 	Shadow:
  *		private extern __ShadowTest_CreateSomethingUseful() => (Pointer);
  */
-#define shadowPointer_create(ptr, type) _shadowPointer_create(0, ptr, type)
+#define _shadow_natives__Pointer_create(ptr, type) _shadow_natives__Pointer_create(0, ptr, type)
 
 /**
  * Extracts the pointer of type T* from the shadow:natives@Pointer object.
@@ -54,12 +54,12 @@ void* _shadowPointer_extract(shadow_Pointer_t*);
  * usage:
  *  C:
  *		void __ShadowTest_UseSomethingUseful(shadow_pointer_t* shadow_reference) {
- *			UsefulStruct* extracted = shadowPointer_Extract(UsefulStruct, shadow_reference);
+ *			UsefulStruct* extracted = _shadow_natives__Pointer_extract(UsefulStruct, shadow_reference);
  *		}
  *
  *  Shadow:
  *		private extern __ShadowTest_UseSomethingUseful(Pointer) => ();
  */
-#define shadowPointer_extract(T, shadow_reference) ((T*)_shadowPointer_extract(shadow_reference))
+#define _shadow_natives__Pointer_extract(T, shadow_reference) ((T*)_shadow_natives__Pointer_extract(shadow_reference))
 
 #endif

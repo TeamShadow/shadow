@@ -8,11 +8,11 @@ is	CanWrite
     long handle = -1L;
 
     [ImportAssembly]
-    private readonly __shadowIoStandardOutput_setUp(boolean error) => (long);
+    private readonly __shadow_io__StandardOutput_setUp(boolean error) => (long);
 
     // Use the write function from File
     [ImportAssembly]
-    private readonly __shadowIoFile_write(long handle, readonly ubyte[] array, long bytes) => (long);
+    private readonly __shadow_io__File_write(long handle, readonly ubyte[] array, long bytes) => (long);
 
     /**
 	 * Creates a {@code StandardOutput} object that writes to {@code stdout}.
@@ -28,7 +28,7 @@ is	CanWrite
      */
     public create(boolean error)
     {
-        handle = __shadowIoStandardOutput_setUp(error);
+        handle = __shadow_io__StandardOutput_setUp(error);
     }
 
    	/**
@@ -39,6 +39,6 @@ is	CanWrite
    	 */
    	public write( readonly ubyte[] buffer, long bytes) => ( long )
    	{
-   	    return __shadowIoFile_write(handle, buffer, bytes);
+   	    return __shadow_io__File_write(handle, buffer, bytes);
    	}
 }

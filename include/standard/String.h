@@ -38,22 +38,22 @@ typedef struct {
  * Takes a Shadow String and stores the data in the StringData struct supplied
  * as the second argument.
  */
-StringData* shadowString_getData(const shadow_String_t* instance, StringData* str);
+StringData* __shadow_standard__String_getData(const shadow_String_t* instance, StringData* str);
 
 /**
  * Returns a null-terminated clone of the supplied Shadow String. Since this is a copy,
  * the result needs to be freed after use.
  */
-char* shadowString_getCString(const shadow_String_t* instance);
+char* __shadow_standard__String_getCString(const shadow_String_t* instance);
 
 /**
  * Creates a Shadow String from a NULL-terminated C String.
  */
-shadow_String_t* shadowString_create(const char*);
+shadow_String_t* __shadow_standard__String_create(const char*);
 
 /**
  * Frees a Shadow String that was created using shadowString_Create()
  */
-void shadowString_free(shadow_String_t* instance);
+void __shadow_standard__String_free(shadow_String_t* instance);
 
 #endif

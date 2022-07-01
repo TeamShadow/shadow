@@ -3,7 +3,7 @@
  */
 #include <Shadow.h>
 
-shadow_code_t __shadowIoPath_fileSeparator()
+shadow_code_t __shadow_io__Path_fileSeparator()
 {
 #ifdef SHADOW_WINDOWS
     return (shadow_code_t)'\\';
@@ -12,7 +12,7 @@ shadow_code_t __shadowIoPath_fileSeparator()
 #endif
 }
 
-shadow_code_t __shadowIoPath_pathSeparator()
+shadow_code_t __shadow_io__Path_pathSeparator()
 {
 #ifdef SHADOW_WINDOWS
     return (shadow_code_t)';';

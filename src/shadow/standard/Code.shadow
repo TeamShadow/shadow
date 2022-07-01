@@ -351,7 +351,7 @@ and CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowCode_getClass() => (Class)
+	private _shadow_standard__Code_getClass() => (Class)
 	{
 		return code:class;
 	}

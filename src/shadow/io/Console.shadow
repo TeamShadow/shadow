@@ -14,7 +14,7 @@ singleton shadow:io@
 	TextOutput error;
 
     [ImportAssembly]
-    private readonly __shadowIoConsole_initialize() => ();
+    private readonly __shadow_io__Console_initialize() => ();
 	
 	/**
 	 * Creates a new {@code Console}.
@@ -24,7 +24,7 @@ singleton shadow:io@
 	    input = TextInput:create(StandardInput:create());
         output = TextOutput:create(StandardOutput:create());
 	    error = TextOutput:create(StandardOutput:create(true));
-		__shadowIoConsole_initialize();
+		__shadow_io__Console_initialize();
 	}
 
 	public destroy
@@ -122,13 +122,13 @@ singleton shadow:io@
 	}
 
 	[ExportAssembly]
-    public _shadowIoConsole_printLine(nullable Object value) => (Console)
+    public _shadow_io__Console_printLine(nullable Object value) => (Console)
     {
         return printLine(value);
     }
 
     [ExportAssembly]
-    public _shadowIoConsole_printErrorLine(nullable Object value) => (Console)
+    public _shadow_io__Console_printErrorLine(nullable Object value) => (Console)
     {
         return printErrorLine(value);
     }
@@ -179,7 +179,7 @@ singleton shadow:io@
 	}
 
 	[ExportAssembly]
-    private _shadowIoConsole_getInstance() => (Console)
+    private _shadow_io__Console_getInstance() => (Console)
     {
         Console console;
         return console;

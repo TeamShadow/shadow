@@ -579,7 +579,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowULong_getClass() => (Class)
+	private _shadow_standard__ULong_getClass() => (Class)
 	{
 		return ulong:class;
 	}

@@ -15,25 +15,25 @@ and CanClose
 	get Path path;
 	
 	[ImportAssembly]
-	private readonly __shadowIoFile_exists(String path) => (boolean);
+	private readonly __shadow_io__File_exists(String path) => (boolean);
 	[ImportAssembly]
-	private readonly __shadowIoFile_open(String path, int mode) => (long);
+	private readonly __shadow_io__File_open(String path, int mode) => (long);
 	[ImportAssembly]
-    private readonly __shadowIoFile_delete(String path) => ();
+    private readonly __shadow_io__File_delete(String path) => ();
 	[ImportAssembly]
-	private readonly __shadowIoFile_close(long handle) => ();
+	private readonly __shadow_io__File_close(long handle) => ();
 	[ImportAssembly]
-    private readonly __shadowIoFile_positionGet(long handle) => ( long );
+    private readonly __shadow_io__File_positionGet(long handle) => ( long );
     [ImportAssembly]
-    private readonly __shadowIoFile_positionSet(long handle, long position) => ();
+    private readonly __shadow_io__File_positionSet(long handle, long position) => ();
     [ImportAssembly]
-    private readonly __shadowIoFile_sizeGet(String path) => ( long );
+    private readonly __shadow_io__File_sizeGet(String path) => ( long );
     [ImportAssembly]
-    private readonly __shadowIoFile_sizeSet(long handle, long size) => ();
+    private readonly __shadow_io__File_sizeSet(long handle, long size) => ();
     [ImportAssembly]
-    private readonly __shadowIoFile_read(long handle, ubyte[] array) => (long);
+    private readonly __shadow_io__File_read(long handle, ubyte[] array) => (long);
     [ImportAssembly]
-    private readonly __shadowIoFile_write(long handle, readonly ubyte[] array, long bytes) => (long);
+    private readonly __shadow_io__File_write(long handle, readonly ubyte[] array, long bytes) => (long);
 
 	/**
 	 * Creates a {@code File} object associated with the file on the given
@@ -78,7 +78,7 @@ and CanClose
 	 */	
 	public readonly get exists() => ( boolean )
 	{
-		return __shadowIoFile_exists(#path);
+		return __shadow_io__File_exists(#path);
 	}
 
     /**
@@ -99,13 +99,13 @@ and CanClose
 	    close();
 	    if ((mode & READ) == 0 and (mode & WRITE) == 0)
 	        throw IOException:create("File must be opened for reading, writing, or both");
-	    handle = __shadowIoFile_open(#path, mode);
+	    handle = __shadow_io__File_open(#path, mode);
 	}
 
 	public delete() => (File)
 	{
 	    close();
-	    __shadowIoFile_delete(#path);
+	    __shadow_io__File_delete(#path);
 	    return this;
 	}
 	
@@ -115,7 +115,7 @@ and CanClose
 	 */
 	public get readonly position() => ( long )
 	{
-	    return __shadowIoFile_positionGet(handle);
+	    return __shadow_io__File_positionGet(handle);
 	}
 	
 	/**
@@ -124,7 +124,7 @@ and CanClose
 	 */
 	public set position( long position ) => ()
 	{
-	    __shadowIoFile_positionSet(handle, position);
+	    __shadow_io__File_positionSet(handle, position);
 	}
 	
 	/**
@@ -133,7 +133,7 @@ and CanClose
 	 */
 	public get readonly size() => ( long )
 	{
-        return __shadowIoFile_sizeGet(#path);
+        return __shadow_io__File_sizeGet(#path);
 	}
 	
 	/**
@@ -147,7 +147,7 @@ and CanClose
 	    if (closed)
 	        open (WRITE);
 
-	    __shadowIoFile_sizeSet(handle, size);
+	    __shadow_io__File_sizeSet(handle, size);
 
         if (closed)
             close();
@@ -162,7 +162,7 @@ and CanClose
 	 */
 	public readonly read( ubyte[] buffer ) => ( long )
 	{
-	    return __shadowIoFile_read(handle,buffer);
+	    return __shadow_io__File_read(handle,buffer);
 	}
 	
 	/**
@@ -174,7 +174,7 @@ and CanClose
 	 */
 	public write( readonly ubyte[] buffer, long bytes) => ( long )
 	{
-	    return __shadowIoFile_write(handle, buffer, bytes);
+	    return __shadow_io__File_write(handle, buffer, bytes);
 	}
 
 	/**
@@ -192,13 +192,13 @@ and CanClose
 	public close() => ()
 	{
 		if(handle != -1L) {
-			__shadowIoFile_close(handle);
+			__shadow_io__File_close(handle);
 			handle = -1L;
 		}
 	}
 
     [ExportAssembly]
-    private _shadowIoFile_throwException(String message) => ()
+    private _shadow_io__File_throwException(String message) => ()
     {
         throw IOException:create(message);
     }
@@ -206,7 +206,7 @@ and CanClose
 	/*
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowIoFile_setHandle(long handle) => ()
+	private _shadow_io__File_setHandle(long handle) => ()
 	{
 		this:handle = handle;
 	}

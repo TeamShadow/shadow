@@ -5,17 +5,17 @@
 immutable singleton shadow:standard@System
 {
 	[ImportAssembly]
-	private readonly __shadowSystem_getEpochNanoTime() => (long);
+	private readonly __shadow_standard__System_getEpochNanoTime() => (long);
 	[ImportAssembly]
-	private readonly __shadowSystem_getNanoTime() => (long);
+	private readonly __shadow_standard__System_getNanoTime() => (long);
     [ImportAssembly]
-    private readonly __shadowSystem_isWindows() => (boolean);
+    private readonly __shadow_standard__System_isWindows() => (boolean);
     [ImportAssembly]
-    private readonly __shadowSystem_getEnvironment(String input) => (nullable String);
+    private readonly __shadow_standard__System_getEnvironment(String input) => (nullable String);
     [ImportAssembly]
-    private readonly __shadowSystem_osName() => (String);
+    private readonly __shadow_standard__System_osName() => (String);
     [ImportAssembly]
-    private readonly __shadowSystem_osVersion() => (String);
+    private readonly __shadow_standard__System_osVersion() => (String);
 
 	/**
 	 * Returns the number of nanoseconds elapsed since the Unix Epoch,
@@ -26,31 +26,31 @@ immutable singleton shadow:standard@System
 	 */
 	public get readonly epochNanoTime() => (long)
 	{
-		return __shadowSystem_getEpochNanoTime();
+		return __shadow_standard__System_getEpochNanoTime();
 	}
 	
 	public get readonly nanoTime() => (long)
 	{
-		return __shadowSystem_getNanoTime();
+		return __shadow_standard__System_getNanoTime();
 	}
 
 	public get readonly isWindows() => (boolean)
 	{
-	    return __shadowSystem_isWindows();
+	    return __shadow_standard__System_isWindows();
 	}
 
 	public getEnvironment(String variable) => (nullable String)
 	{
-        return __shadowSystem_getEnvironment(variable);
+        return __shadow_standard__System_getEnvironment(variable);
 	}
 
 	public get osName() => (String)
 	{
-        return __shadowSystem_osName();
+        return __shadow_standard__System_osName();
 	}
 
 	public get osVersion() => (String)
     {
-        return __shadowSystem_osVersion();
+        return __shadow_standard__System_osVersion();
     }
 }

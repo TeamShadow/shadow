@@ -29,18 +29,18 @@ shadow_Class_t;
  * but the functions don't need a parameter to get
  * the appropriate class.
  */
-shadow_Class_t* _shadowULong_getClass();
-shadow_Class_t* _shadowLong_getClass();
-shadow_Class_t* _shadowByte_getClass();
-shadow_Class_t* _shadowUByteArray_getClass();
-shadow_Class_t* _shadowInt_getClass();
-shadow_Class_t* _shadowUInt_getClass();
-shadow_Class_t* _shadowBoolean_getClass();
-shadow_Class_t* _shadowCode_getClass();
-shadow_Class_t* _shadowFloat_getClass();
-shadow_Class_t* _shadowShort_getClass();
-shadow_Class_t* _shadowUByte_getClass();
-shadow_Class_t* _shadowUShort_getClass();
-shadow_Class_t* _shadowDouble_getClass();
+shadow_Class_t* _shadow_standard__ULong_getClass();
+shadow_Class_t* _shadow_standard__Long_getClass();
+shadow_Class_t* _shadow_standard__Byte_getClass();
+shadow_Class_t* _shadow_standard__UByteArray_getClass();
+shadow_Class_t* _shadow_standard__Int_getClass();
+shadow_Class_t* _shadow_standard__UInt_getClass();
+shadow_Class_t* _shadow_standard__Boolean_getClass();
+shadow_Class_t* _shadow_standard__Code_getClass();
+shadow_Class_t* _shadow_standard__Float_getClass();
+shadow_Class_t* _shadow_standard__Short_getClass();
+shadow_Class_t* _shadow_standard__UByte_getClass();
+shadow_Class_t* _shadow_standard__UShort_getClass();
+shadow_Class_t* _shadow_standard__Double_getClass();
 
 #endif

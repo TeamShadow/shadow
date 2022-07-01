@@ -15,14 +15,10 @@
  * the current Thread-Local-Storage thread to the newly spawned
  * thread.
 **/ 
-void* _shadowThread_ThreadStart(shadow_Thread_t*);
-
-// *to be implemented*
-/// The method called from Shadow to spawn a new thread
-shadow_Pointer_t* __shadowThread_spawn(shadow_Thread_t*);
+void* _shadow_standard__Thread_threadStart(shadow_Thread_t*);
 // METHOD SIGNATURES //
 
-shadow_Pointer_t* __shadowThread_spawn(shadow_Thread_t* _this)
+shadow_Pointer_t* __shadow_standard__Thread_spawn(shadow_Thread_t* _this)
 {
-	return shadowPointer_create(malloc(1), SHADOW_CAN_FREE);
+	return _shadow_natives__Pointer_create(malloc(1), SHADOW_CAN_FREE);
 }

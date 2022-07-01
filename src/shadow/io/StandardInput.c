@@ -10,7 +10,7 @@
 	#include <fcntl.h>
 #endif
 
-shadow_long_t __shadowIoStandardInput_setUp()
+shadow_long_t __shadow_io__StandardInput_setUp()
 {
  #ifdef SHADOW_WINDOWS
  	return (shadow_long_t)GetStdHandle(STD_INPUT_HANDLE);

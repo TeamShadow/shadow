@@ -975,7 +975,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowUInt_getClass() => (Class)
+	private _shadow_standard__UInt_getClass() => (Class)
 	{
 		return uint:class;
 	}

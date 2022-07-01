@@ -976,7 +976,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowShort_getClass() => (Class)
+	private _shadow_standard__Short_getClass() => (Class)
 	{
 		return short:class;
 	}

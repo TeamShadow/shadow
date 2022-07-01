@@ -8,7 +8,7 @@
 	#include <Windows.h>
 #endif
 
-void __shadowIoConsole_initialize(void)
+void __shadow_io__Console_initialize(void)
 {
 #ifdef SHADOW_WINDOWS
     SetConsoleCP(65001);

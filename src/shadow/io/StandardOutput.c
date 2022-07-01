@@ -10,7 +10,7 @@
 	#include <fcntl.h>
 #endif
 
-shadow_long_t __shadowIoStandardOutput_setUp(shadow_boolean_t error)
+shadow_long_t __shadow_io__StandardOutput_setUp(shadow_boolean_t error)
 {
  #ifdef SHADOW_WINDOWS
     if (error)

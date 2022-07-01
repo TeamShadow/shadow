@@ -844,7 +844,7 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowInt_getClass() => (Class)
+	private _shadow_standard__Int_getClass() => (Class)
 	{
 		return int:class;
 	}

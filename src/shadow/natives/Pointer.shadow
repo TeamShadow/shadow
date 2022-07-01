@@ -13,7 +13,7 @@ locked immutable class shadow:natives@
 	private invalidateAddress() => ();
 
 	[ImportAssembly]
-	private __shadowPointer_free(long address) => ();
+	private __shadow_natives__Pointer_free(long address) => ();
 	
 	long address;
 	boolean shouldFree;
@@ -60,7 +60,7 @@ locked immutable class shadow:natives@
 		{
 			if(shouldFree)
 			{
-				__shadowPointer_free(address);
+				__shadow_natives__Pointer_free(address);
 			}
 			
 			invalidateAddress();
@@ -74,13 +74,13 @@ locked immutable class shadow:natives@
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowPointer_create(long address, boolean shouldFree) => (Pointer)
+	private _shadow_natives__Pointer_create(long address, boolean shouldFree) => (Pointer)
 	{
 		return Pointer:create(address, shouldFree);
 	}
 	
 	[ExportAssembly]
-	private _shadowPointer_extract() => (long)
+	private _shadow_natives__Pointer_extract() => (long)
 	{
 		if(!isValid())
 			throw FreedResourceException:create("Pointer");

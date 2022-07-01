@@ -1423,13 +1423,13 @@ and	CanHash
 	
 	// C FRAMEWORK EXTENSIONS
 	[ExportAssembly]
-	private _shadowUByteArray_getClass() => (Class)
+	private _shadow_standard__UByteArray_getClass() => (Class)
 	{
 		return ubyte[]:class;
 	}
 	
 	[ExportAssembly]
-	private _shadowUByte_getClass() => (Class)
+	private _shadow_standard__UByte_getClass() => (Class)
 	{
 		return ubyte:class;
 	}

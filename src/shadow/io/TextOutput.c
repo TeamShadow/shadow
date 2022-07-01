@@ -4,11 +4,11 @@
 #include <Shadow.h>
 #include <standard/String.h>
 
-shadow_String_t* __shadowIoTextOutput_getSeparator()
+shadow_String_t* __shadow_io__TextOutput_getSeparator()
 {
 #ifdef SHADOW_WINDOWS
-    return shadowString_create("\r\n");
+    return __shadow_standard__String_create("\r\n");
 #else
-    return shadowString_create("\n");
+    return __shadow_standard__String_create("\n");
 #endif
 }

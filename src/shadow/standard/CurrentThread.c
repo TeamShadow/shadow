@@ -4,15 +4,10 @@
 #include <Shadow.h>
 #include <standard/CurrentThread.h>
 
-// METHOD SIGNATURES //
-shadow_boolean_t __ShadowCurrentThread_Yield(void);
-// METHOD SIGNATURES //
-
-
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
 
-	shadow_boolean_t __ShadowCurrentThread_Yield(void)
+	shadow_boolean_t __shadow_standard__CurrentThread_yield(void)
 	{
 		Sleep(0);
 		return true;
@@ -20,7 +15,7 @@ shadow_boolean_t __ShadowCurrentThread_Yield(void);
 #else
 	#include <sched.h>
 
-	shadow_boolean_t __ShadowCurrentThread_Yield(void)
+	shadow_boolean_t __shadow_standard__CurrentThread_yield(void)
 	{
 		return sched_yield() == 0;
 	}

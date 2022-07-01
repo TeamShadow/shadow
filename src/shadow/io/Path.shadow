@@ -7,9 +7,9 @@ immutable class shadow:io@Path
 	String[] components;
 
     [ImportAssembly]
-    private readonly __shadowIoPath_fileSeparator() => (code);
+    private readonly __shadow_io__Path_fileSeparator() => (code);
     [ImportAssembly]
-    private readonly __shadowIoPath_pathSeparator() => (code);
+    private readonly __shadow_io__Path_pathSeparator() => (code);
 
 	/**
 	 * Creates a {@code Path} object corresponding to the path specified by
@@ -63,7 +63,7 @@ immutable class shadow:io@Path
 	 */
 	public locked get fileSeparator() => ( code )
 	{
-	    return __shadowIoPath_fileSeparator();
+	    return __shadow_io__Path_fileSeparator();
 	}
 
     /**
@@ -74,7 +74,7 @@ immutable class shadow:io@Path
      */
     public locked get pathSeparator() => ( code )
     {
-        return __shadowIoPath_pathSeparator();
+        return __shadow_io__Path_pathSeparator();
     }
 	
 	/**

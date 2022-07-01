@@ -7,7 +7,7 @@
 shadow_Array_t* __allocateArray(shadow_Class_t* class, shadow_ulong_t elements, shadow_boolean_t nullable);
 void __destroyArray(shadow_Array_t* array);
 
-ArrayData* shadowArray_getData(shadow_Array_t* shadowArray, ArrayData* array)
+ArrayData* __shadow_standard__Array_getData(shadow_Array_t* shadowArray, ArrayData* array)
 {
 	if(!array) {
 		array = malloc(sizeof(ArrayData));
@@ -20,7 +20,7 @@ ArrayData* shadowArray_getData(shadow_Array_t* shadowArray, ArrayData* array)
 
 
 
-shadow_Array_t* shadowArray_create(size_t num, shadow_Class_t* class, bool nullable, void** data)
+shadow_Array_t* __shadow_standard__Array_create(size_t num, shadow_Class_t* class, bool nullable, void** data)
 {
 	// allocate the array
 	shadow_Array_t* array = __allocateArray(class, num, nullable ? 1 : 0);	
@@ -32,7 +32,7 @@ shadow_Array_t* shadowArray_create(size_t num, shadow_Class_t* class, bool nulla
 	return array;
 }
 
-void shadowArray_free(shadow_Array_t* array)
+void __shadow_standard__Array_free(shadow_Array_t* array)
 {
 	__destroyArray(array);
 	free(array);
