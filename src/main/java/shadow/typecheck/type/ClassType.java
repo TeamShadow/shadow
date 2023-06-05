@@ -136,21 +136,7 @@ public class ClassType extends Type {
         parent.includeMethods(methodName, list);
         parent = parent.extendType;
       }
-
-      // outer classes of this and parents
-      ClassType current = this;
-      while (current != null) {
-        // then outer classes
-        Type outer = current.getOuter();
-        while (outer instanceof ClassType) {
-          ClassType outerClass = (ClassType) outer;
-          outerClass.includeMethods(methodName, list);
-          outer = outerClass.getOuter();
-        }
-        current = current.extendType;
-      }
     }
-
     return list;
   }
 

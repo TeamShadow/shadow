@@ -38,8 +38,8 @@
 ;---------------------
 ; Method Declarations
 ;---------------------
-; threadStart() => ();
-declare void @shadow.standard..Thread..threadStart(%shadow.standard..Thread*)
+; start() => ();
+declare void @shadow.standard..Thread..start(%shadow.standard..Thread*)
 ; createMainThread() => (Thread);
 declare %shadow.standard..Thread* @shadow.standard..Thread..createMainThread(%shadow.standard..Thread*)
 
@@ -64,14 +64,14 @@ entry:
 ; Custom Method Definitions
 ;---------------------------
 ; the function run from the newly spawned thread
-define %void* @_shadowThread_ThreadStart(%shadow.standard..Thread* %currentThread) {
+define %void* @_shadow_standard__Thread_start(%shadow.standard..Thread* %currentThread) {
 entry:
 	; we need to set the reference of the current thread in this function as it is executed from the newly created thread
 	; and will cause the TLS to correctly store the reference of this thread.
 	store %shadow.standard..Thread* %currentThread, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
 
 	; we let Shadow take care of running the actual desired operation
-	call void @shadow.standard..Thread..threadStart(%shadow.standard..Thread* %currentThread)
+	call void @shadow.standard..Thread..start(%shadow.standard..Thread* %currentThread)
 
 	ret %void* null
 }

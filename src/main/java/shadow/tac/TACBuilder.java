@@ -1176,7 +1176,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     }
 
     for (Context child : list) // potentially empty list
-    params.add(child.appendBefore(anchor));
+      params.add(child.appendBefore(anchor));
 
     prefix = new TACCall(anchor, methodRef, params);
 
@@ -1193,6 +1193,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     node.setOperand(prefix);
     explicitSuper = false;
   }
+
+
 
   private static Context getPrefix(Context ctx) {
     ShadowParser.PrimarySuffixContext parent = (PrimarySuffixContext) ctx.getParent();
@@ -2584,7 +2586,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     anchor.setContext(null);
 
     // Unreachable label
-    if (type.getModifiers().isImmutable()) {
+    // Thread is the one mutable class that should be copied, because there will otherwise be multiple copies of the same thread, which doesn't make sense
+    if (type.getModifiers().isImmutable() || type.equals(Type.THREAD)) {
       // Local store includes increase of reference count
       new TACLocalStore(
           anchor, method.getLocal("return"), new TACLocalLoad(anchor, method.getThis()));
@@ -3525,6 +3528,13 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   public Void visitSpawnExpression(shadow.parse.ShadowParser.SpawnExpressionContext ctx) {
     visitChildren(ctx);
 
+    // Get parent thread
+    TACSingletonRef reference = new TACSingletonRef(Type.CURRENT_THREAD);
+    TACOperand instance = new TACLoad(anchor, reference);
+    MethodSignature instanceSignature = Type.CURRENT_THREAD.getMatchingMethod("instance", new SequenceType());
+    TACMethodRef instanceName = new TACMethodName(anchor, instance, instanceSignature);
+    TACOperand parent = new TACCall(anchor, instanceName, Collections.singletonList(instance));
+
     Type runnerType = ctx.type().getType();
 
     MethodSignature runnerCreateSignature = ctx.spawnRunnerCreateCall().getSignature();
@@ -3546,7 +3556,17 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     }
     params.add(runnerRef);
 
-    prefix = callCreate(threadCreateSignature, params, Type.THREAD);
+    TACOperand newThread = callCreate(threadCreateSignature, params, Type.THREAD);
+
+    // Add new thread to parent thread
+    MethodSignature addChildSignature = Type.THREAD.getMatchingMethod("addChild", new SequenceType(newThread));
+    TACMethodRef addChildName = new TACMethodName(anchor, parent, addChildSignature);
+    List<TACOperand> parameters = new ArrayList<>();
+    parameters.add(parent);
+    parameters.add(newThread);
+    new TACCall(anchor, addChildName, parameters);
+
+    prefix = newThread;
     ctx.setOperand(prefix);
 
     return null;

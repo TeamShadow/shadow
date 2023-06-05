@@ -1885,7 +1885,9 @@ public class StatementChecker extends ScopedChecker {
         ShadowParser.CatchStatementsContext grandparent =
             (CatchStatementsContext) parent.getParent();
         if (grandparent.block() != null) foundRecover = true;
-      } else parent = parent.getParent();
+      }
+
+      parent = parent.getParent();
     }
 
     if (foundFinally)
@@ -1924,6 +1926,7 @@ public class StatementChecker extends ScopedChecker {
       if (child.spawnExpression() != null) {
         ctx.action = true;
         currentType.addUsedType(Type.THREAD);
+        currentType.addUsedType(Type.CURRENT_THREAD);
       }
     }
 
@@ -3386,8 +3389,18 @@ public class StatementChecker extends ScopedChecker {
   public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx) {
     visitChildren(ctx);
 
+    // Make sure the method initializes the CurrentThread singleton
+    MethodSignature methodSignature = currentMethod.getFirst().getSignature();
+    methodSignature.addSingleton(Type.CURRENT_THREAD);
+
     Type runnerType = ctx.type().getType();
-    if (runnerType.equals(Type.CAN_RUN) || !runnerType.isSubtype(Type.CAN_RUN)) {
+    if (!runnerType.getClass().equals(ClassType.class)) {
+      addError(
+              ctx,
+              Error.INVALID_TYPE,
+              runnerType + " must be a class type"); // Not an interface, singleton, exception, etc.
+    }
+    else if (!runnerType.isSubtype(Type.CAN_RUN)) {
       addError(
           ctx,
           Error.INVALID_TYPE,
@@ -3465,12 +3478,22 @@ public class StatementChecker extends ScopedChecker {
     return null;
   }
 
-  /*@Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx)
-  {
-  	visitChildren(ctx);
+  @Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) {
+    visitChildren(ctx);
+    if(ctx.conditionalExpression() != null) {
+      Type type = ctx.conditionalExpression().getType();
+
+      if (!type.isSubtype(Type.THREAD) || ctx.conditionalExpression().getModifiers().isTypeName())
+        addError(
+             ctx,
+             Error.INVALID_ARGUMENTS,
+             "The argument of a receive expression must be a Thread object");
+    }
+
+    ctx.setType(ctx.type().getType());
 
   	return null;
-  }*/
+  }
 
   @Override
   public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx) {

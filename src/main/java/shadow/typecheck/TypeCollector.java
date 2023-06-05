@@ -716,8 +716,7 @@ public class TypeCollector extends ScopedChecker {
           type = new EnumType(name, modifiers, documentation, currentType);
           break;
         case "exception":
-          ExceptionType exceptionType =
-              new ExceptionType(name, modifiers, documentation, currentType);
+          ExceptionType exceptionType = new ExceptionType(name, modifiers, documentation, currentType);
           captureExceptionType(exceptionType, typeName);
           type = exceptionType;
           break;
@@ -727,7 +726,9 @@ public class TypeCollector extends ScopedChecker {
           type = interfaceType;
           break;
         case "singleton":
-          type = new SingletonType(name, modifiers, documentation, currentType);
+          SingletonType singletonType = new SingletonType(name, modifiers, documentation, currentType);
+          captureSingletonType(singletonType, typeName);
+          type = singletonType;
           break;
         case "attribute":
           AttributeType attributeType = new AttributeType(name, documentation, currentType);
@@ -842,6 +843,16 @@ public class TypeCollector extends ScopedChecker {
         case "UnexpectedNullException":
           Type.UNEXPECTED_NULL_EXCEPTION = exceptionType;
           break;
+      }
+    }
+  }
+
+  // Captures standard singleton types for later reference during compilation
+  private void captureSingletonType(SingletonType singletonType, String typeName) {
+    if (currentPackage.getQualifiedName().equals("shadow:standard")) {
+      switch (typeName) {
+        case "CurrentThread":
+          Type.CURRENT_THREAD = singletonType;
       }
     }
   }

@@ -1,0 +1,214 @@
+import shadow:natives;
+
+/**
+ * Class {@code MessageQueue} is a custom queue implemented with a circular array, and allows removal
+ * of items from any position of the queue. The backing array has a lower and upper bound, the array starts
+ * at the lower bound and grows on demand until it reaches the upper bound.
+ *
+ * @author Claude Abounegm
+ */
+class shadow:standard@
+	MessageQueue
+is CanIndex<int, Message>
+and CanIndexStore<int, Message>
+{
+	/*
+	 * TODO: Write a smarter, more efficient removeAt() which can efficiently remove
+	 * 		from the beginning or from the end of the list, like the LinkedList implementation.
+	 */
+	
+	Mutex mutex;
+	nullable Message[] elements;
+	int start;
+	int maxCapacity;
+	
+	get int size;
+	
+	public create(int size)
+	{
+		this(size, size);
+	}
+	
+	public create(int initialCapacity, int maxCapacity)
+	{
+		if(initialCapacity > maxCapacity) {
+			throw IllegalArgumentException:create("{maxCapacity: " # maxCapacity # "} should be greater than or equal to {initialCapacity: " # initialCapacity # "}.");
+		}
+		
+		this:elements = Message:null[initialCapacity];
+		
+		this:start = 0;
+		this:maxCapacity = maxCapacity;
+		this:size = 0;
+		this:mutex = Mutex:create();
+	}
+	
+	/**
+	* Gets whether the backing array is full. If it is, it tries to double its size.
+	* If the new size is bigger than the maxCapacity, the array is set to the maxCapacity.
+	* 
+	* @return {@code true} if this array cannot grow more and reached maxCapacity; otherwise, {@code false}.
+	*/
+	public get isFull() => (boolean)
+	{
+		if (size == elements->size) {
+			if(size == maxCapacity) {
+				return true;
+			}
+
+			int newSize = elements->size * 2;
+			if(newSize > maxCapacity) {
+				newSize = maxCapacity;
+			}
+
+			nullable Message[] temp = Message:null[newSize];
+			for(int i = 0; i < size; i += 1) {
+				temp[i] = this[i];
+			}
+
+			elements = temp;
+			start = 0;
+		}
+		
+		return false;
+	}
+	
+	public readonly get isEmpty() => (boolean)
+	{
+		return (size == 0);
+	}
+
+	public enqueue(Message message) => (boolean)
+	{
+		mutex.lock();
+		try {
+			if(isFull()) {
+				return false;
+			}
+
+			size += 1;
+			this[size - 1] = message;
+			return true;
+		} finally {
+			mutex.unlock();
+		}
+	}
+	
+	public dequeue(Class expectedType) => (nullable Message)
+	{
+		mutex.lock();
+		try {
+			if(isEmpty()) {
+				return null;
+			}
+			
+			try {
+			return removeAt(0, expectedType);
+			} catch(Exception e) {
+				shadow:io@Console.printLine(e);
+				return null;
+			}
+		} finally {
+		try {
+			mutex.unlock();
+			}catch(Exception e) {
+			shadow:io@Console.printLine(e);
+			}
+		}
+	}
+	
+	public dequeue(Thread sender, Class expectedType) => (nullable Message)
+	{
+		int index = -1;
+		
+		mutex.lock();
+		try {
+			for(int i = 0; index == -1 and i < size; i += 1) {
+				if(sender === this[i]->sender) {
+					index = i;
+				}
+			}
+			
+			if(index == -1) {	
+				return null;
+			}
+			
+			return removeAt(index, expectedType);
+		} finally {
+			mutex.unlock();
+		}
+	}
+	
+	/**
+	* Attempts to remove the Message at the specified index. This method does not 
+	* remove the item if it is not the same as the expectedType.
+	*/
+	private removeAt(int index, Class expectedType) => (Message)
+	{
+		// retrieve the data and make sure that it is the same as the expectedType.
+		// the indexer also checks for out of bounds exception, so we do not need
+		// to worry about that.
+		var message = this[index];
+		var dataType = message->data.getClass();
+		
+		// TODO: I'm not sure if we should use the Class methods such isSubType() to compare
+		// instead of a naive comparaison.
+		if(dataType !== expectedType) {
+			throw IncompatibleMessageTypeException:create(expectedType, dataType);
+		}
+		
+		if(index == 0) {
+			nullify(0);
+			start = (start + 1) % elements->size;
+		} else {
+			// we shift the array by one to the left.
+			// assuming we are deleting the second item:
+			// [1, 2, 3, 4, 5] -> [1, 3, 4, 5, null]
+			// (   size = 5  ) -> (    size = 4    )
+			for(int i = index; i < size - 1; i += 1) {
+				this[i] = this[i + 1];
+			}
+			
+			// set the last item to null since it is not used anymore
+			nullify(size - 1);
+		}
+		
+		// decrease the size, since we deleted the item.
+		size -= 1;
+		
+		// if the list is empty, we can start at zero again.
+		// not necessary, but makes me happy.
+		if(isEmpty()) {
+			start = 0;
+		}
+		
+		return message;
+	}
+	
+	// CanIndex<int, Message>
+	public readonly index(int index) => (Message)
+	{
+			return check(elements[rawIndex(index)]);
+	}
+	
+	// CanIndexStore<int, Message>
+	public index(int index, Message message) => ()
+	{
+			elements[rawIndex(index)] = message;
+	}
+	
+	/// sets the item at index to null.
+	private nullify(int index) => ()
+	{
+		elements[rawIndex(index)] = null;
+	}
+	
+	private readonly rawIndex(int index) => (int)
+	{
+		if(index < 0 or index >= size) {
+			throw IndexOutOfBoundsException:create();
+		}
+
+		return ((start + index) % elements->size);
+	}
+}

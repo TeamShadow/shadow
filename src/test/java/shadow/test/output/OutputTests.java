@@ -41,7 +41,7 @@ public class OutputTests {
 
     //args.add("-r");
     //args.add("-f");
-    //args.add("-v");
+    args.add("-v");
   }
 
   @AfterEach
@@ -1317,6 +1317,8 @@ public class OutputTests {
     run(new String[0], "13\n" + "130\n" + "false\n" + "countrytime\n");
   }
 
+
+
   @Test
   public void testGenericInterface() throws Exception {
     args.add("shadow/test/GenericInterfaceTest.shadow");
@@ -1522,7 +1524,6 @@ public class OutputTests {
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testMessageQueue() throws Exception {
   	args.add("shadow/test/MessageQueueTest.shadow");
   	Main.run(args.toArray(new String[] { }));
@@ -1531,7 +1532,6 @@ public class OutputTests {
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testMutex() throws Exception {
   args.add("shadow/test/MutexTest.shadow");
   Main.run(args.toArray(new String[] { }));
@@ -1545,40 +1545,37 @@ public class OutputTests {
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testSignaler() throws Exception {
   	args.add("shadow/test/SignalerTest.shadow");
   	Main.run(args.toArray(new String[] { }));
-  	run(new String[0],
-  			"Thread#1: waiting!\n" +
-  			"Thread#2: waiting!\n" +
-  			"Thread#3: waiting!\n" +
-  			"Thread#3: finished waiting!\n" +
-  			"Thread#4: waiting!\n" +
-  			"Thread#5: waiting!\n" +
-  			"Thread#1: finished waiting!\n" +
-  			"Thread#2: finished waiting!\n" +
-  			"Thread#4: finished waiting!\n" +
-  			"Thread#5: finished waiting!\n"
-  			);
+  	run(new String[0], formatOutputString(
+  			"Thread#1: waiting!",
+  			"Thread#2: waiting!",
+  			"Thread#3: waiting!",
+  			"Thread#3: finished waiting!",
+  			"Thread#4: waiting!",
+  			"Thread#5: waiting!",
+  			"Thread#1: finished waiting!",
+  			"Thread#2: finished waiting!",
+  			"Thread#4: finished waiting!",
+  			"Thread#5: finished waiting!"
+          ));
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testThreadSleep() throws Exception {
   	args.add("shadow/test/ThreadSleepTest.shadow");
   	Main.run(args.toArray(new String[] { }));
-  	run(new String[0],
-  			"I am going to wait 3 seconds.\n" +
-  			"I waited 3 seconds.\n" +
-  			"I am a thread.\n" +
-  		    "I am a thread.\n" +
-  			"I am a thread.\n" +
-  		    "true\n");
+  	run(new String[0], formatOutputString(
+  			"I am going to wait 3 seconds.",
+  			"I waited 3 seconds.",
+  			"I am a thread.",
+  		    "I am a thread.",
+  			"I am a thread.",
+  		    "true"));
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testMailbox() throws Exception {
   	args.add("shadow/test/MailboxTest.shadow");
   	Main.run(args.toArray(new String[] { }));
@@ -1612,7 +1609,6 @@ public class OutputTests {
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testMessagePassing() throws Exception {
   	args.add("shadow/test/MessagePassingTest.shadow");
   	Main.run(args.toArray(new String[] { }));
@@ -1620,7 +1616,6 @@ public class OutputTests {
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testInterrupt() throws Exception {
   	args.add("shadow/test/InterruptTest.shadow");
   	Main.run(args.toArray(new String[] { }));
@@ -1638,58 +1633,57 @@ public class OutputTests {
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testThread() throws Exception {
   	args.add("shadow/test/ThreadTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0],
   			// stdin
-  			"Thread#main\n" +
-  			"Thread#1\n" +
-  			"Thread#2\n" +
-  			"Thread#3\n" +
-  			"Thread#4\n" +
-  			"Thread#5\n" +
-  			"true\n" +
-  			"true\n" +
-  			"Thread#6\n" +
-  			"Thread#7\n" +
-  			"Thread#8\n",
+            formatOutputString(
+  			"Thread#main",
+  			"Thread#1",
+  			"Thread#2",
+  			"Thread#3",
+  			"Thread#4",
+  			"Thread#5",
+  			"true",
+  			"true",
+  			"Thread#6",
+  			"Thread#7",
+  			"Thread#8"),
 
   			// stderr
-  			"Uncaught Thread Exception @Thread#3:\n" +
-  			"   Propagated from: (Thread#3)\n" +
-  			"   Throwing: (shadow:standard@Exception: from Thread#3)\n" +
+            formatOutputString(
+  			"Uncaught Thread Exception @Thread#3:",
+  			"   Propagated from: (Thread#3)",
+  			"   Throwing: (shadow:standard@Exception: from Thread#3)",
 
-  			"Uncaught Thread Exception @Thread#4:\n" +
-  			"   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)\n" +
-  			"   Throwing: (shadow:standard@Exception: from Thread#8)\n" +
+  			"Uncaught Thread Exception @Thread#4:",
+  			"   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)",
+  			"   Throwing: (shadow:standard@Exception: from Thread#8)",
 
-  			"Uncaught Thread Exception @Thread#7:\n" +
-  			"   Propagated from: (Thread#7)\n" +
-  			"   Throwing: (shadow:standard@Exception: from Thread#7)\n"
+  			"Uncaught Thread Exception @Thread#7:",
+  			"   Propagated from: (Thread#7)",
+  			"   Throwing: (shadow:standard@Exception: from Thread#7)")
   		);
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testTLSThread() throws Exception {
   	args.add("shadow/test/TLSTest.shadow");
   	Main.run(args.toArray(new String[] { }));
-  	run(new String[0],
-  			"1\n" +
-  			"1\n");
+  	run(new String[0], formatOutputString(
+              "1",
+  			"1"));
   }
 
   @Test
-  @Disabled // Needs support for threads
   public void testThreadIsolatedRunner() throws Exception {
   	args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
   	Main.run(args.toArray(new String[] { }));
-  	run(new String[0],
-  			"1 1\n" +
-  			"1 1\n" +
-  			"1 1\n" +
-  			"0\n");
+  	run(new String[0], formatOutputString(
+  			"1 1",
+  			"1 1",
+  			"1 1",
+  			"0"));
   }
 }

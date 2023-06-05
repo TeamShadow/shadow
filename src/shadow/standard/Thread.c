@@ -6,6 +6,12 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#ifdef SHADOW_WINDOWS
+	#include <Windows.h>
+#else
+    #include <pthread.h>
+#endif
+
 // METHOD SIGNATURES //
 //*HELPERS*
 /**
@@ -15,10 +21,28 @@
  * the current Thread-Local-Storage thread to the newly spawned
  * thread.
 **/ 
-void* _shadow_standard__Thread_threadStart(shadow_Thread_t*);
+void* _shadow_standard__Thread_start(shadow_Thread_t*);
 // METHOD SIGNATURES //
 
 shadow_Pointer_t* __shadow_standard__Thread_spawn(shadow_Thread_t* _this)
 {
-	return _shadow_natives__Pointer_create(malloc(1), SHADOW_CAN_FREE);
+#ifdef SHADOW_WINDOWS
+    HANDLE* handle = malloc(sizeof(HANDLE));
+    *handle = CreateThread(NULL, 0, (unsigned long (*)(void *))_shadow_standard__Thread_start, _this, 0, NULL);
+
+	if(*handle == NULL) {
+		free(handle);
+		handle = NULL;
+	}
+
+	return _shadow_natives__Pointer_create(handle, SHADOW_CAN_FREE);
+#else
+    pthread_t* ptr = malloc(sizeof(pthread_t));
+	if(pthread_create(ptr, NULL, _shadow_standard__Thread_start, _this) != 0) {
+		free(ptr);
+		ptr = NULL;
+	}
+
+	return _shadow_natives__Pointer_create(ptr, SHADOW_CAN_FREE);
+#endif
 }

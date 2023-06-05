@@ -1,0 +1,41 @@
+import shadow:io@Console;
+import shadow:natives;
+
+class shadow:test@MutexTest
+{
+	public main(String[] args) => ()
+	{
+		// example usage of single lock/unlock
+		var mutex1 = Mutex:create();
+		try {
+			mutex1.lock();
+			Console.printLine("lock1");
+			mutex1.lock();
+			Console.printLine("lock2");
+		} catch(MutexException e) {
+			Console.printLine(e);
+		}
+		
+		// example usage of nested locks
+		Console.printLine("Nested locks");
+		var mutex2 = Mutex:create(true);
+		mutex2.lock();
+			mutex2.lock();
+				mutex2.lock();
+				mutex2.unlock();
+			mutex2.unlock();
+			
+			mutex2.lock();
+			mutex2.unlock();
+		mutex2.unlock();
+		try {
+			mutex2.unlock();
+		} catch(MutexException e) {
+			Console.printLine(e);
+		}
+		Console.printLine("Done!");
+		
+		mutex1.free();
+		mutex2.free();
+	}
+}

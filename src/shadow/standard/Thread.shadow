@@ -1,4 +1,6 @@
-import shadow:natives@Pointer;
+import shadow:utility;
+import shadow:natives;
+import shadow:io@Console;
 
 /**
  * Class {@code Thread} provides ways to manipulate threads. 
@@ -11,70 +13,39 @@ locked class shadow:standard@
 	Thread
 is CanIndex<int, Thread>
 {
-	[ImportAssembly]
-	private readonly __shadow_standard__Thread_spawn(Thread instance) => (Pointer);
+	public constant int READY = 0;
+	public constant int RUNNING = 1;
+	public constant int WAITING = 2;
+	public constant int DEAD = 3;
 	
+	[ImportAssembly]
+	private readonly __shadow_standard__Thread_spawn() => (Pointer);
+
 	[ImportNative]
-	private readonly get staticNextId() => (int);
+	private get staticNextId() => (int);
+
+	// START: Private variables
+	nullable Exception ex = null;
+	nullable SignalToken interruptToken = null;
+	
+	int state;
+	int joined;
+	boolean interrupting;
 
 	Pointer handle;
 	CanRun runner;
-	// TODO: Uncomment this once it is consumed/returned somewhere
-	// nullable Exception threadException;
 	
-	/**
-	* Creates a new {@code Thread} object which takes on a {@code CanRun}
-	* instance, containing a run function that is going to be ran
-	* on a different thread.
-	* 
-	* @param runner The instance that contains a run function.
-	*/
-	protected create(CanRun runner)
-	{
-		this(null, runner);
-	}
+	ThreadSafeList<Thread> childrenList;
+	CanIterate<Thread> childrenIterate;
+	CanIterate<Thread> childrenIterateRecurse;
 	
-	/**
-	* Creates a new {@code Thread} object which takes on a {@code CanRun}
-	* instance, containing a run function that is going to be ran
-	* on a different thread, and takes a {@code String} which is the name
-	* of the thread for reference purposes.
-	* 
-	* @param name The name of the thread.
-	* @param runner The instance that contains a run function.
-	*/
-	protected create(nullable String name, CanRun runner)
-	{
-		this:id = this->staticNextId;
-		
-		try {
-			this:name = check(name);
-		} recover {
-			this:name = "Thread#" # id;
-		}
-		
-		if(this:id == 0) {
-			// no need to copy since it's the NopRunner
-			this:runner = runner;
-			this:parent = null;
-			// we don't need a valid handle anyway
-			this:handle = Pointer:create();
-		} else {
-			this:runner = copy(runner);
-			
-			// set the threads hierarchy
-			this:parent = currentThread();
-			//check(parent):childrenList.add(instance());
-			
-			// spawn the thread and get the Pointer
-			this:handle = __shadow_standard__Thread_spawn(this);
-			
-			if(!this:handle->isValid) {
-				throw ThreadSpawnException:create();
-			}
-		}
-	}
-
+	Mutex mutex;
+	Mutex stateMutex;
+	
+	Signaler signaler;
+	Mailbox mailbox;
+	// END: Private variables
+	
 	/// Gets the Shadow-specific thread ID.
 	get int id;
 	
@@ -101,25 +72,122 @@ is CanIndex<int, Thread>
 	*/
 	public readonly get isAlive() => (boolean)
 	{
-		throw UnsupportedOperationException:create();
+		return (this->state != DEAD);
 	}
 	
-	/// @unused
 	private set state(int state) => ()
 	{
-		throw UnsupportedOperationException:create();
+		stateMutex.lock();
+		this:state = state;
+		stateMutex.unlock();
 	}
 	
 	/// Gets the state of this thread. It can be one of {@code READY}, {@code RUNNING}, {@code WAITING}, or {@code DEAD}.
 	public readonly get state() => (int)
 	{
-		throw UnsupportedOperationException:create();
+		stateMutex.lock();
+		var state = this:state;
+		stateMutex.unlock();
+		
+		return state;
 	}
 	
 	/// Gets the string representation of the state of this thread.
-	public readonly get stateStr() => (String)
+	public readonly get stateString() => (String)
 	{
-		throw UnsupportedOperationException:create();
+		switch(this->state) {
+			case (READY)
+				return "READY";
+			
+			case (RUNNING)
+				return "RUNNING";
+				
+			case (WAITING)
+				return "WAITING";
+				
+			case (DEAD)
+				return "DEAD";
+		}
+		
+		throw InvalidOperationException:create("Invalid state");
+	}
+	
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread.
+	* 
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(CanRun runner)
+	{
+		this(null, runner);
+	}
+	
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be run
+	* on a different thread, and takes a {@code String} which is the name
+	* of the thread for reference purposes.
+	* 
+	* @param name The name of the thread.
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(nullable String name, CanRun runner)
+	{
+		this:id = this->staticNextId;
+		this:childrenList = ThreadSafeList<Thread>:create();
+		
+		try {
+			this:name = check(name);
+		} recover {
+			this:name = "Thread#" # id;
+		}
+		
+		this:joined = 0;
+		this:mutex = Mutex:create();
+		this:stateMutex = Mutex:create();
+		this:signaler = Signaler:create();
+		
+		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
+		// the mailbox doubles as more items are sent to it, until it reaches 32, and blocks
+		// if more items are added, until space becomes available again by receiving messages.
+		this:mailbox = Mailbox:create(/*instance(),*/ 8, 32);
+		
+		this:state = READY;
+		
+		this:childrenIterate = TraverseChildren:create(this, false);
+		this:childrenIterateRecurse = TraverseChildren:create(this, true);
+		
+		if(this:id == 0) {
+			this:runner = runner;
+			this:state = RUNNING;
+			this:handle = Pointer:create();
+		} else {
+			// better way to clone the runner with TAC? We need to clone even the parent
+			// so there would be no variable sharing at all.
+			// Edit: No, I think Thread contents are the one things that *should* be shared in Shadow.
+			// Otherwise, how can the parent Thread have control over its children?
+			this:runner = copy(runner);
+			
+			this:parent = currentThread();
+			this:handle = __shadow_standard__Thread_spawn();
+            if(!this:handle->isValid) {
+                throw ThreadSpawnException:create();
+            }
+
+            // This is done awkwardly in TAC generation but could come back here if leaking were allowed in creates
+            // Legal leaking could only be A) after all initialization is done and B) inside of locked methods, since
+            // non-locked methods could leak before subsequent child creates were called
+			// check(parent):childrenList.add(this);
+
+			// sleep(1); // necessary?
+		}
+	}
+
+	protected addChild(Thread thread) => ()
+	{
+	    childrenList.add(thread);
 	}
 	
 	/**
@@ -178,7 +246,45 @@ is CanIndex<int, Thread>
 	
 	private join(boolean finalizing, TimeSpan timeout) => (boolean)
 	{
-		throw UnsupportedOperationException:create();
+		if(this === main()) {
+			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
+		}
+		
+		if(isCurrentThread()) {
+			throw InvalidOperationException:create("A thread cannot call join on itself.");
+		}
+		
+		mutex.lock();
+		boolean throwException = (!finalizing or joined == 0);
+		boolean timedOut = false;
+		
+		joined += 1;
+		mutex.unlock();
+		
+		if(isAlive()) {
+			try {
+				if(timeout->isPositive) {
+					timedOut = signaler.waitForNotify(timeout);
+				} else {
+					signaler.waitForNotify();
+				}
+			} catch(InterruptedException e) {
+				// An interrupted join is not successful, so we decrease its count.
+				mutex.lock();
+				joined -= 1;
+				mutex.unlock();
+
+				throw e;
+			}
+		}
+
+		// we then check here if we have an exception. If we do, we throw it, and
+		// it is the job of runnerNative() to take care of the handling.
+		if(ex !== null and throwException) {
+			throw check(ex);
+		}
+
+		return timedOut;
 	}
 	
 	/**
@@ -196,17 +302,56 @@ is CanIndex<int, Thread>
 	{
 		return interrupt(true);
 	}
-	
+
+	[ExportMethod(exportedTo = Mailbox:class)]
 	private interrupt(boolean shouldThrow) => (boolean)
 	{
-		throw UnsupportedOperationException:create();
+		if(!isAlive()) {
+			return true;
+		}
+		
+		mutex.lock();
+		if(shouldThrow) {
+			interrupting = true;
+		}
+		try {
+			if(this->state == WAITING and interruptToken !== null) {				
+				check(interruptToken).signal();
+				return true;
+			}
+			
+			// Quick explanation on how exceptions propagate:
+			// 
+			// When the InterruptedException is raised, the runnerNative() catches that exception. 
+			// Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
+			// up the resources it used. It calls signaler.free(), which in turn causes Signaler to release
+			// all the threads it is holding through a waitForNotify(). Since all threads get woken up after
+			// the exception `ex` has been set, all the joined thread also get an InterruptedException correctly.
+			return false;
+		} finally {
+			mutex.unlock();
+		}
 	}
 	
 	/// Implemented for CurrentThread->interrupting.
 	[ExportMethod(exportedTo = CurrentThread:class)]
 	private interrupting() => (boolean)
 	{
-		throw UnsupportedOperationException:create();
+		if(!isCurrentThread()) { // should never reach this
+			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
+		}
+		
+		mutex.lock();
+		try {
+			if(interrupting) {
+				interrupting = false;
+				return true;
+			}
+			
+			return false;
+		} finally {
+			mutex.unlock();
+		}
 	}
 
 	/**
@@ -217,7 +362,7 @@ is CanIndex<int, Thread>
 	[ExportMethod(exportedTo = CurrentThread:class)]
 	private sleep(TimeSpan timeout) => ()
 	{
-		throw UnsupportedOperationException:create();
+		signaler.waitForTimeout(timeout);
 	}
 	
 	/**
@@ -228,7 +373,7 @@ is CanIndex<int, Thread>
 	[ExportMethod(exportedTo = CurrentThread:class)]
 	private sleep(int millisecondsTimeout) => ()
 	{
-		throw UnsupportedOperationException:create();
+		sleep(Time.fromMilliSeconds(millisecondsTimeout));
 	}
 
 	/**
@@ -240,11 +385,13 @@ is CanIndex<int, Thread>
 	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
+	* @seeDoc shadow:standard@Mailbox
 	*/
 	[ExportMethod(exportedTo = Object:class)]
 	protected receiveFirst(Class expectedType) => (Object, Thread)
 	{
-		throw UnsupportedOperationException:create();
+		return mailbox.receiveFirst(expectedType);
 	}
 	
 	/**
@@ -257,11 +404,17 @@ is CanIndex<int, Thread>
 	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
+	* @seeDoc shadow:standard@Mailbox
 	*/
 	[ExportMethod(exportedTo = Object:class)]
 	protected receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
-		throw UnsupportedOperationException:create();
+		if (from === this) {
+			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
+		}
+		
+		return mailbox.receiveFirstFrom(expectedType, from);
 	}
 	
 	/**
@@ -276,26 +429,40 @@ is CanIndex<int, Thread>
 	* 
 	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
 	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
+	*
+	* @seeDoc shadow:standard@Mailbox
 	*/
 	protected sendTo(Object data) => ()
 	{
-		throw UnsupportedOperationException:create();
+		if (!isAlive()) {
+			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
+		}
+		
+		if(isCurrentThread()) {
+			throw InvalidOperationException:create("A Thread cannot send a message to itself.");
+		}
+		
+		mailbox.sendTo(data);
 	}
 	
 	/**
 	* This method is natively executed from the newly spawned thread.
 	* !!DO NOT MANUALLY EXECUTE!!
 	*/
-	[ExportNative]
-	private threadStart() => ()
+	private start() => ()
 	{
 		try {
+			this->state = RUNNING;
 			runner.run();
 		} catch(Exception e) {
-	        // TODO: Uncomment this once it is consumed/returned somewhere
-			// threadException = ThreadException:create(this, e);
+			ex = ThreadException:create(this, e);
 		} finally {
+			this->state = DEAD;
+			
+			mutex.lock();
 			handle.free();
+			signaler.free();
+			mutex.unlock();
 		}
 	}
 	
@@ -314,7 +481,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly get childrenCount() => (int)
 	{
-		throw UnsupportedOperationException:create();
+		return childrenList->size;
 	}
 	
 	/**
@@ -325,7 +492,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly childAt(int index) => (Thread)
 	{
-		throw UnsupportedOperationException:create();
+		return childrenList[index];
 	}
 	
 	/**
@@ -337,7 +504,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly index(int index) => (Thread)
 	{
-		throw UnsupportedOperationException:create();
+		return childAt(index);
 	}
 	
 	/**
@@ -351,7 +518,11 @@ is CanIndex<int, Thread>
 	*/
 	public readonly children(boolean recurse) => (CanIterate<Thread>)
 	{
-		throw UnsupportedOperationException:create();
+		if(recurse) {
+			return childrenIterateRecurse;
+		}
+		
+		return childrenIterate;
 	}
 	
 	/**
@@ -362,15 +533,40 @@ is CanIndex<int, Thread>
 	*/
 	public readonly children() => (CanIterate<Thread>)
 	{
-		throw UnsupportedOperationException:create();
+		return children(false);
 	}
 	
 	/**
-	* Returns a string with the format: "Thread ({Thread->name}): {Thread->stateStr}". 
+	* Returns a string with the format: "Thread ({Thread->name}): {Thread->stateString}".
 	*/
 	public readonly toString() => (String)
 	{
-		return "Thread (" # name # "): " # this->stateStr;
+		return "Thread (" # name # "): " # this->stateString;
+	}
+	
+	/// Called natively by Signaler, `this` is the CurrentThread->instance.
+	/// This code is responsible for throwing InterruptedException in all methods.
+	[ExportMethod(exportedTo = Signaler:class)]
+	private setInterruptToken(nullable SignalToken interruptToken) => ()
+	{
+		int state = RUNNING;
+		// checks whether we need to interrupt, and if we do, it resets the interrupt flag
+		var interrupting = CurrentThread->interrupting;
+		
+		if(interrupting) {
+			interruptToken = null;
+		} else if(interruptToken !== null) {
+			state = WAITING;
+		}
+		
+		this:stateMutex.lock();
+		this:state = state;
+		this:interruptToken = interruptToken;
+		this:stateMutex.unlock();
+		
+		if(interrupting) {
+			throw InterruptedException:create();
+		}
 	}
 	
 	private readonly currentThread() => (Thread)
@@ -378,13 +574,33 @@ is CanIndex<int, Thread>
 		return CurrentThread->instance;
 	}
 	
-	[ExportNative]
 	private waitForThreads() => ()
 	{
+		if(this !== main()) {
+			throw Exception:create("waitForThreads() can only be called on the main thread.");
+		}
+		// this->state = DEAD; // necessary, maybe?
+		
+		var exceptionQueue = ArrayDeque<ThreadException>:create();
+		
+		foreach(var thread in children(true)) {
+			try {
+				thread.join(true, Time->InfiniteTimeout);
+				// the `true` causes this thread to wait for the other thread
+				// to terminate and it will only throw an exception if the target 
+				// thread had not been joined on before.
+			} catch (ThreadException e) {
+				exceptionQueue.addLast(e);
+			}
+		}
+
+		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
+		while(!exceptionQueue.isEmpty()) {
+			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
+		}
 	}
 	
-	[ExportNative]
-	private readonly createMainThread() => (Thread) 
+	private readonly createMainThread() => (Thread)
 	{
 		return Thread:create("Thread#main", NopRunner:create()); 
 	}
@@ -396,5 +612,64 @@ is CanIndex<int, Thread>
 		is CanRun
 	{
 		public run() => () {}
+	}
+	
+	private class TraverseChildren is CanIterate<Thread>
+	{
+		boolean recurse;
+		Thread current;
+		
+		public create(Thread current, boolean recurse)
+		{
+		    this:current = current;
+			this:recurse = recurse;
+		}
+		
+		public readonly iterator() => (Iterator<Thread>)
+		{
+			if(recurse) {
+				return RecursiveChildrenIterator:create(current);
+			}
+
+			return current:childrenList.iterator();
+		}
+		
+		private class RecursiveChildrenIterator is Iterator<Thread>
+		{
+			ArrayDeque<Thread> threadsQueue;
+			Thread current;
+			
+			public create(Thread current)
+			{
+				threadsQueue = ArrayDeque<Thread>:create();
+				this:current = current;
+			}
+			
+			public readonly hasNext() => (boolean)
+			{
+				return (!threadsQueue.isEmpty() or current->childrenCount > 0);
+			}
+			
+			public next() => (Thread)
+			{
+				// this is tricky as we need to avoid race conditions, so we add the children
+				// at the time we retrieve the next thread instead of adding them in the hasNext()
+				addChildrenToQueue(current);
+				
+				if(threadsQueue.isEmpty()) {
+					throw NoSuchElementException:create();
+				}
+				
+				current = threadsQueue.removeFirst();
+				return current;
+			}
+			
+			private addChildrenToQueue(Thread parent) => ()
+			{
+				foreach(var child in parent.children()) {
+					threadsQueue.addLast(child);
+				}
+			}
+		}
 	}
 }

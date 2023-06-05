@@ -425,9 +425,9 @@ spawnRunnerCreateCall
 	: ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
 	;
 
-/*receiveExpression
+receiveExpression
 	: 'receive' '<' type '>' '(' conditionalExpression? ')'
-	;*/
+	;
 
 primaryExpression
 locals [boolean action = false]
@@ -458,7 +458,7 @@ primaryPrefix
 	| checkExpression
 	| copyExpression
 	| spawnExpression
-//	| receiveExpression
+	| receiveExpression
 	| castExpression
 	| '(' conditionalExpression ')'
 	| primitiveType
