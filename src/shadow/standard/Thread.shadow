@@ -5,9 +5,10 @@ import shadow:io@Console;
 /**
  * Class {@code Thread} provides ways to manipulate threads. 
  * All threads are required to terminate for the main process to terminate as well.
- * If the main method returns and there are still running threads, 
+ * If the main method returns and there are still running threads ... what will happen?
  *
  * @author Claude Abounegm
+ * @author Barry Wittman
  */
 locked class shadow:standard@
 	Thread
@@ -26,11 +27,13 @@ is CanIndex<int, Thread>
 
 	// START: Private variables
 	nullable Exception ex = null;
-	nullable SignalToken interruptToken = null;
+	//nullable SignalToken interruptToken = null;
+	ConditionVariable conditionVariable; // used for all thread-safety, sleeping, and joining
+	nullable ConditionVariable waitingVariable; // the condition variable a thread is waiting on (perhaps from another thread)
 	
 	int state;
-	int joined;
 	boolean interrupting;
+	boolean joined;
 
 	Pointer handle;
 	CanRun runner;
@@ -39,10 +42,10 @@ is CanIndex<int, Thread>
 	CanIterate<Thread> childrenIterate;
 	CanIterate<Thread> childrenIterateRecurse;
 	
-	Mutex mutex;
-	Mutex stateMutex;
+	//Mutex mutex;
+	//Mutex stateMutex;
 	
-	Signaler signaler;
+	//Signaler signaler;
 	Mailbox mailbox;
 	// END: Private variables
 	
@@ -72,24 +75,23 @@ is CanIndex<int, Thread>
 	*/
 	public readonly get isAlive() => (boolean)
 	{
-		return (this->state != DEAD);
+	    return this->state != DEAD;
 	}
 	
 	private set state(int state) => ()
 	{
-		stateMutex.lock();
+	    conditionVariable.lock();
 		this:state = state;
-		stateMutex.unlock();
+		conditionVariable.unlock();
 	}
 	
 	/// Gets the state of this thread. It can be one of {@code READY}, {@code RUNNING}, {@code WAITING}, or {@code DEAD}.
 	public readonly get state() => (int)
 	{
-		stateMutex.lock();
-		var state = this:state;
-		stateMutex.unlock();
-		
-		return state;
+        conditionVariable.lock();
+        int result = state;
+        conditionVariable.unlock();
+        return result;
 	}
 	
 	/// Gets the string representation of the state of this thread.
@@ -136,6 +138,7 @@ is CanIndex<int, Thread>
 	protected create(nullable String name, CanRun runner)
 	{
 		this:id = this->staticNextId;
+
 		this:childrenList = ThreadSafeList<Thread>:create();
 		
 		try {
@@ -143,12 +146,10 @@ is CanIndex<int, Thread>
 		} recover {
 			this:name = "Thread#" # id;
 		}
-		
-		this:joined = 0;
-		this:mutex = Mutex:create();
-		this:stateMutex = Mutex:create();
-		this:signaler = Signaler:create();
-		
+
+
+        this:conditionVariable = ConditionVariable:create();
+
 		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
 		// the mailbox doubles as more items are sent to it, until it reaches 32, and blocks
 		// if more items are added, until space becomes available again by receiving messages.
@@ -158,7 +159,7 @@ is CanIndex<int, Thread>
 		
 		this:childrenIterate = TraverseChildren:create(this, false);
 		this:childrenIterateRecurse = TraverseChildren:create(this, true);
-		
+
 		if(this:id == 0) {
 			this:runner = runner;
 			this:state = RUNNING;
@@ -172,6 +173,7 @@ is CanIndex<int, Thread>
 			
 			this:parent = currentThread();
 			this:handle = __shadow_standard__Thread_spawn();
+
             if(!this:handle->isValid) {
                 throw ThreadSpawnException:create();
             }
@@ -187,7 +189,7 @@ is CanIndex<int, Thread>
 
 	protected addChild(Thread thread) => ()
 	{
-	    childrenList.add(thread);
+        childrenList.add(thread);
 	}
 	
 	/**
@@ -203,28 +205,9 @@ is CanIndex<int, Thread>
 	*/
 	public join() => ()
 	{
-		join(false, Time->InfiniteTimeout);
+		join(Time->InfiniteTimeout);
 	}
-	
-	/**
-	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
-	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
-	* the exception is thrown when this method is called.
-	*
-	* @param timeout the time to wait for.
-	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
-	*
-	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
-	* @throws ThreadException if the thread terminated due to an exception.
-	* @throws InterruptedException if another thread requested to interrupt this thread.
-	*
-	* @seeDoc shadow:standard@ThreadException
-	*/
-	public join(TimeSpan timeout) => (boolean)
-	{
-		return join(false, timeout);
-	}
-	
+
 	/**
 	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
 	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
@@ -241,56 +224,88 @@ is CanIndex<int, Thread>
 	*/
 	public join(int millisecondsTimeout) => (boolean)
 	{
-		return join(false, Time.fromMilliSeconds(millisecondsTimeout));
+		return join(Time.fromMilliSeconds(millisecondsTimeout));
 	}
-	
-	private join(boolean finalizing, TimeSpan timeout) => (boolean)
+
+	/**
+    * {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
+    * Joining on a dead thread has no side effects. If the thread is terminated because of an exception,
+    * the exception is thrown when this method is called.
+    *
+    * @param timeout the time to wait for.
+    * @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+    *
+    * @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
+    * @throws ThreadException if the thread terminated due to an exception.
+    * @throws InterruptedException if another thread requested to interrupt this thread.
+    *
+    * @seeDoc shadow:standard@ThreadException
+    */
+	public join(TimeSpan timeout) => (boolean)
 	{
+	    Thread currentThread = CurrentThread->instance;
+
 		if(this === main()) {
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
 		}
 		
-		if(isCurrentThread()) {
+		if(this === currentThread) {
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 		}
-		
-		mutex.lock();
-		boolean throwException = (!finalizing or joined == 0);
-		boolean timedOut = false;
-		
-		joined += 1;
-		mutex.unlock();
-		
-		if(isAlive()) {
-			try {
-				if(timeout->isPositive) {
-					timedOut = signaler.waitForNotify(timeout);
-				} else {
-					signaler.waitForNotify();
-				}
-			} catch(InterruptedException e) {
-				// An interrupted join is not successful, so we decrease its count.
-				mutex.lock();
-				joined -= 1;
-				mutex.unlock();
 
-				throw e;
-			}
-		}
+		conditionVariable.lock();
+		boolean throwException = !joined;
+        long currentTime = System.epochNanoTime();
+        long finishedTime = currentTime + timeout.totalNanoSeconds();
+		boolean waiting = !timeout->isPositive or currentTime < finishedTime; // ignore time if not positive
+
+        while (isAlive() and waiting) {
+            currentThread:conditionVariable.lock();
+            currentThread:state = WAITING;
+            currentThread:waitingVariable = conditionVariable;
+
+            if (currentThread:interrupting) {
+                currentThread:interrupting = false;
+                currentThread:waitingVariable = null;
+                currentThread:state = RUNNING;
+                currentThread:conditionVariable.unlock();
+                conditionVariable.unlock();
+                throw InterruptedException:create();
+            }
+            else
+                currentThread:conditionVariable.unlock();
+
+            if (timeout->isPositive) {
+                conditionVariable.wait(TimeSpan:create(finishedTime - currentTime));
+                currentTime = System.epochNanoTime();
+                waiting = currentTime < finishedTime;
+            }
+            else
+                conditionVariable.wait();
+        }
+
+        joined = true;
+
+        currentThread:conditionVariable.lock();
+        currentThread:state = RUNNING;
+        currentThread:conditionVariable.unlock();
 
 		// we then check here if we have an exception. If we do, we throw it, and
 		// it is the job of runnerNative() to take care of the handling.
 		if(ex !== null and throwException) {
+		    conditionVariable.unlock();
 			throw check(ex);
 		}
 
-		return timedOut;
+		conditionVariable.unlock();
+
+		return !waiting;
 	}
 	
 	/**
 	* Requests this thread to be interrupted. If the thread is currently in the {@code WAITING} state, 
 	* the thread is interrupted and the method that caused the thread to be in the {@code WAITING} state
-	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()}, 
+	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()},
 	* {@code sleep()}, {@code send()}, {@code receive()}, and all their overloads.
 	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
 	* as soon as one of the above interruptible methods above are called, or when the user calls 
@@ -300,23 +315,16 @@ is CanIndex<int, Thread>
 	*/
 	public interrupt() => (boolean)
 	{
-		return interrupt(true);
-	}
-
-	[ExportMethod(exportedTo = Mailbox:class)]
-	private interrupt(boolean shouldThrow) => (boolean)
-	{
 		if(!isAlive()) {
 			return true;
 		}
 		
-		mutex.lock();
-		if(shouldThrow) {
-			interrupting = true;
-		}
+		conditionVariable.lock();
+
 		try {
-			if(this->state == WAITING and interruptToken !== null) {				
-				check(interruptToken).signal();
+			if(this->state == WAITING) {
+			    interrupting = true;
+				check(waitingVariable).notifyAll();
 				return true;
 			}
 			
@@ -329,28 +337,7 @@ is CanIndex<int, Thread>
 			// the exception `ex` has been set, all the joined thread also get an InterruptedException correctly.
 			return false;
 		} finally {
-			mutex.unlock();
-		}
-	}
-	
-	/// Implemented for CurrentThread->interrupting.
-	[ExportMethod(exportedTo = CurrentThread:class)]
-	private interrupting() => (boolean)
-	{
-		if(!isCurrentThread()) { // should never reach this
-			throw InvalidOperationException:create("interrupting() should only be called from the current thread.");
-		}
-		
-		mutex.lock();
-		try {
-			if(interrupting) {
-				interrupting = false;
-				return true;
-			}
-			
-			return false;
-		} finally {
-			mutex.unlock();
+			conditionVariable.unlock();
 		}
 	}
 
@@ -362,7 +349,31 @@ is CanIndex<int, Thread>
 	[ExportMethod(exportedTo = CurrentThread:class)]
 	private sleep(TimeSpan timeout) => ()
 	{
-		signaler.waitForTimeout(timeout);
+	    // Should only be called on current thread
+        conditionVariable.lock();
+        long currentTime = System.epochNanoTime();
+        long finishedTime = currentTime + timeout.totalNanoSeconds();
+        boolean sleeping = currentTime < finishedTime;
+        while (isAlive() and sleeping) {
+            state = WAITING;
+            waitingVariable = conditionVariable; // sleeping on its own condition variable
+
+            if (interrupting) {
+                interrupting = false;
+                waitingVariable = null;
+                state = RUNNING;
+                conditionVariable.unlock();
+                throw InterruptedException:create();
+            }
+
+            conditionVariable.wait(TimeSpan:create(finishedTime - currentTime));
+            currentTime = System.epochNanoTime();
+            sleeping = currentTime < finishedTime;
+        }
+
+        state = RUNNING;
+
+        conditionVariable.unlock();
 	}
 	
 	/**
@@ -457,12 +468,10 @@ is CanIndex<int, Thread>
 		} catch(Exception e) {
 			ex = ThreadException:create(this, e);
 		} finally {
+		    conditionVariable.lock();
 			this->state = DEAD;
-			
-			mutex.lock();
-			handle.free();
-			signaler.free();
-			mutex.unlock();
+			conditionVariable.unlock();
+            conditionVariable.notifyAll();
 		}
 	}
 	
@@ -544,31 +553,6 @@ is CanIndex<int, Thread>
 		return "Thread (" # name # "): " # this->stateString;
 	}
 	
-	/// Called natively by Signaler, `this` is the CurrentThread->instance.
-	/// This code is responsible for throwing InterruptedException in all methods.
-	[ExportMethod(exportedTo = Signaler:class)]
-	private setInterruptToken(nullable SignalToken interruptToken) => ()
-	{
-		int state = RUNNING;
-		// checks whether we need to interrupt, and if we do, it resets the interrupt flag
-		var interrupting = CurrentThread->interrupting;
-		
-		if(interrupting) {
-			interruptToken = null;
-		} else if(interruptToken !== null) {
-			state = WAITING;
-		}
-		
-		this:stateMutex.lock();
-		this:state = state;
-		this:interruptToken = interruptToken;
-		this:stateMutex.unlock();
-		
-		if(interrupting) {
-			throw InterruptedException:create();
-		}
-	}
-	
 	private readonly currentThread() => (Thread)
 	{
 		return CurrentThread->instance;
@@ -585,9 +569,9 @@ is CanIndex<int, Thread>
 		
 		foreach(var thread in children(true)) {
 			try {
-				thread.join(true, Time->InfiniteTimeout);
-				// the `true` causes this thread to wait for the other thread
-				// to terminate and it will only throw an exception if the target 
+			    thread.interrupt();
+				thread.join(Time->InfiniteTimeout);
+				// will only throw an exception if the target
 				// thread had not been joined on before.
 			} catch (ThreadException e) {
 				exceptionQueue.addLast(e);

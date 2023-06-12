@@ -53,7 +53,7 @@ shadow_Pointer_t* __shadow_test__ExternalsTest_initPointer(int number)
 	TestData* data = malloc(sizeof(TestData));
 	data->number = number;
 	
-	return _shadow_natives__Pointer_create(data, SHADOW_CAN_FREE);
+	return _shadow_natives__Pointer_create(NULL, data, SHADOW_CAN_FREE);
 }
 
 void _shadow_test__ExternalsTest_printNumberWithOffset(shadow_ExternalsTest_t* instance, int number);

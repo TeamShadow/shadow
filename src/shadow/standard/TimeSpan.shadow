@@ -9,23 +9,23 @@ is CanAdd<TimeSpan>
 and CanSubtract<TimeSpan>
 and CanCompare<TimeSpan>
 {
-	immutable long NANOS_PER_MICROSECOND = 1000;
-	immutable double MICROSECONDS_PER_NANO = 1.0 / NANOS_PER_MICROSECOND;
+	private constant long NANOS_PER_MICROSECOND = 1000;
+	private constant double MICROSECONDS_PER_NANO = 1.0 / NANOS_PER_MICROSECOND;
 
-	immutable long NANOS_PER_MILLISECOND = NANOS_PER_MICROSECOND * 1000;
-	immutable double MILLISECONDS_PER_NANO = 1.0 / NANOS_PER_MILLISECOND;
+	private constant long NANOS_PER_MILLISECOND = NANOS_PER_MICROSECOND * 1000;
+	private constant double MILLISECONDS_PER_NANO = 1.0 / NANOS_PER_MILLISECOND;
 
-	immutable long NANOS_PER_SECOND = NANOS_PER_MILLISECOND * 1000;
-	immutable double SECONDS_PER_NANO = 1.0 / NANOS_PER_SECOND;
+	private constant long NANOS_PER_SECOND = NANOS_PER_MILLISECOND * 1000;
+	private constant double SECONDS_PER_NANO = 1.0 / NANOS_PER_SECOND;
 
-	immutable long NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
-	immutable double MINUTES_PER_NANO = 1.0 / NANOS_PER_MINUTE;
+	private constant long NANOS_PER_MINUTE = NANOS_PER_SECOND * 60;
+	private constant double MINUTES_PER_NANO = 1.0 / NANOS_PER_MINUTE;
 
-	immutable long NANOS_PER_HOUR = NANOS_PER_MINUTE * 60;
-	immutable double HOURS_PER_NANO = 1.0 / NANOS_PER_HOUR;
+	private constant long NANOS_PER_HOUR = NANOS_PER_MINUTE * 60;
+	private constant double HOURS_PER_NANO = 1.0 / NANOS_PER_HOUR;
 
-	immutable long NANOS_PER_DAY = NANOS_PER_MINUTE * 24;
-	immutable double DAYS_PER_NANO = 1.0 / NANOS_PER_DAY;
+	private constant long NANOS_PER_DAY = NANOS_PER_MINUTE * 24;
+	private constant double DAYS_PER_NANO = 1.0 / NANOS_PER_DAY;
 
 	long totalNanos = 0;
 

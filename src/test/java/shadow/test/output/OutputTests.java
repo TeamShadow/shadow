@@ -39,7 +39,7 @@ public class OutputTests {
     else if (os.contains("mac")) args.add("mac.json");
     else args.add("linux.json");
 
-    //args.add("-r");
+    args.add("-r");
     //args.add("-f");
     args.add("-v");
   }
@@ -49,7 +49,7 @@ public class OutputTests {
 
     // Try to remove the unit test executable
     try {
-     Files.delete(executable);
+     //Files.delete(executable);
     } catch (Exception ignored) {
     }
   }
@@ -1543,7 +1543,7 @@ public class OutputTests {
   					"Done!")
   	);
   }
-
+/*
   @Test
   public void testSignaler() throws Exception {
   	args.add("shadow/test/SignalerTest.shadow");
@@ -1560,7 +1560,7 @@ public class OutputTests {
   			"Thread#4: finished waiting!",
   			"Thread#5: finished waiting!"
           ));
-  }
+  }*/
 
   @Test
   public void testThreadSleep() throws Exception {
@@ -1630,6 +1630,18 @@ public class OutputTests {
   			"1",
   			"done")
   		);
+  }
+
+  @Test
+  public void testSimpleThread() throws Exception {
+    args.add("shadow/test/SimpleThreadTest.shadow");
+    Main.run(args.toArray(new String[] { }));
+    run(new String[0],
+            // stdin
+            formatOutputString(
+                    "Printing on a separate thread",
+                    "Joined thread")
+    );
   }
 
   @Test

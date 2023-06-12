@@ -5,6 +5,7 @@
 #include <standard/Thread.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
@@ -24,6 +25,7 @@
 void* _shadow_standard__Thread_start(shadow_Thread_t*);
 // METHOD SIGNATURES //
 
+
 shadow_Pointer_t* __shadow_standard__Thread_spawn(shadow_Thread_t* _this)
 {
 #ifdef SHADOW_WINDOWS
@@ -35,7 +37,7 @@ shadow_Pointer_t* __shadow_standard__Thread_spawn(shadow_Thread_t* _this)
 		handle = NULL;
 	}
 
-	return _shadow_natives__Pointer_create(handle, SHADOW_CAN_FREE);
+	return _shadow_natives__Pointer_create(NULL, handle, SHADOW_CAN_FREE);
 #else
     pthread_t* ptr = malloc(sizeof(pthread_t));
 	if(pthread_create(ptr, NULL, _shadow_standard__Thread_start, _this) != 0) {
@@ -43,6 +45,6 @@ shadow_Pointer_t* __shadow_standard__Thread_spawn(shadow_Thread_t* _this)
 		ptr = NULL;
 	}
 
-	return _shadow_natives__Pointer_create(ptr, SHADOW_CAN_FREE);
+	return _shadow_natives__Pointer_create(NULL, ptr, SHADOW_CAN_FREE);
 #endif
 }

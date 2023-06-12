@@ -1,0 +1,107 @@
+/**
+ * Class {@code ConditionVariable} is an implementation of a condition variable in Shadow. A condition variable
+ * is used to wait for a specific condition to be true. It has a built-in lock (mutex) that must be acquired before
+ * the condition can be checked. If the condition isn't true, a wait() can be called, which automatically releases
+ * the lock.
+ *
+ * @author Barry Wittman
+ *
+ * @seeDoc shadow:standard@Thread
+ */
+locked immutable class shadow:natives@
+	ConditionVariable
+{
+    [ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_initialize() => (Pointer);
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_destroy(Pointer ptr) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_lock(Pointer ptr) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_unlock(Pointer ptr) => ();
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_wait(Pointer ptr) => ();
+	[ImportAssembly]
+    private readonly __shadow_natives__ConditionVariable_waitTimeout(Pointer handle, long timeEpochNow, long timeout) => (boolean);
+    [ImportAssembly]
+    private readonly __shadow_natives__ConditionVariable_notifyAll(Pointer handle) => ();
+
+	Pointer handle;
+
+	/**
+	* Initializes a new {@code ConditionVariable}.
+	*/
+	public create()
+	{
+		handle = __shadow_natives__ConditionVariable_initialize();
+	}
+
+	public destroy
+	{
+        __shadow_natives__ConditionVariable_destroy(handle);
+	}
+
+	/**
+	* Attempts to lock the mutex associated with the condition variable.
+	*/
+	public lock() => ()
+	{
+        __shadow_natives__ConditionVariable_lock(handle);
+	}
+
+
+	/**
+	* Attempts to unlock the mutex associated with the condition variable. If the mutex has been locked multiple times
+	* by this thread, this method simply decreases the counter. The mutex is unlocked when an corresponding unlock has
+	* been called * for each lock, e.g. if {@code lock()} was called twice, {@code unlock()} will unlock the mutex on
+	* its second call.
+	*/
+	public unlock() => ()
+	{
+		__shadow_natives__ConditionVariable_unlock(handle);
+	}
+
+    /**
+	* Suspends the calling thread until another thread calls notifyAll() or interrupt(). The mutex *must* already be
+    * locked by the calling thread for this code to work correctly.
+	*/
+	public wait() => ()
+	{
+		__shadow_natives__ConditionVariable_wait(handle);
+	}
+
+	/**
+    * Suspends the calling thread until another thread calls notify(), notifyAll(), or for the specified amount of time
+    * elapses. The mutex *must* already be locked by the calling thread for this code to work correctly.
+    *
+    * @return {@code true} if the operation timed-out; otherwise, {@code false}.
+    */
+    public wait(TimeSpan timeout) => (boolean)
+    {
+        var now = Time.epochNow();
+        return __shadow_natives__ConditionVariable_waitTimeout(handle, now->totalNanoSeconds, now->totalNanoSeconds + timeout->totalNanoSeconds);
+    }
+
+    /**
+    * Suspends the calling thread until another thread calls notify(), notifyAll(), or for the specified amount of time
+    * elapses. The mutex *must* already be locked by the calling thread for this code to work correctly.
+    *
+    * @param millisecondsTimeout The amount of time to wait, in milliseconds, before timing out.
+    * @return {@code true} if the operation timed-out; otherwise, {@code false}.
+    *
+    * @throws FreedResourceException if this Signaler has been freed.
+    * @throws InterruptedException if another thread requested to interrupt this thread.
+    */
+    public wait(int millisecondsTimeout) => (boolean)
+    {
+        return wait(Time.fromMilliSeconds(millisecondsTimeout));
+    }
+
+	/**
+	* Wakes up all the waiting threads. The mutex must *not* be locked when this happens.
+	*/
+	public notifyAll() => ()
+	{
+        __shadow_natives__ConditionVariable_notifyAll(handle);
+	}
+}

@@ -2,6 +2,7 @@ import shadow:natives;
 
 /**
  * @author Claude Abounegm
+ * @author Barry Wittman
  */
 locked class shadow:utility@
 	ThreadSafeList<T>
@@ -85,7 +86,7 @@ is List<T>
 		mutex.lock();
 		list.add(element);
 		mutex.unlock();
-		
+
 		return this;
 	}
 	

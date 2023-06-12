@@ -1,5 +1,3 @@
-import shadow:natives;
-
 /**
  * Class {@code Mailbox} is the main component of the Message Passing
  * between Threads in the Shadow language. 
@@ -7,6 +5,10 @@ import shadow:natives;
  * @seeDoc shadow:standard@Thread
  * @author Claude Abounegm
  */
+
+ //NOTE NOTE NOTE
+ //Signaler has been removed, so this mailbox DOESN'T work right now
+
 locked class shadow:standard@
 	Mailbox
 {
@@ -25,7 +27,7 @@ locked class shadow:standard@
 	*        happens or until they timeout. This avoids us busy waiting.
 	*/
 	
-	Signaler signaler;
+	//Signaler signaler;
 	MessageQueue list;
 	//Mutex mutex;
 	
@@ -36,7 +38,7 @@ locked class shadow:standard@
 	public create(int min, int max)
 	{
 		this:list = MessageQueue:create(min, max);
-		this:signaler = Signaler:create();
+		//this:signaler = Signaler:create();
 		//this:mutex = Mutex:create();
 	}	
 	
@@ -54,7 +56,7 @@ locked class shadow:standard@
 	*/
 	public sendTo(Object data, boolean blocking) => ()
 	{
-		CurrentThread.throwIfInterrupting();
+		//CurrentThread.throwIfInterrupting();
 		
 		var message = Message:create(data);
 		if(!blocking) {
@@ -65,12 +67,12 @@ locked class shadow:standard@
 				stop = list.enqueue(message);
 				
 				if(!stop) {
-					signaler.waitForNotify(TIMEOUT);
+					//signaler.waitForNotify(TIMEOUT);
 				}
 			}
 		}
 		
-		signaler.notifyAll();
+		//signaler.notifyAll();
 	}
 	
 	/**
@@ -79,7 +81,7 @@ locked class shadow:standard@
 	*/
 	public receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
 	{
-		CurrentThread.throwIfInterrupting();
+		//CurrentThread.throwIfInterrupting();
 
 		nullable var message = list.dequeue(expectedType);
 		if(!blocking) {
@@ -89,12 +91,12 @@ locked class shadow:standard@
 				message = list.dequeue(expectedType);
 				
 				if(message === null) {
-					signaler.waitForNotify(TIMEOUT);
+					//signaler.waitForNotify(TIMEOUT);
 				}
 			}
 		}
 		
-		signaler.notifyAll();
+		//signaler.notifyAll();
 		
 		return (check(message)->data, check(message)->sender);
 	}
@@ -105,7 +107,7 @@ locked class shadow:standard@
 	*/
 	public receiveFirstFrom(Class expectedType, Thread sender, boolean blocking) => (Object)
 	{
-		CurrentThread.throwIfInterrupting();
+		//CurrentThread.throwIfInterrupting();
 
 		nullable var message = list.dequeue(sender, expectedType);
 		if(!blocking) {
@@ -115,12 +117,12 @@ locked class shadow:standard@
 				message = list.dequeue(sender, expectedType);
 				
 				if(message === null) {
-					signaler.waitForNotify(TIMEOUT);
+					//signaler.waitForNotify(TIMEOUT);
 				}
 			}
 		}
 		
-		signaler.notifyAll();
+		//signaler.notifyAll();
 
 		return (check(message)->data);
 	}

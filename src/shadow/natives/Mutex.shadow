@@ -14,36 +14,27 @@ locked immutable class shadow:natives@
 	Mutex
 {
     [ImportAssembly]
-	private readonly __shadow_natives__Mutex_initialize(boolean allowRecursive) => (Pointer);
+	private readonly __shadow_natives__Mutex_initialize() => (Pointer);
 	[ImportAssembly]
 	private readonly __shadow_natives__Mutex_destroy(Pointer ptr) => (boolean);
 	[ImportAssembly]
-	private readonly __shadow_natives__Mutex_lock(Pointer ptr, Thread currentThread) => (boolean);
+	private readonly __shadow_natives__Mutex_lock(Pointer ptr, Thread currentThread) => ();
 	[ImportAssembly]
-	private readonly __shadow_natives__Mutex_unlock(Pointer ptr) => (boolean);
+	private readonly __shadow_natives__Mutex_unlock(Pointer ptr, Thread currentThread) => (boolean);
 	[ImportAssembly]
 	private readonly __shadow_natives__Mutex_getOwner(Pointer ptr) => (nullable Thread);
 	
 	Pointer ptr;
-	
+
 	/**
-	* Initializes a new {@code Mutex} which does not allow nested locks.
+	* Initializes a new {@code Mutex}.
 	*/
 	public create()
 	{
-		this(false);
-	}
-	
-	/**
-	* Initializes a new {@code Mutex} which can allow nested locks.
-	* @param allowRecursiveLocks whether the Mutex should allow mutliple nested locks.
-	*/
-	public create(boolean allowRecursiveLocks)
-	{
-		ptr = __shadow_natives__Mutex_initialize(allowRecursiveLocks);
+		ptr = __shadow_natives__Mutex_initialize();
 		
 		if(!ptr->isValid) {
-			throw MutexException:create("An error occured while initializing the Mutex.");
+			throw MutexException:create("An error occurred while initializing the mutex.");
 		}
 	}
 	
@@ -53,16 +44,12 @@ locked immutable class shadow:natives@
 	* recursive locks are allowed, this method will simply increase the counter. The mutex should be unlocked
 	* the same number of times it was locked.
 	*
-	* @throws MutexException if recursive locks are not allowed and the mutex is already owned by this thread.
 	* @throws FreedResourceException if the Mutex has been freed.
 	*/
 	public lock() => ()
 	{
-		ptr.assertValid("Mutex");
-
-		if(!__shadow_natives__Mutex_lock(ptr, CurrentThread->instance)) {
-			throw MutexException:create("This mutex does not allow recursive locks.");
-		}
+	    ptr.assertValid("Mutex");
+		__shadow_natives__Mutex_lock(ptr, CurrentThread->instance);
 	}
 	
 	/**
@@ -78,12 +65,9 @@ locked immutable class shadow:natives@
 	{
 		ptr.assertValid("Mutex");
 		
-		if(!isOwnerCurrentThread()) {
+		if(!__shadow_natives__Mutex_unlock(ptr, CurrentThread->instance)) {
 			throw MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked." # (owner() === null ? "", #owner()));
 		}
-		
-		__shadow_natives__Mutex_unlock(ptr);
-		// TODO: error checking
 	}
 	
 	/**
@@ -104,12 +88,12 @@ locked immutable class shadow:natives@
 			ptr.free();
 		}
 	}
-	
+
 	private owner() => (nullable Thread)
 	{
 		return __shadow_natives__Mutex_getOwner(ptr);
 	}
-	
+
 	private isOwnerCurrentThread() => (boolean)
 	{
 		return CurrentThread.equal(owner());

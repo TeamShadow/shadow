@@ -7,15 +7,15 @@
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
 
-	shadow_boolean_t __shadow_standard__CurrentThread_yield(void)
+	shadow_boolean_t __shadow_standard__CurrentThread_yield(shadow_CurrentThread_t* _this)
 	{
 		Sleep(0);
-		return true;
+		return TRUE;
 	}
 #else
 	#include <sched.h>
 
-	shadow_boolean_t __shadow_standard__CurrentThread_yield(void)
+	shadow_boolean_t __shadow_standard__CurrentThread_yield(shadow_CurrentThread_t* _this)
 	{
 		return sched_yield() == 0;
 	}

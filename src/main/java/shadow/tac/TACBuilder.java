@@ -1170,7 +1170,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       TACMethodName methodName = new TACMethodName(anchor, prefix, signature);
       methodName.setSuper(explicitSuper);
 
-      if (!signature.isImportAssembly()) params.add(methodName.getPrefix());
+      /*if (!signature.isImportAssembly())*/
+      params.add(methodName.getPrefix());
 
       methodRef = methodName;
     }

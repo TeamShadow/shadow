@@ -373,12 +373,11 @@ public class Configuration {
     }
 
     // Make sure that llc is specified early, since it's used to get the default target
-    if (llc == null) llc = "llc";
+    if (llc == null) llc = "clang";
 
     if (opt == null) opt = "opt";
 
     if (cc == null) cc = "clang";
-
 
     if (target == null) target = getDefaultTarget();
 
@@ -429,6 +428,7 @@ public class Configuration {
       if (getOs().equals("Windows")) {
         linkCommand.add("-Wl,-nodefaultlib:libcmt");
         linkCommand.add("-D_DLL");
+        //linkCommand.add("-femulated-tls");
       }
 
       if (architecture == 32) linkCommand.add("-m32");
@@ -531,13 +531,13 @@ public class Configuration {
       }
 
       // Create the regular expression required to find the target "triple"
-      Pattern pattern = Pattern.compile("(Default target:\\s)([\\w\\-]+)");
+      Pattern pattern = Pattern.compile("(Target:\\s)([\\w\\-]+)");
       Matcher matcher = pattern.matcher(versionOutput.toString());
 
       if (matcher.find()) return matcher.group(2);
       else
         throw new ConfigurationException(
-            "Unable to find target in 'llc -version' output:"
+            "Unable to find target in 'clang --version' output:"
                 + System.lineSeparator()
                 + versionOutput);
     } catch (IOException e) {
@@ -562,7 +562,7 @@ public class Configuration {
       }
 
       // Create the regular expression required to find the version
-      Pattern pattern = Pattern.compile("(LLVM version\\s)(\\d+(\\.\\d+)*)");
+      Pattern pattern = Pattern.compile("(clang version\\s)(\\d+(\\.\\d+)*)");
       Matcher matcher = pattern.matcher(versionOutput.toString());
 
       if (matcher.find()) return matcher.group(2);
@@ -581,7 +581,7 @@ public class Configuration {
     Process process = null;
     try {
       process =
-          new ProcessBuilder(getConfiguration().getLlc(), "-version")
+          new ProcessBuilder(getConfiguration().getLlc(), "--version")
               .redirectErrorStream(true)
               .start();
       StringBuilder information = new StringBuilder();

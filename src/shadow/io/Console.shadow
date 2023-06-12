@@ -15,6 +15,7 @@ singleton shadow:io@
 
     [ImportAssembly]
     private readonly __shadow_io__Console_initialize() => ();
+
 	
 	/**
 	 * Creates a new {@code Console}.
@@ -118,7 +119,8 @@ singleton shadow:io@
 	 */
 	public printLine(nullable Object value) => ( Console )
 	{
-		return print(value).printLine();
+		print(value);
+		return printLine();
 	}
 
 	[ExportAssembly]

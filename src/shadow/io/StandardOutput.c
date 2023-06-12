@@ -2,6 +2,7 @@
  * Author: Barry Wittman
  */
 #include <Shadow.h>
+#include <io/StandardOutput.h>
 
 #ifdef SHADOW_WINDOWS
 	#include <Windows.h>
@@ -10,7 +11,7 @@
 	#include <fcntl.h>
 #endif
 
-shadow_long_t __shadow_io__StandardOutput_setUp(shadow_boolean_t error)
+shadow_long_t __shadow_io__StandardOutput_setUp(shadow_io_StandardOutput_t* _this, shadow_boolean_t error)
 {
  #ifdef SHADOW_WINDOWS
     if (error)

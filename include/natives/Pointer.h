@@ -36,20 +36,20 @@ void* _shadow_natives__Pointer_extract(shadow_Pointer_t*);
  * usage:
  *	C:
  *		shadow_Pointer_t* __shadow_Test__Test_createSomethingUseful() {
- *			return _shadow_natives__Pointer_create(malloc(sizeof(UsefulStruct)), SHADOW_CAN_FREE);
+ *			return _shadow_natives__Pointer_create(NULL, malloc(sizeof(UsefulStruct)), SHADOW_CAN_FREE);
  *		}
  *
  * 	Shadow:
  *		private extern __ShadowTest_CreateSomethingUseful() => (Pointer);
  */
-#define _shadow_natives__Pointer_create(ptr, type) _shadow_natives__Pointer_create(0, ptr, type)
+//#define _shadow_natives__Pointer_create(ptr, type) _shadow_natives__Pointer_create(0, ptr, type)
 
 /**
  * Extracts the pointer of type T* from the shadow:natives@Pointer object.
  * 
  * params:
  *   T: the type of the original pointer which was stored earlier in the Pointer object.
- * 	 shadow_reference: the shadow_pointer_t* reference.
+ * 	 shadow_reference: the shadow_Pointer_t* reference.
  *
  * usage:
  *  C:

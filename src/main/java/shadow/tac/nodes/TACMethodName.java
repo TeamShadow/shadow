@@ -28,8 +28,9 @@ public class TACMethodName extends TACOperand implements TACMethodRef {
         ArrayType arrayType = (ArrayType) prefix.getType();
         Type genericArray = arrayType.convertToGeneric();
         prefix = check(prefixNode, new SimpleModifiedType(genericArray));
-      } else // Don't change to parent type for methods not implemented by the child
-      prefix = check(prefixNode, new SimpleModifiedType(sig.getOuter()));
+      }
+      else // Don't change to parent type for methods not implemented by the child
+        prefix = check(prefixNode, new SimpleModifiedType(sig.getOuter()));
     }
     signature = sig;
   }

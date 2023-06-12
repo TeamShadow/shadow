@@ -136,7 +136,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
     // else
     methodType = type;
 
-    if (!isImportAssembly()) {
+    //if (!isImportAssembly()) {
       Type outerType = getOuter();
       if (isCreate()
           || outerType
@@ -145,7 +145,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
         // methods
         paramTypes.add(new SimpleModifiedType(Type.OBJECT));
       else paramTypes.add(new SimpleModifiedType(outerType)); // this
-    }
+    //}
 
     paramTypes.addAll(methodType.getParameterTypes());
     return paramTypes;

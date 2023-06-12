@@ -77,7 +77,7 @@ static void reportError(char* error)
 }
 
 // Add support for wide characters? Perhaps something like: https://github.com/tapika/cutf
-shadow_boolean_t __shadow_io__File_exists(shadow_String_t* str)
+shadow_boolean_t __shadow_io__File_exists(shadow_io_File_t* _this, shadow_String_t* str)
 {
 	char* path = __shadow_standard__String_getCString(str);
 	shadow_boolean_t ret;
@@ -91,7 +91,7 @@ shadow_boolean_t __shadow_io__File_exists(shadow_String_t* str)
 	return ret;
 }
 
-shadow_long_t __shadow_io__File_open(shadow_String_t* str, shadow_int_t mode)
+shadow_long_t __shadow_io__File_open(shadow_io_File_t* _this, shadow_String_t* str, shadow_int_t mode)
 {
 	char* path = __shadow_standard__String_getCString(str);
     shadow_long_t result;
@@ -138,7 +138,7 @@ shadow_long_t __shadow_io__File_open(shadow_String_t* str, shadow_int_t mode)
     return result;
 }
 
-void __shadow_io__File_delete(shadow_String_t* str)
+void __shadow_io__File_delete(shadow_io_File_t* _this, shadow_String_t* str)
 {
     char* path = __shadow_standard__String_getCString(str);
     bool error;
@@ -155,7 +155,7 @@ void __shadow_io__File_delete(shadow_String_t* str)
         reportError("Delete file error");
 }
 
-shadow_long_t __shadow_io__File_positionGet(shadow_long_t handle)
+shadow_long_t __shadow_io__File_positionGet(shadow_io_File_t* _this, shadow_long_t handle)
 {
     if (handle == -1L) {
         shadow_String_t* message = __shadow_standard__String_create("Cannot retrieve position when file is not open");
@@ -184,7 +184,7 @@ shadow_long_t __shadow_io__File_positionGet(shadow_long_t handle)
     return result;
 }
 
-void __shadow_io__File_positionSet(shadow_long_t handle, shadow_long_t position)
+void __shadow_io__File_positionSet(shadow_io_File_t* _this, shadow_long_t handle, shadow_long_t position)
 {
     if (handle == -1L) {
         shadow_String_t* message = __shadow_standard__String_create("Cannot set position when file is not open");
@@ -229,12 +229,12 @@ shadow_long_t __shadow_io__File_sizeGet(shadow_String_t* str)
 }
 
 
-void __shadow_io__File_sizeSet(shadow_long_t handle, shadow_long_t size)
+void __shadow_io__File_sizeSet(shadow_io_File_t* _this, shadow_long_t handle, shadow_long_t size)
 {
     bool error;
 
 #ifdef SHADOW_WINDOWS
-    shadow_long_t currentPosition = __shadow_io__File_positionGet(handle);
+    shadow_long_t currentPosition = __shadow_io__File_positionGet(_this, handle);
     if (currentPosition < size)
         currentPosition = size;
     // Move to size, set end of file, move position back to current position
@@ -249,7 +249,7 @@ void __shadow_io__File_sizeSet(shadow_long_t handle, shadow_long_t size)
         reportError("Set file size error");
 }
 
-void __shadow_io__File_close(shadow_long_t handle)
+void __shadow_io__File_close(shadow_io_File_t* _this, shadow_long_t handle)
 {
 #ifdef SHADOW_WINDOWS
 	CloseHandle((HANDLE)handle);
@@ -258,7 +258,7 @@ void __shadow_io__File_close(shadow_long_t handle)
 #endif
 }
 
-shadow_long_t __shadow_io__File_read(shadow_long_t handle, shadow_Array_t* array)
+shadow_long_t __shadow_io__File_read(shadow_io_File_t* _this, shadow_long_t handle, shadow_Array_t* array)
 {
     ArrayData data;
     __shadow_standard__Array_getData(array, &data);
@@ -289,7 +289,7 @@ shadow_long_t __shadow_io__File_read(shadow_long_t handle, shadow_Array_t* array
 
     return result;
 }
-shadow_long_t __shadow_io__File_write(shadow_long_t handle, shadow_Array_t* array, shadow_long_t bytes)
+shadow_long_t __shadow_io__File_write(shadow_io_File_t* _this, shadow_long_t handle, shadow_Array_t* array, shadow_long_t bytes)
 {
     ArrayData data;
     __shadow_standard__Array_getData(array, &data);

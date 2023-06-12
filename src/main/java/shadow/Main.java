@@ -303,6 +303,11 @@ public class Main {
 
     compileCommand.add("-m" + Configuration.getConfiguration().getArchitecture());
 
+    //if (Configuration.getConfiguration().getOs().equals("Windows"))
+      //compileCommand.add("-femulated-tls");
+
+    compileCommand.add("-fexceptions");
+
     compileCommand.add("-O3");
 
     compileCommand.add("-c");
@@ -461,12 +466,17 @@ public class Main {
   private static Process getCompiler(String objectFile) throws IOException {
     return new ProcessBuilder(
             config.getLlc(),
-            "-mtriple",
-            config.getTarget(),
+           // "-mtriple",
+            //config.getTarget(),
             config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
-            "--filetype=obj",
+            "-c",
+            "-x",
+            "ir",
+            //"--filetype=obj",
+            "-w", // Warning: Turns off all warnings
             "-o",
-            objectFile)
+            objectFile,
+            "-")
         .redirectError(Redirect.INHERIT)
         .start();
   }

@@ -21,11 +21,16 @@
 %double = type double
 %void = type i8
 
+; Object
+%shadow.standard..Object = type opaque
+
 ; Thread
 %shadow.standard..Thread = type opaque
 
 ; CurrentThread
 %shadow.standard..CurrentThread = type opaque
+
+declare void @__incrementRef(%shadow.standard..Object*) nounwind
 
 ;---------
 ; Globals
@@ -39,5 +44,8 @@
 define %shadow.standard..Thread* @shadow.standard..CurrentThread..currentThread(%shadow.standard..CurrentThread*) {
 entry:
 	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
+	; The following increment is necessary because the current thread will otherwise be decremented wherever it's used and deallocated
+	%threadAsObj = bitcast %shadow.standard..Thread* %currentThread to %shadow.standard..Object*
+    call void @__incrementRef(%shadow.standard..Object* %threadAsObj) nounwind
 	ret %shadow.standard..Thread* %currentThread
 }

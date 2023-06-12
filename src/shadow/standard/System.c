@@ -42,7 +42,25 @@
 	}
 #endif
 
-shadow_long_t __shadow_standard__System_getNanoTime(void)
+
+shadow_long_t __shadow_standard__System_getEpochNanoTime(shadow_System_t* _this)
+{
+#ifdef SHADOW_WINDOWS
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    ULARGE_INTEGER time;
+    time.LowPart = now.dwLowDateTime;
+    time.HighPart = now.dwHighDateTime;
+    return ((shadow_long_t)time.QuadPart - OFFSET_FROM_1601_TO_1970) * 100;
+#elif defined SHADOW_MAC
+	return get_nano_time(CALENDAR_CLOCK);
+#else
+	return get_nano_time(CLOCK_REALTIME);
+#endif
+}
+
+
+shadow_long_t __shadow_standard__System_getNanoTime(shadow_System_t* _this)
 {
 #ifdef SHADOW_WINDOWS
 		LARGE_INTEGER freq;
@@ -62,23 +80,7 @@ shadow_long_t __shadow_standard__System_getNanoTime(void)
 #endif
 }
 
-shadow_long_t __shadow_standard__System_getEpochNanoTime(void)
-{
-#ifdef SHADOW_WINDOWS
-    FILETIME now;
-    GetSystemTimeAsFileTime(&now);
-    ULARGE_INTEGER time;
-    time.LowPart = now.dwLowDateTime;
-    time.HighPart = now.dwHighDateTime;
-    return ((shadow_long_t)time.QuadPart - OFFSET_FROM_1601_TO_1970) * 100;
-#elif defined SHADOW_MAC
-	return get_nano_time(CALENDAR_CLOCK);
-#else
-	return get_nano_time(CLOCK_REALTIME);
-#endif
-}
-
-shadow_boolean_t __shadow_standard__System_isWindows()
+shadow_boolean_t __shadow_standard__System_isWindows(shadow_System_t* _this)
 {
 #ifdef SHADOW_WINDOWS
     return (shadow_boolean_t)true;
@@ -87,7 +89,7 @@ shadow_boolean_t __shadow_standard__System_isWindows()
 #endif
 }
 
-shadow_String_t* __shadow_standard__System_getEnvironment(shadow_String_t* input)
+shadow_String_t* __shadow_standard__System_getEnvironment(shadow_System_t* _this, shadow_String_t* input)
 {
 	char* variable = __shadow_standard__String_getCString(input);
 	shadow_String_t* value = NULL;
@@ -104,7 +106,7 @@ shadow_String_t* __shadow_standard__System_getEnvironment(shadow_String_t* input
     return value;
 }
 
-shadow_String_t* __shadow_standard__System_osName()
+shadow_String_t* __shadow_standard__System_osName(shadow_System_t* _this)
 {
     shadow_String_t* value = NULL;
 #ifdef SHADOW_WINDOWS
@@ -138,7 +140,7 @@ shadow_String_t* __shadow_standard__System_osName()
     return value;
 }
 
-shadow_String_t* __shadow_standard__System_osVersion()
+shadow_String_t* __shadow_standard__System_osVersion(shadow_System_t* _this)
 {
     shadow_String_t* value = NULL;
 #ifdef SHADOW_WINDOWS
