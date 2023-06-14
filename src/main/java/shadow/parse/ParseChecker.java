@@ -151,10 +151,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
       ShadowParser.ClassOrInterfaceBodyDeclarationContext declaration =
           (ClassOrInterfaceBodyDeclarationContext) parent;
       return declaration.modifiers();
-    } else if (parent instanceof ShadowParser.AttributeBodyDeclarationContext) {
-      ShadowParser.AttributeBodyDeclarationContext declaration =
-          (ShadowParser.AttributeBodyDeclarationContext) parent;
-      return declaration.modifiers();
     } else if (parent instanceof ShadowParser.CompilationUnitContext) {
       ShadowParser.CompilationUnitContext unit = (CompilationUnitContext) parent;
       return unit.modifiers();
@@ -236,17 +232,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
   }
 
   @Override
-  public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
-    addDocumentation(ctx);
-    ctx.setDocumentation(getDocumentation());
-
-    ShadowParser.ModifiersContext modifiersCtx = getModifiers(ctx);
-    addErrors(modifiersCtx, modifiersCtx.getModifiers().checkAttributeModifiers(ctx));
-
-    return visitChildren(ctx);
-  }
-
-  @Override
   public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx) {
     addDocumentation(ctx);
     ctx.setDocumentation(getDocumentation());
@@ -261,17 +246,6 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 
   @Override
   public Void visitAttributeInvocation(ShadowParser.AttributeInvocationContext ctx) {
-    for (ShadowParser.VariableDeclaratorContext fieldAssignmentCtx : ctx.variableDeclarator()) {
-      if (fieldAssignmentCtx.conditionalExpression() == null) {
-        addError(
-            fieldAssignmentCtx,
-            Error.MISSING_ASSIGNMENT,
-            "Field \""
-                + fieldAssignmentCtx.generalIdentifier()
-                + "\" must have a value assigned or be omitted");
-      }
-    }
-
     return visitChildren(ctx);
   }
 
@@ -283,7 +257,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
     ShadowParser.ModifiersContext mods = getModifiers(ctx);
     Modifiers modifiers = mods.getModifiers();
     ctx.addModifiers(modifiers);
-    addErrors(mods, modifiers.checkFieldModifiers(ctx));
+    addErrors(mods, modifiers.checkFieldModifiers( ctx));
     ctx.type().addModifiers(modifiers); // also add to type
 
     return visitChildren(ctx);
@@ -316,6 +290,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
     Modifiers modifiers = mods.getModifiers();
     ctx.addModifiers(modifiers);
     switch (ctx.getStart().getText()) {
+      case "attribute":
+        addErrors(mods, modifiers.checkAttributeModifiers(ctx));
+        break;
       case "class":
         addErrors(mods, modifiers.checkClassModifiers(ctx));
         break;

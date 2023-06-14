@@ -120,9 +120,11 @@ public class StatementChecker extends ScopedChecker {
     // Done here because AttributeInvocationContext doesn't have references to these
     // AttributeInvocation objects
     for (AttributeInvocation attribute : signature.getAttributes()) {
-      attribute.updateFieldTypes(this.getErrorReporter());
+      attribute.update(this.getErrorReporter());
     }
 
+    /*
+    // Removing imports
     if (signature.isImportMethod()) {
       if (signature.getModifiers().isPublic()) {
         addError(node, Error.INVALID_MODIFIER, "Method imports cannot be public.");
@@ -153,6 +155,7 @@ public class StatementChecker extends ScopedChecker {
         signature.setImportSource(method);
       }
     }
+    */
 
     currentMethod.addFirst(node);
     openScope();

@@ -895,6 +895,8 @@ public class TypeUpdater extends BaseChecker {
     }
 
     // checks for method imports
+
+    /*
     if (signature.isImportMethod()) {
       if (signature.getParameterTypes().size() == 0) {
         addError(
@@ -907,6 +909,8 @@ public class TypeUpdater extends BaseChecker {
         addError(node, Error.INVALID_MODIFIER, "A method import should be private.");
       }
     }
+
+     */
 
     boolean hasBlock = signature.hasBlock();
 

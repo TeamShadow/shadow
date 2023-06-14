@@ -1,3 +1,8 @@
 attribute shadow:standard:attributes@ExportMethod {
-    Class exportedTo;
+    Class class_;
+
+    public create(Class class_)
+    {
+        this:class_ = class_;
+    }
 }

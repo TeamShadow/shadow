@@ -34,8 +34,6 @@ is CanIndex<int, Thread>
 	int state;
 	boolean interrupting;
 	boolean joined;
-
-	Pointer handle;
 	CanRun runner;
 	
 	ThreadSafeList<Thread> childrenList;
@@ -147,7 +145,6 @@ is CanIndex<int, Thread>
 			this:name = "Thread#" # id;
 		}
 
-
         this:conditionVariable = ConditionVariable:create();
 
 		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
@@ -163,7 +160,6 @@ is CanIndex<int, Thread>
 		if(this:id == 0) {
 			this:runner = runner;
 			this:state = RUNNING;
-			this:handle = Pointer:create();
 		} else {
 			// better way to clone the runner with TAC? We need to clone even the parent
 			// so there would be no variable sharing at all.
@@ -172,9 +168,9 @@ is CanIndex<int, Thread>
 			this:runner = copy(runner);
 			
 			this:parent = currentThread();
-			this:handle = __shadow_standard__Thread_spawn();
+			Pointer handle = __shadow_standard__Thread_spawn();
 
-            if(!this:handle->isValid) {
+            if(!handle->isValid) {
                 throw ThreadSpawnException:create();
             }
 
@@ -346,13 +342,18 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	[ExportMethod(exportedTo = CurrentThread:class)]
+	[ExportMethod(CurrentThread:class)]
 	private sleep(TimeSpan timeout) => ()
 	{
+	    Console.printLine("Joimps!");
 	    // Should only be called on current thread
+	    Console.printPointer(conditionVariable);
         conditionVariable.lock();
+        Console.printLine("Back in sleep!");
         long currentTime = System.epochNanoTime();
+        Console.printLine("Current time: " # currentTime);
         long finishedTime = currentTime + timeout.totalNanoSeconds();
+        Console.printLine("Finished time: " # currentTime);
         boolean sleeping = currentTime < finishedTime;
         while (isAlive() and sleeping) {
             state = WAITING;
@@ -374,6 +375,7 @@ is CanIndex<int, Thread>
         state = RUNNING;
 
         conditionVariable.unlock();
+        Console.printLine("Done sleeping!");
 	}
 	
 	/**

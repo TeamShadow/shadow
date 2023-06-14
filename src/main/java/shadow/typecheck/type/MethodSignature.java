@@ -2,6 +2,7 @@ package shadow.typecheck.type;
 
 import shadow.doctool.Documentation;
 import shadow.interpreter.ShadowClass;
+import shadow.interpreter.ShadowValue;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.typecheck.ErrorReporter;
@@ -32,7 +33,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
   private ImportExportMode exportMode = ImportExportMode.NONE;
 
   // Only applies for ImportMethod signatures - points to the corresponding exported method
-  private MethodSignature importSource;
 
   private final Map<AttributeType, AttributeInvocation> attributes = new HashMap<>();
 
@@ -400,13 +400,21 @@ public class MethodSignature implements Comparable<MethodSignature> {
     return exportMode == ImportExportMode.METHOD;
   }
 
-  public void setImportSource(MethodSignature method) {
-    // TODO: Assert that the import mode is IMPORT_METHOD
-    importSource = method;
-  }
-
   public Collection<AttributeInvocation> getAttributes() {
     return Collections.unmodifiableCollection(attributes.values());
+  }
+
+  public List<Type> getExports() {
+    List<Type> exports = new ArrayList<>();
+    AttributeInvocation invocation = attributes.get(AttributeType.EXPORT_METHOD);
+    if (invocation != null) {
+      for (ShadowParser.ConditionalExpressionContext ctx : invocation.getValues()) {
+        ShadowClass class_ = (ShadowClass) ctx.getInterpretedValue();
+        exports.add(class_.getRepresentedType());
+      }
+    }
+
+    return exports;
   }
 
   public AttributeInvocation getAttributeInvocation(AttributeType type) {
@@ -474,26 +482,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
    */
   public void processAttributeValues(ErrorReporter errorReporter) {
     for (AttributeType attributeType : attributes.keySet()) {
-      if (attributeType.equals(AttributeType.IMPORT_METHOD)) {
-        AttributeInvocation export =
-            importSource.getAttributeInvocation(AttributeType.EXPORT_METHOD);
-        if (export != null) {
-          Type exportType = ((ShadowClass) export.getFieldValue("exportedTo")).getRepresentedType();
-          if (outer.equals(exportType)) {
-            continue;
-          }
-        }
-        errorReporter.addError(
-            node,
-            TypeCheckException.Error.INVALID_METHOD_IMPORT,
-            "The '"
-                + importSource.getSymbol()
-                + "' method in '"
-                + importSource.getOuter()
-                + "' is not allowed to be shared with '"
-                + outer
-                + "'");
-      }
+      //TODO: Fill in something here?
     }
   }
 }

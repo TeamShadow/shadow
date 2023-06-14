@@ -4,6 +4,7 @@ import shadow.Loggers;
 import shadow.ShadowException;
 import shadow.interpreter.InterpreterException.Error;
 import shadow.parse.Context;
+import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;
@@ -139,10 +140,11 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
     for (AttributeInvocation attributeInvocation : attributeInvocations) {
-      for (Map.Entry<String, VariableDeclaratorContext> field :
-          attributeInvocation.getFieldAssignments().entrySet()) {
-        visitor.visitRootField(
-            new FieldKey(attributeInvocation.getType(), field.getKey()), field.getValue());
+      for (ShadowParser.ConditionalExpressionContext ctx :
+          attributeInvocation.getValues()) {
+        //TODO: Actually call constructor via interpretation
+        //visitor.visitRootField(
+          //  new FieldKey(attributeInvocation.getType(), field.getKey()), field.getValue());
       }
     }
 

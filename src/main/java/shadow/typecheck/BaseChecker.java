@@ -638,6 +638,11 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
   public static boolean methodIsAccessible(MethodSignature signature, Type currentType) {
     if (signature.getMethodType().getModifiers().isPublic()) return true;
 
+    for(Type type : signature.getExports()) {
+      if (currentType.isSubtype(type))
+        return true;
+    }
+
     Context node = signature.getNode();
     if (node == null) return false;
 
@@ -683,33 +688,6 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
   @Override
   public Void visitClassOrInterfaceDeclaration(
       ShadowParser.ClassOrInterfaceDeclarationContext ctx) {
-    declarationType = ctx.getType();
-    currentPackage = declarationType.getPackage();
-
-    visitChildren(ctx);
-
-    declarationType = declarationType.getOuter();
-
-    return null;
-  }
-
-  @Override
-  public Void visitAttributeBody(ShadowParser.AttributeBodyContext ctx) {
-    // Entering a type
-    currentType = declarationType;
-    currentPackage = currentType.getPackage();
-
-    visitChildren(ctx);
-
-    // Leaving a type
-    currentType = currentType.getOuter();
-
-    return null;
-  }
-
-  @Override
-  public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
-    // Entering declaration, but type has not yet been entered.
     declarationType = ctx.getType();
     currentPackage = declarationType.getPackage();
 

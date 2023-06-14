@@ -481,6 +481,15 @@ and	CanHash
 			return NaN->raw;
 		return this->raw;	
 	}
+
+    /**
+     * Returns a non-negative version of the current value.
+     * @return non-negative value
+     */
+    public abs() => (float)
+    {
+        return this < 0.0f ? -this, this;
+    }
 	
 	/** 
 	 * Returns a {@code String} representation of the value, in base 10, with

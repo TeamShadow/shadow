@@ -349,6 +349,15 @@ and	CanHash
 	{
 		return this < other ? this, other;
 	}
+
+	/**
+     * Returns a non-negative version of the current value.
+     * @return non-negative value
+     */
+    public abs() => (double)
+    {
+        return this < 0.0 ? -this, this;
+    }
 	
 	/** 
 	 * Finds the maximum of the current value and another {@code double}.

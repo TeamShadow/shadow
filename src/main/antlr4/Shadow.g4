@@ -35,7 +35,7 @@ import shadow.typecheck.type.Type;
 options {contextSuperClass=shadow.parse.Context;}
 
 compilationUnit	
-    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration | attributeDeclaration) EOF
+    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration ) EOF
     ;
     
 importDeclaration
@@ -70,7 +70,7 @@ modifier throws ParseException
 
 classOrInterfaceDeclaration
 	:
-	('class' | 'singleton' | 'exception'| 'interface' )
+	('class' | 'singleton' | 'exception'| 'interface' | 'attribute' )
 	( unqualifiedName '@' )? Identifier typeParameters? dependencyList? VersionLiteral? isList?
 	classOrInterfaceBody
 	;
@@ -93,25 +93,6 @@ enumConstant
 	: Identifier arguments? classOrInterfaceBody?
 	;
 
-attributeDeclaration
-    :
-    'attribute' ( unqualifiedName '@' )? Identifier
-    attributeBody
-    ;
-
-attributeBody
-    :
-    '{'
-        attributeBodyDeclaration*
-    '}'
-    ;
-
-// Note that attribute fields should not have modifiers. We allow them here
-// but enforce their absence in the typechecker to provide clearer errors
-attributeBodyDeclaration
-    : modifiers fieldDeclaration
-    ;
-	
 dependencyList
 	: ':' '<' type( ',' type )* '>'
 	;
@@ -215,7 +196,7 @@ attributeInvocations
 // variableDeclarator in an attribute invocation must include an assignment (enforced
 // at parse-checking time).
 attributeInvocation
-    : classOrInterfaceType ( '(' variableDeclarator ( ',' variableDeclarator )* ')' )?
+    : classOrInterfaceType ( '(' conditionalExpression ( ',' conditionalExpression )* ')' )?
     ;
 
 type

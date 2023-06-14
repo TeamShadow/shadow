@@ -8,6 +8,9 @@
  *
  * @seeDoc shadow:standard@Thread
  */
+
+import shadow:io@Console;
+
 locked immutable class shadow:natives@
 	ConditionVariable
 {
@@ -46,6 +49,8 @@ locked immutable class shadow:natives@
 	*/
 	public lock() => ()
 	{
+	    Console.print("Trying to lock ");
+	    Console.printPointer(this);
         __shadow_natives__ConditionVariable_lock(handle);
 	}
 

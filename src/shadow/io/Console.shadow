@@ -16,6 +16,9 @@ singleton shadow:io@
     [ImportAssembly]
     private readonly __shadow_io__Console_initialize() => ();
 
+    [ImportAssembly]
+    private readonly __shadow_io__Console_printPointer(Object object) => ();
+
 	
 	/**
 	 * Creates a new {@code Console}.
@@ -178,6 +181,12 @@ singleton shadow:io@
 		error.writeLine();
 		error.flush();
 		return this;
+	}
+
+	public printPointer(Object object) => (Console)
+	{
+	    __shadow_io__Console_printPointer(object);
+	    return this;
 	}
 
 	[ExportAssembly]

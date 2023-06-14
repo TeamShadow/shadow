@@ -54,4 +54,10 @@ and CanNegate<T>
 	 * @return current value rounded to the nearest integer
 	 */
 	readonly round() => (T);
+
+    /**
+     * Returns a non-negative version of the current value.
+     * @return non-negative value
+     */
+    readonly  abs() => (T);
 }

@@ -474,8 +474,6 @@ public class TypeCollector extends ScopedChecker {
         unqualifiedName = node.classOrInterfaceDeclaration().unqualifiedName();
       else if (node.enumDeclaration() != null)
         unqualifiedName = node.enumDeclaration().unqualifiedName();
-      else if (node.attributeDeclaration().unqualifiedName() != null)
-        unqualifiedName = node.attributeDeclaration().unqualifiedName();
 
       if (unqualifiedName != null) {
         String text = unqualifiedName.getText();
@@ -1182,22 +1180,6 @@ public class TypeCollector extends ScopedChecker {
     typeDeclarations.addFirst(enclosingClass);
   }
 
-  /**
-   * Attribute-specific variant of {@link shadow.typecheck.TypeCollector#addMembers(java.util.List)}
-   */
-  private void addMembers(ShadowParser.AttributeDeclarationContext ctx) {
-    TypeDeclaration attributeDeclaration = new TypeDeclaration();
-    // Is this the most readable way to write this?
-    ctx.attributeBody().attributeBodyDeclaration().stream()
-        .map(ShadowParser.AttributeBodyDeclarationContext::fieldDeclaration)
-        .map(ShadowParser.FieldDeclarationContext::variableDeclarator)
-        .flatMap(Collection::stream)
-        .map(VariableDeclaratorContext::generalIdentifier)
-        .map(RuleContext::getText)
-        .forEach(attributeDeclaration::addField);
-    typeDeclarations.addFirst(attributeDeclaration);
-  }
-
   private void removeMembers() {
     typeDeclarations.removeFirst();
   }
@@ -1246,36 +1228,6 @@ public class TypeCollector extends ScopedChecker {
     return null;
   }
 
-  @Override
-  public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
-
-    String packageName = null;
-    if (ctx.unqualifiedName() != null) packageName = ctx.unqualifiedName().getText();
-
-    addMembers(ctx);
-
-    // (Non-presence of modifiers was asserted during parse checking)
-    Type type =
-        createType(
-            ctx,
-            new Modifiers(),
-            ctx.getDocumentation(),
-            "attribute",
-            packageName,
-            ctx.Identifier().getText());
-
-    visitChildren(ctx);
-    typeTable.put(type, ctx);
-
-    // Attach this type to the surrounding declaration context (e.g. compilation unit)
-    ((Context) ctx.getParent()).setType(type);
-
-    removeMembers();
-
-    if (!type.hasOuter()) updateImports(type);
-
-    return null;
-  }
 
   @Override
   public Void visitClassOrInterfaceBody(ShadowParser.ClassOrInterfaceBodyContext ctx) {

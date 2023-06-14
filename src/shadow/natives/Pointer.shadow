@@ -7,8 +7,6 @@
  * @seeDoc shadow:standard@Thread
  */
 
- import shadow:io@Console;
-
 locked immutable class shadow:natives@
 	Pointer
 {

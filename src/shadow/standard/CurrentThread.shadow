@@ -6,6 +6,7 @@
  * @seeDoc shadow:standard@Thread
  */
 
+import shadow:io@Console;
 
 singleton shadow:standard@
 	CurrentThread
@@ -14,11 +15,13 @@ is CanIndex<int, Thread>
 	[ImportNative]
 	private readonly currentThread() => (Thread);
 
+/*
 	[ImportMethod]
 	private readonly sleep(Thread instance, TimeSpan time) => ();
 	[ImportMethod]
 	private readonly sleep(Thread instance, int milliseconds) => ();
-	
+*/
+
 	[ImportAssembly]
 	private readonly __shadow_standard__CurrentThread_yield() => (boolean);
 	
@@ -87,6 +90,8 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(TimeSpan timeout) => ()
 	{
+
+
 		sleep(currentThread(), timeout);
 	}
 	
@@ -97,6 +102,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(int millisecondsTimeout) => ()
 	{
+	    Console.printLine("Sleep on CurrentThread!");
 		sleep(currentThread(), millisecondsTimeout);
 	}
 	

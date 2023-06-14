@@ -34,6 +34,10 @@ shadow_boolean_t __shadow_natives__ConditionVariable_destroy(shadow_ConditionVar
 shadow_boolean_t __shadow_natives__ConditionVariable_lock(shadow_ConditionVariable_t* _this, shadow_Pointer_t* handle)
 {
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
+    if (data == NULL)
+        printf("Bad condition variable data!\n");
+    else
+        printf("Entering critical section!\n");
     EnterCriticalSection(&data->criticalSection);
     return TRUE;
 }

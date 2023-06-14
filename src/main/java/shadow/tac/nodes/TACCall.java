@@ -42,7 +42,8 @@ public class TACCall extends TACUpdate {
     this.methodRef = methodRef;
     SequenceType types = methodRef.getParameterTypes();
     SequenceType uninstantiatedTypes = methodRef.getUninstantiatedParameterTypes();
-    if (params.size() != types.size()) throw new IllegalArgumentException("Wrong # args");
+    if (params.size() != types.size())
+      throw new IllegalArgumentException("Wrong # args");
     Iterator<? extends TACOperand> paramIter = params.iterator();
     int i = 0;
     parameters = new ArrayList<>(params.size());

@@ -338,8 +338,10 @@ public final class Modifiers {
     return exceptions;
   }
 
-  public List<ShadowException> checkFieldModifiers(Context ctx) {
-    if (ctx.getParent() instanceof ShadowParser.AttributeBodyDeclarationContext
+  public List<ShadowException> checkFieldModifiers(ShadowParser.FieldDeclarationContext ctx) {
+
+    // Parent of field is body declaration, parent of declaration is body, parent of body is declaration
+    if (ctx.getParent().getParent().getParent().getText().equals("attribute")
         && !equals(NO_MODIFIERS)) {
       List<ShadowException> exceptions = new ArrayList<>();
       exceptions.add(
