@@ -627,6 +627,10 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
     return false;
   }
 
+  public boolean methodIsAccessible(MethodSignature signature, Type currentType) {
+    return methodIsAccessible(signature, currentType, packageTree);
+  }
+
   /**
    * Tests to see if a method is accessible from the current type.
    *
@@ -635,12 +639,17 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
    * @return <code>true</code> if the method is accessible
    */
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  public static boolean methodIsAccessible(MethodSignature signature, Type currentType) {
+  public static boolean methodIsAccessible(MethodSignature signature, Type currentType, Package packageTree) {
     if (signature.getMethodType().getModifiers().isPublic()) return true;
 
-    for(Type type : signature.getExports()) {
-      if (currentType.isSubtype(type))
-        return true;
+    try {
+      for (Type type : signature.getExports(packageTree)) {
+        if (currentType.isSubtype(type))
+          return true;
+      }
+    }
+    catch(TypeCheckException e) {
+      return false;
     }
 
     Context node = signature.getNode();

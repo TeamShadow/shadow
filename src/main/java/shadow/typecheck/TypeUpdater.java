@@ -501,7 +501,7 @@ public class TypeUpdater extends BaseChecker {
   }
 
   private List<Context> sortOnIsLists(Map<Type, Context> nodeTable) {
-    // Now make dependency graph based on extends and implements
+    // Now make dependency graph based on extends and implements and attributes
     DirectedGraph<Context> graph = new DirectedGraph<>();
 
     for (Context declarationNode : nodeTable.values()) graph.addNode(declarationNode);
@@ -972,12 +972,6 @@ public class TypeUpdater extends BaseChecker {
   }
 
   @Override
-  public Void visitAttributeDeclaration(ShadowParser.AttributeDeclarationContext ctx) {
-    visitDeclaration(ctx, /* list= */ null);
-    return null;
-  }
-
-  @Override
   public Void visitCreateDeclarator(ShadowParser.CreateDeclaratorContext ctx) {
     visitChildren(ctx);
 
@@ -1111,13 +1105,19 @@ public class TypeUpdater extends BaseChecker {
     visitChildren(node);
 
     // After visiting children
-    if (declarationType instanceof InterfaceType || declarationType instanceof EnumType) {
+    if (declarationType instanceof InterfaceType || declarationType instanceof EnumType || declarationType instanceof AttributeType) {
       String kind;
       if (declarationType instanceof EnumType) {
         kind = "Enum type ";
         EnumType enumType = (EnumType) declarationType;
         enumType.setExtendType(Type.ENUM);
-      } else kind = "Interface type ";
+      }
+      else if (declarationType instanceof AttributeType) {
+        kind = "Attribute type ";
+        AttributeType attributeType = (AttributeType) declarationType;
+        attributeType.setExtendType(Type.ATTRIBUTE);
+      }
+      else kind = "Interface type ";
 
       if (list != null)
         for (ShadowParser.ClassOrInterfaceTypeContext child : list.classOrInterfaceType()) {
@@ -1140,6 +1140,7 @@ public class TypeUpdater extends BaseChecker {
       else kind = "Class type ";
 
       if (list != null) {
+
         boolean first = true;
         for (ShadowParser.ClassOrInterfaceTypeContext child : list.classOrInterfaceType()) {
           Type type = child.getType();

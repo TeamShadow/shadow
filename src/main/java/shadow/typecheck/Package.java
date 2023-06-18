@@ -90,6 +90,14 @@ public class Package implements Comparable<Package>, Iterable<Type> {
     return newPackage;
   }
 
+  public Package getRoot() {
+    Package packageParent = parent;
+    while (packageParent != null)
+      packageParent = packageParent.parent;
+
+    return packageParent;
+  }
+
   /**
    * Adds an entire package path to the package tree and returns the the deepest child package
    * specified by the path.

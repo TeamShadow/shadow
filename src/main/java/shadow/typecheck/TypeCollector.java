@@ -735,7 +735,7 @@ public class TypeCollector extends ScopedChecker {
           break;
       }
 
-      // Put new type inside of outer type, if it exists.
+      // Put new type inside outer type, if it exists.
       if (currentType != null) {
         currentType.addInnerType(name, type);
       }
@@ -867,6 +867,9 @@ public class TypeCollector extends ScopedChecker {
           break;
         case "ArrayNullable":
           Type.ARRAY_NULLABLE = classType;
+          break;
+        case "Attribute":
+          Type.ATTRIBUTE = classType;
           break;
         case "Class":
           Type.CLASS = classType;

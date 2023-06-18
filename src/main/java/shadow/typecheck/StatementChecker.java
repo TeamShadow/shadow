@@ -121,6 +121,17 @@ public class StatementChecker extends ScopedChecker {
     // AttributeInvocation objects
     for (AttributeInvocation attribute : signature.getAttributes()) {
       attribute.update(this.getErrorReporter());
+
+      AttributeType attributeType = attribute.getType();
+
+      SequenceType arguments = new SequenceType();
+      arguments.addAll(attribute.getValues());
+
+      // A little bit ugly since the InvocationContext's type changes from AttributeType to MethodType (for the create)
+      // But the AttributeInvocation continues to have the AttributeType
+      MethodSignature create = setCreateType(attribute.getInvocationContext(), attributeType, arguments);
+      // TODO: Write test for error case
+      attribute.setSignature(create);
     }
 
     /*
@@ -2448,6 +2459,12 @@ public class StatementChecker extends ScopedChecker {
       addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Interfaces cannot be created");
     else if (prefixType instanceof SingletonType)
       addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Singletons cannot be created");
+    else if (prefixType instanceof AttributeType)
+      //TODO: Add error check for this
+      addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Attributes cannot be created with an explicit call");
+    else if (prefixType instanceof EnumType)
+      //TODO: Add error check for this
+      addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Enums cannot be created with an explicit call");
     else if (!(prefixType instanceof ClassType)
         && !(prefixType instanceof TypeParameter
             && !prefixType.recursivelyGetMethodOverloads("create").isEmpty()))
@@ -3503,6 +3520,7 @@ public class StatementChecker extends ScopedChecker {
     // Must happen first to determine the types of conditional expressions
     visitChildren(ctx);
 
+    /*
     if (ctx.getParent() instanceof ShadowParser.AttributeInvocationContext) {
       Type attributeType = ((ShadowParser.AttributeInvocationContext) ctx.getParent()).getType();
       String fieldName = ctx.generalIdentifier().getText();
@@ -3518,7 +3536,7 @@ public class StatementChecker extends ScopedChecker {
             isValidInitialization(attributeType.getField(fieldName), ctx.conditionalExpression()));
       }
     }
-
+    */
     return null;
   }
 

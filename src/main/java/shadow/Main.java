@@ -387,6 +387,7 @@ public class Main {
         TypeChecker.typeCheck(
             mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
+    //TODO: Add enum evaluations here
     ConstantFieldInterpreter.evaluateConstants(
         typecheckerOutput.packageTree, typecheckerOutput.nodes);
 

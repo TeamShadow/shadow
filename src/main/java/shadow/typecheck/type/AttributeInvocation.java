@@ -14,8 +14,15 @@ import java.util.stream.Collectors;
  */
 public class AttributeInvocation {
   private final AttributeType type;
+
+  public AttributeInvocationContext getInvocationContext() {
+    return invocationCtx;
+  }
+
   private final AttributeInvocationContext invocationCtx; // The AST node for this invocation
   private final Type enclosingType;
+
+  private MethodSignature signature;
 
   // Note that this does not contain the default expressions provided in the attribute declaration
   private final List<ShadowParser.ConditionalExpressionContext> values =
@@ -40,6 +47,14 @@ public class AttributeInvocation {
   public void addValue(
       ShadowParser.ConditionalExpressionContext ctx) {
     values.add(ctx);
+  }
+
+  public void setSignature(MethodSignature signature) {
+    this.signature = signature;
+  }
+
+  public MethodSignature getSignature() {
+    return signature;
   }
 
   /** Must be called after type updating to ensure the fields of the AttributeType are populated. */

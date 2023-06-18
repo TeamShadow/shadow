@@ -1,6 +1,7 @@
 package shadow.typecheck.type;
 
 import shadow.doctool.Documentation;
+import shadow.interpreter.AttributeInterpreter;
 import shadow.interpreter.ShadowClass;
 import shadow.interpreter.ShadowValue;
 import shadow.parse.Context;
@@ -404,13 +405,17 @@ public class MethodSignature implements Comparable<MethodSignature> {
     return Collections.unmodifiableCollection(attributes.values());
   }
 
-  public List<Type> getExports() {
+  public List<Type> getExports(shadow.typecheck.Package packageTree) throws TypeCheckException {
     List<Type> exports = new ArrayList<>();
     AttributeInvocation invocation = attributes.get(AttributeType.EXPORT_METHOD);
     if (invocation != null) {
       for (ShadowParser.ConditionalExpressionContext ctx : invocation.getValues()) {
-        ShadowClass class_ = (ShadowClass) ctx.getInterpretedValue();
-        exports.add(class_.getRepresentedType());
+        ShadowValue value = AttributeInterpreter.getAttributeInvocationArgument(ctx, packageTree);
+        if (value instanceof ShadowClass) {
+          ShadowClass class_ = (ShadowClass) value;
+          exports.add(class_.getRepresentedType());
+        }
+        else throw new TypeCheckException(TypeCheckException.Error.INVALID_TYPE, "Only class objects can be used in " + AttributeType.EXPORT_METHOD.getTypeName() + " creates");
       }
     }
 

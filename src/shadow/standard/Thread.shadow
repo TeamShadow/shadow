@@ -383,7 +383,7 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	[ExportMethod(exportedTo = CurrentThread:class)]
+	[ExportMethod(CurrentThread:class)]
 	private sleep(int millisecondsTimeout) => ()
 	{
 		sleep(Time.fromMilliSeconds(millisecondsTimeout));
@@ -401,7 +401,7 @@ is CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	[ExportMethod(exportedTo = Object:class)]
+	[ExportMethod(Object:class)]
 	protected receiveFirst(Class expectedType) => (Object, Thread)
 	{
 		return mailbox.receiveFirst(expectedType);
@@ -420,7 +420,7 @@ is CanIndex<int, Thread>
 	* 
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	[ExportMethod(exportedTo = Object:class)]
+	[ExportMethod(Object:class)]
 	protected receiveFirstFrom(Class expectedType, Thread from) => (Object)
 	{
 		if (from === this) {

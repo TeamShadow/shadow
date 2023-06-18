@@ -90,9 +90,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(TimeSpan timeout) => ()
 	{
-
-
-		sleep(currentThread(), timeout);
+		currentThread().sleep(timeout);
 	}
 	
 	/**
@@ -103,7 +101,7 @@ is CanIndex<int, Thread>
 	public readonly sleep(int millisecondsTimeout) => ()
 	{
 	    Console.printLine("Sleep on CurrentThread!");
-		sleep(currentThread(), millisecondsTimeout);
+		currentThread().sleep(millisecondsTimeout);
 	}
 	
 	/**

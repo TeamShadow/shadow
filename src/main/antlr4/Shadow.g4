@@ -192,9 +192,7 @@ attributeInvocations
     : '[' attributeInvocation ( ',' attributeInvocation )* ']'
     ;
 
-// Parentheses are disallowed unless at least one field is being initialized. Each
-// variableDeclarator in an attribute invocation must include an assignment (enforced
-// at parse-checking time).
+// Parentheses are disallowed unless at least one argument is being passed to the create.
 attributeInvocation
     : classOrInterfaceType ( '(' conditionalExpression ( ',' conditionalExpression )* ')' )?
     ;

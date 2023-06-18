@@ -1,8 +1,10 @@
 package shadow.typecheck.type;
 
 import shadow.ShadowException;
+import shadow.doctool.Documentation;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
+import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException.Error;
 
 import java.util.ArrayList;
@@ -47,7 +49,8 @@ public class PropertyType extends Type {
           "Property " + name + " cannot accept input of type " + input.getType());
     else {
       setSetter(signature);
-      if (!BaseChecker.methodIsAccessible(signature, context))
+
+      if (!BaseChecker.methodIsAccessible(signature, context, getPackage().getRoot()))
         ErrorReporter.addError(
             errors,
             Error.ILLEGAL_ACCESS,
@@ -69,7 +72,11 @@ public class PropertyType extends Type {
 
   public PropertyType(
       MethodSignature getter, UnboundMethodType method, ModifiedType prefix, Type context) {
-    super(null);
+    super(null,
+            new Modifiers(),
+    null,
+    null,
+    context.getPackage());
     this.getter = getter;
     this.method = method;
     this.prefix = prefix;

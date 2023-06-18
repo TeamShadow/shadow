@@ -109,7 +109,7 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
       visitor.visitRootField(fieldKey, fieldCtx);
     }
 
-    evaluateAttributeFields(typesIncludingInner, visitor, errorReporter);
+    //evaluateAttributeFields(typesIncludingInner, visitor, errorReporter);
 
     visitor.printAndReportErrors();
   }
@@ -123,7 +123,7 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
     for (Type type : typesIncludingInner) {
       if (type instanceof AttributeType) {
         for (Map.Entry<String, VariableDeclaratorContext> field :
-            ((AttributeType) type).getInitializedFields().entrySet()) {
+            type.getFields().entrySet()) {
           visitor.visitRootField(new FieldKey(type, field.getKey()), field.getValue());
         }
       }

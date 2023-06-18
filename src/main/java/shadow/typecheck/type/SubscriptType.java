@@ -64,7 +64,7 @@ public class SubscriptType extends PropertyType {
           input.getType());
     else {
       setSetter(signature);
-      if (!BaseChecker.methodIsAccessible(signature, context))
+      if (!BaseChecker.methodIsAccessible(signature, context, getPackage().getRoot()))
         ErrorReporter.addError(
             errors, Error.ILLEGAL_ACCESS, "Subscript is not accessible from this context");
 

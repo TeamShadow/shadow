@@ -68,6 +68,7 @@ public abstract class Type implements Comparable<Type> {
       null; // really just a pointer for method tables, but we sometimes act like it is a class
 
   public static ClassType ENUM = null; // weirdly, the base class for enum is not an EnumType
+  public static ClassType ATTRIBUTE = null; // similarly for attributes
   public static ExceptionType EXCEPTION = null;
   public static ExceptionType CAST_EXCEPTION = null;
   public static ExceptionType INDEX_OUT_OF_BOUNDS_EXCEPTION = null;
@@ -300,6 +301,7 @@ public abstract class Type implements Comparable<Type> {
     ARRAY = null;
     ARRAY_NULLABLE = null;
     ENUM = null;
+    ATTRIBUTE = null;
     EXCEPTION = null;
     GENERIC_CLASS = null;
     BOOLEAN = null;

@@ -27,7 +27,7 @@ import java.util.*;
  * private myMethod() => () { ... }
  * </code></pre>
  */
-public class AttributeType extends Type {
+public class AttributeType extends ClassType {
 
   // Used as a placeholder for unresolved attribute types during typechecking
   public static final AttributeType UNKNOWN_ATTRIBUTE_TYPE =
@@ -52,102 +52,12 @@ public class AttributeType extends Type {
     EXPORT_METHOD = null;
   }
 
-  // Names of fields which do not have default values (i.e. must always be provided when invoking
-  // the attribute)
-  private final Set<String> uninitializedFields = new HashSet<>();
-
   public AttributeType(String typeName, Documentation documentation, Type outer) {
     super(typeName, new Modifiers(), documentation, outer);
   }
 
   @Override
-  public void addField(String fieldName, ShadowParser.VariableDeclaratorContext node) {
-    if (node.conditionalExpression() == null) {
-      uninitializedFields.add(node.generalIdentifier().getText());
-    }
-    super.addField(fieldName, node);
-  }
-
-  @Override
-  protected List<MethodSignature> recursivelyOrderAllMethods(List<MethodSignature> methodList) {
-    return methodList;
-  }
-
-  @Override
-  protected List<MethodSignature> recursivelyOrderMethods(List<MethodSignature> methodList) {
-    return methodList;
-  }
-
-  /**
-   * Returns the names of the fields of this attribute for which default values were not provided.
-   */
-  public Set<String> getUninitializedFields() {
-    return Collections.unmodifiableSet(uninitializedFields);
-  }
-
-  public Map<String, ShadowParser.VariableDeclaratorContext> getInitializedFields() {
-    Map<String, ShadowParser.VariableDeclaratorContext> initializedFields =
-        new HashMap<>(getFields());
-    for (String fieldName : uninitializedFields) {
-      initializedFields.remove(fieldName);
-    }
-    return Collections.unmodifiableMap(initializedFields);
-  }
-
-  @Override
   public void printMetaFile(PrintWriter out, String linePrefix) {
-    printImports(out, linePrefix);
-
-    out.print("attribute ");
-    if (!hasOuter()) // If this is the outermost class
-    out.print(toString(PACKAGES));
-    else {
-      String name = toString();
-      out.print(name.substring(name.lastIndexOf(':') + 1));
-    }
-
-    out.println();
-    out.println(linePrefix + "{");
-
-    // Fields
-    for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> field : getFields().entrySet()) {
-      out.print(
-          linePrefix
-              + "\t"
-              + field.getValue().getType().toString(PACKAGES | TYPE_PARAMETERS | NO_NULLABLE)
-              + " "
-              + field.getKey());
-      if (!uninitializedFields.contains(field.getKey())) {
-        out.print(" = " + field.getValue().getInterpretedValue().toLiteral());
-      }
-      out.println(";");
-    }
-
-    if (!getFields().isEmpty()) {
-      out.println();
-    }
-
-    out.println(linePrefix + "}");
+    throw new UnsupportedOperationException("Meta files cannot be created for attributes since their definitions are required at compile time");
   }
-
-  // Attributes do not support inheritance
-  @Override
-  public boolean isSubtype(Type other) {
-    return this == other;
-  }
-
-  // Type-parameter related methods (not currently supported by attributes)
-
-  @Override
-  public Type replace(List<ModifiedType> values, List<ModifiedType> replacements) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Type partiallyReplace(List<ModifiedType> values, List<ModifiedType> replacements) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void updateFieldsAndMethods() {}
 }
