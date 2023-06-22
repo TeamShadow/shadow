@@ -4,6 +4,8 @@ import shadow.interpreter.InterpreterException.Error;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
+import java.util.Map;
+
 public class ShadowNull extends ShadowValue {
   private final Type type;
 
@@ -23,7 +25,7 @@ public class ShadowNull extends ShadowValue {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowNull(type);
   }
 

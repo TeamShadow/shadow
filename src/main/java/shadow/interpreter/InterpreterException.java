@@ -24,8 +24,12 @@ public class InterpreterException extends ShadowException {
         "Invalid assignment", "Right hand side cannot be assigned to left hand side"),
     INVALID_CAST("Invalid cast", "Result type cannot be cast to specified type"),
     INVALID_CREATE("Invalid create", "Target cannot be created"),
+
     INVALID_DEREFERENCE("Invalid dereference", "Nullable reference cannot be dereferenced"),
+    INVALID_FIELD("Invalid field", "Field not available in object"),
+    INVALID_METHOD("Invalid method", "Method cannot be called"),
     INVALID_PROPERTY("Invalid property", "No matching property can be found"),
+    INVALID_REFERENCE("Invalid reference", "Property, subscript, variable, or field is invalid"),
     INVALID_SELF_REFERENCE("Invalid self reference", "Self reference is invalid"),
     INVALID_STRUCTURE("Invalid structure", "Language construct cannot be used in this way"),
     INVALID_SUBSCRIPT("Invalid subscript", "Subscript is of wrong type or number"),
@@ -39,8 +43,11 @@ public class InterpreterException extends ShadowException {
         "Missing type arguments", "Type arguments not supplied for parameterized type"),
     NOT_OBJECT("Not object", "Object reference must be used"),
     NOT_TYPE("Not type", "Type name must be used"),
+    UNAVAILABLE_SOURCE("Unavailable source", "Source code is not available for interpretation"),
     UNDEFINED_SYMBOL("Undefined symbol", "Symbol has not been defined in this context"),
-    UNKNOWN_REFERENCE("Unknown reference", "This symbol could not be resolved"),
+    UNINITIALIZED_CONSTANT("Uninitialized constant", "Constant was not initialized before use"),
+    UNKNOWN_REFERENCE("Unknown reference", "Symbol could not be resolved"),
+
     UNNECESSARY_TYPE_ARGUMENTS(
         "Unnecessary type arguments", "Type arguments supplied for non-parameterized type"),
     UNSUPPORTED_OPERATION(

@@ -74,18 +74,11 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
    * Assumes that type-checking has already happened, meaning that all statements are valid and all
    * references to fields are legitimate.
    *
-   * @param nodes List of AST nodes for classes under compilation. Generally comes from
-   * {@link TypeChecker#typeCheck(Path, boolean, ErrorReporter, boolean)}.
    */
-  public static void evaluateConstants(Package packageTree, List<Context> nodes)
+  public static void evaluateConstants(Package packageTree, List<Type> typesIncludingInner)
       throws ShadowException {
     // We also want to process fields from inner types. Order doesn't really matter.
-    List<Type> typesIncludingInner =
-        nodes.stream().map(Context::getType).collect(Collectors.toList());
-    nodes.stream()
-        .map(Context::getType)
-        .map(Type::recursivelyGetInnerTypes)
-        .forEach(typesIncludingInner::addAll);
+
 
     Map<FieldKey, VariableDeclaratorContext> constantFields = new HashMap<>();
 
@@ -109,48 +102,74 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
       visitor.visitRootField(fieldKey, fieldCtx);
     }
 
-    //evaluateAttributeFields(typesIncludingInner, visitor, errorReporter);
 
     visitor.printAndReportErrors();
   }
 
-  // Evaluates fields on attribute types and attribute invocations. We don't store these in the
-  // constantFields because they can't be referenced by each other or by other constants.
-  private static void evaluateAttributeFields(
-      List<Type> typesIncludingInner,
-      ConstantFieldInterpreter visitor,
-      ErrorReporter errorReporter) {
-    for (Type type : typesIncludingInner) {
-      if (type instanceof AttributeType) {
-        for (Map.Entry<String, VariableDeclaratorContext> field :
-            type.getFields().entrySet()) {
-          visitor.visitRootField(new FieldKey(type, field.getKey()), field.getValue());
-        }
-      }
+  @Override
+  public Void visitPrimaryPrefix(ShadowParser.PrimaryPrefixContext ctx) {
+    visitChildren(ctx);
+
+    String image = ctx.getText();
+    ShadowValue value = ShadowValue.INVALID;
+
+    if (image.equals("this") || image.equals("super")) {
+        addError(
+                ctx,
+                Error.INVALID_SELF_REFERENCE,
+                "Reference " + image + " invalid for compile-time constants");
+    }
+    else if (ctx.generalIdentifier() != null && !ctx.getModifiers().isTypeName()) {
+      String name = ctx.generalIdentifier().getText();
+      ShadowValue variable = (ShadowValue) findSymbol(name);
+      if (variable != null)
+        value = new ShadowVariable(this, name);
+      else if( currentType.recursivelyContainsConstant(name))
+        value = getConstant(currentType, name, ctx);
+      else
+        addError(ctx, Error.NON_CONSTANT_REFERENCE);
+    }
+    else if(ctx.conditionalExpression() != null) {
+      value = ctx.conditionalExpression().getInterpretedValue();
+    }
+    // literal, check expression, copy expression,
+    // spawn expression, receive expression, cast expression
+    // primitive and function types, and array initializer
+    else {
+      Context child = (Context) ctx.getChild(0);
+      value = child.getInterpretedValue();
+      ctx.addModifiers(child.getModifiers());
     }
 
-    List<MethodSignature> allMethods =
-        typesIncludingInner.stream()
-            .map(Type::getAllMethods)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
-    List<AttributeInvocation> attributeInvocations =
-        allMethods.stream()
-            .map(MethodSignature::getAttributes)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
-    for (AttributeInvocation attributeInvocation : attributeInvocations) {
-      for (ShadowParser.ConditionalExpressionContext ctx :
-          attributeInvocation.getValues()) {
-        //TODO: Actually call constructor via interpretation
-        //visitor.visitRootField(
-          //  new FieldKey(attributeInvocation.getType(), field.getKey()), field.getValue());
-      }
-    }
+    ctx.setInterpretedValue(value);
+    curPrefix.set(0, ctx); // so that the suffix can figure out where it's at
 
-    for (MethodSignature method : allMethods) {
-      method.processAttributeValues(errorReporter);
-    }
+    return null;
+  }
+
+
+  @Override
+  public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx) {
+    visitChildren(ctx);
+
+    // Always part of a suffix, thus always has a prefix
+    Context prefixNode = curPrefix.getFirst();
+    Type prefixType = prefixNode.getType();
+
+    String name = ctx.Identifier().getText();
+      // Check field first
+      if (prefixType.containsField(name)) {
+        addError(
+                ctx,
+                Error.ILLEGAL_ACCESS,
+                "Field "
+                        + name
+                        + " cannot be referenced in a compile-time constant because it is not constant");
+        ctx.setInterpretedValue(ShadowValue.INVALID);
+      } else if (prefixType.recursivelyContainsConstant(name))
+        ctx.setInterpretedValue(getConstant(prefixType, name, ctx));
+
+    return null;
   }
 
   public void visitRootField(FieldKey rootFieldKey, VariableDeclaratorContext rootFieldCtx) {
@@ -161,10 +180,34 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
     visit(rootFieldCtx);
   }
 
-  // TODO: Disallow references to inner class fields from outer class fields?
-  //  c.f. test-negative/compile/invalid-constant-dependency
+  // This should be the entry point for constant interpretation. Assumes the variable
+  // declarator includes a definition.
   @Override
-  protected ShadowValue dereferenceField(Type parentType, String fieldName, Context referenceCtx) {
+  public Void visitVariableDeclarator(ShadowParser.VariableDeclaratorContext ctx) {
+    // Normally BaseChecker would do this for us if we weren't using VariableDeclarator
+    // as an entry point
+    Type oldType = currentType;
+    currentType = ctx.getEnclosingType();
+
+    visitChildren(ctx);
+
+    ShadowValue value = ShadowValue.INVALID;
+    if (ctx.conditionalExpression() != null) {
+      try {
+        // This cast seems wacky, but if we don't do it, then constant long X = 5; stores 5 into X,
+        // not 5L
+        value = ctx.conditionalExpression().getInterpretedValue().cast(ctx.getType());
+      } catch (InterpreterException e) {
+        addError(e.setContext(ctx));
+      }
+    }
+    ctx.setInterpretedValue(value);
+
+    currentType = oldType;
+    return null;
+  }
+
+  public ShadowValue getConstant(Type parentType, String fieldName, Context referenceCtx) {
     FieldKey fieldKey = new FieldKey(parentType, fieldName);
 
     if (!allFields.containsKey(fieldKey)) {

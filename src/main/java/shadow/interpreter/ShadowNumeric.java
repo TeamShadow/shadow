@@ -13,34 +13,34 @@ public abstract class ShadowNumeric extends ShadowNumber {
   }
 
   @Override
-  public ShadowValue callMethod(String method, ShadowValue... arguments)
+  public ShadowValue[] callMethod(String method, ShadowValue... arguments)
       throws InterpreterException {
     if (arguments.length == 0) {
       switch (method) {
         case "abs":
-          return abs();
+          return new ShadowNumber[]{abs()};
         case "cos":
-          return cos();
+          return new ShadowNumber[]{cos()};
         case "sin":
-          return sin();
+          return new ShadowNumber[]{sin()};
         case "squareRoot":
-          return squareRoot();
+          return new ShadowNumber[]{squareRoot()};
         case "logBase10":
-          return logBase10();
+          return new ShadowNumber[]{logBase10()};
         case "logBase2":
-          return logBase2();
+          return new ShadowNumber[]{logBase2()};
         case "logBaseE":
-          return logBaseE();
+          return new ShadowNumber[]{logBaseE()};
       }
     } else if (arguments.length == 1 && arguments[0] instanceof ShadowNumber) {
       ShadowNumber number = (ShadowNumber) arguments[0];
       switch (method) {
         case "power":
-          return power(number);
+          return new ShadowNumber[]{power(number)};
         case "max":
-          return max(number);
+          return new ShadowNumber[]{max(number)};
         case "min":
-          return min(number);
+          return new ShadowNumber[]{min(number)};
       }
     }
 

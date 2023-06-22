@@ -2,6 +2,8 @@ package shadow.interpreter;
 
 import shadow.typecheck.type.Type;
 
+import java.util.Map;
+
 /**
  * A dummy value produced when an invalid or unsupported expression is interpreted. Should propagate
  * quietly as a result of any operation that involves it - only the initial expression of concern
@@ -17,7 +19,7 @@ public class ShadowInvalid extends ShadowValue {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return INVALID;
   }
 

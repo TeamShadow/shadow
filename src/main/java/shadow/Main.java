@@ -2,6 +2,7 @@ package shadow;
 
 import org.apache.logging.log4j.Logger;
 import shadow.doctool.tag.TagManager.BlockTagType;
+import shadow.interpreter.AttributeInterpreter;
 import shadow.interpreter.ConstantFieldInterpreter;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -23,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * @author Barry Wittman
@@ -387,9 +389,22 @@ public class Main {
         TypeChecker.typeCheck(
             mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
-    //TODO: Add enum evaluations here
+
+    List<Type> typesIncludingInner =
+            typecheckerOutput.nodes.stream().map(Context::getType).collect(Collectors.toList());
+    typecheckerOutput.nodes.stream()
+            .map(Context::getType)
+            .map(Type::recursivelyGetInnerTypes)
+            .forEach(typesIncludingInner::addAll);
+
+
     ConstantFieldInterpreter.evaluateConstants(
-        typecheckerOutput.packageTree, typecheckerOutput.nodes);
+        typecheckerOutput.packageTree, typesIncludingInner);
+
+    //TODO: Add enum evaluations here (right after constants?)
+
+    //AttributeInterpreter.
+            //evaluateAttributes(typesIncludingInner);
 
     if (!currentJob.isCheckOnly()) {
       // Set data for main class
@@ -407,16 +422,17 @@ public class Main {
     try {
       for (Context node : typecheckerOutput.nodes) {
         // As an optimization, print .meta files for the .shadow files being checked
-        if (!node.isFromMetaFile()) TypeChecker.printMetaFile(node);
+        // Attributes never generate .meta files because their original .shadow files are interpreted
+        if (!node.isFromMetaFile() && !(node.getType() instanceof AttributeType)) TypeChecker.printMetaFile(node);
 
         Path file = node.getSourcePath();
 
         if (currentJob.isCheckOnly()) {
           // Performs checks to make sure all paths return, there is
           // no dead code, etc.
-          // No need to check interfaces, attributes, or .meta files (no code in
+          // No need to check interfaces or .meta files (no code in
           // those cases)
-          if (!node.isFromMetaFile() && !(node.getType() instanceof AttributeType))
+          if (!node.isFromMetaFile() && !(node.getType() instanceof InterfaceType))
             optimizeTAC(new TACBuilder().build(node), reporter);
         } else {
           Path path = BaseChecker.stripExtension(file);
@@ -447,7 +463,9 @@ public class Main {
             logger.info("Generating LLVM code for " + name);
             // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
-            linkCommand.add(compileShadowFile(file, binaryPath, module));
+            // We don't generate LLVM for attributes, since their computation is all at compile time
+            if (!(node.getType() instanceof AttributeType))
+              linkCommand.add(compileShadowFile(file, binaryPath, module));
           }
 
           if (Files.exists(nativeObject)) linkCommand.add(nativeObject.toString());

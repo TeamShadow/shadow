@@ -3,6 +3,8 @@ package shadow.interpreter;
 import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
+import java.util.Map;
+
 public class ShadowBoolean extends ShadowValue {
   private final boolean value;
 
@@ -31,7 +33,7 @@ public class ShadowBoolean extends ShadowValue {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> copies) throws InterpreterException {
     return new ShadowBoolean(value);
   }
 

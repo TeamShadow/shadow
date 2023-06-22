@@ -5,6 +5,7 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 import java.math.BigInteger;
+import java.util.Map;
 
 public class ShadowInteger extends ShadowNumeric {
 
@@ -160,22 +161,22 @@ public class ShadowInteger extends ShadowNumeric {
   }
 
   @Override
-  public ShadowValue callMethod(String method, ShadowValue... arguments)
+  public ShadowValue[] callMethod(String method, ShadowValue... arguments)
       throws InterpreterException {
     if (arguments.length == 0) {
       switch (method) {
         case "flipEndian":
-          return flipEndian();
+          return new ShadowInteger[]{flipEndian()};
         case "leadingZeroes":
-          return leadingZeroes();
+          return new ShadowInteger[]{leadingZeroes()};
         case "ones":
-          return ones();
+          return new ShadowInteger[]{ones()};
         case "trailingZeroes":
-          return trailingZeroes();
+          return new ShadowInteger[]{trailingZeroes()};
         case "toSigned":
-          return toSigned();
+          return new ShadowInteger[]{toSigned()};
         case "toUnsigned":
-          return toUnsigned();
+          return new ShadowInteger[]{toUnsigned()};
       }
     }
 
@@ -417,7 +418,7 @@ public class ShadowInteger extends ShadowNumeric {
   }
 
   @Override
-  public ShadowInteger copy() throws InterpreterException {
+  public ShadowInteger copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowInteger(value, size, signed);
   }
 
@@ -560,7 +561,7 @@ public class ShadowInteger extends ShadowNumeric {
     return new ShadowInteger(BigInteger.valueOf(count), size, signed);
   }
 
-  public ShadowInteger flipEndian() throws InterpreterException {
+  public ShadowInteger flipEndian() {
     BigInteger result = BigInteger.ZERO;
     BigInteger mask = BigInteger.valueOf(0xFF);
 
@@ -570,11 +571,11 @@ public class ShadowInteger extends ShadowNumeric {
     return new ShadowInteger(result, size, signed);
   }
 
-  public ShadowInteger toSigned() throws InterpreterException {
+  public ShadowInteger toSigned() {
     return new ShadowInteger(value, size, true, preferredBase);
   }
 
-  public ShadowInteger toUnsigned() throws InterpreterException {
+  public ShadowInteger toUnsigned() {
     return new ShadowInteger(value, size, false, preferredBase);
   }
 }

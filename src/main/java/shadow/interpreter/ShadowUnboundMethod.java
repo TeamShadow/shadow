@@ -4,6 +4,8 @@ import shadow.interpreter.InterpreterException.Error;
 import shadow.typecheck.type.Type;
 import shadow.typecheck.type.UnboundMethodType;
 
+import java.util.Map;
+
 public class ShadowUnboundMethod extends ShadowValue {
 
   private final ShadowValue object;
@@ -31,7 +33,7 @@ public class ShadowUnboundMethod extends ShadowValue {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowUnboundMethod(object, type);
   }
 

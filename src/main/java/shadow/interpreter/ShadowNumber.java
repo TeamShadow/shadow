@@ -13,38 +13,38 @@ public abstract class ShadowNumber extends ShadowValue {
   }
 
   @Override
-  public ShadowValue callMethod(String method, ShadowValue... arguments)
+  public ShadowValue[] callMethod(String method, ShadowValue... arguments)
       throws InterpreterException {
     if (arguments.length == 0) {
       switch (method) {
         case "toByte":
-          return toByte();
+          return new ShadowNumber[]{toByte()};
         case "toUByte":
-          return toUByte();
+          return new ShadowNumber[]{toUByte()};
         case "toShort":
-          return toShort();
+          return new ShadowNumber[]{toShort()};
         case "toUShort":
-          return toUShort();
+          return new ShadowNumber[]{toUShort()};
         case "toInt":
-          return toInt();
+          return new ShadowNumber[]{toInt()};
         case "toLong":
-          return toLong();
+          return new ShadowNumber[]{toLong()};
         case "toULong":
-          return toULong();
+          return new ShadowNumber[]{toULong()};
         case "toCode":
-          return toCode();
+          return new ShadowNumber[]{toCode()};
         case "toFloat":
-          return toFloat();
+          return new ShadowNumber[]{toFloat()};
         case "toDouble":
-          return toDouble();
+          return new ShadowNumber[]{toDouble()};
       }
     } else if (arguments.length == 1 && arguments[0] instanceof ShadowNumber) {
       ShadowNumber number = (ShadowNumber) (arguments[0].cast(getType()));
       switch (method) {
         case "max":
-          return max(number);
+          return new ShadowNumber[]{max(number)};
         case "min":
-          return min(number);
+          return new ShadowNumber[]{min(number)};
       }
     }
 

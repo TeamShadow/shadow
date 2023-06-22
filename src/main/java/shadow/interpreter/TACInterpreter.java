@@ -266,7 +266,7 @@ public class TACInterpreter extends TACAbstractVisitor {
         for (int i = 1; i < parameters.size(); i++)
           arguments[i - 1] = value(parameters.get(i)); // First argument is always the prefix
 
-        ShadowValue data = prefix.callMethod(method.getName(), arguments);
+        ShadowValue data = prefix.callMethod(method.getName(), arguments)[0];
         node.setData(data);
       }
     } else

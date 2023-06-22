@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class ShadowString extends ShadowValue {
   private static final Charset UTF8 = StandardCharsets.UTF_8;
@@ -60,7 +61,7 @@ public class ShadowString extends ShadowValue {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowString(getValue());
   }
 
@@ -179,40 +180,40 @@ public class ShadowString extends ShadowValue {
   }
 
   @Override
-  public ShadowValue callMethod(String method, ShadowValue... arguments)
+  public ShadowValue[] callMethod(String method, ShadowValue... arguments)
       throws InterpreterException {
     if (arguments.length == 0) {
       switch (method) {
         case "size":
-          return new ShadowInteger(value.length());
+          return new ShadowInteger[]{new ShadowInteger(value.length())};
         case "isEmpty":
-          return new ShadowBoolean(value.isEmpty());
+          return new ShadowBoolean[]{new ShadowBoolean(value.isEmpty())};
         case "toLowerCase":
-          return new ShadowString(value.toLowerCase());
+          return new ShadowString[]{new ShadowString(value.toLowerCase())};
         case "toUpperCase":
-          return new ShadowString(value.toUpperCase());
+          return new ShadowString[]{new ShadowString(value.toUpperCase())};
         case "toString":
-          return this;
+          return new ShadowString[]{this};
         case "toByte":
-          return convert(Type.BYTE);
+          return new ShadowValue[]{convert(Type.BYTE)};
         case "toUByte":
-          return convert(Type.UBYTE);
+          return new ShadowValue[]{convert(Type.UBYTE)};
         case "toShort":
-          return convert(Type.SHORT);
+          return new ShadowValue[]{convert(Type.SHORT)};
         case "toUShort":
-          return convert(Type.USHORT);
+          return new ShadowValue[]{convert(Type.USHORT)};
         case "toInt":
-          return convert(Type.INT);
+          return new ShadowValue[]{convert(Type.INT)};
         case "toUInt":
-          return convert(Type.UINT);
+          return new ShadowValue[]{convert(Type.UINT)};
         case "toLong":
-          return convert(Type.LONG);
+          return new ShadowValue[]{convert(Type.LONG)};
         case "toULong":
-          return convert(Type.ULONG);
+          return new ShadowValue[]{convert(Type.ULONG)};
         case "toFloat":
-          return convert(Type.FLOAT);
+          return new ShadowValue[]{convert(Type.FLOAT)};
         case "toDouble":
-          return convert(Type.DOUBLE);
+          return new ShadowValue[]{convert(Type.DOUBLE)};
       }
     } else if (arguments.length == 1) {
       switch (method) {
@@ -220,7 +221,7 @@ public class ShadowString extends ShadowValue {
           {
             if (arguments[0] instanceof ShadowInteger) {
               int index = ((ShadowInteger) arguments[0]).getValue().intValue();
-              return new ShadowInteger(BigInteger.valueOf(value.getBytes(UTF8)[index]), 1, false);
+              return new ShadowInteger[]{new ShadowInteger(BigInteger.valueOf(value.getBytes(UTF8)[index]), 1, false)};
             }
           }
         case "substring":
@@ -229,10 +230,10 @@ public class ShadowString extends ShadowValue {
             int firstIndex = ((ShadowInteger) arguments[0]).getValue().intValue();
             int secondIndex = bytes.length;
             bytes = Arrays.copyOfRange(bytes, firstIndex, secondIndex);
-            return new ShadowString(new String(bytes, UTF8));
+            return new ShadowString[]{new ShadowString(new String(bytes, UTF8))};
           }
         case "concatenate":
-          return new ShadowString(value + arguments[0].unaryCat().getValue());
+          return new ShadowString[]{new ShadowString(value + arguments[0].unaryCat().getValue())};
       }
     } else if (arguments.length == 2) {
       if ("substring".equals(method)) {
@@ -241,7 +242,7 @@ public class ShadowString extends ShadowValue {
           int firstIndex = ((ShadowInteger) arguments[0]).getValue().intValue();
           int secondIndex = ((ShadowInteger) arguments[1]).getValue().intValue();
           bytes = Arrays.copyOfRange(bytes, firstIndex, secondIndex);
-          return new ShadowString(new String(bytes, UTF8));
+          return new ShadowString[]{new ShadowString(new String(bytes, UTF8))};
         }
       }
     }

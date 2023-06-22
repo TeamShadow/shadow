@@ -22,6 +22,7 @@ import shadow.Loggers;
 import shadow.ShadowException;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
+import shadow.typecheck.type.AttributeType;
 import shadow.typecheck.type.Type;
 
 import java.io.BufferedOutputStream;
@@ -90,6 +91,20 @@ public class TypeChecker {
     /* Select only nodes corresponding to outer types. */
     List<Context> nodes = new ArrayList<>();
     for (Context node : nodeTable.values()) if (!node.getType().hasOuter()) nodes.add(node);
+
+    // Put all attribute types first so that they're typechecked before classes try to interpret them
+    // TODO: Enforce that attributes cannot mark their methods with attributes, to avoid circular problems
+    nodes.sort( (first, second) -> {
+      boolean firstAttribute = first.getType() instanceof AttributeType;
+      boolean secondAttribute = second.getType() instanceof AttributeType;
+      if (firstAttribute == secondAttribute) // Both attributes or both not
+        return 0;
+      else if(firstAttribute)
+        return -1;
+      else
+        return 1;
+    });
+
 
     /* Do type-checking of statements, i.e., actual code. */
     StatementChecker checker = new StatementChecker(packageTree, reporter);

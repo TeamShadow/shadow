@@ -5,6 +5,7 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 import java.math.BigInteger;
+import java.util.Map;
 
 public class ShadowCode extends ShadowNumber {
   private final int value;
@@ -41,7 +42,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowCode(getValue());
   }
 

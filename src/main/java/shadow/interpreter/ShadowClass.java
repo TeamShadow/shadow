@@ -3,35 +3,43 @@ package shadow.interpreter;
 import shadow.interpreter.InterpreterException.Error;
 import shadow.typecheck.type.*;
 
+import java.util.HashMap;
+
 public class ShadowClass extends ShadowObject {
   private final Type representedType;
 
+
   public ShadowClass(Type representedType) throws InterpreterException {
-    super(representedType.isParameterized() ? Type.GENERIC_CLASS : Type.CLASS);
+    this(representedType, representedType.isParameterized());
+  }
+
+  private ShadowClass(Type representedType, boolean hasTypeParameters) throws InterpreterException {
+    // TODO: Fill out all class fields?
+    super(hasTypeParameters ? Type.GENERIC_CLASS : Type.CLASS, hasTypeParameters ? new ShadowClass(representedType, false) : ShadowObject.makeObject(), new HashMap<>());
     this.representedType = representedType;
   }
 
   @Override
-  public ShadowValue callMethod(String method, ShadowValue... arguments)
+  public ShadowValue[] callMethod(String method, ShadowValue... arguments)
       throws InterpreterException {
     if (arguments.length == 0) {
       switch (method) {
         case "isArray":
-          return isArray();
+          return new ShadowBoolean[]{isArray()};
         case "isGeneric":
-          return isGeneric();
+          return new ShadowBoolean[]{isGeneric()};
         case "isInterface":
-          return isInterface();
+          return new ShadowBoolean[]{isInterface()};
         case "isMethod":
-          return isMethod();
+          return new ShadowBoolean[]{isMethod()};
         case "isPrimitive":
-          return isPrimitive();
+          return new ShadowBoolean[]{isPrimitive()};
         case "isSingleton":
-          return isSingleton();
+          return new ShadowBoolean[]{isSingleton()};
         case "name":
-          return name();
+          return new ShadowString[]{name()};
         case "parent":
-          return parent();
+          return new ShadowValue[]{parent()};
       }
     }
 
@@ -116,15 +124,5 @@ public class ShadowClass extends ShadowObject {
   @Override
   public String toLiteral() {
     return representedType.toString() + ":class";
-  }
-
-  @Override
-  public ShadowValue cast(Type type) throws InterpreterException {
-    if (type.equals(getType())) return this;
-    else if (type.isSubtype(getType()) || getType().isSubtype(type))
-      return new ShadowObject(type);
-
-    throw new InterpreterException(
-        Error.MISMATCHED_TYPE, "Cannot cast " + getType() + " to " + type);
   }
 }

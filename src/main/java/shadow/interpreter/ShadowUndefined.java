@@ -2,6 +2,8 @@ package shadow.interpreter;
 
 import shadow.typecheck.type.Type;
 
+import java.util.Map;
+
 /** A value held by a variable before it's been defined. */
 public class ShadowUndefined extends ShadowValue {
 
@@ -22,7 +24,7 @@ public class ShadowUndefined extends ShadowValue {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowUndefined(type);
   }
 

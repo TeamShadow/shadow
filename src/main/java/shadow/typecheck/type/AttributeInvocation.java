@@ -1,9 +1,12 @@
 package shadow.typecheck.type;
 
+import shadow.interpreter.AttributeInterpreter;
+import shadow.interpreter.InterpreterException;
 import shadow.interpreter.ShadowValue;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.AttributeInvocationContext;
 import shadow.typecheck.ErrorReporter;
+import shadow.typecheck.Package;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,6 +23,11 @@ public class AttributeInvocation {
   }
 
   private final AttributeInvocationContext invocationCtx; // The AST node for this invocation
+
+  public Type getEnclosingType() {
+    return enclosingType;
+  }
+
   private final Type enclosingType;
 
   private MethodSignature signature;
@@ -58,12 +66,11 @@ public class AttributeInvocation {
   }
 
   /** Must be called after type updating to ensure the fields of the AttributeType are populated. */
-  public void update(ErrorReporter errorReporter) {
-    for (ShadowParser.ConditionalExpressionContext ctx : values) {
-         ctx.setEnclosingType(enclosingType);
-         //TODO: Make sure the create is actually valid
-         // ctx.setType(ctx.getType().up.getType());
-      }
+  public void update(Package packageTree, ErrorReporter errorReporter) {
+    try {
+      AttributeInterpreter.getAttributeInvocation(this, packageTree, errorReporter);
+    } catch (InterpreterException ignored) {
+    }
   }
 
 

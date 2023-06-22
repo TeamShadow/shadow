@@ -120,18 +120,7 @@ public class StatementChecker extends ScopedChecker {
     // Done here because AttributeInvocationContext doesn't have references to these
     // AttributeInvocation objects
     for (AttributeInvocation attribute : signature.getAttributes()) {
-      attribute.update(this.getErrorReporter());
-
-      AttributeType attributeType = attribute.getType();
-
-      SequenceType arguments = new SequenceType();
-      arguments.addAll(attribute.getValues());
-
-      // A little bit ugly since the InvocationContext's type changes from AttributeType to MethodType (for the create)
-      // But the AttributeInvocation continues to have the AttributeType
-      MethodSignature create = setCreateType(attribute.getInvocationContext(), attributeType, arguments);
-      // TODO: Write test for error case
-      attribute.setSignature(create);
+      attribute.update(packageTree, this.getErrorReporter());
     }
 
     /*

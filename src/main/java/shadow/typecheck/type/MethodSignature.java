@@ -1,5 +1,6 @@
 package shadow.typecheck.type;
 
+import shadow.Loggers;
 import shadow.doctool.Documentation;
 import shadow.interpreter.AttributeInterpreter;
 import shadow.interpreter.ShadowClass;
@@ -410,7 +411,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
     AttributeInvocation invocation = attributes.get(AttributeType.EXPORT_METHOD);
     if (invocation != null) {
       for (ShadowParser.ConditionalExpressionContext ctx : invocation.getValues()) {
-        ShadowValue value = AttributeInterpreter.getAttributeInvocationArgument(ctx, packageTree);
+        ShadowValue value = AttributeInterpreter.getAttributeInvocationArgument(outer, ctx, packageTree, new ErrorReporter(Loggers.AST_INTERPRETER));
         if (value instanceof ShadowClass) {
           ShadowClass class_ = (ShadowClass) value;
           exports.add(class_.getRepresentedType());
@@ -485,9 +486,12 @@ public class MethodSignature implements Comparable<MethodSignature> {
    * Performs any required operations based on the attached attribute types AND the values of their
    * fields. Runs relatively late, after compile-time constants can be evaluated.
    */
+  /*
   public void processAttributeValues(ErrorReporter errorReporter) {
     for (AttributeType attributeType : attributes.keySet()) {
       //TODO: Fill in something here?
     }
   }
+
+   */
 }

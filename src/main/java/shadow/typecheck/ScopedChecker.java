@@ -1,5 +1,6 @@
 package shadow.typecheck;
 
+import shadow.interpreter.InterpreterException;
 import shadow.parse.Context;
 import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.ModifiedType;
@@ -100,6 +101,38 @@ public abstract class ScopedChecker extends BaseChecker {
   }
 
   /**
+   * Similar to addSymbol() but updates a symbol that already exists. Useful for interpretation.
+   * The symbol must already exist.
+   *
+   * @param name the name of the symbol
+   * @param type the modified type of the symbol
+   */
+
+  public void setSymbol(String name, ModifiedType type) {
+    if (scopes.isEmpty()) {
+      if (type instanceof Context)
+        addError(
+                (Context) type,
+                Error.INVALID_STRUCTURE,
+                "Declaration of " + name + " is illegal outside of a defined scope");
+      else
+        addError(
+                new TypeCheckException(
+                        Error.INVALID_STRUCTURE,
+                        "Declaration of " + name + " is illegal outside of a defined scope"));
+    } else {
+      for (Scope scope : scopes) {
+        if (scope.containsSymbol(name)) { // we look at all enclosing scopes
+          scope.addSymbol(name, type);
+          return;
+        }
+      }
+      addError(new InterpreterException(InterpreterException.Error.UNDEFINED_SYMBOL, "Variable" + name + " has not been declared"));
+    }
+  }
+
+
+  /**
    * Find a symbol (variable) with a given name, searching from the current scope back through
    * enclosing scopes.
    *
@@ -107,7 +140,7 @@ public abstract class ScopedChecker extends BaseChecker {
    * @return modified type (usually Context AST node) associated with the symbol or null if not
    *     found
    */
-  protected ModifiedType findSymbol(String name) {
+  public ModifiedType findSymbol(String name) {
     for (Scope scope : scopes) {
       if (scope.containsSymbol(name)) {
         //noinspection StatementWithEmptyBody

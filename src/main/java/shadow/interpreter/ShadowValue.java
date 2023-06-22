@@ -7,6 +7,7 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 import java.math.BigInteger;
+import java.util.Map;
 
 /**
  * An abstract class that is the base of all values (array, boolean, code, number, object, string)
@@ -29,7 +30,7 @@ public abstract class ShadowValue implements ModifiedType {
   }
 
   @Override
-  public final Modifiers getModifiers() {
+  public Modifiers getModifiers() {
     return modifiers;
   }
 
@@ -279,7 +280,7 @@ public abstract class ShadowValue implements ModifiedType {
 
   public abstract ShadowValue cast(Type type) throws InterpreterException;
 
-  public abstract ShadowValue copy() throws InterpreterException;
+  public abstract ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException;
 
   /**
    * Sets the {@link Modifiers} immutable flag on the value.
@@ -287,13 +288,13 @@ public abstract class ShadowValue implements ModifiedType {
    * @return a copy of the value, or this if it is already immutable.
    * @throws InterpreterException thrown if impossible to determine value
    */
-  public ShadowValue freeze() throws InterpreterException {
+  public ShadowValue freeze(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     if (getModifiers().isImmutable()) return this;
 
     // One might ask: Why make a copy here?
     // Answer: Because an immutable value can't be changed
     // which would be possible when there are other references to the original
-    final ShadowValue copy = copy();
+    final ShadowValue copy = copy(newValues);
 
     copy.getModifiers().addModifier(Modifiers.IMMUTABLE);
 
@@ -308,20 +309,41 @@ public abstract class ShadowValue implements ModifiedType {
   /**
    * Returns a "default" value for a type if it's supported: array or nullable
    *
-   * @param type the {@link ModifiedType} to get the default value for.
+   * @param modifiedType the {@link ModifiedType} to get the default value for.
    * @return the default value.
    * @throws InterpreterException thrown if no default value is supported
    */
-  public static ShadowValue getDefault(ModifiedType type) throws InterpreterException {
-    if (type.getModifiers().isNullable()) return new ShadowNull(type.getType());
+  public static ShadowValue getDefault(ModifiedType modifiedType) throws InterpreterException {
+    if (modifiedType.getModifiers().isNullable()) return new ShadowNull(modifiedType.getType());
 
-    if (type instanceof ArrayType) {
-      final ArrayType arrayType = (ArrayType) type;
+    Type type = modifiedType.getType();
 
-      return new ShadowArray(arrayType, 0);
-    }
+    if (type.equals(Type.BOOLEAN))
+      return new ShadowBoolean(false);
+    else if(type.equals(Type.CODE))
+      return new ShadowCode(0);
+    else if(type.equals(Type.DOUBLE))
+      return new ShadowDouble(0.0);
+    else if(type.equals(Type.FLOAT))
+      return new ShadowFloat(0.0f);
+    else if(type.equals(Type.BYTE))
+      return new ShadowInteger(BigInteger.valueOf(0), 1, true);
+    else if(type.equals(Type.SHORT))
+      return new ShadowInteger(BigInteger.valueOf(0), 2, true);
+    else if(type.equals(Type.INT))
+      return new ShadowInteger(0);
+    else if(type.equals(Type.LONG))
+      return new ShadowInteger(0L);
+    else if(type.equals(Type.UBYTE))
+      return new ShadowInteger(BigInteger.valueOf(0), 1, false);
+    else if(type.equals(Type.USHORT))
+      return new ShadowInteger(BigInteger.valueOf(0), 2, false);
+    else if(type.equals(Type.UINT))
+      return new ShadowInteger(BigInteger.valueOf(0), 4, false);
+    else if(type.equals(Type.ULONG))
+      return new ShadowInteger(BigInteger.valueOf(0), 8, false);
 
-    throw new InterpreterException(Error.INVALID_TYPE, "Unsupported type " + type.getType());
+    throw new InterpreterException(Error.INVALID_TYPE, "Unsupported type " + type);
   }
 
   public ShadowInteger hash() throws InterpreterException {
@@ -408,72 +430,72 @@ public abstract class ShadowValue implements ModifiedType {
   /** Returns a valid Shadow literal representation of the value */
   public abstract String toLiteral();
 
-  public ShadowValue callMethod(String method, ShadowValue... arguments)
+  public ShadowValue[] callMethod(String method, ShadowValue... arguments)
       throws InterpreterException {
     if (arguments.length == 0) {
       switch (method) {
         case "bitwiseComplement":
-          return bitwiseComplement();
+          return new ShadowValue[]{bitwiseComplement()};
         case "hash":
-          return hash();
+          return new ShadowInteger[]{hash()};
         case "negate":
-          return negate();
+          return new ShadowValue[]{negate()};
         case "not":
-          return not();
+          return new ShadowBoolean[]{not()};
         case "toString":
-          return new ShadowString(toLiteral());
+          return new ShadowString[]{new ShadowString(toLiteral())};
       }
     } else if (arguments.length == 1) {
       ShadowValue value = arguments[0];
       switch (method) {
         case "add":
-          return add(value);
+          return new ShadowValue[]{add(value)};
         case "and":
-          return and(value);
+          return new ShadowBoolean[]{and(value)};
         case "bitRotateLeft":
-          return bitRotateLeft(value);
+          return new ShadowValue[]{bitRotateLeft(value)};
         case "bitRotateRight":
-          return bitRotateRight(value);
+          return new ShadowValue[]{bitRotateRight(value)};
         case "bitShiftLeft":
-          return bitShiftLeft(value);
+          return new ShadowValue[]{bitShiftLeft(value)};
         case "bitShiftRight":
-          return bitShiftRight(value);
+          return new ShadowValue[]{bitShiftRight(value)};
         case "bitwiseAnd":
-          return bitwiseAnd(value);
+          return new ShadowValue[]{bitwiseAnd(value)};
         case "bitwiseOr":
-          return bitwiseOr(value);
+          return new ShadowValue[]{bitwiseOr(value)};
         case "bitwiseXor":
-          return bitwiseXor(value);
+          return new ShadowValue[]{bitwiseXor(value)};
         case "compareTo":
-          return new ShadowInteger(compareTo(value));
+          return new ShadowInteger[]{new ShadowInteger(compareTo(value))};
         case "divide":
-          return divide(value);
+          return new ShadowValue[]{divide(value)};
         case "equal":
-          return equal(value);
+          return new ShadowBoolean[]{equal(value)};
         case "greaterThan":
-          return greaterThan(value);
+          return new ShadowBoolean[]{greaterThan(value)};
         case "greaterThanOrEqual":
-          return greaterThanOrEqual(value);
+          return new ShadowBoolean[]{greaterThanOrEqual(value)};
         case "lessThan":
-          return lessThan(value);
+          return new ShadowBoolean[]{lessThan(value)};
         case "lessThanOrEqual":
-          return lessThanOrEqual(value);
+          return new ShadowBoolean[]{lessThanOrEqual(value)};
         case "modulus":
-          return modulus(value);
+          return new ShadowValue[]{modulus(value)};
         case "multiply":
-          return multiply(value);
+          return new ShadowValue[]{multiply(value)};
         case "notEqual":
-          return notEqual(value);
+          return new ShadowBoolean[]{notEqual(value)};
         case "or":
-          return or(value);
+          return new ShadowBoolean[]{or(value)};
         case "referenceEqual":
-          return referenceEqual(value);
+          return new ShadowBoolean[]{referenceEqual(value)};
         case "referenceNotEqual":
-          return referenceNotEqual(value);
+          return new ShadowBoolean[]{referenceNotEqual(value)};
         case "subtract":
-          return subtract(value);
+          return new ShadowValue[]{subtract(value)};
         case "xor":
-          return xor(value);
+          return new ShadowBoolean[]{xor(value)};
       }
     }
 

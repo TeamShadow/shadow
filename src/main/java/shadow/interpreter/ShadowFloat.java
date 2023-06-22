@@ -5,6 +5,7 @@ import shadow.typecheck.type.Modifiers;
 import shadow.typecheck.type.Type;
 
 import java.math.BigInteger;
+import java.util.Map;
 
 public class ShadowFloat extends ShadowNumeric {
   private final float value;
@@ -24,16 +25,16 @@ public class ShadowFloat extends ShadowNumeric {
   }
 
   @Override
-  public ShadowValue callMethod(String method, ShadowValue... arguments)
+  public ShadowValue[] callMethod(String method, ShadowValue... arguments)
       throws InterpreterException {
     if (arguments.length == 0) {
       switch (method) {
         case "ceiling":
-          return ceiling();
+          return new ShadowFloat[]{ceiling()};
         case "floor":
-          return floor();
+          return new ShadowFloat[]{floor()};
         case "round":
-          return round();
+          return new ShadowFloat[]{round()};
       }
     }
 
@@ -180,7 +181,7 @@ public class ShadowFloat extends ShadowNumeric {
   }
 
   @Override
-  public ShadowValue copy() throws InterpreterException {
+  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowFloat(getValue());
   }
 
