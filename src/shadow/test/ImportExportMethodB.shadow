@@ -3,7 +3,7 @@ import shadow:io@Console;
 
 class shadow:test@ImportExportMethodB
 {
-    [ExportMethod(exportedTo = ImportExportMethodA:class)]
+    [ExportMethod(ImportExportMethodA:class)]
     private test() => () {
 		Console.printLine("Test");
 	}

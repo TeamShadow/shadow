@@ -6,8 +6,6 @@
  * @seeDoc shadow:standard@Thread
  */
 
-import shadow:io@Console;
-
 singleton shadow:standard@
 	CurrentThread
 is CanIndex<int, Thread>
@@ -100,7 +98,6 @@ is CanIndex<int, Thread>
 	*/
 	public readonly sleep(int millisecondsTimeout) => ()
 	{
-	    Console.printLine("Sleep on CurrentThread!");
 		currentThread().sleep(millisecondsTimeout);
 	}
 	

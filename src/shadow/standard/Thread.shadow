@@ -345,15 +345,10 @@ is CanIndex<int, Thread>
 	[ExportMethod(CurrentThread:class)]
 	private sleep(TimeSpan timeout) => ()
 	{
-	    Console.printLine("Joimps!");
 	    // Should only be called on current thread
-	    Console.printPointer(conditionVariable);
         conditionVariable.lock();
-        Console.printLine("Back in sleep!");
         long currentTime = System.epochNanoTime();
-        Console.printLine("Current time: " # currentTime);
         long finishedTime = currentTime + timeout.totalNanoSeconds();
-        Console.printLine("Finished time: " # currentTime);
         boolean sleeping = currentTime < finishedTime;
         while (isAlive() and sleeping) {
             state = WAITING;
@@ -375,7 +370,6 @@ is CanIndex<int, Thread>
         state = RUNNING;
 
         conditionVariable.unlock();
-        Console.printLine("Done sleeping!");
 	}
 	
 	/**

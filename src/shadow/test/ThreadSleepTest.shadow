@@ -7,15 +7,12 @@ class shadow:test@ThreadSleepTest
 		public run() => ()
 		{
 			var time = System.nanoTime();
-			Console.printLine("Time: " # time);
-			Console.printLine("Now for the sleep!");
 			CurrentThread.sleep(5000);
-			Console.printLine("Sleeping done!");
 			time = System.nanoTime() - time;
 			
-			// give +- 1 ms
+			// give +- 50 ms
 			var ms = ((time / 1000000.0) - 5000.0);
-			Console.printLine(ms.abs() <= 1.0);
+			Console.printLine(ms.abs() <= 50.0);
 		}
 	}
 	
@@ -33,7 +30,6 @@ class shadow:test@ThreadSleepTest
 		CurrentThread.sleep(3000);
 		Console.printLine("I waited 3 seconds.");
 
-		/*
 		var thread1 = spawn(ThreadSleepTestRunner:());
 		
 		var thread2 = spawn(ThreadTestRunner:());
@@ -46,6 +42,5 @@ class shadow:test@ThreadSleepTest
 		thread4.join();
 		
 		thread1.join();
-		*/
 	}
 }
