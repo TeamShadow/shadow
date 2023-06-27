@@ -108,4 +108,8 @@ public abstract class TACOperand extends TACNode implements ModifiedType {
 
     return value;
   }
+
+  public boolean isNull() {
+    return false;
+  }
 }

@@ -20,4 +20,10 @@ public abstract class TACUpdate extends TACOperand {
   public abstract TACOperand getValue();
 
   public abstract boolean update(Set<TACUpdate> currentlyUpdating);
+
+  public boolean isNull() {
+    TACOperand value = getValue();
+    if (value == null || value == this) return false; // unknown value might not be null
+    return value.isNull();
+  }
 }

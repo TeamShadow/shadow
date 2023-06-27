@@ -2,6 +2,7 @@ package shadow.output.llvm;
 
 import shadow.Configuration;
 import shadow.ConfigurationException;
+import shadow.Loggers;
 import shadow.ShadowException;
 import shadow.interpreter.*;
 import shadow.output.AbstractOutput;
@@ -27,6 +28,7 @@ public class LLVMOutput extends AbstractOutput {
 
   private TACModule module;
   private boolean skipMethod = false;
+
 
   @SuppressWarnings("unused")
   public LLVMOutput(Path file) throws ShadowException {
@@ -1849,6 +1851,7 @@ public class LLVMOutput extends AbstractOutput {
         writer.write(
             "store " + typeSymbol(node.getValue()) + ", " + typeText(arrayRef, temp(0), true));
     } else if (reference instanceof TACFieldRef) {
+
       TACFieldRef fieldRef = (TACFieldRef) reference;
       writer.write(
           nextTemp()
@@ -1895,7 +1898,8 @@ public class LLVMOutput extends AbstractOutput {
       boolean decrement,
       TACCatchPad catchPad)
       throws ShadowException {
-    if (increment) {
+
+     if (increment && !value.isNull()) {
       writer.write(nextTemp() + " = bitcast " + typeSymbol(value) + " to " + type(Type.OBJECT));
       writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
     }

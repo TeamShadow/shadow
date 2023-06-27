@@ -155,4 +155,15 @@ public class TACPhi extends TACLocalStorage {
   public TACOperand getOperand(int num) {
     throw new IndexOutOfBoundsException("" + num);
   }
+
+
+  @Override
+  public boolean isNull() {
+    boolean isNull = true;
+    for(TACOperand op : previousStores.values()) {
+      if (op != this)
+        isNull = isNull && op.isNull();
+    }
+    return isNull;
+  }
 }

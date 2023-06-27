@@ -9,6 +9,8 @@
  * @seeDoc shadow:standard@Thread
  */
 
+import shadow:io@Console;
+
 locked immutable class shadow:natives@
 	ConditionVariable
 {
@@ -47,6 +49,8 @@ locked immutable class shadow:natives@
 	*/
 	public lock() => ()
 	{
+        if (!handle->isValid)
+	        Console.printErrorLine("Invalid handle for condition variable lock!");
         __shadow_natives__ConditionVariable_lock(handle);
 	}
 

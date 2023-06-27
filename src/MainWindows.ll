@@ -83,6 +83,7 @@ declare i32 @__C_specific_handler(...)
 ;declare %shadow.standard..Exception* @__shadow_catch(i8* nocapture) nounwind
 declare void @__incrementRef(%shadow.standard..Object*) nounwind
 declare void @__decrementRef(%shadow.standard..Object* %object) nounwind
+declare void @__printRef(%shadow.standard..Object* %object) nounwind
 declare noalias %shadow.standard..Object* @__allocate(%shadow.standard..Class* %class, %shadow.standard..Object._methods* %methods)
 declare noalias %shadow.standard..Array* @__allocateArray(%shadow.standard..GenericClass* %class, %ulong %longElements, %boolean %nullable)
 
@@ -155,9 +156,10 @@ entry:
 	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread..initMainThread()
 	call void @shadow.test..Test..main_shadow.standard..String._A(%shadow.test..Test* %initialized, %shadow.standard..Array* %args)
 	call void @shadow.standard..Thread..waitForThreads(%shadow.standard..Thread* %mainThread)
-	
+
 	%threadAsObj = bitcast %shadow.standard..Thread* %mainThread to %shadow.standard..Object*
-	call void @__decrementRef(%shadow.standard..Object* %threadAsObj) nounwind	
+	; call void @__printRef(%shadow.standard..Object* %threadAsObj) nounwind
+	call void @__decrementRef(%shadow.standard..Object* %threadAsObj) nounwind
 	
 	ret void
 }

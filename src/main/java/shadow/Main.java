@@ -460,7 +460,10 @@ public class Main {
               linkCommand.add(compileLLVMFile(llvmFile, binaryPath));
             else throw new CompileException("File not found: " + binaryPath);
           } else {
-            logger.info("Generating LLVM code for " + name);
+            if (node.getType() instanceof AttributeType)
+              logger.info("Interpreting Shadow for " + name);
+            else
+              logger.info("Generating LLVM code for " + name);
             // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
             // We don't generate LLVM for attributes, since their computation is all at compile time
@@ -631,6 +634,7 @@ public class Main {
 
       for (TACModule class_ : modules) {
         // No attribute member checking for now
+        // TODO: Update this in case of attribute errors?
         if (class_.getType() instanceof AttributeType) continue;
 
         // Check field initialization

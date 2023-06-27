@@ -37,16 +37,14 @@ is CanIndex<int, Thread>
 	CanRun runner;
 	
 	ThreadSafeList<Thread> childrenList;
-	CanIterate<Thread> childrenIterate;
-	CanIterate<Thread> childrenIterateRecurse;
-	
+
 	//Mutex mutex;
 	//Mutex stateMutex;
 	
 	//Signaler signaler;
 	Mailbox mailbox;
 	// END: Private variables
-	
+
 	/// Gets the Shadow-specific thread ID.
 	get int id;
 	
@@ -123,7 +121,7 @@ is CanIndex<int, Thread>
 	{
 		this(null, runner);
 	}
-	
+
 	/**
 	* Creates a new {@code Thread} object which takes on a {@code CanRun}
 	* instance, containing a run function that is going to be run
@@ -153,9 +151,6 @@ is CanIndex<int, Thread>
 		this:mailbox = Mailbox:create(/*instance(),*/ 8, 32);
 		
 		this:state = READY;
-		
-		this:childrenIterate = TraverseChildren:create(this, false);
-		this:childrenIterateRecurse = TraverseChildren:create(this, true);
 
 		if(this:id == 0) {
 			this:runner = runner;
@@ -280,8 +275,11 @@ is CanIndex<int, Thread>
                 conditionVariable.wait();
         }
 
+
+
         joined = true;
 
+        // this conditionVariable is NULL!!!
         currentThread:conditionVariable.lock();
         currentThread:state = RUNNING;
         currentThread:conditionVariable.unlock();
@@ -307,35 +305,36 @@ is CanIndex<int, Thread>
 	* as soon as one of the above interruptible methods above are called, or when the user calls 
 	* {@code CurrentThread.throwIfInterrupting()}, or throws an exception using {@code CurrentThread->interrupting}.
 	*
-	* @return {@code true} if the thread was interrupted; otherwise, {@code false} the interrupt flag has been set.
+	* @return {@code true} if the thread was marked as interrupted or {@code false} if the thread wasn't waiting.
 	*/
-	public interrupt() => (boolean)
+	public interrupt() => ()
 	{
-		if(!isAlive()) {
-			return true;
-		}
+		if(!isAlive())
+			return;
 		
 		conditionVariable.lock();
 
-		try {
-			if(this->state == WAITING) {
-			    interrupting = true;
-				check(waitingVariable).notifyAll();
-				return true;
-			}
-			
-			// Quick explanation on how exceptions propagate:
-			// 
-			// When the InterruptedException is raised, the runnerNative() catches that exception. 
-			// Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
-			// up the resources it used. It calls signaler.free(), which in turn causes Signaler to release
-			// all the threads it is holding through a waitForNotify(). Since all threads get woken up after
-			// the exception `ex` has been set, all the joined thread also get an InterruptedException correctly.
-			return false;
-		} finally {
-			conditionVariable.unlock();
-		}
-	}
+        // Whether or not we're currently waiting, we might be soon, and we want to interrupt immediately
+        interrupting = true;
+
+        if(this->state == WAITING) {
+        	conditionVariable.unlock();
+            // Should never be null
+            try {
+                check(waitingVariable).notifyAll();
+            }
+            recover {}
+        }
+        else
+            conditionVariable.unlock();
+
+        // Quick explanation on how exceptions propagate:
+        //
+        // When the InterruptedException is raised, the runnerNative() catches that exception.
+        // Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
+        // up the resources it used. Since all threads get woken up after
+        // the exception `ex` has been set, all the joined thread also get an InterruptedException correctly.
+    }
 
 	/**
 	* {@code Interruptible}
@@ -459,13 +458,16 @@ is CanIndex<int, Thread>
 	private start() => ()
 	{
 		try {
-			this->state = RUNNING;
+		    conditionVariable.lock();
+			state = RUNNING;
+			conditionVariable.unlock();
 			runner.run();
 		} catch(Exception e) {
 			ex = ThreadException:create(this, e);
 		} finally {
 		    conditionVariable.lock();
-			this->state = DEAD;
+			state = DEAD;
+			parent = null; // to avoid circular reference issues
 			conditionVariable.unlock();
             conditionVariable.notifyAll();
 		}
@@ -523,11 +525,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly children(boolean recurse) => (CanIterate<Thread>)
 	{
-		if(recurse) {
-			return childrenIterateRecurse;
-		}
-		
-		return childrenIterate;
+	    return TraverseChildren:create(this, recurse);
 	}
 	
 	/**
@@ -538,7 +536,7 @@ is CanIndex<int, Thread>
 	*/
 	public readonly children() => (CanIterate<Thread>)
 	{
-		return children(false);
+	    return TraverseChildren:create(this, false);
 	}
 	
 	/**
@@ -562,7 +560,7 @@ is CanIndex<int, Thread>
 		// this->state = DEAD; // necessary, maybe?
 		
 		var exceptionQueue = ArrayDeque<ThreadException>:create();
-		
+
 		foreach(var thread in children(true)) {
 			try {
 			    thread.interrupt();
@@ -571,6 +569,8 @@ is CanIndex<int, Thread>
 				// thread had not been joined on before.
 			} catch (ThreadException e) {
 				exceptionQueue.addLast(e);
+			} catch (Exception e) {
+			    Console.printErrorLine(e);
 			}
 		}
 

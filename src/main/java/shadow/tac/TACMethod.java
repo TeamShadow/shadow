@@ -176,17 +176,27 @@ public class TACMethod {
   }
 
   void addGarbageCollection() {
+    TACNode start = getNode();
+    Set<TACVariable> storedVariables = new HashSet<>();
+    Set<TACCallFinallyFunction> cleanupCalls = new HashSet<>();
+    Map<TACVariable, TACParameter> parameterStores = new HashMap<>();
+    addGarbageCollection(start, storedVariables, cleanupCalls, parameterStores);
+
+    for(TACFinallyFunction finallyFunction : finallyFunctions)
+      addGarbageCollection(finallyFunction.getNode(), storedVariables, cleanupCalls, parameterStores);
+
+    addCleanup(storedVariables, cleanupCalls);
+  }
+
+  private void addGarbageCollection(TACNode start, Set<TACVariable> storedVariables, Set<TACCallFinallyFunction> cleanupCalls, Map<TACVariable, TACParameter> parameterStores) {
     // only stored variables needed to have their reference counts decremented at the end of the
     // method
-    Set<TACVariable> storedVariables = new HashSet<>();
-
-    TACNode start = getNode();
 
     // Keep track of all the initial parameter stores
     // if a method parameter is never stored again (which is the typical case),
     // then we will neither need to increment it nor clean it up
-    Map<TACVariable, TACParameter> parameterStores = new HashMap<>();
-    Set<TACCallFinallyFunction> cleanupCalls = new HashSet<>();
+
+
 
     // fix this!  Run stores in a separate loop, after arrays and calls?
     boolean changed = true;
@@ -295,8 +305,6 @@ public class TACMethod {
         node = node.getNext();
       }
     }
-
-    addCleanup(storedVariables, cleanupCalls);
   }
 
   public void addParameters(TACNode node) {

@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
+import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowValue;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
@@ -488,5 +489,14 @@ public class TACCast extends TACUpdate {
 
     currentlyUpdating.remove(this);
     return changed;
+  }
+
+  @Override
+  public boolean isNull() {
+    boolean isNull = true;
+    for (int i = 0; i < operands.size(); ++i)
+      isNull = isNull && operands.get(i).isNull();
+
+    return isNull;
   }
 }

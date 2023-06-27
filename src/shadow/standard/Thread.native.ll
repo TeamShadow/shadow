@@ -43,6 +43,8 @@ declare void @shadow.standard..Thread..start(%shadow.standard..Thread*)
 ; createMainThread() => (Thread);
 declare %shadow.standard..Thread* @shadow.standard..Thread..createMainThread(%shadow.standard..Thread*)
 
+declare void @__incrementRef(%shadow.standard..Object*) nounwind
+
 ;---------------------------
 ; Shadow Method Definitions
 ;---------------------------
@@ -50,6 +52,9 @@ declare %shadow.standard..Thread* @shadow.standard..Thread..createMainThread(%sh
 define %shadow.standard..Thread* @shadow.standard..Thread..main(%shadow.standard..Thread*) {
 entry:
 	%mainThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_STATIC_mainThread
+	; The following increment is necessary because the current thread will otherwise be decremented wherever it's used and deallocated
+    %threadAsObj = bitcast %shadow.standard..Thread* %mainThread to %shadow.standard..Object*
+    call void @__incrementRef(%shadow.standard..Object* %threadAsObj) nounwind
 	ret %shadow.standard..Thread* %mainThread
 }
 
@@ -81,7 +86,7 @@ define %shadow.standard..Thread* @shadow.standard..Thread..initMainThread() {
 entry:
 	; we initialize the dummy Thread for the main thread
 	%mainThread = call %shadow.standard..Thread* @shadow.standard..Thread..createMainThread(%shadow.standard..Thread* null)
-	
+
 	; each thread needs to be able to get a reference to its own Thread, so we set its instance to the currentThread TLS.
 	store %shadow.standard..Thread* %mainThread, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
 	

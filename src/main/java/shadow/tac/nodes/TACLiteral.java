@@ -1,6 +1,7 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
+import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowValue;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.Modifiers;
@@ -75,5 +76,10 @@ public class TACLiteral extends TACOperand {
   @Override
   public boolean canPropagate() {
     return true;
+  }
+
+  @Override
+  public boolean isNull() {
+    return value instanceof ShadowNull;
   }
 }

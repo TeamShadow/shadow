@@ -7,6 +7,8 @@
  * @seeDoc shadow:standard@Thread
  */
 
+ import shadow:io@Console;
+
 locked immutable class shadow:natives@
 	Pointer
 {
@@ -83,8 +85,10 @@ locked immutable class shadow:natives@
 	[ExportAssembly]
 	private _shadow_natives__Pointer_extract() => (long)
 	{
-		if(!isValid())
+		if(!isValid()) {
+		    Console.printErrorLine("Bad pointer");
 			throw FreedResourceException:create("Pointer");
+		}
 
 		return address;
 	}
