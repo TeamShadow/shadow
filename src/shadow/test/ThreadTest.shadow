@@ -14,8 +14,8 @@ class shadow:test@ThreadTest
 				spawn(ThreadTestRunner:()).join(); // Thread#5; throws from Thread#6
 			}
 			else if(id == 5) {
-				Console.printLine(CurrentThread->parent->id == 4);
-				Console.printLine(CurrentThread->main->id == CurrentThread->parent->parent->id);
+				Console.printLine(check(CurrentThread->parent)->id == 4);
+				Console.printLine(CurrentThread->main->id == check(check(CurrentThread->parent)->parent)->id);
 				
 				spawn(ThreadTestRunner:()).join(); // Thread#6; throws from Thread#8
 			}

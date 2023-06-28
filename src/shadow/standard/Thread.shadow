@@ -54,7 +54,7 @@ is CanIndex<int, Thread>
 	
 	/**
 	* Gets the {@code Thread} which spawned this thread. The Main thread does not
-	* have a parent, and is null.
+	* have a parent. Once a thread has ended, its parent is set to null.
 	*/
 	get nullable Thread parent = null;
 	
@@ -563,8 +563,7 @@ is CanIndex<int, Thread>
 
 		foreach(var thread in children(true)) {
 			try {
-			    thread.interrupt();
-				thread.join(Time->InfiniteTimeout);
+				thread.join();
 				// will only throw an exception if the target
 				// thread had not been joined on before.
 			} catch (ThreadException e) {

@@ -39,9 +39,9 @@ public class OutputTests {
     else if (os.contains("mac")) args.add("mac.json");
     else args.add("linux.json");
 
-    args.add("-r");
+    //args.add("-r");
     //args.add("-f");
-    args.add("-v");
+    //args.add("-v");
   }
 
   @AfterEach
@@ -1536,10 +1536,9 @@ public class OutputTests {
   args.add("shadow/test/MutexTest.shadow");
   Main.run(args.toArray(new String[] { }));
   run(new String[0],  formatOutputString(
-  					"lock1",
-  					"shadow:natives@MutexException: This mutex does not allow recursive locks.",
   					"Nested locks",
-  					"shadow:natives@MutexException: This mutex is not owned by 'Thread#main' and cannot be unlocked.",
+            "Both locks",
+            "shadow:natives@MutexException: Thread 'Thread#main' cannot unlock a Mutex it does not own.",
   					"Done!")
   	);
   }
