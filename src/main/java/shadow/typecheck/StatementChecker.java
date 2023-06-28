@@ -2713,6 +2713,9 @@ public class StatementChecker extends ScopedChecker {
           getter = null;
         }
 
+        if (getter != null && getter.getReturnTypes().getModifiers(0).isNullable())
+          ctx.addModifiers(Modifiers.NULLABLE);
+
         if (setterName == null) {
           ctx.setType(Type.UNKNOWN); // assume bad
           if (mutableProblem)
