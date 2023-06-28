@@ -21,6 +21,7 @@
     	*/
 
         shadow_Thread_t* owner;
+        LONG counter;
         CRITICAL_SECTION   criticalSection;
 
     } ShadowMutexData;
@@ -39,7 +40,10 @@ shadow_Pointer_t __shadow_natives__Mutex_initialize(shadow_Mutex_t* _this)
 
 shadow_boolean_t __shadow_natives__Mutex_destroy(shadow_Mutex_t* _this, shadow_Pointer_t* pointer)
 {
-	DeleteCriticalSection(&_shadow_natives__Pointer_extract(ShadowMutexData, pointer)->criticalSection);
+    ShadowMutexData* data = _shadow_natives__Pointer_extract(ShadowMutexData, pointer);
+    if (data->owner)
+        return FALSE;
+	DeleteCriticalSection(&data->criticalSection);
 	return TRUE;
 }
 
@@ -47,6 +51,7 @@ void __shadow_natives__Mutex_lock(shadow_Mutex_t* _this, shadow_Pointer_t* point
 {
 	ShadowMutexData* data = _shadow_natives__Pointer_extract(ShadowMutexData, pointer);
 	EnterCriticalSection(&data->criticalSection);
+	data->counter++;
     data->owner = currentThread;
 }
 
@@ -56,9 +61,14 @@ shadow_boolean_t __shadow_natives__Mutex_unlock(shadow_Mutex_t* _this, shadow_Po
     if (data->owner != currentThread)
         return FALSE;
 
-    data->owner = NULL;
-	LeaveCriticalSection (&data->criticalSection);
+    data->counter--;
 
+    if (data->counter < 0)
+        return FALSE;
+    if (data->counter == 0)
+        data->owner = NULL;
+
+	LeaveCriticalSection (&data->criticalSection);
     return TRUE;
 }
 

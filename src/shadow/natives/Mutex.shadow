@@ -16,57 +16,61 @@ locked immutable class shadow:natives@
     [ImportAssembly]
 	private readonly __shadow_natives__Mutex_initialize() => (Pointer);
 	[ImportAssembly]
-	private readonly __shadow_natives__Mutex_destroy(Pointer ptr) => (boolean);
+	private readonly __shadow_natives__Mutex_destroy(Pointer handle) => (boolean);
 	[ImportAssembly]
-	private readonly __shadow_natives__Mutex_lock(Pointer ptr, Thread currentThread) => ();
+	private readonly __shadow_natives__Mutex_lock(Pointer handle, Thread currentThread) => ();
 	[ImportAssembly]
-	private readonly __shadow_natives__Mutex_unlock(Pointer ptr, Thread currentThread) => (boolean);
+	private readonly __shadow_natives__Mutex_unlock(Pointer handle, Thread currentThread) => (boolean);
 	[ImportAssembly]
-	private readonly __shadow_natives__Mutex_getOwner(Pointer ptr) => (nullable Thread);
+	private readonly __shadow_natives__Mutex_getOwner(Pointer handle) => (nullable Thread);
 	
-	Pointer ptr;
+	Pointer handle;
 
 	/**
-	* Initializes a new {@code Mutex}.
-	*/
+	 * Initializes a new {@code Mutex}.
+	 */
 	public create()
 	{
-		ptr = __shadow_natives__Mutex_initialize();
+		handle = __shadow_natives__Mutex_initialize();
 		
-		if(!ptr->isValid) {
-			throw MutexException:create("An error occurred while initializing the mutex.");
+		if(!handle->isValid) {
+			throw MutexException:create("An error occurred while initializing the Mutex.");
 		}
 	}
+
+    public destroy
+    {
+        free();
+    }
 	
 	/**
-	* Attempts to lock this Mutex. If the Mutex is already owned by another thread, this method
-	* blocks until the Mutex becomes available. If the current thread already owns this mutex and
-	* recursive locks are allowed, this method will simply increase the counter. The mutex should be unlocked
-	* the same number of times it was locked.
+	* Attempts to lock this mutex. If the mutex is already owned by another thread, this method
+	* blocks until the mutex becomes available. If the current thread already owns this mutex, this method will simply
+	* increase the counter. The mutex should be unlocked the same number of times it was locked.
 	*
-	* @throws FreedResourceException if the Mutex has been freed.
+	* @throws FreedResourceException if the mutex has been freed.
 	*/
 	public lock() => ()
 	{
-	    ptr.assertValid("Mutex");
-		__shadow_natives__Mutex_lock(ptr, CurrentThread->instance);
+	    handle.assertValid("Mutex");
+		__shadow_natives__Mutex_lock(handle, CurrentThread->instance);
 	}
 	
 	/**
-	* Attempts to unlock this Mutex. If the Mutex has been locked mutliple times by this thread,
-	* this method simply decreases the counter. This Mutex is unlocked when an corresponding unlock has been called
+	* Attempts to unlock this mutex. If the mutex has been locked multiple times by this thread,
+	* this method simply decreases the counter. This mutex is unlocked when an corresponding unlock has been called
 	* for each lock. i.e. If {@code lock()} was called twice, {@code unlock()} will unlock the mutex on
 	* its second call.
 	*
-	* @throws MutexException if this Mutex is not owned by this thread.
-	* @throws FreedResourceException if the Mutex has been freed.
+	* @throws MutexException if this mutex is not owned by this thread.
+	* @throws FreedResourceException if the mutex has been freed.
 	*/
 	public unlock() => ()
 	{
-		ptr.assertValid("Mutex");
+		handle.assertValid("Mutex");
 		
-		if(!__shadow_natives__Mutex_unlock(ptr, CurrentThread->instance)) {
-			throw MutexException:create("This mutex is not owned by '" # CurrentThread->name # "' and cannot be unlocked." # (owner() === null ? "", #owner()));
+		if(!__shadow_natives__Mutex_unlock(handle, CurrentThread->instance)) {
+			throw MutexException:create("Thread '" # CurrentThread->name # "' cannot unlock a Mutex it does not own.");
 		}
 	}
 	
@@ -77,25 +81,20 @@ locked immutable class shadow:natives@
 	*/
 	public free() => ()
 	{
-		if(ptr->isValid) {
-			if(isOwnerCurrentThread()) {
+		if(handle->isValid)
+		{
+			if(CurrentThread.equal(owner()))
 				unlock();
-			} else if(owner() !== null) {
-				throw MutexException:create("Cannot free a locked Mutex.");
-			}
-			
-			__shadow_natives__Mutex_destroy(ptr);
-			ptr.free();
-		}
+
+			if (__shadow_natives__Mutex_destroy(handle))
+			    handle.free();
+			else
+			    throw MutexException:create("Cannot free a locked Mutex.");
+    	}
 	}
 
 	private owner() => (nullable Thread)
 	{
-		return __shadow_natives__Mutex_getOwner(ptr);
-	}
-
-	private isOwnerCurrentThread() => (boolean)
-	{
-		return CurrentThread.equal(owner());
+		return __shadow_natives__Mutex_getOwner(handle);
 	}
 }
