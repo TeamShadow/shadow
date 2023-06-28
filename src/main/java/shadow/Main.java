@@ -486,21 +486,40 @@ public class Main {
   }
 
   private static Process getCompiler(String objectFile) throws IOException {
-    return new ProcessBuilder(
-            config.getLlc(),
-           // "-mtriple",
-            //config.getTarget(),
-            config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
-            "-c",
-            "-x",
-            "ir",
-            //"--filetype=obj",
-            "-w", // Warning: Turns off all warnings
-            "-o",
-            objectFile,
-            "-")
-        .redirectError(Redirect.INHERIT)
-        .start();
+    if (config.getOs().equals("Mac")) {
+      return new ProcessBuilder(
+              config.getLlc(),
+              // "-mtriple",
+              //config.getTarget(),
+              config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
+              "-femulated-tls", // needed for Mac
+              "-c",
+              "-x",
+              "ir",
+              //"--filetype=obj",
+              "-w", // Warning: Turns off all warnings
+              "-o",
+              objectFile,
+              "-")
+              .redirectError(Redirect.INHERIT)
+              .start();
+    } else {
+      return new ProcessBuilder(
+              config.getLlc(),
+              // "-mtriple",
+              //config.getTarget(),
+              config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
+              "-c",
+              "-x",
+              "ir",
+              //"--filetype=obj",
+              "-w", // Warning: Turns off all warnings
+              "-o",
+              objectFile,
+              "-")
+              .redirectError(Redirect.INHERIT)
+              .start();
+    }
   }
 
   private static void createDirectories(Path binaryPath) throws CompileException {

@@ -424,6 +424,7 @@ public class Configuration {
 
       // Build link command
       linkCommand.add(linker);
+      linkCommand.add("-flto"); // Link-time optimization
 
       if (getOs().equals("Windows")) {
         linkCommand.add("-Wl,-nodefaultlib:libcmt");

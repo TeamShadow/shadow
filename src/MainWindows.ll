@@ -158,7 +158,6 @@ entry:
 	call void @shadow.standard..Thread..waitForThreads(%shadow.standard..Thread* %mainThread)
 
 	%threadAsObj = bitcast %shadow.standard..Thread* %mainThread to %shadow.standard..Object*
-	; call void @__printRef(%shadow.standard..Object* %threadAsObj) nounwind
 	call void @__decrementRef(%shadow.standard..Object* %threadAsObj) nounwind
 	
 	ret void
