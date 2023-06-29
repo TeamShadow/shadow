@@ -13,7 +13,7 @@ public class ShadowClass extends ShadowObject {
     this(representedType, representedType.isParameterized());
   }
 
-  private ShadowClass(Type representedType, boolean hasTypeParameters) throws InterpreterException {
+  private ShadowClass(Type representedType, boolean hasTypeParameters) {
     // TODO: Fill out all class fields?
     super(hasTypeParameters ? Type.GENERIC_CLASS : Type.CLASS, hasTypeParameters ? new ShadowClass(representedType, false) : ShadowObject.makeObject(), new HashMap<>());
     this.representedType = representedType;

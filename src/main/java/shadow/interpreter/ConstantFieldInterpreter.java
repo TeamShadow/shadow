@@ -196,7 +196,7 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
       try {
         // This cast seems wacky, but if we don't do it, then constant long X = 5; stores 5 into X,
         // not 5L
-        value = ctx.conditionalExpression().getInterpretedValue().cast(ctx.getType());
+        value = resolveValue(ctx.conditionalExpression().getInterpretedValue(), ctx).cast(ctx.getType());
       } catch (InterpreterException e) {
         addError(e.setContext(ctx));
       }

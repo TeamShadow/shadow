@@ -16,14 +16,13 @@ public class ShadowObject extends ShadowValue {
   private Map<String, ShadowValue> fields;
   private ShadowObject parent;
 
-  public static ShadowObject makeObject() throws InterpreterException {
-    return new ShadowObject(Type.OBJECT, null, new HashMap<>());
+  public static ShadowObject makeObject() {
+      return new ShadowObject(Type.OBJECT, null, new HashMap<>());
   }
 
-  public ShadowObject(ClassType type, ShadowObject parent, Map<String, ShadowValue> fields) throws InterpreterException {
+  public ShadowObject(ClassType type, ShadowObject parent, Map<String, ShadowValue> fields) {
     if (type.isPrimitive())
-      throw new InterpreterException(
-          Error.INVALID_TYPE, "Cannot create an object with a primitive type");
+      throw new RuntimeException("Cannot create an object with a primitive type");
     this.type = type;
     this.parent = parent;
     this.fields = fields;

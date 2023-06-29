@@ -11,35 +11,19 @@ import shadow.typecheck.type.Type;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class ShadowString extends ShadowValue {
+public class ShadowString extends ShadowObject {
   private static final Charset UTF8 = StandardCharsets.UTF_8;
   private final String value;
 
   public ShadowString(String value) {
+    super(Type.STRING, makeObject(), new HashMap<>());
     this.value = value;
-  }
-
-  @Override
-  public Type getType() {
-    return Type.STRING;
   }
 
   public String getValue() {
     return value;
-  }
-
-  @Override
-  public ShadowValue cast(Type type) throws InterpreterException {
-    if (!type.equals(Type.STRING))
-      throw new InterpreterException(
-          Error.MISMATCHED_TYPE, "Cannot convert type " + Type.STRING + " to " + type);
-
-    return this;
   }
 
   public ShadowValue convert(Type type) throws InterpreterException {
@@ -61,7 +45,7 @@ public class ShadowString extends ShadowValue {
   }
 
   @Override
-  public ShadowValue copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
+  public ShadowObject copy(Map<ShadowValue, ShadowValue> newValues) throws InterpreterException {
     return new ShadowString(getValue());
   }
 

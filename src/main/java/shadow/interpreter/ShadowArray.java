@@ -4,7 +4,6 @@ import shadow.Loggers;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.type.*;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +17,7 @@ public class ShadowArray extends ShadowObject {
     return fields;
   }
 
-  public ShadowArray(ArrayType type, long length) throws InterpreterException {
+  public ShadowArray(ArrayType type, long length) {
     super(type, ShadowObject.makeObject(), makeFields(length));
     this.type = type;
     this.data = new ShadowValue[(int)length];
