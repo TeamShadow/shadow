@@ -94,7 +94,7 @@ public class NegativeTests {
   @Test
   public void testAttributeUnknown() throws Exception {
     args.add("tests-negative/typechecker/attribute-unknown/Test.shadow");
-    enforce(Error.UNDEFINED_TYPE);
+    enforce(Error.INVALID_TYPE);
   }
 
   @Test

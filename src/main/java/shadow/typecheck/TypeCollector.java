@@ -20,6 +20,7 @@ package shadow.typecheck;
 import org.antlr.v4.runtime.RuleContext;
 import shadow.*;
 import shadow.doctool.Documentation;
+import shadow.doctool.output.HtmlWriter;
 import shadow.parse.Context;
 import shadow.parse.ParseChecker;
 import shadow.parse.ShadowParser;
@@ -954,9 +955,6 @@ public class TypeCollector extends ScopedChecker {
           break;
         case "ExportNative":
           AttributeType.EXPORT_NATIVE = type;
-          break;
-        case "ImportMethod":
-          AttributeType.IMPORT_METHOD = type;
           break;
         case "ExportMethod":
           AttributeType.EXPORT_METHOD = type;

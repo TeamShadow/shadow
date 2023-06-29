@@ -50,7 +50,7 @@ immutable class shadow:io@Path
 			components[index] = path.substring(start);
 	}
 
-	private create(String[] components)
+	public create(String[] components)
 	{
 	    this:components = freeze(components);
 	}

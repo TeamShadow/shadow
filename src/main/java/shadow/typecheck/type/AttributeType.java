@@ -39,7 +39,6 @@ public class AttributeType extends ClassType {
   public static AttributeType EXPORT_ASSEMBLY;
   public static AttributeType IMPORT_NATIVE;
   public static AttributeType EXPORT_NATIVE;
-  public static AttributeType IMPORT_METHOD;
   public static AttributeType EXPORT_METHOD;
 
   /** Called by {@link Type#clearTypes()}. */
@@ -48,7 +47,6 @@ public class AttributeType extends ClassType {
     EXPORT_ASSEMBLY = null;
     IMPORT_NATIVE = null;
     EXPORT_NATIVE = null;
-    IMPORT_METHOD = null;
     EXPORT_METHOD = null;
   }
 

@@ -453,8 +453,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
         processImportExportAttributes(true, ImportExportMode.NATIVE, errorReporter);
       } else if (attributeType.equals(AttributeType.IMPORT_ASSEMBLY)) {
         processImportExportAttributes(true, ImportExportMode.ASSEMBLY, errorReporter);
-      } else if (attributeType.equals(AttributeType.IMPORT_METHOD)) {
-        processImportExportAttributes(true, ImportExportMode.METHOD, errorReporter);
       } else if (attributeType.equals(AttributeType.EXPORT_NATIVE)) {
         processImportExportAttributes(false, ImportExportMode.NATIVE, errorReporter);
       } else if (attributeType.equals(AttributeType.EXPORT_ASSEMBLY)) {

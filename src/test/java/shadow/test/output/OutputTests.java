@@ -41,7 +41,7 @@ public class OutputTests {
 
     //args.add("-r");
     //args.add("-f");
-    //args.add("-v");
+    args.add("-v");
   }
 
   @AfterEach
@@ -49,7 +49,7 @@ public class OutputTests {
 
     // Try to remove the unit test executable
     try {
-     //Files.delete(executable);
+     Files.delete(executable);
     } catch (Exception ignored) {
     }
   }

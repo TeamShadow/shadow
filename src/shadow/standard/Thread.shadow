@@ -73,7 +73,8 @@ is CanIndex<int, Thread>
 	{
 	    return this->state != DEAD;
 	}
-	
+
+	/// @unused
 	private set state(int state) => ()
 	{
 	    conditionVariable.lock();
@@ -150,17 +151,18 @@ is CanIndex<int, Thread>
 		// if more items are added, until space becomes available again by receiving messages.
 		this:mailbox = Mailbox:create(/*instance(),*/ 8, 32);
 		
-		this:state = READY;
+
 
 		if(this:id == 0) {
 			this:runner = runner;
 			this:state = RUNNING;
 		} else {
-			// better way to clone the runner with TAC? We need to clone even the parent
+		    // better way to clone the runner with TAC? We need to clone even the parent
 			// so there would be no variable sharing at all.
 			// Edit: No, I think Thread contents are the one things that *should* be shared in Shadow.
 			// Otherwise, how can the parent Thread have control over its children?
 			this:runner = copy(runner);
+			this:state = READY;
 			
 			this:parent = currentThread();
 			Pointer handle = __shadow_standard__Thread_spawn();
@@ -173,8 +175,6 @@ is CanIndex<int, Thread>
             // Legal leaking could only be A) after all initialization is done and B) inside of locked methods, since
             // non-locked methods could leak before subsequent child creates were called
 			// check(parent):childrenList.add(this);
-
-			// sleep(1); // necessary?
 		}
 	}
 
@@ -454,6 +454,7 @@ is CanIndex<int, Thread>
 	/**
 	* This method is natively executed from the newly spawned thread.
 	* !!DO NOT MANUALLY EXECUTE!!
+	* @unused
 	*/
 	private start() => ()
 	{
@@ -551,7 +552,8 @@ is CanIndex<int, Thread>
 	{
 		return CurrentThread->instance;
 	}
-	
+
+	/// @unused
 	private waitForThreads() => ()
 	{
 		if(this !== main()) {
@@ -578,7 +580,8 @@ is CanIndex<int, Thread>
 			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
 		}
 	}
-	
+
+	/// @unused
 	private readonly createMainThread() => (Thread)
 	{
 		return Thread:create("Thread#main", NopRunner:create()); 
