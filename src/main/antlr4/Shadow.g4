@@ -405,7 +405,7 @@ spawnRunnerCreateCall
 	;
 
 receiveExpression
-	: 'receive' '<' type '>' '(' conditionalExpression? ')'
+	: 'receive' '*'? '<' type '>' '(' conditionalExpression? ')'
 	;
 
 primaryExpression
@@ -677,7 +677,7 @@ throwStatement
 	;
 	
 sendStatement
-	: 'send' '(' conditionalExpression ',' conditionalExpression ')' ';'
+	: 'send' '*'? '(' conditionalExpression ',' conditionalExpression ')' ';'
 	;
 	
 /* For a simpler back end, a finally statement holds

@@ -27,7 +27,6 @@ is CanIndex<int, Thread>
 
 	// START: Private variables
 	nullable Exception ex = null;
-	//nullable SignalToken interruptToken = null;
 	ConditionVariable conditionVariable; // used for all thread-safety, sleeping, and joining
 	nullable ConditionVariable waitingVariable; // the condition variable a thread is waiting on (perhaps from another thread)
 	
@@ -42,16 +41,13 @@ is CanIndex<int, Thread>
 	//Mutex stateMutex;
 	
 	//Signaler signaler;
-	Mailbox mailbox;
+    Mailbox mailbox;
 	// END: Private variables
 
 	/// Gets the Shadow-specific thread ID.
 	get int id;
 	
-	/// Gets the main thread, which is the root of all threads.
-	[ImportNative]
-	public readonly get main() => (Thread);
-	
+
 	/**
 	* Gets the {@code Thread} which spawned this thread. The Main thread does not
 	* have a parent. Once a thread has ended, its parent is set to null.
@@ -94,7 +90,8 @@ is CanIndex<int, Thread>
 	/// Gets the string representation of the state of this thread.
 	public readonly get stateString() => (String)
 	{
-		switch(this->state) {
+		switch(this->state)
+		{
 			case (READY)
 				return "READY";
 			
@@ -149,9 +146,7 @@ is CanIndex<int, Thread>
 		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
 		// the mailbox doubles as more items are sent to it, until it reaches 32, and blocks
 		// if more items are added, until space becomes available again by receiving messages.
-		this:mailbox = Mailbox:create(/*instance(),*/ 8, 32);
-		
-
+		this:mailbox = Mailbox:create(8, 32);
 
 		if(this:id == 0) {
 			this:runner = runner;
@@ -164,7 +159,7 @@ is CanIndex<int, Thread>
 			this:runner = copy(runner);
 			this:state = READY;
 			
-			this:parent = currentThread();
+			this:parent = Thread:Current->instance;
 			Pointer handle = __shadow_standard__Thread_spawn();
 
             if(!handle->isValid) {
@@ -234,15 +229,13 @@ is CanIndex<int, Thread>
     */
 	public join(TimeSpan timeout) => (boolean)
 	{
-	    Thread currentThread = CurrentThread->instance;
+	    Thread currentThread = Thread:Current->instance;
 
-		if(this === main()) {
+		if(this === Thread:Current->main)
 			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
-		}
-		
-		if(this === currentThread) {
+
+		if(this === currentThread)
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
-		}
 
 		conditionVariable.lock();
 		boolean throwException = !joined;
@@ -250,12 +243,14 @@ is CanIndex<int, Thread>
         long finishedTime = currentTime + timeout.totalNanoSeconds();
 		boolean waiting = !timeout->isPositive or currentTime < finishedTime; // ignore time if not positive
 
-        while (isAlive() and waiting) {
+        while (state != DEAD and waiting)
+        {
             currentThread:conditionVariable.lock();
             currentThread:state = WAITING;
             currentThread:waitingVariable = conditionVariable;
 
-            if (currentThread:interrupting) {
+            if (currentThread:interrupting)
+            {
                 currentThread:interrupting = false;
                 currentThread:waitingVariable = null;
                 currentThread:state = RUNNING;
@@ -266,7 +261,8 @@ is CanIndex<int, Thread>
             else
                 currentThread:conditionVariable.unlock();
 
-            if (timeout->isPositive) {
+            if (timeout->isPositive)
+            {
                 conditionVariable.wait(TimeSpan:create(finishedTime - currentTime));
                 currentTime = System.epochNanoTime();
                 waiting = currentTime < finishedTime;
@@ -279,14 +275,14 @@ is CanIndex<int, Thread>
 
         joined = true;
 
-        // this conditionVariable is NULL!!!
         currentThread:conditionVariable.lock();
         currentThread:state = RUNNING;
         currentThread:conditionVariable.unlock();
 
-		// we then check here if we have an exception. If we do, we throw it, and
+		// We then check here if we have an exception. If we do, we throw it, and
 		// it is the job of runnerNative() to take care of the handling.
-		if(ex !== null and throwException) {
+		if (ex !== null and throwException)
+		{
 		    conditionVariable.unlock();
 			throw check(ex);
 		}
@@ -302,28 +298,22 @@ is CanIndex<int, Thread>
 	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()},
 	* {@code sleep()}, {@code send()}, {@code receive()}, and all their overloads.
 	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
-	* as soon as one of the above interruptible methods above are called, or when the user calls 
-	* {@code CurrentThread.throwIfInterrupting()}, or throws an exception using {@code CurrentThread->interrupting}.
+	* as soon as one of the above interruptible methods above are called.
 	*
 	* @return {@code true} if the thread was marked as interrupted or {@code false} if the thread wasn't waiting.
 	*/
 	public interrupt() => ()
 	{
-		if(!isAlive())
-			return;
-		
 		conditionVariable.lock();
 
-        // Whether or not we're currently waiting, we might be soon, and we want to interrupt immediately
+        // Set interrupting, even if DEAD (because it won't matter)
         interrupting = true;
-
-        if(this->state == WAITING) {
-        	conditionVariable.unlock();
+        if (state == WAITING)
+        {
             // Should never be null
-            try {
-                check(waitingVariable).notifyAll();
-            }
-            recover {}
+            ConditionVariable currentWaiting = check(waitingVariable);
+            conditionVariable.unlock();
+            currentWaiting.notifyAll();
         }
         else
             conditionVariable.unlock();
@@ -341,7 +331,6 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	[ExportMethod(CurrentThread:class)]
 	private sleep(TimeSpan timeout) => ()
 	{
 	    // Should only be called on current thread
@@ -349,11 +338,12 @@ is CanIndex<int, Thread>
         long currentTime = System.epochNanoTime();
         long finishedTime = currentTime + timeout.totalNanoSeconds();
         boolean sleeping = currentTime < finishedTime;
-        while (isAlive() and sleeping) {
+        while (state != DEAD and sleeping) {
             state = WAITING;
             waitingVariable = conditionVariable; // sleeping on its own condition variable
 
-            if (interrupting) {
+            if (interrupting)
+            {
                 interrupting = false;
                 waitingVariable = null;
                 state = RUNNING;
@@ -376,7 +366,6 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException
 	* @seeDoc shadow:natives@Signaler
 	*/
-	[ExportMethod(CurrentThread:class)]
 	private sleep(int millisecondsTimeout) => ()
 	{
 		sleep(Time.fromMilliSeconds(millisecondsTimeout));
@@ -386,18 +375,46 @@ is CanIndex<int, Thread>
 	* {@code Interruptible}. Receives data with the desired {@code expectedType}. This method will throw an exception 
 	* and will not retrieve the message if the expected type is not the same as the actual one
 	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
-	* should always receive the data in the order it was sent, or otherwise an exception is thrown.
+	* should always receive the data in the order it was sent; otherwise, an exception is thrown.
+	* @unused
 	*
 	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
-	* 
-	* @seeDoc shadow:standard@Mailbox
 	*/
-	[ExportMethod(Object:class)]
-	protected receiveFirst(Class expectedType) => (Object, Thread)
+	private receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
 	{
-		return mailbox.receiveFirst(expectedType);
+	    conditionVariable.lock();
+		nullable var message = mailbox.dequeue(expectedType);
+		if(!blocking)
+		{
+		    conditionVariable.unlock();
+			if(message === null) throw EmptyMailboxException:create();
+		}
+		else
+		{
+			while(message === null)
+			{
+		        state = WAITING;
+                waitingVariable = conditionVariable; // waiting on its own condition variable
+
+                if (interrupting)
+                {
+                    interrupting = false;
+                    waitingVariable = null;
+                    state = RUNNING;
+                    conditionVariable.unlock();
+                    throw InterruptedException:create();
+                }
+
+                conditionVariable.wait();
+
+				message = mailbox.dequeue(expectedType);
+			}
+		}
+
+		Message checkedMessage = check(message);
+		return (checkedMessage->data, checkedMessage->sender);
 	}
 	
 	/**
@@ -406,21 +423,49 @@ is CanIndex<int, Thread>
 	* expected type is not the same as the actual one sent by the thread. A thread
 	* can send as many messages as it desires, but the receiving thread should always
 	* receive the data in the order it was sent, or otherwise an exception is thrown.
+	* @unused
 	*
 	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	* 
-	* @seeDoc shadow:standard@Mailbox
 	*/
-	[ExportMethod(Object:class)]
-	protected receiveFirstFrom(Class expectedType, Thread from) => (Object)
+	private receiveFirstFrom(Class expectedType, Thread from, boolean blocking) => (Object)
 	{
-		if (from === this) {
+		if (from === this)
 			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
-		}
-		
-		return mailbox.receiveFirstFrom(expectedType, from);
+
+		conditionVariable.lock();
+        nullable var message = mailbox.dequeue(from, expectedType);
+        if(!blocking)
+        {
+            conditionVariable.unlock();
+            if(message === null) throw EmptyMailboxException:create();
+        }
+        else
+        {
+            while(message === null)
+            {
+                state = WAITING;
+                waitingVariable = conditionVariable; // waiting on its own condition variable
+
+                if (interrupting)
+                {
+                    interrupting = false;
+                    waitingVariable = null;
+                    state = RUNNING;
+                    conditionVariable.unlock();
+                    throw InterruptedException:create();
+                }
+
+                conditionVariable.wait();
+
+                message = mailbox.dequeue(from, expectedType);
+            }
+        }
+
+        Message checkedMessage = check(message);
+        return checkedMessage->data;
 	}
 	
 	/**
@@ -438,17 +483,54 @@ is CanIndex<int, Thread>
 	*
 	* @seeDoc shadow:standard@Mailbox
 	*/
-	protected sendTo(Object data) => ()
+	protected sendTo(Object data, boolean blocking) => ()
 	{
-		if (!isAlive()) {
-			throw InvalidOperationException:create("Cannot send a message to a dead thread.");
-		}
-		
-		if(isCurrentThread()) {
-			throw InvalidOperationException:create("A Thread cannot send a message to itself.");
-		}
-		
-		mailbox.sendTo(data);
+		Thread currentThread = Thread:Current->instance;
+
+		if(this === currentThread)
+			throw InvalidOperationException:create("A thread cannot send a message to itself.");
+
+        var message = Message:create(data);
+        conditionVariable.lock();
+        if (state == DEAD)
+        {
+            conditionVariable.unlock();
+            throw InvalidOperationException:create("Cannot send a message to a dead thread.");
+        }
+
+        if(!blocking)
+        {
+            if(!mailbox.enqueue(message))
+            {
+                conditionVariable.unlock();
+                throw FullMailboxException:create();
+            }
+        }
+        else
+        {
+            boolean done = mailbox.enqueue(message);
+            while(!done)
+            {
+                currentThread:conditionVariable.lock();
+                currentThread:state = WAITING;
+                currentThread:waitingVariable = conditionVariable;
+
+                if (currentThread:interrupting)
+                {
+                    currentThread:interrupting = false;
+                    currentThread:waitingVariable = null;
+                    currentThread:state = RUNNING;
+                    currentThread:conditionVariable.unlock();
+                    conditionVariable.unlock();
+                    throw InterruptedException:create();
+                }
+                else
+                    currentThread:conditionVariable.unlock();
+
+                conditionVariable.wait();
+                done = mailbox.enqueue(message);
+            }
+        }
 	}
 	
 	/**
@@ -458,14 +540,19 @@ is CanIndex<int, Thread>
 	*/
 	private start() => ()
 	{
-		try {
+		try
+		{
 		    conditionVariable.lock();
 			state = RUNNING;
 			conditionVariable.unlock();
 			runner.run();
-		} catch(Exception e) {
+		}
+		catch(Exception e)
+		{
 			ex = ThreadException:create(this, e);
-		} finally {
+		}
+		finally
+		{
 		    conditionVariable.lock();
 			state = DEAD;
 			parent = null; // to avoid circular reference issues
@@ -473,13 +560,7 @@ is CanIndex<int, Thread>
             conditionVariable.notifyAll();
 		}
 	}
-	
-	/// Gets whether this thread is the current executing thread.
-	public readonly get isCurrentThread() => (boolean)
-	{
-		return (currentThread() === this);
-	}
-	
+
 	/**
 	* Gets the number of children the thread currently has. This method should be used with caution
 	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
@@ -547,16 +628,11 @@ is CanIndex<int, Thread>
 	{
 		return "Thread (" # name # "): " # this->stateString;
 	}
-	
-	private readonly currentThread() => (Thread)
-	{
-		return CurrentThread->instance;
-	}
 
 	/// @unused
 	private waitForThreads() => ()
 	{
-		if(this !== main()) {
+		if(this !== Thread:Current.main()) {
 			throw Exception:create("waitForThreads() can only be called on the main thread.");
 		}
 		// this->state = DEAD; // necessary, maybe?
@@ -595,7 +671,8 @@ is CanIndex<int, Thread>
 	{
 		public run() => () {}
 	}
-	
+
+	// TODO: Are race conditions a problem for this class, or is the thread-safe list good enough?
 	private class TraverseChildren is CanIterate<Thread>
 	{
 		boolean recurse;
@@ -654,4 +731,202 @@ is CanIndex<int, Thread>
 			}
 		}
 	}
+
+	private class Mailbox
+    {
+    	nullable Message[] elements;
+    	int start;
+    	int maxCapacity;
+
+    	get int size;
+
+    	public create(int size)
+    	{
+    		this(size, size);
+    	}
+
+    	public create(int initialCapacity, int maxCapacity)
+    	{
+    		if(initialCapacity > maxCapacity)
+    			throw IllegalArgumentException:create("maxCapacity (" # maxCapacity # ") must be greater than or equal to initialCapacity (" # initialCapacity # ").");
+
+    		this:elements = Message:null[initialCapacity];
+
+    		this:start = 0;
+    		this:maxCapacity = maxCapacity;
+    		this:size = 0;
+    	}
+
+    	/**
+    	* Gets whether the backing array is full. If it is, it tries to double its size.
+    	* If the new size is bigger than the maxCapacity, the array is set to the maxCapacity.
+    	* Must be called when the mutex is already locked.
+    	*
+    	* @return {@code true} if this array cannot grow more and reached maxCapacity; otherwise, {@code false}.
+    	*/
+    	public get isFull() => (boolean)
+    	{
+            if (size == elements->size)
+            {
+                if(size == maxCapacity)
+                    return true;
+
+                int newSize = size * 2;
+                if (newSize > maxCapacity)
+                    newSize = maxCapacity;
+
+                nullable Message[] temp = Message:null[newSize];
+                for(int i = 0; i < size; i += 1)
+                    temp[i] = elements[(i + start) % size];
+
+                elements = temp;
+                start = 0;
+            }
+
+            return false;
+       }
+
+    	public enqueue(Message message) => (boolean)
+    	{
+            if(isFull())
+                return false;
+
+            elements[(start + size) % elements->size] = message;
+            size += 1;
+            return true;
+    	}
+
+    	public dequeue(Class expectedType) => (nullable Message)
+    	{
+            if(size == 0)
+                return null;
+            try
+            {
+                return removeAt(start, expectedType);
+            }
+            catch(Exception e)
+            {
+                shadow:io@Console.printErrorLine(e);
+                return null;
+            }
+    	}
+
+    	public dequeue(Thread sender, Class expectedType) => (nullable Message)
+    	{
+    		int index = -1;
+            for(int i = start; index == -1 and i < start + size; i += 1)
+            {
+                if(sender === check(elements[i % elements->size])->sender)
+                    index = i;
+            }
+
+            if(index == -1)
+                return null;
+
+            return removeAt(index, expectedType);
+    	}
+
+    	/**
+    	* Attempts to remove the Message at the specified index. This method does not
+    	* remove the item if it is not the same as the expectedType.
+    	*
+    	* Must be called when the mutex is already locked.
+    	*/
+    	public removeAt(int index, Class expectedType) => (Message)
+    	{
+            // retrieve the data and make sure that it is the same as the expectedType.
+            // the indexer also checks for out of bounds exception, so we do not need
+            // to worry about that.
+            var message = check(elements[index]);
+            var dataType = message->data.getClass();
+
+            // TODO: I'm not sure if we should use the Class methods such isSubtype() to compare
+            // instead of a naive comparison.
+            if(!dataType.isSubtype(expectedType))
+                throw IncompatibleMessageTypeException:create(expectedType, dataType);
+
+            if(index == start)
+            {
+                start = (start + 1) % elements->size;
+                elements[index] = null;
+            }
+            else
+            {
+                // we shift the array by one to the left.
+                // assuming we are deleting the second item:
+                // [1, 2, 3, 4, 5] -> [1, 3, 4, 5, null]
+                // (   size = 5  ) -> (    size = 4    )
+                for (int i = index; i < start + size - 1; i += 1)
+                    elements[i % elements->size] = elements[(i + 1) % elements->size];
+
+                // set the last item to null since it is not used anymore
+                elements[(start + size - 1) % elements->size] = null;
+            }
+
+            // decrease the size, since we deleted the item.
+            size -= 1;
+
+            return message;
+    	}
+    }
+
+    public singleton Current
+    {
+        /**
+        * Gets the current thread's actual instance.
+        *
+        * @return The instance of the current thread.
+        */
+        [ImportNative]
+        public readonly get instance() => (Thread);
+
+        [ImportAssembly]
+        private readonly __shadow_standard__Thread_Current_yield() => (boolean);
+
+        /// Gets the main thread, which is the root of all threads.
+        [ImportNative]
+        public readonly get main() => (Thread);
+
+        /**
+        * Suspends the current running thread for the specified amount of time.
+        *
+        * @param timeout The amount of time to pause this thread for.
+        */
+        public readonly sleep(TimeSpan timeout) => ()
+        {
+            instance().sleep(timeout);
+        }
+
+        /**
+        * Suspends the current running thread for {@code milliseconds} milliseconds.
+        *
+        * @param millisecondsTimeout The milliseconds to pause this thread for.
+        */
+        public readonly sleep(int millisecondsTimeout) => ()
+        {
+            instance().sleep(millisecondsTimeout);
+        }
+
+       /**
+        * Checks whether the {@code thread} is the same as the current thread.
+        *
+        * @param other The thread to compare against the current thread.
+        *
+        * @return {@code true} if the other thread is not null and is the current thread; otherwise, {@code false}.
+        */
+        public readonly equal(nullable Thread other) => (boolean)
+        {
+            return other === instance();
+        }
+
+        /**
+        * Causes the current thread to yield execution to another thread.
+        *
+        * @return {@code true} if the yield was successful; otherwise, {@code false}.
+        */
+        public readonly yield() => (boolean)
+        {
+            return __shadow_standard__Thread_Current_yield();
+        }
+    }
 }

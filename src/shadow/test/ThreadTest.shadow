@@ -6,16 +6,16 @@ class shadow:test@ThreadTest
 	{
 		public run() => ()
 		{
-			var id = CurrentThread->id;
-			CurrentThread.sleep(id * 50);
-			Console.printLine(CurrentThread->name);
+			var id = Thread:Current->instance->id;
+			Thread:Current.sleep(id * 50);
+			Console.printLine(Thread:Current->instance);
 			
 			if(id == 4) {
 				spawn(ThreadTestRunner:()).join(); // Thread#5; throws from Thread#6
 			}
 			else if(id == 5) {
-				Console.printLine(check(CurrentThread->parent)->id == 4);
-				Console.printLine(CurrentThread->main->id == check(check(CurrentThread->parent)->parent)->id);
+				Console.printLine(check(Thread:Current->instance->parent)->id == 4);
+				Console.printLine(Thread:Current->main->id == check(check(Thread:Current->instance->parent)->parent)->id);
 				
 				spawn(ThreadTestRunner:()).join(); // Thread#6; throws from Thread#8
 			}
@@ -25,7 +25,7 @@ class shadow:test@ThreadTest
 			}
 			
 			if(id > 2) {
-				throw Exception:create("from " # CurrentThread->name);
+				throw Exception:create("from " # Thread:Current->instance);
 			}
 		}
 	}
@@ -39,22 +39,7 @@ class shadow:test@ThreadTest
 		for (int i = 0; i < threads->size; i += 1) {
 			threads[i] = spawn(ThreadTestRunner:());
 		}
-		
-		/*foreach(var x in CurrentThread.children()) {
-			try {
-				x.join();
-			} catch(Exception e) {}
-		}
-	
-		Console.printLine("First class children");
-		foreach(var x in CurrentThread.children()) {
-			Console.printLine(x->name);
-		}
 
-		Console.printLine("All children");
-		foreach(var x in CurrentThread.children(true)) {
-			Console.printLine(x->name);
-		}*/
 		// if we do not join here, Shadow should join on all threads
 	}
 }

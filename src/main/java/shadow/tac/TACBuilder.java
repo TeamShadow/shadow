@@ -2576,8 +2576,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     anchor.setContext(null);
 
     // Unreachable label
-    // Thread is the one mutable class that should be copied, because there will otherwise be multiple copies of the same thread, which doesn't make sense
-    if (type.getModifiers().isImmutable() || type.equals(Type.THREAD)) {
+    // Thread  (and its inner classes) are the only mutable classes that should be copied, because there will otherwise be multiple copies of the same thread, which doesn't make sense
+    if (type.getModifiers().isImmutable() || type.equals(Type.THREAD) || Type.THREAD.containsInnerType(type.getTypeName())) {
       // Local store includes increase of reference count
       new TACLocalStore(
           anchor, method.getLocal("return"), new TACLocalLoad(anchor, method.getThis()));
@@ -3519,9 +3519,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     visitChildren(ctx);
 
     // Get parent thread
-    TACSingletonRef reference = new TACSingletonRef(Type.CURRENT_THREAD);
+    TACSingletonRef reference = new TACSingletonRef(Type.THREAD_CURRENT);
     TACOperand instance = new TACLoad(anchor, reference);
-    MethodSignature instanceSignature = Type.CURRENT_THREAD.getMatchingMethod("instance", new SequenceType());
+    MethodSignature instanceSignature = Type.THREAD_CURRENT.getMatchingMethod("instance", new SequenceType());
     TACMethodRef instanceName = new TACMethodName(anchor, instance, instanceSignature);
     TACOperand parent = new TACCall(anchor, instanceName, Collections.singletonList(instance));
 
@@ -3575,6 +3575,34 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   }
 
   @Override
+  public Void visitReceiveExpression(ReceiveExpressionContext ctx) {
+    visitChildren(ctx);
+
+    // Get current thread from Thread:Current singleton
+    TACOperand currentThreadSingleton = new TACLoad(anchor, new TACSingletonRef(Type.THREAD_CURRENT));
+    TACMethodName instanceRef = new TACMethodName(anchor, currentThreadSingleton, Type.THREAD_CURRENT.getMatchingMethod("instance", new SequenceType()));
+    TACOperand currentThread = new TACCall(anchor, instanceRef, instanceRef.getPrefix());
+
+
+    // Call receive
+    TACMethodName receiveRef = new TACMethodName(anchor, currentThread, ctx.getSignature());
+    TACOperand receive;
+
+    if (ctx.conditionalExpression() != null)  { // receive from a specific thread
+      TACOperand from = ctx.conditionalExpression().appendBefore(anchor);
+      // Class expectedType, Thread from, boolean blocking
+      // Is blocking unless there's a star
+      receive = new TACCall(anchor, receiveRef, currentThread, new TACClass(anchor, ctx.getType()), from, new TACLiteral(anchor, new ShadowBoolean(ctx.STAR() == null)));
+    }
+    else
+      receive = new TACCall(anchor, receiveRef, currentThread, new TACClass(anchor, ctx.getType()), new TACLiteral(anchor, new ShadowBoolean(ctx.STAR() == null)));
+
+    prefix = TACCast.cast(anchor, ctx.type(), receive);
+    ctx.setOperand(prefix);
+    return null;
+  }
+
+  @Override
   public Void visitSendStatement(SendStatementContext ctx) {
     visitChildren(ctx);
 
@@ -3585,6 +3613,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     List<TACOperand> params = new ArrayList<>();
     params.add(methodRef.getPrefix());
     params.add(object);
+
+    // If there's no star, it's blocking (true), otherwise non-blocking (false)
+    params.add(new TACLiteral(anchor, new ShadowBoolean(ctx.STAR() == null)));
 
     new TACCall(anchor, methodRef, params);
 

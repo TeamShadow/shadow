@@ -888,7 +888,7 @@ public class ASTInterpreter extends ScopedChecker {
     visitChildren(ctx);
 
     String image = ctx.getText();
-    ShadowValue value;
+    ShadowValue value = null;
 
    if (image.equals("this") || image.equals("super")) {
       if(image.equals("this"))
@@ -896,20 +896,22 @@ public class ASTInterpreter extends ScopedChecker {
       else
         value = curObject.getParent();
     }
-    else if (ctx.generalIdentifier() != null && !ctx.getModifiers().isTypeName()) {
+   else if (ctx.generalIdentifier() != null) {
+     if (!ctx.getModifiers().isTypeName()) {
        String name = ctx.generalIdentifier().getText();
        ShadowValue variable = (ShadowValue) findSymbol(name);
        if (variable != null)
          value = new ShadowVariable(this, name);
        else if( currentType.recursivelyContainsConstant(name)) {
-           Context constant = currentType.recursivelyGetConstant(name);
-           value = constant.getInterpretedValue();
+         Context constant = currentType.recursivelyGetConstant(name);
+         value = constant.getInterpretedValue();
        }
        else {
          ShadowParser.VariableDeclaratorContext field = currentType.recursivelyGetField(name);
          value = new ShadowField(curObject, field.generalIdentifier().getText(), field.getType());
        }
-    }
+     }
+   }
    else if(ctx.conditionalExpression() != null) {
      value = ctx.conditionalExpression().getInterpretedValue();
    }
@@ -921,7 +923,6 @@ public class ASTInterpreter extends ScopedChecker {
       value = child.getInterpretedValue();
       ctx.addModifiers(child.getModifiers());
     }
-
 
     ctx.setInterpretedValue(value);
     curPrefix.set(0, ctx); // so that the suffix can figure out where it's at

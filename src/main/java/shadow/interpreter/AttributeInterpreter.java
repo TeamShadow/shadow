@@ -25,6 +25,7 @@ public class AttributeInterpreter extends ASTInterpreter {
 
         ctx.setEnclosingType(enclosingType);
         AttributeInterpreter visitor = new AttributeInterpreter(packageTree, errorReporter);
+        visitor.currentType = enclosingType;
         visitor.visit(ctx);
 
         return ctx.getInterpretedValue();

@@ -17,10 +17,8 @@
 
 package shadow.typecheck;
 
-import org.antlr.v4.runtime.RuleContext;
 import shadow.*;
 import shadow.doctool.Documentation;
-import shadow.doctool.output.HtmlWriter;
 import shadow.parse.Context;
 import shadow.parse.ParseChecker;
 import shadow.parse.ShadowParser;
@@ -677,10 +675,8 @@ public class TypeCollector extends ScopedChecker {
           _package = _package.getParent();
         }
       }
-    } else { // inner type
-      // if the outer type is locked, then make this inner type locked too
-      if (currentType.getModifiers().isLocked()) modifiers.addModifier(Modifiers.LOCKED);
     }
+
 
     // Fix type names for primitive types.
     if (currentPackage.getQualifiedName().equals("shadow:standard")
@@ -850,8 +846,8 @@ public class TypeCollector extends ScopedChecker {
   private void captureSingletonType(SingletonType singletonType, String typeName) {
     if (currentPackage.getQualifiedName().equals("shadow:standard")) {
       switch (typeName) {
-        case "CurrentThread":
-          Type.CURRENT_THREAD = singletonType;
+        case "Thread:Current":
+          Type.THREAD_CURRENT = singletonType;
       }
     }
   }

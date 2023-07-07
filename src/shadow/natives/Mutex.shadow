@@ -53,7 +53,7 @@ locked immutable class shadow:natives@
 	public lock() => ()
 	{
 	    handle.assertValid("Mutex");
-		__shadow_natives__Mutex_lock(handle, CurrentThread->instance);
+		__shadow_natives__Mutex_lock(handle, Thread:Current->instance);
 	}
 	
 	/**
@@ -69,8 +69,8 @@ locked immutable class shadow:natives@
 	{
 		handle.assertValid("Mutex");
 		
-		if(!__shadow_natives__Mutex_unlock(handle, CurrentThread->instance)) {
-			throw MutexException:create("Thread '" # CurrentThread->name # "' cannot unlock a Mutex it does not own.");
+		if(!__shadow_natives__Mutex_unlock(handle, Thread:Current->instance)) {
+			throw MutexException:create("Thread '" # Thread:Current->instance # "' cannot unlock a Mutex it does not own.");
 		}
 	}
 	
@@ -83,7 +83,7 @@ locked immutable class shadow:natives@
 	{
 		if(handle->isValid)
 		{
-			if(CurrentThread.equal(owner()))
+			if(Thread:Current.equal(owner()))
 				unlock();
 
 			if (__shadow_natives__Mutex_destroy(handle))

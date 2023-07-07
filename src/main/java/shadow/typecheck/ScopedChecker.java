@@ -3,7 +3,7 @@ package shadow.typecheck;
 import shadow.interpreter.InterpreterException;
 import shadow.parse.Context;
 import shadow.typecheck.TypeCheckException.Error;
-import shadow.typecheck.type.ModifiedType;
+import shadow.typecheck.type.*;
 
 import java.util.Deque;
 import java.util.HashMap;
@@ -98,6 +98,137 @@ public abstract class ScopedChecker extends BaseChecker {
 
       scopes.getFirst().addSymbol(name, type);
     }
+  }
+
+  public boolean setTypeFromContext(Context node, String name, Type context) {
+    if (context instanceof TypeParameter) {
+      TypeParameter typeParameter = (TypeParameter) context;
+      for (Type type : typeParameter.getBounds())
+        if (setTypeFromContext(node, name, type)) return true;
+
+      return setTypeFromContext(node, name, typeParameter.getClassBound());
+    } else {
+      Modifiers methodModifiers = Modifiers.NO_MODIFIERS;
+      if (!currentMethod.isEmpty()) methodModifiers = currentMethod.getFirst().getModifiers();
+
+      // Check fields first
+      if (context.containsField(name)) {
+        Context field = context.getField(name);
+        node.setType(field.getType());
+        node.addModifiers(field.getModifiers());
+
+        if (!fieldIsAccessible(field, currentType))
+          addError(
+                  field, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
+        else {
+          if (methodModifiers.isImmutable() || methodModifiers.isReadonly())
+            node.getModifiers().upgradeToTemporaryReadonly();
+          else node.addModifiers(Modifiers.ASSIGNABLE);
+        }
+
+        return true;
+      }
+
+      // Next check methods
+      if (context.recursivelyContainsMethod(name)) {
+        node.setType(new UnboundMethodType(name, context));
+        if (methodModifiers != null && methodModifiers.isImmutable())
+          node.addModifiers(Modifiers.IMMUTABLE);
+        else if (methodModifiers != null && methodModifiers.isReadonly())
+          node.addModifiers(Modifiers.READONLY);
+        return true;
+      }
+
+      // Finally check constants
+      if (context.recursivelyContainsConstant(name)) {
+        Context field = context.recursivelyGetConstant(name);
+        node.setType(field.getType());
+        node.addModifiers(field.getModifiers());
+
+        if (!fieldIsAccessible(field, currentType))
+          addError(
+                  field,
+                  Error.ILLEGAL_ACCESS,
+                  "Constant " + name + " not accessible from this context");
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+  public static boolean fieldIsAccessible(Context field, Type type) {
+    // Constants are not all public
+    if (field.getModifiers().isPublic()) return true;
+
+    // If inside class
+    Type checkedType = type.getTypeWithoutTypeArguments();
+    Type enclosing = field.getEnclosingType().getTypeWithoutTypeArguments();
+
+    while (checkedType != null) {
+      if (enclosing.equals(checkedType)) return true;
+      checkedType = checkedType.getOuter();
+    }
+
+    checkedType = type.getTypeWithoutTypeArguments();
+    if (field.getModifiers().isProtected() && checkedType instanceof ClassType) {
+      ClassType classType = ((ClassType) checkedType).getExtendType();
+      while (classType != null) {
+        if (enclosing.equals(classType)) {
+          return true;
+        }
+
+        classType = classType.getExtendType();
+      }
+    }
+
+    return false;
+  }
+
+  public boolean setTypeFromName(Context node, String name) {
+    // next go through the scopes trying to find the variable
+    ModifiedType declaration = findSymbol(name);
+
+    if (declaration != null) {
+      node.setType(declaration.getType());
+      node.addModifiers(declaration.getModifiers());
+      node.addModifiers(Modifiers.ASSIGNABLE);
+      return true;
+    }
+
+    // now check the parameters of the methods
+    MethodType methodType;
+
+    for (Context method : currentMethod) {
+      methodType = (MethodType) method.getType();
+
+      if (methodType != null && methodType.containsParam(name)) {
+        node.setType(methodType.getParameterType(name).getType());
+        node.addModifiers(methodType.getParameterType(name).getModifiers());
+        node.addModifiers(
+                Modifiers
+                        .ASSIGNABLE); // is this right?  Shouldn't all method parameters be unassignable?
+        return true;
+      }
+    }
+
+    // check to see if it's a field or a method
+    if (setTypeFromContext(node, name, currentType)) return true;
+
+    // is it a type?
+    Type type = lookupType(node, name);
+
+    if (type != null) {
+      currentType.addUsedType(type);
+      node.setType(type);
+      node.addModifiers(Modifiers.TYPE_NAME);
+      return true;
+    }
+
+    return false;
   }
 
   /**

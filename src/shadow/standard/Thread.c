@@ -48,3 +48,21 @@ shadow_Pointer_t* __shadow_standard__Thread_spawn(shadow_Thread_t* _this)
 	return _shadow_natives__Pointer_create(NULL, ptr, SHADOW_CAN_FREE);
 #endif
 }
+
+
+#ifdef SHADOW_WINDOWS
+	#include <Windows.h>
+
+	shadow_boolean_t __shadow_standard__Thread_Current_yield(shadow_Thread_Current_t* _this)
+	{
+		Sleep(0);
+		return TRUE;
+	}
+#else
+	#include <sched.h>
+
+	shadow_boolean_t __shadow_standard__Thread_Current_yield(shadow_Thread_Current_t* _this)
+	{
+		return sched_yield() == 0;
+	}
+#endif

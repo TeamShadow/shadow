@@ -14,7 +14,7 @@ locked class shadow:standard@
 	*/
 	public create(Object data)
 	{
-		this:sender = CurrentThread->instance;
+		this:sender = Thread:Current->instance;
 		this:data = copy(data);
 	}
 }

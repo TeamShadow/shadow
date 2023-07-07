@@ -28,10 +28,7 @@ import shadow.typecheck.TypeCheckException.Error;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.*;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class StatementChecker extends ScopedChecker {
   /* Stack for current prefix (needed for arbitrarily long chains of expressions). */
@@ -116,6 +113,7 @@ public class StatementChecker extends ScopedChecker {
 
     for (ModifiedType modifiedType : signature.getReturnTypes())
       currentType.addUsedType(modifiedType.getType());
+
 
     // Done here because AttributeInvocationContext doesn't have references to these
     // AttributeInvocation objects
@@ -455,106 +453,8 @@ public class StatementChecker extends ScopedChecker {
     return null;
   }
 
-  public boolean setTypeFromContext(Context node, String name, Type context) {
-    if (context instanceof TypeParameter) {
-      TypeParameter typeParameter = (TypeParameter) context;
-      for (Type type : typeParameter.getBounds())
-        if (setTypeFromContext(node, name, type)) return true;
 
-      return setTypeFromContext(node, name, typeParameter.getClassBound());
-    } else {
-      Modifiers methodModifiers = Modifiers.NO_MODIFIERS;
-      if (!currentMethod.isEmpty()) methodModifiers = currentMethod.getFirst().getModifiers();
 
-      // Check fields first
-      if (context.containsField(name)) {
-        Context field = context.getField(name);
-        node.setType(field.getType());
-        node.addModifiers(field.getModifiers());
-
-        if (!fieldIsAccessible(field, currentType))
-          addError(
-              field, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
-        else {
-          if (methodModifiers.isImmutable() || methodModifiers.isReadonly())
-            node.getModifiers().upgradeToTemporaryReadonly();
-          else node.addModifiers(Modifiers.ASSIGNABLE);
-        }
-
-        return true;
-      }
-
-      // Next check methods
-      if (context.recursivelyContainsMethod(name)) {
-        node.setType(new UnboundMethodType(name, context));
-        if (methodModifiers != null && methodModifiers.isImmutable())
-          node.addModifiers(Modifiers.IMMUTABLE);
-        else if (methodModifiers != null && methodModifiers.isReadonly())
-          node.addModifiers(Modifiers.READONLY);
-        return true;
-      }
-
-      // Finally check constants
-      if (context.recursivelyContainsConstant(name)) {
-        Context field = context.recursivelyGetConstant(name);
-        node.setType(field.getType());
-        node.addModifiers(field.getModifiers());
-
-        if (!fieldIsAccessible(field, currentType))
-          addError(
-              field,
-              Error.ILLEGAL_ACCESS,
-              "Constant " + name + " not accessible from this context");
-
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  public boolean setTypeFromName(Context node, String name) {
-    // next go through the scopes trying to find the variable
-    ModifiedType declaration = findSymbol(name);
-
-    if (declaration != null) {
-      node.setType(declaration.getType());
-      node.addModifiers(declaration.getModifiers());
-      node.addModifiers(Modifiers.ASSIGNABLE);
-      return true;
-    }
-
-    // now check the parameters of the methods
-    MethodType methodType;
-
-    for (Context method : currentMethod) {
-      methodType = (MethodType) method.getType();
-
-      if (methodType != null && methodType.containsParam(name)) {
-        node.setType(methodType.getParameterType(name).getType());
-        node.addModifiers(methodType.getParameterType(name).getModifiers());
-        node.addModifiers(
-            Modifiers
-                .ASSIGNABLE); // is this right?  Shouldn't all method parameters be unassignable?
-        return true;
-      }
-    }
-
-    // check to see if it's a field or a method
-    if (setTypeFromContext(node, name, currentType)) return true;
-
-    // is it a type?
-    Type type = lookupType(node, name);
-
-    if (type != null) {
-      currentType.addUsedType(type);
-      node.setType(type);
-      node.addModifiers(Modifiers.TYPE_NAME);
-      return true;
-    }
-
-    return false;
-  }
 
   @Override
   public Void visitRelationalExpression(ShadowParser.RelationalExpressionContext ctx) {
@@ -1929,7 +1829,7 @@ public class StatementChecker extends ScopedChecker {
       if (child.spawnExpression() != null) {
         ctx.action = true;
         currentType.addUsedType(Type.THREAD);
-        currentType.addUsedType(Type.CURRENT_THREAD);
+        currentType.addUsedType(Type.THREAD_CURRENT);
       }
     }
 
@@ -2917,34 +2817,6 @@ public class StatementChecker extends ScopedChecker {
     return null;
   }
 
-  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  public static boolean fieldIsAccessible(Context field, Type type) {
-    // Constants are not all public
-    if (field.getModifiers().isPublic()) return true;
-
-    // If inside class
-    Type checkedType = type.getTypeWithoutTypeArguments();
-    Type enclosing = field.getEnclosingType().getTypeWithoutTypeArguments();
-
-    while (checkedType != null) {
-      if (enclosing.equals(checkedType)) return true;
-      checkedType = checkedType.getOuter();
-    }
-
-    checkedType = type.getTypeWithoutTypeArguments();
-    if (field.getModifiers().isProtected() && checkedType instanceof ClassType) {
-      ClassType classType = ((ClassType) checkedType).getExtendType();
-      while (classType != null) {
-        if (enclosing.equals(classType)) {
-          return true;
-        }
-
-        classType = classType.getExtendType();
-      }
-    }
-
-    return false;
-  }
 
   @Override
   public Void visitBreakOrContinueStatement(ShadowParser.BreakOrContinueStatementContext ctx) {
@@ -3401,9 +3273,12 @@ public class StatementChecker extends ScopedChecker {
   public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx) {
     visitChildren(ctx);
 
-    // Make sure the method initializes the CurrentThread singleton
+    /*
+    // Should be unnecessary, since Thread:Current is always initialized when the thread is created
+    // Make sure the method initializes the Thread:Current singleton
     MethodSignature methodSignature = currentMethod.getFirst().getSignature();
-    methodSignature.addSingleton(Type.CURRENT_THREAD);
+    methodSignature.addSingleton(Type.THREAD_CURRENT);
+     */
 
     Type runnerType = ctx.type().getType();
     if (!runnerType.getClass().equals(ClassType.class)) {
@@ -3462,18 +3337,18 @@ public class StatementChecker extends ScopedChecker {
   public Void visitSendStatement(SendStatementContext ctx) {
     visitChildren(ctx);
 
-    if (ctx.conditionalExpression().size() != 2
-        || !resolveType(ctx.conditionalExpression(1)).getType().equals(Type.THREAD)) {
+    if (!resolveType(ctx.conditionalExpression(1)).getType().equals(Type.THREAD)) {
       addError(
           ctx,
           Error.INVALID_ARGUMENTS,
           "The arguments do not match the signature: send(Object data, Thread to)");
     } else {
       List<ShadowException> errors = new ArrayList<>();
+
       MethodSignature sendSignature =
           Type.THREAD.getMatchingMethod(
               "sendTo",
-              new SequenceType(resolveType(ctx.conditionalExpression().get(0))),
+              new SequenceType(Arrays.asList(resolveType(ctx.conditionalExpression().get(0)), new SimpleModifiedType(Type.BOOLEAN))),
               new SequenceType(),
               errors);
       if (sendSignature == null) {
@@ -3492,18 +3367,51 @@ public class StatementChecker extends ScopedChecker {
 
   @Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) {
     visitChildren(ctx);
-    if(ctx.conditionalExpression() != null) {
-      Type type = ctx.conditionalExpression().getType();
+    Type type = ctx.conditionalExpression().getType();
+    MethodSignature receiveSignature = null;
+    List<ShadowException> errors = new ArrayList<>();
 
+    if(ctx.conditionalExpression() != null) {
       if (!type.isSubtype(Type.THREAD) || ctx.conditionalExpression().getModifiers().isTypeName())
         addError(
              ctx,
              Error.INVALID_ARGUMENTS,
              "The argument of a receive expression must be a Thread object");
+      else {
+        receiveSignature =
+                Type.THREAD.getMatchingMethod(
+                        "receiveFirstFrom",
+                        new SequenceType(Arrays.asList(new SimpleModifiedType(Type.CLASS), new SimpleModifiedType(Type.THREAD), new SimpleModifiedType(Type.BOOLEAN))),
+                        new SequenceType(),
+                        errors);
+        if (receiveSignature == null) {
+          addError(
+                  ctx,
+                  Error.INVALID_ARGUMENTS,
+                  "The receive arguments do not match the syntax receive<type>( thread )");
+        }
+      }
+    }
+    else {
+      receiveSignature =
+              Type.THREAD.getMatchingMethod(
+                      "receiveFrom",
+                      new SequenceType(Arrays.asList(new SimpleModifiedType(Type.CLASS), new SimpleModifiedType(Type.BOOLEAN))),
+                      new SequenceType(),
+                      errors);
+      if (receiveSignature == null) { // should be impossible
+        addError(
+                ctx,
+                Error.INVALID_ARGUMENTS,
+                "The receive arguments do not match the syntax receive<type>()");
+      }
     }
 
-    ctx.setType(ctx.type().getType());
 
+    if (receiveSignature != null)
+      ctx.setSignature(receiveSignature);
+
+    ctx.setType(ctx.type().getType());
   	return null;
   }
 

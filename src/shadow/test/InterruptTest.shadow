@@ -7,7 +7,7 @@ class shadow:test@InterruptTest
 		public run() => ()
 		{
 			Console.printLine("waiting");
-			CurrentThread.sleep(Time.fromSeconds(10));
+			Thread:Current.sleep(Time.fromSeconds(10));
 			Console.printLine("done");
 		}
 	}
@@ -16,13 +16,13 @@ class shadow:test@InterruptTest
 	{
 		public run() => ()
 		{
-			Console.printLine("I am " # CurrentThread->name);
+			Console.printLine("I am " # Thread:Current->instance);
 
-			var index = receive<int>(CurrentThread->main);
-			Console.printLine(CurrentThread->name # ": " # index);
-			CurrentThread->main[index].join();
+			var index = receive<int>(Thread:Current->main);
+			Console.printLine(Thread:Current->instance # ": " # index);
+			Thread:Current->main[index].join();
 
-			Console.printLine("I should quit before reaching this" # CurrentThread->name);
+			Console.printLine("I should quit before reaching this" # Thread:Current->instance);
 		}
 	}
 
@@ -31,17 +31,20 @@ class shadow:test@InterruptTest
 		spawn(ThreadSleepTestRunner:()); // 0
 		
 		spawn(ThreadTestRunner:()); // 1
-		send(0, CurrentThread[1]);
+
+		Thread current = Thread:Current->instance;
+
+		send(0, current[1]);
 		
 		spawn(ThreadTestRunner:()); // 2
-		send(1, CurrentThread[2]);
+		send(1, current[2]);
 		
-		CurrentThread.sleep(Time.fromSeconds(4));
-		CurrentThread[1].interrupt();
+		Thread:Current.sleep(Time.fromSeconds(4));
+		current[1].interrupt();
 		Console.printLine("end");
 		
 		try {
-			CurrentThread[2].join();
+			current[2].join();
 		} catch(ThreadException e) {
 			if(e->actual is InterruptedException) {
 				Console.printLine("InterruptedException thrown");
@@ -51,7 +54,7 @@ class shadow:test@InterruptTest
 		}
 		
 		var now = Time.epochNow();
-		CurrentThread[0].join(Time.fromSeconds(1));
+		current[0].join(Time.fromSeconds(1));
 		now = Time.epochNow() - now;
 		Console.printLine(now->seconds);
 	}

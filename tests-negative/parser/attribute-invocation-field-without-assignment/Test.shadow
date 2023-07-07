@@ -1,8 +1,0 @@
-class Test
-{
-    [Attribute(test)]
-    public main(String[] args) => ()
-    {
-
-    }
-}

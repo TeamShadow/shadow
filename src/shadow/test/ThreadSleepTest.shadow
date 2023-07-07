@@ -7,7 +7,7 @@ class shadow:test@ThreadSleepTest
 		public run() => ()
 		{
 			var time = System.nanoTime();
-			CurrentThread.sleep(5000);
+			Thread:Current.sleep(5000);
 			time = System.nanoTime() - time;
 			
 			// give +- 50 ms
@@ -27,7 +27,7 @@ class shadow:test@ThreadSleepTest
 	public main(String[] args) => ()
 	{
 		Console.printLine("I am going to wait 3 seconds.");
-		CurrentThread.sleep(3000);
+		Thread:Current.sleep(3000);
 		Console.printLine("I waited 3 seconds.");
 
 		var thread1 = spawn(ThreadSleepTestRunner:());

@@ -42,9 +42,7 @@ public class ParseException extends ShadowException {
     ILLEGAL_OPERATOR("Illegal operator", "Illegal operator used"),
     NEWLINE_IN_STRING("Newline in string", "String literal contains newline"),
     REPEATED_MODIFIERS("Repeated modifier", "Modifier cannot be repeated"),
-    SYNTAX_ERROR("Syntax error", "Parsing failed because of syntax error"),
-    MISSING_ASSIGNMENT(
-        "Missing assignment", "Variable or field must be explicitly assigned a value");
+    SYNTAX_ERROR("Syntax error", "Parsing failed because of syntax error");
 
     private final String name;
     private final String message;

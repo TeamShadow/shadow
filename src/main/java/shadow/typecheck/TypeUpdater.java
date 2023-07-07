@@ -841,6 +841,7 @@ public class TypeUpdater extends BaseChecker {
 
   /* Visitor methods and their helpers below this point. */
 
+
   /* Helper method called by several different visitor methods. */
   private void visitMethodPre(String name, Context node) {
     /*
@@ -1622,7 +1623,6 @@ public class TypeUpdater extends BaseChecker {
   public Void visitCreateBlock(ShadowParser.CreateBlockContext ctx) {
     /* no children */ return null;
   }
-
   // Skip all field initializations.
   @Override
   public Void visitConditionalExpression(ShadowParser.ConditionalExpressionContext ctx) {

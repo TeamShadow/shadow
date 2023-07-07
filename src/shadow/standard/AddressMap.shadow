@@ -109,7 +109,7 @@ locked class shadow:standard@
 	}
 	
 
-	private class Node
+	private locked class Node
 	{
 		immutable get long hash;
 		get ulong key;
@@ -303,7 +303,7 @@ locked class shadow:standard@
 	}
 	
 	
-	private class AddressMapIterator is Iterator<ulong>
+	private locked class AddressMapIterator is Iterator<ulong>
 	{
 		long index = 0;
 		nullable Node current;

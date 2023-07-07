@@ -26,11 +26,12 @@
 
 ; Thread
 %shadow.standard..Thread = type opaque
+%shadow.standard..Thread.Current = type opaque
 
 ;---------
 ; Globals
 ;---------
-; used to store the current instance of the thread; CurrentThread->instance.
+; used to store the current instance of the thread; Thread:Current->instance.
 @shadow.standard..Thread_TLS_currentThread = thread_local global %shadow.standard..Thread* null
 @shadow.standard..Thread_STATIC_mainThread = global %shadow.standard..Thread* null
 @STATIC_nextThreadId = private global %int 0
@@ -49,7 +50,7 @@ declare void @__incrementRef(%shadow.standard..Object*) nounwind
 ; Shadow Method Definitions
 ;---------------------------
 ; get main() => (Thread);
-define %shadow.standard..Thread* @shadow.standard..Thread..main(%shadow.standard..Thread*) {
+define %shadow.standard..Thread* @shadow.standard..Thread.Current..main(%shadow.standard..Thread*) {
 entry:
 	%mainThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_STATIC_mainThread
 	; The following increment is necessary because the current thread will otherwise be decremented wherever it's used and deallocated
@@ -94,4 +95,16 @@ entry:
 	store %shadow.standard..Thread* %mainThread, %shadow.standard..Thread** @shadow.standard..Thread_STATIC_mainThread
 	
 	ret %shadow.standard..Thread* %mainThread
+}
+
+; Thread.Current methods
+
+; get instance() => (Thread);
+define %shadow.standard..Thread* @shadow.standard..Thread.Current..instance(%shadow.standard..Thread.Current*) {
+entry:
+	%currentThread = load %shadow.standard..Thread*, %shadow.standard..Thread** @shadow.standard..Thread_TLS_currentThread
+	; The following increment is necessary because the current thread will otherwise be decremented wherever it's used and deallocated
+	%threadAsObj = bitcast %shadow.standard..Thread* %currentThread to %shadow.standard..Object*
+    call void @__incrementRef(%shadow.standard..Object* %threadAsObj) nounwind
+	ret %shadow.standard..Thread* %currentThread
 }

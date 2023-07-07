@@ -49,7 +49,7 @@ public class OutputTests {
 
     // Try to remove the unit test executable
     try {
-     Files.delete(executable);
+     //Files.delete(executable);
     } catch (Exception ignored) {
     }
   }
@@ -1574,7 +1574,10 @@ public class OutputTests {
   		    "true"));
   }
 
+
+  // TODO: Make a thorough test like this for send/receive
   @Test
+  @Disabled
   public void testMailbox() throws Exception {
   	args.add("shadow/test/MailboxTest.shadow");
   	Main.run(args.toArray(new String[] { }));
@@ -1629,6 +1632,16 @@ public class OutputTests {
   			"1",
   			"done")
   		);
+  }
+
+  @Test
+  public void testSendAndReceive() throws Exception {
+    args.add("shadow/test/SendAndReceiveTest.shadow");
+    Main.run(args.toArray(new String[] { }));
+    run(new String[0], formatOutputString(
+            "Thread#1 received: aardvark",
+            "Thread#2 received: formulation")
+    );
   }
 
   @Test

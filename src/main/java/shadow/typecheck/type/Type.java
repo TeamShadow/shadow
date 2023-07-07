@@ -95,7 +95,7 @@ public abstract class Type implements Comparable<Type> {
 
   public static ClassType POINTER = null;
   public static ClassType THREAD = null;
-  public static SingletonType CURRENT_THREAD = null;
+  public static SingletonType THREAD_CURRENT = null;
 
   public static final ClassType UNKNOWN =
       new ClassType(
@@ -341,7 +341,7 @@ public abstract class Type implements Comparable<Type> {
     CAN_RUN = null;
     THREAD = null;
 
-    CURRENT_THREAD = null;
+    THREAD_CURRENT = null;
 
     exceptionType = null;
 
