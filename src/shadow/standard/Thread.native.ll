@@ -97,7 +97,7 @@ entry:
 	ret %shadow.standard..Thread* %mainThread
 }
 
-; Thread.Current methods
+; Thread:Current methods
 
 ; get instance() => (Thread);
 define %shadow.standard..Thread* @shadow.standard..Thread.Current..instance(%shadow.standard..Thread.Current*) {

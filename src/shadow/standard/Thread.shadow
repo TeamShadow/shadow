@@ -237,7 +237,7 @@ is CanIndex<int, Thread>
 		if(this === currentThread)
 			throw InvalidOperationException:create("A thread cannot call join on itself.");
 
-		conditionVariable.lock();
+    	conditionVariable.lock();
 		boolean throwException = !joined;
         long currentTime = System.epochNanoTime();
         long finishedTime = currentTime + timeout.totalNanoSeconds();
@@ -271,8 +271,6 @@ is CanIndex<int, Thread>
                 conditionVariable.wait();
         }
 
-
-
         joined = true;
 
         currentThread:conditionVariable.lock();
@@ -287,7 +285,7 @@ is CanIndex<int, Thread>
 			throw check(ex);
 		}
 
-		conditionVariable.unlock();
+        conditionVariable.unlock();
 
 		return !waiting;
 	}
@@ -636,8 +634,8 @@ is CanIndex<int, Thread>
 			throw Exception:create("waitForThreads() can only be called on the main thread.");
 		}
 		// this->state = DEAD; // necessary, maybe?
-		
-		var exceptionQueue = ArrayDeque<ThreadException>:create();
+
+	    var exceptionQueue = ArrayDeque<ThreadException>:create();
 
 		foreach(var thread in children(true)) {
 			try {
@@ -806,7 +804,7 @@ is CanIndex<int, Thread>
             }
             catch(Exception e)
             {
-                shadow:io@Console.printErrorLine(e);
+                Console.printErrorLine(e);
                 return null;
             }
     	}

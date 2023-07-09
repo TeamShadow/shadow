@@ -10,7 +10,6 @@
 
 	typedef struct {
 	    shadow_Thread_t* owner;
-        LONG counter;
         CONDITION_VARIABLE variable;
         CRITICAL_SECTION   criticalSection;
     } ShadowConditionVariableData;
@@ -32,32 +31,39 @@ shadow_boolean_t __shadow_natives__ConditionVariable_destroy(shadow_ConditionVar
 {
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     if (data->owner)
+    {
+        printf("Destroy problem!\n");
         return FALSE;
+    }
+
     DeleteCriticalSection(&data->criticalSection);
     return TRUE;
 }
 
-void __shadow_natives__ConditionVariable_lock(shadow_ConditionVariable_t* _this, shadow_Pointer_t* handle, shadow_Thread_t* currentThread)
+shadow_boolean_t __shadow_natives__ConditionVariable_lock(shadow_ConditionVariable_t* _this, shadow_Pointer_t* handle, shadow_Thread_t* currentThread)
 {
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     EnterCriticalSection(&data->criticalSection);
-    data->counter++;
+    if (data->owner != NULL)
+    {
+        printf("Lock problem!\n");
+        LeaveCriticalSection (&data->criticalSection); // Non-NULL owner would mean entering twice
+        return FALSE;
+    }
     data->owner = currentThread;
+    return TRUE;
 }
 
 shadow_boolean_t __shadow_natives__ConditionVariable_unlock(shadow_ConditionVariable_t* _this, shadow_Pointer_t* handle, shadow_Thread_t* currentThread)
 {
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     if (data->owner != currentThread)
+    {
+        printf("Unlock problem!\n");
         return FALSE;
+    }
 
-    data->counter--;
-
-    if (data->counter < 0)
-        return FALSE;
-    if (data->counter == 0)
-        data->owner = NULL;
-
+    data->owner = NULL;
     LeaveCriticalSection (&data->criticalSection);
     return TRUE;
 }
@@ -66,36 +72,50 @@ shadow_boolean_t __shadow_natives__ConditionVariable_wait(shadow_ConditionVariab
 {
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     if (data->owner != currentThread)
-            return FALSE;
-    SleepConditionVariableCS(&data->variable, &data->criticalSection, INFINITE);
-    return TRUE;
+    {
+        printf("Wait problem!\n");
+        return FALSE;
+    }
+    data->owner = NULL;
+
+    if (SleepConditionVariableCS(&data->variable, &data->criticalSection, INFINITE))
+    {
+        data->owner = currentThread;
+        return TRUE;
+    }
+    else
+    {
+        printf("Wait problem!\n");
+        return FALSE;
+    }
 }
 
 shadow_int_t __shadow_natives__ConditionVariable_waitTimeout(shadow_ConditionVariable_t* _this, shadow_Pointer_t* handle, shadow_Thread_t* currentThread, shadow_long_t timeEpochNow, shadow_long_t timeout)
 {
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     if (data->owner != currentThread)
-            return NOT_OWNER;
+        return NOT_OWNER;
+
     shadow_long_t nanoseconds = timeout - timeEpochNow;
     DWORD milliseconds = nanoseconds / 1000000;
-    BOOL result = SleepConditionVariableCS(&data->variable, &data->criticalSection, milliseconds);
-    if (!result) {
+    data->owner = NULL;
+
+    if (SleepConditionVariableCS(&data->variable, &data->criticalSection, milliseconds))
+    {
+        data->owner = currentThread;
+        return TRUE;
+    }
+    else
+    {
         if (GetLastError() == ERROR_TIMEOUT)
             return TIMEOUT;
         else
             return NOT_OWNER; // assume ownership problem?
     }
-    else
-        return WAKEUP;
 }
 
 void __shadow_natives__ConditionVariable_notifyAll(shadow_ConditionVariable_t* _this, shadow_Pointer_t* handle)
 {
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     WakeAllConditionVariable (&data->variable);
-}
-
-shadow_Thread_t __shadow_natives__ConditionVariable_getOwner(shadow_ConditionVariable_t* _this, shadow_Pointer_t* pointer)
-{
-	return _shadow_natives__Pointer_extract(ShadowConditionVariableData, pointer)->owner;
 }

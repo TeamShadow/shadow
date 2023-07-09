@@ -5,6 +5,8 @@
  * automatically releases the lock. Other threads can call {@code notifyAll()} to wake up threads so that they can
  * check to see if the condition is still false before calling {@code wait()} again.
  *
+ * Unlike {@code Mutex}, a {@code ConditionVariable} can only be locked once by a given thread.
+ *
  * @author Barry Wittman
  *
  * @seeDoc shadow:standard@Thread
@@ -19,7 +21,7 @@ locked immutable class shadow:natives@
 	[ImportAssembly]
 	private readonly __shadow_natives__ConditionVariable_destroy(Pointer ptr) => (boolean);
 	[ImportAssembly]
-	private readonly __shadow_natives__ConditionVariable_lock(Pointer handle, Thread currentThread) => ();
+	private readonly __shadow_natives__ConditionVariable_lock(Pointer handle, Thread currentThread) => (boolean);
 	[ImportAssembly]
 	private readonly __shadow_natives__ConditionVariable_unlock(Pointer handle, Thread currentThread) => (boolean);
 	[ImportAssembly]
@@ -28,8 +30,6 @@ locked immutable class shadow:natives@
     private readonly __shadow_natives__ConditionVariable_waitTimeout(Pointer handle, Thread currentThread, long timeEpochNow, long timeout) => (int);
     [ImportAssembly]
     private readonly __shadow_natives__ConditionVariable_notifyAll(Pointer handle) => ();
-    [ImportAssembly]
-    private readonly __shadow_natives__ConditionVariable_getOwner(Pointer handle) => (nullable Thread);
 
     private constant int NOT_OWNER = 0;
     private constant int TIMEOUT = 1;
@@ -152,19 +152,12 @@ locked immutable class shadow:natives@
     */
     public free() => ()
     {
-        if(handle->isValid) {
-            if(Thread:Current.equal(owner()))
-                unlock();
-
+        if(handle->isValid)
+        {
             if (__shadow_natives__ConditionVariable_destroy(handle))
                 handle.free();
             else
                 throw ConditionVariableException:create("Cannot free a locked ConditionVariable.");
         }
-    }
-
-    private owner() => (nullable Thread)
-    {
-        return __shadow_natives__ConditionVariable_getOwner(handle);
     }
 }
