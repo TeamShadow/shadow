@@ -16,6 +16,7 @@
     } ShadowMutexData;
 #else
     #include <pthread.h>
+    #include <stdlib.h>
 
 	typedef struct {
         shadow_Thread_t* owner;

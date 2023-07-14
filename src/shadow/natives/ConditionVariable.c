@@ -15,6 +15,8 @@
     } ShadowConditionVariableData;
 #else
     #include <pthread.h>
+    #include <stdlib.h>
+    #include <errno.h>
 
 	typedef struct {
 	    shadow_Thread_t* owner;
@@ -93,7 +95,7 @@ shadow_boolean_t __shadow_natives__ConditionVariable_unlock(shadow_ConditionVari
 #else
     pthread_mutex_unlock(&data->mutex);
 #endif
-    return TRUE;
+    return 1;
 }
 
 shadow_boolean_t __shadow_natives__ConditionVariable_wait(shadow_ConditionVariable_t* _this, shadow_Pointer_t* handle, shadow_Thread_t* currentThread)

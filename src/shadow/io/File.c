@@ -67,11 +67,11 @@ static void reportError(char* error)
             buffer[length - 1] = '\0';
             --length;
         }
-        message = shadowString_create(buffer);
+        message = __shadow_standard__String_create(buffer);
         free(buffer);
     }
     else
-        message = shadowString_create(error);
+        message = __shadow_standard__String_create(error);
 #endif
     _shadow_io__File_throwException(NULL, message);
 }

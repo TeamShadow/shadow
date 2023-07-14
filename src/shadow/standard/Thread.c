@@ -40,7 +40,7 @@ shadow_Pointer_t* __shadow_standard__Thread_spawn(shadow_Thread_t* _this)
 	return _shadow_natives__Pointer_create(NULL, handle, SHADOW_CAN_FREE);
 #else
     pthread_t* ptr = malloc(sizeof(pthread_t));
-	if(pthread_create(ptr, NULL, _shadow_standard__Thread_start, _this) != 0) {
+	if(pthread_create(ptr, NULL, (void*(*)(void*))_shadow_standard__Thread_start, _this) != 0) {
 		free(ptr);
 		ptr = NULL;
 	}
