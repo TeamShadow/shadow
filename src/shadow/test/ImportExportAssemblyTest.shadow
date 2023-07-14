@@ -3,7 +3,7 @@ import shadow:io@Console;
 class shadow:test@ImportExportAssemblyTest
 {
     [ImportAssembly]
-    private __shadow_test__ImportExportAssemblyTest_multiply(ImportExportAssemblyTest thisClass, int a, int b) => (int);
+    private __shadow_test__ImportExportAssemblyTest_multiply(int a, int b) => (int);
 
     [ExportAssembly]
     private _shadow_test__ImportExportAssemblyTest_add(int a, int b) => (int) {
@@ -12,6 +12,6 @@ class shadow:test@ImportExportAssemblyTest
 
 	public main(String[] args) => ()
 	{
-		Console.printLine(__shadow_test__ImportExportAssemblyTest_multiply(this, 5, 3));
+		Console.printLine(__shadow_test__ImportExportAssemblyTest_multiply(5, 3));
 	}
 }

@@ -204,7 +204,7 @@ void __shadow_io__File_positionSet(shadow_io_File_t* _this, shadow_long_t handle
         reportError("Set position error");
 }
 
-shadow_long_t __shadow_io__File_sizeGet(shadow_String_t* str)
+shadow_long_t __shadow_io__File_sizeGet(shadow_io_File_t* _this, shadow_String_t* str)
 {
     char* path = __shadow_standard__String_getCString(str);
     bool error;
