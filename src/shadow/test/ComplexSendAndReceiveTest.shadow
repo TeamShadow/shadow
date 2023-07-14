@@ -39,7 +39,7 @@ class shadow:test@ComplexSendAndReceiveTest
 
 		// !!!! TEST #2 !!!!
 		Console.printLine("Test2");
-		var t2 = spawn(Test2Runner:());
+		spawn(Test2Runner:());
 		// !!!! TEST #2 !!!!
 	}
 

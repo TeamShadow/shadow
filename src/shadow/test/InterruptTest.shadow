@@ -30,6 +30,8 @@ class shadow:test@InterruptTest
 	public main(String[] args) => ()
 	{
 		spawn(ThreadSleepTestRunner:()); // index: 0, id: 1
+
+		Thread:Current.sleep(10); // just enough to make sure the first thread prints "waiting"
 		
 		spawn(ThreadTestRunner:()); // index: 1, id: 2
 

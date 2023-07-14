@@ -39,9 +39,9 @@ public class OutputTests {
     else if (os.contains("mac")) args.add("mac.json");
     else args.add("linux.json");
 
-    args.add("-r");
+    //args.add("-r");
     //args.add("-f");
-    args.add("-v");
+    //args.add("-v");
   }
 
   @AfterEach
@@ -49,7 +49,7 @@ public class OutputTests {
 
     // Try to remove the unit test executable
     try {
-     //Files.delete(executable);
+     Files.delete(executable);
     } catch (Exception ignored) {
     }
   }
@@ -1541,10 +1541,7 @@ public class OutputTests {
   		    "true"));
   }
 
-
-  // TODO: Make a thorough test like this for send/receive
   @Test
-  @Disabled
   public void testComplexSendAndReceive() throws Exception {
   	args.add("shadow/test/ComplexSendAndReceiveTest.shadow");
   	Main.run(args.toArray(new String[] { }));
