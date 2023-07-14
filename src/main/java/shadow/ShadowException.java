@@ -43,6 +43,10 @@ public abstract class ShadowException extends Exception {
     return this;
   }
 
+  public String getMessageText() {
+    return super.getMessage();
+  }
+
   @Override
   public String getMessage() {
     StringBuilder message = new StringBuilder();

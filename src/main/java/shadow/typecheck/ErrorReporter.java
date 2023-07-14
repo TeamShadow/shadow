@@ -46,7 +46,7 @@ public class ErrorReporter {
    */
   public final void addErrors(Context ctx, List<ShadowException> errors) {
     if (errors != null)
-      for (ShadowException error : errors) addError(ctx, error.getError(), error.getMessage());
+      for (ShadowException error : errors) addError(ctx, error.getError(), error.getMessageText());
   }
 
   /**

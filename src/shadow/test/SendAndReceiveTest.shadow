@@ -6,17 +6,17 @@ class shadow:test@SendAndReceiveTest
 	{
 		public run() => ()
 		{
-			String message = receive<String>();
-			Console.printLine(Thread:Current->instance # " received: " # message);
+			(String message, Thread thread) = receive<String>();
+			Console.printLine(Thread:Current->instance->name # " received: " # message # " from " # thread->name);
 		}
 	}
 
 	public main(String[] args) => ()
 	{
-		Thread thread1 =  spawn(ThreadTestRunner:());
+		Thread thread1 = spawn(ThreadTestRunner:());
 		Thread thread2 = spawn(ThreadTestRunner:());
 
 		send("aardvark", thread1);
-		send("formulation", thread1);
+		send("formulation", thread2);
 	}
 }

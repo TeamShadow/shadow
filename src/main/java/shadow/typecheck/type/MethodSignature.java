@@ -406,23 +406,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
     return Collections.unmodifiableCollection(attributes.values());
   }
 
-  public List<Type> getExports(shadow.typecheck.Package packageTree) throws TypeCheckException {
-    List<Type> exports = new ArrayList<>();
-    AttributeInvocation invocation = attributes.get(AttributeType.EXPORT_METHOD);
-    if (invocation != null) {
-      for (ShadowParser.ConditionalExpressionContext ctx : invocation.getValues()) {
-        ShadowValue value = AttributeInterpreter.getAttributeInvocationArgument(outer, ctx, packageTree, new ErrorReporter(Loggers.AST_INTERPRETER));
-        if (value instanceof ShadowClass) {
-          ShadowClass class_ = (ShadowClass) value;
-          exports.add(class_.getRepresentedType());
-        }
-        else throw new TypeCheckException(TypeCheckException.Error.INVALID_TYPE, "Only class objects can be used in " + AttributeType.EXPORT_METHOD.getTypeName() + " creates");
-      }
-    }
-
-    return exports;
-  }
-
   public AttributeInvocation getAttributeInvocation(AttributeType type) {
     return attributes.get(type);
   }
@@ -457,8 +440,6 @@ public class MethodSignature implements Comparable<MethodSignature> {
         processImportExportAttributes(false, ImportExportMode.NATIVE, errorReporter);
       } else if (attributeType.equals(AttributeType.EXPORT_ASSEMBLY)) {
         processImportExportAttributes(false, ImportExportMode.ASSEMBLY, errorReporter);
-      } else if (attributeType.equals(AttributeType.EXPORT_METHOD)) {
-        processImportExportAttributes(false, ImportExportMode.METHOD, errorReporter);
       }
     }
   }

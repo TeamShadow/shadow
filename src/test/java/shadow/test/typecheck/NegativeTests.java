@@ -44,9 +44,9 @@ public class NegativeTests {
   }
 
   @Test
-  public void testAttributeInvalidFieldInitialization() throws Exception {
-    args.add("tests-negative/typechecker/attribute-invalid-field-initialization/Test.shadow");
-    enforce(Error.INVALID_ASSIGNMENT);
+  public void testAttributeInvalidArgument() throws Exception {
+    args.add("tests-negative/typechecker/attribute-invalid-argument/Test.shadow");
+    enforce(Error.INVALID_METHOD);
   }
 
   @Test
@@ -56,33 +56,21 @@ public class NegativeTests {
   }
 
   @Test
-  public void testAttributeInvocationFieldSelfReference() throws Exception {
-    args.add("tests-negative/typechecker/attribute-invocation-field-self-reference/Test.shadow");
-    enforce(Error.UNDEFINED_SYMBOL);
+  public void testAttributeInvocationMissingArgument() throws Exception {
+    args.add("tests-negative/typechecker/attribute-invocation-missing-argument/Test.shadow");
+    enforce(Error.INVALID_METHOD);
   }
 
   @Test
-  public void testAttributeInvocationRepeatedField() throws Exception {
-    args.add("tests-negative/typechecker/attribute-invocation-repeated-field/Test.shadow");
-    enforce(Error.REPEATED_ASSIGNMENT);
-  }
-
-  @Test
-  public void testAttributeInvocationUnknownField() throws Exception {
-    args.add("tests-negative/typechecker/attribute-invocation-unknown-field/Test.shadow");
-    enforce(Error.UNDEFINED_SYMBOL);
+  public void testAttributeInvocationExtraArgument() throws Exception {
+    args.add("tests-negative/typechecker/attribute-invocation-extra-argument/Test.shadow");
+    enforce(Error.INVALID_METHOD);
   }
 
   @Test
   public void testAttributeRepeatedOnMethod() throws Exception {
     args.add("tests-negative/typechecker/attribute-repeated-on-method/Test.shadow");
     enforce(Error.REPEATED_ATTRIBUTE);
-  }
-
-  @Test
-  public void testAttributeUndeclaredField() throws Exception {
-    args.add("tests-negative/typechecker/attribute-undeclared-field/Test.shadow");
-    enforce(Error.UNDEFINED_SYMBOL);
   }
 
   @Test

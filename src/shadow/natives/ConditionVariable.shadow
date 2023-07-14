@@ -78,7 +78,7 @@ locked immutable class shadow:natives@
 	{
 		handle.assertValid("ConditionVariable");
 		if (!__shadow_natives__ConditionVariable_unlock(handle, Thread:Current->instance))
-		    throw ConditionVariableException:create("Thread '" # Thread:Current->instance # "' cannot unlock a ConditionVariable it does not own.");
+		    throw ConditionVariableException:create("Thread '" # Thread:Current->instance->name # "' cannot unlock a ConditionVariable it does not own.");
 	}
 
     /**
@@ -109,9 +109,10 @@ locked immutable class shadow:natives@
     {
         handle.assertValid("ConditionVariable");
         var now = Time.epochNow();
-        int result = __shadow_natives__ConditionVariable_waitTimeout(handle, Thread:Current->instance, now->totalNanoSeconds, now->totalNanoSeconds + timeout->totalNanoSeconds);
+        Thread current = Thread:Current->instance;
+        int result = __shadow_natives__ConditionVariable_waitTimeout(handle, current, now->totalNanoSeconds, now->totalNanoSeconds + timeout->totalNanoSeconds);
         if (result == 0)
-            throw ConditionVariableException:create("Thread '" # Thread:Current->instance # "' cannot wait on a ConditionVariable it does not own.");
+            throw ConditionVariableException:create("Thread '" # current->name # "' cannot wait on a ConditionVariable it does not own.");
         else
             return result != TIMEOUT;
     }

@@ -1077,6 +1077,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     else if (ctx.functionType() != null) prefix = ctx.functionType().appendBefore(anchor);
     else if (ctx.arrayInitializer() != null) prefix = ctx.arrayInitializer().appendBefore(anchor);
     else if (ctx.spawnExpression() != null) prefix = ctx.spawnExpression().appendBefore(anchor);
+    else if (ctx.receiveExpression() != null) prefix = ctx.receiveExpression().appendBefore(anchor);
     else if (ctx.getType() instanceof SingletonType)
       prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType) ctx.getType()));
     else {
@@ -3593,11 +3594,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       // Class expectedType, Thread from, boolean blocking
       // Is blocking unless there's a star
       receive = new TACCall(anchor, receiveRef, currentThread, new TACClass(anchor, ctx.getType()), from, new TACLiteral(anchor, new ShadowBoolean(ctx.STAR() == null)));
+      prefix = TACCast.cast(anchor, ctx.type(), receive);
     }
-    else
-      receive = new TACCall(anchor, receiveRef, currentThread, new TACClass(anchor, ctx.getType()), new TACLiteral(anchor, new ShadowBoolean(ctx.STAR() == null)));
+    else { // receive object of a given type, which also returns the sending thread
+      ModifiedType objectType = ((SequenceType)ctx.getType()).get(0); // object
+      receive = new TACCall(anchor, receiveRef, currentThread, new TACClass(anchor, objectType.getType()), new TACLiteral(anchor, new ShadowBoolean(ctx.STAR() == null)));
+      TACOperand object = TACCast.cast(anchor, objectType, new TACSequenceElement(anchor, receive, 0));
+      TACOperand thread = new TACSequenceElement(anchor, receive, 1);
+      prefix = new TACSequence(anchor, Arrays.asList(object, thread));
+    }
 
-    prefix = TACCast.cast(anchor, ctx.type(), receive);
     ctx.setOperand(prefix);
     return null;
   }

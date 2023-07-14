@@ -291,7 +291,8 @@ public class ASTInterpreter extends ScopedChecker {
     }
     else { // not a default create and therefore might have a super or a this
       ShadowParser.CreateDeclarationContext create = (ShadowParser.CreateDeclarationContext) methodNode;
-      if (create.createBlock().explicitCreateInvocation() != null) {
+      // Watch out for null create blocks from .meta files
+      if (create.createBlock() != null && create.createBlock().explicitCreateInvocation() != null) {
         ShadowParser.ExplicitCreateInvocationContext explicit = create.createBlock().explicitCreateInvocation();
         ShadowValue[] delegatedArguments = new ShadowValue[explicit.conditionalExpression().size()];
         for (int i = 0; i < delegatedArguments.length; ++i) {
@@ -313,8 +314,10 @@ public class ASTInterpreter extends ScopedChecker {
         initializeFields(interpreter, type);
       }
 
-      for (int i = 0; i < create.createBlock().blockStatement().size(); ++i) {
-        interpreter.visitBlockStatement(create.createBlock().blockStatement(i));
+      if (create.createBlock() != null) {
+        for (int i = 0; i < create.createBlock().blockStatement().size(); ++i) {
+          interpreter.visitBlockStatement(create.createBlock().blockStatement(i));
+        }
       }
     }
 

@@ -134,9 +134,18 @@ public class TypeChecker {
       if (!Files.exists(metaVersion)
           || (Files.exists(shadowVersion)
               && Files.getLastModifiedTime(shadowVersion).compareTo(Files.getLastModifiedTime(metaVersion)) > 0)) {
-        PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(metaVersion.toFile())));
-        node.getType().printMetaFile(out, "");
-        out.close();
+        // Because of compiler optimizations, we need a .meta file for all compiled code
+        // So we simply copy the normal .shadow file into a .meta for attributes
+        BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(metaVersion.toFile()));
+        if (node.getType() instanceof AttributeType) {
+          Files.copy(shadowVersion, outputStream);
+        }
+        else {
+          PrintWriter out = new PrintWriter(outputStream);
+          node.getType().printMetaFile(out, "");
+          out.close();
+        }
+        outputStream.close();
       }
     } catch (IOException e) {
       Loggers.SHADOW.error("Failed to create meta file for " + node.getType());

@@ -397,6 +397,13 @@ public class StatementChecker extends ScopedChecker {
       if (isVar) {
         if (declarator.conditionalExpression() != null) { // Has initializer
           type = declarator.conditionalExpression().getType();
+          if (type.equals(Type.NULL)) {
+            type = Type.UNKNOWN;
+            addError(
+                    declarator,
+                    Error.UNDEFINED_TYPE,
+                    "Variable declared with var cannot be initialized to null");
+          }
         } else {
           type = Type.UNKNOWN;
           addError(
@@ -1224,6 +1231,14 @@ public class StatementChecker extends ScopedChecker {
           if (leftElement.getModifiers().isNullable() && type instanceof ArrayType) {
             ArrayType arrayType = (ArrayType) type;
             type = arrayType.convertToNullable();
+          }
+
+          if (type.equals(Type.NULL)) {
+            type = Type.UNKNOWN;
+            addError(
+                    ctx,
+                    Error.UNDEFINED_TYPE,
+                    "Variable declared with var cannot be initialized to null");
           }
 
           leftElement.setType(type);
@@ -3341,8 +3356,16 @@ public class StatementChecker extends ScopedChecker {
       addError(
           ctx,
           Error.INVALID_ARGUMENTS,
-          "The arguments do not match the signature: send(Object data, Thread to)");
+          "Cannot send to a non-Thread object");
     } else {
+      if (ctx.conditionalExpression(1).getModifiers().isNullable()) {
+        addError(
+                ctx,
+                Error.INVALID_MODIFIER,
+                "Cannot send to a nullable Thread");
+      }
+
+
       List<ShadowException> errors = new ArrayList<>();
 
       MethodSignature sendSignature =
@@ -3367,11 +3390,12 @@ public class StatementChecker extends ScopedChecker {
 
   @Override public Void visitReceiveExpression(shadow.parse.ShadowParser.ReceiveExpressionContext ctx) {
     visitChildren(ctx);
-    Type type = ctx.conditionalExpression().getType();
     MethodSignature receiveSignature = null;
     List<ShadowException> errors = new ArrayList<>();
+    ctx.setType(Type.UNKNOWN);
 
     if(ctx.conditionalExpression() != null) {
+      Type type = ctx.conditionalExpression().getType();
       if (!type.isSubtype(Type.THREAD) || ctx.conditionalExpression().getModifiers().isTypeName())
         addError(
              ctx,
@@ -3390,12 +3414,14 @@ public class StatementChecker extends ScopedChecker {
                   Error.INVALID_ARGUMENTS,
                   "The receive arguments do not match the syntax receive<type>( thread )");
         }
+        else
+          ctx.setType(ctx.type().getType());
       }
     }
     else {
       receiveSignature =
               Type.THREAD.getMatchingMethod(
-                      "receiveFrom",
+                      "receiveFirst",
                       new SequenceType(Arrays.asList(new SimpleModifiedType(Type.CLASS), new SimpleModifiedType(Type.BOOLEAN))),
                       new SequenceType(),
                       errors);
@@ -3405,14 +3431,48 @@ public class StatementChecker extends ScopedChecker {
                 Error.INVALID_ARGUMENTS,
                 "The receive arguments do not match the syntax receive<type>()");
       }
+      else
+        ctx.setType(new SequenceType(Arrays.asList(ctx.type(), new SimpleModifiedType(Type.THREAD))));
     }
 
+    ctx.setSignature(receiveSignature);
 
-    if (receiveSignature != null)
-      ctx.setSignature(receiveSignature);
 
-    ctx.setType(ctx.type().getType());
+
+
   	return null;
+  }
+
+  @Override
+  public Void visitAttributeInvocation(ShadowParser.AttributeInvocationContext ctx) {
+    visitChildren(ctx);
+
+    // always part of a suffix, thus always has a prefix
+    Type prefixType = ctx.classOrInterfaceType().getType();
+
+    SequenceType arguments = new SequenceType();
+    arguments.addAll(ctx.conditionalExpression());
+
+    if (prefixType instanceof AttributeType) {
+      AttributeType attributeType = (AttributeType) prefixType;
+
+      MethodSignature signature = setCreateType(ctx, prefixType, arguments);
+      ctx.setSignature(signature);
+
+      if (signature != null)
+        ctx.setType(attributeType);
+      else
+        ctx.setType(Type.UNKNOWN);
+    } else {
+      addError(
+              ctx,
+              Error.INVALID_TYPE,
+              "Cannot invoke non-attribute type " + prefixType + " as an attribute",
+              prefixType);
+      ctx.setType(Type.UNKNOWN);
+    }
+
+    return null;
   }
 
   @Override

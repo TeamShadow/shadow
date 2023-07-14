@@ -32,7 +32,7 @@ shadow_boolean_t __shadow_natives__ConditionVariable_destroy(shadow_ConditionVar
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     if (data->owner)
     {
-        printf("Destroy problem!\n");
+        fprintf(stderr, "Trying to destroy condition variable while it's locked\n");
         return FALSE;
     }
 
@@ -46,7 +46,7 @@ shadow_boolean_t __shadow_natives__ConditionVariable_lock(shadow_ConditionVariab
     EnterCriticalSection(&data->criticalSection);
     if (data->owner != NULL)
     {
-        printf("Lock problem!\n");
+        fprintf(stderr, "Condition variable locked repeatedly by the same thread\n");
         LeaveCriticalSection (&data->criticalSection); // Non-NULL owner would mean entering twice
         return FALSE;
     }
@@ -59,7 +59,7 @@ shadow_boolean_t __shadow_natives__ConditionVariable_unlock(shadow_ConditionVari
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     if (data->owner != currentThread)
     {
-        printf("Unlock problem!\n");
+        fprintf(stderr, "Condition variable unlocked by a thread that isn't its owner\n");
         return FALSE;
     }
 
@@ -73,7 +73,7 @@ shadow_boolean_t __shadow_natives__ConditionVariable_wait(shadow_ConditionVariab
     ShadowConditionVariableData* data = _shadow_natives__Pointer_extract(ShadowConditionVariableData, handle);
     if (data->owner != currentThread)
     {
-        printf("Wait problem!\n");
+        fprintf(stderr, "Condition variable waited on by a thread that isn't its owner\n");
         return FALSE;
     }
     data->owner = NULL;
@@ -85,7 +85,7 @@ shadow_boolean_t __shadow_natives__ConditionVariable_wait(shadow_ConditionVariab
     }
     else
     {
-        printf("Wait problem!\n");
+        fprintf(stderr, "Error while thread was waiting on a condition variable\n");
         return FALSE;
     }
 }
@@ -103,14 +103,20 @@ shadow_int_t __shadow_natives__ConditionVariable_waitTimeout(shadow_ConditionVar
     if (SleepConditionVariableCS(&data->variable, &data->criticalSection, milliseconds))
     {
         data->owner = currentThread;
-        return TRUE;
+        return WAKEUP;
     }
     else
     {
         if (GetLastError() == ERROR_TIMEOUT)
+        {
+            data->owner = currentThread;
             return TIMEOUT;
+        }
         else
+        {
+            fprintf(stderr, "Error while thread was waiting on a condition variable\n");
             return NOT_OWNER; // assume ownership problem?
+        }
     }
 }
 

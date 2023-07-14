@@ -952,9 +952,6 @@ public class TypeCollector extends ScopedChecker {
         case "ExportNative":
           AttributeType.EXPORT_NATIVE = type;
           break;
-        case "ExportMethod":
-          AttributeType.EXPORT_METHOD = type;
-          break;
       }
     }
   }

@@ -423,7 +423,7 @@ public class Main {
       for (Context node : typecheckerOutput.nodes) {
         // As an optimization, print .meta files for the .shadow files being checked
         // Attributes never generate .meta files because their original .shadow files are interpreted
-        if (!node.isFromMetaFile() && !(node.getType() instanceof AttributeType)) TypeChecker.printMetaFile(node);
+        if (!node.isFromMetaFile()) TypeChecker.printMetaFile(node);
 
         Path file = node.getSourcePath();
 
@@ -450,15 +450,18 @@ public class Main {
           Path nativeBinary = BaseChecker.changeExtension(binaryPath, ".native");
           Path nativeObject = BaseChecker.addExtension(nativeBinary, ".o");
 
-          // If the LLVM bitcode didn't exist, the full .shadow file would
-          // have been used
+          // If the LLVM bitcode or compiled object code didn't exist, the full .shadow file would
+          // have been used (except for attributes, which are always interpreted)
           if (node.isFromMetaFile()) {
-            logger.info("Using pre-existing LLVM code for " + name);
-
-            if (Files.exists(binaryPath)) linkCommand.add(binaryPath.toString());
-            else if (Files.exists(llvmFile))
-              linkCommand.add(compileLLVMFile(llvmFile, binaryPath));
-            else throw new CompileException("File not found: " + binaryPath);
+            if (node.getType() instanceof  AttributeType)
+              logger.info("Interpreting Shadow for " + name);
+            else {
+              logger.info("Using pre-existing LLVM code for " + name);
+              if (Files.exists(binaryPath)) linkCommand.add(binaryPath.toString());
+              else if (Files.exists(llvmFile))
+                linkCommand.add(compileLLVMFile(llvmFile, binaryPath));
+              else throw new CompileException("File not found: " + binaryPath);
+            }
           } else {
             if (node.getType() instanceof AttributeType)
               logger.info("Interpreting Shadow for " + name);
@@ -467,7 +470,7 @@ public class Main {
             // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
             // We don't generate LLVM for attributes, since their computation is all at compile time
-            if (!(node.getType() instanceof AttributeType))
+            //if (!(node.getType() instanceof AttributeType))
               linkCommand.add(compileShadowFile(file, binaryPath, module));
           }
 
@@ -654,7 +657,7 @@ public class Main {
       for (TACModule class_ : modules) {
         // No attribute member checking for now
         // TODO: Update this in case of attribute errors?
-        if (class_.getType() instanceof AttributeType) continue;
+        //if (class_.getType() instanceof AttributeType) continue;
 
         // Check field initialization
         class_.checkFieldInitialization(reporter, graphs);

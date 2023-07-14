@@ -1,0 +1,7 @@
+class Test {
+
+    // argument of type int
+    [Attribute(3.5)]
+    public main() => () {
+    }
+}

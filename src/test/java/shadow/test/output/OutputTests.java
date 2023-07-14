@@ -39,7 +39,7 @@ public class OutputTests {
     else if (os.contains("mac")) args.add("mac.json");
     else args.add("linux.json");
 
-    //args.add("-r");
+    args.add("-r");
     //args.add("-f");
     args.add("-v");
   }
@@ -1503,13 +1503,6 @@ public class OutputTests {
   }
 
   @Test
-  public void testImportExportMethod() throws Exception {
-    args.add("shadow/test/ImportExportMethodA.shadow");
-    Main.run(args.toArray(new String[] {}));
-    run(new String[0], "Test\n");
-  }
-
-  @Test
   public void testImportExportAssembly() throws Exception {
     args.add("shadow/test/ImportExportAssemblyTest.shadow");
     Main.run(args.toArray(new String[] {}));
@@ -1524,14 +1517,6 @@ public class OutputTests {
   }
 
   @Test
-  public void testMessageQueue() throws Exception {
-  	args.add("shadow/test/MessageQueueTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], "FullListException\n" +
-  						"10\n");
-  }
-
-  @Test
   public void testMutex() throws Exception {
   args.add("shadow/test/MutexTest.shadow");
   Main.run(args.toArray(new String[] { }));
@@ -1542,24 +1527,6 @@ public class OutputTests {
   					"Done!")
   	);
   }
-/*
-  @Test
-  public void testSignaler() throws Exception {
-  	args.add("shadow/test/SignalerTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], formatOutputString(
-  			"Thread#1: waiting!",
-  			"Thread#2: waiting!",
-  			"Thread#3: waiting!",
-  			"Thread#3: finished waiting!",
-  			"Thread#4: waiting!",
-  			"Thread#5: waiting!",
-  			"Thread#1: finished waiting!",
-  			"Thread#2: finished waiting!",
-  			"Thread#4: finished waiting!",
-  			"Thread#5: finished waiting!"
-          ));
-  }*/
 
   @Test
   public void testThreadSleep() throws Exception {
@@ -1578,8 +1545,8 @@ public class OutputTests {
   // TODO: Make a thorough test like this for send/receive
   @Test
   @Disabled
-  public void testMailbox() throws Exception {
-  	args.add("shadow/test/MailboxTest.shadow");
+  public void testComplexSendAndReceive() throws Exception {
+  	args.add("shadow/test/ComplexSendAndReceiveTest.shadow");
   	Main.run(args.toArray(new String[] { }));
   	run(new String[0], formatOutputString(
   						"Test1",
@@ -1590,7 +1557,6 @@ public class OutputTests {
   						"Thread#main: stop",
 
   						"Test2",
-  						"true",
   						"Thread#7",
   						"Thread#8",
 
@@ -1608,13 +1574,6 @@ public class OutputTests {
   					),
   			"shadow:standard@IncompatibleMessageTypeException: Expected 'int' but got 'shadow:standard@String'.\n"
   	);
-  }
-
-  @Test
-  public void testMessagePassing() throws Exception {
-  	args.add("shadow/test/MessagePassingTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], formatOutputString("9592"));
   }
 
   @Test
@@ -1639,8 +1598,8 @@ public class OutputTests {
     args.add("shadow/test/SendAndReceiveTest.shadow");
     Main.run(args.toArray(new String[] { }));
     run(new String[0], formatOutputString(
-            "Thread#1 received: aardvark",
-            "Thread#2 received: formulation")
+            "Thread#1 received: aardvark from Thread#main",
+            "Thread#2 received: formulation from Thread#main")
     );
   }
 

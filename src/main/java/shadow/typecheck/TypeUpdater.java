@@ -917,7 +917,7 @@ public class TypeUpdater extends BaseChecker {
 
     /* Check to see if the method has a body or not (and if it should). */
     if (currentType instanceof ClassType) {
-      if (isMeta && hasBlock) {
+      if (isMeta && hasBlock && !(currentType instanceof AttributeType)) {
         addError(
             node,
             Error.INVALID_STRUCTURE,

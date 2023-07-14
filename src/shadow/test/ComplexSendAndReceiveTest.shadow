@@ -1,0 +1,145 @@
+import shadow:io@Console;
+
+class shadow:test@ComplexSendAndReceiveTest
+{
+	public main(String[] args) => ()
+	{
+		// Mailbox is blocking, has room for 8 items but will expand to 32
+
+		// !!!! TEST #1 !!!!
+		Console.printLine("Test1");
+		var t1 = spawn(Test1Runner:());
+
+		// we wait till the children get spawned:()
+		while(t1->childrenCount != 4)
+		{
+		    Thread:Current.sleep(10);
+		}
+
+		foreach(var t in t1.children())
+		{
+			t.join();
+		}
+
+		// send a stop signal
+		send("stop", t1);
+		// send an invalid signal to make sure that exceptions
+		// work correctly.
+		send("wrong", t1);
+
+		try
+		{
+			t1.join();
+		}
+		catch(ThreadException e)
+		{
+			Console.printErrorLine(e->actual);
+		}
+		// !!!! TEST #1 !!!!
+
+		// !!!! TEST #2 !!!!
+		Console.printLine("Test2");
+		var t2 = spawn(Test2Runner:());
+		// !!!! TEST #2 !!!!
+	}
+
+	private class Test1Runner is CanRun
+	{
+		private class SenderRunner is CanRun
+		{
+			public run() => ()
+			{
+			    Thread current = Thread:Current->instance;
+				Thread:Current.sleep(current->id * 100);
+				Thread parent = check(current->parent);
+
+				send("hello", parent);
+				send(" ", parent);
+				send("world", parent);
+				send("!", parent);
+				send("\n", parent);
+			}
+		}
+
+		public run() => ()
+		{
+			nullable var threads = Thread:null[4];
+
+			for (int i = 0; i < threads->size; i += 1)
+				threads[i] = spawn(SenderRunner:());
+
+			var message = "";
+			nullable Thread thread = null;
+			Thread tempThread;
+
+			while(message != "stop")
+			{
+				(message, tempThread) = receive<String>();
+                if(thread !== tempThread)
+                {
+					thread = tempThread;
+					Console.print(tempThread->name # ": ");
+				}
+				Console.print(message);
+			}
+			Console.printLine();
+
+
+			(var data, ) = receive<int>(); // causes exception
+		    Console.printLine(data); // should never happen
+		}
+	}
+
+	private class Test2Runner is CanRun
+	{
+		private class SenderRunner2<T> is CanRun
+		{
+			int secretNumber;
+			public create(T i)
+			{
+				secretNumber = cast<int>(i);
+			}
+
+			public run() => ()
+			{
+				var x = int:create[5];
+				for(int i = 0; i < x->size; i += 1)
+				{
+					x[i] = i;
+					if(secretNumber == 1)
+						x[i] += 10;
+				}
+
+				Thread current = Thread:Current->instance;
+				Thread parent = check(current->parent);
+
+				send("A string from " # current->name, parent);
+				send("Secret number: ", parent);
+				send(secretNumber, parent);
+				send(x, parent);
+				x[0] = 55;
+				send("done", parent);
+			}
+		}
+
+		public run() => ()
+		{
+			for (int i = 0; i < 2; i += 1)
+				Console.printLine(spawn(SenderRunner2<int>:(i))->name);
+
+			Thread current = Thread:Current->instance;
+
+			for (int i = 0; i < current->childrenCount; i += 1)
+			{
+			    Thread child = current.childAt(i);
+				Console.printLine(receive<String>(child));
+				Console.print(receive<String>(child));
+				Console.printLine(receive<int>(child));
+				var arr = receive<int[]>(child);
+				Console.printLine(arr);
+				Console.printLine(receive<String>(child));
+				Console.printLine(arr);
+			}
+		}
+	}
+}

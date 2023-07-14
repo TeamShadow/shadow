@@ -600,6 +600,9 @@ public class LLVMOutput extends AbstractOutput {
   public void startFile(TACModule module) throws ShadowException {
     this.module = module;
 
+    if (module.getType() instanceof AttributeType)
+      return;
+
     // Write all regular types including (non-generic) class objects and method tables
     Set<Type> definedGenerics = writeUsedTypes();
 
@@ -756,6 +759,9 @@ public class LLVMOutput extends AbstractOutput {
 
   @Override
   public void endFile(TACModule module) throws ShadowException {
+    if(module.getType() instanceof AttributeType)
+      return;
+
     // Print only the (mostly private) methods that are called directly
     for (MethodSignature method : usedSignatures) writer.write("declare " + methodToString(method));
     writer.write();
@@ -769,7 +775,7 @@ public class LLVMOutput extends AbstractOutput {
   public void startMethod(TACMethod method, TACModule module) throws ShadowException {
 
     MethodSignature signature = method.getSignature();
-    if (module.getType() instanceof InterfaceType || signature.isAbstract()) {
+    if (module.getType() instanceof InterfaceType ||  module.getType() instanceof AttributeType || signature.isAbstract()) {
       skipMethod = true;
     } else if (signature.isImport()) {
       writer.write("declare " + methodToString(method));
@@ -815,14 +821,15 @@ public class LLVMOutput extends AbstractOutput {
       writer.outdent();
       writer.write('}');
       writer.write();
+
+      for (TACFinallyFunction function : method.getFinallyFunctions()) {
+        startFinallyFunction(function);
+        walk(function.getNode());
+        endFinallyFunction();
+      }
+
     }
     skipMethod = false;
-
-    for (TACFinallyFunction function : method.getFinallyFunctions()) {
-      startFinallyFunction(function);
-      walk(function.getNode());
-      endFinallyFunction();
-    }
   }
 
   public void startFinallyFunction(TACFinallyFunction function) throws ShadowException {

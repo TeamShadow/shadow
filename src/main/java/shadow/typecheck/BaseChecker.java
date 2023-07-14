@@ -642,16 +642,6 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
   public static boolean methodIsAccessible(MethodSignature signature, Type currentType, Package packageTree) {
     if (signature.getMethodType().getModifiers().isPublic()) return true;
 
-    try {
-      for (Type type : signature.getExports(packageTree)) {
-        if (currentType.isSubtype(type))
-          return true;
-      }
-    }
-    catch(TypeCheckException e) {
-      return false;
-    }
-
     Context node = signature.getNode();
     if (node == null) return false;
 

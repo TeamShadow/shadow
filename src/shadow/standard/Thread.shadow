@@ -336,27 +336,30 @@ is CanIndex<int, Thread>
         long currentTime = System.epochNanoTime();
         long finishedTime = currentTime + timeout.totalNanoSeconds();
         boolean sleeping = currentTime < finishedTime;
-        while (state != DEAD and sleeping) {
-            state = WAITING;
-            waitingVariable = conditionVariable; // sleeping on its own condition variable
-
-            if (interrupting)
+        try
+        {
+            while (state != DEAD and sleeping)
             {
-                interrupting = false;
-                waitingVariable = null;
-                state = RUNNING;
-                conditionVariable.unlock();
-                throw InterruptedException:create();
+                state = WAITING;
+                waitingVariable = conditionVariable; // sleeping on its own condition variable
+                conditionVariable.wait(TimeSpan:create(finishedTime - currentTime));
+
+                if (interrupting)
+                {
+                    interrupting = false;
+                    throw InterruptedException:create();
+                }
+
+                currentTime = System.epochNanoTime();
+                sleeping = currentTime < finishedTime;
             }
-
-            conditionVariable.wait(TimeSpan:create(finishedTime - currentTime));
-            currentTime = System.epochNanoTime();
-            sleeping = currentTime < finishedTime;
         }
-
-        state = RUNNING;
-
-        conditionVariable.unlock();
+        finally
+        {
+            state = RUNNING;
+            waitingVariable = null;
+            conditionVariable.unlock();
+        }
 	}
 	
 	/**
@@ -380,39 +383,62 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	*/
-	private receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
+	protected receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
 	{
 	    conditionVariable.lock();
-		nullable var message = mailbox.dequeue(expectedType);
+		nullable Message message = null;
+
+		try
+		{
+		    message = mailbox.dequeue(expectedType);
+		}
+		catch(Exception e)
+		{
+		    conditionVariable.unlock();
+		    throw e;
+		}
 		if(!blocking)
 		{
 		    conditionVariable.unlock();
-			if(message === null) throw EmptyMailboxException:create();
+			try
+			{
+			    Message checkedMessage = check(message);
+                return (checkedMessage->data, checkedMessage->sender);
+            }
+			recover
+			{
+			    throw EmptyMailboxException:create();
+			}
 		}
 		else
 		{
-			while(message === null)
-			{
-		        state = WAITING;
-                waitingVariable = conditionVariable; // waiting on its own condition variable
-
-                if (interrupting)
+		    try
+		    {
+                while(message === null)
                 {
-                    interrupting = false;
-                    waitingVariable = null;
-                    state = RUNNING;
-                    conditionVariable.unlock();
-                    throw InterruptedException:create();
+                    state = WAITING;
+                    waitingVariable = conditionVariable; // waiting on its own condition variable
+                    conditionVariable.wait();
+
+                    if (interrupting)
+                    {
+                        interrupting = false;
+                        throw InterruptedException:create();
+                    }
+
+                    message = mailbox.dequeue(expectedType);
                 }
 
-                conditionVariable.wait();
-
-				message = mailbox.dequeue(expectedType);
-			}
+                Message checkedMessage = check(message);
+                return (checkedMessage->data, checkedMessage->sender);
+            }
+            finally
+            {
+                state = RUNNING;
+                waitingVariable = null;
+                conditionVariable.unlock();
+            }
 		}
-
-		Message checkedMessage = check(message);
-		return (checkedMessage->data, checkedMessage->sender);
 	}
 	
 	/**
@@ -428,42 +454,67 @@ is CanIndex<int, Thread>
 	* @throws IllegalArgumentException If this thread is the same as the from thread.
 	* 
 	*/
-	private receiveFirstFrom(Class expectedType, Thread from, boolean blocking) => (Object)
+	protected receiveFirstFrom(Class expectedType, Thread from, boolean blocking) => (Object)
 	{
 		if (from === this)
 			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
 
 		conditionVariable.lock();
-        nullable var message = mailbox.dequeue(from, expectedType);
+        nullable Message message = null;
+        try
+        {
+            message = mailbox.dequeue(from, expectedType);
+        }
+        catch(Exception e)
+        {
+            conditionVariable.unlock();
+            throw e;
+        }
+
         if(!blocking)
         {
             conditionVariable.unlock();
-            if(message === null) throw EmptyMailboxException:create();
+            try
+            {
+                Message checkedMessage = check(message);
+                conditionVariable.notifyAll();
+                return checkedMessage->data;
+            }
+            recover
+            {
+                throw EmptyMailboxException:create();
+            }
         }
         else
         {
-            while(message === null)
+            try
             {
-                state = WAITING;
-                waitingVariable = conditionVariable; // waiting on its own condition variable
-
-                if (interrupting)
+                while(message === null)
                 {
-                    interrupting = false;
-                    waitingVariable = null;
-                    state = RUNNING;
-                    conditionVariable.unlock();
-                    throw InterruptedException:create();
+                    state = WAITING;
+                    waitingVariable = conditionVariable; // waiting on its own condition variable
+                    conditionVariable.wait();
+
+                    if (interrupting)
+                    {
+                        interrupting = false;
+                        throw InterruptedException:create();
+                    }
+
+                    message = mailbox.dequeue(from, expectedType);
                 }
 
-                conditionVariable.wait();
-
-                message = mailbox.dequeue(from, expectedType);
+                Message checkedMessage = check(message);
+                return checkedMessage->data;
+            }
+            finally
+            {
+                state = RUNNING;
+                waitingVariable = null;
+                conditionVariable.unlock();
+                conditionVariable.notifyAll();
             }
         }
-
-        Message checkedMessage = check(message);
-        return checkedMessage->data;
 	}
 	
 	/**
@@ -503,10 +554,16 @@ is CanIndex<int, Thread>
                 conditionVariable.unlock();
                 throw FullMailboxException:create();
             }
+            else
+            {
+                conditionVariable.unlock();
+                conditionVariable.notifyAll(); // after a message is sent, a receiver might need to wake up
+            }
         }
         else
         {
             boolean done = mailbox.enqueue(message);
+
             while(!done)
             {
                 currentThread:conditionVariable.lock();
@@ -516,10 +573,10 @@ is CanIndex<int, Thread>
                 if (currentThread:interrupting)
                 {
                     currentThread:interrupting = false;
-                    currentThread:waitingVariable = null;
-                    currentThread:state = RUNNING;
-                    currentThread:conditionVariable.unlock();
                     conditionVariable.unlock();
+                    currentThread:state = RUNNING;
+                    currentThread:waitingVariable = null;
+                    currentThread:conditionVariable.unlock();
                     throw InterruptedException:create();
                 }
                 else
@@ -528,6 +585,14 @@ is CanIndex<int, Thread>
                 conditionVariable.wait();
                 done = mailbox.enqueue(message);
             }
+
+            conditionVariable.unlock();
+            conditionVariable.notifyAll(); // after a message is sent, a receiver might need to wake up
+
+            currentThread:conditionVariable.lock();
+            currentThread:state = RUNNING;
+            currentThread:waitingVariable = null;
+            currentThread:conditionVariable.unlock();
         }
 	}
 	
@@ -798,15 +863,8 @@ is CanIndex<int, Thread>
     	{
             if(size == 0)
                 return null;
-            try
-            {
-                return removeAt(start, expectedType);
-            }
-            catch(Exception e)
-            {
-                Console.printErrorLine(e);
-                return null;
-            }
+
+            return removeAt(start, expectedType);
     	}
 
     	public dequeue(Thread sender, Class expectedType) => (nullable Message)

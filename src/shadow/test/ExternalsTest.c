@@ -10,10 +10,10 @@
 
 typedef shadow_Object_t shadow_ExternalsTest_t;
 
-void __shadow_test__ExternalsTest_printfToString(shadow_ExternalsTest_t* ref)
+void __shadow_test__ExternalsTest_printfToString(shadow_ExternalsTest_t* _this)
 {
 	// equivalent to ref.toString()
-	shadow_String_t* str = _shadow_standard__Object_toString(ref);
+	shadow_String_t* str = _shadow_standard__Object_toString(_this);
 	
 	// get the C string from the Shadow String object
 	char* cStr = __shadow_standard__String_getCString(str);
@@ -31,7 +31,7 @@ void __shadow_test__ExternalsTest_printfToString(shadow_ExternalsTest_t* ref)
 	free(cStr);
 }
 
-shadow_String_t* __shadow_test__ExternalsTest_createString()
+shadow_String_t* __shadow_test__ExternalsTest_createString(shadow_ExternalsTest_t* _this)
 {
 	// Create a Shadow string from a C string
 	shadow_String_t* string = __shadow_standard__String_create("This is a string created in C and printed using Shadow's Console.printLine()");
@@ -48,7 +48,7 @@ typedef struct {
 	int number;
 } TestData;
 
-shadow_Pointer_t* __shadow_test__ExternalsTest_initPointer(int number)
+shadow_Pointer_t* __shadow_test__ExternalsTest_initPointer(shadow_ExternalsTest_t* _this, int number)
 {
 	TestData* data = malloc(sizeof(TestData));
 	data->number = number;
@@ -56,8 +56,8 @@ shadow_Pointer_t* __shadow_test__ExternalsTest_initPointer(int number)
 	return _shadow_natives__Pointer_create(NULL, data, SHADOW_CAN_FREE);
 }
 
-void _shadow_test__ExternalsTest_printNumberWithOffset(shadow_ExternalsTest_t* instance, int number);
-void __shadow_test__ExternalsTest_printPointerData(shadow_ExternalsTest_t* instance, shadow_Pointer_t* ptr)
+void _shadow_test__ExternalsTest_printNumberWithOffset(shadow_ExternalsTest_t* _this, int number);
+void __shadow_test__ExternalsTest_printPointerData(shadow_ExternalsTest_t* _this, shadow_Pointer_t* ptr)
 {
 	// retrieve the original pointer we allocated earlier
 	TestData* data = _shadow_natives__Pointer_extract(TestData, ptr);
@@ -67,16 +67,15 @@ void __shadow_test__ExternalsTest_printPointerData(shadow_ExternalsTest_t* insta
 	fflush(stdout);
 	
 	// pass the number to Shadow to print it with an offset
-	_shadow_test__ExternalsTest_printNumberWithOffset(instance, data->number);
+	_shadow_test__ExternalsTest_printNumberWithOffset(_this, data->number);
 }
 
-void __shadow_test__ExternalsTest_printClasses(shadow_ExternalsTest_t* instance)
+void __shadow_test__ExternalsTest_printClasses(shadow_ExternalsTest_t* _this)
 {
-
     shadow_io_Console_t* console = _shadow_io__Console_getInstance(NULL);
 
 	// object class
-	_shadow_io__Console_printLine(console, (shadow_Object_t*)_shadow_standard__Object_getClass(instance));
+	_shadow_io__Console_printLine(console, (shadow_Object_t*)_shadow_standard__Object_getClass(_this));
 	
 	// primitives
 	_shadow_io__Console_printLine(console, (shadow_Object_t*)_shadow_standard__Boolean_getClass());
