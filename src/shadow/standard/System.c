@@ -83,9 +83,9 @@ shadow_long_t __shadow_standard__System_getNanoTime(shadow_System_t* _this)
 shadow_boolean_t __shadow_standard__System_isWindows(shadow_System_t* _this)
 {
 #ifdef SHADOW_WINDOWS
-    return (shadow_boolean_t)true;
+    return 1;
 #else
-    return (shadow_boolean_t)false;
+    return 0;
 #endif
 }
 
