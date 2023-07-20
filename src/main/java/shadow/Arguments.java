@@ -11,6 +11,7 @@ public class Arguments {
 
   // Recognized single-character arguments
   public static final String CONFIG = "c";
+  public static final String BUILD_SYSTEM = "b";
   public static final String TYPECHECK = "t";
   public static final String NO_LINK = "n";
   public static final String HELP = "h";
@@ -23,8 +24,9 @@ public class Arguments {
 
   // Recognized long arguments
   private static final String CONFIG_LONG = "config";
+  private static final String BUILD_SYSTEM_LONG = "build-system";
   private static final String TYPECHECK_LONG = "typecheck";
-  private static final String NO_LINK_LONG = "nolink";
+  private static final String NO_LINK_LONG = "no-link";
   private static final String HELP_LONG = "help";
   private static final String OUTPUT_LONG = "output";
   private static final String VERBOSE_LONG = "verbose";
@@ -62,9 +64,8 @@ public class Arguments {
     return commandLine.hasOption(option);
   }
 
-  public String getMainFileArg() {
-    if (commandLine.getArgs().length > 0) return commandLine.getArgs()[0];
-    else return null;
+  public String[] getFiles() {
+    return commandLine.getArgs();
   }
 
   public String getConfigFileArg() {
@@ -95,6 +96,14 @@ public class Arguments {
             .argName("config.xml")
             .desc("Specify optional configuration file\nIf shadow.xml exists, it will be checked")
             .build();
+
+    Option buildSystemOption =
+            Option.builder(BUILD_SYSTEM)
+                    .longOpt(BUILD_SYSTEM_LONG)
+                    .hasArg()
+                    .argName("path")
+                    .desc("Build object files for system source files from specified path")
+                    .build();
 
     Option outputOption =
         Option.builder(OUTPUT)

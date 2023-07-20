@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,9 +16,6 @@ import java.util.Map;
  * files, compiler flags, and output files.
  */
 public class Job {
-
-  /** The main method containing source file given on the command line */
-  private Path mainFile;
 
   /** The linker command used to specify an output file */
   private final List<String> outputCommand = new ArrayList<>();
@@ -30,7 +28,11 @@ public class Job {
   private boolean warningsAsErrors = false; // Treat warnings as errors
   private final boolean humanReadable;
 
-  public Job(Arguments compilerArgs) throws FileNotFoundException, ConfigurationException {
+  private final boolean buildSystem;
+
+  private final List<Path> files = new ArrayList<>();
+
+  public Job(Arguments compilerArgs) throws FileNotFoundException, ConfigurationException, CommandLineException {
 
     // Check relevant command line flags
     checkOnly = compilerArgs.hasOption(Arguments.TYPECHECK);
@@ -38,23 +40,40 @@ public class Job {
     verbose = compilerArgs.hasOption(Arguments.VERBOSE);
     forceRecompile = compilerArgs.hasOption(Arguments.RECOMPILE);
     humanReadable = compilerArgs.hasOption(Arguments.READABLE);
+    buildSystem = compilerArgs.hasOption(Arguments.BUILD_SYSTEM);
 
-    // Locate main source file if not help or information only
-    if (!compilerArgs.hasOption(Arguments.INFORMATION) && !compilerArgs.hasOption(Arguments.HELP)) {
-      if (compilerArgs.getMainFileArg() != null) {
-        Map<Path, Path> imports =  Configuration.getConfiguration().getImport();
+    String[] fileNames = compilerArgs.getFiles();
+
+    if (compilerArgs.hasOption(Arguments.INFORMATION)) {
+      if (fileNames.length > 0)
+        throw new CommandLineException("Requests for compiler information should not include files to compile");
+    }
+    else if (compilerArgs.hasOption(Arguments.HELP)) {
+      if (fileNames.length > 0)
+        throw new CommandLineException("Requests for help information should not include files to compile");
+    }
+    else if (compilerArgs.hasOption(Arguments.BUILD_SYSTEM)) {
+      if (fileNames.length > 0)
+        throw new CommandLineException("Input files should not be specified when building the system library");
+
+
+    }
+    else if(fileNames.length > 0) {
+      Map<Path, Path> imports =  Configuration.getConfiguration().getImport();
+      for (String file : fileNames) {
+        Path path = null;
         for (Path _import : imports.keySet()) {
-          Path candidate = _import.resolve(Paths.get(compilerArgs.getMainFileArg()));
+          Path candidate = _import.resolve(Paths.get(file));
           if (Files.exists(candidate))
-            mainFile = candidate.toAbsolutePath().normalize();
-            break;
+            path = candidate.toAbsolutePath().normalize();
+          break;
         }
-      }
 
-      // Ensure that the main source file exists
-      if (mainFile == null)
-        throw new FileNotFoundException(
-            "Source file at " + compilerArgs.getMainFileArg() + " not found");
+        if (path == null)
+          throw new FileNotFoundException("Source file at " + file + " not found");
+        else
+          files.add(path);
+      }
 
       Path outputFile;
 
@@ -63,10 +82,10 @@ public class Job {
         outputFile = Paths.get(compilerArgs.getOutputFileArg());
 
         // Resolve it if necessary
-        outputFile = mainFile.resolveSibling(outputFile);
+        outputFile = files.get(0).resolveSibling(outputFile);
       } else {
         // Determine a path to the default output file
-        Path outputName = BaseChecker.stripExtension(mainFile);
+        Path outputName = BaseChecker.stripExtension(files.get(0));
         outputFile = properExecutableName(outputName);
       }
 
@@ -81,6 +100,12 @@ public class Job {
         else System.err.println("Unknown warning flag: " + flag);
       }
     }
+    else
+      throw new CommandLineException("No input files");
+  }
+
+  public List<Path> getFiles() {
+    return Collections.unmodifiableList(files);
   }
 
   public boolean isCheckOnly() {
@@ -100,12 +125,12 @@ public class Job {
     return forceRecompile;
   }
 
-  public boolean isHumanReadable() {
-    return humanReadable;
+  public boolean isBuildSystem() {
+    return buildSystem;
   }
 
-  public Path getMainFile() {
-    return mainFile;
+  public boolean isHumanReadable() {
+    return humanReadable;
   }
 
   public boolean treatWarningsAsErrors() {

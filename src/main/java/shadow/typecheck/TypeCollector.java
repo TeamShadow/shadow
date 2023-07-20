@@ -190,43 +190,21 @@ public class TypeCollector extends ScopedChecker {
   }
 
   /**
-   * Calls <code>collectTypes</code> with one main file. The main file should be an absolute,
-   * normalized (no redundant dots) path.
+   * Calls <code>collectTypes</code> with a list of files. The main file (the first one) has updated source is given in
+   * source. Used for type-checking files currently being edited in an IDE.
    *
-   * @param mainFile main file to be type-checked or compiled
-   * @return map from types to nodes
-   * @throws ShadowException thrown if there's a problem collecting types
-   * @throws IOException thrown if files are inaccessible
-   * @throws ConfigurationException thrown if there's a problem with Configuration
-   */
-  public Map<Type, Context> collectTypes(Path mainFile)
-      throws ShadowException, IOException, ConfigurationException {
-    List<Path> initialFiles = new ArrayList<>();
-    mainFile = mainFile.normalize().toAbsolutePath();
-    initialFiles.add(mainFile);
-    return collectTypes(initialFiles, new HashMap<>(), true);
-  }
-
-  /**
-   * Calls <code>collectTypes</code> with one main file, whose source is given in source. Used for
-   * type-checking files currently being edited in an IDE.
-   *
-   * @param source the complete source code to check
-   * @param mainFile main file to be type-checked or compiled
+   * @param source the updated source code of the main file
    * @return map from types to nodes
    * @throws ShadowException thrown if there's a problem collecting types
    * @throws IOException thrown if files are inaccessible
    * @throws ConfigurationException thrown if there's a problem with Configuration
    */
   @SuppressWarnings("unused")
-  public Map<Type, Context> collectTypes(String source, Path mainFile)
+  public Map<Type, Context> collectTypes(String source, List<Path> files)
       throws ShadowException, IOException, ConfigurationException {
-    List<Path> initialFiles = new ArrayList<>();
-    mainFile = mainFile.normalize().toAbsolutePath();
-    initialFiles.add(mainFile);
     Map<Path, String> activeFiles = new HashMap<>();
-    activeFiles.put(mainFile, source);
-    return collectTypes(initialFiles, activeFiles, true);
+    activeFiles.put(files.get(0), source);
+    return collectTypes(files, activeFiles);
   }
 
   /**
@@ -240,7 +218,7 @@ public class TypeCollector extends ScopedChecker {
    */
   public Map<Type, Context> collectTypes(List<Path> files)
       throws ShadowException, IOException, ConfigurationException {
-    return collectTypes(files, new HashMap<>(), false);
+    return collectTypes(files, new HashMap<>());
   }
 
   /*
@@ -248,13 +226,13 @@ public class TypeCollector extends ScopedChecker {
    * if needed to determine what should be recompiled.
    */
   private Map<Type, Context> collectTypes(
-      List<Path> files, Map<Path, String> activeFiles, boolean hasMain)
+      List<Path> files, Map<Path, String> activeFiles)
       throws ShadowException, IOException, ConfigurationException {
     Set<Path> mustCompile = new HashSet<>();
     Map<Path, TreeSet<Path>> dependencies = new HashMap<>();
 
     // Initial type collection
-    collectTypes(files, hasMain, activeFiles, mustCompile, dependencies);
+    collectTypes(files, activeFiles, mustCompile, dependencies);
 
     /* Classes needing recompilation may trigger other files to get
      * recompiled. Changes in the number or organization of methods
@@ -282,7 +260,7 @@ public class TypeCollector extends ScopedChecker {
       clear(); // Clears out all internal representations and types.
 
       // Collect types again with updated recompilation requirements.
-      collectTypes(files, hasMain, activeFiles, mustCompile, null);
+      collectTypes(files, activeFiles, mustCompile, null);
     }
 
     // Check packages for errors.
@@ -300,7 +278,6 @@ public class TypeCollector extends ScopedChecker {
    */
   private void collectTypes(
       List<Path> files,
-      boolean hasMain,
       Map<Path, String> activeFiles,
       Set<Path> mustCompile,
       Map<Path, TreeSet<Path>> dependencies)
@@ -308,16 +285,16 @@ public class TypeCollector extends ScopedChecker {
     // Create and fill the initial set of files to be checked.
     TreeSet<Path> uncheckedFiles = new TreeSet<>();
 
-
-    Path mainSource = null;
     if (files.isEmpty()) throw new ConfigurationException("No files provided for typechecking");
 
+    Path mainFile = files.get(0);
+    Path mainSource = null;
     for (Path file : files) {
       Path path = stripExtension(file);
       uncheckedFiles.add(path);
 
-      // Assume the main file is the first and only file.
-      if (hasMain)
+      // Assume the main file is the first file.
+      if (mainSource == null)
         mainSource = path;
     }
 
@@ -367,7 +344,7 @@ public class TypeCollector extends ScopedChecker {
             && source == null
             &&
             // Always do the full .shadow file for the main file if typechecking
-            (!typeCheckOnly || !hasMain || !files.get(0).equals(canonicalFile))
+            (!typeCheckOnly || !mainFile.equals(canonicalFile))
             &&
             // Only use .meta if it's newer than .shadow
             Files.exists(meta)
@@ -380,11 +357,8 @@ public class TypeCollector extends ScopedChecker {
                     && Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(meta))
                         >= 0))) {
           canonicalFile = meta;
-          // Loggers.SHADOW.info("Using meta file: " + meta);
-        } else {
+        } else
           mustCompile.add(canonical);
-          // Loggers.SHADOW.info("Using Shadow file: " + canonical);
-        }
       } else if (!useSourceFiles) canonicalFile = BaseChecker.addExtension(canonical, ".meta");
 
       currentFile = canonicalFile;

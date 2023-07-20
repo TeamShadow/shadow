@@ -53,9 +53,8 @@ public class TypeChecker {
   }
 
   /**
-   * Typechecks a main file and all files that it depends on.
-   *
-   * @param mainFile the main file to compile
+   * Typechecks files and all files they depend on.
+   * @param files files to typecheck (main file is the first)
    * @param useSourceFiles whether the source files should be recompiled
    * @param reporter object used to report errors
    * @param typeCheckOnly whether the source files are only being type-checked
@@ -66,17 +65,18 @@ public class TypeChecker {
    * @throws ConfigurationException thrown if there's a problem with Configuration
    */
   public static TypeCheckerOutput typeCheck(
-      Path mainFile, boolean useSourceFiles, ErrorReporter reporter, boolean typeCheckOnly)
+      List<Path> files, boolean useSourceFiles, ErrorReporter reporter, boolean typeCheckOnly)
       throws ShadowException, IOException, ConfigurationException {
     Type.clearTypes();
     Package packageTree = new Package(); // Root of all packages, storing all types
+    Path mainFile = files.get(0);
 
     /* Collector looks over all files and creates types for everything needed. */
     TypeCollector collector =
         new TypeCollector(packageTree, reporter, useSourceFiles, typeCheckOnly);
 
     /* Its return value maps all the types to the nodes that need compiling. */
-    Map<Type, Context> nodeTable = collector.collectTypes(mainFile);
+    Map<Type, Context> nodeTable = collector.collectTypes(files);
     Map<Path, Context> fileTable = collector.getFileTable();
 
     /* Updates types, adding:
@@ -105,7 +105,6 @@ public class TypeChecker {
         return 1;
     });
 
-
     /* Do type-checking of statements, i.e., actual code. */
     StatementChecker checker = new StatementChecker(packageTree, reporter);
     for (Context node : nodes) {
@@ -117,7 +116,7 @@ public class TypeChecker {
     }
 
     // Note that all files in the fileTable have no extension
-    return new TypeCheckerOutput(nodes, packageTree, fileTable.get(BaseChecker.stripExtension(mainFile)));
+    return new TypeCheckerOutput(nodes, packageTree, fileTable.get(BaseChecker.stripExtension(files.get(0))));
   }
 
   /*

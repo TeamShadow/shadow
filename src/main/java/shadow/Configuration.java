@@ -410,7 +410,6 @@ public class Configuration {
     if (linker == null) {
       switch (getOs()) {
         case "Windows":
-          // linker = "lld-link";
           linker = "clang";
           break;
         case "Mac":
@@ -418,7 +417,7 @@ public class Configuration {
           linker = "clang";
           break;
         default:
-          linker = "clang++";
+          linker = "clang";
           break;
       }
 

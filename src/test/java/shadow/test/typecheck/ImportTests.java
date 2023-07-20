@@ -14,6 +14,7 @@ import shadow.typecheck.type.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.TreeSet;
 
 public class ImportTests {
@@ -93,7 +94,7 @@ public class ImportTests {
     Package p = new Package();
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
     TypeCollector collector = new TypeCollector(p, reporter, false, true);
-    collector.collectTypes(path);
+    collector.collectTypes(Arrays.asList(path));
     Type testType = collector.getMainType();
     reporter.printAndReportErrors();
 

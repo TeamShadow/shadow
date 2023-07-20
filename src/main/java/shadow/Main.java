@@ -2,7 +2,6 @@ package shadow;
 
 import org.apache.logging.log4j.Logger;
 import shadow.doctool.tag.TagManager.BlockTagType;
-import shadow.interpreter.AttributeInterpreter;
 import shadow.interpreter.ConstantFieldInterpreter;
 import shadow.output.llvm.LLVMOutput;
 import shadow.parse.Context;
@@ -37,8 +36,7 @@ public class Main {
 
   // Version of the Shadow compiler
   public static final String VERSION = "0.8";
-  public static final String MINIMUM_LLVM_VERSION = "6.0";
-  public static final String MINIMUM_WINDOWS_LLVM_VERSION = "10.0";
+  public static final String MINIMUM_LLVM_VERSION = "10.0";
 
   // These are the error codes returned by the compiler
   public static final int NO_ERROR = 0;
@@ -75,7 +73,7 @@ public class Main {
     } catch (IOException e) {
       System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
       System.exit(TYPE_CHECK_ERROR);
-    } catch (org.apache.commons.cli.ParseException e) {
+    } catch (org.apache.commons.cli.ParseException | CommandLineException e) {
       System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
       Arguments.printHelp();
       System.exit(COMMAND_LINE_ERROR);
@@ -98,10 +96,7 @@ public class Main {
   private static void checkLLVMVersion() throws ConfigurationException {
     String LLVMVersion = Configuration.getLLVMVersion();
 
-    int comparison;
-    if (Configuration.isWindows()) // Higher versions of LLVM are needed for Windows because of EH
-    comparison = compareVersions(LLVMVersion, MINIMUM_WINDOWS_LLVM_VERSION);
-    else comparison = compareVersions(LLVMVersion, MINIMUM_LLVM_VERSION);
+    int comparison = compareVersions(LLVMVersion, MINIMUM_LLVM_VERSION);
 
     if (comparison < 0) {
       String error =
@@ -161,37 +156,41 @@ public class Main {
   }
 
   public static void run(String[] args)
-      throws ShadowException, IOException, org.apache.commons.cli.ParseException,
+      throws ShadowException, IOException, org.apache.commons.cli.ParseException, CommandLineException,
           ConfigurationException {
 
     // Detect and establish the current settings and arguments
     Arguments compilerArgs = new Arguments(args);
 
+    String firstFile = null;
+    if (compilerArgs.getFiles().length > 0)
+      firstFile = compilerArgs.getFiles()[0];
+
     // Detect and establish the current settings based on the arguments
     config =
         Configuration.buildConfiguration(
-            compilerArgs.getMainFileArg(), compilerArgs.getConfigFileArg(), false);
+                firstFile, compilerArgs.getConfigFileArg(), false);
     currentJob = new Job(compilerArgs);
+    List<Path> files = currentJob.getFiles();
 
-    // Print help and exit
-    if (compilerArgs.hasOption(Arguments.HELP)) {
-      Arguments.printHelp();
-      return;
-    }
-
-    // Print information and exit
+    // Print information
     // Must come after building configuration, since configuration helps
     // us find the correct LLVM installation
-    if (compilerArgs.hasOption(Arguments.INFORMATION)) {
+    if (compilerArgs.hasOption(Arguments.INFORMATION))
       Arguments.printInformation();
+
+    // Print help
+    if (compilerArgs.hasOption(Arguments.HELP))
+      Arguments.printHelp();
+
+    if (compilerArgs.hasOption(Arguments.INFORMATION) || compilerArgs.hasOption(Arguments.HELP))
       return;
-    }
 
     // Important settings
     List<Path> system = config.getSystem();
     Path systemInclude = system.get(Configuration.INCLUDE);
     Path systemSource = system.get(Configuration.SOURCE);
-    boolean isCompile = !currentJob.isCheckOnly() && !currentJob.isNoLink();
+    boolean isCompile = !currentJob.isCheckOnly();
 
     if (isCompile) checkLLVMVersion();
 
@@ -210,52 +209,52 @@ public class Main {
         throw new CompileException("FAILED TO COMPILE");
       }
 
-      logger.info("Building for target \"" + config.getTarget() + "\"");
-      Path mainLL;
-      if (config.getOs().equals("Windows")) {
-        if (mainArguments) mainLL = Paths.get("MainWindows.ll");
-        else mainLL = Paths.get("NoArgumentsWindows.ll");
-      } else {
-        if (mainArguments) mainLL = Paths.get( "Main.ll");
-        else mainLL = Paths.get("NoArguments.ll");
+      if (!currentJob.isNoLink()) {
+        logger.info("Building for target \"" + config.getTarget() + "\"");
+        Path mainLL;
+        if (config.getOs().equals("Windows")) {
+          if (mainArguments) mainLL = Paths.get("MainWindows.ll");
+          else mainLL = Paths.get("NoArgumentsWindows.ll");
+        } else {
+          if (mainArguments) mainLL = Paths.get("Main.ll");
+          else mainLL = Paths.get("NoArguments.ll");
+        }
+
+        mainLL = systemSource.resolve(mainLL);
+        BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
+
+        // Read main and compile into temporary object
+        Map<Path, Path> imports = config.getImport();
+        Path parent = getBinaryPath(files.get(0), imports).getParent();
+        Path temporaryMain = Files.createTempFile(parent, "main", ".o");
+        StringBuilder builder = new StringBuilder();
+        String line = main.readLine();
+
+        while (line != null) {
+          line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
+          builder.append(line);
+          line = main.readLine();
+        }
+        main.close();
+
+        linkCommand.add(compileLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain));
+
+        logger.info("Linking object files...");
+
+        // Usually clang
+        Process link =
+                new ProcessBuilder(linkCommand)
+                        .redirectOutput(Redirect.INHERIT)
+                        .redirectError(Redirect.INHERIT)
+                        .start();
+        try {
+          if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
+        } catch (InterruptedException ignored) {
+        } finally {
+          link.destroy();
+          Files.delete(temporaryMain);
+        }
       }
-
-      mainLL = systemSource.resolve(mainLL);
-      BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
-
-      // Read main and compile into temporary object
-      Map<Path, Path> imports = config.getImport();
-      Path parent = getBinaryPath(currentJob.getMainFile(), imports).getParent();
-      Path temporaryMain = Files.createTempFile(parent, "main", ".o");
-      StringBuilder builder = new StringBuilder();
-      String line = main.readLine();
-
-      while (line != null) {
-        line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
-        builder.append(line);
-        line = main.readLine();
-      }
-      main.close();
-
-      linkCommand.add(compileLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain));
-
-      logger.info("Linking object files...");
-
-      // Usually clang or clang++
-      Process link =
-          new ProcessBuilder(linkCommand)
-              .redirectOutput(Redirect.INHERIT)
-              .redirectError(Redirect.INHERIT)
-              .start();
-      try {
-        if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
-      } catch (InterruptedException ignored) {
-      } finally {
-        link.destroy();
-        Files.delete(temporaryMain);
-        //Files.delete(Paths.get(compiledMain));
-      }
-
       logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
     }
   }
@@ -300,26 +299,24 @@ public class Main {
       compileCommand.add("clang");
       String[] version = System.getProperty("os.version").split("\\.");
       compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
-      // compileCommand.add("-Wall");
+      compileCommand.add("-femulated-tls");
     } else compileCommand.add("clang");
 
+    // Architecture, optimization, and exception support
     compileCommand.add("-m" + Configuration.getConfiguration().getArchitecture());
-
-    //if (Configuration.getConfiguration().getOs().equals("Windows"))
-      //compileCommand.add("-femulated-tls");
-
+    compileCommand.add("-O3");
     compileCommand.add("-fexceptions");
 
-    compileCommand.add("-O3");
-
+    // Partial compilation
     compileCommand.add("-c");
 
-    // include directories to be in the search path of gcc
+    // Include directories to be in the search path of clang
     compileCommand.add("-I" + includePath);
     compileCommand.add("-I" + includePath.resolve("platform").resolve(config.getOs()));
     compileCommand.add(
         "-I" + includePath.resolve("platform").resolve("Arch" + config.getArchitecture()));
 
+    // Input and output files
     compileCommand.add("-o");
     compileCommand.add(null); // Location for output name
     compileCommand.add(null); // Location for .c file
@@ -379,7 +376,7 @@ public class Main {
     linkCommand.add(
         compileLLVMFile(systemSource.resolve("Shared.ll"), systemBinary.resolve("Shared.o")));
 
-    Path mainFile = currentJob.getMainFile();
+    List<Path> files = currentJob.getFiles();
 
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
@@ -387,8 +384,7 @@ public class Main {
     // classes needing compilation
     TypeChecker.TypeCheckerOutput typecheckerOutput =
         TypeChecker.typeCheck(
-            mainFile, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
-
+                files, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
     List<Type> typesIncludingInner =
             typecheckerOutput.nodes.stream().map(Context::getType).collect(Collectors.toList());
@@ -403,8 +399,6 @@ public class Main {
 
     //TODO: Add enum evaluations here (right after constants?)
 
-    //AttributeInterpreter.
-            //evaluateAttributes(typesIncludingInner);
 
     if (!currentJob.isCheckOnly()) {
       // Set data for main class
@@ -416,7 +410,7 @@ public class Main {
         mainArguments = false;
       else
         throw new CompileException(
-            "File " + mainFile + " does not contain an appropriate main() method");
+            "File " + files.get(0) + " does not contain an appropriate main() method");
     }
 
     try {
@@ -483,7 +477,7 @@ public class Main {
       reporter.printAndReportErrors();
 
     } catch (TypeCheckException e) {
-      logger.error(mainFile + " FAILED TO TYPE CHECK");
+      logger.error(files.get(0) + " FAILED TO TYPE CHECK");
       throw e;
     }
   }
