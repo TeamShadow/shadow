@@ -299,7 +299,7 @@ public class TypeCollector extends ScopedChecker {
     }
 
 
-    /* Check standard imports. */
+    // Check standard imports.
     if (!Files.exists(standardSourcePath))
       throw new ConfigurationException("Invalid path to shadow:standard: " + standardSourcePath);
 
@@ -312,7 +312,7 @@ public class TypeCollector extends ScopedChecker {
       standardDependencies.add(file);
     }
 
-    /* A few io classes are absolutely necessary for a console program. */
+    // A few io classes are absolutely necessary for a console program.
     Path ioSource = standardSourcePath.resolveSibling("io");
     if (!Files.exists(ioSource)) throw new ConfigurationException("Invalid path to io: " + ioSource);
 
@@ -323,7 +323,7 @@ public class TypeCollector extends ScopedChecker {
 
     Map<Path, Path> imports = Configuration.getConfiguration().getImport();
 
-    /* As long as there are unchecked files, remove one and process it. */
+    // As long as there are unchecked files, remove one and process it.
     while (!uncheckedFiles.isEmpty()) {
       Path canonical = uncheckedFiles.first();
       uncheckedFiles.remove(canonical);
@@ -709,6 +709,11 @@ public class TypeCollector extends ScopedChecker {
       // Put new type inside outer type, if it exists.
       if (currentType != null) {
         currentType.addInnerType(name, type);
+
+        if (currentType instanceof AttributeType)
+          addError(node, Error.INVALID_STRUCTURE, "Type " + name + " cannot be declared as an inner class of an attribute");
+        else if (kind.equals("attribute"))
+          addError(node, Error.INVALID_STRUCTURE, "Attribute " + name + " cannot be declared as an inner class");
       }
 
       // Put new type in its package.

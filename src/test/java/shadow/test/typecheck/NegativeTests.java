@@ -44,6 +44,18 @@ public class NegativeTests {
   }
 
   @Test
+  public void testAttributeOuterClass() throws Exception {
+    args.add("tests-negative/typechecker/attribute-outer-class/Test.shadow");
+    enforce(Error.INVALID_STRUCTURE);
+  }
+
+  @Test
+  public void testAttributeInnerClass() throws Exception {
+    args.add("tests-negative/typechecker/attribute-inner-class/Test.shadow");
+    enforce(Error.INVALID_STRUCTURE);
+  }
+
+  @Test
   public void testAttributeInvalidArgument() throws Exception {
     args.add("tests-negative/typechecker/attribute-invalid-argument/Test.shadow");
     enforce(Error.INVALID_METHOD);
