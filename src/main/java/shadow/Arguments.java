@@ -52,12 +52,15 @@ public class Arguments {
     if (commandLine.hasOption(HELP) || commandLine.hasOption(INFORMATION)) return;
 
     // Ensure exactly one source file is specified (and that it ends in .shadow)
+    /*
     if (commandLine.getArgs().length > 1)
       throw new ConfigurationException("Only one main source file may be specified");
     else if (commandLine.getArgs().length == 0)
       throw new ConfigurationException("No source file specified to compile");
     else if (!commandLine.getArgs()[0].endsWith(".shadow"))
       throw new ConfigurationException("Source files must end in \".shadow\"");
+
+     */
   }
 
   public boolean hasOption(String option) {
@@ -93,17 +96,10 @@ public class Arguments {
         Option.builder(CONFIG)
             .longOpt(CONFIG_LONG)
             .hasArg()
-            .argName("config.xml")
+            .argName("shadow.xml")
             .desc("Specify optional configuration file\nIf shadow.xml exists, it will be checked")
             .build();
 
-    Option buildSystemOption =
-            Option.builder(BUILD_SYSTEM)
-                    .longOpt(BUILD_SYSTEM_LONG)
-                    .hasArg()
-                    .argName("path")
-                    .desc("Build object files for system source files from specified path")
-                    .build();
 
     Option outputOption =
         Option.builder(OUTPUT)
@@ -126,6 +122,13 @@ public class Arguments {
     options.addOption(warningOption);
 
     // Build/add simple options
+
+    options.addOption(
+        new Option(
+            BUILD_SYSTEM,
+            BUILD_SYSTEM_LONG,
+            false,
+            "Build binary files for system source files"));
     options.addOption(
         new Option(TYPECHECK, TYPECHECK_LONG, false, "Parse and type-check the Shadow files"));
     options.addOption(

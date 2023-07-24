@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Barry Wittman
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 public class Main {
 
   // Version of the Shadow compiler
-  public static final String VERSION = "0.8";
+  public static final String VERSION = "0.8.5";
   public static final String MINIMUM_LLVM_VERSION = "10.0";
 
   // These are the error codes returned by the compiler
@@ -162,14 +163,14 @@ public class Main {
     // Detect and establish the current settings and arguments
     Arguments compilerArgs = new Arguments(args);
 
-    String firstFile = null;
+    String mainFile = null;
     if (compilerArgs.getFiles().length > 0)
-      firstFile = compilerArgs.getFiles()[0];
+      mainFile = compilerArgs.getFiles()[0];
 
     // Detect and establish the current settings based on the arguments
     config =
         Configuration.buildConfiguration(
-                firstFile, compilerArgs.getConfigFileArg(), false);
+                mainFile, compilerArgs.getConfigFileArg(), false);
     currentJob = new Job(compilerArgs);
     List<Path> files = currentJob.getFiles();
 
@@ -209,7 +210,7 @@ public class Main {
         throw new CompileException("FAILED TO COMPILE");
       }
 
-      if (!currentJob.isNoLink()) {
+      if (currentJob.isLink()) {
         logger.info("Building for target \"" + config.getTarget() + "\"");
         Path mainLL;
         if (config.getOs().equals("Windows")) {
@@ -258,6 +259,8 @@ public class Main {
       logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
     }
   }
+
+
 
   // Assumes compileCommand contains two empty slots at the end:
   // The first is for the output file name
@@ -359,7 +362,7 @@ public class Main {
     Path systemBinary = system.get(Configuration.BINARY);
     Path systemSource = system.get(Configuration.SOURCE);
 
-    boolean isWindows = Configuration.getConfiguration().getOs().equals("Windows");
+    boolean isWindows = config.getOs().equals("Windows");
     Path unwindSource =
         systemSource.resolve(
             "Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture() + ".ll");
@@ -394,13 +397,16 @@ public class Main {
             .forEach(typesIncludingInner::addAll);
 
 
+    reporter.printAndReportErrors();
+
+
     ConstantFieldInterpreter.evaluateConstants(
         typecheckerOutput.packageTree, typesIncludingInner);
 
     //TODO: Add enum evaluations here (right after constants?)
 
 
-    if (!currentJob.isCheckOnly()) {
+    if (currentJob.isLink()) {
       // Set data for main class
       Type mainType = typecheckerOutput.main.getType();
       mainClass = mainType.toString(Type.MANGLE);

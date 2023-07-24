@@ -16,6 +16,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -281,7 +282,7 @@ public class Configuration {
     Path sourceDir =
         mainFilePath == null
             ? null
-            : Paths.get(mainFilePath).getParent().normalize();
+            : Paths.get(mainFilePath).toAbsolutePath().getParent().normalize();
     Path workingDir = Paths.get("").toAbsolutePath().normalize();
     Path runningDir = getRunningDirectory().toAbsolutePath().normalize();
 
@@ -442,14 +443,12 @@ public class Configuration {
     // Using running directory for system src, include, and bin
     if (system.isEmpty()) {
       Path directory = getRunningDirectory();
-      system.add(directory);
-      system.add(directory);
-      system.add(directory);
+      system.add(directory); // source
+      system.add(directory); // include
+      system.add(directory); // binary
     }
 
     if (_import == null) {
-      // _import = new ArrayList<>();
-
       // If there are no imports, add the current directory for both src and bin
       Path currentDirectory = Paths.get("." + File.separator).toAbsolutePath().normalize();
       _import.put(currentDirectory, currentDirectory);
@@ -658,10 +657,10 @@ public class Configuration {
 
   private static Path getChildWithLargestVersion(Path path) {
     if (Files.isDirectory(path)) {
-      try {
+      try(DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
         // Get largest version number
         Path largest = null;
-        for (Path child : Files.newDirectoryStream(path)) {
+        for (Path child : stream) {
           if (largest == null
               || Main.compareVersions(
                       child.getFileName().toString(), largest.getFileName().toString())
