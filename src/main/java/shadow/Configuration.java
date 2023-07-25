@@ -448,7 +448,7 @@ public class Configuration {
       system.add(directory); // binary
     }
 
-    if (_import == null) {
+    if (_import.isEmpty()) {
       // If there are no imports, add the current directory for both src and bin
       Path currentDirectory = Paths.get("." + File.separator).toAbsolutePath().normalize();
       _import.put(currentDirectory, currentDirectory);
