@@ -469,8 +469,7 @@ public class Main {
               logger.info("Generating LLVM code for " + name);
             // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
-            // We don't generate LLVM for attributes, since their computation is all at compile time
-            //if (!(node.getType() instanceof AttributeType))
+            if (reporter.getErrorList().size() == 0)
               linkCommand.add(compileShadowFile(file, binaryPath, module));
           }
 
@@ -478,10 +477,10 @@ public class Main {
           else if (Files.exists(nativeFile))
             linkCommand.add(compileLLVMFile(nativeFile, nativeObject));
         }
+
+        reporter.printAndReportErrors();
+
       }
-
-      reporter.printAndReportErrors();
-
     } catch (TypeCheckException e) {
       logger.error(files.get(0) + " FAILED TO TYPE CHECK");
       throw e;

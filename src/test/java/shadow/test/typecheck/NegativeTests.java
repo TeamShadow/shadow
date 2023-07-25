@@ -464,6 +464,18 @@ public class NegativeTests {
   }
 
   @Test
+  public void testMethodDoesNotReturnSimple() throws Exception {
+    args.add("tests-negative/typechecker/method-does-not-return-simple/Test.shadow");
+    enforce(Error.NOT_ALL_PATHS_RETURN);
+  }
+
+  @Test
+  public void testMethodDoesNotReturnWithException() throws Exception {
+    args.add("tests-negative/typechecker/method-does-not-return-with-exception/Test.shadow");
+    enforce(Error.NOT_ALL_PATHS_RETURN);
+  }
+
+  @Test
   public void testUnreachableCode() throws Exception {
     args.add("tests-negative/typechecker/unreachable-code/Test.shadow");
     enforce(Error.UNREACHABLE_CODE);

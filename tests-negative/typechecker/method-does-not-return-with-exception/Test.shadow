@@ -1,0 +1,17 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		Console.printLine(value(4));
+	}
+
+	public value(int x) => (int)
+	{
+		if (x < 5)
+			return 10;
+	    else if (x > 5)
+	        throw IllegalArgumentException:create();
+	}
+}

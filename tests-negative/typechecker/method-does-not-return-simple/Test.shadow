@@ -1,0 +1,14 @@
+import shadow:io@Console;
+
+class Test
+{
+	public main() => ()
+	{
+		Console.printLine(value(4));
+	}
+
+	public value(int x) => (int)
+	{
+
+	}
+}
