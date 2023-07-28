@@ -1,0 +1,15 @@
+attribute shadow:test@
+SampleAttribute
+{
+    int value;
+
+    create(int number)
+    {
+        value = number * 2;
+    }
+
+    getData() => (String)
+    {
+        return #(value * 3);
+    }
+}

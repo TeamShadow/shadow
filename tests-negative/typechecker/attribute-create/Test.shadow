@@ -1,0 +1,6 @@
+class Test {
+
+    public main() => () {
+        Object o = Attribute:create(5);
+    }
+}

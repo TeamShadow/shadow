@@ -384,7 +384,14 @@ public class StatementChecker extends ScopedChecker {
     Type type;
     boolean isVar = false;
 
-    if (ctx.type() != null) type = ctx.type().getType();
+    if (ctx.type() != null) {
+      type = ctx.type().getType();
+      if (type instanceof AttributeType)
+        addError(
+                ctx.type(),
+                Error.INVALID_TYPE,
+                "Variable cannot be declared with attribute type");
+    }
     else { // var type
       type = Type.VAR;
       isVar = true;
@@ -1207,7 +1214,7 @@ public class StatementChecker extends ScopedChecker {
     Type rightType = right.getType();
     ModifiedType rightElement = right;
 
-    // check lengths first
+    // Check lengths first
     if (rightType instanceof SequenceType
         && leftSequence.size() != ((SequenceType) rightType).size()) {
       addError(
@@ -1228,10 +1235,8 @@ public class StatementChecker extends ScopedChecker {
 
         if (leftElement.getType().equals(Type.VAR)) {
           Type type = resolveType(rightElement).getType();
-          if (leftElement.getModifiers().isNullable() && type instanceof ArrayType) {
-            ArrayType arrayType = (ArrayType) type;
+          if (leftElement.getModifiers().isNullable() && type instanceof ArrayType arrayType)
             type = arrayType.convertToNullable();
-          }
 
           if (type.equals(Type.NULL)) {
             type = Type.UNKNOWN;
@@ -2309,12 +2314,33 @@ public class StatementChecker extends ScopedChecker {
     Type prefixType = prefixNode.getType();
     String methodName = ctx.Identifier().getText();
 
-    if (prefixNode.getModifiers().isTypeName() && !(prefixType instanceof SingletonType)) {
-      addError(curPrefix.getFirst(), Error.NOT_OBJECT, "Type name cannot be used to call method");
+    if (prefixNode.getModifiers().isTypeName() ) {
+      if (prefixType instanceof AttributeType attributeType) {
+        MethodSignature signature = currentMethod.getFirst().getSignature();
+        if (signature.getAttributeInvocation(attributeType) == null)
+          addError(curPrefix.getFirst(), Error.MISMATCHED_TYPE, "Attribute type " + attributeType + " has not been invoked for this method");
+
+        PrimarySuffixContext parent = (PrimarySuffixContext) ctx.getParent();
+        List<PrimarySuffixContext> suffixes =
+                ((PrimaryExpressionContext) parent.getParent()).primarySuffix();
+        int index = 0;
+        while (suffixes.get(index) != parent) index++;
+        index++;
+
+        // If there are no more suffixes after this one or the next suffix is not a method call,
+        // this is a method reference
+        if (index == suffixes.size() || suffixes.get(index).methodCall() == null)
+          addError(ctx, Error.INVALID_STRUCTURE, "A method reference cannot be used from an attribute");
+
+      }
+      else if (!(prefixType instanceof SingletonType))
+        addError(curPrefix.getFirst(), Error.NOT_OBJECT, "Type name cannot be used to call method");
     } else if (prefixType instanceof SequenceType) {
       addError(
           curPrefix.getFirst(), Error.INVALID_TYPE, "Method cannot be called on a sequence result");
-    } else if (prefixType != null) {
+    }
+
+    if (prefixType != null) {
       List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(methodName);
 
       // unbound method (it gets bound when you supply arguments)
@@ -2364,7 +2390,6 @@ public class StatementChecker extends ScopedChecker {
     else if (prefixType instanceof SingletonType)
       addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Singletons cannot be created");
     else if (prefixType instanceof AttributeType)
-      //TODO: Add error check for this
       addError(curPrefix.getFirst(), Error.INVALID_CREATE, "Attributes cannot be created with an explicit call");
     else if (prefixType instanceof EnumType)
       //TODO: Add error check for this
@@ -2518,7 +2543,7 @@ public class StatementChecker extends ScopedChecker {
 
       if (!fieldIsAccessible(field, currentType)) {
         addError(ctx, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
-      } else if (!field.getModifiers().isConstant() && isTypeName) {
+      } else if (!(field.getModifiers().isConstant() || prefixType instanceof AttributeType) && isTypeName) {
         addError(
             ctx,
             Error.ILLEGAL_ACCESS,

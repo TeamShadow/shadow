@@ -1612,6 +1612,19 @@ public class OutputTests {
     );
   }
 
+
+  @Test
+  public void testAttributeUsage() throws Exception {
+    args.add("shadow/test/AttributeUsageTest.shadow");
+    Main.run(args.toArray(new String[] { }));
+    run(new String[0],
+            // stdin
+            formatOutputString(
+                    "42",
+                    "19")
+    );
+  }
+
   @Test
   public void testThread() throws Exception {
   	args.add("shadow/test/ThreadTest.shadow");

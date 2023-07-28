@@ -12,8 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Represents a particular invocation of an attribute type, including any fields set during that
- * invocation. E.g. {@code SomeAttribute("alpha", 5)}.
+ * Represents a particular invocation of an attribute type. E.g. {@code SomeAttribute("alpha", 5)}.
  */
 public class AttributeInvocation {
   private final AttributeType type;

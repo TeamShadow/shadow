@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import shadow.Configuration;
+import shadow.Loggers;
 import shadow.interpreter.ConstantFieldInterpreter.FieldKey;
 import shadow.interpreter.*;
 import shadow.parse.Context;
@@ -12,6 +13,8 @@ import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.*;
 import shadow.tac.TACMethod.TACFinallyFunction;
 import shadow.tac.nodes.*;
+import shadow.typecheck.ErrorReporter;
+import shadow.typecheck.Package;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.*;
 
@@ -1159,8 +1162,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       TACMethodName methodName = new TACMethodName(anchor, prefix, signature);
       methodName.setSuper(explicitSuper);
 
-      /*if (!signature.isImportAssembly())*/
-
       params.add(methodName.getPrefix());
 
       methodRef = methodName;
@@ -1212,16 +1213,24 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   @Override
   public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx) {
     visitChildren(ctx);
-    if (ctx.getModifiers().isConstant()) {
-      // TODO: Replace this TACLoad with a TACLiteral since the value is known
-      Type parentType = getPreviousSuffix((PrimarySuffixContext) ctx.getParent()).getType();
-      // prefix = new TACLoad(anchor, new TACConstantRef(parentType, ctx.Identifier().getText()));
+    Type parentType = getPreviousSuffix((PrimarySuffixContext) ctx.getParent()).getType();
+
+    if (parentType instanceof AttributeType attributeType) {
+      Package packageTree = attributeType.getPackage().getRoot();
+      ErrorReporter reporter = new ErrorReporter(Loggers.AST_INTERPRETER);
+      AttributeInvocation invocation = method.getSignature().getAttributeInvocation(attributeType);
+      try {
+        ShadowObject attribute = AttributeInterpreter.getAttributeInvocation(invocation, packageTree, reporter);
+        prefix = new TACLiteral(anchor, attribute.getField(ctx.Identifier().getText()));
+      } catch (InterpreterException e) {
+        throw new RuntimeException(e);
+      }
+    } else if (ctx.getModifiers().isConstant()) {
       Context constant = parentType.recursivelyGetConstant(ctx.Identifier().getText());
       prefix = new TACLiteral(anchor, constant.getInterpretedValue()); // should work?
     } else if (ctx.getType() instanceof SingletonType) {
       prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType) ctx.getType()));
-    } else if (!ctx.getModifiers()
-        .isTypeName()) { // doesn't do anything at this stage if it's just a type name
+    } else if (!ctx.getModifiers().isTypeName()) { // doesn't do anything at this stage if it's just a type name
       prefix = new TACLoad(anchor, new TACFieldRef(prefix, ctx.Identifier().getText()));
     }
 
@@ -1352,7 +1361,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     index++;
 
     // if there are no more suffixes after this one or the next suffix is not a method call
-    // make a method references
+    // make a method reference
     if (index == suffixes.size() || suffixes.get(index).methodCall() == null) {
       // Create Method object
       UnboundMethodType unboundMethod = (UnboundMethodType) ctx.getType();
@@ -1367,13 +1376,37 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   public Void visitMethodCall(ShadowParser.MethodCallContext ctx) {
     boolean fromMethodReference = prefix != null && prefix.getType() instanceof MethodReferenceType;
 
-    visitChildren(ctx);
-    methodCall(
-        ctx.getSignature(),
-        ctx,
-        ctx.conditionalExpression(),
-        fromMethodReference); // handles appending
+    MethodSignature signature = ctx.getSignature();
 
+    if (signature.getOuter() instanceof AttributeType attributeType) {
+      Package packageTree = attributeType.getPackage().getRoot();
+      ErrorReporter reporter = new ErrorReporter(Loggers.AST_INTERPRETER);
+      AttributeInvocation invocation = method.getSignature().getAttributeInvocation(attributeType);
+      try {
+        ShadowObject attribute = AttributeInterpreter.getAttributeInvocation(invocation, packageTree, reporter);
+        List<ConditionalExpressionContext> argumentContexts = ctx.conditionalExpression();
+        ShadowValue[] arguments = new ShadowValue[argumentContexts.size()];
+        for (int i = 0; i < argumentContexts.size(); ++i)
+          arguments[i] = ASTInterpreter.getValue(packageTree, reporter, method.getSignature(), argumentContexts.get(i));
+        ShadowValue[] results = ASTInterpreter.callMethod(packageTree, reporter, attribute, signature.getSymbol(), null, arguments);
+        if (results.length == 1)
+          prefix = new TACLiteral(anchor, results[0]);
+        else if (results.length > 0)
+          prefix = new TACLiteral(anchor, new ShadowSequence(results));
+        ctx.setOperand(prefix);
+      } catch (InterpreterException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    else {
+      visitChildren(ctx);
+
+      methodCall(
+              signature,
+              ctx,
+              ctx.conditionalExpression(),
+              fromMethodReference); // handles appending
+    }
     return null;
   }
 

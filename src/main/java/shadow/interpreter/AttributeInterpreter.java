@@ -31,9 +31,9 @@ public class AttributeInterpreter extends ASTInterpreter {
         return ctx.getInterpretedValue();
     }
 
-    public static ShadowValue getAttributeInvocation(AttributeInvocation attribute, Package packageTree, ErrorReporter errorReporter) throws InterpreterException {
+    public static ShadowObject getAttributeInvocation(AttributeInvocation attribute, Package packageTree, ErrorReporter errorReporter) throws InterpreterException {
         if (attribute.getInvocationContext().getInterpretedValue() != null)
-            return attribute.getInvocationContext().getInterpretedValue();
+            return (ShadowObject) attribute.getInvocationContext().getInterpretedValue();
 
         List<ShadowParser.ConditionalExpressionContext> arguments = attribute.getValues();
         ShadowValue[] argumentValues = new ShadowValue[arguments.size()];

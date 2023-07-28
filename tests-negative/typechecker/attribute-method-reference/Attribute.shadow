@@ -1,0 +1,7 @@
+attribute Attribute
+{
+    getValue() => (int)
+    {
+        return 5;
+    }
+}

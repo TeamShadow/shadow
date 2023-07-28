@@ -176,6 +176,42 @@ public class NegativeTests {
   }
 
   @Test
+  public void testAttributeVisibility() throws Exception {
+    args.add("tests-negative/typechecker/attribute-visibility/Test.shadow");
+    enforce(Error.INVALID_MODIFIER);
+  }
+
+  @Test
+  public void testAttributeNotInvoked() throws Exception {
+    args.add("tests-negative/typechecker/attribute-not-invoked/Test.shadow");
+    enforce(Error.MISMATCHED_TYPE);
+  }
+
+  @Test
+  public void testAttributeCreate() throws Exception {
+    args.add("tests-negative/typechecker/attribute-create/Test.shadow");
+    enforce(Error.INVALID_CREATE);
+  }
+
+  @Test
+  public void testAttributeVariable() throws Exception {
+    args.add("tests-negative/typechecker/attribute-variable/Test.shadow");
+    enforce(Error.INVALID_TYPE);
+  }
+
+  @Test
+  public void testAttributeField() throws Exception {
+    args.add("tests-negative/typechecker/attribute-field/Test.shadow");
+    enforce(Error.INVALID_TYPE);
+  }
+
+  @Test
+  public void testAttributeMethodReference() throws Exception {
+    args.add("tests-negative/typechecker/attribute-method-reference/Test.shadow");
+    enforce(Error.INVALID_STRUCTURE);
+  }
+
+  @Test
   public void testNoVisibility() throws Exception {
     args.add("tests-negative/typechecker/no-visibility/Test.shadow");
     enforce(Error.INVALID_MODIFIER);

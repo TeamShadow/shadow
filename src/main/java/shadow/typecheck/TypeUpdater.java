@@ -801,7 +801,7 @@ public class TypeUpdater extends BaseChecker {
 
   /*
    * Checks method and field modifiers to see if they are legal. The kind is
-   * "constant" or "method", for error reporting purposes.
+   * "constant", "field", or "method", for error reporting purposes.
    */
   private void checkModifiers(Context node, String kind) {
     int visibilityModifiers = 0;
@@ -819,18 +819,18 @@ public class TypeUpdater extends BaseChecker {
           "Only one public, private, or protected modifier can be used at once");
     }
 
-    if (currentType instanceof InterfaceType) {
+    if (currentType instanceof InterfaceType || currentType instanceof AttributeType) {
+      String structure = (currentType instanceof InterfaceType) ? "Interface " : "Attribute ";
       if (visibilityModifiers > 0) {
         addError(
             node,
             Error.INVALID_MODIFIER,
-            "Interface "
+            structure
                 + kind
                 + "s cannot be marked public, private, or protected since they are all public by definition");
       }
 
       node.getModifiers().addModifier(Modifiers.PUBLIC);
-      // node.getType().addModifier(Modifiers.PUBLIC);  //What was this supposed to do?
     } else if (visibilityModifiers == 0) {
       addError(
           node,
@@ -1275,6 +1275,7 @@ public class TypeUpdater extends BaseChecker {
     // A field declaration has a type followed by an identifier (or a sequence of them).
     Type type = ctx.type().getType();
 
+
     if (ctx.getModifiers().isNullable() && type instanceof ArrayType) {
       ArrayType arrayType = (ArrayType) type;
       type = arrayType.convertToNullable();
@@ -1285,6 +1286,8 @@ public class TypeUpdater extends BaseChecker {
     // Constants must be public, private, or protected,
     // unlike regular fields which are implicitly private.
     if (ctx.getModifiers().isConstant()) checkModifiers(ctx, "constant");
+
+    if (currentType instanceof AttributeType) checkModifiers(ctx, "field");
 
     if (currentType.getModifiers().isImmutable())
       ctx.getModifiers().addModifier(Modifiers.IMMUTABLE);
@@ -1378,6 +1381,7 @@ public class TypeUpdater extends BaseChecker {
               "Modifier weak cannot be applied to field " + symbol + " with singleton type");
       }
     }
+
 
     return null;
   }
@@ -1494,7 +1498,7 @@ public class TypeUpdater extends BaseChecker {
       addError(
           ctx,
           Error.INVALID_TYPE,
-          "Attribute types can only be referenced before method declarations");
+          "Attribute types cannot be referenced in field or method declarations");
     }
 
     if (ctx.typeArguments() != null) { // Contains type arguments.

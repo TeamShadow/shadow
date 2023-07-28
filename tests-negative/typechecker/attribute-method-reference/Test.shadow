@@ -1,0 +1,15 @@
+class Test {
+
+    public main() => ()
+    {
+        int result = method1();
+    }
+
+    [Attribute]
+    public method1() => (int)
+    {
+        () => (int) reference = Attribute.getValue;
+
+        return 6;
+    }
+}

@@ -1,0 +1,9 @@
+attribute Test
+{
+    int value;
+
+    public create(int number)
+    {
+        value = number;
+    }
+}

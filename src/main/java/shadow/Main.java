@@ -485,6 +485,12 @@ public class Main {
       logger.error(files.get(0) + " FAILED TO TYPE CHECK");
       throw e;
     }
+    catch (RuntimeException e) {
+      if (e.getCause() instanceof ShadowException)
+        throw (ShadowException) e.getCause();
+      else
+        throw e;
+    }
   }
 
   private static Process getCompiler(String objectFile) throws IOException {

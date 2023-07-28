@@ -1,0 +1,8 @@
+class Test {
+
+    Attribute a;
+
+    public main() => () {
+
+    }
+}

@@ -1,0 +1,19 @@
+class Test {
+
+    public main() => ()
+    {
+        int result = method1() + method2();
+    }
+
+    [Attribute1]
+    public method1() => (int)
+    {
+        return Attribute2.getValue();
+    }
+
+    [Attribute2]
+    public method2() => (int)
+    {
+        return Attribute1.getValue();
+    }
+}
