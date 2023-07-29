@@ -450,8 +450,7 @@ public abstract class Type implements Comparable<Type> {
 
   @Override
   public boolean equals(Object object) {
-    if (object instanceof Type) {
-      Type type = (Type) object;
+    if (object instanceof Type type) {
       return equals(type);
     } else return false;
   }
@@ -705,7 +704,7 @@ public abstract class Type implements Comparable<Type> {
           rightType
               .getOuter()
               .getMatchingMethod(
-                  rightType.getTypeName(), methodType.getParameterTypes(), null, errors);
+                  rightType.getTypeName(), methodType.getParameterTypes(), errors);
         } else
           ErrorReporter.addError(
               errors,
@@ -760,7 +759,7 @@ public abstract class Type implements Comparable<Type> {
 
     if (hasUninstantiatedInterface(interfaceType)) {
       SequenceType argument = new SequenceType(rightType);
-      MethodSignature signature = getMatchingMethod(methodName, argument, null, errors);
+      MethodSignature signature = getMatchingMethod(methodName, argument, errors);
       if (signature != null) {
         Type result = signature.getReturnTypes().getType(0);
         accepts = result.isSubtype(this);
@@ -788,21 +787,33 @@ public abstract class Type implements Comparable<Type> {
     }
   }
 
-  public MethodSignature getMatchingMethod(String methodName, SequenceType arguments) {
-    return getMatchingMethod(methodName, arguments, null);
+  public MethodSignature getMatchingMethod(
+      String methodName, SequenceType arguments) {
+    List<ShadowException> errors = new ArrayList<>();
+    return getMatchingMethod(methodName, arguments, errors);
   }
 
+
   public MethodSignature getMatchingMethod(
-      String methodName, SequenceType arguments, SequenceType typeArguments) {
+          String methodName, SequenceType arguments, SequenceType typeArguments) {
     List<ShadowException> errors = new ArrayList<>();
     return getMatchingMethod(methodName, arguments, typeArguments, errors);
   }
 
   public MethodSignature getMatchingMethod(
-      String methodName,
-      SequenceType arguments,
-      SequenceType typeArguments,
-      List<ShadowException> errors) {
+          String methodName,
+          SequenceType arguments,
+          List<ShadowException> errors) {
+    return getMatchingMethod(methodName, arguments, null, errors);
+  }
+
+  // Type arguments are only needed for creates
+  // TODO: Separate into code for methods and creates?
+  public MethodSignature getMatchingMethod(
+          String methodName,
+          SequenceType arguments,
+          SequenceType typeArguments,
+          List<ShadowException> errors) {
     boolean hasTypeArguments = typeArguments != null;
     MethodSignature candidate = null;
 
@@ -828,15 +839,15 @@ public abstract class Type implements Comparable<Type> {
       // signature)
       if (signature.canAccept(arguments)) {
         if (candidate == null
-            || (signature.getParameterTypes().isSubtype(candidate.getParameterTypes())
+                || (signature.getParameterTypes().isSubtype(candidate.getParameterTypes())
                 && !candidate.getParameterTypes().isSubtype(signature.getParameterTypes())))
           candidate = signature;
         else if (!candidate.getParameterTypes().isSubtype(signature.getParameterTypes())) {
           ErrorReporter.addError(
-              errors,
-              Error.INVALID_ARGUMENTS,
-              "Ambiguous reference to " + methodName + " with arguments " + arguments,
-              arguments);
+                  errors,
+                  Error.INVALID_ARGUMENTS,
+                  "Ambiguous reference to " + methodName + " with arguments " + arguments,
+                  arguments);
           return null;
         }
       }
@@ -844,13 +855,15 @@ public abstract class Type implements Comparable<Type> {
 
     if (candidate == null)
       ErrorReporter.addError(
-          errors,
-          Error.INVALID_METHOD,
-          "No definition of " + methodName + " with arguments " + arguments + " in this context",
-          arguments);
+              errors,
+              Error.INVALID_METHOD,
+              "No definition of " + methodName + " with arguments " + arguments + " in this context",
+              arguments);
 
     return candidate;
   }
+
+
 
   public Package getPackage() {
     return _package;
@@ -1228,12 +1241,10 @@ public abstract class Type implements Comparable<Type> {
   public void addMentionedType(Type type) {
     if (type == null || type instanceof UninstantiatedType || type instanceof TypeParameter) return;
 
-    if (type instanceof ArrayType) {
-      ArrayType arrayType = (ArrayType) type;
+    if (type instanceof ArrayType arrayType) {
       Type baseType = arrayType.getBaseType();
       addMentionedType(baseType);
-    } else if (type instanceof MethodType) {
-      MethodType methodType = (MethodType) type;
+    } else if (type instanceof MethodType methodType) {
       for (ModifiedType parameter : methodType.getParameterTypes())
         addMentionedType(parameter.getType());
 
@@ -1266,8 +1277,7 @@ public abstract class Type implements Comparable<Type> {
 
       for (ModifiedType modifiedType : getTypeParameters()) {
         Type parameter = modifiedType.getType();
-        if (parameter instanceof TypeParameter) {
-          TypeParameter typeParameter = (TypeParameter) parameter;
+        if (parameter instanceof TypeParameter typeParameter) {
           if (!parameters.contains(typeParameter)) return false;
         } else if (!parameter.onlyUsesTheseParameters(parameters)) return false;
       }
@@ -1280,11 +1290,9 @@ public abstract class Type implements Comparable<Type> {
     if (type == null || type instanceof UninstantiatedType) return;
 
     if (!usedTypes.contains(type)) {
-      if (type instanceof TypeParameter) {
-        TypeParameter typeParameter = (TypeParameter) type;
+      if (type instanceof TypeParameter typeParameter) {
         for (Type bound : typeParameter.getBounds()) addUsedType(bound);
-      } else if (type instanceof ArrayType) {
-        ArrayType arrayType = (ArrayType) type;
+      } else if (type instanceof ArrayType arrayType) {
         Type baseType = arrayType.getBaseType();
 
         usedTypes.add(type);
@@ -1297,8 +1305,7 @@ public abstract class Type implements Comparable<Type> {
         addUsedType(baseType);
       } else if (type instanceof MethodReferenceType)
         addUsedType(((MethodReferenceType) type).getMethodType());
-      else if (type instanceof MethodType) {
-        MethodType methodType = (MethodType) type;
+      else if (type instanceof MethodType methodType) {
         for (ModifiedType parameter : methodType.getParameterTypes())
           addUsedType(parameter.getType());
 
@@ -1414,7 +1421,7 @@ public abstract class Type implements Comparable<Type> {
     return list;
   }
 
-  public boolean isDescendentOf(Type type) {
+  public boolean isDescendantOf(Type type) {
     return false;
   }
 
@@ -1469,15 +1476,6 @@ public abstract class Type implements Comparable<Type> {
 
       out.println();
     }
-  }
-
-  public void clearInstantiatedTypes() {
-    if (instantiatedTypes.children != null) {
-      instantiatedTypes.children.clear();
-      instantiatedTypes.children = null;
-    }
-    instantiatedTypes.argument = null;
-    instantiatedTypes.instantiatedType = null;
   }
 
   public boolean hasDocumentation() {

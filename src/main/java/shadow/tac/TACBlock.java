@@ -20,7 +20,7 @@ public class TACBlock {
   // Although it seems like overkill, we need many different items for a cleanup:
   private TACLabel
       cleanupLabel; // Label for the actual cleaning up code, which everything will visit, even if
-                    // not unwinding
+  // not unwinding
   private TACPhi cleanupPhi; // Phi for returning to wherever we were before doing the cleanup
 
   private TACLabel cleanupUnwindLabel; // Label for the cleanup done when unwinding
@@ -28,7 +28,7 @@ public class TACBlock {
   private final TACMethod method;
   private boolean unwindTarget =
       false; // Used to see if the block can be reached by unwinding, important for finally
-             // code-generation
+  // code-generation
   private boolean cleanupTarget =
       false; // Used to see if the block contains a cleanup, important for finally code-generation
   private TACFinallyFunction finallyFunction = null;
@@ -189,7 +189,7 @@ public class TACBlock {
     TACBlock block = this;
     while (block != null) {
       if (block.hasCleanup()) // only finally blocks
-      block.unwindTarget = true;
+        block.unwindTarget = true;
       block = block.getParent();
     }
   }
@@ -198,7 +198,7 @@ public class TACBlock {
     cleanupTarget = true;
   }
 
-  // Used to see if code is inside of a cleanup
+  // Used to see if code is inside a cleanup
   // If it is, we don't report an error for dead code removal
   public boolean isInsideCleanup() {
     TACBlock block = this;

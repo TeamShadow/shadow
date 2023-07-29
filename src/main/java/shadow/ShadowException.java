@@ -56,7 +56,12 @@ public abstract class ShadowException extends Exception {
         message.append("(").append(context.getSourcePath().getFileName().toString()).append(")");
 
       if (context.lineStart() != -1 && context.columnStart() != -1)
-        message.append("[").append(context.lineStart()).append(":").append(context.columnStart()).append("] ");
+        message
+            .append("[")
+            .append(context.lineStart())
+            .append(":")
+            .append(context.columnStart())
+            .append("] ");
       else message.append(" ");
 
       if (kind != null) message.append(kind.getName()).append(": ");
@@ -86,7 +91,12 @@ public abstract class ShadowException extends Exception {
         message.append("(").append(context.getSourcePath().getFileName().toString()).append(")");
 
       if (context.lineStart() != -1 && context.columnStart() != -1)
-        message.append("[").append(context.lineStart()).append(":").append(context.columnStart()).append("] ");
+        message
+            .append("[")
+            .append(context.lineStart())
+            .append(":")
+            .append(context.columnStart())
+            .append("] ");
       else message.append(" ");
 
       if (kind != null) message.append(kind.getName()).append(": ");

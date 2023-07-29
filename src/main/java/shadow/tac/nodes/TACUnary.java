@@ -102,8 +102,7 @@ public class TACUnary extends TACUpdate {
     boolean changed = false;
     TACOperand value = operand;
 
-    if (operand instanceof TACUpdate) {
-      TACUpdate update = (TACUpdate) operand;
+    if (operand instanceof TACUpdate update) {
       if (update.update(currentlyUpdating)) changed = true;
       value = update.getValue();
     }

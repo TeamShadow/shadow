@@ -1,6 +1,5 @@
 package shadow.interpreter;
 
-import shadow.interpreter.InterpreterException.Error;
 import shadow.typecheck.type.*;
 
 import java.util.HashMap;
@@ -8,14 +7,16 @@ import java.util.HashMap;
 public class ShadowClass extends ShadowObject {
   private final Type representedType;
 
-
   public ShadowClass(Type representedType) throws InterpreterException {
     this(representedType, representedType.isParameterized());
   }
 
   private ShadowClass(Type representedType, boolean hasTypeParameters) {
     // TODO: Fill out all class fields?
-    super(hasTypeParameters ? Type.GENERIC_CLASS : Type.CLASS, hasTypeParameters ? new ShadowClass(representedType, false) : ShadowObject.makeObject(), new HashMap<>());
+    super(
+        hasTypeParameters ? Type.GENERIC_CLASS : Type.CLASS,
+        hasTypeParameters ? new ShadowClass(representedType, false) : ShadowObject.makeObject(),
+        new HashMap<>());
     this.representedType = representedType;
   }
 
@@ -25,21 +26,21 @@ public class ShadowClass extends ShadowObject {
     if (arguments.length == 0) {
       switch (method) {
         case "isArray":
-          return new ShadowBoolean[]{isArray()};
+          return new ShadowBoolean[] {isArray()};
         case "isGeneric":
-          return new ShadowBoolean[]{isGeneric()};
+          return new ShadowBoolean[] {isGeneric()};
         case "isInterface":
-          return new ShadowBoolean[]{isInterface()};
+          return new ShadowBoolean[] {isInterface()};
         case "isMethod":
-          return new ShadowBoolean[]{isMethod()};
+          return new ShadowBoolean[] {isMethod()};
         case "isPrimitive":
-          return new ShadowBoolean[]{isPrimitive()};
+          return new ShadowBoolean[] {isPrimitive()};
         case "isSingleton":
-          return new ShadowBoolean[]{isSingleton()};
+          return new ShadowBoolean[] {isSingleton()};
         case "name":
-          return new ShadowString[]{name()};
+          return new ShadowString[] {name()};
         case "parent":
-          return new ShadowValue[]{parent()};
+          return new ShadowValue[] {parent()};
       }
     }
 
@@ -51,8 +52,7 @@ public class ShadowClass extends ShadowObject {
   }
 
   public ShadowValue parent() throws InterpreterException {
-    if (representedType instanceof ClassType) {
-      ClassType classType = (ClassType) representedType;
+    if (representedType instanceof ClassType classType) {
       if (classType.getExtendType() == null) return new ShadowNull(Type.CLASS);
       else return new ShadowClass(classType.getExtendType());
     }
@@ -85,8 +85,7 @@ public class ShadowClass extends ShadowObject {
   }
 
   public ShadowBoolean equal(ShadowValue value) throws InterpreterException {
-    if (value instanceof ShadowClass) {
-      ShadowClass other = (ShadowClass) value;
+    if (value instanceof ShadowClass other) {
       return new ShadowBoolean(representedType.equals(other.representedType));
     }
 
@@ -96,8 +95,7 @@ public class ShadowClass extends ShadowObject {
   @SuppressWarnings("unused")
   public ShadowBoolean classIsSubtype(ShadowValue value) {
 
-    if (value instanceof ShadowClass) {
-      ShadowClass other = (ShadowClass) value;
+    if (value instanceof ShadowClass other) {
       return new ShadowBoolean(representedType.isSubtype(other.representedType));
     }
 

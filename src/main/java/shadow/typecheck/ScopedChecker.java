@@ -101,8 +101,7 @@ public abstract class ScopedChecker extends BaseChecker {
   }
 
   public boolean setTypeFromContext(Context node, String name, Type context) {
-    if (context instanceof TypeParameter) {
-      TypeParameter typeParameter = (TypeParameter) context;
+    if (context instanceof TypeParameter typeParameter) {
       for (Type type : typeParameter.getBounds())
         if (setTypeFromContext(node, name, type)) return true;
 
@@ -119,7 +118,7 @@ public abstract class ScopedChecker extends BaseChecker {
 
         if (!fieldIsAccessible(field, currentType))
           addError(
-                  field, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
+              field, Error.ILLEGAL_ACCESS, "Field " + name + " not accessible from this context");
         else {
           if (methodModifiers.isImmutable() || methodModifiers.isReadonly())
             node.getModifiers().upgradeToTemporaryReadonly();
@@ -147,9 +146,9 @@ public abstract class ScopedChecker extends BaseChecker {
 
         if (!fieldIsAccessible(field, currentType))
           addError(
-                  field,
-                  Error.ILLEGAL_ACCESS,
-                  "Constant " + name + " not accessible from this context");
+              field,
+              Error.ILLEGAL_ACCESS,
+              "Constant " + name + " not accessible from this context");
 
         return true;
       }
@@ -157,7 +156,6 @@ public abstract class ScopedChecker extends BaseChecker {
 
     return false;
   }
-
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public static boolean fieldIsAccessible(Context field, Type type) {
@@ -209,8 +207,8 @@ public abstract class ScopedChecker extends BaseChecker {
         node.setType(methodType.getParameterType(name).getType());
         node.addModifiers(methodType.getParameterType(name).getModifiers());
         node.addModifiers(
-                Modifiers
-                        .ASSIGNABLE); // is this right?  Shouldn't all method parameters be unassignable?
+            Modifiers
+                .ASSIGNABLE); // is this right?  Shouldn't all method parameters be unassignable?
         return true;
       }
     }
@@ -232,25 +230,24 @@ public abstract class ScopedChecker extends BaseChecker {
   }
 
   /**
-   * Similar to addSymbol() but updates a symbol that already exists. Useful for interpretation.
-   * The symbol must already exist.
+   * Similar to addSymbol() but updates a symbol that already exists. Useful for interpretation. The
+   * symbol must already exist.
    *
    * @param name the name of the symbol
    * @param type the modified type of the symbol
    */
-
   public void setSymbol(String name, ModifiedType type) {
     if (scopes.isEmpty()) {
       if (type instanceof Context)
         addError(
-                (Context) type,
-                Error.INVALID_STRUCTURE,
-                "Declaration of " + name + " is illegal outside of a defined scope");
+            (Context) type,
+            Error.INVALID_STRUCTURE,
+            "Declaration of " + name + " is illegal outside of a defined scope");
       else
         addError(
-                new TypeCheckException(
-                        Error.INVALID_STRUCTURE,
-                        "Declaration of " + name + " is illegal outside of a defined scope"));
+            new TypeCheckException(
+                Error.INVALID_STRUCTURE,
+                "Declaration of " + name + " is illegal outside of a defined scope"));
     } else {
       for (Scope scope : scopes) {
         if (scope.containsSymbol(name)) { // we look at all enclosing scopes
@@ -258,10 +255,12 @@ public abstract class ScopedChecker extends BaseChecker {
           return;
         }
       }
-      addError(new InterpreterException(InterpreterException.Error.UNDEFINED_SYMBOL, "Variable" + name + " has not been declared"));
+      addError(
+          new InterpreterException(
+              InterpreterException.Error.UNDEFINED_SYMBOL,
+              "Variable" + name + " has not been declared"));
     }
   }
-
 
   /**
    * Find a symbol (variable) with a given name, searching from the current scope back through

@@ -69,11 +69,9 @@ public class TACVariable implements ModifiedType {
 
   @Override
   public boolean equals(Object other) {
-    if (!(other instanceof TACVariable)) return false;
+    if (!(other instanceof TACVariable var)) return false;
 
     if (other == this) return true;
-
-    TACVariable var = (TACVariable) other;
 
     return getName().equals(var.getName());
   }

@@ -85,8 +85,7 @@ public class ArrayType extends ClassType {
   public boolean equals(Type type) {
     if (type == Type.NULL) return false;
 
-    if (type instanceof ArrayType) {
-      ArrayType other = (ArrayType) type;
+    if (type instanceof ArrayType other) {
       if (nullable == other.nullable) return baseType.equals(other.baseType);
     }
     return false;
@@ -139,11 +138,9 @@ public class ArrayType extends ClassType {
 
     if (equals(t)) return true;
 
-    if (t instanceof ArrayType) {
-      ArrayType type = this;
-      ArrayType other = (ArrayType) t;
+    if (t instanceof ArrayType other) {
       // Invariant subtyping on arrays
-      if (type.nullable == other.nullable) return type.getBaseType().equals(other.getBaseType());
+      if (nullable == other.nullable) return getBaseType().equals(other.getBaseType());
       else return false;
     }
 

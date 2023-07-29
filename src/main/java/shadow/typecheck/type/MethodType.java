@@ -96,8 +96,7 @@ public class MethodType extends Type {
   /** Need to override equals as we're doing special things */
   @Override
   public boolean equals(Type o) {
-    if (o instanceof MethodType) {
-      MethodType methodType = (MethodType) o;
+    if (o instanceof MethodType methodType) {
       return matchesParams(methodType) && matchesReturns(methodType);
     } else return false;
   }
@@ -186,8 +185,7 @@ public class MethodType extends Type {
 
     if (equals(t) || t == Type.OBJECT) return true;
 
-    if (t instanceof MethodType) {
-      MethodType otherMethod = (MethodType) t;
+    if (t instanceof MethodType otherMethod) {
       return returns.isSubtype(otherMethod.returns)
           && otherMethod.parameterTypes.isSubtype(parameterTypes);
     } else if (t instanceof MethodReferenceType) {

@@ -22,6 +22,7 @@ import shadow.doctool.Documentation;
 import shadow.typecheck.type.Type;
 
 import java.io.File;
+import java.io.Serial;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,6 +40,7 @@ public class Package implements Comparable<Package>, Iterable<Type> {
    * contains that type.
    */
   public static class PackageException extends Exception {
+    @Serial
     private static final long serialVersionUID = -2535851392865246026L;
 
     public PackageException(String message) {
@@ -92,8 +94,7 @@ public class Package implements Comparable<Package>, Iterable<Type> {
 
   public Package getRoot() {
     Package packageParent = parent;
-    while (packageParent != null)
-      packageParent = packageParent.parent;
+    while (packageParent != null) packageParent = packageParent.parent;
 
     return packageParent;
   }
@@ -130,15 +131,9 @@ public class Package implements Comparable<Package>, Iterable<Type> {
     if (!types.containsKey(name)) {
       types.put(name, type);
       type.setPackage(this); // Informs type of its package
-    } else
-      throw new PackageException("Package " + this + " already contains type " + type);
+    } else throw new PackageException("Package " + this + " already contains type " + type);
   }
 
-  public boolean containsType(Type type) {
-    // name doesn't include packages or type parameters
-    String name = type.toString(Type.NO_OPTIONS);
-    return types.containsKey(name);
-  }
 
   /**
    * Gets all child packages within this package.
@@ -168,10 +163,8 @@ public class Package implements Comparable<Package>, Iterable<Type> {
   public String getMangledName() {
     // Added a cached mangled name since the profiler reported this method in heavy rotation
     if (mangledName == null) {
-      if (parent == null || parent.getName().isEmpty())
-        mangledName = Type.mangle(getName());
-      else
-        mangledName = parent.getMangledName() + '.' + Type.mangle(getName());
+      if (parent == null || parent.getName().isEmpty()) mangledName = Type.mangle(getName());
+      else mangledName = parent.getMangledName() + '.' + Type.mangle(getName());
     }
     return mangledName;
   }
@@ -276,10 +269,8 @@ public class Package implements Comparable<Package>, Iterable<Type> {
   public boolean equals(Object o) {
     if (this == o) return true;
 
-    if (o instanceof Package) {
-      Package p = (Package) o;
+    if (o instanceof Package p)
       return getQualifiedName().equals(p.getQualifiedName());
-    }
 
     return false;
   }

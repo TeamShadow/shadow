@@ -20,7 +20,7 @@ public class ShadowArray extends ShadowObject {
   public ShadowArray(ArrayType type, long length) {
     super(type, ShadowObject.makeObject(), makeFields(length));
     this.type = type;
-    this.data = new ShadowValue[(int)length];
+    this.data = new ShadowValue[(int) length];
   }
 
   @Override
@@ -49,7 +49,7 @@ public class ShadowArray extends ShadowObject {
 
   @Override
   public ShadowValue[] callMethod(String method, ShadowValue... values)
-          throws InterpreterException {
+      throws InterpreterException {
 
     if (method.equals("index") && values.length >= 1) {
       ShadowInteger index = (ShadowInteger) values[0].cast(Type.INT);
@@ -57,30 +57,32 @@ public class ShadowArray extends ShadowObject {
 
       if (location >= 0 && location < data.length) {
         if (values.length == 1) {
-          return new ShadowValue[]{data[location]};
-        }
-        else if(values.length == 2) {
+          return new ShadowValue[] {data[location]};
+        } else if (values.length == 2) {
           data[location] = values[1];
-          return new ShadowValue[]{data[location]};
+          return new ShadowValue[] {data[location]};
         }
-      }
-      else
-        throw new InterpreterException(InterpreterException.Error.INVALID_SUBSCRIPT, "Array out of bounds");
+      } else
+        throw new InterpreterException(
+            InterpreterException.Error.INVALID_SUBSCRIPT, "Array out of bounds");
     }
 
-    return ASTInterpreter.callMethod(type.getPackage().getRoot(), new ErrorReporter(Loggers.AST_INTERPRETER), this, method, null, values);
+    return ASTInterpreter.callMethod(
+        type.getPackage().getRoot(),
+        new ErrorReporter(Loggers.AST_INTERPRETER),
+        this,
+        method,
+        null,
+        values);
   }
 
   @Override
   public String toLiteral() {
     StringBuilder builder = new StringBuilder("{");
     for (int i = 0; i < data.length; ++i) {
-      if (i > 0)
-        builder.append(", ");
-      if (data[i] == null)
-        builder.append("null");
-      else
-        builder.append(data[i].toLiteral());
+      if (i > 0) builder.append(", ");
+      if (data[i] == null) builder.append("null");
+      else builder.append(data[i].toLiteral());
     }
     builder.append("}");
     return builder.toString();

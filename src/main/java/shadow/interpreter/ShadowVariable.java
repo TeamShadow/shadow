@@ -2,6 +2,7 @@ package shadow.interpreter;
 
 import shadow.typecheck.ScopedChecker;
 import shadow.typecheck.type.Type;
+
 public class ShadowVariable extends ShadowReference {
 
   private final ScopedChecker checker;

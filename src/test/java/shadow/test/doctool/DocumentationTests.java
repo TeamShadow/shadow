@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DocumentationTests {
-  private static final Path outputDirectory = Paths.get("src","shadow", "test", "doctool", "docs");
+  private static final Path outputDirectory = Paths.get("src", "shadow", "test", "doctool", "docs");
   private final ArrayList<String> args = new ArrayList<>();
 
   @BeforeAll
@@ -137,11 +137,12 @@ public class DocumentationTests {
   public void tagTest() throws Exception {
     DocumentationBuilder builder = new DocumentationBuilder();
     builder.addBlock(
-        "This is a documentation comment {@code this is\n"
-            + "some literal code} here is some more content and\n"
-            + "{@code here is some more}.\n"
-            + "@author now for block, tags\n"
-            + "@param fake these should be ignored");
+            """
+                    This is a documentation comment {@code this is
+                    some literal code} here is some more content and
+                    {@code here is some more}.
+                    @author now for block, tags
+                    @param fake these should be ignored""");
     Documentation documentation = new Documentation(builder);
     List<InlineTag> summary = documentation.getSummary();
     List<InlineTag> inline = documentation.getInlineTags();

@@ -194,15 +194,12 @@ public class TextOutput extends AbstractOutput {
   }
 
   private void visitReference(StringBuilder sb, TACReference reference) throws ShadowException {
-    if (reference instanceof TACArrayRef) {
-      TACArrayRef arrayRef = (TACArrayRef) reference;
+    if (reference instanceof TACArrayRef arrayRef) {
       inline.visit(inline.visit(sb, arrayRef.getArray()).append('['), arrayRef.getIndex());
       sb.append(']');
-    } else if (reference instanceof TACFieldRef) {
-      TACFieldRef fieldRef = (TACFieldRef) reference;
+    } else if (reference instanceof TACFieldRef fieldRef) {
       inline.visit(sb, fieldRef.getPrefix()).append(':').append(fieldRef.getName());
-    } else if (reference instanceof TACSingletonRef) {
-      TACSingletonRef singleton = (TACSingletonRef) reference;
+    } else if (reference instanceof TACSingletonRef singleton) {
       sb.append(singleton.getType().toString());
     }
   }
@@ -335,14 +332,12 @@ public class TextOutput extends AbstractOutput {
     @Override
     public void visit(TACCall node) throws ShadowException {
       TACMethodRef method = node.getMethodRef();
-      if (method instanceof TACMethodName) {
-        TACMethodName methodName = (TACMethodName) method;
+      if (method instanceof TACMethodName methodName) {
         sb.append(methodName.getOuterType().toString(Type.PACKAGES | Type.TYPE_PARAMETERS))
             .append('.')
             .append(methodName.getName())
             .append('(');
-      } else if (method instanceof TACMethodPointer) {
-        TACMethodPointer methodPointer = (TACMethodPointer) method;
+      } else if (method instanceof TACMethodPointer methodPointer) {
         sb.append(methodPointer).append('(');
       }
 

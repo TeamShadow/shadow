@@ -8,18 +8,12 @@ import java.util.ArrayDeque;
  * whitespace in documentation comments is not guaranteed to be preserved
  */
 public class DocumentationBuilder {
-  private ArrayDeque<String> lines = new ArrayDeque<>();
+  private final ArrayDeque<String> lines = new ArrayDeque<>();
 
   /** Parses a single line comment, removing leading/trailing whitespace */
   public void appendLine(String line) {
     line = line.trim();
     if (!line.isEmpty()) lines.add(clean(line));
-  }
-
-  /** Parses a single line comment, removing leading/trailing whitespace */
-  public void prependLine(String line) {
-    line = line.trim();
-    if (!line.isEmpty()) lines.addFirst(clean(line));
   }
 
   /**

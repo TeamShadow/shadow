@@ -21,12 +21,7 @@ public class NegativeTests {
 
   @BeforeEach
   public void setup() throws Exception {
-    // args.add("-v");
     args.add("--typecheck");
-    // args.add("--force-recompile");
-
-    String os = System.getProperty("os.name").toLowerCase();
-
     args.add("-c");
     args.add("tests.json");
   }

@@ -42,8 +42,7 @@ public class TACCall extends TACUpdate {
     this.methodRef = methodRef;
     SequenceType types = methodRef.getParameterTypes();
     SequenceType uninstantiatedTypes = methodRef.getUninstantiatedParameterTypes();
-    if (params.size() != types.size())
-      throw new IllegalArgumentException("Wrong # args");
+    if (params.size() != types.size()) throw new IllegalArgumentException("Wrong # args");
     Iterator<? extends TACOperand> paramIter = params.iterator();
     int i = 0;
     parameters = new ArrayList<>(params.size());
@@ -140,8 +139,7 @@ public class TACCall extends TACUpdate {
     boolean allLiterals = true;
 
     for (TACOperand parameter : parameters) {
-      if (parameter instanceof TACUpdate) {
-        TACUpdate update = (TACUpdate) parameter;
+      if (parameter instanceof TACUpdate update) {
         if (update.update(currentlyUpdating)) changed = true;
         // parameters.set(i, update.getValue());
         if (!(update.getValue() instanceof TACLiteral)) allLiterals = false;
@@ -149,9 +147,7 @@ public class TACCall extends TACUpdate {
     }
 
     // right now, the only calls we're doing are on String objects
-    if (methodRef instanceof TACMethodName) {
-      TACMethodName methodName = (TACMethodName) methodRef;
-
+    if (methodRef instanceof TACMethodName methodName) {
       if ((changed || getUpdatedValue() == null)
           && allLiterals
           && methodName.getSignature().getOuter().equals(Type.STRING)

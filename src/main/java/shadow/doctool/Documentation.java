@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  * inline and block tags, alongside a brief summary of the original comment.
  */
 public class Documentation {
-  private static Logger logger = Loggers.DOC_TOOL;
+  private static final Logger logger = Loggers.DOC_TOOL;
 
   private final List<InlineTag> inlineTags;
   private final Map<BlockTagType, List<List<String>>> blockTags;

@@ -1,0 +1,13 @@
+class Test {
+
+    public main() => ()
+    {
+        int result = method1();
+    }
+
+    [Attribute1]
+    public method1() => (int)
+    {
+        return 6;
+    }
+}

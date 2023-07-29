@@ -1,7 +1,6 @@
 package shadow.doctool.output;
 
 import shadow.ShadowException;
-import shadow.doctool.DocumentationException;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.Type;
 
@@ -25,6 +24,5 @@ public abstract class DocumentationTemplate {
   }
 
   /** Outputs the formatted documentation files to the desired directory */
-  public abstract void write(Path outputDirectory)
-      throws IOException, ShadowException;
+  public abstract void write(Path outputDirectory) throws IOException, ShadowException;
 }

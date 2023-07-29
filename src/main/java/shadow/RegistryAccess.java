@@ -20,7 +20,7 @@ public class RegistryAccess {
   public static String[] getKeys(WinReg.HKEY topLevel, String key) {
     return Advapi32Util.registryGetKeys(topLevel, key);
   }
-/* Examples
+  /* Examples
     // Read a string
     String productName = Advapi32Util.registryGetStringValue(
         WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName");

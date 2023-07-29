@@ -12,8 +12,7 @@ import java.util.regex.Pattern;
 // TODO: Write doc-comments for all methods
 /**
  * Provides some basic assistance in creating HTML-style documents. Constraints are based upon the
- * syntax defined within the W3C HTML5 Recommendation found here:
- * http://www.w3.org/TR/html5/syntax.html
+ * syntax defined within the W3C HTML5 Recommendation found <a href="http://www.w3.org/TR/html5/syntax.html">here</a>.
  *
  * <p>Some arbitrary formatting choices have been made in the name of cleanliness
  */
@@ -39,14 +38,9 @@ public class HtmlWriter {
 
       for (int i = 0; i < value.length(); ++i) {
         switch (value.charAt(i)) {
-          case '"':
-            builder.append("&quot;");
-            break;
-          case '&':
-            builder.append("&amp;");
-            break;
-          default:
-            builder.append(value.charAt(i));
+          case '"' -> builder.append("&quot;");
+          case '&' -> builder.append("&amp;");
+          default -> builder.append(value.charAt(i));
         }
       }
 
@@ -193,17 +187,11 @@ public class HtmlWriter {
 
     for (int i = 0; i < text.length(); ++i) {
       switch (text.charAt(i)) {
-        case '<':
-          builder.append("&lt;");
-          break;
-        case '>': // Not strictly illegal, but arguably confusing
-          builder.append("&gt;");
-          break;
-        case '&':
-          builder.append("&amp;");
-          break;
-        default:
-          builder.append(text.charAt(i));
+        case '<' -> builder.append("&lt;");
+        case '>' -> // Not strictly illegal, but arguably confusing
+                builder.append("&gt;");
+        case '&' -> builder.append("&amp;");
+        default -> builder.append(text.charAt(i));
       }
     }
 

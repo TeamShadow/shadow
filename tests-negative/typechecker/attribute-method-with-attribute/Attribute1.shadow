@@ -1,0 +1,8 @@
+attribute Attribute1
+{
+    [Attribute2]
+    getValue() => (int)
+    {
+        return 5;
+    }
+}

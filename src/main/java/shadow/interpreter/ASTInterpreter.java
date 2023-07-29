@@ -1,14 +1,11 @@
 package shadow.interpreter;
 
 import org.antlr.v4.runtime.CommonToken;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import shadow.ShadowException;
 import shadow.interpreter.InterpreterException.Error;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
-import shadow.tac.TACVariable;
-import shadow.tac.nodes.*;
 import shadow.typecheck.*;
 import shadow.typecheck.Package;
 import shadow.typecheck.type.InstantiationException;
@@ -21,8 +18,8 @@ import static java.util.stream.Collectors.toList;
 /**
  * Interpreter that walks AST nodes in order to determine the values of expressions.
  *
- * <p>Currently, this is only used by {@link ConstantFieldInterpreter} to determine the values of
- * compile-time constant fields.
+ * <p>Currently, this is used by to determine the values of
+ * compile-time constant fields and attribute fields and method calls.
  */
 public class ASTInterpreter extends ScopedChecker {
 
@@ -37,13 +34,6 @@ public class ASTInterpreter extends ScopedChecker {
     super(packageTree, reporter);
   }
 
-  /*
-  public ASTInterpreter(Package packageTree, ErrorReporter reporter, ShadowObject object) {
-    super(packageTree, reporter);
-    curObject = object;
-  }
-  */
-
   // Converts a Context object to a single "token" containing the same text.
   // Useful for passing some .*Context types to code that operates on tokens.
   private static Token toToken(Context ctx) {
@@ -53,26 +43,24 @@ public class ASTInterpreter extends ScopedChecker {
   // Assumes that operands has at least one element, and that operators has
   // operators.size() - 1 elements.
   private ShadowValue evaluateBinaryOperation(
-          Context parent, List<? extends Context> operands, List<Token> operators) {
+      Context parent, List<? extends Context> operands, List<Token> operators) {
 
     try {
       ShadowValue current = operands.get(0).getInterpretedValue();
-      if (current instanceof ShadowReference)
-        current = ((ShadowReference) current).get();
+      if (current instanceof ShadowReference) current = ((ShadowReference) current).get();
       for (int i = 0; i < parent.getOperations().size(); i++) {
         String op = operators.get(i).getText();
         BinaryOperator operator = BinaryOperator.fromString(op);
         ShadowValue next = operands.get(i + 1).getInterpretedValue();
-        if (next instanceof ShadowReference)
-          next = ((ShadowReference) next).get();
+        if (next instanceof ShadowReference) next = ((ShadowReference) next).get();
         MethodSignature signature = parent.getOperations().get(i);
         boolean isCompare =
-                (op.equals("<")
-                        || op.equals(">")
-                        || op.equals("<=")
-                        || op.equals(">=")
-                        || op.equals("==")
-                        || op.equals("==="));
+            (op.equals("<")
+                || op.equals(">")
+                || op.equals("<=")
+                || op.equals(">=")
+                || op.equals("==")
+                || op.equals("==="));
         Type currentType = current.getType();
         next = next.cast(signature.getParameterTypes().get(0).getType());
         if (currentType.isPrimitive() && signature.isImport()) { // operation based on method
@@ -90,10 +78,8 @@ public class ASTInterpreter extends ScopedChecker {
     }
   }
 
-
   protected ShadowValue resolveValue(ShadowValue value, Context ctx) {
-    if(value instanceof ShadowReference) {
-      ShadowReference reference = (ShadowReference) value;
+    if (value instanceof ShadowReference reference) {
       try {
         value = reference.get();
       } catch (InterpreterException e) {
@@ -106,8 +92,7 @@ public class ASTInterpreter extends ScopedChecker {
   // Dereferences into PropertyType or IndexType for getter, if needed
   private ModifiedType resolveType(ModifiedType node) {
     Type type = node.getType();
-    if (type instanceof PropertyType) { // includes SubscriptType as well
-      PropertyType getSetType = (PropertyType) type;
+    if (type instanceof PropertyType getSetType) { // includes SubscriptType as well
       if (getSetType.isGettable()) return getSetType.getGetType();
       else {
         String kind = (type instanceof SubscriptType) ? "Subscript " : "Property ";
@@ -136,7 +121,9 @@ public class ASTInterpreter extends ScopedChecker {
       try {
         // This cast seems wacky, but if we don't do it, then constant long X = 5; stores 5 into X,
         // not 5L
-        value = resolveValue(ctx.conditionalExpression().getInterpretedValue(), ctx).cast(ctx.getType());
+        value =
+            resolveValue(ctx.conditionalExpression().getInterpretedValue(), ctx)
+                .cast(ctx.getType());
         addSymbol(ctx.generalIdentifier().Identifier().getText(), value);
       } catch (InterpreterException e) {
         addError(e.setContext(ctx));
@@ -183,13 +170,24 @@ public class ASTInterpreter extends ScopedChecker {
     return null;
   }
 
-  public static ShadowValue getValue(Package packageTree, ErrorReporter errorReporter, MethodSignature currentSignature, ShadowParser.ConditionalExpressionContext ctx) throws InterpreterException {
+  public static ShadowValue getValue(
+      Package packageTree,
+      ErrorReporter errorReporter,
+      MethodSignature currentSignature,
+      ShadowParser.ConditionalExpressionContext ctx)
+      throws InterpreterException {
 
     Context methodNode = currentSignature.getNode();
 
     if (methodNode.isFromMetaFile())
-      throw new InterpreterException(Error.UNAVAILABLE_SOURCE, "Source code for method " + currentSignature.getOuter() + "." + currentSignature + " is not available for interpretation");
-      // Autogenerated method (index, get, set)
+      throw new InterpreterException(
+          Error.UNAVAILABLE_SOURCE,
+          "Source code for method "
+              + currentSignature.getOuter()
+              + "."
+              + currentSignature
+              + " is not available for interpretation");
+    // Autogenerated method (index, get, set)
     else {
       ASTInterpreter interpreter = new ASTInterpreter(packageTree, errorReporter);
       interpreter.currentType = currentSignature.getOuter();
@@ -201,32 +199,45 @@ public class ASTInterpreter extends ScopedChecker {
     }
   }
 
-
-
-  public static ShadowValue[] callMethod(Package packageTree, ErrorReporter errorReporter, ShadowObject object, String methodName, SequenceType typeArguments, ShadowValue ... values) throws InterpreterException {
+  public static ShadowValue[] callMethod(
+      Package packageTree,
+      ErrorReporter errorReporter,
+      ShadowObject object,
+      String methodName,
+      SequenceType typeArguments,
+      ShadowValue... values)
+      throws InterpreterException {
     ClassType type = object.getType();
     SequenceType arguments = new SequenceType(Arrays.asList(values));
 
     List<ShadowException> errors = new ArrayList<>();
-    MethodSignature signature = type.getMatchingMethod(methodName, arguments, typeArguments, errors);
-    if (signature == null) throw new InterpreterException(Error.INVALID_METHOD, errors.get(0).getMessage());
+    MethodSignature signature =
+        type.getMatchingMethod(methodName, arguments, typeArguments, errors);
+    if (signature == null)
+      throw new InterpreterException(Error.INVALID_METHOD, errors.get(0).getMessage());
 
     Context methodNode = signature.getNode();
 
     if (methodNode.isFromMetaFile())
-      throw new InterpreterException(Error.UNAVAILABLE_SOURCE, "Source code for method " + type + "." + signature + " is not available for interpretation");
+      throw new InterpreterException(
+          Error.UNAVAILABLE_SOURCE,
+          "Source code for method "
+              + type
+              + "."
+              + signature
+              + " is not available for interpretation");
     // Autogenerated method (index, get, set)
-    else if(methodNode.getParent() == null) {
-      if(signature.isGet() && values.length == 0)
-        return new ShadowValue[]{object.getField(methodName)};
-      else if(signature.isSet() && values.length == 1) {
+    else if (methodNode.getParent() == null) {
+      if (signature.isGet() && values.length == 0)
+        return new ShadowValue[] {object.getField(methodName)};
+      else if (signature.isSet() && values.length == 1) {
         object.setField(methodName, values[0]);
         return new ShadowValue[0];
-      }
-      else
-        throw new InterpreterException(Error.INVALID_METHOD, "Method " +  type + "." + signature + " is not supported for interpretation");
-    }
-    else {
+      } else
+        throw new InterpreterException(
+            Error.INVALID_METHOD,
+            "Method " + type + "." + signature + " is not supported for interpretation");
+    } else {
       ASTInterpreter interpreter = new ASTInterpreter(packageTree, errorReporter);
       interpreter.currentType = type;
       interpreter.curObject = object;
@@ -240,7 +251,6 @@ public class ASTInterpreter extends ScopedChecker {
     }
   }
 
-
   @Override
   public Void visitReturnStatement(ShadowParser.ReturnStatementContext ctx) {
     visitChildren(ctx);
@@ -248,26 +258,31 @@ public class ASTInterpreter extends ScopedChecker {
     MethodType methodType = (MethodType) (currentMethod.getFirst().getType());
     SequenceType returnTypes = methodType.getReturnTypes();
 
-    if (ctx.rightSide() == null)
-      returnValues = new ShadowValue[0];
-    else if(ctx.rightSide().conditionalExpression() != null){
+    if (ctx.rightSide() == null) returnValues = new ShadowValue[0];
+    else if (ctx.rightSide().conditionalExpression() != null) {
       returnValues = new ShadowValue[1];
       ShadowValue value = ctx.rightSide().conditionalExpression().getInterpretedValue();
       try {
         returnValues[0] = value.cast(returnTypes.getType(0));
       } catch (InterpreterException e) {
-        addError(ctx, Error.INVALID_CAST, "Cannot cast type " + value.getType() + " to " + returnTypes.getType(0));
+        addError(
+            ctx,
+            Error.INVALID_CAST,
+            "Cannot cast type " + value.getType() + " to " + returnTypes.getType(0));
       }
-    }
-    else { // sequence type return
-      List<ShadowParser.ConditionalExpressionContext> values = ctx.rightSide().sequenceRightSide().conditionalExpression();
+    } else { // sequence type return
+      List<ShadowParser.ConditionalExpressionContext> values =
+          ctx.rightSide().sequenceRightSide().conditionalExpression();
       returnValues = new ShadowValue[values.size()];
       for (int i = 0; i < values.size(); ++i) {
         ShadowValue value = values.get(i).getInterpretedValue();
         try {
           returnValues[i] = value.cast(returnTypes.getType(i));
         } catch (InterpreterException e) {
-          addError(ctx, Error.INVALID_CAST, "Cannot cast type " + value.getType() + " to " + returnTypes.getType(0));
+          addError(
+              ctx,
+              Error.INVALID_CAST,
+              "Cannot cast type " + value.getType() + " to " + returnTypes.getType(0));
         }
       }
     }
@@ -275,19 +290,22 @@ public class ASTInterpreter extends ScopedChecker {
     return null;
   }
 
-
   private static void initializeFields(ASTInterpreter interpreter, Type type) {
     // First, fill in all the values that are marked outside the create
-    for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> entry : type.getFields().entrySet()) {
+    for (Map.Entry<String, ShadowParser.VariableDeclaratorContext> entry :
+        type.getFields().entrySet()) {
       if (entry.getValue().conditionalExpression() != null) {
-        ShadowParser.ConditionalExpressionContext expression = entry.getValue().conditionalExpression();
+        ShadowParser.ConditionalExpressionContext expression =
+            entry.getValue().conditionalExpression();
         interpreter.visitConditionalExpression(expression);
         interpreter.fields.put(entry.getKey(), expression.getInterpretedValue());
       }
     }
   }
 
-  public static ShadowObject callCreate(Package packageTree, ErrorReporter errorReporter, ClassType type, ShadowValue ... values) throws InterpreterException {
+  public static ShadowObject callCreate(
+      Package packageTree, ErrorReporter errorReporter, ClassType type, ShadowValue... values)
+      throws InterpreterException {
     SequenceType arguments = new SequenceType(Arrays.asList(values));
     ShadowObject parent = null;
 
@@ -312,12 +330,13 @@ public class ASTInterpreter extends ScopedChecker {
 
       interpreter.curObject = new ShadowObject(type, parent, interpreter.fields);
       initializeFields(interpreter, type);
-    }
-    else { // not a default create and therefore might have a super or a this
-      ShadowParser.CreateDeclarationContext create = (ShadowParser.CreateDeclarationContext) methodNode;
+    } else { // not a default create and therefore might have a super or a this
+      ShadowParser.CreateDeclarationContext create =
+          (ShadowParser.CreateDeclarationContext) methodNode;
       // Watch out for null create blocks from .meta files
       if (create.createBlock() != null && create.createBlock().explicitCreateInvocation() != null) {
-        ShadowParser.ExplicitCreateInvocationContext explicit = create.createBlock().explicitCreateInvocation();
+        ShadowParser.ExplicitCreateInvocationContext explicit =
+            create.createBlock().explicitCreateInvocation();
         ShadowValue[] delegatedArguments = new ShadowValue[explicit.conditionalExpression().size()];
         for (int i = 0; i < delegatedArguments.length; ++i) {
           interpreter.visitConditionalExpression(explicit.conditionalExpression().get(i));
@@ -330,8 +349,7 @@ public class ASTInterpreter extends ScopedChecker {
           interpreter.curObject = new ShadowObject(type, parent, interpreter.fields);
           initializeFields(interpreter, type);
         }
-      }
-      else { // no explicit create
+      } else { // no explicit create
         if (type.getExtendType() != null)
           parent = callCreate(packageTree, errorReporter, type.getExtendType());
         interpreter.curObject = new ShadowObject(type, parent, interpreter.fields);
@@ -618,15 +636,13 @@ public class ASTInterpreter extends ScopedChecker {
       } catch (InterpreterException e) {
         addError(ctx, e.getError());
       }
-    }
-    else
-      ctx.setInterpretedValue(left);
+    } else ctx.setInterpretedValue(left);
 
     return null;
   }
 
-  private void doAssignment(
-          ShadowReference left, ShadowValue right, String operation, Context node) throws InterpreterException {
+  private void doAssignment(ShadowReference left, ShadowValue right, String operation, Context node)
+      throws InterpreterException {
     MethodSignature signature;
 
     operation = operation.substring(0, operation.length() - 1); // clip off last character (=)
@@ -640,9 +656,7 @@ public class ASTInterpreter extends ScopedChecker {
 
       if (leftValue.getType().isPrimitive() && signature.isImport()) {
         right = leftValue.apply(BinaryOperator.fromString(operation), right);
-      }
-      else
-        right = leftValue.callMethod(signature.getSymbol(), right)[0];
+      } else right = leftValue.callMethod(signature.getSymbol(), right)[0];
     }
 
     left.set(right);
@@ -706,26 +720,26 @@ public class ASTInterpreter extends ScopedChecker {
 
     String name = ctx.Identifier().getText();
 
-      if (prefixType.containsField(name)) {
-        ShadowValue prefixValue = resolveValue(prefixNode.getInterpretedValue(), ctx);
-        ctx.setInterpretedValue(new ShadowField((ShadowObject) prefixValue, name, resolveType(ctx).getType()));
-      } else if (prefixType.recursivelyContainsConstant(name)) {
-        // Constants should be evaluated ahead of time
-        Context constant = prefixType.recursivelyGetConstant(name);
-        ShadowValue value = constant.getInterpretedValue();
+    if (prefixType.containsField(name)) {
+      ShadowValue prefixValue = resolveValue(prefixNode.getInterpretedValue(), ctx);
+      ctx.setInterpretedValue(
+          new ShadowField((ShadowObject) prefixValue, name, resolveType(ctx).getType()));
+    } else if (prefixType.recursivelyContainsConstant(name)) {
+      // Constants should be evaluated ahead of time
+      Context constant = prefixType.recursivelyGetConstant(name);
+      ShadowValue value = constant.getInterpretedValue();
 
-        if (value == null) {
-          addError(
-                  ctx, Error.UNINITIALIZED_CONSTANT, "Constant " + prefixType + ":" + name + " was not initialized before use");
-          ctx.setInterpretedValue(ShadowValue.INVALID);
-        }
-        else
-          ctx.setInterpretedValue(value);
-      }
-      else {
-        addError(ctx, Error.UNKNOWN_REFERENCE, "Symbol " + name + " could not be resolved");
+      if (value == null) {
+        addError(
+            ctx,
+            Error.UNINITIALIZED_CONSTANT,
+            "Constant " + prefixType + ":" + name + " was not initialized before use");
         ctx.setInterpretedValue(ShadowValue.INVALID);
-      }
+      } else ctx.setInterpretedValue(value);
+    } else {
+      addError(ctx, Error.UNKNOWN_REFERENCE, "Symbol " + name + " could not be resolved");
+      ctx.setInterpretedValue(ShadowValue.INVALID);
+    }
 
     return null;
   }
@@ -839,10 +853,8 @@ public class ASTInterpreter extends ScopedChecker {
         ShadowValue object = unboundMethod.getObject();
 
         ShadowValue[] results = object.callMethod(unboundMethod.getType().getTypeName(), arguments);
-        if (results.length == 1)
-          value = results[0];
-        else if (results.length > 1)
-          value = new ShadowSequence(results);
+        if (results.length == 1) value = results[0];
+        else if (results.length > 1) value = new ShadowSequence(results);
       } catch (InterpreterException e) {
         addError(e.setContext(ctx));
       }
@@ -917,34 +929,28 @@ public class ASTInterpreter extends ScopedChecker {
     String image = ctx.getText();
     ShadowValue value = null;
 
-   if (image.equals("this") || image.equals("super")) {
-      if(image.equals("this"))
-        value = curObject;
-      else
-        value = curObject.getParent();
+    if (image.equals("this") || image.equals("super")) {
+      if (image.equals("this")) value = curObject;
+      else value = curObject.getParent();
+    } else if (ctx.generalIdentifier() != null) {
+      if (!ctx.getModifiers().isTypeName()) {
+        String name = ctx.generalIdentifier().getText();
+        ShadowValue variable = (ShadowValue) findSymbol(name);
+        if (variable != null) value = new ShadowVariable(this, name);
+        else if (currentType.recursivelyContainsConstant(name)) {
+          Context constant = currentType.recursivelyGetConstant(name);
+          value = constant.getInterpretedValue();
+        } else {
+          ShadowParser.VariableDeclaratorContext field = currentType.recursivelyGetField(name);
+          value = new ShadowField(curObject, field.generalIdentifier().getText(), field.getType());
+        }
+      }
+    } else if (ctx.conditionalExpression() != null) {
+      value = ctx.conditionalExpression().getInterpretedValue();
     }
-   else if (ctx.generalIdentifier() != null) {
-     if (!ctx.getModifiers().isTypeName()) {
-       String name = ctx.generalIdentifier().getText();
-       ShadowValue variable = (ShadowValue) findSymbol(name);
-       if (variable != null)
-         value = new ShadowVariable(this, name);
-       else if( currentType.recursivelyContainsConstant(name)) {
-         Context constant = currentType.recursivelyGetConstant(name);
-         value = constant.getInterpretedValue();
-       }
-       else {
-         ShadowParser.VariableDeclaratorContext field = currentType.recursivelyGetField(name);
-         value = new ShadowField(curObject, field.generalIdentifier().getText(), field.getType());
-       }
-     }
-   }
-   else if(ctx.conditionalExpression() != null) {
-     value = ctx.conditionalExpression().getInterpretedValue();
-   }
-   // literal, check expression, copy expression,
-   // spawn expression, receive expression, cast expression
-   // primitive and function types, and array initializer
+    // literal, check expression, copy expression,
+    // spawn expression, receive expression, cast expression
+    // primitive and function types, and array initializer
     else {
       Context child = (Context) ctx.getChild(0);
       value = child.getInterpretedValue();
@@ -1001,7 +1007,9 @@ public class ASTInterpreter extends ScopedChecker {
 
     Context prefixNode = curPrefix.getFirst();
     ShadowValue prefixValue = resolveValue(prefixNode.getInterpretedValue(), ctx);
-    ShadowValue value = new ShadowSubscript(prefixValue, ctx.conditionalExpression().getInterpretedValue(), ctx.getType());
+    ShadowValue value =
+        new ShadowSubscript(
+            prefixValue, ctx.conditionalExpression().getInterpretedValue(), ctx.getType());
 
     ctx.setInterpretedValue(value);
     return null;

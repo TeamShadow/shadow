@@ -69,7 +69,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
     }
 
     if (getErrorReporter().getErrorList().size() == 0) visit(context);
-    
+
     return context;
   }
 
@@ -78,46 +78,21 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
     addDocumentation(ctx);
 
     for (ShadowParser.ModifierContext modifier : ctx.modifier()) {
-      boolean newModifier = true;
-
-      switch (modifier.getText()) {
-        case "public":
-          newModifier = ctx.addModifiers(Modifiers.PUBLIC);
-          break;
-        case "protected":
-          newModifier = ctx.addModifiers(Modifiers.PROTECTED);
-          break;
-        case "private":
-          newModifier = ctx.addModifiers(Modifiers.PRIVATE);
-          break;
-        case "abstract":
-          newModifier = ctx.addModifiers(Modifiers.ABSTRACT);
-          break;
-        case "readonly":
-          newModifier = ctx.addModifiers(Modifiers.READONLY);
-          break;
-        case "weak":
-          newModifier = ctx.addModifiers(Modifiers.WEAK);
-          break;
-        case "immutable":
-          newModifier = ctx.addModifiers(Modifiers.IMMUTABLE);
-          break;
-        case "nullable":
-          newModifier = ctx.addModifiers(Modifiers.NULLABLE);
-          break;
-        case "get":
-          newModifier = ctx.addModifiers(Modifiers.GET);
-          break;
-        case "set":
-          newModifier = ctx.addModifiers(Modifiers.SET);
-          break;
-        case "constant":
-          newModifier = ctx.addModifiers(Modifiers.CONSTANT);
-          break;
-        case "locked":
-          newModifier = ctx.addModifiers(Modifiers.LOCKED);
-          break;
-      }
+      boolean newModifier = switch (modifier.getText()) {
+        case "public" -> ctx.addModifiers(Modifiers.PUBLIC);
+        case "protected" -> ctx.addModifiers(Modifiers.PROTECTED);
+        case "private" -> ctx.addModifiers(Modifiers.PRIVATE);
+        case "abstract" -> ctx.addModifiers(Modifiers.ABSTRACT);
+        case "readonly" -> ctx.addModifiers(Modifiers.READONLY);
+        case "weak" -> ctx.addModifiers(Modifiers.WEAK);
+        case "immutable" -> ctx.addModifiers(Modifiers.IMMUTABLE);
+        case "nullable" -> ctx.addModifiers(Modifiers.NULLABLE);
+        case "get" -> ctx.addModifiers(Modifiers.GET);
+        case "set" -> ctx.addModifiers(Modifiers.SET);
+        case "constant" -> ctx.addModifiers(Modifiers.CONSTANT);
+        case "locked" -> ctx.addModifiers(Modifiers.LOCKED);
+        default -> true;
+      };
 
       if (!newModifier)
         addError(modifier, Error.REPEATED_MODIFIERS, "Repeated modifier " + modifier.getText());
@@ -147,12 +122,9 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
 
   private ShadowParser.ModifiersContext getModifiers(Context ctx) {
     ParserRuleContext parent = ctx.getParent();
-    if (parent instanceof ShadowParser.ClassOrInterfaceBodyDeclarationContext) {
-      ShadowParser.ClassOrInterfaceBodyDeclarationContext declaration =
-          (ClassOrInterfaceBodyDeclarationContext) parent;
+    if (parent instanceof ClassOrInterfaceBodyDeclarationContext declaration) {
       return declaration.modifiers();
-    } else if (parent instanceof ShadowParser.CompilationUnitContext) {
-      ShadowParser.CompilationUnitContext unit = (CompilationUnitContext) parent;
+    } else if (parent instanceof CompilationUnitContext unit) {
       return unit.modifiers();
     }
 
@@ -257,7 +229,7 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
     ShadowParser.ModifiersContext mods = getModifiers(ctx);
     Modifiers modifiers = mods.getModifiers();
     ctx.addModifiers(modifiers);
-    addErrors(mods, modifiers.checkFieldModifiers( ctx));
+    addErrors(mods, modifiers.checkFieldModifiers(ctx));
     ctx.type().addModifiers(modifiers); // also add to type
 
     return visitChildren(ctx);
@@ -290,21 +262,11 @@ public class ParseChecker extends ShadowVisitorErrorReporter {
     Modifiers modifiers = mods.getModifiers();
     ctx.addModifiers(modifiers);
     switch (ctx.getStart().getText()) {
-      case "attribute":
-        addErrors(mods, modifiers.checkAttributeModifiers(ctx));
-        break;
-      case "class":
-        addErrors(mods, modifiers.checkClassModifiers(ctx));
-        break;
-      case "singleton":
-        addErrors(mods, modifiers.checkSingletonModifiers(ctx));
-        break;
-      case "exception":
-        addErrors(mods, modifiers.checkExceptionModifiers(ctx));
-        break;
-      case "interface":
-        addErrors(mods, modifiers.checkInterfaceModifiers(ctx));
-        break;
+      case "attribute" -> addErrors(mods, modifiers.checkAttributeModifiers(ctx));
+      case "class" -> addErrors(mods, modifiers.checkClassModifiers(ctx));
+      case "singleton" -> addErrors(mods, modifiers.checkSingletonModifiers(ctx));
+      case "exception" -> addErrors(mods, modifiers.checkExceptionModifiers(ctx));
+      case "interface" -> addErrors(mods, modifiers.checkInterfaceModifiers(ctx));
     }
   }
 

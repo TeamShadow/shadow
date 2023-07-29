@@ -1,10 +1,6 @@
 package shadow.typecheck.type;
 
-import shadow.Loggers;
 import shadow.doctool.Documentation;
-import shadow.interpreter.AttributeInterpreter;
-import shadow.interpreter.ShadowClass;
-import shadow.interpreter.ShadowValue;
 import shadow.parse.Context;
 import shadow.parse.ShadowParser;
 import shadow.typecheck.ErrorReporter;
@@ -91,10 +87,9 @@ public class MethodSignature implements Comparable<MethodSignature> {
   }
 
   public boolean equals(Object o) {
-    if (o instanceof MethodSignature) {
-      MethodSignature ms = (MethodSignature) o;
+    if (o instanceof MethodSignature signature) {
       // Is it pretty? No. Should it work?  Probably!
-      return ms.getMangledName().equals(getMangledName());
+      return signature.getMangledName().equals(getMangledName());
     } else return false;
   }
 
@@ -138,16 +133,16 @@ public class MethodSignature implements Comparable<MethodSignature> {
     // else
     methodType = type;
 
-    //if (!isImportAssembly()) {
-      Type outerType = getOuter();
-      if (isCreate()
-          || outerType
-              instanceof
-              InterfaceType) // since actual object is unknown, assume Object for all interface
-        // methods
-        paramTypes.add(new SimpleModifiedType(Type.OBJECT));
-      else paramTypes.add(new SimpleModifiedType(outerType)); // this
-    //}
+    // if (!isImportAssembly()) {
+    Type outerType = getOuter();
+    if (isCreate()
+        || outerType
+            instanceof
+            InterfaceType) // since actual object is unknown, assume Object for all interface
+      // methods
+      paramTypes.add(new SimpleModifiedType(Type.OBJECT));
+    else paramTypes.add(new SimpleModifiedType(outerType)); // this
+    // }
 
     paramTypes.addAll(methodType.getParameterTypes());
     return paramTypes;
@@ -412,7 +407,7 @@ public class MethodSignature implements Comparable<MethodSignature> {
 
   public void attachAttribute(
       ShadowParser.AttributeInvocationContext ctx, ErrorReporter errorReporter) {
-    AttributeInvocation attribute = new AttributeInvocation(ctx, errorReporter, this);
+    AttributeInvocation attribute = new AttributeInvocation(ctx, this);
     AttributeType type = attribute.getType();
 
     if (attributes.containsKey(type)) {
@@ -460,17 +455,4 @@ public class MethodSignature implements Comparable<MethodSignature> {
       exportMode = mode;
     }
   }
-
-  /**
-   * Performs any required operations based on the attached attribute types AND the values of their
-   * fields. Runs relatively late, after compile-time constants can be evaluated.
-   */
-  /*
-  public void processAttributeValues(ErrorReporter errorReporter) {
-    for (AttributeType attributeType : attributes.keySet()) {
-      //TODO: Fill in something here?
-    }
-  }
-
-   */
 }

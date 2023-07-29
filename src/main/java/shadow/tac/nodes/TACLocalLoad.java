@@ -36,8 +36,7 @@ public class TACLocalLoad extends TACUpdate {
     undefined = false;
     TACOperand temp = previousStore;
 
-    if (temp instanceof TACUpdate) {
-      TACUpdate update = (TACUpdate) temp;
+    if (temp instanceof TACUpdate update) {
       if (update.update(currentlyUpdating)) changed = true;
 
       TACOperand op = update.getValue();
@@ -49,11 +48,9 @@ public class TACLocalLoad extends TACUpdate {
       }
     }
 
-    if (temp instanceof TACLiteral) {
-      TACLiteral literal = (TACLiteral) temp;
+    if (temp instanceof TACLiteral literal) {
       if (literal.getValue() instanceof ShadowUndefined) undefined = true;
-    } else if (temp instanceof TACPhi) {
-      TACPhi phiStore = (TACPhi) temp;
+    } else if (temp instanceof TACPhi phiStore) {
       if (phiStore.isUndefined()) undefined = true;
     }
 
@@ -99,8 +96,7 @@ public class TACLocalLoad extends TACUpdate {
   }
 
   public void setPreviousStore(TACOperand store) {
-    if (store instanceof TACLiteral) {
-      TACLiteral literal = (TACLiteral) store;
+    if (store instanceof TACLiteral literal) {
       if (literal.getValue() instanceof ShadowUndefined) undefined = true;
     }
 

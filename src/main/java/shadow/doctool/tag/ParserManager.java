@@ -17,7 +17,7 @@ public class ParserManager {
     private final int argCount;
     private final boolean hasDescription;
 
-    private static final Pattern argumentPattern = Pattern.compile("[^\\s]+");
+    private static final Pattern argumentPattern = Pattern.compile("\\S+");
 
     public ArgDescriptionParser(int argCount, boolean hasDescription) {
       this.argCount = argCount;
@@ -47,7 +47,7 @@ public class ParserManager {
         if (hasDescription)
           results.add(text.substring(lastCaptured).trim().replaceAll("\\s+", " "));
         else // TODO: Should this just be a warning?
-        throw new DocumentationException("Found more arguments than expected");
+          throw new DocumentationException("Found more arguments than expected");
       }
 
       return results;

@@ -53,9 +53,9 @@ public class InterfaceType extends Type {
     return allInterfaces;
   }
 
-  public boolean isDescendentOf(Type type) {
+  public boolean isDescendantOf(Type type) {
     for (InterfaceType parent : getInterfaces())
-      if (parent.equals(type) || parent.isDescendentOf(type)) return true;
+      if (parent.equals(type) || parent.isDescendantOf(type)) return true;
 
     return false;
   }
@@ -227,7 +227,7 @@ public class InterfaceType extends Type {
 
     if (equals(t) || t == Type.OBJECT || t == Type.VAR) return true;
 
-    if (t instanceof InterfaceType) return isDescendentOf(t);
+    if (t instanceof InterfaceType) return isDescendantOf(t);
     else return false;
   }
 

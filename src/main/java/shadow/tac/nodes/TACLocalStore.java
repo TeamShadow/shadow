@@ -63,8 +63,7 @@ public class TACLocalStore extends TACLocalStorage {
     boolean changed = false;
     TACOperand temp = getValue();
 
-    if (temp instanceof TACUpdate) {
-      TACUpdate update = (TACUpdate) temp;
+    if (temp instanceof TACUpdate update) {
       if (update.update(currentlyUpdating)) changed = true;
 
       temp = update.getValue();
@@ -107,11 +106,9 @@ public class TACLocalStore extends TACLocalStorage {
 
   @Override
   public boolean equals(Object other) {
-    if (!(other instanceof TACLocalStore)) return false;
+    if (!(other instanceof TACLocalStore store)) return false;
 
     if (other == this) return true;
-
-    TACLocalStore store = (TACLocalStore) other;
 
     return getNumber() == store.getNumber() && getVariable().equals(store.getVariable());
   }

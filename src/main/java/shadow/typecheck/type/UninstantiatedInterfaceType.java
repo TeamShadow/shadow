@@ -47,11 +47,9 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
   @Override
   public InterfaceType instantiate() throws InstantiationException {
     for (ModifiedType argument : typeArguments) {
-      if (argument.getType() instanceof UninstantiatedType) {
-        UninstantiatedType uninstantiatedArgument = (UninstantiatedType) argument.getType();
+      if (argument.getType() instanceof UninstantiatedType uninstantiatedArgument) {
         argument.setType(uninstantiatedArgument.instantiate());
-      } else if (argument.getType() instanceof ArrayType) {
-        ArrayType arrayArgument = (ArrayType) argument.getType();
+      } else if (argument.getType() instanceof ArrayType arrayArgument) {
         argument.setType(arrayArgument.instantiate());
       }
     }
@@ -71,8 +69,7 @@ public class UninstantiatedInterfaceType extends InterfaceType implements Uninst
   @Override
   public InterfaceType partiallyInstantiate() throws InstantiationException {
     for (ModifiedType argument : typeArguments) {
-      if (argument.getType() instanceof UninstantiatedType) {
-        UninstantiatedType uninstantiatedArgument = (UninstantiatedType) argument.getType();
+      if (argument.getType() instanceof UninstantiatedType uninstantiatedArgument) {
         argument.setType(uninstantiatedArgument.partiallyInstantiate());
       }
     }

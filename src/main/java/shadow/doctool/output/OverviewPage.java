@@ -1,7 +1,6 @@
 package shadow.doctool.output;
 
 import shadow.ShadowException;
-import shadow.doctool.DocumentationException;
 import shadow.doctool.output.HtmlWriter.Attribute;
 import shadow.typecheck.Package;
 
@@ -59,8 +58,7 @@ public class OverviewPage extends Page {
     out.closeUntab();
   }
 
-  private void writeTable(Set<Package> knownPackages, HtmlWriter out)
-      throws ShadowException {
+  private void writeTable(Set<Package> knownPackages, HtmlWriter out) throws ShadowException {
     if (!knownPackages.isEmpty()) {
       // List packages in alphabetical order, documenting only those that
       // have contents

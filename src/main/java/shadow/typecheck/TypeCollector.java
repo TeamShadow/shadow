@@ -88,7 +88,7 @@ public class TypeCollector extends ScopedChecker {
     private final Set<String> localTypes = new HashSet<>();
     private final Set<String> typeParameters = new HashSet<>();
 
-     public TypeDeclaration() {}
+    public TypeDeclaration() {}
 
     public void addMethod(String method) {
       methods.add(method);
@@ -148,7 +148,8 @@ public class TypeCollector extends ScopedChecker {
     typeTable = new HashMap<>();
 
     List<Path> systemPaths = Configuration.getConfiguration().getSystem();
-    standardSourcePath = systemPaths.get(Configuration.SOURCE).resolve("shadow").resolve("standard");
+    standardSourcePath =
+        systemPaths.get(Configuration.SOURCE).resolve("shadow").resolve("standard");
     standardImportedTypes = getStandardImports(standardSourcePath);
   }
 
@@ -190,8 +191,8 @@ public class TypeCollector extends ScopedChecker {
   }
 
   /**
-   * Calls <code>collectTypes</code> with a list of files. The main file (the first one) has updated source is given in
-   * source. Used for type-checking files currently being edited in an IDE.
+   * Calls <code>collectTypes</code> with a list of files. The main file (the first one) has updated
+   * source is given in source. Used for type-checking files currently being edited in an IDE.
    *
    * @param source the updated source code of the main file
    * @return map from types to nodes
@@ -225,8 +226,7 @@ public class TypeCollector extends ScopedChecker {
    * Calls the full <code>collectTypes</code> and might call it a second time
    * if needed to determine what should be recompiled.
    */
-  private Map<Type, Context> collectTypes(
-      List<Path> files, Map<Path, String> activeFiles)
+  private Map<Type, Context> collectTypes(List<Path> files, Map<Path, String> activeFiles)
       throws ShadowException, IOException, ConfigurationException {
     Set<Path> mustCompile = new HashSet<>();
     Map<Path, TreeSet<Path>> dependencies = new HashMap<>();
@@ -294,10 +294,8 @@ public class TypeCollector extends ScopedChecker {
       uncheckedFiles.add(path);
 
       // Assume the main file is the first file.
-      if (mainSource == null)
-        mainSource = path;
+      if (mainSource == null) mainSource = path;
     }
-
 
     // Check standard imports.
     if (!Files.exists(standardSourcePath))
@@ -314,7 +312,8 @@ public class TypeCollector extends ScopedChecker {
 
     // A few io classes are absolutely necessary for a console program.
     Path ioSource = standardSourcePath.resolveSibling("io");
-    if (!Files.exists(ioSource)) throw new ConfigurationException("Invalid path to io: " + ioSource);
+    if (!Files.exists(ioSource))
+      throw new ConfigurationException("Invalid path to io: " + ioSource);
 
     uncheckedFiles.add(ioSource.resolve("Console"));
     uncheckedFiles.add(ioSource.resolve("File"));
@@ -354,11 +353,11 @@ public class TypeCollector extends ScopedChecker {
             // Also, only use .meta if we're not going to need to recompile it into an object file
             (typeCheckOnly
                 || (Files.exists(binaryPath)
-                    && Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(meta))
+                    && Files.getLastModifiedTime(binaryPath)
+                            .compareTo(Files.getLastModifiedTime(meta))
                         >= 0))) {
           canonicalFile = meta;
-        } else
-          mustCompile.add(canonical);
+        } else mustCompile.add(canonical);
       } else if (!useSourceFiles) canonicalFile = BaseChecker.addExtension(canonical, ".meta");
 
       currentFile = canonicalFile;
@@ -545,7 +544,7 @@ public class TypeCollector extends ScopedChecker {
                   // Type name
                   file -> stripExtension(file.getFileName().toString()),
                   // Path
-                  file ->  new PathWithContext(stripExtension(file), null)));
+                  file -> new PathWithContext(stripExtension(file), null)));
     }
   }
 
@@ -651,7 +650,6 @@ public class TypeCollector extends ScopedChecker {
       }
     }
 
-
     // Fix type names for primitive types.
     if (currentPackage.getQualifiedName().equals("shadow:standard")
         && (name.equals("Boolean")
@@ -676,34 +674,34 @@ public class TypeCollector extends ScopedChecker {
       return type;
     } else { // Set kind of type and create it with the appropriate name and outer type.
       switch (kind) {
-        case "class":
+        case "class" -> {
           ClassType classType = new ClassType(name, modifiers, documentation, currentType);
           captureClassType(classType, typeName);
           type = classType;
-          break;
-        case "enum":
-          type = new EnumType(name, modifiers, documentation, currentType);
-          break;
-        case "exception":
-          ExceptionType exceptionType = new ExceptionType(name, modifiers, documentation, currentType);
+        }
+        case "enum" -> type = new EnumType(name, modifiers, documentation, currentType);
+        case "exception" -> {
+          ExceptionType exceptionType =
+                  new ExceptionType(name, modifiers, documentation, currentType);
           captureExceptionType(exceptionType, typeName);
           type = exceptionType;
-          break;
-        case "interface":
+        }
+        case "interface" -> {
           InterfaceType interfaceType = new InterfaceType(name, modifiers, documentation);
           captureInterfaceType(interfaceType, typeName);
           type = interfaceType;
-          break;
-        case "singleton":
-          SingletonType singletonType = new SingletonType(name, modifiers, documentation, currentType);
+        }
+        case "singleton" -> {
+          SingletonType singletonType =
+                  new SingletonType(name, modifiers, documentation, currentType);
           captureSingletonType(singletonType, typeName);
           type = singletonType;
-          break;
-        case "attribute":
+        }
+        case "attribute" -> {
           AttributeType attributeType = new AttributeType(name, documentation, currentType);
           captureAttributeType(attributeType, typeName);
           type = attributeType;
-          break;
+        }
       }
 
       // Put new type inside outer type, if it exists.
@@ -711,9 +709,15 @@ public class TypeCollector extends ScopedChecker {
         currentType.addInnerType(name, type);
 
         if (currentType instanceof AttributeType)
-          addError(node, Error.INVALID_STRUCTURE, "Type " + name + " cannot be declared as an inner class of an attribute");
+          addError(
+              node,
+              Error.INVALID_STRUCTURE,
+              "Type " + name + " cannot be declared as an inner class of an attribute");
         else if (kind.equals("attribute"))
-          addError(node, Error.INVALID_STRUCTURE, "Attribute " + name + " cannot be declared as an inner class");
+          addError(
+              node,
+              Error.INVALID_STRUCTURE,
+              "Attribute " + name + " cannot be declared as an inner class");
       }
 
       // Put new type in its package.
@@ -735,63 +739,25 @@ public class TypeCollector extends ScopedChecker {
   private void captureInterfaceType(InterfaceType interfaceType, String typeName) {
     if (currentPackage.getQualifiedName().equals("shadow:standard")) {
       switch (typeName) {
-        case "CanAdd":
-          Type.CAN_ADD = interfaceType;
-          break;
-        case "CanCompare":
-          Type.CAN_COMPARE = interfaceType;
-          break;
-        case "CanDivide":
-          Type.CAN_DIVIDE = interfaceType;
-          break;
-        case "CanEqual":
-          Type.CAN_EQUAL = interfaceType;
-          break;
-        case "CanModulus":
-          Type.CAN_MODULUS = interfaceType;
-          break;
-        case "CanMultiply":
-          Type.CAN_MULTIPLY = interfaceType;
-          break;
-        case "CanNegate":
-          Type.CAN_NEGATE = interfaceType;
-          break;
-        case "CanSubtract":
-          Type.CAN_SUBTRACT = interfaceType;
-          break;
-        case "CanIndex":
-          Type.CAN_INDEX = interfaceType;
-          break;
-        case "CanIndexNullable":
-          Type.CAN_INDEX_NULLABLE = interfaceType;
-          break;
-        case "CanIndexStore":
-          Type.CAN_INDEX_STORE = interfaceType;
-          break;
-        case "CanIndexStoreNullable":
-          Type.CAN_INDEX_STORE_NULLABLE = interfaceType;
-          break;
-        case "CanIterate":
-          Type.CAN_ITERATE = interfaceType;
-          break;
-        case "CanIterateNullable":
-          Type.CAN_ITERATE_NULLABLE = interfaceType;
-          break;
-        case "CanRun":
-          Type.CAN_RUN = interfaceType;
-          break;
-        case "Integer":
-          Type.INTEGER = interfaceType;
-          break;
-        case "Iterator":
-          Type.ITERATOR = interfaceType;
-          break;
-        case "IteratorNullable":
-          Type.ITERATOR_NULLABLE = interfaceType;
-          break;
-        case "Number":
-          Type.NUMBER = interfaceType;
-          break;
+        case "CanAdd" -> Type.CAN_ADD = interfaceType;
+        case "CanCompare" -> Type.CAN_COMPARE = interfaceType;
+        case "CanDivide" -> Type.CAN_DIVIDE = interfaceType;
+        case "CanEqual" -> Type.CAN_EQUAL = interfaceType;
+        case "CanModulus" -> Type.CAN_MODULUS = interfaceType;
+        case "CanMultiply" -> Type.CAN_MULTIPLY = interfaceType;
+        case "CanNegate" -> Type.CAN_NEGATE = interfaceType;
+        case "CanSubtract" -> Type.CAN_SUBTRACT = interfaceType;
+        case "CanIndex" -> Type.CAN_INDEX = interfaceType;
+        case "CanIndexNullable" -> Type.CAN_INDEX_NULLABLE = interfaceType;
+        case "CanIndexStore" -> Type.CAN_INDEX_STORE = interfaceType;
+        case "CanIndexStoreNullable" -> Type.CAN_INDEX_STORE_NULLABLE = interfaceType;
+        case "CanIterate" -> Type.CAN_ITERATE = interfaceType;
+        case "CanIterateNullable" -> Type.CAN_ITERATE_NULLABLE = interfaceType;
+        case "CanRun" -> Type.CAN_RUN = interfaceType;
+        case "Integer" -> Type.INTEGER = interfaceType;
+        case "Iterator" -> Type.ITERATOR = interfaceType;
+        case "IteratorNullable" -> Type.ITERATOR_NULLABLE = interfaceType;
+        case "Number" -> Type.NUMBER = interfaceType;
       }
     }
   }
@@ -799,24 +765,12 @@ public class TypeCollector extends ScopedChecker {
   private void captureExceptionType(ExceptionType exceptionType, String typeName) {
     if (currentPackage.getQualifiedName().equals("shadow:standard")) {
       switch (typeName) {
-        case "AssertException":
-          Type.ASSERT_EXCEPTION = exceptionType;
-          break;
-        case "CastException":
-          Type.CAST_EXCEPTION = exceptionType;
-          break;
-        case "Exception":
-          Type.EXCEPTION = exceptionType;
-          break;
-        case "IndexOutOfBoundsException":
-          Type.INDEX_OUT_OF_BOUNDS_EXCEPTION = exceptionType;
-          break;
-        case "InterfaceCreateException":
-          Type.INTERFACE_CREATE_EXCEPTION = exceptionType;
-          break;
-        case "UnexpectedNullException":
-          Type.UNEXPECTED_NULL_EXCEPTION = exceptionType;
-          break;
+        case "AssertException" -> Type.ASSERT_EXCEPTION = exceptionType;
+        case "CastException" -> Type.CAST_EXCEPTION = exceptionType;
+        case "Exception" -> Type.EXCEPTION = exceptionType;
+        case "IndexOutOfBoundsException" -> Type.INDEX_OUT_OF_BOUNDS_EXCEPTION = exceptionType;
+        case "InterfaceCreateException" -> Type.INTERFACE_CREATE_EXCEPTION = exceptionType;
+        case "UnexpectedNullException" -> Type.UNEXPECTED_NULL_EXCEPTION = exceptionType;
       }
     }
   }
@@ -824,9 +778,8 @@ public class TypeCollector extends ScopedChecker {
   // Captures standard singleton types for later reference during compilation
   private void captureSingletonType(SingletonType singletonType, String typeName) {
     if (currentPackage.getQualifiedName().equals("shadow:standard")) {
-      switch (typeName) {
-        case "Thread:Current":
-          Type.THREAD_CURRENT = singletonType;
+      if ("Thread:Current".equals(typeName)) {
+        Type.THREAD_CURRENT = singletonType;
       }
     }
   }
@@ -835,78 +788,31 @@ public class TypeCollector extends ScopedChecker {
   private void captureClassType(ClassType classType, String typeName) {
     if (currentPackage.getQualifiedName().equals("shadow:standard")) {
       switch (typeName) {
-        case "AddressMap":
-          Type.ADDRESS_MAP = classType;
-          break;
-        case "Array":
-          Type.ARRAY = classType;
-          break;
-        case "ArrayNullable":
-          Type.ARRAY_NULLABLE = classType;
-          break;
-        case "Attribute":
-          Type.ATTRIBUTE = classType;
-          break;
-        case "Class":
-          Type.CLASS = classType;
-          break;
-        case "boolean":
-          Type.BOOLEAN = classType;
-          break;
-        case "byte":
-          Type.BYTE = classType;
-          break;
-        case "code":
-          Type.CODE = classType;
-          break;
-        case "double":
-          Type.DOUBLE = classType;
-          break;
-        case "Enum":
-          Type.ENUM = classType;
-          break; // the base class for enum is not an enum
-        case "float":
-          Type.FLOAT = classType;
-          break;
-        case "GenericClass":
-          Type.GENERIC_CLASS = classType;
-          break;
-        case "int":
-          Type.INT = classType;
-          break;
-        case "long":
-          Type.LONG = classType;
-          break;
-        case "Method":
-          Type.METHOD = classType;
-          break;
-        case "MethodTable":
-          Type.METHOD_TABLE = classType;
-          break;
-        case "Object":
-          Type.OBJECT = classType;
-          break;
-        case "short":
-          Type.SHORT = classType;
-          break;
-        case "String":
-          Type.STRING = classType;
-          break;
-        case "ubyte":
-          Type.UBYTE = classType;
-          break;
-        case "uint":
-          Type.UINT = classType;
-          break;
-        case "ulong":
-          Type.ULONG = classType;
-          break;
-        case "ushort":
-          Type.USHORT = classType;
-          break;
-        case "Thread":
-          Type.THREAD = classType;
-          break;
+        case "AddressMap" -> Type.ADDRESS_MAP = classType;
+        case "Array" -> Type.ARRAY = classType;
+        case "ArrayNullable" -> Type.ARRAY_NULLABLE = classType;
+        case "Attribute" -> Type.ATTRIBUTE = classType;
+        case "Class" -> Type.CLASS = classType;
+        case "boolean" -> Type.BOOLEAN = classType;
+        case "byte" -> Type.BYTE = classType;
+        case "code" -> Type.CODE = classType;
+        case "double" -> Type.DOUBLE = classType;
+        case "Enum" -> Type.ENUM = classType;
+        // the base class for enum is not an enum
+        case "float" -> Type.FLOAT = classType;
+        case "GenericClass" -> Type.GENERIC_CLASS = classType;
+        case "int" -> Type.INT = classType;
+        case "long" -> Type.LONG = classType;
+        case "Method" -> Type.METHOD = classType;
+        case "MethodTable" -> Type.METHOD_TABLE = classType;
+        case "Object" -> Type.OBJECT = classType;
+        case "short" -> Type.SHORT = classType;
+        case "String" -> Type.STRING = classType;
+        case "ubyte" -> Type.UBYTE = classType;
+        case "uint" -> Type.UINT = classType;
+        case "ulong" -> Type.ULONG = classType;
+        case "ushort" -> Type.USHORT = classType;
+        case "Thread" -> Type.THREAD = classType;
       }
     } else if (currentPackage.getQualifiedName().equals("shadow:natives")) {
       if ("Pointer".equals(typeName)) {
@@ -919,18 +825,10 @@ public class TypeCollector extends ScopedChecker {
   private void captureAttributeType(AttributeType type, String typeName) {
     if (currentPackage.getQualifiedName().equals("shadow:standard:attributes")) {
       switch (typeName) {
-        case "ImportAssembly":
-          AttributeType.IMPORT_ASSEMBLY = type;
-          break;
-        case "ExportAssembly":
-          AttributeType.EXPORT_ASSEMBLY = type;
-          break;
-        case "ImportNative":
-          AttributeType.IMPORT_NATIVE = type;
-          break;
-        case "ExportNative":
-          AttributeType.EXPORT_NATIVE = type;
-          break;
+        case "ImportAssembly" -> AttributeType.IMPORT_ASSEMBLY = type;
+        case "ExportAssembly" -> AttributeType.EXPORT_ASSEMBLY = type;
+        case "ImportNative" -> AttributeType.IMPORT_NATIVE = type;
+        case "ExportNative" -> AttributeType.EXPORT_NATIVE = type;
       }
     }
   }
@@ -943,7 +841,7 @@ public class TypeCollector extends ScopedChecker {
   private Path findPath(String name) {
     String separator = FileSystems.getDefault().getSeparator(); // Adds some platform independence.
     if (separator.equals("\\")) // Hack for Windows to deal with backslash escaping.
-    separator = "\\\\";
+      separator = "\\\\";
 
     int atIndex = name.indexOf('@');
     boolean isDirectory = atIndex == -1;
@@ -972,8 +870,7 @@ public class TypeCollector extends ScopedChecker {
         Path metaVersion = importPath.resolve(path + ".meta");
         if (Files.exists(shadowVersion)) {
           return shadowVersion;
-        }
-        else if (Files.exists(metaVersion)) {
+        } else if (Files.exists(metaVersion)) {
           return metaVersion;
         }
       }
@@ -1037,8 +934,7 @@ public class TypeCollector extends ScopedChecker {
     // Single class
     if (name.contains("@")) {
       Path file = findPath(name);
-      if (file == null)
-        addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
+      if (file == null) addError(ctx, Error.INVALID_IMPORT, "No file found for type " + name);
       else if (!addImport(file, ctx, false))
         addError(ctx, Error.IMPORT_COLLIDES, "Type " + name + " collides with existing import");
     }
@@ -1115,7 +1011,7 @@ public class TypeCollector extends ScopedChecker {
               Error.UNUSED_IMPORT,
               "Import for type " + context.getText() + " is not used");
         else // Whole directory, but maybe something in it is used?
-        potentiallyUnusedDirectories.add(context);
+          potentiallyUnusedDirectories.add(context);
       }
     }
 
@@ -1200,7 +1096,6 @@ public class TypeCollector extends ScopedChecker {
 
     return null;
   }
-
 
   @Override
   public Void visitClassOrInterfaceBody(ShadowParser.ClassOrInterfaceBodyContext ctx) {

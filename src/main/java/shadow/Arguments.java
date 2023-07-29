@@ -39,7 +39,7 @@ public class Arguments {
 
   private static final Options compilerOptions = createOptions();
 
-  public Arguments(String[] args) throws ParseException, ConfigurationException {
+  public Arguments(String[] args) throws ParseException {
 
     // Parse the command line arguments
     CommandLineParser parser = new DefaultParser();
@@ -47,20 +47,6 @@ public class Arguments {
 
     // Increase logging level if VERBOSE is set
     if (hasOption(VERBOSE)) Loggers.setAllToLevel(Level.INFO);
-
-    // Don't throw argument exceptions if help or information was requested
-    if (commandLine.hasOption(HELP) || commandLine.hasOption(INFORMATION)) return;
-
-    // Ensure exactly one source file is specified (and that it ends in .shadow)
-    /*
-    if (commandLine.getArgs().length > 1)
-      throw new ConfigurationException("Only one main source file may be specified");
-    else if (commandLine.getArgs().length == 0)
-      throw new ConfigurationException("No source file specified to compile");
-    else if (!commandLine.getArgs()[0].endsWith(".shadow"))
-      throw new ConfigurationException("Source files must end in \".shadow\"");
-
-     */
   }
 
   public boolean hasOption(String option) {
@@ -100,7 +86,6 @@ public class Arguments {
             .desc("Specify optional configuration file\nIf shadow.xml exists, it will be checked")
             .build();
 
-
     Option outputOption =
         Option.builder(OUTPUT)
             .longOpt(OUTPUT_LONG)
@@ -125,10 +110,7 @@ public class Arguments {
 
     options.addOption(
         new Option(
-            BUILD_SYSTEM,
-            BUILD_SYSTEM_LONG,
-            false,
-            "Build binary files for system source files"));
+            BUILD_SYSTEM, BUILD_SYSTEM_LONG, false, "Build binary files for system source files"));
     options.addOption(
         new Option(TYPECHECK, TYPECHECK_LONG, false, "Parse and type-check the Shadow files"));
     options.addOption(

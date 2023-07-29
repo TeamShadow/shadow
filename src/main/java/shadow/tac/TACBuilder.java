@@ -58,8 +58,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     for (int i = 0; i < node.getChildCount(); i++) {
       ParseTree child = node.getChild(i);
 
-      if (child instanceof Context) {
-        Context context = (Context) child;
+      if (child instanceof Context context) {
         anchor = new TACDummyNode(context, block);
         context.accept(this);
         // take out dummy node and save the resulting list in the context
@@ -240,9 +239,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     initializeSingletons(ctx.getSignature());
     visitChildren(ctx);
 
-    if (ctx.createBlock()
-        != null) // Possible because we still walk dummy nodes created for default creates
-    ctx.createBlock().appendBefore(anchor);
+    // Possible because we still walk dummy nodes created for default creates
+    if (ctx.createBlock() != null)
+      ctx.createBlock().appendBefore(anchor);
 
     TACNode last = anchor.getPrevious();
 
@@ -268,9 +267,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   public Void visitDestroyDeclaration(ShadowParser.DestroyDeclarationContext ctx) {
     initializeSingletons(ctx.getSignature());
     visitChildren(ctx);
-    if (ctx.block()
-        != null) // Possible because we still walk dummy nodes created for default destroys
-    ctx.block().appendBefore(anchor);
+    // Possible because we still walk dummy nodes created for default destroys
+    if (ctx.block() != null)
+      ctx.block().appendBefore(anchor);
 
     return null;
   }
@@ -347,8 +346,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
     operation = operation.substring(0, operation.length() - 1); // clip off last character (=)
 
-    if (leftType instanceof PropertyType) {
-      PropertyType propertyType = (PropertyType) leftType;
+    if (leftType instanceof PropertyType propertyType) {
       List<TACOperand> parameters = new ArrayList<>();
 
       parameters.add(left);
@@ -761,8 +759,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
           done.insertBefore(anchor);
           current = new TACLocalLoad(anchor, var);
-        } else // both non-nullable primitives or both references, no problem
-        current = new TACBinary(anchor, current, next);
+        } else // Both non-nullable primitives or both references, no problem
+          current = new TACBinary(anchor, current, next);
       }
       if (op.startsWith("!")) current = new TACUnary(anchor, "!", current);
     }
@@ -835,7 +833,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
         nonnullLabel.insertBefore(anchor);
 
         if (type.isPrimitive()) // convert non null primitive wrapper to real primitive
-        operand = TACCast.cast(anchor, new SimpleModifiedType(type), operand);
+          operand = TACCast.cast(anchor, new SimpleModifiedType(type), operand);
 
         TACMethodName methodName =
             new TACMethodName(
@@ -1215,7 +1213,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     visitChildren(ctx);
     Type parentType = getPreviousSuffix((PrimarySuffixContext) ctx.getParent()).getType();
 
-    if (parentType instanceof AttributeType attributeType) {
+    // Confusing bit here: Interpret the attribute value if we're *not* inside of an attribute.
+    // If we are inside, we act like it's normal code, just for the sake of typechecking and data flow analysis.
+    if (parentType instanceof AttributeType attributeType && !(method.getSignature().getOuter() instanceof AttributeType)) {
       Package packageTree = attributeType.getPackage().getRoot();
       ErrorReporter reporter = new ErrorReporter(Loggers.AST_INTERPRETER);
       AttributeInvocation invocation = method.getSignature().getAttributeInvocation(attributeType);
@@ -1286,11 +1286,10 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
             TACCast.cast(anchor, new SimpleModifiedType(Type.LONG, index.getModifiers()), index);
 
       prefix = new TACLoad(anchor, new TACArrayRef(anchor, prefix, index));
-    } else if (ctx.getType() instanceof SubscriptType) {
-      SubscriptType subscriptType = (SubscriptType) ctx.getType();
-      // only do the straight loads
-      // stores (and +='s) are handled in ASTExpression
-      // only one conditionalExpression is possible
+    } else if (ctx.getType() instanceof SubscriptType subscriptType) {
+      // Only do the straight loads
+      // Stores (and +='s) are handled in ASTExpression
+      // Only one conditionalExpression is possible
       // Arrays of type parameters (T[]) are handled here as well, since it's easy to use index()
       // methods
       if (!isStore) {
@@ -1315,8 +1314,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
     if (parent instanceof shadow.parse.ShadowParser.SequenceLeftSideContext) return true;
 
-    if (parent instanceof shadow.parse.ShadowParser.ExpressionContext) {
-      shadow.parse.ShadowParser.ExpressionContext expression = (ExpressionContext) parent;
+    if (parent instanceof ExpressionContext expression) {
       return expression.assignmentOperator() != null;
     }
 
@@ -1378,7 +1376,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
     MethodSignature signature = ctx.getSignature();
 
-    if (signature.getOuter() instanceof AttributeType attributeType) {
+    if (signature != null && signature.getOuter() instanceof AttributeType attributeType) {
       Package packageTree = attributeType.getPackage().getRoot();
       ErrorReporter reporter = new ErrorReporter(Loggers.AST_INTERPRETER);
       AttributeInvocation invocation = method.getSignature().getAttributeInvocation(attributeType);
@@ -1455,8 +1453,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       prefix = visitArrayAllocation(arrayType, arrayClass, indices, value);
     }
     // fills ragged arrays like int[]:create[5] with arrays of size 0
-    else if (ctx.prefixType instanceof ArrayType) {
-      ArrayType baseType = (ArrayType) ctx.prefixType;
+    else if (ctx.prefixType instanceof ArrayType baseType) {
       TACClass baseClass = new TACClass(anchor, baseType);
       TACOperand newArray =
           new TACNewArray(
@@ -1766,11 +1763,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
         }
       }
 
-      if (ctx.hasDefault
-          && ctx.switchLabel().size() == 1) // only default exists, needs a direct jump
-      new TACBranch(anchor, defaultLabel);
+      // Only default exists, needs a direct jump
+      if (ctx.hasDefault && ctx.switchLabel().size() == 1)
+        new TACBranch(anchor, defaultLabel);
 
-      // then go through and add the executable blocks of code to jump to
+      // Then go through and add the executable blocks of code to jump to
       for (int i = 0; i < ctx.statement().size(); ++i) {
         labels.get(i).insertBefore(anchor); // mark start of code
         ctx.statement(i).appendBefore(anchor); // add block of code (the child after each label)
@@ -2099,10 +2096,8 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       if (rightSide != null) {
         Type type = rightSide.getType();
 
-        if (type instanceof SequenceType) {
-          SequenceType sequenceType = (SequenceType) type;
-          if (rightSide instanceof TACSequence) {
-            TACSequence sequence = (TACSequence) rightSide;
+        if (type instanceof SequenceType sequenceType) {
+          if (rightSide instanceof TACSequence sequence) {
             for (int i = 0; i < sequenceType.size(); ++i)
               new TACLocalStore(anchor, method.getLocal("_return" + i), sequence.get(i));
           }
@@ -2133,8 +2128,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       if (rightSide != null) {
         Type type = rightSide.getType();
 
-        if (type instanceof SequenceType) {
-          SequenceType sequenceType = (SequenceType) type;
+        if (type instanceof SequenceType sequenceType) {
           List<TACOperand> operands = new ArrayList<>(sequenceType.size());
           for (int i = 0; i < sequenceType.size(); ++i)
             operands.add(new TACLocalLoad(anchor, method.getLocal("_return" + i)));
@@ -2831,7 +2825,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
                         field,
                         Type.OBJECT.getMatchingMethod("copy", new SequenceType(Type.ADDRESS_MAP)));
               } else // normal object or array
-              copyMethod =
+                copyMethod =
                     new TACMethodName(
                         anchor,
                         field,
@@ -2991,8 +2985,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
               methodSignature.getSignatureWithoutTypeArguments().getFullReturnTypes());
 
       // cast all returns and store them in appropriate variables
-      if (value.getType() instanceof SequenceType) {
-        SequenceType sequenceType = (SequenceType) value.getType();
+      if (value.getType() instanceof SequenceType sequenceType) {
         for (int i = 0; i < sequenceType.size(); ++i)
           new TACLocalStore(
               anchor,
@@ -3009,8 +3002,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       // turn context back on
       anchor.setContext(context);
 
-      if (value.getType() instanceof SequenceType) {
-        SequenceType sequenceType = (SequenceType) value.getType();
+      if (value.getType() instanceof SequenceType sequenceType) {
         List<TACOperand> operands = new ArrayList<>(sequenceType.size());
         for (int i = 0; i < sequenceType.size(); ++i)
           operands.add(new TACLocalLoad(anchor, method.getLocal("_return" + i)));

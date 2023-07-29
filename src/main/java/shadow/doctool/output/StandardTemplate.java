@@ -68,8 +68,7 @@ public class StandardTemplate extends DocumentationTemplate {
     }
   }
 
-  public void write(Path outputDirectory)
-      throws IOException, ShadowException {
+  public void write(Path outputDirectory) throws IOException, ShadowException {
     overviewPage.write(outputDirectory);
 
     for (PackagePage page : packagePages.values()) page.write(outputDirectory);
@@ -127,23 +126,11 @@ public class StandardTemplate extends DocumentationTemplate {
   }
 
   private static boolean isPrimitive(String name) {
-    switch (name) {
-      case "boolean":
-      case "byte":
-      case "code":
-      case "double":
-      case "float":
-      case "int":
-      case "long":
-      case "short":
-      case "ubyte":
-      case "uint":
-      case "ulong":
-      case "ushort":
-        return true;
-      default:
-        return false;
-    }
+    return switch (name) {
+      case "boolean", "byte", "code", "double", "float", "int", "long", "short", "ubyte", "uint", "ulong", "ushort" ->
+              true;
+      default -> false;
+    };
   }
 
   /** Creates a relative link to the master stylesheet */

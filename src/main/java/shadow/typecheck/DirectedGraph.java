@@ -17,6 +17,7 @@
 
 package shadow.typecheck;
 
+import java.io.Serial;
 import java.util.*;
 
 /**
@@ -51,6 +52,7 @@ public class DirectedGraph<T> implements Iterable<T> {
    * topological sort.
    */
   public static class CycleFoundException extends Exception {
+    @Serial
     private static final long serialVersionUID = -1938318109952799264L;
     private final Object cause;
 

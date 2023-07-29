@@ -127,8 +127,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
       if ((options & MANGLE) != 0) {
         // Raw primitive types get a . before them, to avoid collisions
         Type baseType = type;
-        if (type instanceof ArrayType)
-          baseType = ((ArrayType)type).recursivelyGetBaseType();
+        if (type instanceof ArrayType) baseType = ((ArrayType) type).recursivelyGetBaseType();
         if (baseType.isPrimitive() && !modifiers.isNullable()) builder.append(".");
         else builder.append("_");
       } else if (first) first = false;
@@ -153,8 +152,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
   public boolean equals(Type type) {
     if (type == Type.NULL) return true;
 
-    if (type instanceof SequenceType) {
-      SequenceType inputTypes = (SequenceType) type;
+    if (type instanceof SequenceType inputTypes) {
 
       if (types.size() != inputTypes.size()) return false;
 
@@ -296,7 +294,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
 
   @Override
   public boolean containsAll(Collection<?> c) {
-    return types.containsAll(c);
+    return new HashSet<>(types).containsAll(c);
   }
 
   @Override
@@ -376,8 +374,7 @@ public class SequenceType extends Type implements Iterable<ModifiedType>, List<M
   public boolean isSubtype(Type t) {
     if (equals(t)) return true;
 
-    if (t instanceof SequenceType) {
-      SequenceType inputTypes = (SequenceType) t;
+    if (t instanceof SequenceType inputTypes) {
 
       if (types.size() != inputTypes.size()) return false;
 

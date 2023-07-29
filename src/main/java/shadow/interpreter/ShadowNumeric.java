@@ -18,29 +18,28 @@ public abstract class ShadowNumeric extends ShadowNumber {
     if (arguments.length == 0) {
       switch (method) {
         case "abs":
-          return new ShadowNumber[]{abs()};
+          return new ShadowNumber[] {abs()};
         case "cos":
-          return new ShadowNumber[]{cos()};
+          return new ShadowNumber[] {cos()};
         case "sin":
-          return new ShadowNumber[]{sin()};
+          return new ShadowNumber[] {sin()};
         case "squareRoot":
-          return new ShadowNumber[]{squareRoot()};
+          return new ShadowNumber[] {squareRoot()};
         case "logBase10":
-          return new ShadowNumber[]{logBase10()};
+          return new ShadowNumber[] {logBase10()};
         case "logBase2":
-          return new ShadowNumber[]{logBase2()};
+          return new ShadowNumber[] {logBase2()};
         case "logBaseE":
-          return new ShadowNumber[]{logBaseE()};
+          return new ShadowNumber[] {logBaseE()};
       }
-    } else if (arguments.length == 1 && arguments[0] instanceof ShadowNumber) {
-      ShadowNumber number = (ShadowNumber) arguments[0];
+    } else if (arguments.length == 1 && arguments[0] instanceof ShadowNumber number) {
       switch (method) {
         case "power":
-          return new ShadowNumber[]{power(number)};
+          return new ShadowNumber[] {power(number)};
         case "max":
-          return new ShadowNumber[]{max(number)};
+          return new ShadowNumber[] {max(number)};
         case "min":
-          return new ShadowNumber[]{min(number)};
+          return new ShadowNumber[] {min(number)};
       }
     }
 

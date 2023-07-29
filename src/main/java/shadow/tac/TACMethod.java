@@ -182,21 +182,24 @@ public class TACMethod {
     Map<TACVariable, TACParameter> parameterStores = new HashMap<>();
     addGarbageCollection(start, storedVariables, cleanupCalls, parameterStores);
 
-    for(TACFinallyFunction finallyFunction : finallyFunctions)
-      addGarbageCollection(finallyFunction.getNode(), storedVariables, cleanupCalls, parameterStores);
+    for (TACFinallyFunction finallyFunction : finallyFunctions)
+      addGarbageCollection(
+          finallyFunction.getNode(), storedVariables, cleanupCalls, parameterStores);
 
     addCleanup(storedVariables, cleanupCalls);
   }
 
-  private void addGarbageCollection(TACNode start, Set<TACVariable> storedVariables, Set<TACCallFinallyFunction> cleanupCalls, Map<TACVariable, TACParameter> parameterStores) {
+  private void addGarbageCollection(
+      TACNode start,
+      Set<TACVariable> storedVariables,
+      Set<TACCallFinallyFunction> cleanupCalls,
+      Map<TACVariable, TACParameter> parameterStores) {
     // only stored variables needed to have their reference counts decremented at the end of the
     // method
 
     // Keep track of all the initial parameter stores
     // if a method parameter is never stored again (which is the typical case),
     // then we will neither need to increment it nor clean it up
-
-
 
     // fix this!  Run stores in a separate loop, after arrays and calls?
     boolean changed = true;
@@ -211,8 +214,7 @@ public class TACMethod {
         // and creating new things that might need to be garbage collected
 
         if (!node.isGarbageCollected()) { // if already GC, skip it
-          if (node instanceof TACLocalStore) {
-            TACLocalStore store = (TACLocalStore) node;
+          if (node instanceof TACLocalStore store) {
             TACVariable variable = store.getVariable();
             // Type that needs garbage collection will be stored in alloc'ed variable
             if (variable.needsGarbageCollection()) {
@@ -231,21 +233,17 @@ public class TACMethod {
                 }
               }
             }
-          } else if (node instanceof TACLocalLoad) {
-            TACLocalLoad load = (TACLocalLoad) node;
+          } else if (node instanceof TACLocalLoad load) {
             TACVariable variable = load.getVariable();
             if (variable.needsGarbageCollection()) load.setGarbageCollected(true);
-          } else if (node instanceof TACPhi) {
-            TACPhi phi = (TACPhi) node;
+          } else if (node instanceof TACPhi phi) {
             TACVariable variable = phi.getVariable();
             if (variable.needsGarbageCollection()) phi.setGarbageCollected(true);
-          } else if (node instanceof TACStore) {
-            TACStore store = (TACStore) node;
+          } else if (node instanceof TACStore store) {
             TACReference reference = store.getReference();
 
             if (reference.needsGarbageCollection()) store.setGarbageCollected(true);
-          } else if (node instanceof TACNewArray) {
-            TACNewArray newArray = (TACNewArray) node;
+          } else if (node instanceof TACNewArray newArray) {
             if (newArray.hasLocalStore()) {
               TACLocalStore store = newArray.getLocalStore();
               // local stores should not be incremented, since they are returned with an existing
@@ -262,8 +260,7 @@ public class TACMethod {
               storedVariables.add(temp);
               // No change here because we're pulling from an existing base class object
             }
-          } else if (node instanceof TACCall) {
-            TACCall call = (TACCall) node;
+          } else if (node instanceof TACCall call) {
             call.setGarbageCollected(true); // marks the call as handled
             if (call.hasLocalStore()) {
               TACLocalStore store = call.getLocalStore();
@@ -296,8 +293,7 @@ public class TACMethod {
             }
           }
           // Used to note cleanup calls in case we don't end up using them
-          else if (node instanceof TACCallFinallyFunction) {
-            TACCallFinallyFunction call = (TACCallFinallyFunction) node;
+          else if (node instanceof TACCallFinallyFunction call) {
             if (call.getFinallyFunction() == cleanupFinallyFunction) cleanupCalls.add(call);
           }
         }
@@ -403,8 +399,7 @@ public class TACMethod {
     TACNode node = start;
 
     do {
-      if (node instanceof TACLocalLoad) {
-        TACLocalLoad load = (TACLocalLoad) node;
+      if (node instanceof TACLocalLoad load) {
         TACVariable variable = load.getVariable();
         if (finallyUsedLocals != null) {
           finallyUsedLocals.add(variable);
@@ -412,8 +407,7 @@ public class TACMethod {
         }
 
         if (isUsedVariable(variable)) usedLocals.add(variable);
-      } else if (node instanceof TACLocalStore) {
-        TACLocalStore store = (TACLocalStore) node;
+      } else if (node instanceof TACLocalStore store) {
         TACVariable variable = store.getVariable();
         if (finallyUsedLocals != null) {
           finallyUsedLocals.add(variable);
@@ -421,8 +415,7 @@ public class TACMethod {
         }
 
         if (isUsedVariable(variable)) usedLocals.add(variable);
-      } else if (node instanceof TACChangeReferenceCount) {
-        TACChangeReferenceCount change = (TACChangeReferenceCount) node;
+      } else if (node instanceof TACChangeReferenceCount change) {
         TACVariable variable = change.getVariable();
         if (!change.isField()) referenceCountChanges.add(change);
 
@@ -430,8 +423,7 @@ public class TACMethod {
           finallyUsedLocals.add(variable);
           variable.makeFinallyVariable();
         }
-      } else if (node instanceof TACPhi) {
-        TACPhi phi = (TACPhi) node;
+      } else if (node instanceof TACPhi phi) {
         TACVariable variable = phi.getVariable();
 
         // Being present in a phi doesn't mean it's really used in the finally
@@ -521,8 +513,7 @@ public class TACMethod {
     TACNode node = start;
 
     do {
-      if (node instanceof TACLocalStore) {
-        TACLocalStore store = (TACLocalStore) node;
+      if (node instanceof TACLocalStore store) {
         // Small optimization here:
         // If a GC variable had no previous store,
         // then this must be the "first" store to it,
@@ -531,8 +522,7 @@ public class TACMethod {
         if (store.isGarbageCollected() && !store.hasPreviousStore())
           store.setDecrementReference(false);
 
-        if (store.getValue() instanceof TACLiteral) {
-          TACLiteral literal = (TACLiteral) store.getValue();
+        if (store.getValue() instanceof TACLiteral literal) {
           if (literal.getValue() instanceof ShadowUndefined) node = node.remove();
         }
       }

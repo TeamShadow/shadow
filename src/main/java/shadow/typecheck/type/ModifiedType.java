@@ -1,7 +1,5 @@
 package shadow.typecheck.type;
 
-import shadow.interpreter.InterpreterException;
-
 /** Interface for types that have been modified. */
 public interface ModifiedType {
   /**

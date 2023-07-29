@@ -8,15 +8,9 @@ import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.VariableDeclaratorContext;
 import shadow.typecheck.ErrorReporter;
 import shadow.typecheck.Package;
-import shadow.typecheck.TypeChecker;
-import shadow.typecheck.type.AttributeInvocation;
-import shadow.typecheck.type.AttributeType;
-import shadow.typecheck.type.MethodSignature;
 import shadow.typecheck.type.Type;
 
-import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * A lightweight wrapper around {@link ASTInterpreter} that evaluates compile-time constant fields.
@@ -60,11 +54,10 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
 
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof FieldKey)) {
+      if (!(o instanceof FieldKey other)) {
         return false;
       }
 
-      FieldKey other = (FieldKey) o;
       return Objects.equals(parentType, other.parentType)
           && Objects.equals(fieldName, other.fieldName);
     }
@@ -73,12 +66,10 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
   /**
    * Assumes that type-checking has already happened, meaning that all statements are valid and all
    * references to fields are legitimate.
-   *
    */
   public static void evaluateConstants(Package packageTree, List<Type> typesIncludingInner)
       throws ShadowException {
     // We also want to process fields from inner types. Order doesn't really matter.
-
 
     Map<FieldKey, VariableDeclaratorContext> constantFields = new HashMap<>();
 
@@ -102,7 +93,6 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
       visitor.visitRootField(fieldKey, fieldCtx);
     }
 
-
     visitor.printAndReportErrors();
   }
 
@@ -114,22 +104,18 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
     ShadowValue value = ShadowValue.INVALID;
 
     if (image.equals("this") || image.equals("super")) {
-        addError(
-                ctx,
-                Error.INVALID_SELF_REFERENCE,
-                "Reference " + image + " invalid for compile-time constants");
-    }
-    else if (ctx.generalIdentifier() != null && !ctx.getModifiers().isTypeName()) {
+      addError(
+          ctx,
+          Error.INVALID_SELF_REFERENCE,
+          "Reference " + image + " invalid for compile-time constants");
+    } else if (ctx.generalIdentifier() != null && !ctx.getModifiers().isTypeName()) {
       String name = ctx.generalIdentifier().getText();
       ShadowValue variable = (ShadowValue) findSymbol(name);
-      if (variable != null)
-        value = new ShadowVariable(this, name);
-      else if( currentType.recursivelyContainsConstant(name))
+      if (variable != null) value = new ShadowVariable(this, name);
+      else if (currentType.recursivelyContainsConstant(name))
         value = getConstant(currentType, name, ctx);
-      else
-        addError(ctx, Error.NON_CONSTANT_REFERENCE);
-    }
-    else if(ctx.conditionalExpression() != null) {
+      else addError(ctx, Error.NON_CONSTANT_REFERENCE);
+    } else if (ctx.conditionalExpression() != null) {
       value = ctx.conditionalExpression().getInterpretedValue();
     }
     // literal, check expression, copy expression,
@@ -147,7 +133,6 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
     return null;
   }
 
-
   @Override
   public Void visitScopeSpecifier(ShadowParser.ScopeSpecifierContext ctx) {
     visitChildren(ctx);
@@ -157,17 +142,17 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
     Type prefixType = prefixNode.getType();
 
     String name = ctx.Identifier().getText();
-      // Check field first
-      if (prefixType.containsField(name)) {
-        addError(
-                ctx,
-                Error.ILLEGAL_ACCESS,
-                "Field "
-                        + name
-                        + " cannot be referenced in a compile-time constant because it is not constant");
-        ctx.setInterpretedValue(ShadowValue.INVALID);
-      } else if (prefixType.recursivelyContainsConstant(name))
-        ctx.setInterpretedValue(getConstant(prefixType, name, ctx));
+    // Check field first
+    if (prefixType.containsField(name)) {
+      addError(
+          ctx,
+          Error.ILLEGAL_ACCESS,
+          "Field "
+              + name
+              + " cannot be referenced in a compile-time constant because it is not constant");
+      ctx.setInterpretedValue(ShadowValue.INVALID);
+    } else if (prefixType.recursivelyContainsConstant(name))
+      ctx.setInterpretedValue(getConstant(prefixType, name, ctx));
 
     return null;
   }
@@ -196,7 +181,9 @@ public class ConstantFieldInterpreter extends ASTInterpreter {
       try {
         // This cast seems wacky, but if we don't do it, then constant long X = 5; stores 5 into X,
         // not 5L
-        value = resolveValue(ctx.conditionalExpression().getInterpretedValue(), ctx).cast(ctx.getType());
+        value =
+            resolveValue(ctx.conditionalExpression().getInterpretedValue(), ctx)
+                .cast(ctx.getType());
       } catch (InterpreterException e) {
         addError(e.setContext(ctx));
       }

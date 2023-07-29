@@ -16,7 +16,8 @@ import java.util.ArrayList;
 public class TACTests {
 
   // To simplify removal, every unit test executable will have the same name
-  private static final Path executable = Job.properExecutableName(Paths.get("bin", "shadow", "test", "TacTest"));
+  private static final Path executable =
+      Job.properExecutableName(Paths.get("bin", "shadow", "test", "TacTest"));
 
   private final ArrayList<String> args = new ArrayList<>();
 

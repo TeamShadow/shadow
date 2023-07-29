@@ -1,10 +1,8 @@
 package shadow.typecheck.type;
 
 import shadow.doctool.Documentation;
-import shadow.parse.ShadowParser;
 
 import java.io.PrintWriter;
-import java.util.*;
 
 /**
  * Type representing an attribute in Shadow. Attributes are much simpler than classes: they have no
@@ -54,6 +52,7 @@ public class AttributeType extends ClassType {
 
   @Override
   public void printMetaFile(PrintWriter out, String linePrefix) {
-    throw new UnsupportedOperationException("Meta files cannot be created for attributes since their definitions are required at compile time");
+    throw new UnsupportedOperationException(
+        "Meta files cannot be created for attributes since their definitions are required at compile time");
   }
 }

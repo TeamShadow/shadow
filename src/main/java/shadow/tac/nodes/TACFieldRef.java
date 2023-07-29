@@ -16,29 +16,22 @@ public class TACFieldRef extends TACReference {
 
     if (fieldType == null) throw new NullPointerException();
     switch (fieldName) {
-      case "reference count":
-        index = 0;
-        break;
-      case "class":
-        index = 1;
-        break;
-      case "_methods":
-        index = 2;
-        break;
-      default:
+      case "reference count" -> index = 0;
+      case "class" -> index = 1;
+      case "_methods" -> index = 2;
+      default -> {
         // 0 is reference count
         // 1 is class
         // 2 is methods
         ClassType prefixType = (ClassType) fieldPrefix.getType();
-        if (prefixType instanceof ArrayType) prefixType = ((ArrayType) prefixType).convertToGeneric();
-
+        if (prefixType instanceof ArrayType)
+          prefixType = ((ArrayType) prefixType).convertToGeneric();
         int value = prefixType.getFieldIndex(fieldName);
         if (value < 0)
           throw new IllegalArgumentException(
-              "Field " + fieldName + " not found in type " + prefixType);
-
+                  "Field " + fieldName + " not found in type " + prefixType);
         index = value + 3;
-        break;
+      }
     }
     prefix = fieldPrefix;
     type = fieldType;

@@ -33,10 +33,8 @@ public class TACConstantRef extends TACReference {
   public boolean equals(Object o) {
     if (o == null) return false;
 
-    if (o instanceof TACConstantRef) {
-      TACConstantRef other = (TACConstantRef) o;
+    if (o instanceof TACConstantRef other)
       return prefix.equals(other.prefix) && name.equals(other.name);
-    }
 
     return false;
   }

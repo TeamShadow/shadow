@@ -54,10 +54,6 @@ public class TACModule {
     return type instanceof InterfaceType;
   }
 
-  public InterfaceType getInterfaceType() {
-    return (InterfaceType) type;
-  }
-
   public void addConstant(TACConstant constant) {
     constants.add(constant);
   }

@@ -31,11 +31,15 @@ public class Job {
   private final boolean humanReadable;
   private final List<Path> files = new ArrayList<>();
 
-  public Job(Arguments compilerArgs) throws FileNotFoundException, ConfigurationException, CommandLineException {
+  public Job(Arguments compilerArgs)
+      throws FileNotFoundException, ConfigurationException, CommandLineException {
 
     // Check relevant command line flags
     checkOnly = compilerArgs.hasOption(Arguments.TYPECHECK);
-    link = !compilerArgs.hasOption(Arguments.NO_LINK) && !compilerArgs.hasOption(Arguments.BUILD_SYSTEM) && !checkOnly;
+    link =
+        !compilerArgs.hasOption(Arguments.NO_LINK)
+            && !compilerArgs.hasOption(Arguments.BUILD_SYSTEM)
+            && !checkOnly;
     verbose = compilerArgs.hasOption(Arguments.VERBOSE);
     forceRecompile = compilerArgs.hasOption(Arguments.RECOMPILE);
     humanReadable = compilerArgs.hasOption(Arguments.READABLE);
@@ -44,35 +48,36 @@ public class Job {
 
     if (compilerArgs.hasOption(Arguments.INFORMATION)) {
       if (fileNames.length > 0)
-        throw new CommandLineException("Requests for compiler information should not include files to compile");
-    }
-    else if (compilerArgs.hasOption(Arguments.HELP)) {
+        throw new CommandLineException(
+            "Requests for compiler information should not include files to compile");
+    } else if (compilerArgs.hasOption(Arguments.HELP)) {
       if (fileNames.length > 0)
-        throw new CommandLineException("Requests for help information should not include files to compile");
-    }
-    else if (compilerArgs.hasOption(Arguments.BUILD_SYSTEM)) {
+        throw new CommandLineException(
+            "Requests for help information should not include files to compile");
+    } else if (compilerArgs.hasOption(Arguments.BUILD_SYSTEM)) {
       if (fileNames.length > 0)
-        throw new CommandLineException("Input files should not be specified when building the system library");
+        throw new CommandLineException(
+            "Input files should not be specified when building the system library");
       else
-        addDirectories(Configuration.getConfiguration().getSystem().get(Configuration.SOURCE).resolve("shadow"));
-    }
-    else if(fileNames.length > 0) {
-      Map<Path, Path> imports =  Configuration.getConfiguration().getImport();
+        addDirectories(
+            Configuration.getConfiguration()
+                .getSystem()
+                .get(Configuration.SOURCE)
+                .resolve("shadow"));
+    } else if (fileNames.length > 0) {
+      Map<Path, Path> imports = Configuration.getConfiguration().getImport();
       for (String file : fileNames) {
         Path path = null;
         for (Path _import : imports.keySet()) {
           Path candidate = _import.resolve(Paths.get(file));
-          if (Files.exists(candidate))
-            path = candidate.toAbsolutePath().normalize();
+          if (Files.exists(candidate)) path = candidate.toAbsolutePath().normalize();
           break;
         }
 
-        if (path == null)
-          throw new FileNotFoundException("Source file at " + file + " not found");
+        if (path == null) throw new FileNotFoundException("Source file at " + file + " not found");
         else if (!path.toString().endsWith(".shadow"))
           throw new CommandLineException("Source file " + file + " does not end with .shadow");
-        else
-          files.add(path);
+        else files.add(path);
       }
 
       Path outputFile;
@@ -99,23 +104,21 @@ public class Job {
         if (flag.equals("error")) warningsAsErrors = true;
         else System.err.println("Unknown warning flag: " + flag);
       }
-    }
-    else
-      throw new CommandLineException("No input files");
+    } else throw new CommandLineException("No input files");
   }
 
   private void addDirectories(Path directory) {
     try (Stream<Path> stream = Files.list(directory)) {
       stream
-              .filter(file -> Files.isDirectory(file) && !file.getFileName().toString().equals("test")).forEach(this::addShadowFiles);
+          .filter(file -> Files.isDirectory(file) && !file.getFileName().toString().equals("test"))
+          .forEach(this::addShadowFiles);
     } catch (IOException ignored) {
     }
   }
 
   private void addShadowFiles(Path directory) {
     try (Stream<Path> stream = Files.walk(directory)) {
-      stream
-              .filter(file -> file.toString().endsWith(".shadow")).forEach(files::add);
+      stream.filter(file -> file.toString().endsWith(".shadow")).forEach(files::add);
     } catch (IOException ignored) {
     }
   }
@@ -156,7 +159,7 @@ public class Job {
   /** Takes a file name without extension and outputs it in an OS-appropriate, absolute form. */
   public static Path properExecutableName(Path executableName) {
     if (System.getProperty("os.name").contains("Windows"))
-      executableName =  BaseChecker.addExtension(executableName, ".exe");
+      executableName = BaseChecker.addExtension(executableName, ".exe");
     return executableName.normalize().toAbsolutePath();
   }
 }

@@ -20,6 +20,8 @@ package shadow.parse;
 import shadow.ShadowException;
 import shadow.ShadowExceptionErrorKind;
 
+import java.io.Serial;
+
 /**
  * Exception to capture various standard errors than can occur during type-checking.
  *
@@ -27,6 +29,7 @@ import shadow.ShadowExceptionErrorKind;
  */
 public class ParseException extends ShadowException {
   /** */
+  @Serial
   private static final long serialVersionUID = 862626267585320354L;
 
   /**

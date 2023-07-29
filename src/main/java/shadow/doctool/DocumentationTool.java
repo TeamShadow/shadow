@@ -25,7 +25,7 @@ public class DocumentationTool {
   private static final String SRC_EXTENSION = ".shadow";
   private static final String PKG_INFO_FILE = "package-info.txt";
 
-  private static Logger logger = Loggers.DOC_TOOL;
+  private static final Logger logger = Loggers.DOC_TOOL;
 
   public static void main(String[] args) {
     try {
@@ -65,8 +65,11 @@ public class DocumentationTool {
 
   // TODO: Subdivide this into more manageable pieces
   public static void document(String[] args)
-      throws org.apache.commons.cli.ParseException, ConfigurationException, IOException,
-          shadow.ShadowException, HelpRequestedException {
+      throws org.apache.commons.cli.ParseException,
+          ConfigurationException,
+          IOException,
+          shadow.ShadowException,
+          HelpRequestedException {
     // Detect and establish the current settings and arguments
     DocumentationArguments arguments = new DocumentationArguments(args);
 
@@ -141,22 +144,21 @@ public class DocumentationTool {
    * packages/directories. Verifies that the files actually exist
    */
   public static List<Path> getRequestedFiles(
-      String[] givenPaths, Map<String, Documentation> pkgDocs) throws IOException, ShadowException, ConfigurationException {
+      String[] givenPaths, Map<String, Documentation> pkgDocs)
+      throws IOException, ShadowException, ConfigurationException {
     List<Path> sourceFiles = new ArrayList<>();
-    Map<Path, Path> imports =  Configuration.getConfiguration().getImport();
+    Map<Path, Path> imports = Configuration.getConfiguration().getImport();
     Path current = null;
     for (String path : givenPaths) {
 
       for (Path _import : imports.keySet()) {
         Path candidate = _import.resolve(Paths.get(path));
-        if (Files.exists(candidate))
-          current = candidate.toAbsolutePath().normalize();
+        if (Files.exists(candidate)) current = candidate.toAbsolutePath().normalize();
         break;
       }
 
       // Ensure that the source file exists
-      if (current == null)
-        throw new FileNotFoundException("File at " + path + " not found");
+      if (current == null) throw new FileNotFoundException("File at " + path + " not found");
 
       // If the file is a directory, process it as a package
       if (Files.isDirectory(current)) sourceFiles.addAll(getPackageFiles(current, true, pkgDocs));
@@ -213,14 +215,17 @@ public class DocumentationTool {
   private static void processPackageInfo(Path infoFile, Map<String, Documentation> pkgDocs)
       throws IOException, ShadowException {
     /* Get the contents of the file */
-    BufferedReader info = Files.newBufferedReader(infoFile, StandardCharsets.UTF_8);
-    String declarationLine = null;
-    DocumentationBuilder docBuilder = new DocumentationBuilder();
-    while (info.ready()) {
-      String line = info.readLine();
-      if (info.ready()) // Capture all but the last line as comment text
-      docBuilder.appendLine(line);
-      else declarationLine = line; // The last line is the declaration
+    String declarationLine;
+    DocumentationBuilder docBuilder;
+    try (BufferedReader info = Files.newBufferedReader(infoFile, StandardCharsets.UTF_8)) {
+      declarationLine = null;
+      docBuilder = new DocumentationBuilder();
+      while (info.ready()) {
+        String line = info.readLine();
+        if (info.ready()) // Capture all but the last line as comment text
+        docBuilder.appendLine(line);
+        else declarationLine = line; // The last line is the declaration
+      }
     }
     if (declarationLine == null)
       throw new DocumentationException("No lines in file: " + infoFile.toAbsolutePath());

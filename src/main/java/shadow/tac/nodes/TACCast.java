@@ -1,7 +1,6 @@
 package shadow.tac.nodes;
 
 import shadow.ShadowException;
-import shadow.interpreter.ShadowNull;
 import shadow.interpreter.ShadowValue;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
@@ -446,7 +445,7 @@ public class TACCast extends TACUpdate {
     sb.append('(');
     int length = operands.size();
     if (kind == Kind.OBJECT_TO_INTERFACE) // extra ops
-    length--;
+      length--;
     for (int i = 0; i < length; ++i) {
       sb.append(operands.get(i).toString());
       if (i < length - 1) sb.append(", ");
@@ -469,8 +468,7 @@ public class TACCast extends TACUpdate {
     boolean changed = false;
     TACOperand updated = operands.get(0);
 
-    if (operands.get(0) instanceof TACUpdate) {
-      TACUpdate update = (TACUpdate) operands.get(0);
+    if (operands.get(0) instanceof TACUpdate update) {
       if (update.update(currentlyUpdating)) changed = true;
       updated = update.getValue();
     }
@@ -494,8 +492,8 @@ public class TACCast extends TACUpdate {
   @Override
   public boolean isNull() {
     boolean isNull = true;
-    for (int i = 0; i < operands.size(); ++i)
-      isNull = isNull && operands.get(i).isNull();
+    for (TACOperand operand : operands)
+      isNull = isNull && operand.isNull();
 
     return isNull;
   }

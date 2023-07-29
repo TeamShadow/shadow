@@ -188,11 +188,10 @@ public class TACClass extends TACOperand {
   }
 
   private TACOperand lookUpClass(Type type, Type outer) {
-    if (outer instanceof ClassType) {
+    if (outer instanceof ClassType outerClass) {
       Type check = type;
       if (type instanceof ArrayType) check = ((ArrayType) type).convertToGeneric();
 
-      ClassType outerClass = (ClassType) outer;
       SequenceType dependencies = outerClass.getDependencyList();
       int size = dependencies != null ? dependencies.size() : 0;
 

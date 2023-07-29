@@ -101,10 +101,8 @@ public abstract class TACOperand extends TACNode implements ModifiedType {
   public static TACOperand value(TACOperand operand) {
     TACOperand value = operand;
 
-    if (value instanceof TACUpdate) {
-      TACUpdate update = (TACUpdate) value;
+    if (value instanceof TACUpdate update)
       value = update.getValue();
-    }
 
     return value;
   }

@@ -59,38 +59,18 @@ public class ShadowCode extends ShadowNumber {
   public static ShadowCode parseCode(String literal) {
     int value;
     if (literal.charAt(1) == '\\') {
-      switch (literal.charAt(2)) {
-        case '\'':
-          value = '\'';
-          break;
-        case '\"':
-          value = '\"';
-          break;
-        case '\\':
-          value = '\\';
-          break;
-        case 'b':
-          value = '\b';
-          break;
-        case 'f':
-          value = '\f';
-          break;
-        case 'n':
-          value = '\n';
-          break;
-        case 'r':
-          value = '\r';
-          break;
-        case 't':
-          value = '\t';
-          break;
-        case 'u':
-          value = Integer.parseInt(literal.substring(3, literal.length() - 1), 16);
-          break;
-        default:
-          value = Integer.parseInt(literal.substring(3, literal.length() - 1), 8);
-          break;
-      }
+      value = switch (literal.charAt(2)) {
+        case '\'' -> '\'';
+        case '\"' -> '\"';
+        case '\\' -> '\\';
+        case 'b' -> '\b';
+        case 'f' -> '\f';
+        case 'n' -> '\n';
+        case 'r' -> '\r';
+        case 't' -> '\t';
+        case 'u' -> Integer.parseInt(literal.substring(3, literal.length() - 1), 16);
+        default -> Integer.parseInt(literal.substring(3, literal.length() - 1), 8);
+      };
     } else value = literal.codePointAt(1);
 
     return new ShadowCode(value);
@@ -98,8 +78,7 @@ public class ShadowCode extends ShadowNumber {
 
   @Override
   public ShadowBoolean equal(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowBoolean(value == input.value);
     }
 
@@ -108,8 +87,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   public ShadowBoolean lessThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowBoolean(value < input.value);
     }
 
@@ -118,8 +96,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   public ShadowBoolean lessThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowBoolean(value <= input.value);
     }
 
@@ -128,8 +105,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   public ShadowBoolean greaterThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowBoolean(value > input.value);
     }
 
@@ -138,8 +114,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowBoolean(value >= input.value);
     }
 
@@ -148,8 +123,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   public ShadowCode bitwiseAnd(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowCode(value & input.value);
     }
 
@@ -158,8 +132,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   public ShadowCode bitwiseOr(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowCode(value | input.value);
     }
 
@@ -168,8 +141,7 @@ public class ShadowCode extends ShadowNumber {
   }
 
   public ShadowCode bitwiseXor(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowCode) {
-      ShadowCode input = (ShadowCode) other;
+    if (other instanceof ShadowCode input) {
       return new ShadowCode(value ^ input.value);
     }
 

@@ -16,7 +16,8 @@ import java.util.concurrent.TimeoutException;
 
 public class OutputTests {
   // To simplify removal, every unit test executable will have the same name
-  private static final Path executable = Job.properExecutableName(Paths.get("bin", "shadow", "test", "OutputTest"));
+  private static final Path executable =
+      Job.properExecutableName(Paths.get("bin", "shadow", "test", "OutputTest"));
 
   private final ArrayList<String> args = new ArrayList<>();
 
@@ -39,9 +40,9 @@ public class OutputTests {
     else if (os.contains("mac")) args.add("mac.json");
     else args.add("linux.json");
 
-    //args.add("-r");
-    //args.add("-f");
-    //args.add("-v");
+    // args.add("-r");
+    // args.add("-f");
+    // args.add("-v");
   }
 
   @AfterEach
@@ -49,7 +50,7 @@ public class OutputTests {
 
     // Try to remove the unit test executable
     try {
-     Files.delete(executable);
+      Files.delete(executable);
     } catch (Exception ignored) {
     }
   }
@@ -1196,17 +1197,26 @@ public class OutputTests {
     boolean isWindows = os.toLowerCase().contains("windows");
     String version;
     if (isWindows) {
-      os = RegistryAccess.readString(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName");
-      int major = RegistryAccess.readInt(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentMajorVersionNumber");
-      int minor = RegistryAccess.readInt(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentMinorVersionNumber");
+      os =
+          RegistryAccess.readString(
+              WinReg.HKEY_LOCAL_MACHINE,
+              "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+              "ProductName");
+      int major =
+          RegistryAccess.readInt(
+              WinReg.HKEY_LOCAL_MACHINE,
+              "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+              "CurrentMajorVersionNumber");
+      int minor =
+          RegistryAccess.readInt(
+              WinReg.HKEY_LOCAL_MACHINE,
+              "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+              "CurrentMinorVersionNumber");
       version = major + "." + minor;
-    }
-    else
-       version = System.getProperty("os.version");
+    } else version = System.getProperty("os.version");
 
     String path = System.getenv("PATH");
-    if (path == null)
-      path = "";
+    if (path == null) path = "";
 
     // Time since Unix epoch rounded to nearest 10 second chunk
     String time = "" + Math.round(System.currentTimeMillis() / 10000.0);
@@ -1316,8 +1326,6 @@ public class OutputTests {
     Main.run(args.toArray(new String[] {}));
     run(new String[0], "13\n" + "130\n" + "false\n" + "countrytime\n");
   }
-
-
 
   @Test
   public void testGenericInterface() throws Exception {
@@ -1518,165 +1526,154 @@ public class OutputTests {
 
   @Test
   public void testMutex() throws Exception {
-  args.add("shadow/test/MutexTest.shadow");
-  Main.run(args.toArray(new String[] { }));
-  run(new String[0],  formatOutputString(
-  					"Nested locks",
+    args.add("shadow/test/MutexTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        formatOutputString(
+            "Nested locks",
             "Both locks",
             "shadow:natives@MutexException: Thread 'Thread#main' cannot unlock a Mutex it does not own.",
-  					"Done!")
-  	);
+            "Done!"));
   }
 
   @Test
   public void testThreadSleep() throws Exception {
-  	args.add("shadow/test/ThreadSleepTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], formatOutputString(
-  			"I am going to wait 3 seconds.",
-  			"I waited 3 seconds.",
-  			"I am a thread.",
-  		    "I am a thread.",
-  			"I am a thread.",
-  		    "true"));
+    args.add("shadow/test/ThreadSleepTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        formatOutputString(
+            "I am going to wait 3 seconds.",
+            "I waited 3 seconds.",
+            "I am a thread.",
+            "I am a thread.",
+            "I am a thread.",
+            "true"));
   }
 
   @Test
   public void testComplexSendAndReceive() throws Exception {
-  	args.add("shadow/test/ComplexSendAndReceiveTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], formatOutputString(
-  						"Test1",
-  						"Thread#2: hello world!",
-  						"Thread#3: hello world!",
-  						"Thread#4: hello world!",
-  						"Thread#5: hello world!",
-  						"Thread#main: stop",
-
-  						"Test2",
-  						"Thread#7",
-  						"Thread#8",
-
-  						"A string from Thread#7",
-  						"Secret number: 0",
-  						"[0, 1, 2, 3, 4]",
-  						"done",
-  						"[0, 1, 2, 3, 4]",
-
-  						"A string from Thread#8",
-  						"Secret number: 1",
-  						"[10, 11, 12, 13, 14]",
-  						"done",
-  						"[10, 11, 12, 13, 14]"
-  					),
-  			"shadow:standard@IncompatibleMessageTypeException: Expected 'int' but got 'shadow:standard@String'.\n"
-  	);
+    args.add("shadow/test/ComplexSendAndReceiveTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        formatOutputString(
+            "Test1",
+            "Thread#2: hello world!",
+            "Thread#3: hello world!",
+            "Thread#4: hello world!",
+            "Thread#5: hello world!",
+            "Thread#main: stop",
+            "Test2",
+            "Thread#7",
+            "Thread#8",
+            "A string from Thread#7",
+            "Secret number: 0",
+            "[0, 1, 2, 3, 4]",
+            "done",
+            "[0, 1, 2, 3, 4]",
+            "A string from Thread#8",
+            "Secret number: 1",
+            "[10, 11, 12, 13, 14]",
+            "done",
+            "[10, 11, 12, 13, 14]"),
+        "shadow:standard@IncompatibleMessageTypeException: Expected 'int' but got 'shadow:standard@String'.\n");
   }
 
   @Test
   public void testInterrupt() throws Exception {
-  	args.add("shadow/test/InterruptTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], formatOutputString(
-  			"waiting",
-  			"I am Thread#2",
-  			"Thread#2: 0",
-  			"I am Thread#3",
-  			"Thread#3: 1",
-  			"end",
-  			"InterruptedException thrown",
-  			"1",
-  			"done")
-  		);
+    args.add("shadow/test/InterruptTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        formatOutputString(
+            "waiting",
+            "I am Thread#2",
+            "Thread#2: 0",
+            "I am Thread#3",
+            "Thread#3: 1",
+            "end",
+            "InterruptedException thrown",
+            "1",
+            "done"));
   }
 
   @Test
   public void testSendAndReceive() throws Exception {
     args.add("shadow/test/SendAndReceiveTest.shadow");
-    Main.run(args.toArray(new String[] { }));
-    run(new String[0], formatOutputString(
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        formatOutputString(
             "Thread#1 received: aardvark from Thread#main",
-            "Thread#2 received: formulation from Thread#main")
-    );
+            "Thread#2 received: formulation from Thread#main"));
   }
 
   @Test
   public void testSimpleThread() throws Exception {
     args.add("shadow/test/SimpleThreadTest.shadow");
-    Main.run(args.toArray(new String[] { }));
-    run(new String[0],
-            // stdin
-            formatOutputString(
-                    "Printing on a separate thread",
-                    "Joined thread")
-    );
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        // stdin
+        formatOutputString("Printing on a separate thread", "Joined thread"));
   }
-
 
   @Test
   public void testAttributeUsage() throws Exception {
     args.add("shadow/test/AttributeUsageTest.shadow");
-    Main.run(args.toArray(new String[] { }));
-    run(new String[0],
-            // stdin
-            formatOutputString(
-                    "42",
-                    "19")
-    );
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        // stdin
+        formatOutputString("42", "19"));
   }
 
   @Test
   public void testThread() throws Exception {
-  	args.add("shadow/test/ThreadTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0],
-  			// stdin
-            formatOutputString(
-  			"Thread#main",
-  			"Thread#1",
-  			"Thread#2",
-  			"Thread#3",
-  			"Thread#4",
-  			"Thread#5",
-  			"true",
-  			"true",
-  			"Thread#6",
-  			"Thread#7",
-  			"Thread#8"),
+    args.add("shadow/test/ThreadTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    run(
+        new String[0],
+        // stdin
+        formatOutputString(
+            "Thread#main",
+            "Thread#1",
+            "Thread#2",
+            "Thread#3",
+            "Thread#4",
+            "Thread#5",
+            "true",
+            "true",
+            "Thread#6",
+            "Thread#7",
+            "Thread#8"),
 
-  			// stderr
-            formatOutputString(
-  			"Uncaught Thread Exception @Thread#3:",
-  			"   Propagated from: (Thread#3)",
-  			"   Throwing: (shadow:standard@Exception: from Thread#3)",
-
-  			"Uncaught Thread Exception @Thread#4:",
-  			"   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)",
-  			"   Throwing: (shadow:standard@Exception: from Thread#8)",
-
-  			"Uncaught Thread Exception @Thread#7:",
-  			"   Propagated from: (Thread#7)",
-  			"   Throwing: (shadow:standard@Exception: from Thread#7)")
-  		);
+        // stderr
+        formatOutputString(
+            "Uncaught Thread Exception @Thread#3:",
+            "   Propagated from: (Thread#3)",
+            "   Throwing: (shadow:standard@Exception: from Thread#3)",
+            "Uncaught Thread Exception @Thread#4:",
+            "   Propagated from: (Thread#8 to Thread#6 to Thread#5 to Thread#4)",
+            "   Throwing: (shadow:standard@Exception: from Thread#8)",
+            "Uncaught Thread Exception @Thread#7:",
+            "   Propagated from: (Thread#7)",
+            "   Throwing: (shadow:standard@Exception: from Thread#7)"));
   }
 
   @Test
   public void testTLSThread() throws Exception {
-  	args.add("shadow/test/TLSTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], formatOutputString(
-              "1",
-  			"1"));
+    args.add("shadow/test/TLSTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    run(new String[0], formatOutputString("1", "1"));
   }
 
   @Test
   public void testThreadIsolatedRunner() throws Exception {
-  	args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
-  	Main.run(args.toArray(new String[] { }));
-  	run(new String[0], formatOutputString(
-  			"1 1",
-  			"1 1",
-  			"1 1",
-  			"0"));
+    args.add("shadow/test/ThreadIsolatedRunnerTest.shadow");
+    Main.run(args.toArray(new String[] {}));
+    run(new String[0], formatOutputString("1 1", "1 1", "1 1", "0"));
   }
 }

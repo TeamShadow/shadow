@@ -20,9 +20,6 @@ public class ParserTests {
   @BeforeEach
   public void setup() throws Exception {
     args.add("--typecheck");
-
-    String os = System.getProperty("os.name").toLowerCase();
-
     args.add("-c");
     args.add("tests.json");
   }

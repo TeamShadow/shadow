@@ -1,8 +1,6 @@
 package shadow.output.llvm;
 
 import shadow.Configuration;
-import shadow.ConfigurationException;
-import shadow.Loggers;
 import shadow.ShadowException;
 import shadow.interpreter.*;
 import shadow.output.AbstractOutput;
@@ -28,7 +26,6 @@ public class LLVMOutput extends AbstractOutput {
 
   private TACModule module;
   private boolean skipMethod = false;
-
 
   @SuppressWarnings("unused")
   public LLVMOutput(Path file) throws ShadowException {
@@ -108,7 +105,7 @@ public class LLVMOutput extends AbstractOutput {
             writer.write(
                 methodTable(type) + " = external constant " + methodTableType(type, false));
           if (type instanceof SingletonType) // never parameterized
-          writer.write(
+            writer.write(
                 '@' + raw(type, ".singleton") + " = external thread_local global " + type(type));
         }
       }
@@ -202,8 +199,7 @@ public class LLVMOutput extends AbstractOutput {
 
     // Class fields (since the order is all changed)
     // used for debugging
-    if (moduleType instanceof ClassType) {
-      ClassType classType = (ClassType) moduleType;
+    if (moduleType instanceof ClassType classType) {
       writer.write("; 0: reference count (ulong)");
       writer.write("; 1: class (Class)");
       writer.write("; 2: ._methods");
@@ -221,7 +217,10 @@ public class LLVMOutput extends AbstractOutput {
     // Constants
     // TODO: Change private constants to private?
     for (TACConstant constant : module.getConstants()) {
-      writer.write(name(constant) + " = unnamed_addr constant " + typeLiteral(constant.getInterpretedValue()));
+      writer.write(
+          name(constant)
+              + " = unnamed_addr constant "
+              + typeLiteral(constant.getInterpretedValue()));
     }
 
     // interfaces implemented (because a special object is used to map the methods correctly)
@@ -600,8 +599,7 @@ public class LLVMOutput extends AbstractOutput {
   public void startFile(TACModule module) throws ShadowException {
     this.module = module;
 
-    if (module.getType() instanceof AttributeType)
-      return;
+    if (module.getType() instanceof AttributeType) return;
 
     // Write all regular types including (non-generic) class objects and method tables
     Set<Type> definedGenerics = writeUsedTypes();
@@ -759,8 +757,7 @@ public class LLVMOutput extends AbstractOutput {
 
   @Override
   public void endFile(TACModule module) throws ShadowException {
-    if(module.getType() instanceof AttributeType)
-      return;
+    if (module.getType() instanceof AttributeType) return;
 
     // Print only the (mostly private) methods that are called directly
     for (MethodSignature method : usedSignatures) writer.write("declare " + methodToString(method));
@@ -775,7 +772,9 @@ public class LLVMOutput extends AbstractOutput {
   public void startMethod(TACMethod method, TACModule module) throws ShadowException {
 
     MethodSignature signature = method.getSignature();
-    if (module.getType() instanceof InterfaceType ||  module.getType() instanceof AttributeType || signature.isAbstract()) {
+    if (module.getType() instanceof InterfaceType
+        || module.getType() instanceof AttributeType
+        || signature.isAbstract()) {
       skipMethod = true;
     } else if (signature.isImport()) {
       writer.write("declare " + methodToString(method));
@@ -827,7 +826,6 @@ public class LLVMOutput extends AbstractOutput {
         walk(function.getNode());
         endFinallyFunction();
       }
-
     }
     skipMethod = false;
   }
@@ -1075,124 +1073,117 @@ public class LLVMOutput extends AbstractOutput {
       String destTypeName;
 
       switch (node.getKind()) {
-        case INTERFACE_TO_OBJECT:
-          writer.write(nextTemp(node) + " = extractvalue " + typeSymbol(source) + ", 1");
-          break;
-        case ITEM_TO_SEQUENCE:
-          writer.write(
-              nextTemp(node)
-                  + " = insertvalue "
-                  + type(node)
-                  + " undef, "
-                  + typeSymbol(node.getOperand(1))
-                  + ", 0");
-          break;
-        case NULL_TO_INTERFACE:
-          writer.write(
-              nextTemp(node)
-                  + " = insertvalue "
-                  + type(node)
-                  + " zeroinitializer, "
-                  + type(Type.OBJECT)
-                  + " null, 1");
-          break;
-        case OBJECT_TO_INTERFACE:
+        case INTERFACE_TO_OBJECT -> writer.write(nextTemp(node) + " = extractvalue " + typeSymbol(source) + ", 1");
+        case ITEM_TO_SEQUENCE -> writer.write(
+                nextTemp(node)
+                        + " = insertvalue "
+                        + type(node)
+                        + " undef, "
+                        + typeSymbol(node.getOperand(1))
+                        + ", 0");
+        case NULL_TO_INTERFACE -> writer.write(
+                nextTemp(node)
+                        + " = insertvalue "
+                        + type(node)
+                        + " zeroinitializer, "
+                        + type(Type.OBJECT)
+                        + " null, 1");
+        case OBJECT_TO_INTERFACE -> {
           // operand 1 is the interface method table
           writer.write(
-              nextTemp()
-                  + " = bitcast "
-                  + typeSymbol(node.getOperand(1))
-                  + " to "
-                  + methodTableType(destType));
+                  nextTemp()
+                          + " = bitcast "
+                          + typeSymbol(node.getOperand(1))
+                          + " to "
+                          + methodTableType(destType));
           writer.write(
-              nextTemp()
-                  + " = insertvalue "
-                  + type(destType)
-                  + " undef, "
-                  + methodTableType(destType)
-                  + " "
-                  + temp(1)
-                  + ", 0");
+                  nextTemp()
+                          + " = insertvalue "
+                          + type(destType)
+                          + " undef, "
+                          + methodTableType(destType)
+                          + " "
+                          + temp(1)
+                          + ", 0");
           writer.write(
-              nextTemp() + " = bitcast " + typeSymbol(source) + " to " + type(Type.OBJECT));
+                  nextTemp() + " = bitcast " + typeSymbol(source) + " to " + type(Type.OBJECT));
           back1 = temp(0);
           back2 = temp(1);
           writer.write(
-              nextTemp(node)
-                  + " = insertvalue "
-                  + typeText(destType, back2)
-                  + ", "
-                  + typeText(Type.OBJECT, back1)
-                  + ", 1");
-          break;
-        case OBJECT_TO_ARRAY:
-        case OBJECT_TO_OBJECT:
+                  nextTemp(node)
+                          + " = insertvalue "
+                          + typeText(destType, back2)
+                          + ", "
+                          + typeText(Type.OBJECT, back1)
+                          + ", 1");
+        }
+        case OBJECT_TO_ARRAY, OBJECT_TO_OBJECT -> {
           srcTypeName = type(srcType, true); // nullable takes care of primitives in object form
           destTypeName = type(destType, true);
           writer.write(
-              nextTemp(node)
-                  + " = bitcast "
-                  + srcTypeName
-                  + ' '
-                  + symbol(source)
-                  + " to "
-                  + destTypeName);
-          break;
-        case OBJECT_TO_PRIMITIVE:
+                  nextTemp(node)
+                          + " = bitcast "
+                          + srcTypeName
+                          + ' '
+                          + symbol(source)
+                          + " to "
+                          + destTypeName);
+        }
+        case OBJECT_TO_PRIMITIVE -> {
           writer.write(
-              nextTemp() + " = bitcast " + typeSymbol(source) + " to %" + raw(destType) + "*");
+                  nextTemp() + " = bitcast " + typeSymbol(source) + " to %" + raw(destType) + "*");
           writer.write(
-              nextTemp()
-                  + " = getelementptr inbounds %"
-                  + raw(destType)
-                  + ", %"
-                  + raw(destType)
-                  + "* "
-                  + temp(1)
-                  + ", i32 0, i32 3");
+                  nextTemp()
+                          + " = getelementptr inbounds %"
+                          + raw(destType)
+                          + ", %"
+                          + raw(destType)
+                          + "* "
+                          + temp(1)
+                          + ", i32 0, i32 3");
           back1 = temp(0);
           writer.write(
-              nextTemp(node)
-                  + " = load "
-                  + type(destType)
-                  + ", "
-                  + typeText(destType, back1, true));
-          break;
-        case PRIMITIVE_TO_OBJECT:
+                  nextTemp(node)
+                          + " = load "
+                          + type(destType)
+                          + ", "
+                          + typeText(destType, back1, true));
+        }
+        case PRIMITIVE_TO_OBJECT -> {
           writer.write(
-              nextTemp()
-                  + " = call noalias "
-                  + type(Type.OBJECT)
-                  + " @__allocate("
-                  + type(Type.CLASS)
-                  + ' '
-                  + classOf(srcType)
-                  + ", "
-                  + methodTableType(Type.OBJECT)
-                  + " bitcast("
-                  + methodTableType(srcType)
-                  + " "
-                  + methodTable(srcType)
-                  + " to "
-                  + methodTableType(Type.OBJECT)
-                  + ")"
-                  + ")");
+                  nextTemp()
+                          + " = call noalias "
+                          + type(Type.OBJECT)
+                          + " @__allocate("
+                          + type(Type.CLASS)
+                          + ' '
+                          + classOf(srcType)
+                          + ", "
+                          + methodTableType(Type.OBJECT)
+                          + " bitcast("
+                          + methodTableType(srcType)
+                          + " "
+                          + methodTable(srcType)
+                          + " to "
+                          + methodTableType(Type.OBJECT)
+                          + ")"
+                          + ")");
           back1 = temp(0);
           String result = nextTemp(node);
           writer.write(
-              result + " = bitcast " + typeText(Type.OBJECT, back1) + " to %" + raw(srcType) + "*");
+                  result + " = bitcast " + typeText(Type.OBJECT, back1) + " to %" + raw(srcType) + "*");
           writer.write(
-              nextTemp()
-                  + " = getelementptr inbounds %"
-                  + raw(srcType)
-                  + ", %"
-                  + raw(srcType)
-                  + "* "
-                  + result
-                  + ", i32 0, i32 3");
+                  nextTemp()
+                          + " = getelementptr inbounds %"
+                          + raw(srcType)
+                          + ", %"
+                          + raw(srcType)
+                          + "* "
+                          + result
+                          + ", i32 0, i32 3");
           writer.write("store " + typeSymbol(source) + ", " + typeText(srcType, temp(0), true));
-          break;
-        case PRIMITIVE_TO_PRIMITIVE:
+        }
+        case PRIMITIVE_TO_PRIMITIVE -> {
           String instruction;
           int srcWidth = Type.getWidth(source), destWidth = Type.getWidth(node);
           srcTypeName = type(srcType);
@@ -1200,38 +1191,36 @@ public class LLVMOutput extends AbstractOutput {
           if (srcType.isFloating()) {
             if (destType.isFloating())
               instruction =
-                  srcWidth > destWidth ? "fptrunc" : (srcWidth < destWidth ? "fpext" : "bitcast");
+                      srcWidth > destWidth ? "fptrunc" : (srcWidth < destWidth ? "fpext" : "bitcast");
             else if (destType.isSigned()) instruction = "fptosi";
             else instruction = "fptoui";
           } else if (srcType.isSigned()) {
             if (destType.isFloating()) instruction = "sitofp";
             else if (destType.isSigned())
               instruction =
-                  srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "sext" : "bitcast");
+                      srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "sext" : "bitcast");
             else
               instruction =
-                  srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+                      srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
           } else { //  srcType.isUnsigned() must be true
             if (destType.isFloating()) instruction = "uitofp";
             else
               instruction =
-                  srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
+                      srcWidth > destWidth ? "trunc" : (srcWidth < destWidth ? "zext" : "bitcast");
           }
           writer.write(
-              nextTemp(node)
-                  + " = "
-                  + instruction
-                  + ' '
-                  + srcTypeName
-                  + ' '
-                  + symbol(source)
-                  + " to "
-                  + destTypeName);
-          break;
-        case SEQUENCE_TO_ITEM:
-          writer.write(nextTemp(node) + " = extractvalue " + typeSymbol(source) + ", 0");
-          break;
-        case SEQUENCE_TO_SEQUENCE:
+                  nextTemp(node)
+                          + " = "
+                          + instruction
+                          + ' '
+                          + srcTypeName
+                          + ' '
+                          + symbol(source)
+                          + " to "
+                          + destTypeName);
+        }
+        case SEQUENCE_TO_ITEM -> writer.write(nextTemp(node) + " = extractvalue " + typeSymbol(source) + ", 0");
+        case SEQUENCE_TO_SEQUENCE -> {
           String current = "undef";
           String location;
           int index = 0;
@@ -1239,17 +1228,17 @@ public class LLVMOutput extends AbstractOutput {
             if (i == node.getNumOperands() - 1) location = nextTemp(node);
             else location = nextTemp();
             writer.write(
-                location
-                    + " = insertvalue "
-                    + typeText(node, current)
-                    + ", "
-                    + typeSymbol(node.getOperand(i))
-                    + ", "
-                    + index);
+                    location
+                            + " = insertvalue "
+                            + typeText(node, current)
+                            + ", "
+                            + typeSymbol(node.getOperand(i))
+                            + ", "
+                            + index);
             current = location;
             index++;
           }
-          break;
+        }
       }
     } else
       // unusual case when casting from one primitive constant to another
@@ -1265,8 +1254,7 @@ public class LLVMOutput extends AbstractOutput {
 
     // this is pretty ugly, but if we retrieved a generic type parameter's method table, it'll be
     // stored as MethodTable*, not an Object._methods*
-    if (type instanceof TypeParameter) {
-      TypeParameter parameter = (TypeParameter) type;
+    if (type instanceof TypeParameter parameter) {
       writer.write(
           nextTemp()
               + " = bitcast "
@@ -1275,7 +1263,7 @@ public class LLVMOutput extends AbstractOutput {
               + symbol(methods)
               + " to "
               + methodTableType(parameter.getClassBound()));
-      // any other method table will be of the correct type but needs cast to Object._methods* for
+      // Any other method table will be of the correct type but needs a cast to Object._methods* for
       // compatibility with allocate()
     } else
       writer.write(
@@ -1479,72 +1467,27 @@ public class LLVMOutput extends AbstractOutput {
     // no precomputation done
     if (value == null) {
       switch (node.getOperation()) {
-        case "+":
-          visitUnsignedOperation(node, "add");
-          break;
-        case "-":
-          visitUnsignedOperation(node, "sub");
-          break;
-        case "*":
-          visitUnsignedOperation(node, "mul");
-          break;
-        case "/":
-          visitSignedOperation(node, "div");
-          break;
-        case "%":
-          visitSignedOperation(node, "rem");
-          break;
-
-        case "or":
-        case "|":
-          visitNormalOperation(node, "or");
-          break;
-        case "xor":
-        case "^":
-          visitNormalOperation(node, "xor");
-          break;
-        case "and":
-        case "&":
-          visitNormalOperation(node, "and");
-          break;
-
-        case "<<":
-          visitNormalOperation(node, "shl");
-          break;
-        case ">>":
-          visitShiftOperation(node);
-          break;
-        case "<<<":
-          visitRotateLeft(node);
-          break;
-        case ">>>":
-          visitRotateRight(node);
-          break;
-
-        case "==":
-          visitEqualityOperation(node, "eq");
-          break;
-        case "!=":
-          visitEqualityOperation(node, "ne");
-          break;
-        case "<":
-          visitRelationalOperation(node, "lt");
-          break;
-        case ">":
-          visitRelationalOperation(node, "gt");
-          break;
-        case "<=":
-          visitRelationalOperation(node, "le");
-          break;
-        case ">=":
-          visitRelationalOperation(node, "ge");
-          break;
-        case "===":
-          visitReferenceEquality(node);
-          break;
-        default:
-          throw new UnsupportedOperationException(
-              "Binary operation " + node.getOperation() + " not supported on current types");
+        case "+" -> visitUnsignedOperation(node, "add");
+        case "-" -> visitUnsignedOperation(node, "sub");
+        case "*" -> visitUnsignedOperation(node, "mul");
+        case "/" -> visitSignedOperation(node, "div");
+        case "%" -> visitSignedOperation(node, "rem");
+        case "or", "|" -> visitNormalOperation(node, "or");
+        case "xor", "^" -> visitNormalOperation(node, "xor");
+        case "and", "&" -> visitNormalOperation(node, "and");
+        case "<<" -> visitNormalOperation(node, "shl");
+        case ">>" -> visitShiftOperation(node);
+        case "<<<" -> visitRotateLeft(node);
+        case ">>>" -> visitRotateRight(node);
+        case "==" -> visitEqualityOperation(node, "eq");
+        case "!=" -> visitEqualityOperation(node, "ne");
+        case "<" -> visitRelationalOperation(node, "lt");
+        case ">" -> visitRelationalOperation(node, "gt");
+        case "<=" -> visitRelationalOperation(node, "le");
+        case ">=" -> visitRelationalOperation(node, "ge");
+        case "===" -> visitReferenceEquality(node);
+        default -> throw new UnsupportedOperationException(
+                "Binary operation " + node.getOperation() + " not supported on current types");
       }
     } else node.setData(value.getData());
   }
@@ -1658,8 +1601,7 @@ public class LLVMOutput extends AbstractOutput {
     if (node.isGarbageCollected()) {
       // initial parameter stores never have decrements
       // sometimes they are incremented, if a value is later stored into the same parameter name
-      if (node.getValue() instanceof TACParameter) {
-        TACParameter parameter = (TACParameter) node.getValue();
+      if (node.getValue() instanceof TACParameter parameter) {
         gcObjectStore(
             name(variable),
             variable.getType(),
@@ -1725,8 +1667,7 @@ public class LLVMOutput extends AbstractOutput {
     TACReference reference = node.getReference();
     String back1;
 
-    if (reference instanceof TACSingletonRef) {
-      TACSingletonRef singleton = (TACSingletonRef) reference;
+    if (reference instanceof TACSingletonRef singleton) {
       writer.write(
           nextTemp(node)
               + " = load "
@@ -1734,8 +1675,8 @@ public class LLVMOutput extends AbstractOutput {
               + ", "
               + typeText(singleton, '@' + raw(singleton.getType(), ".singleton"), true));
 
-    } else if (reference instanceof TACArrayRef) {
-      TACArrayRef arrayRef = (TACArrayRef) reference; // has type of result
+    } else if (reference instanceof TACArrayRef arrayRef) {
+      // has type of result
       ArrayType arrayType = (ArrayType) arrayRef.getArray().getType();
       ClassType genericArray = arrayType.convertToGeneric().getTypeWithoutTypeArguments();
       writer.write(
@@ -1759,8 +1700,7 @@ public class LLVMOutput extends AbstractOutput {
       back1 = temp(0);
       writer.write(
           nextTemp(node) + " = load " + type(arrayRef) + ", " + typeText(arrayRef, back1, true));
-    } else if (reference instanceof TACFieldRef) {
-      TACFieldRef fieldRef = (TACFieldRef) reference;
+    } else if (reference instanceof TACFieldRef fieldRef) {
       Type prefixType = fieldRef.getPrefix().getType();
       if (prefixType instanceof ArrayType) prefixType = ((ArrayType) prefixType).convertToGeneric();
       else if (prefixType instanceof MethodType) prefixType = Type.METHOD;
@@ -1788,8 +1728,7 @@ public class LLVMOutput extends AbstractOutput {
     		usedConstants.add(constant);
     }
     */
-    else if (reference instanceof TACGlobalRef) {
-      TACGlobalRef global = (TACGlobalRef) reference;
+    else if (reference instanceof TACGlobalRef global) {
       writer.write(
           nextTemp(node)
               + " = load "
@@ -1805,16 +1744,15 @@ public class LLVMOutput extends AbstractOutput {
   public void visit(TACStore node) throws ShadowException {
     TACReference reference = node.getReference();
 
-    if (reference instanceof TACSingletonRef) {
+    if (reference instanceof TACSingletonRef singleton) {
       // singletons are never GC
-      TACSingletonRef singleton = (TACSingletonRef) reference;
       writer.write(
           "store "
               + typeSymbol(node.getValue())
               + ", "
               + typeText(singleton, '@' + raw(singleton.getType(), ".singleton"), true));
-    } else if (reference instanceof TACArrayRef) {
-      TACArrayRef arrayRef = (TACArrayRef) reference; // has type of result
+    } else if (reference instanceof TACArrayRef arrayRef) {
+      // has type of result
       ArrayType arrayType = (ArrayType) arrayRef.getArray().getType();
       ClassType genericArray = arrayType.convertToGeneric().getTypeWithoutTypeArguments();
       writer.write(
@@ -1857,9 +1795,8 @@ public class LLVMOutput extends AbstractOutput {
       } else
         writer.write(
             "store " + typeSymbol(node.getValue()) + ", " + typeText(arrayRef, temp(0), true));
-    } else if (reference instanceof TACFieldRef) {
+    } else if (reference instanceof TACFieldRef fieldRef) {
 
-      TACFieldRef fieldRef = (TACFieldRef) reference;
       writer.write(
           nextTemp()
               + " = getelementptr inbounds "
@@ -1906,7 +1843,7 @@ public class LLVMOutput extends AbstractOutput {
       TACCatchPad catchPad)
       throws ShadowException {
 
-     if (increment && !value.isNull()) {
+    if (increment && !value.isNull()) {
       writer.write(nextTemp() + " = bitcast " + typeSymbol(value) + " to " + type(Type.OBJECT));
       writer.write("call void @__incrementRef(" + typeText(Type.OBJECT, temp(0)) + ") nounwind");
     }
@@ -2068,11 +2005,9 @@ public class LLVMOutput extends AbstractOutput {
     if (value == null) {
       StringBuilder sb = new StringBuilder(unwindLabel != null ? "invoke" : "call").append(' ');
       TACMethodRef method = node.getMethodRef();
-      if (method instanceof TACMethodName) {
-        TACMethodName methodName = (TACMethodName) method;
+      if (method instanceof TACMethodName methodName) {
         sb.append(methodToString(methodName, false)).append(symbol(methodName)).append('(');
-      } else if (method instanceof TACMethodPointer) {
-        TACMethodPointer methodPointer = (TACMethodPointer) method;
+      } else if (method instanceof TACMethodPointer methodPointer) {
         sb.append(methodToString(methodPointer)).append(symbol(methodPointer)).append('(');
       }
       boolean first = true;
@@ -2310,8 +2245,7 @@ public class LLVMOutput extends AbstractOutput {
   public static String methodTable(Type type) {
     if (type instanceof InterfaceType && type.isFullyInstantiated())
       return "@" + withGenerics(type, "._methods");
-    else if (type instanceof ArrayType) {
-      ArrayType arrayType = (ArrayType) type;
+    else if (type instanceof ArrayType arrayType) {
       if (arrayType.isNullable()) return methodTable(Type.ARRAY_NULLABLE);
       else return methodTable(Type.ARRAY);
     }
@@ -2323,8 +2257,7 @@ public class LLVMOutput extends AbstractOutput {
   }
 
   private static String methodTableType(Type type, boolean reference) {
-    if (type instanceof ArrayType) {
-      ArrayType arrayType = (ArrayType) type;
+    if (type instanceof ArrayType arrayType) {
       if (arrayType.isNullable()) return methodTableType(Type.ARRAY_NULLABLE, reference);
       else return methodTableType(Type.ARRAY, reference);
     }
@@ -2431,12 +2364,12 @@ public class LLVMOutput extends AbstractOutput {
     if (type instanceof ArrayType) return type((ArrayType) type);
     if (type instanceof SequenceType) return type((SequenceType) type);
     if (type instanceof MethodType) return type((MethodType) type);
+    if (type instanceof AttributeType) return type((AttributeType) type);
     if (type instanceof ClassType) return type((ClassType) type, nullable);
     if (type instanceof InterfaceType) return type((InterfaceType) type);
     if (type instanceof TypeParameter) return type((TypeParameter) type);
     if (type instanceof MethodTableType) return type((MethodTableType) type);
     if (type instanceof PointerType) return type((PointerType) type);
-    if (type instanceof AttributeType) return type((AttributeType) type);
 
     throw new IllegalArgumentException("Unknown type.");
   }
@@ -2877,8 +2810,7 @@ public class LLVMOutput extends AbstractOutput {
         genericAsObject.getTypeParameters() != null
             ? genericAsObject.getTypeParameters().size()
             : 0;
-    if (genericAsObject instanceof ClassType) {
-      ClassType genericClass = (ClassType) genericAsObject;
+    if (genericAsObject instanceof ClassType genericClass) {
       if (genericClass.hasDependencyList())
         classListSize += genericClass.getDependencyList().size();
     }
@@ -2957,8 +2889,7 @@ public class LLVMOutput extends AbstractOutput {
 
     // handle extra class dependencies
 
-    if (genericAsObject instanceof ClassType) {
-      ClassType classType = (ClassType) genericAsObject;
+    if (genericAsObject instanceof ClassType classType) {
       if (classType.hasDependencyList())
         for (ModifiedType parameter : classType.getDependencyList()) {
           Type parameterType = parameter.getType();

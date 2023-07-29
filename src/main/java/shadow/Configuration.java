@@ -81,7 +81,6 @@ public class Configuration {
     }
   }
 
-
   public static final String DEFAULT_CONFIG_NAME = "shadow.json";
   public static final String SHADOW_HOME = "SHADOW_HOME";
 
@@ -89,7 +88,7 @@ public class Configuration {
   // Some are included with Visual Studio, and others are in the SDK
   public static final String[] WINDOWS_LIBRARIES = {
     "msvcrt.lib",
-    "ucrt.lib", //Dynamic linking
+    "ucrt.lib", // Dynamic linking
     "vcruntime.lib", // Dynamic linking
     "kernel32.lib",
     // "user32.lib",
@@ -248,7 +247,6 @@ public class Configuration {
     globalConfig = null;
   }
 
-
   private static Configuration readConfiguration(String mainFilePath, String configFilePath)
       throws ConfigurationException, IOException {
     // Attempt to locate hierarchy of config files
@@ -392,34 +390,27 @@ public class Configuration {
       libraries = new ArrayList<>();
 
       switch (getOs()) {
-        case "Mac":
+        case "Mac" -> {
           libraries.add("m");
           libraries.add("System");
           libraries.add("pthread");
-          break;
-        case "Windows":
-          libraries.addAll(Arrays.asList(WINDOWS_LIBRARIES));
-          break;
-        case "Linux":
+        }
+        case "Windows" -> libraries.addAll(Arrays.asList(WINDOWS_LIBRARIES));
+        case "Linux" -> {
           libraries.add("m");
           libraries.add("rt");
           libraries.add("pthread");
-          break;
+        }
       }
     }
 
     if (linker == null) {
       switch (getOs()) {
-        case "Windows":
-          linker = "clang";
-          break;
-        case "Mac":
+        case "Windows" -> linker = "clang";
+        case "Mac" ->
           // Does Mac work at all now?  What about the new M chips?
-          linker = "clang";
-          break;
-        default:
-          linker = "clang";
-          break;
+                linker = "clang";
+        default -> linker = "clang";
       }
 
       // Build link command
@@ -429,7 +420,7 @@ public class Configuration {
       if (getOs().equals("Windows")) {
         linkCommand.add("-Wl,-nodefaultlib:libcmt");
         linkCommand.add("-D_DLL");
-        //linkCommand.add("-femulated-tls");
+        // linkCommand.add("-femulated-tls");
       }
 
       if (architecture == 32) linkCommand.add("-m32");
@@ -523,7 +514,8 @@ public class Configuration {
       process = new ProcessBuilder(getLlc(), "--version").redirectErrorStream(true).start();
 
       StringBuilder versionOutput = new StringBuilder();
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(process.getInputStream()))) {
         String line;
         while ((line = reader.readLine()) != null)
           versionOutput.append(line).append(System.lineSeparator());
@@ -554,7 +546,8 @@ public class Configuration {
               .redirectErrorStream(true)
               .start();
       StringBuilder versionOutput = new StringBuilder();
-      try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(process.getInputStream()))) {
         String line;
         while ((line = reader.readLine()) != null)
           versionOutput.append(line).append(System.lineSeparator());
@@ -584,7 +577,8 @@ public class Configuration {
               .redirectErrorStream(true)
               .start();
       StringBuilder information = new StringBuilder();
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))){
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(process.getInputStream()))) {
         String line;
         while ((line = reader.readLine()) != null && !line.isEmpty())
           information.append(line).append(System.lineSeparator());
@@ -612,22 +606,12 @@ public class Configuration {
   public String getDataLayout() {
     if (dataLayout == null) {
       String endian = "e"; // little Endian
-      String mangling;
-
-      switch (getOs()) {
-        case "Mac":
-          mangling = "m:o-";
-          break;
-        case "Windows":
-          mangling = "m:x-";
-          break;
-        case "Linux":
-          mangling = "m:e-";
-          break;
-        default:
-          mangling = "";
-          break;
-      }
+      String mangling = switch (getOs()) {
+        case "Mac" -> "m:o-";
+        case "Windows" -> "m:x-";
+        case "Linux" -> "m:e-";
+        default -> "";
+      };
 
       String pointerAlignment =
           "p:" + getArchitecture() + ":" + getArchitecture() + ":" + getArchitecture();
@@ -657,7 +641,7 @@ public class Configuration {
 
   private static Path getChildWithLargestVersion(Path path) {
     if (Files.isDirectory(path)) {
-      try(DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
         // Get largest version number
         Path largest = null;
         for (Path child : stream) {
@@ -718,7 +702,7 @@ public class Configuration {
         sdkPath =
             getChildWithLargestVersion(Paths.get(System.getenv("ProgramFiles"), "Windows Kits"));
       else // Weirdly, x64 needs the x86 specification
-      sdkPath =
+        sdkPath =
             getChildWithLargestVersion(
                 Paths.get(System.getenv("ProgramFiles(x86)"), "Windows Kits"));
       if (sdkPath == null) return false;

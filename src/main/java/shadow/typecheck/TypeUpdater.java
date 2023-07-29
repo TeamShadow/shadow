@@ -39,7 +39,7 @@ import java.util.Map.Entry;
 /**
  * The <code>TypeUpdater</code> class updates types after they have been collected by the <code>
  * TypeCollector</code>. This class adds fields and methods, instantiates type parameters, adds
- * parent types and interfaces, and checks method overrides. It fills in the general shape of all of
+ * parent types and interfaces, and checks method overrides. It fills in the general shape of all
  * the types but does not check the actual statements of executable code.
  *
  * @author Barry Wittman
@@ -271,8 +271,7 @@ public class TypeUpdater extends BaseChecker {
 
   private void addCreatesAndProperties(Context declaration) {
     Type type = declaration.getType();
-    if (type instanceof ClassType) {
-      ClassType classType = (ClassType) type;
+    if (type instanceof ClassType classType) {
       /* If no creates are present, add the default one. */
       if (classType.getMethodOverloads("create").isEmpty()) {
         // might be a terrible idea to create a dummy node
@@ -509,8 +508,7 @@ public class TypeUpdater extends BaseChecker {
     for (Context declarationNode : nodeTable.values()) {
       Type type = declarationNode.getType();
 
-      if (type instanceof ClassType) {
-        ClassType classType = (ClassType) type;
+      if (type instanceof ClassType classType) {
 
         if (classType.getExtendType() != null) {
           Context dependencyNode =
@@ -545,8 +543,7 @@ public class TypeUpdater extends BaseChecker {
   private void updateIsLists(List<Context> nodeList) {
     for (Context declarationNode : nodeList) {
       Type type = declarationNode.getType();
-      if (type instanceof ClassType) {
-        ClassType classType = (ClassType) type;
+      if (type instanceof ClassType classType) {
         ClassType parent = classType.getExtendType();
 
         /* Update parent */
@@ -581,8 +578,7 @@ public class TypeUpdater extends BaseChecker {
 
   private void checkOverrides(List<Context> nodeList) {
     for (Context declarationNode : nodeList) {
-      if (declarationNode.getType() instanceof ClassType) {
-        ClassType classType = (ClassType) declarationNode.getType();
+      if (declarationNode.getType() instanceof ClassType classType) {
         ClassType parent = classType.getExtendType();
 
         if (parent != null) {
@@ -667,7 +663,9 @@ public class TypeUpdater extends BaseChecker {
           ArrayList<String> reasons = new ArrayList<>();
 
           if (!classType.satisfiesInterface(interfaceType, reasons)) {
-            StringBuilder message = new StringBuilder("Type " + classType + " does not implement interface " + interfaceType);
+            StringBuilder message =
+                new StringBuilder(
+                    "Type " + classType + " does not implement interface " + interfaceType);
             for (String reason : reasons) message.append("\n\t").append(reason);
             addError(declarationNode, Error.MISSING_INTERFACE, message.toString());
           }
@@ -789,8 +787,7 @@ public class TypeUpdater extends BaseChecker {
       if (declarationType.isParameterized()) {
         for (ModifiedType modifiedParameter : declarationType.getTypeParameters()) {
           Type parameter = modifiedParameter.getType();
-          if (parameter instanceof TypeParameter) {
-            TypeParameter typeParameter = (TypeParameter) parameter;
+          if (parameter instanceof TypeParameter typeParameter) {
             if (typeParameter.getTypeName().equals(name)) return typeParameter;
           }
         }
@@ -829,8 +826,6 @@ public class TypeUpdater extends BaseChecker {
                 + kind
                 + "s cannot be marked public, private, or protected since they are all public by definition");
       }
-
-      node.getModifiers().addModifier(Modifiers.PUBLIC);
     } else if (visibilityModifiers == 0) {
       addError(
           node,
@@ -840,7 +835,6 @@ public class TypeUpdater extends BaseChecker {
   }
 
   /* Visitor methods and their helpers below this point. */
-
 
   /* Helper method called by several different visitor methods. */
   private void visitMethodPre(String name, Context node) {
@@ -853,6 +847,10 @@ public class TypeUpdater extends BaseChecker {
     MethodType methodType = signature.getMethodType();
     node.setType(methodType);
     checkModifiers(node, "method");
+
+    if (currentType instanceof InterfaceType || currentType instanceof AttributeType)
+      node.getModifiers().addModifier(Modifiers.PUBLIC);
+
     currentMethod.addFirst(node);
   }
 
@@ -870,18 +868,20 @@ public class TypeUpdater extends BaseChecker {
       return;
     }
 
-    if (node.getParent() instanceof ClassOrInterfaceBodyDeclarationContext) {
-      ClassOrInterfaceBodyDeclarationContext outerCtx =
-          ((ClassOrInterfaceBodyDeclarationContext) node.getParent());
+    if (node.getParent() instanceof ClassOrInterfaceBodyDeclarationContext outerCtx) {
 
       // Attach and pre-process attributes
       if (outerCtx.attributeInvocations() != null) {
-        for (ShadowParser.AttributeInvocationContext attributeCtx :
-            outerCtx.attributeInvocations().attributeInvocation()) {
-          signature.attachAttribute(attributeCtx, this.getErrorReporter());
+        if (currentType instanceof AttributeType)
+          addError(node, Error.INVALID_STRUCTURE, "Cannot mark an attribute method with an attribute");
+        else {
+          for (ShadowParser.AttributeInvocationContext attributeCtx :
+              outerCtx.attributeInvocations().attributeInvocation()) {
+            signature.attachAttribute(attributeCtx, this.getErrorReporter());
+          }
+          signature.processAttributeTypes(this.getErrorReporter());
         }
       }
-      signature.processAttributeTypes(this.getErrorReporter());
     }
 
     // only imports and exports that are meant to be called to and from C are allowed to start with
@@ -894,24 +894,6 @@ public class TypeUpdater extends BaseChecker {
           Error.INVALID_METHOD_IDENTIFIER,
           Error.INVALID_METHOD_IDENTIFIER.getDefaultMessage());
     }
-
-    // checks for method imports
-
-    /*
-    if (signature.isImportMethod()) {
-      if (signature.getParameterTypes().size() == 0) {
-        addError(
-            node,
-            Error.INVALID_ARGUMENTS,
-            "The first parameter of a method import needs to be the class where the method originally lives.");
-      }
-
-      if (!signature.getModifiers().isPrivate()) {
-        addError(node, Error.INVALID_MODIFIER, "A method import should be private.");
-      }
-    }
-
-     */
 
     boolean hasBlock = signature.hasBlock();
 
@@ -1023,8 +1005,7 @@ public class TypeUpdater extends BaseChecker {
     }
 
     // Add return types
-    if (node instanceof ShadowParser.MethodDeclaratorContext) {
-      ShadowParser.MethodDeclaratorContext declarator = (MethodDeclaratorContext) node;
+    if (node instanceof MethodDeclaratorContext declarator) {
       for (ShadowParser.ResultTypeContext result : declarator.resultTypes().resultType())
         signature.addReturn(result);
 
@@ -1048,8 +1029,6 @@ public class TypeUpdater extends BaseChecker {
 
     Type type = ctx.type().getType();
     ctx.setType(type);
-    //if (type instanceof SingletonType)
-      //addError(ctx, Error.INVALID_TYPE, "Parameter cannot be defined with singleton type " + type);
 
     return null;
   }
@@ -1106,19 +1085,17 @@ public class TypeUpdater extends BaseChecker {
     visitChildren(node);
 
     // After visiting children
-    if (declarationType instanceof InterfaceType || declarationType instanceof EnumType || declarationType instanceof AttributeType) {
+    if (declarationType instanceof InterfaceType
+        || declarationType instanceof EnumType
+        || declarationType instanceof AttributeType) {
       String kind;
-      if (declarationType instanceof EnumType) {
+      if (declarationType instanceof EnumType enumType) {
         kind = "Enum type ";
-        EnumType enumType = (EnumType) declarationType;
         enumType.setExtendType(Type.ENUM);
-      }
-      else if (declarationType instanceof AttributeType) {
+      } else if (declarationType instanceof AttributeType attributeType) {
         kind = "Attribute type ";
-        AttributeType attributeType = (AttributeType) declarationType;
         attributeType.setExtendType(Type.ATTRIBUTE);
-      }
-      else kind = "Interface type ";
+      } else kind = "Interface type ";
 
       if (list != null)
         for (ShadowParser.ClassOrInterfaceTypeContext child : list.classOrInterfaceType()) {
@@ -1133,8 +1110,7 @@ public class TypeUpdater extends BaseChecker {
         }
     }
     // Should only be classes, singletons, and exceptions.
-    else if (declarationType instanceof ClassType) {
-      ClassType classType = (ClassType) declarationType;
+    else if (declarationType instanceof ClassType classType) {
       String kind;
       if (classType.getClass() == ExceptionType.class) kind = "Exception type ";
       else if (classType.getClass() == SingletonType.class) kind = "Singleton type ";
@@ -1275,9 +1251,7 @@ public class TypeUpdater extends BaseChecker {
     // A field declaration has a type followed by an identifier (or a sequence of them).
     Type type = ctx.type().getType();
 
-
-    if (ctx.getModifiers().isNullable() && type instanceof ArrayType) {
-      ArrayType arrayType = (ArrayType) type;
+    if (ctx.getModifiers().isNullable() && type instanceof ArrayType arrayType) {
       type = arrayType.convertToNullable();
     }
 
@@ -1297,9 +1271,14 @@ public class TypeUpdater extends BaseChecker {
       ctx.getModifiers().addModifier(Modifiers.CONSTANT);
       ctx.getModifiers().addModifier(Modifiers.PUBLIC);
     }
+    // All attribute fields are implicitly public and immutable
+    // (not constant, since constants are all computed once).
+    else if (currentType instanceof AttributeType) {
+      ctx.getModifiers().addModifier(Modifiers.PUBLIC);
+      ctx.getModifiers().addModifier(Modifiers.IMMUTABLE);
+    }
 
-    if (type instanceof UninstantiatedType && ctx.getModifiers().isConstant()) {
-      UninstantiatedType uninstantiatedType = (UninstantiatedType) type;
+    if (type instanceof UninstantiatedType uninstantiatedType && ctx.getModifiers().isConstant()) {
       for (ModifiedType argument : uninstantiatedType.getTypeArguments()) {
         if (argument.getType() instanceof TypeParameter) {
           addError(
@@ -1381,7 +1360,6 @@ public class TypeUpdater extends BaseChecker {
               "Modifier weak cannot be applied to field " + symbol + " with singleton type");
       }
     }
-
 
     return null;
   }
@@ -1480,9 +1458,7 @@ public class TypeUpdater extends BaseChecker {
     if (!isMeta && !typeIsAccessible(type, declarationType))
       addError(ctx, Error.ILLEGAL_ACCESS, "Type " + type + " not accessible from current context");
 
-    if (ctx.getParent() instanceof ShadowParser.AttributeInvocationContext) {
-      ShadowParser.AttributeInvocationContext attributeInvocation =
-          (ShadowParser.AttributeInvocationContext) ctx.getParent();
+    if (ctx.getParent() instanceof ShadowParser.AttributeInvocationContext attributeInvocation) {
       if (type instanceof AttributeType) {
         attributeInvocation.setType(type);
       } else {
@@ -1608,10 +1584,8 @@ public class TypeUpdater extends BaseChecker {
     Context child = (Context) ctx.getChild(0);
     Type type = child.getType();
 
-    if (isNullable && type instanceof ArrayType) {
-      ArrayType arrayType = (ArrayType) type;
+    if (isNullable && type instanceof ArrayType arrayType)
       type = arrayType.convertToNullable();
-    }
 
     ctx.setType(type);
 

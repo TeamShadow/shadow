@@ -131,8 +131,7 @@ public class ErrorReporter {
   private static boolean containsUnknown(Type type) {
     if (type == null) return false;
     if (type == Type.UNKNOWN) return true;
-    if (type instanceof SequenceType) {
-      SequenceType sequenceType = (SequenceType) type;
+    if (type instanceof SequenceType sequenceType) {
       for (ModifiedType modifiedType : sequenceType)
         if (containsUnknown(modifiedType.getType())) return true;
     } else if (type instanceof ArrayType) return containsUnknown(((ArrayType) type).getBaseType());

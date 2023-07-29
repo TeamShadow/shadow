@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Barry Wittman
@@ -157,32 +156,30 @@ public class Main {
   }
 
   public static void run(String[] args)
-      throws ShadowException, IOException, org.apache.commons.cli.ParseException, CommandLineException,
+      throws ShadowException,
+          IOException,
+          org.apache.commons.cli.ParseException,
+          CommandLineException,
           ConfigurationException {
 
     // Detect and establish the current settings and arguments
     Arguments compilerArgs = new Arguments(args);
 
     String mainFile = null;
-    if (compilerArgs.getFiles().length > 0)
-      mainFile = compilerArgs.getFiles()[0];
+    if (compilerArgs.getFiles().length > 0) mainFile = compilerArgs.getFiles()[0];
 
     // Detect and establish the current settings based on the arguments
-    config =
-        Configuration.buildConfiguration(
-                mainFile, compilerArgs.getConfigFileArg(), false);
+    config = Configuration.buildConfiguration(mainFile, compilerArgs.getConfigFileArg(), false);
     currentJob = new Job(compilerArgs);
     List<Path> files = currentJob.getFiles();
 
     // Print information
     // Must come after building configuration, since configuration helps
     // us find the correct LLVM installation
-    if (compilerArgs.hasOption(Arguments.INFORMATION))
-      Arguments.printInformation();
+    if (compilerArgs.hasOption(Arguments.INFORMATION)) Arguments.printInformation();
 
     // Print help
-    if (compilerArgs.hasOption(Arguments.HELP))
-      Arguments.printHelp();
+    if (compilerArgs.hasOption(Arguments.HELP)) Arguments.printHelp();
 
     if (compilerArgs.hasOption(Arguments.INFORMATION) || compilerArgs.hasOption(Arguments.HELP))
       return;
@@ -238,16 +235,18 @@ public class Main {
         }
         main.close();
 
-        linkCommand.add(compileLLVMStream(new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain));
+        linkCommand.add(
+            compileLLVMStream(
+                new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain));
 
         logger.info("Linking object files...");
 
         // Usually clang
         Process link =
-                new ProcessBuilder(linkCommand)
-                        .redirectOutput(Redirect.INHERIT)
-                        .redirectError(Redirect.INHERIT)
-                        .start();
+            new ProcessBuilder(linkCommand)
+                .redirectOutput(Redirect.INHERIT)
+                .redirectError(Redirect.INHERIT)
+                .start();
         try {
           if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
         } catch (InterruptedException ignored) {
@@ -259,8 +258,6 @@ public class Main {
       logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
     }
   }
-
-
 
   // Assumes compileCommand contains two empty slots at the end:
   // The first is for the output file name
@@ -367,13 +364,15 @@ public class Main {
         systemSource.resolve(
             "Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture() + ".ll");
     Path unwindBinary =
-        systemBinary.resolve("Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture() + ".o");
+        systemBinary.resolve(
+            "Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture() + ".o");
     linkCommand.add(compileLLVMFile(unwindSource, unwindBinary));
 
     // Add platform-specific system code
     linkCommand.add(
         compileLLVMFile(
-            systemSource.resolve(config.getOs() + ".ll"), systemBinary.resolve(config.getOs() + ".o")));
+            systemSource.resolve(config.getOs() + ".ll"),
+            systemBinary.resolve(config.getOs() + ".o")));
 
     // Add shared code
     linkCommand.add(
@@ -387,24 +386,20 @@ public class Main {
     // classes needing compilation
     TypeChecker.TypeCheckerOutput typecheckerOutput =
         TypeChecker.typeCheck(
-                files, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
+            files, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
 
     List<Type> typesIncludingInner =
-            typecheckerOutput.nodes.stream().map(Context::getType).collect(Collectors.toList());
+        typecheckerOutput.nodes.stream().map(Context::getType).collect(Collectors.toList());
     typecheckerOutput.nodes.stream()
-            .map(Context::getType)
-            .map(Type::recursivelyGetInnerTypes)
-            .forEach(typesIncludingInner::addAll);
-
+        .map(Context::getType)
+        .map(Type::recursivelyGetInnerTypes)
+        .forEach(typesIncludingInner::addAll);
 
     reporter.printAndReportErrors();
 
+    ConstantFieldInterpreter.evaluateConstants(typecheckerOutput.packageTree, typesIncludingInner);
 
-    ConstantFieldInterpreter.evaluateConstants(
-        typecheckerOutput.packageTree, typesIncludingInner);
-
-    //TODO: Add enum evaluations here (right after constants?)
-
+    // TODO: Add enum evaluations here (right after constants?)
 
     if (currentJob.isLink()) {
       // Set data for main class
@@ -422,7 +417,8 @@ public class Main {
     try {
       for (Context node : typecheckerOutput.nodes) {
         // As an optimization, print .meta files for the .shadow files being checked
-        // Attributes never generate .meta files because their original .shadow files are interpreted
+        // Attributes never generate .meta files because their original .shadow files are
+        // interpreted
         if (!node.isFromMetaFile()) TypeChecker.printMetaFile(node);
 
         Path file = node.getSourcePath();
@@ -453,7 +449,7 @@ public class Main {
           // If the LLVM bitcode or compiled object code didn't exist, the full .shadow file would
           // have been used (except for attributes, which are always interpreted)
           if (node.isFromMetaFile()) {
-            if (node.getType() instanceof  AttributeType)
+            if (node.getType() instanceof AttributeType)
               logger.info("Interpreting Shadow for " + name);
             else {
               logger.info("Using pre-existing LLVM code for " + name);
@@ -465,8 +461,7 @@ public class Main {
           } else {
             if (node.getType() instanceof AttributeType)
               logger.info("Interpreting Shadow for " + name);
-            else
-              logger.info("Generating LLVM code for " + name);
+            else logger.info("Generating LLVM code for " + name);
             // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
             if (reporter.getErrorList().size() == 0)
@@ -479,17 +474,13 @@ public class Main {
         }
 
         reporter.printAndReportErrors();
-
       }
     } catch (TypeCheckException e) {
       logger.error(files.get(0) + " FAILED TO TYPE CHECK");
       throw e;
-    }
-    catch (RuntimeException e) {
-      if (e.getCause() instanceof ShadowException)
-        throw (ShadowException) e.getCause();
-      else
-        throw e;
+    } catch (RuntimeException e) {
+      if (e.getCause() instanceof ShadowException) throw (ShadowException) e.getCause();
+      else throw e;
     }
   }
 
@@ -498,35 +489,35 @@ public class Main {
       return new ProcessBuilder(
               config.getLlc(),
               // "-mtriple",
-              //config.getTarget(),
+              // config.getTarget(),
               config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
               "-femulated-tls", // needed for Mac
               "-c",
               "-x",
               "ir",
-              //"--filetype=obj",
+              // "--filetype=obj",
               "-w", // Warning: Turns off all warnings
               "-o",
               objectFile,
               "-")
-              .redirectError(Redirect.INHERIT)
-              .start();
+          .redirectError(Redirect.INHERIT)
+          .start();
     } else {
       return new ProcessBuilder(
               config.getLlc(),
               // "-mtriple",
-              //config.getTarget(),
+              // config.getTarget(),
               config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
               "-c",
               "-x",
               "ir",
-              //"--filetype=obj",
+              // "--filetype=obj",
               "-w", // Warning: Turns off all warnings
               "-o",
               objectFile,
               "-")
-              .redirectError(Redirect.INHERIT)
-              .start();
+          .redirectError(Redirect.INHERIT)
+          .start();
     }
   }
 
@@ -660,15 +651,14 @@ public class Main {
       }
 
       for (TACModule class_ : modules) {
-        // No attribute member checking for now
-        // TODO: Update this in case of attribute errors?
-        //if (class_.getType() instanceof AttributeType) continue;
-
         // Check field initialization
         class_.checkFieldInitialization(reporter, graphs);
+        Type type = class_.getType();
+
+        // Check that attribute fields are initialized, but don't worry if they aren't used
+        if (type instanceof AttributeType) continue;
 
         // Give warnings if fields are never used
-        Type type = class_.getType();
         Set<String> usedFields = allUsedFields.computeIfAbsent(type, k -> new HashSet<>());
         for (Entry<String, VariableDeclaratorContext> entry : type.getFields().entrySet()) {
           if (!entry.getValue().getModifiers().isConstant()

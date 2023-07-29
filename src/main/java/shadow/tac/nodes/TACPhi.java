@@ -30,8 +30,7 @@ public class TACPhi extends TACLocalStorage {
     for (Map.Entry<TACLabel, TACOperand> entry : previousStores.entrySet()) {
       TACOperand temp = entry.getValue();
 
-      if (temp instanceof TACUpdate) {
-        TACUpdate update = (TACUpdate) temp;
+      if (temp instanceof TACUpdate update) {
         if (update.update(currentlyUpdating)) changed = true;
 
         TACOperand op = update.getValue();
@@ -41,11 +40,9 @@ public class TACPhi extends TACLocalStorage {
         }
       }
 
-      if (temp instanceof TACLiteral) {
-        TACLiteral literal = (TACLiteral) temp;
+      if (temp instanceof TACLiteral literal) {
         if (literal.getValue() instanceof ShadowUndefined) undefined = true;
-      } else if (temp instanceof TACPhi) {
-        TACPhi phiStore = (TACPhi) temp;
+      } else if (temp instanceof TACPhi phiStore) {
         if (phiStore.isUndefined()) undefined = true;
       }
 
@@ -95,18 +92,15 @@ public class TACPhi extends TACLocalStorage {
 
   @Override
   public boolean equals(Object other) {
-    if (!(other instanceof TACPhi)) return false;
+    if (!(other instanceof TACPhi store)) return false;
 
     if (other == this) return true;
-
-    TACPhi store = (TACPhi) other;
 
     return getNumber() == store.getNumber() && getVariable().equals(store.getVariable());
   }
 
   public void addPreviousStore(TACLabel label, TACOperand store) {
-    if (store instanceof TACLiteral) {
-      TACLiteral literal = (TACLiteral) store;
+    if (store instanceof TACLiteral literal) {
       if (literal.getValue() instanceof ShadowUndefined) undefined = true;
     }
 
@@ -118,14 +112,12 @@ public class TACPhi extends TACLocalStorage {
 
     if (store != null) {
       previousStores.remove(label);
-      if (store instanceof TACLiteral) {
-        TACLiteral literal = (TACLiteral) store;
+      if (store instanceof TACLiteral literal) {
         if (literal.getValue()
             instanceof ShadowUndefined) { // may need to check to see if still undefined
           undefined = false;
           for (TACOperand op : previousStores.values()) {
             if (op instanceof TACLiteral) {
-              literal = (TACLiteral) store;
               if (literal.getValue() instanceof ShadowUndefined) undefined = true;
             }
           }
@@ -156,13 +148,11 @@ public class TACPhi extends TACLocalStorage {
     throw new IndexOutOfBoundsException("" + num);
   }
 
-
   @Override
   public boolean isNull() {
     boolean isNull = true;
-    for(TACOperand op : previousStores.values()) {
-      if (op != this)
-        isNull = isNull && op.isNull();
+    for (TACOperand op : previousStores.values()) {
+      if (op != this) isNull = isNull && op.isNull();
     }
     return isNull;
   }

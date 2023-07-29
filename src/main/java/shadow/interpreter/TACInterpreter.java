@@ -18,9 +18,9 @@ import java.util.Map;
  * interpreter should actually walk method definitions, failing only if it reaches unsupported
  * native methods.
  *
- * Compile-time constant evaluation is mostly in {@link ASTInterpreter}.
- * There are a few cases where interpretation of TAC nodes is desired, so this code is being
- * preserved.
+ * <p>Compile-time constant evaluation is mostly in {@link ASTInterpreter}. There are a few cases
+ * where interpretation of TAC nodes is desired, so this code is being preserved.
+ *
  * @author Barry Wittman
  * @author Jacob Young
  */
@@ -42,18 +42,10 @@ public class TACInterpreter extends TACAbstractVisitor {
     ShadowValue op = value(TACOperand.value(node.getOperand()));
 
     switch (node.getOperation()) {
-      case "-":
-        data = op.negate();
-        break;
-      case "#":
-        data = new ShadowString(op.toString());
-        break;
-      case "~":
-        data = op.bitwiseComplement();
-        break;
-      case "!":
-        data = op.not();
-        break;
+      case "-" -> data = op.negate();
+      case "#" -> data = new ShadowString(op.toString());
+      case "~" -> data = op.bitwiseComplement();
+      case "!" -> data = op.not();
     }
 
     return data;
@@ -70,21 +62,7 @@ public class TACInterpreter extends TACAbstractVisitor {
         right = value(TACOperand.value(node.getSecond()));
 
     switch (node.getOperation()) {
-      case "+":
-      case "-":
-      case "*":
-      case "/":
-      case "%":
-      case "|":
-      case "&":
-      case "^":
-      case "==":
-      case "===":
-      case "!=":
-      case "<":
-      case "<=":
-      case ">":
-      case ">=":
+      case "+", "-", "*", "/", "%", "|", "&", "^", "==", "===", "!=", "<", "<=", ">", ">=" -> {
         if (left.isStrictSubtype(right)) left = left.cast(right.getType());
         else if (right.isStrictSubtype(left)) right = right.cast(left.getType());
 
@@ -119,12 +97,12 @@ public class TACInterpreter extends TACAbstractVisitor {
             break;
           case "===":
             if ((left.getType().isPrimitive() && right.getType().isPrimitive())
-                || (left instanceof ShadowNull && right instanceof ShadowNull))
+                    || (left instanceof ShadowNull && right instanceof ShadowNull))
               data = left.equal(right);
             else
               throw new InterpreterException(
-                  Error.UNSUPPORTED_OPERATION,
-                  "Interpreter cannot perform reference comparison on non-primitive types");
+                      Error.UNSUPPORTED_OPERATION,
+                      "Interpreter cannot perform reference comparison on non-primitive types");
             break;
           case "!=":
             data = left.notEqual(right);
@@ -142,33 +120,16 @@ public class TACInterpreter extends TACAbstractVisitor {
             data = left.greaterThanOrEqual(right);
             break;
         }
-        break;
-
-      case "<<":
-        data = left.bitShiftLeft(right);
-        break;
-      case ">>":
-        data = left.bitShiftRight(right);
-        break;
-      case "<<<":
-        data = left.bitRotateLeft(right);
-        break;
-      case ">>>":
-        data = left.bitRotateRight(right);
-        break;
-
-      case "or":
-        data = left.or(right);
-        break;
-      case "xor":
-        data = left.xor(right);
-        break;
-      case "and":
-        data = left.and(right);
-        break;
-      case "#": // ever happens?
-        data = new ShadowString(left.toString() + right);
-        break;
+      }
+      case "<<" -> data = left.bitShiftLeft(right);
+      case ">>" -> data = left.bitShiftRight(right);
+      case "<<<" -> data = left.bitRotateLeft(right);
+      case ">>>" -> data = left.bitRotateRight(right);
+      case "or" -> data = left.or(right);
+      case "xor" -> data = left.xor(right);
+      case "and" -> data = left.and(right);
+      case "#" -> // ever happens?
+              data = new ShadowString(left.toString() + right);
     }
 
     return data;
@@ -205,8 +166,7 @@ public class TACInterpreter extends TACAbstractVisitor {
   public void visit(TACLoad node) throws ShadowException {
     TACReference reference = node.getReference();
 
-    if (reference instanceof TACConstantRef) {
-      TACConstantRef constant = ((TACConstantRef) reference);
+    if (reference instanceof TACConstantRef constant) {
       String name = constant.getPrefixType().toString() + ":" + constant.getName();
       ShadowValue data = constants.get(name);
       if (data == null)
@@ -237,8 +197,7 @@ public class TACInterpreter extends TACAbstractVisitor {
   public void visit(TACCall node) throws ShadowException {
     TACMethodRef methodRef = node.getMethodRef();
 
-    if (methodRef instanceof TACMethodName) {
-      TACMethodName method = (TACMethodName) methodRef;
+    if (methodRef instanceof TACMethodName method) {
       MethodSignature signature = method.getSignature();
       List<TACOperand> parameters = node.getParameters();
 

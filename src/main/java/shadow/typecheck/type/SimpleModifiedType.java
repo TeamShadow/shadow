@@ -25,8 +25,7 @@ public class SimpleModifiedType implements ModifiedType {
 
   @Override
   public boolean equals(Object o) {
-    if (o instanceof ModifiedType) {
-      ModifiedType modifiedType = (ModifiedType) o;
+    if (o instanceof ModifiedType modifiedType) {
       return type.equals(modifiedType.getType()) && modifiers.equals(modifiedType.getModifiers());
     }
 

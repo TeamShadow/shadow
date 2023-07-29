@@ -36,8 +36,7 @@ public class MethodTableType extends Type {
   public boolean equals(Type other) {
     if (other == null) return false;
 
-    if (other instanceof MethodTableType) {
-      MethodTableType otherTable = (MethodTableType) other;
+    if (other instanceof MethodTableType otherTable) {
       return otherTable.type.equals(type);
     }
 

@@ -206,8 +206,7 @@ public class PackagePage extends Page {
     return outputPath;
   }
 
-  private void writeTypeName(Type type, HtmlWriter out)
-      throws ShadowException {
+  private void writeTypeName(Type type, HtmlWriter out) throws ShadowException {
     if (linkableTypes.contains(type))
       writeLink(
           type.toString(Type.NO_OPTIONS).replaceAll(":", "\\$") + EXTENSION,
@@ -216,8 +215,7 @@ public class PackagePage extends Page {
     else out.add(type.getTypeName());
   }
 
-  private void writePackageName(Package pkg, HtmlWriter out)
-      throws ShadowException {
+  private void writePackageName(Package pkg, HtmlWriter out) throws ShadowException {
     if (linkablePackages.contains(pkg))
       writeLink(
           StandardTemplate.linkToPage(this, master.getPackagePage(pkg)).toString(),

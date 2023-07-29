@@ -1,7 +1,7 @@
 attribute Attribute {
     Object test;
 
-    public  getValue() => (String)
+    getValue() => (String)
     {
         return test.toString();
     }

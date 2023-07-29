@@ -25,9 +25,9 @@ public class BuildTests {
     else if (os.contains("mac")) args.add("mac.json");
     else args.add("linux.json");
 
-    //args.add("-r");
-    //args.add("-f");
-    //args.add("-v");
+    // args.add("-r");
+    // args.add("-f");
+    // args.add("-v");
   }
 
   @Test
@@ -39,9 +39,9 @@ public class BuildTests {
     Path objectRoot = Path.of("bin");
     addDirectories(sourceRoot.resolve("shadow"), sourceFiles);
     for (Path file : sourceFiles) {
-      Path objectFile = BaseChecker.changeExtension(objectRoot.resolve(sourceRoot.relativize(file)), ".o");
-      if (Files.exists(objectFile))
-        Files.delete(objectFile);
+      Path objectFile =
+          BaseChecker.changeExtension(objectRoot.resolve(sourceRoot.relativize(file)), ".o");
+      if (Files.exists(objectFile)) Files.delete(objectFile);
 
       objectFiles.add(objectFile);
     }
@@ -58,17 +58,16 @@ public class BuildTests {
   private void addDirectories(Path directory, List<Path> files) {
     try (Stream<Path> stream = Files.list(directory)) {
       stream
-              .filter(file -> Files.isDirectory(file) && !file.getFileName().toString().equals("test")).forEach(f -> addShadowFiles(f, files));
+          .filter(file -> Files.isDirectory(file) && !file.getFileName().toString().equals("test"))
+          .forEach(f -> addShadowFiles(f, files));
     } catch (IOException ignored) {
     }
   }
 
   private void addShadowFiles(Path directory, List<Path> files) {
     try (Stream<Path> stream = Files.walk(directory)) {
-      stream
-              .filter(file -> file.toString().endsWith(".shadow")).forEach(files::add);
+      stream.filter(file -> file.toString().endsWith(".shadow")).forEach(files::add);
     } catch (IOException ignored) {
     }
   }
-
 }

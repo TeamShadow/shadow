@@ -54,15 +54,13 @@ public class StatementChecker extends ScopedChecker {
     for (InterfaceType interfaceType : currentType.getInterfaces())
       currentType.addUsedType(interfaceType);
 
-    if (currentType instanceof ClassType) {
-      ClassType classType = (ClassType) currentType;
+    if (currentType instanceof ClassType classType) {
       currentType.addUsedType(classType.getExtendType());
     }
 
     visitChildren(ctx);
 
-    if (currentType instanceof ClassType && currentType.isParameterized()) {
-      ClassType classType = (ClassType) currentType;
+    if (currentType instanceof ClassType classType && currentType.isParameterized()) {
       Set<Type> partiallyInstantiated = currentType.getPartiallyInstantiatedClasses();
       for (Type type : partiallyInstantiated) classType.addDependency(new SimpleModifiedType(type));
     }
@@ -120,40 +118,6 @@ public class StatementChecker extends ScopedChecker {
     for (AttributeInvocation attribute : signature.getAttributes()) {
       attribute.update(packageTree, this.getErrorReporter());
     }
-
-    /*
-    // Removing imports
-    if (signature.isImportMethod()) {
-      if (signature.getModifiers().isPublic()) {
-        addError(node, Error.INVALID_MODIFIER, "Method imports cannot be public.");
-      }
-
-      // first parameter is the class where the method lives
-      SequenceType params = signature.getParameterTypes();
-      Type sourceClass = params.get(0).getType();
-
-      // get the actual parameters of the method
-      SequenceType sourceParams = new SequenceType();
-      for (int i = 1; i < params.size(); ++i) {
-        sourceParams.add(params.get(i));
-      }
-
-      // find the method in the source class
-      MethodSignature method = sourceClass.getMatchingMethod(signature.getSymbol(), sourceParams);
-      if (method == null || !method.getReturnTypes().equals(signature.getReturnTypes())) {
-        addError(
-            node,
-            Error.INVALID_METHOD_IMPORT,
-            "No matching method was found for method '"
-                + signature.getSymbol()
-                + "' in class '"
-                + sourceClass
-                + "'");
-      } else {
-        signature.setImportSource(method);
-      }
-    }
-    */
 
     currentMethod.addFirst(node);
     openScope();
@@ -307,10 +271,9 @@ public class StatementChecker extends ScopedChecker {
 
     // Check for an explicit call to the parent class' create().
     // For .meta files and imports, we trust that the create() is properly implemented elsewhere
-    if (currentType instanceof ClassType
+    if (currentType instanceof ClassType classType
         && !ctx.getSignature().isImport()
         && !ctx.isFromMetaFile()) {
-      ClassType classType = (ClassType) currentType;
       ClassType parentType = classType.getExtendType();
 
       boolean explicitCreate =
@@ -420,8 +383,7 @@ public class StatementChecker extends ScopedChecker {
         }
       }
 
-      if (ctx.getModifiers().isNullable() && type instanceof ArrayType) {
-        ArrayType arrayType = (ArrayType) type;
+      if (ctx.getModifiers().isNullable() && type instanceof ArrayType arrayType) {
         type = arrayType.convertToNullable();
       }
 
@@ -443,8 +405,7 @@ public class StatementChecker extends ScopedChecker {
         Type leftType = declarator.getType();
         Type rightType = declarator.conditionalExpression().getType();
         // let unbound method type know what signature it will eventually be bound to
-        if (rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType) {
-          UnboundMethodType unboundType = (UnboundMethodType) rightType;
+        if (rightType instanceof UnboundMethodType unboundType && leftType instanceof MethodReferenceType) {
           MethodType methodType = ((MethodReferenceType) leftType).getMethodType();
           MethodSignature signature =
               unboundType
@@ -513,7 +474,7 @@ public class StatementChecker extends ScopedChecker {
 
     ctx.setType(result); // also propagates type up if only one child
     if (ctx.getChildCount() == 1) // can make ASSIGNABLE (if only one child)
-    ctx.addModifiers(((Context) ctx.getChild(0)).getModifiers());
+      ctx.addModifiers(((Context) ctx.getChild(0)).getModifiers());
 
     return null;
   }
@@ -545,7 +506,7 @@ public class StatementChecker extends ScopedChecker {
 
     ctx.setType(result); // Propagates type up if only one child
     if (ctx.getChildCount() == 1) // Can make ASSIGNABLE (if only one child)
-    ctx.addModifiers(((Context) ctx.getChild(0)).getModifiers());
+      ctx.addModifiers(((Context) ctx.getChild(0)).getModifiers());
 
     return null;
   }
@@ -615,7 +576,7 @@ public class StatementChecker extends ScopedChecker {
 
     ctx.setType(resultType); // Propagates type up if only one child
     if (ctx.getChildCount() == 1) // Can make ASSIGNABLE (if only one child)
-    ctx.addModifiers(((Context) ctx.getChild(0)).getModifiers());
+      ctx.addModifiers(((Context) ctx.getChild(0)).getModifiers());
 
     return null;
   }
@@ -630,42 +591,42 @@ public class StatementChecker extends ScopedChecker {
       String methodName = "";
 
       switch (operator) {
-        case "+":
+        case "+" -> {
           methodName = "add";
           interfaceType = Type.CAN_ADD;
-          break;
-        case "-":
+        }
+        case "-" -> {
           methodName = "subtract";
           interfaceType = Type.CAN_SUBTRACT;
-          break;
-        case "*":
+        }
+        case "*" -> {
           methodName = "multiply";
           interfaceType = Type.CAN_MULTIPLY;
-          break;
-        case "/":
+        }
+        case "/" -> {
           methodName = "divide";
           interfaceType = Type.CAN_DIVIDE;
-          break;
-        case "%":
+        }
+        case "%" -> {
           methodName = "modulus";
           interfaceType = Type.CAN_MODULUS;
-          break;
-        case "<<":
+        }
+        case "<<" -> {
           methodName = "bitShiftLeft";
           interfaceType = Type.INTEGER;
-          break;
-        case "<<<":
+        }
+        case "<<<" -> {
           methodName = "bitRotateLeft";
           interfaceType = Type.INTEGER;
-          break;
-        case ">>":
+        }
+        case ">>" -> {
           methodName = "bitShiftRight";
           interfaceType = Type.INTEGER;
-          break;
-        case ">>>":
+        }
+        case ">>>" -> {
           methodName = "bitRotateRight";
           interfaceType = Type.INTEGER;
-          break;
+        }
       }
 
       if (result.hasUninstantiatedInterface(interfaceType)) {
@@ -701,7 +662,7 @@ public class StatementChecker extends ScopedChecker {
 
     node.setType(result); // propagates type up if only one child
     if (node.getChildCount() == 1) // can make ASSIGNABLE (if only one child)
-    node.addModifiers(((Context) node.getChild(0)).getModifiers());
+      node.addModifiers(((Context) node.getChild(0)).getModifiers());
   }
 
   @Override
@@ -1037,19 +998,12 @@ public class StatementChecker extends ScopedChecker {
       String operator = node.getChild(i).getText();
       Context currentNode = (Context) node.getChild(i + 1);
       Type current = currentNode.getType();
-      String methodName = "";
-
-      switch (operator) {
-        case "|":
-          methodName = "bitOr";
-          break;
-        case "&":
-          methodName = "bitAnd";
-          break;
-        case "^":
-          methodName = "bitXor";
-          break;
-      }
+      String methodName = switch (operator) {
+        case "|" -> "bitOr";
+        case "&" -> "bitAnd";
+        case "^" -> "bitXor";
+        default -> "";
+      };
 
       if (result.hasUninstantiatedInterface(Type.INTEGER)) {
         SequenceType argument = new SequenceType();
@@ -1083,7 +1037,7 @@ public class StatementChecker extends ScopedChecker {
 
     node.setType(result);
     if (node.getChildCount() == 1) // can make ASSIGNABLE (if only one child)
-    node.addModifiers(((Context) node.getChild(0)).getModifiers());
+      node.addModifiers(((Context) node.getChild(0)).getModifiers());
   }
 
   @Override
@@ -1113,10 +1067,9 @@ public class StatementChecker extends ScopedChecker {
 
   @Override
   public Void visitClassOrInterfaceType(ShadowParser.ClassOrInterfaceTypeContext ctx) {
-    if (ctx.getType() != null
-        && !(ctx.getType()
-            instanceof UninstantiatedType)) // Optimization if type already determined.
-    return null;
+    // Optimization if type already determined.
+    if (ctx.getType() != null  && !(ctx.getType() instanceof UninstantiatedType))
+      return null;
 
     visitChildren(ctx);
 
@@ -1249,7 +1202,7 @@ public class StatementChecker extends ScopedChecker {
           leftElement.setType(type);
         }
 
-        if (leftElement instanceof ShadowParser.SequenceVariableContext) { // declaration
+        if (leftElement instanceof ShadowParser.SequenceVariableContext) { // Declaration
           if (leftElement.getModifiers().isNullable()
               && leftElement.getType() instanceof ArrayType
               && ((ArrayType) leftElement.getType()).recursivelyGetBaseType().isPrimitive())
@@ -1259,8 +1212,8 @@ public class StatementChecker extends ScopedChecker {
                 "Primitive array type " + leftElement.getType() + " cannot be marked nullable");
 
           addErrors(ctx, isValidInitialization(leftElement, rightElement));
-        } else // otherwise simple assignment
-        addErrors(ctx, isValidAssignment(leftElement, rightElement, AssignmentKind.EQUAL));
+        } else // Otherwise, simple assignment
+          addErrors(ctx, isValidAssignment(leftElement, rightElement, AssignmentKind.EQUAL));
       }
     }
 
@@ -1282,8 +1235,7 @@ public class StatementChecker extends ScopedChecker {
         Type leftType = left.getType();
         Type rightType = right.getType();
 
-        if (leftType instanceof PropertyType) {
-          PropertyType getSetType = (PropertyType) leftType;
+        if (leftType instanceof PropertyType getSetType) {
           leftType = getSetType.getSetType().getType();
         }
 
@@ -1291,8 +1243,7 @@ public class StatementChecker extends ScopedChecker {
           rightType = ((PropertyType) rightType).getGetType().getType();
 
         // let unbound method type know what signature it will eventually be bound to
-        if (rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType) {
-          UnboundMethodType unboundType = (UnboundMethodType) rightType;
+        if (rightType instanceof UnboundMethodType unboundType && leftType instanceof MethodReferenceType) {
           MethodType methodType = ((MethodReferenceType) leftType).getMethodType();
           MethodSignature signature =
               unboundType
@@ -1424,10 +1375,8 @@ public class StatementChecker extends ScopedChecker {
         addError(ctx, Error.INVALID_CAST, "Can only specify nullable for array types in casts");
     }
 
-    if (t1 instanceof MethodType && t2 instanceof UnboundMethodType) { // casting methods
-      MethodType method = (MethodType) t1;
-      UnboundMethodType unboundMethod = (UnboundMethodType) t2;
-
+    // Casting methods
+    if (t1 instanceof MethodType method && t2 instanceof UnboundMethodType unboundMethod) {
       MethodSignature candidate = null;
       Type outer = unboundMethod.getOuter();
 
@@ -1611,8 +1560,7 @@ public class StatementChecker extends ScopedChecker {
       isVar = true;
     }
 
-    if (collectionType instanceof ArrayType) {
-      ArrayType array = (ArrayType) collectionType;
+    if (collectionType instanceof ArrayType array) {
       element = new SimpleModifiedType(array.getBaseType());
       if (array.isNullable()) element.getModifiers().addModifier(Modifiers.NULLABLE);
     } else if (collectionType.hasUninstantiatedInterface(Type.CAN_ITERATE)) {
@@ -1647,8 +1595,7 @@ public class StatementChecker extends ScopedChecker {
         Type elementType = element.getType();
         ctx.setType(elementType);
         if (ctx.getModifiers().isNullable()) {
-          if (elementType instanceof ArrayType) {
-            ArrayType arrayType = (ArrayType) elementType;
+          if (elementType instanceof ArrayType arrayType) {
             if (arrayType.recursivelyGetBaseType().isPrimitive())
               addError(
                   ctx,
@@ -1860,8 +1807,7 @@ public class StatementChecker extends ScopedChecker {
 
   private void checkForSingleton(Type type) {
     // if singleton, add to current method for initialization
-    if (type instanceof SingletonType) {
-      SingletonType singletonType = (SingletonType) type;
+    if (type instanceof SingletonType singletonType) {
       if (currentMethod.isEmpty()) {
         // don't add a singleton to itself, could cause infinite recursion
         if (!currentType.equals(type))
@@ -1883,8 +1829,7 @@ public class StatementChecker extends ScopedChecker {
           signatureNode.getSignature().addSingleton(singletonType);
         }
       }
-    } else if (type instanceof SequenceType) {
-      SequenceType sequenceType = (SequenceType) type;
+    } else if (type instanceof SequenceType sequenceType) {
       for (ModifiedType modifiedType : sequenceType) checkForSingleton(modifiedType.getType());
     } else if (type instanceof ArrayType) checkForSingleton(((ArrayType) type).getBaseType());
   }
@@ -1965,8 +1910,7 @@ public class StatementChecker extends ScopedChecker {
     if (ctx.methodCall() != null) {
       Type childType = ctx.methodCall().getType();
 
-      if (childType instanceof MethodType) {
-        MethodType methodType = (MethodType) childType;
+      if (childType instanceof MethodType methodType) {
         SequenceType returnTypes = methodType.getReturnTypes();
         returnTypes.setContextType(ctx); // used instead of setType
       } else ctx.setType(Type.UNKNOWN);
@@ -2009,9 +1953,8 @@ public class StatementChecker extends ScopedChecker {
     prefixNode = resolveType(prefixNode);
     Type prefixType = prefixNode.getType();
 
-    if (prefixType instanceof ArrayType
+    if (prefixType instanceof ArrayType arrayType
         && !(((ArrayType) prefixType).getBaseType() instanceof TypeParameter)) {
-      ArrayType arrayType = (ArrayType) prefixType;
 
       ShadowParser.ConditionalExpressionContext child = ctx.conditionalExpression();
       Type childType = child.getType();
@@ -2151,8 +2094,7 @@ public class StatementChecker extends ScopedChecker {
       nullable = true;
       ctx.addModifiers(Modifiers.NULLABLE);
 
-      if (prefixType instanceof ArrayType) {
-        ArrayType arrayType = (ArrayType) prefixType;
+      if (prefixType instanceof ArrayType arrayType) {
         prefixType = arrayType.convertToNullable();
       }
     }
@@ -2308,7 +2250,7 @@ public class StatementChecker extends ScopedChecker {
   public Void visitMethod(ShadowParser.MethodContext ctx) {
     visitChildren(ctx);
 
-    // always part of a suffix, thus always has a prefix
+    // Always part of a suffix, thus always has a prefix
     ModifiedType prefixNode = curPrefix.getFirst();
     prefixNode = resolveType(prefixNode);
     Type prefixType = prefixNode.getType();
@@ -2335,20 +2277,23 @@ public class StatementChecker extends ScopedChecker {
       }
       else if (!(prefixType instanceof SingletonType))
         addError(curPrefix.getFirst(), Error.NOT_OBJECT, "Type name cannot be used to call method");
-    } else if (prefixType instanceof SequenceType) {
-      addError(
-          curPrefix.getFirst(), Error.INVALID_TYPE, "Method cannot be called on a sequence result");
     }
 
     if (prefixType != null) {
-      List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(methodName);
-
-      // unbound method (it gets bound when you supply arguments)
-      if (methods != null && methods.size() > 0)
-        ctx.setType(new UnboundMethodType(methodName, prefixType));
-      else
+      if (prefixType instanceof SequenceType) {
         addError(
-            ctx, Error.UNDEFINED_SYMBOL, "Method " + methodName + " not defined in this context");
+                curPrefix.getFirst(), Error.INVALID_TYPE, "Method cannot be called on a sequence result");
+      }
+      else {
+        List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(methodName);
+
+        // unbound method (it gets bound when you supply arguments)
+        if (methods != null && methods.size() > 0)
+          ctx.setType(new UnboundMethodType(methodName, prefixType));
+        else
+          addError(
+              ctx, Error.UNDEFINED_SYMBOL, "Method " + methodName + " not defined in this context");
+      }
     }
 
     if (ctx.getType() == null) ctx.setType(Type.UNKNOWN);
@@ -2695,8 +2640,7 @@ public class StatementChecker extends ScopedChecker {
   private ModifiedType resolveType(
       ModifiedType node) { // Dereferences into PropertyType or IndexType for getter, if needed
     Type type = node.getType();
-    if (type instanceof PropertyType) { // includes SubscriptType as well
-      PropertyType getSetType = (PropertyType) type;
+    if (type instanceof PropertyType getSetType) { // includes SubscriptType as well
       if (getSetType.isGettable()) return getSetType.getGetType();
       else {
         String kind = (type instanceof SubscriptType) ? "Subscript " : "Property ";
@@ -2715,18 +2659,14 @@ public class StatementChecker extends ScopedChecker {
   }
 
   protected MethodSignature setCreateType(Context node, Type prefixType, SequenceType arguments) {
-    return setMethodType(node, prefixType, "create", arguments, null);
+    return setMethodType(node, prefixType, "create", arguments);
   }
+
 
   protected MethodSignature setMethodType(
       Context node, Type type, String method, SequenceType arguments) {
-    return setMethodType(node, type, method, arguments, null);
-  }
-
-  protected MethodSignature setMethodType(
-      Context node, Type type, String method, SequenceType arguments, SequenceType typeArguments) {
     List<ShadowException> errors = new ArrayList<>();
-    MethodSignature signature = type.getMatchingMethod(method, arguments, typeArguments, errors);
+    MethodSignature signature = type.getMatchingMethod(method, arguments, errors);
 
     if (signature == null) addErrors(node, errors);
     else {
@@ -2742,10 +2682,9 @@ public class StatementChecker extends ScopedChecker {
       // be
       for (int i = 0; i < arguments.size(); ++i) {
         ModifiedType argument = arguments.get(i);
-        if (argument.getType() instanceof UnboundMethodType) {
+        if (argument.getType() instanceof UnboundMethodType unboundType) {
           // since it matches, the parameter of the method must be a MethodType
           MethodType parameterType = (MethodType) signature.getParameterTypes().get(i).getType();
-          UnboundMethodType unboundType = (UnboundMethodType) argument.getType();
           MethodSignature boundSignature =
               unboundType
                   .getOuter()
@@ -2774,9 +2713,8 @@ public class StatementChecker extends ScopedChecker {
     if (prefixType instanceof UnboundMethodType) {
       UnboundMethodType unboundMethod = (UnboundMethodType) (prefixType);
       Type outer = prefixType.getOuter();
-      MethodSignature signature =
-          setMethodType(
-              ctx, outer, unboundMethod.getTypeName(), arguments, null); // type set inside
+      // Sets ctx type inside
+      MethodSignature signature = setMethodType(ctx, outer, unboundMethod.getTypeName(), arguments);
       ctx.setSignature(signature);
 
       if (signature != null) {
@@ -3122,8 +3060,7 @@ public class StatementChecker extends ScopedChecker {
             Type leftType = methodType.getReturnTypes().get(i).getType();
             Type rightType = updatedTypes.get(i).getType();
 
-            if (rightType instanceof UnboundMethodType && leftType instanceof MethodReferenceType) {
-              UnboundMethodType unboundType = (UnboundMethodType) rightType;
+            if (rightType instanceof UnboundMethodType unboundType && leftType instanceof MethodReferenceType) {
               MethodType returnMethodType = ((MethodReferenceType) leftType).getMethodType();
               MethodSignature signature =
                   unboundType
@@ -3175,8 +3112,8 @@ public class StatementChecker extends ScopedChecker {
     SequenceType arguments = new SequenceType();
     arguments.addAll(ctx.conditionalExpression());
 
-    if (currentType instanceof ClassType) {
-      ClassType type = (ClassType) currentType; // assumes "this"
+    if (currentType instanceof ClassType type) {
+      // assumes "this"
       if (ctx.getChild(0).getText().equals("super")) {
         if (type.getExtendType() != null) type = type.getExtendType();
         else
@@ -3189,8 +3126,8 @@ public class StatementChecker extends ScopedChecker {
               type);
       }
 
-      MethodSignature signature =
-          setMethodType(ctx, type, "create", arguments, null); // type set inside
+      // Set ctx type inside
+      MethodSignature signature = setMethodType(ctx, type, "create", arguments);
       ctx.setSignature(signature);
     } else
       addError(
@@ -3214,8 +3151,7 @@ public class StatementChecker extends ScopedChecker {
     Type type = child.getType();
 
     if (isNullable) {
-      if (type instanceof ArrayType) {
-        ArrayType arrayType = (ArrayType) type;
+      if (type instanceof ArrayType arrayType) {
         type = arrayType.convertToNullable();
 
         if (arrayType.recursivelyGetBaseType().isPrimitive())
@@ -3288,11 +3224,9 @@ public class StatementChecker extends ScopedChecker {
   @Override
   public Void visitMethodDeclarator(ShadowParser.MethodDeclaratorContext ctx) {
     // Non-local methods have already been handled in the type updater
-    if (ctx.getParent() instanceof ShadowParser.LocalMethodDeclarationContext) {
+    if (ctx.getParent() instanceof LocalMethodDeclarationContext parent) {
       visitChildren(ctx);
 
-      ShadowParser.LocalMethodDeclarationContext parent =
-          (LocalMethodDeclarationContext) ctx.getParent();
       MethodSignature signature = parent.getSignature();
 
       // Add parameters
@@ -3312,13 +3246,6 @@ public class StatementChecker extends ScopedChecker {
   @Override
   public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx) {
     visitChildren(ctx);
-
-    /*
-    // Should be unnecessary, since Thread:Current is always initialized when the thread is created
-    // Make sure the method initializes the Thread:Current singleton
-    MethodSignature methodSignature = currentMethod.getFirst().getSignature();
-    methodSignature.addSingleton(Type.THREAD_CURRENT);
-     */
 
     Type runnerType = ctx.type().getType();
     if (!runnerType.getClass().equals(ClassType.class)) {
@@ -3478,8 +3405,7 @@ public class StatementChecker extends ScopedChecker {
     SequenceType arguments = new SequenceType();
     arguments.addAll(ctx.conditionalExpression());
 
-    if (prefixType instanceof AttributeType) {
-      AttributeType attributeType = (AttributeType) prefixType;
+    if (prefixType instanceof AttributeType attributeType) {
 
       MethodSignature signature = setCreateType(ctx, prefixType, arguments);
       ctx.setSignature(signature);
@@ -3505,23 +3431,6 @@ public class StatementChecker extends ScopedChecker {
     // Must happen first to determine the types of conditional expressions
     visitChildren(ctx);
 
-    /*
-    if (ctx.getParent() instanceof ShadowParser.AttributeInvocationContext) {
-      Type attributeType = ((ShadowParser.AttributeInvocationContext) ctx.getParent()).getType();
-      String fieldName = ctx.generalIdentifier().getText();
-      if (!attributeType.getFields().containsKey(fieldName)) {
-        addError(
-            ctx,
-            Error.UNDEFINED_SYMBOL,
-            "Field \"" + fieldName + "\" is not declared in " + attributeType.getTypeName(),
-            attributeType);
-      } else {
-        addErrors(
-            ctx,
-            isValidInitialization(attributeType.getField(fieldName), ctx.conditionalExpression()));
-      }
-    }
-    */
     return null;
   }
 

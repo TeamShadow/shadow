@@ -54,17 +54,16 @@ public class ParseErrorListener extends BaseErrorListener {
       Token t = e.getOffendingToken();
       if (t != null) {
         reporter.addError(
-                new ParseException(
-                        Error.SYNTAX_ERROR,
-                        error,
-                        line,
-                        charPositionInLine,
-                        t.getStartIndex(),
-                        t.getStopIndex()));
-      }
-      else
+            new ParseException(
+                Error.SYNTAX_ERROR,
+                error,
+                line,
+                charPositionInLine,
+                t.getStartIndex(),
+                t.getStopIndex()));
+      } else
         reporter.addError(
-                new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, -1, -1));
+            new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, -1, -1));
     } else
       reporter.addError(
           new ParseException(Error.SYNTAX_ERROR, error, line, charPositionInLine, -1, -1));

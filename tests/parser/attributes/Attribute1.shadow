@@ -2,12 +2,12 @@ attribute Attribute1 {
     double required;
     int optional;
 
-    public create(double required)
+    create(double required)
     {
         this(required, 4);
     }
 
-    public create(double required, int optional)
+    create(double required, int optional)
     {
         this:required = required;
         this:optional = optional;

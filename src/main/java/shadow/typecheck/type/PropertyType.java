@@ -1,10 +1,8 @@
 package shadow.typecheck.type;
 
 import shadow.ShadowException;
-import shadow.doctool.Documentation;
 import shadow.typecheck.BaseChecker;
 import shadow.typecheck.ErrorReporter;
-import shadow.typecheck.Package;
 import shadow.typecheck.TypeCheckException.Error;
 
 import java.util.ArrayList;
@@ -50,7 +48,7 @@ public class PropertyType extends Type {
     else {
       setSetter(signature);
 
-      if (!BaseChecker.methodIsAccessible(signature, context, getPackage().getRoot()))
+      if (!BaseChecker.methodIsAccessible(signature, context))
         ErrorReporter.addError(
             errors,
             Error.ILLEGAL_ACCESS,
@@ -72,11 +70,7 @@ public class PropertyType extends Type {
 
   public PropertyType(
       MethodSignature getter, UnboundMethodType method, ModifiedType prefix, Type context) {
-    super(null,
-            new Modifiers(),
-    null,
-    null,
-    context.getPackage());
+    super(null, new Modifiers(), null, null, context.getPackage());
     this.getter = getter;
     this.method = method;
     this.prefix = prefix;
@@ -134,8 +128,7 @@ public class PropertyType extends Type {
   @Override
   // Probably never gets used
   public boolean isSubtype(Type other) {
-    if (other instanceof PropertyType && this.getClass().equals(other.getClass())) {
-      PropertyType otherProperty = (PropertyType) other;
+    if (other instanceof PropertyType otherProperty && this.getClass().equals(other.getClass())) {
       if (otherProperty.getter != null) {
         if (getGetter() == null) return false;
         // Covariant on get

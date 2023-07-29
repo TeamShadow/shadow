@@ -257,8 +257,7 @@ public class ClassOrInterfacePage extends Page {
     }
   }
 
-  private void writeConstantSummaries(HtmlWriter out)
-      throws ShadowException {
+  private void writeConstantSummaries(HtmlWriter out) throws ShadowException {
     if (!visibleConstants.isEmpty()) {
       out.openTab("div", new Attribute("class", "block"));
       out.fullLine("h3", "Constant Summary");
@@ -345,8 +344,7 @@ public class ClassOrInterfacePage extends Page {
     }
   }
 
-  private void writeConstantDetail(Context constant, HtmlWriter out)
-      throws ShadowException {
+  private void writeConstantDetail(Context constant, HtmlWriter out) throws ShadowException {
     out.openTab("div", new Attribute("class", "detail"));
 
     String identifier = getIdentifier(constant);
@@ -385,8 +383,7 @@ public class ClassOrInterfacePage extends Page {
     out.closeUntab();
   }
 
-  private void writeMethodDetail(MethodSignature method, HtmlWriter out)
-      throws ShadowException {
+  private void writeMethodDetail(MethodSignature method, HtmlWriter out) throws ShadowException {
     out.openTab("div", new Attribute("class", "detail"));
 
     out.fullLine("h4", method.getSymbol(), new Attribute("id", getUniqueID(method)));
@@ -428,8 +425,7 @@ public class ClassOrInterfacePage extends Page {
     else out.add(method.getSymbol());
   }
 
-  private void writeParameters(MethodSignature method, HtmlWriter out)
-      throws ShadowException {
+  private void writeParameters(MethodSignature method, HtmlWriter out) throws ShadowException {
     out.add("(");
     int parameterCount = method.getParameterNames().size();
     for (int i = 0; i < parameterCount; ++i) {
@@ -443,8 +439,7 @@ public class ClassOrInterfacePage extends Page {
     out.add(")");
   }
 
-  private void writeReturns(MethodSignature method, HtmlWriter out)
-      throws ShadowException {
+  private void writeReturns(MethodSignature method, HtmlWriter out) throws ShadowException {
     out.add("(");
     int returnCount = method.getReturnTypes().size();
     for (int i = 0; i < returnCount; ++i) {
@@ -457,8 +452,7 @@ public class ClassOrInterfacePage extends Page {
     out.add(")");
   }
 
-  private void writeBlockTags(Documentation documentation, HtmlWriter out)
-      throws ShadowException {
+  private void writeBlockTags(Documentation documentation, HtmlWriter out) throws ShadowException {
     if (documentation.hasBlockTags(BlockTagType.AUTHOR))
       writeAuthorSection(documentation.getBlockTags(BlockTagType.AUTHOR), out);
 
@@ -526,11 +520,9 @@ public class ClassOrInterfacePage extends Page {
     }
   }
 
-  private void writeCrossLink(Type to, int options, HtmlWriter out)
-      throws ShadowException {
+  private void writeCrossLink(Type to, int options, HtmlWriter out) throws ShadowException {
 
-    if (to instanceof ArrayType) {
-      ArrayType arrayType = (ArrayType) to;
+    if (to instanceof ArrayType arrayType) {
       writeCrossLink(arrayType.getBaseType(), options, out);
       out.add("[]");
     } else if (to.isParameterized()
@@ -577,8 +569,7 @@ public class ClassOrInterfacePage extends Page {
     else out.add(to.toString(options));
   }
 
-  private void writeCrossLink(Type to, String text, HtmlWriter out)
-      throws ShadowException {
+  private void writeCrossLink(Type to, String text, HtmlWriter out) throws ShadowException {
     if (linkableTypes.contains(to))
       // Replace colons in class names with dashes
       writeLink(

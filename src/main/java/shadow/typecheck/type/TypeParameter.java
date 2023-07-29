@@ -68,10 +68,9 @@ public class TypeParameter extends Type {
 
   @Override
   public boolean equals(Type o) {
-    if (o instanceof TypeParameter) {
+    if (o instanceof TypeParameter type) {
       if (o == this) return true;
 
-      TypeParameter type = (TypeParameter) o;
       return type.getTypeName().equals(getTypeName()) && getOuter() == type.getOuter();
     } else return false;
   }
@@ -172,7 +171,7 @@ public class TypeParameter extends Type {
   }
 
   @Override
-  public boolean isDescendentOf(Type type) {
+  public boolean isDescendantOf(Type type) {
     // should never get called
     return false;
   }

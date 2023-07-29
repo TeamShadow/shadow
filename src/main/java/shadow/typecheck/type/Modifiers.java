@@ -127,8 +127,7 @@ public final class Modifiers {
   }
 
   public boolean equals(Object o) {
-    if (o instanceof Modifiers) {
-      Modifiers other = (Modifiers) o;
+    if (o instanceof Modifiers other) {
       return modifiers == other.modifiers;
     }
 
@@ -340,7 +339,8 @@ public final class Modifiers {
 
   public List<ShadowException> checkFieldModifiers(ShadowParser.FieldDeclarationContext ctx) {
 
-    // Parent of field is body declaration, parent of declaration is body, parent of body is declaration
+    // Parent of field is body declaration, parent of declaration is body, parent of body is
+    // declaration
     if (ctx.getParent().getParent().getParent().getText().equals("attribute")
         && !equals(NO_MODIFIERS)) {
       List<ShadowException> exceptions = new ArrayList<>();

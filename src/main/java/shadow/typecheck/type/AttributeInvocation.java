@@ -2,7 +2,6 @@ package shadow.typecheck.type;
 
 import shadow.interpreter.AttributeInterpreter;
 import shadow.interpreter.InterpreterException;
-import shadow.interpreter.ShadowValue;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.AttributeInvocationContext;
 import shadow.typecheck.ErrorReporter;
@@ -32,11 +31,10 @@ public class AttributeInvocation {
   private MethodSignature signature;
 
   // Note that this does not contain the default expressions provided in the attribute declaration
-  private final List<ShadowParser.ConditionalExpressionContext> values =
-      new ArrayList<>();
+  private final List<ShadowParser.ConditionalExpressionContext> values = new ArrayList<>();
 
   public AttributeInvocation(
-      AttributeInvocationContext ctx, ErrorReporter errorReporter, MethodSignature attachedTo) {
+      AttributeInvocationContext ctx, MethodSignature attachedTo) {
     // TypeUpdater.visitClassOrInterfaceType() should guarantee this is an AttributeType
     type = (AttributeType) ctx.getType();
     invocationCtx = ctx;
@@ -51,8 +49,7 @@ public class AttributeInvocation {
    * Associates the given field assignment with its parent attribute invocation and performs sanity
    * checks.
    */
-  public void addValue(
-      ShadowParser.ConditionalExpressionContext ctx) {
+  public void addValue(ShadowParser.ConditionalExpressionContext ctx) {
     values.add(ctx);
   }
 
@@ -72,7 +69,6 @@ public class AttributeInvocation {
     }
   }
 
-
   public List<ShadowParser.ConditionalExpressionContext> getValues() {
     return Collections.unmodifiableList(values);
   }
@@ -81,16 +77,6 @@ public class AttributeInvocation {
     return type;
   }
 
-  /**
-   * Gets the interpreted value of the given field - only safe to call after constant interpretation
-   * has occurred.
-   */
-  /*public ShadowValue getFieldValue(String fieldName) {
-    return values.containsKey(fieldName)
-        ? values.get(fieldName).getInterpretedValue()
-        : type.getField(fieldName).getInterpretedValue();
-  }
-*/
   public String getMetaFileText() {
     String text = type.toString(Type.PACKAGES);
     if (!values.isEmpty()) {

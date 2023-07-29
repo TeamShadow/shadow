@@ -30,11 +30,11 @@ public class ShadowFloat extends ShadowNumeric {
     if (arguments.length == 0) {
       switch (method) {
         case "ceiling":
-          return new ShadowFloat[]{ceiling()};
+          return new ShadowFloat[] {ceiling()};
         case "floor":
-          return new ShadowFloat[]{floor()};
+          return new ShadowFloat[] {floor()};
         case "round":
-          return new ShadowFloat[]{round()};
+          return new ShadowFloat[] {round()};
       }
     }
 
@@ -67,8 +67,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowFloat add(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowFloat(value + input.value);
     }
 
@@ -78,8 +77,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowFloat subtract(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowFloat(value - input.value);
     }
 
@@ -89,8 +87,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowFloat multiply(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowFloat(value * input.value);
     }
 
@@ -100,8 +97,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowFloat divide(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowFloat(value / input.value);
     }
 
@@ -111,8 +107,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowFloat modulus(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowFloat(value % input.value);
     }
 
@@ -122,8 +117,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowBoolean equal(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowBoolean(value == input.value);
     }
 
@@ -133,8 +127,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowBoolean lessThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowBoolean(value <= input.value);
     }
 
@@ -144,8 +137,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowBoolean lessThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowBoolean(value <= input.value);
     }
 
@@ -155,8 +147,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowBoolean greaterThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowBoolean(value > input.value);
     }
 
@@ -166,8 +157,7 @@ public class ShadowFloat extends ShadowNumeric {
 
   @Override
   public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowFloat) {
-      ShadowFloat input = (ShadowFloat) other;
+    if (other instanceof ShadowFloat input) {
       return new ShadowBoolean(value >= input.value);
     }
 

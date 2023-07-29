@@ -21,6 +21,8 @@ import shadow.ShadowException;
 import shadow.ShadowExceptionErrorKind;
 import shadow.parse.Context;
 
+import java.io.Serial;
+
 /**
  * Exception to capture various standard errors than can occur during type-checking.
  *
@@ -28,6 +30,7 @@ import shadow.parse.Context;
  */
 public class TypeCheckException extends ShadowException implements Comparable<TypeCheckException> {
 
+  @Serial
   private static final long serialVersionUID = 5033658866742389524L;
 
   /**

@@ -31,7 +31,7 @@ public class ClassType extends Type {
     return extendType;
   }
 
-  public boolean isDescendentOf(Type type) {
+  public boolean isDescendantOf(Type type) {
     ClassType parent = getExtendType();
     while (parent != null) {
       if (parent.equals(type)) return true;
@@ -381,7 +381,7 @@ public class ClassType extends Type {
     if (t instanceof ArrayType) return isSubtype(((ArrayType) t).convertToGeneric());
 
     if (t.isNumerical() && isNumerical()) return isNumericalSubtype(t);
-    else if (t instanceof ClassType) return isDescendentOf(t);
+    else if (t instanceof ClassType) return isDescendantOf(t);
     else if (t instanceof InterfaceType) return hasInterface((InterfaceType) t);
     else return false;
   }

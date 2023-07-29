@@ -4,10 +4,6 @@ import shadow.typecheck.type.Type;
 
 public abstract class ShadowNumber extends ShadowValue {
 
-  public ShadowNumber() {
-    super();
-  }
-
   public ShadowNumber(int modifiers) {
     super(modifiers);
   }
@@ -18,33 +14,33 @@ public abstract class ShadowNumber extends ShadowValue {
     if (arguments.length == 0) {
       switch (method) {
         case "toByte":
-          return new ShadowNumber[]{toByte()};
+          return new ShadowNumber[] {toByte()};
         case "toUByte":
-          return new ShadowNumber[]{toUByte()};
+          return new ShadowNumber[] {toUByte()};
         case "toShort":
-          return new ShadowNumber[]{toShort()};
+          return new ShadowNumber[] {toShort()};
         case "toUShort":
-          return new ShadowNumber[]{toUShort()};
+          return new ShadowNumber[] {toUShort()};
         case "toInt":
-          return new ShadowNumber[]{toInt()};
+          return new ShadowNumber[] {toInt()};
         case "toLong":
-          return new ShadowNumber[]{toLong()};
+          return new ShadowNumber[] {toLong()};
         case "toULong":
-          return new ShadowNumber[]{toULong()};
+          return new ShadowNumber[] {toULong()};
         case "toCode":
-          return new ShadowNumber[]{toCode()};
+          return new ShadowNumber[] {toCode()};
         case "toFloat":
-          return new ShadowNumber[]{toFloat()};
+          return new ShadowNumber[] {toFloat()};
         case "toDouble":
-          return new ShadowNumber[]{toDouble()};
+          return new ShadowNumber[] {toDouble()};
       }
     } else if (arguments.length == 1 && arguments[0] instanceof ShadowNumber) {
       ShadowNumber number = (ShadowNumber) (arguments[0].cast(getType()));
       switch (method) {
         case "max":
-          return new ShadowNumber[]{max(number)};
+          return new ShadowNumber[] {max(number)};
         case "min":
-          return new ShadowNumber[]{min(number)};
+          return new ShadowNumber[] {min(number)};
       }
     }
 

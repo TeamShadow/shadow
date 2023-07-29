@@ -107,16 +107,16 @@ public class TACBinary extends TACUpdate {
       second = secondOperand;
       if (firstType.getType().isSubtype(secondType.getType())) first = check(first, second);
       else if (secondType.getType().isSubtype(firstType.getType())) second = check(second, first);
-      // primitive exceptions, since they can be equal to each other with no clear subtype relation
+      // Primitive exceptions, since they can be equal to each other with no clear subtype relation
       else if (firstType.getType().isPrimitive() && secondType.getType().isPrimitive()) {
         if (firstType.getType().getWidth() >= secondType.getType().getWidth())
           second = TACCast.cast(this, first, second);
         else first = TACCast.cast(this, second, first);
       } else throw new UnsupportedOperationException();
     }
-    // shifts and rotates have weird issues
-    // LLVM insists that you rotate a byte with a byte
-    // so we have to throw in explicit casts
+    // Shifts and rotates have weird issues.
+    // LLVM insists that you rotate a byte with a byte,
+    // so we have to throw in explicit casts.
     else if ((op.equals("<<") || op.equals(">>") || op.equals("<<<") || op.equals(">>>"))
         && !firstType.getType().equals(secondType.getType()))
       second = TACCast.cast(this, firstType, secondOperand);
@@ -188,14 +188,12 @@ public class TACBinary extends TACUpdate {
     TACOperand firstValue = first;
     TACOperand secondValue = second;
 
-    if (first instanceof TACUpdate) {
-      TACUpdate update = (TACUpdate) first;
+    if (first instanceof TACUpdate update) {
       if (update.update(currentlyUpdating)) changed = true;
       firstValue = update.getValue();
     }
 
-    if (second instanceof TACUpdate) {
-      TACUpdate update = (TACUpdate) second;
+    if (second instanceof TACUpdate update) {
       if (update.update(currentlyUpdating)) changed = true;
       secondValue = update.getValue();
     }

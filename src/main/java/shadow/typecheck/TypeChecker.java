@@ -54,6 +54,7 @@ public class TypeChecker {
 
   /**
    * Typechecks files and all files they depend on.
+   *
    * @param files files to typecheck (main file is the first)
    * @param useSourceFiles whether the source files should be recompiled
    * @param reporter object used to report errors
@@ -69,7 +70,6 @@ public class TypeChecker {
       throws ShadowException, IOException, ConfigurationException {
     Type.clearTypes();
     Package packageTree = new Package(); // Root of all packages, storing all types
-    Path mainFile = files.get(0);
 
     /* Collector looks over all files and creates types for everything needed. */
     TypeCollector collector =
@@ -92,18 +92,17 @@ public class TypeChecker {
     List<Context> nodes = new ArrayList<>();
     for (Context node : nodeTable.values()) if (!node.getType().hasOuter()) nodes.add(node);
 
-    // Put all attribute types first so that they're typechecked before classes try to interpret them
-    // TODO: Enforce that attributes cannot mark their methods with attributes, to avoid circular problems
-    nodes.sort( (first, second) -> {
-      boolean firstAttribute = first.getType() instanceof AttributeType;
-      boolean secondAttribute = second.getType() instanceof AttributeType;
-      if (firstAttribute == secondAttribute) // Both attributes or both not
-        return 0;
-      else if(firstAttribute)
-        return -1;
-      else
-        return 1;
-    });
+    // Put all attribute types first so that they're typechecked before classes try to interpret
+    // them
+    nodes.sort(
+        (first, second) -> {
+          boolean firstAttribute = first.getType() instanceof AttributeType;
+          boolean secondAttribute = second.getType() instanceof AttributeType;
+          if (firstAttribute == secondAttribute) // Both attributes or both not
+          return 0;
+          else if (firstAttribute) return -1;
+          else return 1;
+        });
 
     /* Do type-checking of statements, i.e., actual code. */
     StatementChecker checker = new StatementChecker(packageTree, reporter);
@@ -116,7 +115,8 @@ public class TypeChecker {
     }
 
     // Note that all files in the fileTable have no extension
-    return new TypeCheckerOutput(nodes, packageTree, fileTable.get(BaseChecker.stripExtension(files.get(0))));
+    return new TypeCheckerOutput(
+        nodes, packageTree, fileTable.get(BaseChecker.stripExtension(files.get(0))));
   }
 
   /*
@@ -132,14 +132,16 @@ public class TypeChecker {
       /* Add meta file if an updated one doesn't already exist. */
       if (!Files.exists(metaVersion)
           || (Files.exists(shadowVersion)
-              && Files.getLastModifiedTime(shadowVersion).compareTo(Files.getLastModifiedTime(metaVersion)) > 0)) {
+              && Files.getLastModifiedTime(shadowVersion)
+                      .compareTo(Files.getLastModifiedTime(metaVersion))
+                  > 0)) {
         // Because of compiler optimizations, we need a .meta file for all compiled code
         // So we simply copy the normal .shadow file into a .meta for attributes
-        BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(metaVersion.toFile()));
+        BufferedOutputStream outputStream =
+            new BufferedOutputStream(new FileOutputStream(metaVersion.toFile()));
         if (node.getType() instanceof AttributeType) {
           Files.copy(shadowVersion, outputStream);
-        }
-        else {
+        } else {
           PrintWriter out = new PrintWriter(outputStream);
           node.getType().printMetaFile(out, "");
           out.close();

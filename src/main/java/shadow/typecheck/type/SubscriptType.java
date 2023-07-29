@@ -28,8 +28,7 @@ public class SubscriptType extends PropertyType {
   // this will probably never be used
   @Override
   public boolean isSubtype(Type other) {
-    if (other instanceof SubscriptType) {
-      SubscriptType otherIndex = (SubscriptType) other;
+    if (other instanceof SubscriptType otherIndex) {
       // contravariant on index type
 
       if (!otherIndex.index.getType().isSubtype(index.getType())) return false;
@@ -64,7 +63,7 @@ public class SubscriptType extends PropertyType {
           input.getType());
     else {
       setSetter(signature);
-      if (!BaseChecker.methodIsAccessible(signature, context, getPackage().getRoot()))
+      if (!BaseChecker.methodIsAccessible(signature, context))
         ErrorReporter.addError(
             errors, Error.ILLEGAL_ACCESS, "Subscript is not accessible from this context");
 

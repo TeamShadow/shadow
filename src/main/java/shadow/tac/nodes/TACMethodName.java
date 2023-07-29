@@ -24,12 +24,10 @@ public class TACMethodName extends TACOperand implements TACMethodRef {
     if (prefixNode != null) {
       prefix = prefixNode;
 
-      if (prefix.getType() instanceof ArrayType) {
-        ArrayType arrayType = (ArrayType) prefix.getType();
+      if (prefix.getType() instanceof ArrayType arrayType) {
         Type genericArray = arrayType.convertToGeneric();
         prefix = check(prefixNode, new SimpleModifiedType(genericArray));
-      }
-      else // Don't change to parent type for methods not implemented by the child
+      } else // Don't change to parent type for methods not implemented by the child
         prefix = check(prefixNode, new SimpleModifiedType(sig.getOuter()));
     }
     signature = sig;

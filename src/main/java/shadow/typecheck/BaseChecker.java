@@ -113,8 +113,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
     Type rightType = right.getType();
 
     // If necessary, process the property or subscript on right type.
-    if (rightType instanceof PropertyType) {
-      PropertyType getSetType = (PropertyType) rightType;
+    if (rightType instanceof PropertyType getSetType) {
 
       if (getSetType.isGettable()) { // "Get" from the type, if allowed
         right = getSetType.getGetType();
@@ -128,8 +127,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
     }
 
     // If the left type is a property or subscript, try to apply the right into it.
-    if (leftType instanceof PropertyType) {
-      PropertyType propertyType = (PropertyType) leftType;
+    if (leftType instanceof PropertyType propertyType) {
       List<ShadowException> errorList = propertyType.applyInput(right);
 
       if (errorList.isEmpty())
@@ -142,8 +140,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
     }
 
     // Sequence on left
-    if (leftType instanceof SequenceType) {
-      SequenceType sequenceLeft = (SequenceType) leftType;
+    if (leftType instanceof SequenceType sequenceLeft) {
       // Compound assignments not allowed for sequences
       if (!assignmentKind.equals(AssignmentKind.EQUAL)) {
         ErrorReporter.addError(
@@ -165,8 +162,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
 
     // Type parameter binding follows its own rules
     if (substitutionKind.equals(SubstitutionKind.TYPE_PARAMETER)) {
-      if (leftType instanceof TypeParameter) {
-        TypeParameter typeParameter = (TypeParameter) leftType;
+      if (leftType instanceof TypeParameter typeParameter) {
         if (!typeParameter.acceptsSubstitution(rightType)) {
           ErrorReporter.addError(
               errors,
@@ -415,8 +411,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
         for (ModifiedType modifiedParameter : outer.getTypeParameters()) {
           Type parameter = modifiedParameter.getType();
 
-          if (parameter instanceof TypeParameter) {
-            TypeParameter typeParameter = (TypeParameter) parameter;
+          if (parameter instanceof TypeParameter typeParameter) {
             if (typeParameter.getTypeName().equals(name)) return typeParameter;
           }
         }
@@ -519,34 +514,21 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
    * @return its type
    */
   public static ClassType nameToPrimitiveType(String name) {
-    switch (name) {
-      case "boolean":
-        return Type.BOOLEAN;
-      case "byte":
-        return Type.BYTE;
-      case "code":
-        return Type.CODE;
-      case "double":
-        return Type.DOUBLE;
-      case "float":
-        return Type.FLOAT;
-      case "int":
-        return Type.INT;
-      case "long":
-        return Type.LONG;
-      case "short":
-        return Type.SHORT;
-      case "ubyte":
-        return Type.UBYTE;
-      case "uint":
-        return Type.UINT;
-      case "ulong":
-        return Type.ULONG;
-      case "ushort":
-        return Type.USHORT;
-      default:
-        return null;
-    }
+    return switch (name) {
+      case "boolean" -> Type.BOOLEAN;
+      case "byte" -> Type.BYTE;
+      case "code" -> Type.CODE;
+      case "double" -> Type.DOUBLE;
+      case "float" -> Type.FLOAT;
+      case "int" -> Type.INT;
+      case "long" -> Type.LONG;
+      case "short" -> Type.SHORT;
+      case "ubyte" -> Type.UBYTE;
+      case "uint" -> Type.UINT;
+      case "ulong" -> Type.ULONG;
+      case "ushort" -> Type.USHORT;
+      default -> null;
+    };
   }
 
   /**
@@ -557,8 +539,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
    */
   public static String stripExtension(String file) {
     int index = file.lastIndexOf(".");
-    if (index < 0)
-      index = file.length();
+    if (index < 0) index = file.length();
     return file.substring(0, index);
   }
 
@@ -591,7 +572,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
     Type current = type;
     while (current.hasOuter() && current.getModifiers().isPublic()) current = current.getOuter();
     if (!current.hasOuter()) // It was public all the way
-    return true;
+      return true;
 
     // If any outer class of currentType is also an outer class of the type to access, it's visible.
     Type outer = currentType.getOuter();
@@ -627,10 +608,6 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
     return false;
   }
 
-  public boolean methodIsAccessible(MethodSignature signature, Type currentType) {
-    return methodIsAccessible(signature, currentType, packageTree);
-  }
-
   /**
    * Tests to see if a method is accessible from the current type.
    *
@@ -639,7 +616,7 @@ public abstract class BaseChecker extends ShadowVisitorErrorReporter {
    * @return <code>true</code> if the method is accessible
    */
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  public static boolean methodIsAccessible(MethodSignature signature, Type currentType, Package packageTree) {
+  public static boolean methodIsAccessible(MethodSignature signature, Type currentType) {
     if (signature.getMethodType().getModifiers().isPublic()) return true;
 
     Context node = signature.getNode();

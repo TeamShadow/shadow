@@ -30,11 +30,11 @@ public class ShadowDouble extends ShadowNumeric {
     if (arguments.length == 0) {
       switch (method) {
         case "ceiling":
-          return new ShadowDouble[]{ceiling()};
+          return new ShadowDouble[] {ceiling()};
         case "floor":
-          return new ShadowDouble[]{floor()};
+          return new ShadowDouble[] {floor()};
         case "round":
-          return new ShadowDouble[]{round()};
+          return new ShadowDouble[] {round()};
       }
     }
 
@@ -65,8 +65,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowDouble add(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowDouble(value + input.value);
     }
 
@@ -76,8 +75,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowDouble subtract(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowDouble(value - input.value);
     }
 
@@ -87,8 +85,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowDouble multiply(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowDouble(value * input.value);
     }
 
@@ -98,8 +95,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowDouble divide(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowDouble(value / input.value);
     }
 
@@ -109,8 +105,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowDouble modulus(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowDouble(value % input.value);
     }
 
@@ -120,8 +115,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowBoolean equal(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowBoolean(value == input.value);
     }
 
@@ -131,8 +125,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowBoolean lessThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowBoolean(value <= input.value);
     }
 
@@ -142,8 +135,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowBoolean lessThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowBoolean(value <= input.value);
     }
 
@@ -153,8 +145,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowBoolean greaterThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowBoolean(value > input.value);
     }
 
@@ -164,8 +155,7 @@ public class ShadowDouble extends ShadowNumeric {
 
   @Override
   public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowDouble) {
-      ShadowDouble input = (ShadowDouble) other;
+    if (other instanceof ShadowDouble input) {
       return new ShadowBoolean(value >= input.value);
     }
 

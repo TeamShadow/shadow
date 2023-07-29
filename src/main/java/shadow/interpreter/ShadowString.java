@@ -169,35 +169,35 @@ public class ShadowString extends ShadowObject {
     if (arguments.length == 0) {
       switch (method) {
         case "size":
-          return new ShadowInteger[]{new ShadowInteger(value.length())};
+          return new ShadowInteger[] {new ShadowInteger(value.length())};
         case "isEmpty":
-          return new ShadowBoolean[]{new ShadowBoolean(value.isEmpty())};
+          return new ShadowBoolean[] {new ShadowBoolean(value.isEmpty())};
         case "toLowerCase":
-          return new ShadowString[]{new ShadowString(value.toLowerCase())};
+          return new ShadowString[] {new ShadowString(value.toLowerCase())};
         case "toUpperCase":
-          return new ShadowString[]{new ShadowString(value.toUpperCase())};
+          return new ShadowString[] {new ShadowString(value.toUpperCase())};
         case "toString":
-          return new ShadowString[]{this};
+          return new ShadowString[] {this};
         case "toByte":
-          return new ShadowValue[]{convert(Type.BYTE)};
+          return new ShadowValue[] {convert(Type.BYTE)};
         case "toUByte":
-          return new ShadowValue[]{convert(Type.UBYTE)};
+          return new ShadowValue[] {convert(Type.UBYTE)};
         case "toShort":
-          return new ShadowValue[]{convert(Type.SHORT)};
+          return new ShadowValue[] {convert(Type.SHORT)};
         case "toUShort":
-          return new ShadowValue[]{convert(Type.USHORT)};
+          return new ShadowValue[] {convert(Type.USHORT)};
         case "toInt":
-          return new ShadowValue[]{convert(Type.INT)};
+          return new ShadowValue[] {convert(Type.INT)};
         case "toUInt":
-          return new ShadowValue[]{convert(Type.UINT)};
+          return new ShadowValue[] {convert(Type.UINT)};
         case "toLong":
-          return new ShadowValue[]{convert(Type.LONG)};
+          return new ShadowValue[] {convert(Type.LONG)};
         case "toULong":
-          return new ShadowValue[]{convert(Type.ULONG)};
+          return new ShadowValue[] {convert(Type.ULONG)};
         case "toFloat":
-          return new ShadowValue[]{convert(Type.FLOAT)};
+          return new ShadowValue[] {convert(Type.FLOAT)};
         case "toDouble":
-          return new ShadowValue[]{convert(Type.DOUBLE)};
+          return new ShadowValue[] {convert(Type.DOUBLE)};
       }
     } else if (arguments.length == 1) {
       switch (method) {
@@ -205,7 +205,9 @@ public class ShadowString extends ShadowObject {
           {
             if (arguments[0] instanceof ShadowInteger) {
               int index = ((ShadowInteger) arguments[0]).getValue().intValue();
-              return new ShadowInteger[]{new ShadowInteger(BigInteger.valueOf(value.getBytes(UTF8)[index]), 1, false)};
+              return new ShadowInteger[] {
+                new ShadowInteger(BigInteger.valueOf(value.getBytes(UTF8)[index]), 1, false)
+              };
             }
           }
         case "substring":
@@ -214,10 +216,10 @@ public class ShadowString extends ShadowObject {
             int firstIndex = ((ShadowInteger) arguments[0]).getValue().intValue();
             int secondIndex = bytes.length;
             bytes = Arrays.copyOfRange(bytes, firstIndex, secondIndex);
-            return new ShadowString[]{new ShadowString(new String(bytes, UTF8))};
+            return new ShadowString[] {new ShadowString(new String(bytes, UTF8))};
           }
         case "concatenate":
-          return new ShadowString[]{new ShadowString(value + arguments[0].unaryCat().getValue())};
+          return new ShadowString[] {new ShadowString(value + arguments[0].unaryCat().getValue())};
       }
     } else if (arguments.length == 2) {
       if ("substring".equals(method)) {
@@ -226,7 +228,7 @@ public class ShadowString extends ShadowObject {
           int firstIndex = ((ShadowInteger) arguments[0]).getValue().intValue();
           int secondIndex = ((ShadowInteger) arguments[1]).getValue().intValue();
           bytes = Arrays.copyOfRange(bytes, firstIndex, secondIndex);
-          return new ShadowString[]{new ShadowString(new String(bytes, UTF8))};
+          return new ShadowString[] {new ShadowString(new String(bytes, UTF8))};
         }
       }
     }

@@ -1,7 +1,7 @@
 attribute Attribute {
     int test;
 
-    public create(int value)
+    create(int value)
     {
         test = value;
     }

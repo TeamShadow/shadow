@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.TreeSet;
 
 public class ImportTests {
@@ -28,11 +29,7 @@ public class ImportTests {
 
   @BeforeEach
   public void setup() {
-    // args.add("-v");
     args.add("--typecheck");
-
-    String os = System.getProperty("os.name").toLowerCase();
-
     args.add("-c");
     args.add("tests.json");
   }
@@ -87,14 +84,13 @@ public class ImportTests {
 
     String file = "tests/import/all-imports/Test.shadow";
 
-    Configuration.buildConfiguration(
-            file, config, false);
+    Configuration.buildConfiguration(file, config, false);
 
     Path path = Paths.get(file).toAbsolutePath().normalize();
     Package p = new Package();
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
     TypeCollector collector = new TypeCollector(p, reporter, false, true);
-    collector.collectTypes(Arrays.asList(path));
+    collector.collectTypes(List.of(path));
     Type testType = collector.getMainType();
     reporter.printAndReportErrors();
 

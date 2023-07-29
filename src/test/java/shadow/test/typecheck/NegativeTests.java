@@ -21,12 +21,7 @@ public class NegativeTests {
 
   @BeforeEach
   public void setup() throws Exception {
-    // args.add("-v");
     args.add("--typecheck");
-    // args.add("--force-recompile");
-
-    String os = System.getProperty("os.name").toLowerCase();
-
     args.add("-c");
     args.add("tests.json");
   }
@@ -71,6 +66,12 @@ public class NegativeTests {
   public void testAttributeInvocationMissingArgument() throws Exception {
     args.add("tests-negative/typechecker/attribute-invocation-missing-argument/Test.shadow");
     enforce(Error.INVALID_METHOD);
+  }
+
+  @Test
+  public void testAttributeMethodWithAttribute() throws Exception {
+    args.add("tests-negative/typechecker/attribute-method-with-attribute/Test.shadow");
+    enforce(Error.INVALID_STRUCTURE);
   }
 
   @Test
@@ -209,6 +210,12 @@ public class NegativeTests {
   public void testAttributeMethodReference() throws Exception {
     args.add("tests-negative/typechecker/attribute-method-reference/Test.shadow");
     enforce(Error.INVALID_STRUCTURE);
+  }
+
+  @Test
+  public void testAttributeChangeField() throws Exception {
+    args.add("tests-negative/typechecker/attribute-change-field/Test.shadow");
+    enforce(Error.INVALID_ASSIGNMENT);
   }
 
   @Test

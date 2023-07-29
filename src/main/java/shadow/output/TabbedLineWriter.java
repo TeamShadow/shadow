@@ -84,7 +84,7 @@ public class TabbedLineWriter {
     String nl = newline;
     if (nl == null) newline = nl = System.getProperty("line.separator");
     out.write(nl);
-    //out.flush();
+    // out.flush();
 
     atLineStart = true;
   }

@@ -2,12 +2,10 @@ package shadow.interpreter;
 
 import shadow.typecheck.type.Type;
 
-import java.util.Map;
-
 public class ShadowSubscript extends ShadowSuffix {
 
-  private ShadowValue index;
-  private Type type;
+  private final ShadowValue index;
+  private final Type type;
 
   public ShadowSubscript(ShadowValue prefix, ShadowValue index, Type type) {
     super(prefix);

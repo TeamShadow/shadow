@@ -92,12 +92,9 @@ public class Context extends ParserRuleContext implements ModifiedType {
   }
 
   public Path getBinaryPath() {
-    if (binaryPath != null)
-      return binaryPath;
-    else if(parent != null && parent instanceof Context)
-      return ((Context)parent).getBinaryPath();
-    else
-      return null;
+    if (binaryPath != null) return binaryPath;
+    else if (parent != null && parent instanceof Context) return ((Context) parent).getBinaryPath();
+    else return null;
   }
 
   public void setType(Type type) {

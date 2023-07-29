@@ -61,11 +61,10 @@ public class TACLiteral extends TACOperand {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof TACLiteral)) return false;
+    if (!(object instanceof TACLiteral literal)) return false;
 
     if (object == this) return true;
 
-    TACLiteral literal = (TACLiteral) object;
     try {
       return value.equals(literal.value);
     } catch (ShadowException e) {

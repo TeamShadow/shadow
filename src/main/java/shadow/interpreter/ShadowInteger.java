@@ -166,17 +166,17 @@ public class ShadowInteger extends ShadowNumeric {
     if (arguments.length == 0) {
       switch (method) {
         case "flipEndian":
-          return new ShadowInteger[]{flipEndian()};
+          return new ShadowInteger[] {flipEndian()};
         case "leadingZeroes":
-          return new ShadowInteger[]{leadingZeroes()};
+          return new ShadowInteger[] {leadingZeroes()};
         case "ones":
-          return new ShadowInteger[]{ones()};
+          return new ShadowInteger[] {ones()};
         case "trailingZeroes":
-          return new ShadowInteger[]{trailingZeroes()};
+          return new ShadowInteger[] {trailingZeroes()};
         case "toSigned":
-          return new ShadowInteger[]{toSigned()};
+          return new ShadowInteger[] {toSigned()};
         case "toUnsigned":
-          return new ShadowInteger[]{toUnsigned()};
+          return new ShadowInteger[] {toUnsigned()};
       }
     }
 
@@ -271,8 +271,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowInteger bitShiftLeft(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       return new ShadowInteger(
           value.shiftLeft(input.value.mod(new BigInteger("64")).intValue()), size, signed);
     }
@@ -283,8 +282,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowInteger bitShiftRight(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       return new ShadowInteger(
           value.shiftRight(input.value.mod(new BigInteger("64")).intValue()), size, signed);
     }
@@ -295,8 +293,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowInteger bitRotateLeft(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       int shift = input.value.mod(new BigInteger("64")).intValue();
       BigInteger result = value.shiftLeft(shift);
 
@@ -313,8 +310,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowInteger bitRotateRight(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       int shift = input.value.mod(new BigInteger("64")).intValue();
       BigInteger result = value.shiftLeft(8 * size - shift);
 
@@ -331,8 +327,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowBoolean equal(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       return new ShadowBoolean(value.equals(input.value));
     }
 
@@ -342,8 +337,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowBoolean lessThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       return new ShadowBoolean(value.compareTo(input.value) < 0);
     }
 
@@ -353,8 +347,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowBoolean lessThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       return new ShadowBoolean(value.compareTo(input.value) <= 0);
     }
 
@@ -364,8 +357,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowBoolean greaterThan(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       return new ShadowBoolean(value.compareTo(input.value) > 0);
     }
 
@@ -375,8 +367,7 @@ public class ShadowInteger extends ShadowNumeric {
 
   @Override
   public ShadowBoolean greaterThanOrEqual(ShadowValue other) throws InterpreterException {
-    if (other instanceof ShadowInteger) {
-      ShadowInteger input = (ShadowInteger) other;
+    if (other instanceof ShadowInteger input) {
       return new ShadowBoolean(value.compareTo(input.value) >= 0);
     }
 
