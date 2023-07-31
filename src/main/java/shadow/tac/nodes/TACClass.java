@@ -2,7 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.ShadowException;
 import shadow.interpreter.ShadowInteger;
-import shadow.output.llvm.LLVMOutput;
+import shadow.output.llvm.IrOutput;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVariable;
 import shadow.tac.TACVisitor;
@@ -53,7 +53,7 @@ public class TACClass extends TACOperand {
 
     @Override
     public Object getData() {
-      return LLVMOutput.classOf(type);
+      return IrOutput.classOf(type);
     }
 
     @Override
@@ -102,7 +102,7 @@ public class TACClass extends TACOperand {
         withoutArguments = ((ArrayType) withoutArguments).recursivelyGetBaseType();
 
       if (withoutArguments instanceof InterfaceType) return "null";
-      else return LLVMOutput.methodTable(withoutArguments);
+      else return IrOutput.methodTable(withoutArguments);
     }
 
     @Override

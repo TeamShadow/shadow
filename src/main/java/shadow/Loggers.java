@@ -14,11 +14,21 @@ public class Loggers {
   public static final Logger TAC = LogManager.getLogger("Shadow TAC");
   public static final Logger DOC_TOOL = LogManager.getLogger("Shadow Documentation Tool");
 
+  private static boolean warningsAreErrors = false;
+
   public static void setAllToLevel(Level level) {
     LoggerContext context = (LoggerContext) LogManager.getContext(false);
     org.apache.logging.log4j.core.config.Configuration config = context.getConfiguration();
     LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
     loggerConfig.setLevel(level);
     context.updateLoggers();
+  }
+
+  public static boolean warningsAreErrors() {
+    return warningsAreErrors;
+  }
+
+  public static void setWarningsAsErrors(boolean value) {
+    warningsAreErrors = value;
   }
 }

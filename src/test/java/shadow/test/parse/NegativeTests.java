@@ -28,7 +28,7 @@ public class NegativeTests {
 
   private void enforce(Error type) throws Exception {
     try {
-      Main.run(args.toArray(new String[] {}));
+      new Main(args.toArray(new String[] {})).run();
       throw new Exception("Test failed");
     } catch (ParseException e) {
       if (!e.getError().equals(type)) throw new Exception("Test failed");

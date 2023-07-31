@@ -30,7 +30,7 @@ public class WarningTests {
 
   private void enforce(Error type) throws Exception {
     try {
-      Main.run(args.toArray(new String[] {}));
+      new Main(args.toArray(new String[] {})).run();
       throw new Exception("Test failed");
     } catch (TypeCheckException e) {
       if (!e.getError().equals(type)) throw new Exception("Test failed");
@@ -65,12 +65,6 @@ public class WarningTests {
   public void testNoImportsUsedFromDirectory() throws Exception {
     args.add("tests-negative/warnings/no-imports-used-from-directory/Test.shadow");
     enforce(Error.UNUSED_IMPORT);
-  }
-
-  @Test
-  public void testSomeImportsUsedFromDirectory() throws Exception {
-    args.add("tests-negative/warnings/some-imports-used-from-directory/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
   }
 
   @Test

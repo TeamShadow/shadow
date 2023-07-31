@@ -1,7 +1,7 @@
 package shadow.typecheck;
 
 import org.apache.logging.log4j.Logger;
-import shadow.Main;
+import shadow.Loggers;
 import shadow.ShadowException;
 import shadow.ShadowExceptionErrorKind;
 import shadow.parse.Context;
@@ -18,6 +18,7 @@ public class ErrorReporter {
   protected final ArrayList<ShadowException> warningList = new ArrayList<>();
 
   private final Logger LOGGER;
+
 
   public ErrorReporter(Logger typeChecker) {
     LOGGER = typeChecker;
@@ -79,7 +80,7 @@ public class ErrorReporter {
    * @param exception exception for error
    */
   public void addWarning(ShadowException exception) {
-    if (Main.getJob() != null && Main.getJob().treatWarningsAsErrors()) addError(exception);
+    if (Loggers.warningsAreErrors()) addError(exception);
     else if (exception != null) warningList.add(exception);
   }
 
@@ -91,7 +92,7 @@ public class ErrorReporter {
    * @param message message explaining warning
    */
   public void addWarning(Context ctx, ShadowExceptionErrorKind warning, String message) {
-    if (Main.getJob() != null && Main.getJob().treatWarningsAsErrors())
+    if (Loggers.warningsAreErrors())
       addError(ctx, warning, message);
     else if (ctx != null) warningList.add(warning.getException(message, ctx));
   }

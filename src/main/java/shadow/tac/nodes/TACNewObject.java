@@ -2,7 +2,7 @@ package shadow.tac.nodes;
 
 import shadow.ShadowException;
 import shadow.interpreter.ShadowInteger;
-import shadow.output.llvm.LLVMOutput;
+import shadow.output.llvm.IrOutput;
 import shadow.tac.TACMethod;
 import shadow.tac.TACVisitor;
 import shadow.typecheck.type.*;
@@ -32,7 +32,7 @@ public class TACNewObject extends TACOperand {
     if (type instanceof TypeParameter) {
       TACOperand flags =
           new TACLoad(this, new TACFieldRef(classData, Type.CLASS.getField("flags"), "flags"));
-      TACLiteral interfaceFlag = new TACLiteral(this, new ShadowInteger(LLVMOutput.INTERFACE));
+      TACLiteral interfaceFlag = new TACLiteral(this, new ShadowInteger(IrOutput.INTERFACE));
       TACOperand value =
           new TACBinary(
               this,

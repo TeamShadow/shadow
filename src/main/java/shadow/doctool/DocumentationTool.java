@@ -32,33 +32,33 @@ public class DocumentationTool {
       document(args);
     } catch (FileNotFoundException e) {
       System.err.println("FILE NOT FOUND: " + e.getLocalizedMessage());
-      System.exit(Main.FILE_NOT_FOUND_ERROR);
+      System.exit(Main.Error.FILE_NOT_FOUND_ERROR.ordinal());
     } catch (DocumentationException e) {
       System.err.println("DOCUMENTATION ERROR: " + e.getLocalizedMessage());
       e.printStackTrace();
-      System.exit(-1);
+      System.exit(Main.Error.DOCUMENTATION_ERROR.ordinal());
     } catch (ParseException e) {
       System.err.println("PARSE ERROR: " + e.getLocalizedMessage());
-      System.exit(Main.PARSE_ERROR);
+      System.exit(Main.Error.PARSE_ERROR.ordinal());
     } catch (IOException e) {
       System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
       e.printStackTrace();
-      System.exit(Main.TYPE_CHECK_ERROR);
+      System.exit(Main.Error.TYPE_CHECK_ERROR.ordinal());
     } catch (org.apache.commons.cli.ParseException e) {
       System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
       DocumentationArguments.printHelp();
-      System.exit(Main.COMMAND_LINE_ERROR);
+      System.exit(Main.Error.COMMAND_LINE_ERROR.ordinal());
     } catch (ConfigurationException e) {
       System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
       DocumentationArguments.printHelp();
-      System.exit(Main.CONFIGURATION_ERROR);
+      System.exit(Main.Error.CONFIGURATION_ERROR.ordinal());
     } catch (TypeCheckException e) {
       System.err.println("TYPE CHECK ERROR: " + e.getLocalizedMessage());
-      System.exit(Main.TYPE_CHECK_ERROR);
+      System.exit(Main.Error.TYPE_CHECK_ERROR.ordinal());
     } catch (ShadowException e) {
       System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
       e.printStackTrace();
-      System.exit(Main.TYPE_CHECK_ERROR);
+      System.exit(Main.Error.TYPE_CHECK_ERROR.ordinal());
     } catch (HelpRequestedException ignored) {
     }
   }
@@ -183,7 +183,7 @@ public class DocumentationTool {
   /**
    * Finds all Shadow source files within a directory (a package)
    *
-   * @param recursive Determines whether or not subdirectories/subpackages are also searched
+   * @param recursive Determines whether subdirectories/subpackages are also searched
    */
   public static List<Path> getPackageFiles(
       Path directory, boolean recursive, Map<String, Documentation> pkgDocs)
@@ -253,7 +253,7 @@ public class DocumentationTool {
     pkgDocs.put(pkgName, docBuilder.process());
   }
 
-  /** Determines whether or not a package-info file is in a valid directory */
+  /** Determines whether a package-info file is in a valid directory */
   private static boolean insideValidDirectory(String pkgName, Path infoFile) {
     String[] packages = pkgName.split(":");
     Path current = infoFile.getParent();

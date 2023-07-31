@@ -14,7 +14,6 @@ import shadow.typecheck.type.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -38,48 +37,46 @@ public class ImportTests {
   @Test
   public void testErrorsInOtherFiles() throws Exception {
     args.add("tests/import/errors-in-other-files/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   // Local file has the same name as a standard class (String)
   @Test
   public void testHidingStandardClass() throws Exception {
     args.add("tests/import/hiding-standard-class/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   // Local files are in a package
   @Test
   public void testPackage() throws Exception {
     args.add("tests/import/package/testing/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   // Type has no import statement because it's fully qualifed
   @Test
   public void testFullyQualifiedType() throws Exception {
     args.add("tests/import/fully-qualified-type/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   // Type imports inner class in the same package
   @Test
   public void testInnerClassInSamePackage() throws Exception {
     args.add("tests/import/inner-class-in-same-package/testing/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   // Type imports inner class in a diffewrent package
   @Test
   public void testInnerClassInDifferentPackage() throws Exception {
     args.add("tests/import/inner-class-in-different-package/testing/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testAllImports() throws Exception {
-    String os = System.getProperty("os.name").toLowerCase();
-
     String config = "tests.json";
 
     String file = "tests/import/all-imports/Test.shadow";

@@ -1,7 +1,12 @@
 package shadow.test.typecheck;
 
+import org.apache.commons.cli.ParseException;
+import shadow.CommandLineException;
+import shadow.ConfigurationException;
 import shadow.Main;
+import shadow.ShadowException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -12,7 +17,7 @@ import java.util.ArrayList;
  */
 public class SimpleTest {
 
-  public static void main(String[] unused) {
+  public static void main(String[] unused) throws ConfigurationException, ParseException, IOException, CommandLineException, ShadowException {
 
     ArrayList<String> args = new ArrayList<>();
 
@@ -27,6 +32,6 @@ public class SimpleTest {
 
     args.add("tests-negative/parser/missing-left-brace/Test.shadow");
 
-    Main.main(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 }

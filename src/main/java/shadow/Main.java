@@ -3,7 +3,7 @@ package shadow;
 import org.apache.logging.log4j.Logger;
 import shadow.doctool.tag.TagManager.BlockTagType;
 import shadow.interpreter.ConstantFieldInterpreter;
-import shadow.output.llvm.LLVMOutput;
+import shadow.output.llvm.IrOutput;
 import shadow.parse.Context;
 import shadow.parse.ParseException;
 import shadow.parse.ShadowParser;
@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Barry Wittman
@@ -36,26 +37,45 @@ public class Main {
 
   // Version of the Shadow compiler
   public static final String VERSION = "0.8.5";
-  public static final String MINIMUM_LLVM_VERSION = "10.0";
+  public static final String MINIMUM_CLANG_VERSION = "10.0";
 
   // These are the error codes returned by the compiler
-  public static final int NO_ERROR = 0;
-  public static final int FILE_NOT_FOUND_ERROR = -1;
-  public static final int PARSE_ERROR = -2;
-  public static final int TYPE_CHECK_ERROR = -3;
-  public static final int COMPILE_ERROR = -4;
-  public static final int COMMAND_LINE_ERROR = -5;
-  public static final int CONFIGURATION_ERROR = -6;
+  public enum Error {
+    NO_ERROR,
+    FILE_NOT_FOUND_ERROR,
+    PARSE_ERROR,
+    TYPE_CHECK_ERROR,
+    COMPILE_ERROR,
+    COMMAND_LINE_ERROR,
+    CONFIGURATION_ERROR,
+    DOCUMENTATION_ERROR
+  }
 
   private static final Logger logger = Loggers.SHADOW;
-  private static Configuration config;
-  private static Job currentJob;
+  private static final Charset UTF8 = StandardCharsets.UTF_8;
+
+  // Data for the current compilation
+
+  private final Configuration config;
+
+
+  /** The linker command used to specify an output file */
+  private final List<String> linkCommand = new ArrayList<>();
+
+  // Important, job-specific compiler flags
+  private final boolean checkOnly; // Run only parser and type-checker
+  private final boolean link; // Compile the given file, but do not link
+  private final boolean forceRecompile; // Recompile all source files, even if unneeded
+  private final boolean humanReadable;
+  private final List<Path> files = new ArrayList<>();
 
   // Metadata related to a Shadow program's main class
-  private static String mainClass;
-  private static boolean mainArguments;
+  private String mainClass;
+  private boolean mainArguments;
 
-  private static final Charset UTF8 = StandardCharsets.UTF_8;
+  private final Arguments arguments;
+
+
 
   /**
    * This is the starting point of the compiler.
@@ -64,49 +84,253 @@ public class Main {
    */
   public static void main(String[] args) {
     try {
-      run(args);
+      new Main(args).run();
     } catch (FileNotFoundException e) {
       System.err.println("FILE NOT FOUND: " + e.getLocalizedMessage());
-      System.exit(FILE_NOT_FOUND_ERROR);
+      System.exit(Error.FILE_NOT_FOUND_ERROR.ordinal());
     } catch (ParseException e) {
-      System.exit(PARSE_ERROR);
+      System.exit(Error.PARSE_ERROR.ordinal());
     } catch (IOException e) {
       System.err.println("FILE DEPENDENCY ERROR: " + e.getLocalizedMessage());
-      System.exit(TYPE_CHECK_ERROR);
+      System.exit(Error.TYPE_CHECK_ERROR.ordinal());
     } catch (org.apache.commons.cli.ParseException | CommandLineException e) {
       System.err.println("COMMAND LINE ERROR: " + e.getLocalizedMessage());
       Arguments.printHelp();
-      System.exit(COMMAND_LINE_ERROR);
+      System.exit(Error.COMMAND_LINE_ERROR.ordinal());
     } catch (ConfigurationException e) {
       System.err.println("CONFIGURATION ERROR: " + e.getLocalizedMessage());
       Arguments.printHelp();
-      System.exit(CONFIGURATION_ERROR);
+      System.exit(Error.CONFIGURATION_ERROR.ordinal());
     } catch (TypeCheckException e) {
-      System.exit(TYPE_CHECK_ERROR);
+      System.exit(Error.TYPE_CHECK_ERROR.ordinal());
     } catch (CompileException e) {
-      System.exit(COMPILE_ERROR);
+      System.exit(Error.COMPILE_ERROR.ordinal());
     } catch (ShadowException e) {
       System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
-      System.exit(TYPE_CHECK_ERROR);
+      System.exit(Error.TYPE_CHECK_ERROR.ordinal());
     }
-    System.exit(NO_ERROR);
+    System.exit(Error.NO_ERROR.ordinal());
   }
 
-  // Check LLVM version using lexical comparison
-  private static void checkLLVMVersion() throws ConfigurationException {
-    String LLVMVersion = Configuration.getLLVMVersion();
+  public Main(String[] args)
+      throws org.apache.commons.cli.ParseException,
+          IOException,
+          CommandLineException,
+          ConfigurationException {
 
-    int comparison = compareVersions(LLVMVersion, MINIMUM_LLVM_VERSION);
+    // Detect and establish the current settings and arguments
+    arguments = new Arguments(args);
+
+    String mainFile = null;
+    if (arguments.getFiles().length > 0) mainFile = arguments.getFiles()[0];
+
+    // Detect and establish the current settings based on the arguments
+    config = Configuration.buildConfiguration(mainFile, arguments.getConfigFileArg(), false);
+
+    // Check relevant command line flags
+    checkOnly = arguments.hasOption(Arguments.TYPECHECK);
+    link =
+            !arguments.hasOption(Arguments.NO_LINK)
+                    && !arguments.hasOption(Arguments.BUILD_SYSTEM)
+                    && !checkOnly;
+    forceRecompile = arguments.hasOption(Arguments.RECOMPILE);
+    humanReadable = arguments.hasOption(Arguments.READABLE);
+
+    // Redundant for normal use, but it helps to assume warnings are not errors when running automated tests
+    Loggers.setWarningsAsErrors(false);
+
+    // Deal with warning flags
+    if (arguments.hasOption(Arguments.WARNING)) {
+      String flag = arguments.getWarningFlag();
+      if (flag.equals("error")) Loggers.setWarningsAsErrors(true);
+      else System.err.println("Unknown warning flag: " + flag);
+    }
+
+    String[] fileNames = arguments.getFiles();
+
+    if (arguments.hasOption(Arguments.INFORMATION)) {
+      if (fileNames.length > 0)
+        throw new CommandLineException(
+                "Requests for compiler information should not include files to compile");
+    } else if (arguments.hasOption(Arguments.HELP)) {
+      if (fileNames.length > 0)
+        throw new CommandLineException(
+                "Requests for help information should not include files to compile");
+    } else if (arguments.hasOption(Arguments.BUILD_SYSTEM)) {
+      if (fileNames.length > 0)
+        throw new CommandLineException(
+                "Input files should not be specified when building the system library");
+      else
+        addDirectories(
+                Configuration.getConfiguration()
+                        .getSystem()
+                        .get(Configuration.SOURCE)
+                        .resolve("shadow"));
+    } else if (fileNames.length > 0) {
+      Map<Path, Path> imports = Configuration.getConfiguration().getImport();
+      for (String file : fileNames) {
+        Path path = null;
+        for (Path _import : imports.keySet()) {
+          Path candidate = _import.resolve(Paths.get(file));
+          if (Files.exists(candidate)) path = candidate.toAbsolutePath().normalize();
+          break;
+        }
+
+        if (path == null) throw new FileNotFoundException("Source file at " + file + " not found");
+        else if (!path.toString().endsWith(".shadow"))
+          throw new CommandLineException("Source file " + file + " does not end with .shadow");
+        else files.add(path);
+      }
+
+    } else throw new CommandLineException("No input files");
+  }
+
+  public void run() throws IOException, ShadowException, ConfigurationException {
+    // Print information
+    // Must come after building configuration, since configuration helps
+    // us find the correct clang installation
+    if (arguments.hasOption(Arguments.INFORMATION)) Arguments.printInformation();
+
+    // Print help
+    if (arguments.hasOption(Arguments.HELP)) Arguments.printHelp();
+
+    if (arguments.hasOption(Arguments.INFORMATION) || arguments.hasOption(Arguments.HELP))
+      return;
+
+    linkCommand.addAll(config.getLinkCommand());
+
+    // Important settings
+    List<Path> system = config.getSystem();
+    Path systemInclude = system.get(Configuration.INCLUDE);
+    Path systemSource = system.get(Configuration.SOURCE);
+    boolean isCompile = !checkOnly;
+
+    if (isCompile) checkClangVersion();
+
+    // Begin the checking/compilation process
+    long startTime = System.currentTimeMillis();
+
+    List<Path> cFiles = new ArrayList<>();
+    generateObjectFiles(cFiles);
+
+    if (isCompile) {
+      // Compile and add the C source files to get linked
+      if (!compileCSourceFiles(systemInclude, cFiles)) {
+        logger.error("Failed to compile one or more C source files.");
+        throw new CompileException("FAILED TO COMPILE");
+      }
+
+      if (link) {
+        logger.info("Building for target \"" + config.getTarget() + "\"");
+
+        // Create linker output command
+        Path outputFile;
+
+        // See if an output file was specified
+        if (arguments.hasOption(Arguments.OUTPUT)) {
+          outputFile = Paths.get(arguments.getOutputFileArg());
+
+          // Resolve it if necessary
+          outputFile = files.get(0).resolveSibling(outputFile);
+        } else {
+          // Determine a path to the default output file
+          Path outputName = BaseChecker.stripExtension(files.get(0));
+          outputFile = properExecutableName(outputName);
+        }
+
+        linkCommand.add("-o");
+        linkCommand.add(outputFile.toString());
+
+        Path mainLL;
+        if (config.getOs().equals("Windows")) {
+          if (mainArguments) mainLL = Paths.get("MainWindows.ll");
+          else mainLL = Paths.get("NoArgumentsWindows.ll");
+        } else {
+          if (mainArguments) mainLL = Paths.get("Main.ll");
+          else mainLL = Paths.get("NoArguments.ll");
+        }
+
+        mainLL = systemSource.resolve(mainLL);
+        BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
+
+        // Read main and compile into temporary object
+        Map<Path, Path> imports = config.getImport();
+        Path parent = getBinaryPath(files.get(0), imports).getParent();
+        Path temporaryMain = Files.createTempFile(parent, "main", ".o");
+        StringBuilder builder = new StringBuilder();
+        String line = main.readLine();
+
+        while (line != null) {
+          line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
+          builder.append(line);
+          line = main.readLine();
+        }
+        main.close();
+
+        linkCommand.add(
+                compileIrStream(
+                        new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain));
+
+        logger.info("Linking object files...");
+
+        // Usually clang
+        Process link =
+                new ProcessBuilder(linkCommand)
+                        .redirectOutput(Redirect.INHERIT)
+                        .redirectError(Redirect.INHERIT)
+                        .start();
+        try {
+          if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
+        } catch (InterruptedException | CompileException ignored) {
+        } finally {
+          link.destroy();
+          Files.delete(temporaryMain);
+        }
+      }
+      logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
+    }
+  }
+
+  public static Path properExecutableName(Path executableName) {
+    if (System.getProperty("os.name").contains("Windows"))
+      executableName = BaseChecker.addExtension(executableName, ".exe");
+    return executableName.normalize().toAbsolutePath();
+  }
+
+  private void addDirectories(Path directory) {
+    try (Stream<Path> stream = Files.list(directory)) {
+      stream
+              .filter(file -> Files.isDirectory(file) && !file.getFileName().toString().equals("test"))
+              .forEach(this::addShadowFiles);
+    } catch (IOException ignored) {
+    }
+  }
+
+  private void addShadowFiles(Path directory) {
+    try (Stream<Path> stream = Files.walk(directory)) {
+      stream.filter(file -> file.toString().endsWith(".shadow")).forEach(files::add);
+    } catch (IOException ignored) {
+    }
+  }
+
+
+
+
+  // Check clang version using lexical comparison
+  private static void checkClangVersion() throws ConfigurationException {
+    String clangVersion = Configuration.getClangVersion();
+
+    int comparison = compareVersions(clangVersion, MINIMUM_CLANG_VERSION);
 
     if (comparison < 0) {
       String error =
-          "LLVM version "
-              + MINIMUM_LLVM_VERSION
+          "clang version "
+              + MINIMUM_CLANG_VERSION
               + " or higher is required for Shadow "
               + VERSION
               + ", but ";
-      if (LLVMVersion.isEmpty()) error += "no LLVM installation found.";
-      else error += "version " + LLVMVersion + " found.";
+      if (clangVersion.isEmpty()) error += "no clang installation found.";
+      else error += "version " + clangVersion + " found.";
       throw new ConfigurationException(error);
     }
   }
@@ -155,121 +379,17 @@ public class Main {
     return binaryParent.resolve(fromParentToChild);
   }
 
-  public static void run(String[] args)
-      throws ShadowException,
-          IOException,
-          org.apache.commons.cli.ParseException,
-          CommandLineException,
-          ConfigurationException {
-
-    // Detect and establish the current settings and arguments
-    Arguments compilerArgs = new Arguments(args);
-
-    String mainFile = null;
-    if (compilerArgs.getFiles().length > 0) mainFile = compilerArgs.getFiles()[0];
-
-    // Detect and establish the current settings based on the arguments
-    config = Configuration.buildConfiguration(mainFile, compilerArgs.getConfigFileArg(), false);
-    currentJob = new Job(compilerArgs);
-    List<Path> files = currentJob.getFiles();
-
-    // Print information
-    // Must come after building configuration, since configuration helps
-    // us find the correct LLVM installation
-    if (compilerArgs.hasOption(Arguments.INFORMATION)) Arguments.printInformation();
-
-    // Print help
-    if (compilerArgs.hasOption(Arguments.HELP)) Arguments.printHelp();
-
-    if (compilerArgs.hasOption(Arguments.INFORMATION) || compilerArgs.hasOption(Arguments.HELP))
-      return;
-
-    // Important settings
-    List<Path> system = config.getSystem();
-    Path systemInclude = system.get(Configuration.INCLUDE);
-    Path systemSource = system.get(Configuration.SOURCE);
-    boolean isCompile = !currentJob.isCheckOnly();
-
-    if (isCompile) checkLLVMVersion();
-
-    // Begin the checking/compilation process
-    long startTime = System.currentTimeMillis();
-
-    List<String> linkCommand = new ArrayList<>(config.getLinkCommand(currentJob));
-    List<Path> cFiles = new ArrayList<>();
-
-    generateObjectFiles(cFiles, linkCommand);
-
-    if (isCompile) {
-      // Compile and add the C source files to get linked
-      if (!compileCSourceFiles(systemInclude, cFiles, linkCommand)) {
-        logger.error("Failed to compile one or more C source files.");
-        throw new CompileException("FAILED TO COMPILE");
-      }
-
-      if (currentJob.isLink()) {
-        logger.info("Building for target \"" + config.getTarget() + "\"");
-        Path mainLL;
-        if (config.getOs().equals("Windows")) {
-          if (mainArguments) mainLL = Paths.get("MainWindows.ll");
-          else mainLL = Paths.get("NoArgumentsWindows.ll");
-        } else {
-          if (mainArguments) mainLL = Paths.get("Main.ll");
-          else mainLL = Paths.get("NoArguments.ll");
-        }
-
-        mainLL = systemSource.resolve(mainLL);
-        BufferedReader main = Files.newBufferedReader(mainLL, UTF8);
-
-        // Read main and compile into temporary object
-        Map<Path, Path> imports = config.getImport();
-        Path parent = getBinaryPath(files.get(0), imports).getParent();
-        Path temporaryMain = Files.createTempFile(parent, "main", ".o");
-        StringBuilder builder = new StringBuilder();
-        String line = main.readLine();
-
-        while (line != null) {
-          line = line.replace("shadow.test..Test", mainClass) + System.lineSeparator();
-          builder.append(line);
-          line = main.readLine();
-        }
-        main.close();
-
-        linkCommand.add(
-            compileLLVMStream(
-                new ByteArrayInputStream(builder.toString().getBytes()), temporaryMain));
-
-        logger.info("Linking object files...");
-
-        // Usually clang
-        Process link =
-            new ProcessBuilder(linkCommand)
-                .redirectOutput(Redirect.INHERIT)
-                .redirectError(Redirect.INHERIT)
-                .start();
-        try {
-          if (link.waitFor() != 0) throw new CompileException("FAILED TO LINK");
-        } catch (InterruptedException ignored) {
-        } finally {
-          link.destroy();
-          Files.delete(temporaryMain);
-        }
-      }
-      logger.info("SUCCESS: Built in " + (System.currentTimeMillis() - startTime) + "ms");
-    }
-  }
-
   // Assumes compileCommand contains two empty slots at the end:
   // The first is for the output file name
   // The last is for the input file name
-  private static boolean compileCSourceFile(
-      Path cFile, Path binaryPath, List<String> compileCommand, List<String> linkCommand)
+  private boolean compileCSourceFile(
+      Path cFile, Path binaryPath, List<String> compileCommand)
       throws IOException {
 
     String binaryFile = binaryPath.toString();
     linkCommand.add(binaryFile);
 
-    if (currentJob.isForceRecompile()
+    if (forceRecompile
         || !Files.exists(binaryPath)
         || Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(cFile)) < 0) {
       logger.info("Generating assembly code for " + cFile.getFileName());
@@ -282,8 +402,8 @@ public class Main {
     return true;
   }
 
-  private static boolean compileCSourceFiles(
-      Path includePath, List<Path> cShadowFiles, List<String> linkCommand)
+  private boolean compileCSourceFiles(
+      Path includePath, List<Path> cShadowFiles)
       throws IOException, ConfigurationException {
 
     // No need to compile anything if there are no c-source files
@@ -325,7 +445,7 @@ public class Main {
 
     for (Path cFile : cShadowFiles) {
       Path binaryPath = BaseChecker.addExtension(getBinaryPath(cFile, imports), ".o");
-      if (!compileCSourceFile(cFile, binaryPath, compileCommand, linkCommand)) return false;
+      if (!compileCSourceFile(cFile, binaryPath, compileCommand)) return false;
     }
 
     return true;
@@ -347,12 +467,12 @@ public class Main {
   }
 
   /*
-   * Ensures that LLVM code exists for all dependencies of a main-method-
-   * containing class/file. This involves either finding an existing .ll file
+   * Ensures that .o files exist for all dependencies of a main-method-
+   * containing class/file. This involves either finding an existing .o file
    * (which has been updated more recently than the corresponding source file)
    * or building a new one
    */
-  private static void generateObjectFiles(List<Path> cFiles, List<String> linkCommand)
+  private void generateObjectFiles(List<Path> cFiles)
       throws IOException, ShadowException, ConfigurationException {
 
     List<Path> system = config.getSystem();
@@ -366,19 +486,17 @@ public class Main {
     Path unwindBinary =
         systemBinary.resolve(
             "Unwind" + (isWindows ? "Windows" : "") + config.getArchitecture() + ".o");
-    linkCommand.add(compileLLVMFile(unwindSource, unwindBinary));
+    linkCommand.add(compileIrFile(unwindSource, unwindBinary));
 
     // Add platform-specific system code
     linkCommand.add(
-        compileLLVMFile(
+        compileIrFile(
             systemSource.resolve(config.getOs() + ".ll"),
             systemBinary.resolve(config.getOs() + ".o")));
 
     // Add shared code
     linkCommand.add(
-        compileLLVMFile(systemSource.resolve("Shared.ll"), systemBinary.resolve("Shared.o")));
-
-    List<Path> files = currentJob.getFiles();
+        compileIrFile(systemSource.resolve("Shared.ll"), systemBinary.resolve("Shared.o")));
 
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
@@ -386,7 +504,7 @@ public class Main {
     // classes needing compilation
     TypeChecker.TypeCheckerOutput typecheckerOutput =
         TypeChecker.typeCheck(
-            files, currentJob.isForceRecompile(), reporter, currentJob.isCheckOnly());
+            files, forceRecompile, reporter, checkOnly);
 
     List<Type> typesIncludingInner =
         typecheckerOutput.nodes.stream().map(Context::getType).collect(Collectors.toList());
@@ -401,7 +519,7 @@ public class Main {
 
     // TODO: Add enum evaluations here (right after constants?)
 
-    if (currentJob.isLink()) {
+    if (link) {
       // Set data for main class
       Type mainType = typecheckerOutput.main.getType();
       mainClass = mainType.toString(Type.MANGLE);
@@ -423,7 +541,7 @@ public class Main {
 
         Path file = node.getSourcePath();
 
-        if (currentJob.isCheckOnly()) {
+        if (checkOnly) {
           // Performs checks to make sure all paths return, there is
           // no dead code, etc.
           // No need to check interfaces or .meta files (no code in
@@ -439,38 +557,38 @@ public class Main {
           Path cFile = file.resolveSibling(className + ".c");
           if (Files.exists(cFile)) cFiles.add(cFile);
 
-          Path llvmFile = file.resolveSibling(className + ".ll");
+          Path irFile = file.resolveSibling(className + ".ll");
           Path binaryPath = node.getBinaryPath();
 
           Path nativeFile = file.resolveSibling(className + ".native.ll");
           Path nativeBinary = BaseChecker.changeExtension(binaryPath, ".native");
           Path nativeObject = BaseChecker.addExtension(nativeBinary, ".o");
 
-          // If the LLVM bitcode or compiled object code didn't exist, the full .shadow file would
+          // If the LLVM IR bitcode or compiled object code didn't exist, the full .shadow file would
           // have been used (except for attributes, which are always interpreted)
           if (node.isFromMetaFile()) {
             if (node.getType() instanceof AttributeType)
               logger.info("Interpreting Shadow for " + name);
             else {
-              logger.info("Using pre-existing LLVM code for " + name);
+              logger.info("Using pre-existing object code for " + name);
               if (Files.exists(binaryPath)) linkCommand.add(binaryPath.toString());
-              else if (Files.exists(llvmFile))
-                linkCommand.add(compileLLVMFile(llvmFile, binaryPath));
+              else if (Files.exists(irFile))
+                linkCommand.add(compileIrFile(irFile, binaryPath));
               else throw new CompileException("File not found: " + binaryPath);
             }
           } else {
             if (node.getType() instanceof AttributeType)
               logger.info("Interpreting Shadow for " + name);
-            else logger.info("Generating LLVM code for " + name);
+            else logger.info("Generating object code for " + name);
             // Gets top level class
             TACModule module = optimizeTAC(new TACBuilder().build(node), reporter);
-            if (reporter.getErrorList().size() == 0)
+            if (reporter.getErrorList().isEmpty())
               linkCommand.add(compileShadowFile(file, binaryPath, module));
           }
 
           if (Files.exists(nativeObject)) linkCommand.add(nativeObject.toString());
           else if (Files.exists(nativeFile))
-            linkCommand.add(compileLLVMFile(nativeFile, nativeObject));
+            linkCommand.add(compileIrFile(nativeFile, nativeObject));
         }
 
         reporter.printAndReportErrors();
@@ -484,13 +602,13 @@ public class Main {
     }
   }
 
-  private static Process getCompiler(String objectFile) throws IOException {
+  private Process getCompiler(String objectFile) throws IOException {
     if (config.getOs().equals("Mac")) {
       return new ProcessBuilder(
-              config.getLlc(),
+              config.getClang(),
               // "-mtriple",
               // config.getTarget(),
-              config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
+              config.getOptimizationLevel(), /*config.getDataLayout(),*/
               "-femulated-tls", // needed for Mac
               "-c",
               "-x",
@@ -504,10 +622,10 @@ public class Main {
           .start();
     } else {
       return new ProcessBuilder(
-              config.getLlc(),
+              config.getClang(),
               // "-mtriple",
               // config.getTarget(),
-              config.getLLVMOptimizationLevel(), /*config.getDataLayout(),*/
+              config.getOptimizationLevel(),
               "-c",
               "-x",
               "ir",
@@ -532,18 +650,18 @@ public class Main {
     }
   }
 
-  private static String compileLLVMModule(Path shadowFile, Path binaryPath, TACModule module)
+  private String compileIrModule(Path shadowFile, Path binaryPath, TACModule module)
       throws CompileException {
     createDirectories(binaryPath);
     String binaryFile = binaryPath.toString();
 
     boolean success = false;
     Process compile = null;
-    LLVMOutput output;
+    IrOutput output;
 
     try {
       compile = getCompiler(binaryFile);
-      output = new LLVMOutput(new BufferedOutputStream(compile.getOutputStream()));
+      output = new IrOutput(new BufferedOutputStream(compile.getOutputStream()));
       output.build(module);
       output.close();
       if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + binaryFile);
@@ -563,7 +681,7 @@ public class Main {
     return binaryFile;
   }
 
-  private static String compileLLVMStream(InputStream stream, Path binaryPath)
+  private String compileIrStream(InputStream stream, Path binaryPath)
       throws CompileException {
     createDirectories(binaryPath);
     String binaryFile = binaryPath.toString();
@@ -591,32 +709,32 @@ public class Main {
     return binaryFile;
   }
 
-  private static String compileLLVMFile(Path LLVMPath, Path binaryPath) throws CompileException {
+  private String compileIrFile(Path irPath, Path binaryPath) throws CompileException {
     try {
-      return compileLLVMStream(Files.newInputStream(LLVMPath), binaryPath);
+      return compileIrStream(Files.newInputStream(irPath), binaryPath);
     } catch (IOException e) {
-      throw new CompileException("FAILED TO COMPILE " + LLVMPath);
+      throw new CompileException("FAILED TO COMPILE " + irPath);
     }
   }
 
-  private static String compileShadowFile(Path shadowFile, Path binaryPath, TACModule module)
+  private String compileShadowFile(Path shadowFile, Path binaryPath, TACModule module)
       throws CompileException {
 
-    if (currentJob.isHumanReadable()) {
+    if (humanReadable) {
       try {
-        // Generate LLVM
-        Path llvmFile = BaseChecker.changeExtension(shadowFile, ".ll");
-        OutputStream out = Files.newOutputStream(llvmFile);
-        LLVMOutput output = new LLVMOutput(new BufferedOutputStream(out));
+        // Generate LLVM IR
+        Path irFile = BaseChecker.changeExtension(shadowFile, ".ll");
+        OutputStream out = Files.newOutputStream(irFile);
+        IrOutput output = new IrOutput(new BufferedOutputStream(out));
         output.build(module);
         output.close();
         out.close();
-        return compileLLVMFile(llvmFile, binaryPath);
+        return compileIrFile(irFile, binaryPath);
       } catch (IOException | ShadowException e) {
         logger.error("FAILED TO COMPILE " + shadowFile);
         throw new CompileException(e.getMessage());
       }
-    } else return compileLLVMModule(shadowFile, binaryPath, module);
+    } else return compileIrModule(shadowFile, binaryPath, module);
   }
 
   /*
@@ -758,9 +876,5 @@ public class Main {
       else name = name.substring(0, 1).toUpperCase() + name.substring(1);
     }
     return name;
-  }
-
-  public static Job getJob() {
-    return currentJob;
   }
 }

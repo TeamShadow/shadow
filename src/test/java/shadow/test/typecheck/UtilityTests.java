@@ -27,54 +27,54 @@ public class UtilityTests {
   @Test
   public void testArrayList() throws Exception {
     args.add("src/shadow/utility/ArrayList.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testHashSet() throws Exception {
     args.add("src/shadow/utility/HashSet.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testIllegalModificationException() throws Exception {
     args.add("src/shadow/utility/IllegalModificationException.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testLinkedList() throws Exception {
     args.add("src/shadow/utility/LinkedList.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testList() throws Exception {
     args.add("src/shadow/utility/List.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testRandom() throws Exception {
     args.add("src/shadow/utility/Random.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testSet() throws Exception {
     args.add("src/shadow/utility/Set.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testArrayDeque() throws Exception {
     args.add("src/shadow/utility/ArrayDeque.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testHashMap() throws Exception {
     args.add("src/shadow/utility/HashMap.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 }

@@ -27,6 +27,6 @@ public class ParserTests {
   @Test
   public void testAttributes() throws Exception {
     args.add("tests/parser/attributes/Attributes.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 }

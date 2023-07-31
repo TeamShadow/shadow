@@ -27,24 +27,24 @@ public class InterpreterTests {
   @Test
   public void testManyConstants() throws Exception {
     args.add("tests/interpreter/many-constants/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testUnusualConstantDependency() throws Exception {
     args.add("tests/interpreter/unusual-constant-dependency/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testInterfaceConstant() throws Exception {
     args.add("tests/interpreter/interface-constant/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testInheritedConstants() throws Exception {
     args.add("tests/interpreter/inherited-constants/Test.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 }

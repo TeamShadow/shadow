@@ -47,7 +47,7 @@ public class BuildTests {
     }
 
     args.add("-b");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
 
     for (Path file : objectFiles) {
       Assertions.assertTrue(Files.exists(file));

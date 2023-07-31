@@ -147,6 +147,6 @@ public class Arguments {
     System.out.println("Shadow Information:");
     System.out.println("  shadowc version " + Main.VERSION);
     System.out.println();
-    System.out.println(Configuration.getLLVMInformation());
+    System.out.println(Configuration.getClangInformation());
   }
 }

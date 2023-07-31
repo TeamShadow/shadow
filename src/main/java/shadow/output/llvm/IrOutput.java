@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class LLVMOutput extends AbstractOutput {
+public class IrOutput extends AbstractOutput {
   private int tempCounter = 0;
   private final List<String> stringLiterals = new LinkedList<>();
   private int classCounter = 0;
@@ -28,11 +28,11 @@ public class LLVMOutput extends AbstractOutput {
   private boolean skipMethod = false;
 
   @SuppressWarnings("unused")
-  public LLVMOutput(Path file) throws ShadowException {
+  public IrOutput(Path file) throws ShadowException {
     super(file);
   }
 
-  public LLVMOutput(OutputStream stream) {
+  public IrOutput(OutputStream stream) {
     super(stream);
   }
 

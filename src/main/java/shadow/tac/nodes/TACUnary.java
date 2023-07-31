@@ -85,7 +85,7 @@ public class TACUnary extends TACUpdate {
 
   @Override
   public String toString() {
-    return "" + operation + operand;
+    return operation + operand;
   }
 
   @Override

@@ -30,11 +30,8 @@ import java.util.regex.Pattern;
   "import",
   "target",
   "architecture",
-  "cc",
+  "clang",
   "os",
-  "opt",
-  "llc",
-  "link",
   "libraryPaths",
   "libraries",
   "parent"
@@ -123,20 +120,11 @@ public class Configuration {
   @JsonProperty("architecture")
   private int architecture;
 
-  @JsonProperty("cc")
-  private String cc;
+  @JsonProperty("clang")
+  private String clang;
 
   @JsonProperty("os")
   private String os;
-
-  @JsonProperty("opt")
-  private String opt;
-
-  @JsonProperty("llc")
-  private String llc;
-
-  @JsonProperty("linker")
-  private String linker;
 
   @JsonProperty("libraryPaths")
   private List<String> libraryPaths;
@@ -169,9 +157,9 @@ public class Configuration {
     this.target = target;
   }
 
-  @JsonProperty("cc")
-  public String getCC() {
-    return cc;
+  @JsonProperty("clang")
+  public String getClang() {
+    return clang;
   }
 
   @JsonProperty("architecture")
@@ -187,26 +175,6 @@ public class Configuration {
   @JsonProperty("os")
   public void setOs(String os) {
     this.os = os;
-  }
-
-  @JsonProperty("opt")
-  public String getOpt() {
-    return opt;
-  }
-
-  @JsonProperty("opt")
-  public void setOpt(String opt) {
-    this.opt = opt;
-  }
-
-  @JsonProperty("llc")
-  public String getLlc() {
-    return llc;
-  }
-
-  @JsonProperty("linker")
-  public String getLinker() {
-    return linker;
   }
 
   @JsonProperty("libraryPaths")
@@ -372,11 +340,7 @@ public class Configuration {
     }
 
     // Make sure that llc is specified early, since it's used to get the default target
-    if (llc == null) llc = "clang";
-
-    if (opt == null) opt = "opt";
-
-    if (cc == null) cc = "clang";
+    if (clang == null) clang = "clang";
 
     if (target == null) target = getDefaultTarget();
 
@@ -404,32 +368,22 @@ public class Configuration {
       }
     }
 
-    if (linker == null) {
-      switch (getOs()) {
-        case "Windows" -> linker = "clang";
-        case "Mac" ->
-          // Does Mac work at all now?  What about the new M chips?
-                linker = "clang";
-        default -> linker = "clang";
-      }
 
-      // Build link command
-      linkCommand.add(linker);
-      linkCommand.add("-flto"); // Link-time optimization
+    // Build link command
+    linkCommand.add(clang);
+    linkCommand.add("-flto"); // Link-time optimization
 
-      if (getOs().equals("Windows")) {
-        linkCommand.add("-Wl,-nodefaultlib:libcmt");
-        linkCommand.add("-D_DLL");
-        // linkCommand.add("-femulated-tls");
-      }
-
-      if (architecture == 32) linkCommand.add("-m32");
-      else linkCommand.add("-m64");
-
-      for (String path : libraryPaths) linkCommand.add("-L" + path);
-
-      for (String library : libraries) linkCommand.add("-l" + library);
+    if (getOs().equals("Windows")) {
+      linkCommand.add("-Wl,-nodefaultlib:libcmt");
+      linkCommand.add("-D_DLL");
     }
+
+    if (architecture == 32) linkCommand.add("-m32");
+    else linkCommand.add("-m64");
+
+    for (String path : libraryPaths) linkCommand.add("-L" + path);
+
+    for (String library : libraries) linkCommand.add("-l" + library);
 
     // Using running directory for system src, include, and bin
     if (system.isEmpty()) {
@@ -467,10 +421,7 @@ public class Configuration {
         if (configuration.target == null) configuration.target = parent.target;
         if (configuration.architecture == 0) configuration.architecture = parent.architecture;
         if (configuration.os == null) configuration.os = parent.os;
-        if (configuration.opt == null) configuration.opt = parent.opt;
-        if (configuration.cc == null) configuration.cc = parent.cc;
-        if (configuration.llc == null) configuration.llc = parent.llc;
-        if (configuration.linker == null) configuration.linker = parent.linker;
+        if (configuration.clang == null) configuration.clang = parent.clang;
         if (configuration.libraryPaths == null) configuration.libraryPaths = parent.libraryPaths;
         if (configuration.libraries == null) configuration.libraries = parent.libraries;
       }
@@ -495,10 +446,7 @@ public class Configuration {
     }
   }
 
-  public List<String> getLinkCommand(Job currentJob) {
-    // Merge the output commands with the linker commands
-    List<String> linkCommand = new ArrayList<>(this.linkCommand);
-    linkCommand.addAll(currentJob.getOutputCommand());
+  public List<String> getLinkCommand() {
     return linkCommand;
   }
 
@@ -507,11 +455,10 @@ public class Configuration {
     // Some reference available here:
     // http://llvm.org/docs/doxygen/html/Triple_8h_source.html
 
-    // Calling 'llc --version' for current target information
-    // Note: Most of the LLVM tools also have this option
+    // Calling 'clang --version' for current target information
     Process process = null;
     try {
-      process = new ProcessBuilder(getLlc(), "--version").redirectErrorStream(true).start();
+      process = new ProcessBuilder(getClang(), "--version").redirectErrorStream(true).start();
 
       StringBuilder versionOutput = new StringBuilder();
       try (BufferedReader reader =
@@ -532,17 +479,17 @@ public class Configuration {
                 + System.lineSeparator()
                 + versionOutput);
     } catch (IOException e) {
-      throw new ConfigurationException("LLVM installation not found!");
+      throw new ConfigurationException("clang installation not found!");
     } finally {
       if (process != null) process.destroy();
     }
   }
 
-  public static String getLLVMVersion() {
+  public static String getClangVersion() {
     Process process = null;
     try {
       process =
-          new ProcessBuilder(getConfiguration().getLlc(), "--version")
+          new ProcessBuilder(getConfiguration().getClang(), "--version")
               .redirectErrorStream(true)
               .start();
       StringBuilder versionOutput = new StringBuilder();
@@ -567,13 +514,12 @@ public class Configuration {
     return "";
   }
 
-  public static String getLLVMInformation() {
-    // Calling 'llc -version' for LLVM information
-    // Note: Most of the LLVM tools also have this option
+  public static String getClangInformation() {
+    // Calling 'clang --version' for LLVM information
     Process process = null;
     try {
       process =
-          new ProcessBuilder(getConfiguration().getLlc(), "--version")
+          new ProcessBuilder(getConfiguration().getClang(), "--version")
               .redirectErrorStream(true)
               .start();
       StringBuilder information = new StringBuilder();
@@ -586,15 +532,10 @@ public class Configuration {
 
       return information.toString();
     } catch (IOException | ConfigurationException e) {
-      return "LLVM installation not found!";
+      return "clang installation not found!";
     } finally {
       if (process != null) process.destroy();
     }
-  }
-
-  public String getLLVMOptimizationLevel() {
-    // Set to empty string to check for race conditions in threads.
-    return "-O3";
   }
 
   public String getOptimizationLevel() {

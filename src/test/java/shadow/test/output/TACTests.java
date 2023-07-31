@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import shadow.Configuration;
-import shadow.Job;
 import shadow.Main;
 
 import java.nio.file.Files;
@@ -17,7 +16,7 @@ public class TACTests {
 
   // To simplify removal, every unit test executable will have the same name
   private static final Path executable =
-      Job.properExecutableName(Paths.get("bin", "shadow", "test", "TacTest"));
+      Main.properExecutableName(Paths.get("bin", "shadow", "test", "TacTest"));
 
   private final ArrayList<String> args = new ArrayList<>();
 
@@ -54,69 +53,69 @@ public class TACTests {
   @Test
   public void testCanCreate() throws Exception {
     args.add("shadow/test/CanCreateTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test output because of timing dependence
   }
 
   @Test
   public void testFile() throws Exception {
     args.add("shadow/test/FileTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test this without a file
   }
 
   @Test
   public void testSort() throws Exception {
     args.add("shadow/test/SortMain.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test because output is connected to timing
   }
 
   @Test
   public void testDouble() throws Exception {
     args.add("shadow/test/DoubleTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test without more predictable floating point output
   }
 
   @Test
   public void testFloat() throws Exception {
     args.add("shadow/test/FloatTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test without more predictable floating point output
   }
 
   @Test
   public void testGarbageCollection() throws Exception {
     args.add("shadow/test/GarbageCollectionTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
   }
 
   @Test
   public void testMath() throws Exception {
     args.add("shadow/test/MathTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test without more predictable floating point output
   }
 
   @Test
   public void testRandom() throws Exception {
     args.add("shadow/test/RandomTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test without more predictable floating point output
   }
 
   @Test
   public void testString() throws Exception {
     args.add("shadow/test/StringTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // can't test without more predictable floating point output
   }
 
   @Test
   public void testHello() throws Exception {
     args.add("shadow/test/HelloTest.shadow");
-    Main.run(args.toArray(new String[] {}));
+    new Main(args.toArray(new String[] {})).run();
     // CAN test, but it's useful to have a testable executable lying around TAC tests
   }
 }
