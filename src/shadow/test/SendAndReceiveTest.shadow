@@ -17,6 +17,9 @@ class shadow:test@SendAndReceiveTest
 		Thread thread2 = spawn(ThreadTestRunner:create());
 
 		send("aardvark", thread1);
+
+		Thread:Current.sleep(100); // used to avoid mixed up text
+
 		send("formulation", thread2);
 	}
 }
