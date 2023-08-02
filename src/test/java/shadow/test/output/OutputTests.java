@@ -1760,6 +1760,16 @@ public class OutputTests {
   }
 
   @Test
+  public void testThreadName() throws Exception {
+    args.add("shadow/test/ThreadNameTest.shadow");
+    new Main(args.toArray(new String[] {})).run();
+    run(
+            new String[0],
+            // stdin
+            formatOutputString("RZA 1", "GZA 2", "Method Man 3", "Raekwon 4", "Inspectah Deck 5", "done"));
+  }
+
+  @Test
   public void testComplexSendAndReceive() throws Exception {
     args.add("shadow/test/ComplexSendAndReceiveTest.shadow");
     new Main(args.toArray(new String[] {})).run();

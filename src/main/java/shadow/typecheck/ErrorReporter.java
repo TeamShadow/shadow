@@ -190,6 +190,6 @@ public class ErrorReporter {
 
     warningList.clear(); // otherwise the warnings will be printed again
 
-    if (errorList.size() > 0) throw errorList.get(0);
+    if (!errorList.isEmpty()) throw errorList.get(0);
   }
 }

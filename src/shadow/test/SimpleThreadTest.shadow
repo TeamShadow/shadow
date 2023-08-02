@@ -12,7 +12,7 @@ class shadow:test@SimpleThreadTest
 
 	public main(String[] args) => ()
 	{
-		Thread thread = spawn(ThreadTestRunner:());
+		Thread thread = spawn(ThreadTestRunner:create());
 		thread.join();
 		Console.printLine("Joined thread");
 	}

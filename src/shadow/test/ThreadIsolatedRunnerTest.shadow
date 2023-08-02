@@ -24,13 +24,13 @@ class shadow:test@ThreadIsolatedRunnerTest
 
 	public main(String[] args) => ()
 	{
-		var thread1 = spawn(ThreadIsolatedRunner:(this));
+		var thread1 = spawn(ThreadIsolatedRunner:create(this));
 	    thread1.join();
 
-		var thread2 = spawn(ThreadIsolatedRunner:(this));
+		var thread2 = spawn(ThreadIsolatedRunner:create(this));
 		thread2.join();
 
-		var thread3 = spawn(ThreadIsolatedRunner:(this));
+		var thread3 = spawn(ThreadIsolatedRunner:create(this));
 		thread3.join();
 		
 		Console.printLine(y);

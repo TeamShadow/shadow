@@ -1,0 +1,18 @@
+import shadow:io@Console;
+
+class Test
+{
+    public class TestRunner
+    {
+        public run() => ()
+        {
+            Console.printLine("Hello");
+        }
+    }
+
+    public main() => ()
+    {
+        Thread thread = spawn(TestRunner:create());
+        thread.join();
+    }
+}

@@ -657,7 +657,7 @@ public class IrOutput extends AbstractOutput {
       }
     }
 
-    if (sb.length() > 0) return sb.substring(2);
+    if (!sb.isEmpty()) return sb.substring(2);
     else return sb.toString(); // no methods!
   }
 
@@ -1334,14 +1334,11 @@ public class IrOutput extends AbstractOutput {
     // no precomputation done
     if (value == null) {
       switch (node.getOperation()) {
-        case "-":
+        case "-" -> {
           if (node.getType().isFloating()) visitUnary(node, "fsub", "-0.0");
           else visitUnary(node, "sub", "0");
-          break;
-        case "~":
-        case "!":
-          visitUnary(node, "xor", "-1");
-          break;
+        }
+        case "~", "!" -> visitUnary(node, "xor", "-1");
       }
     } else node.setData(value.getData());
   }
@@ -2163,7 +2160,7 @@ public class IrOutput extends AbstractOutput {
     writer.write("cleanup");
     // Fix catches!!!
     List<TACCatch> catches = new ArrayList<>(node.getCatches().size());
-    if (node.getCatches().size() > 0) {
+    if (!node.getCatches().isEmpty()) {
       catches.addAll(node.getCatches());
       TACBlock block = node.getBlock();
       while (block != null) {
@@ -2284,7 +2281,7 @@ public class IrOutput extends AbstractOutput {
   private static String methodToString(TACMethodPointer pointer) {
     StringBuilder sb = new StringBuilder();
     SequenceType returnTypes = pointer.getUninstantiatedReturnTypes();
-    if (returnTypes.size() == 0) sb.append("void");
+    if (returnTypes.isEmpty()) sb.append("void");
     else if (returnTypes.size() == 1) sb.append(type(returnTypes.get(0)));
     else sb.append(type(returnTypes));
 
@@ -2310,7 +2307,7 @@ public class IrOutput extends AbstractOutput {
                 true)); // the nullable looks odd, but it gets the Object version of the primitive
     } else {
       SequenceType returnTypes = signature.getSignatureWithoutTypeArguments().getFullReturnTypes();
-      if (returnTypes.size() == 0) sb.append("void");
+      if (returnTypes.isEmpty()) sb.append("void");
       else if (returnTypes.size() == 1) sb.append(type(returnTypes.get(0)));
       else sb.append(type(returnTypes));
     }
@@ -2410,7 +2407,7 @@ public class IrOutput extends AbstractOutput {
     // Should never be a create
     SequenceType returnTypes = type.getTypeWithoutTypeArguments().getReturnTypes();
 
-    if (returnTypes.size() == 0) sb.append("void");
+    if (returnTypes.isEmpty()) sb.append("void");
     else if (returnTypes.size() == 1) sb.append(type(returnTypes.get(0)));
     else sb.append(type(returnTypes));
 

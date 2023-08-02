@@ -18,6 +18,7 @@ import shadow.typecheck.Package;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.*;
 
+import java.security.Signature;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -1067,18 +1068,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   public Void visitPrimaryPrefix(ShadowParser.PrimaryPrefixContext ctx) {
     visitChildren(ctx);
 
-    // TODO: remove prefix, since the value can be gotten from the Context node?
     if (ctx.literal() != null) prefix = ctx.literal().appendBefore(anchor);
     else if (ctx.checkExpression() != null) prefix = ctx.checkExpression().appendBefore(anchor);
     else if (ctx.copyExpression() != null) prefix = ctx.copyExpression().appendBefore(anchor);
     else if (ctx.castExpression() != null) prefix = ctx.castExpression().appendBefore(anchor);
-    else if (ctx.conditionalExpression() != null)
-      prefix = ctx.conditionalExpression().appendBefore(anchor);
+    else if (ctx.conditionalExpression() != null) prefix = ctx.conditionalExpression().appendBefore(anchor);
     else if (ctx.primitiveType() != null) prefix = ctx.primitiveType().appendBefore(anchor);
     else if (ctx.functionType() != null) prefix = ctx.functionType().appendBefore(anchor);
     else if (ctx.arrayInitializer() != null) prefix = ctx.arrayInitializer().appendBefore(anchor);
-    else if (ctx.spawnExpression() != null) prefix = ctx.spawnExpression().appendBefore(anchor);
     else if (ctx.receiveExpression() != null) prefix = ctx.receiveExpression().appendBefore(anchor);
+    else if (ctx.spawnExpression() != null) prefix = ctx.spawnExpression().appendBefore(anchor);
     else if (ctx.getType() instanceof SingletonType)
       prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType) ctx.getType()));
     else {
@@ -3444,6 +3443,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     prefix = value;
     Type type = ctx.getType();
 
+
+    //TODO: IS THIS FINE??? or are there memory problems?
+
     if (!type.getModifiers().isImmutable()) { // if immutable, do nothing, the old one is fine
       TACNewObject object = new TACNewObject(anchor, Type.ADDRESS_MAP);
       TACMethodName create =
@@ -3544,6 +3546,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   public Void visitSpawnExpression(shadow.parse.ShadowParser.SpawnExpressionContext ctx) {
     visitChildren(ctx);
 
+    // Parameters for thread create
+    ArrayList<TACOperand> params = new ArrayList<>();
+    for (ConditionalExpressionContext child : ctx.conditionalExpression())
+      params.add(child.appendBefore(anchor));
+
     // Get parent thread
     TACSingletonRef reference = new TACSingletonRef(Type.THREAD_CURRENT);
     TACOperand instance = new TACLoad(anchor, reference);
@@ -3551,28 +3558,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     TACMethodRef instanceName = new TACMethodName(anchor, instance, instanceSignature);
     TACOperand parent = new TACCall(anchor, instanceName, Collections.singletonList(instance));
 
-    Type runnerType = ctx.type().getType();
-
-    MethodSignature runnerCreateSignature = ctx.spawnRunnerCreateCall().getSignature();
-    List<TACOperand> runnerParams =
-        new ArrayList<>(((SequenceType) ctx.spawnRunnerCreateCall().getType()).size() + 1);
-
-    ctx.spawnRunnerCreateCall().appendBefore(anchor);
-    for (ShadowParser.ConditionalExpressionContext child :
-        ctx.spawnRunnerCreateCall().conditionalExpression()) {
-      runnerParams.add(child.getOperand());
-    }
-
-    TACOperand runnerRef = callCreate(runnerCreateSignature, runnerParams, runnerType);
-
-    MethodSignature threadCreateSignature = ctx.getSignature();
-    ArrayList<TACOperand> params = new ArrayList<>();
-    if (ctx.StringLiteral() != null) {
-      params.add(new TACLiteral(anchor, ShadowString.parseString(ctx.StringLiteral().getText())));
-    }
-    params.add(runnerRef);
-
-    TACOperand newThread = callCreate(threadCreateSignature, params, Type.THREAD);
+    TACOperand newThread = callCreate(ctx.getSignature(), params, Type.THREAD);
 
     // Add new thread to parent thread
     MethodSignature addChildSignature = Type.THREAD.getMatchingMethod("addChild", new SequenceType(newThread));
@@ -3584,18 +3570,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
     prefix = newThread;
     ctx.setOperand(prefix);
-
-    return null;
-  }
-
-  @Override
-  public Void visitSpawnRunnerCreateCall(
-      shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx) {
-    visitChildren(ctx);
-
-    for (ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {
-      child.appendBefore(anchor);
-    }
 
     return null;
   }

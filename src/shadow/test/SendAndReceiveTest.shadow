@@ -13,8 +13,8 @@ class shadow:test@SendAndReceiveTest
 
 	public main(String[] args) => ()
 	{
-		Thread thread1 = spawn(ThreadTestRunner:());
-		Thread thread2 = spawn(ThreadTestRunner:());
+		Thread thread1 = spawn(ThreadTestRunner:create());
+		Thread thread2 = spawn(ThreadTestRunner:create());
 
 		send("aardvark", thread1);
 		send("formulation", thread2);

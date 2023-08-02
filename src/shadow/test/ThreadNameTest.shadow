@@ -1,0 +1,27 @@
+import shadow:io@Console;
+
+class shadow:test@ThreadNameTest
+{
+	class ThreadNameTestRunner is CanRun
+	{
+		public run() => ()
+		{
+			Console.printLine(Thread:Current->instance->name);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		String[] names = {"RZA", "GZA", "Method Man", "Raekwon", "Inspectah Deck"};
+
+		var runner = ThreadNameTestRunner:create();
+
+		for (int i = 0; i < names->size; i += 1)
+		{
+		    spawn[names[i] # " " # (i + 1)](runner);
+		    Thread:Current.sleep(100);
+		}
+
+		Console.printLine("done");
+	}
+}

@@ -315,6 +315,19 @@ public class NegativeTests {
   }
 
   @Test
+  public void testSpawnTypeName() throws Exception {
+    args.add("tests-negative/typechecker/spawn-type-name/Test.shadow");
+    enforce(Error.INVALID_SPAWN);
+  }
+
+  @Test
+  public void testSpawnIllegalType() throws Exception {
+    args.add("tests-negative/typechecker/spawn-illegal-type/Test.shadow");
+    enforce(Error.INVALID_SPAWN);
+  }
+
+
+  @Test
   public void testClassExtendsNonClass() throws Exception {
     args.add("tests-negative/typechecker/class-extends-non-class/Test.shadow");
     enforce(Error.INVALID_PARENT);

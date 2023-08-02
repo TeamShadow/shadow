@@ -12,17 +12,17 @@ class shadow:test@ThreadTest
 			Console.printLine(current->name);
 			
 			if(id == 4) {
-				spawn(ThreadTestRunner:()).join(); // Thread#5; throws from Thread#6
+				spawn(ThreadTestRunner:create()).join(); // Thread#5; throws from Thread#6
 			}
 			else if(id == 5) {
 				Console.printLine(check(current->parent)->id == 4);
 				Console.printLine(Thread:Current->main->id == check(check(current->parent)->parent)->id);
 				
-				spawn(ThreadTestRunner:()).join(); // Thread#6; throws from Thread#8
+				spawn(ThreadTestRunner:create()).join(); // Thread#6; throws from Thread#8
 			}
 			else if(id == 6) {
-				spawn(ThreadTestRunner:()); // Thread#7; does not throw until joined
-				spawn(ThreadTestRunner:()).join(); // Thread#8; throws and propagates
+				spawn(ThreadTestRunner:create()); // Thread#7; does not throw until joined
+				spawn(ThreadTestRunner:create()).join(); // Thread#8; throws and propagates
 			}
 			
 			if(id > 2) {
@@ -38,7 +38,7 @@ class shadow:test@ThreadTest
 
 		nullable var threads = Thread:null[4];
 		for (int i = 0; i < threads->size; i += 1) {
-			threads[i] = spawn(ThreadTestRunner:());
+			threads[i] = spawn(ThreadTestRunner:create());
 		}
 
 		// if we do not join here, Shadow should join on all threads
