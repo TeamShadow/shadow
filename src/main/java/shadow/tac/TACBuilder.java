@@ -3442,6 +3442,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     prefix = value;
     Type type = ctx.getType();
 
+
+    //TODO: IS THIS FINE??? or are there memory problems?
+
     if (!type.getModifiers().isImmutable()) { // if immutable, do nothing, the old one is fine
       TACNewObject object = new TACNewObject(anchor, Type.ADDRESS_MAP);
       TACMethodName create =
