@@ -395,14 +395,7 @@ checkExpression
 copyExpression
 	: ('copy' | 'freeze' ) '(' conditionalExpression ')'
   	;
-  	
-spawnExpression
-	: 'spawn' '(' (StringLiteral ',')? type spawnRunnerCreateCall
-  	;
 
-spawnRunnerCreateCall
-	: ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
-	;
 
 receiveExpression
 	: 'receive' '*'? '<' type '>' '(' conditionalExpression? ')'
@@ -436,8 +429,8 @@ primaryPrefix
 	| 'super'
 	| checkExpression
 	| copyExpression
-	| spawnExpression
 	| receiveExpression
+	| spawnExpression
 	| castExpression
 	| '(' conditionalExpression ')'
 	| primitiveType
@@ -514,7 +507,11 @@ method
 property
 	: '->' Identifier
 	;
-	
+
+spawnExpression
+	: 'spawn' ('[' conditionalExpression ']')?  '('  conditionalExpression ')'
+	;
+
 methodCall
 	: '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'
 	;

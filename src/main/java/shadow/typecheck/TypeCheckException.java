@@ -71,6 +71,8 @@ public class TypeCheckException extends ShadowException implements Comparable<Ty
     INVALID_SELF_REFERENCE("Invalid self reference", "Self reference is invalid"),
     INVALID_SINGLETON_CREATE(
         "Invalid singleton create", "Singleton type can only specify a default create"),
+
+    INVALID_SPAWN("Invalid spawn", "Target cannot be spawned"),
     INVALID_STRUCTURE("Invalid structure", "Language construct cannot be used in this way"),
     INVALID_SUBSCRIPT("Invalid subscript", "Subscript is of wrong type or number"),
     INVALID_TRY("Invalid try", "Try statement incorrectly constructed"),

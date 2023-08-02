@@ -483,7 +483,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     TACOperand condition = ctx.coalesceExpression().appendBefore(anchor);
     ctx.setOperand(condition);
 
-    if (ctx.throwOrConditionalExpression().size() > 0) {
+    if (!ctx.throwOrConditionalExpression().isEmpty()) {
       ThrowOrConditionalExpressionContext first = ctx.throwOrConditionalExpression(0);
       ThrowOrConditionalExpressionContext second = ctx.throwOrConditionalExpression(1);
 
@@ -1067,18 +1067,16 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   public Void visitPrimaryPrefix(ShadowParser.PrimaryPrefixContext ctx) {
     visitChildren(ctx);
 
-    // TODO: remove prefix, since the value can be gotten from the Context node?
     if (ctx.literal() != null) prefix = ctx.literal().appendBefore(anchor);
     else if (ctx.checkExpression() != null) prefix = ctx.checkExpression().appendBefore(anchor);
     else if (ctx.copyExpression() != null) prefix = ctx.copyExpression().appendBefore(anchor);
     else if (ctx.castExpression() != null) prefix = ctx.castExpression().appendBefore(anchor);
-    else if (ctx.conditionalExpression() != null)
-      prefix = ctx.conditionalExpression().appendBefore(anchor);
+    else if (ctx.conditionalExpression() != null) prefix = ctx.conditionalExpression().appendBefore(anchor);
     else if (ctx.primitiveType() != null) prefix = ctx.primitiveType().appendBefore(anchor);
     else if (ctx.functionType() != null) prefix = ctx.functionType().appendBefore(anchor);
     else if (ctx.arrayInitializer() != null) prefix = ctx.arrayInitializer().appendBefore(anchor);
-    else if (ctx.spawnExpression() != null) prefix = ctx.spawnExpression().appendBefore(anchor);
     else if (ctx.receiveExpression() != null) prefix = ctx.receiveExpression().appendBefore(anchor);
+    else if (ctx.spawnExpression() != null) prefix = ctx.spawnExpression().appendBefore(anchor);
     else if (ctx.getType() instanceof SingletonType)
       prefix = new TACLoad(anchor, new TACSingletonRef((SingletonType) ctx.getType()));
     else {
@@ -1262,7 +1260,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   }
 
   private static Context getSuffix(ShadowParser.PrimaryExpressionContext expression) {
-    if (expression.primarySuffix().size() > 0)
+    if (!expression.primarySuffix().isEmpty())
       return expression.primarySuffix(expression.primarySuffix().size() - 1);
     else return expression.primaryPrefix();
   }
@@ -1720,7 +1718,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
       for (int i = 0; i < ctx.switchLabel().size(); ++i) {
         ShadowParser.SwitchLabelContext label = ctx.switchLabel(i);
 
-        if (label.primaryExpression().size() == 0) labels.add(defaultLabel);
+        if (label.primaryExpression().isEmpty()) labels.add(defaultLabel);
         else { // not default
           label.appendBefore(anchor); // append (all) label conditions
           TACLabel matchingCase = new TACLabel(method);
@@ -1748,7 +1746,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
             else
               moreConditions =
                   i < ctx.switchLabel().size() - 1
-                      && ctx.switchLabel(i + 1).primaryExpression().size() > 0;
+                      && !ctx.switchLabel(i + 1).primaryExpression().isEmpty();
 
             TACLabel next;
 
@@ -2285,7 +2283,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
     TACLabel preCleanupLabel = new TACLabel(method);
 
-    if (ctx.catchStatement().size() > 0) block.addCatches();
+    if (!ctx.catchStatement().isEmpty()) block.addCatches();
 
     if (ctx.block() != null) block.addRecover();
 
@@ -2297,7 +2295,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     new TACBranch(anchor, preCleanupLabel).setContext(null); // jump to shared cleanup
 
     // Handle catches
-    if (ctx.catchStatement().size() > 0) {
+    if (!ctx.catchStatement().isEmpty()) {
       // Ignores context for a while, preventing dead code removal errors
       // They'll be caught inside the catch
       // Catching them here creates misleading error messages
@@ -3544,6 +3542,11 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
   public Void visitSpawnExpression(shadow.parse.ShadowParser.SpawnExpressionContext ctx) {
     visitChildren(ctx);
 
+    // Parameters for thread create
+    ArrayList<TACOperand> params = new ArrayList<>();
+    for (ConditionalExpressionContext child : ctx.conditionalExpression())
+      params.add(child.appendBefore(anchor));
+
     // Get parent thread
     TACSingletonRef reference = new TACSingletonRef(Type.THREAD_CURRENT);
     TACOperand instance = new TACLoad(anchor, reference);
@@ -3551,28 +3554,7 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     TACMethodRef instanceName = new TACMethodName(anchor, instance, instanceSignature);
     TACOperand parent = new TACCall(anchor, instanceName, Collections.singletonList(instance));
 
-    Type runnerType = ctx.type().getType();
-
-    MethodSignature runnerCreateSignature = ctx.spawnRunnerCreateCall().getSignature();
-    List<TACOperand> runnerParams =
-        new ArrayList<>(((SequenceType) ctx.spawnRunnerCreateCall().getType()).size() + 1);
-
-    ctx.spawnRunnerCreateCall().appendBefore(anchor);
-    for (ShadowParser.ConditionalExpressionContext child :
-        ctx.spawnRunnerCreateCall().conditionalExpression()) {
-      runnerParams.add(child.getOperand());
-    }
-
-    TACOperand runnerRef = callCreate(runnerCreateSignature, runnerParams, runnerType);
-
-    MethodSignature threadCreateSignature = ctx.getSignature();
-    ArrayList<TACOperand> params = new ArrayList<>();
-    if (ctx.StringLiteral() != null) {
-      params.add(new TACLiteral(anchor, ShadowString.parseString(ctx.StringLiteral().getText())));
-    }
-    params.add(runnerRef);
-
-    TACOperand newThread = callCreate(threadCreateSignature, params, Type.THREAD);
+    TACOperand newThread = callCreate(ctx.getSignature(), params, Type.THREAD);
 
     // Add new thread to parent thread
     MethodSignature addChildSignature = Type.THREAD.getMatchingMethod("addChild", new SequenceType(newThread));
@@ -3584,18 +3566,6 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
 
     prefix = newThread;
     ctx.setOperand(prefix);
-
-    return null;
-  }
-
-  @Override
-  public Void visitSpawnRunnerCreateCall(
-      shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx) {
-    visitChildren(ctx);
-
-    for (ShadowParser.ConditionalExpressionContext child : ctx.conditionalExpression()) {
-      child.appendBefore(anchor);
-    }
 
     return null;
   }

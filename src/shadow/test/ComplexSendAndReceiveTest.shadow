@@ -8,9 +8,9 @@ class shadow:test@ComplexSendAndReceiveTest
 
 		// !!!! TEST #1 !!!!
 		Console.printLine("Test1");
-		var t1 = spawn(Test1Runner:());
+		var t1 = spawn(Test1Runner:create());
 
-		// we wait till the children get spawned:()
+		// We wait till the children get spawned
 		while(t1->childrenCount != 4)
 		{
 		    Thread:Current.sleep(10);
@@ -39,7 +39,7 @@ class shadow:test@ComplexSendAndReceiveTest
 
 		// !!!! TEST #2 !!!!
 		Console.printLine("Test2");
-		spawn(Test2Runner:());
+		spawn(Test2Runner:create());
 		// !!!! TEST #2 !!!!
 	}
 
@@ -66,7 +66,7 @@ class shadow:test@ComplexSendAndReceiveTest
 			nullable var threads = Thread:null[4];
 
 			for (int i = 0; i < threads->size; i += 1)
-				threads[i] = spawn(SenderRunner:());
+				threads[i] = spawn(SenderRunner:create());
 
 			var message = "";
 			nullable Thread thread = null;
@@ -125,7 +125,7 @@ class shadow:test@ComplexSendAndReceiveTest
 		public run() => ()
 		{
 			for (int i = 0; i < 2; i += 1)
-				Console.printLine(spawn(SenderRunner2<int>:(i))->name);
+				Console.printLine(spawn(SenderRunner2<int>:create(i))->name);
 
 			Thread current = Thread:Current->instance;
 

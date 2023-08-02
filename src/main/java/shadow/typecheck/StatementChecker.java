@@ -748,13 +748,9 @@ public class StatementChecker extends ScopedChecker {
       Type type = ctx.unaryExpression().getType();
 
       switch (operator) {
-        case "-":
-          type = visitUnary(ctx, "negate", "unary -", Type.CAN_NEGATE);
-          break;
-        case "~":
-          type = visitUnary(ctx, "bitComplement", "operator ~", Type.INTEGER);
-          break;
-        case "#":
+        case "-" -> type = visitUnary(ctx, "negate", "unary -", Type.CAN_NEGATE);
+        case "~" -> type = visitUnary(ctx, "bitComplement", "operator ~", Type.INTEGER);
+        case "#" -> {
           if (type instanceof SequenceType) {
             addError(ctx, Error.INVALID_TYPE, "Cannot apply operator # to sequence type " + type);
             type = Type.UNKNOWN;
@@ -763,17 +759,17 @@ public class StatementChecker extends ScopedChecker {
             ctx.addOperation(signature); // should never be null
             type = Type.STRING;
           }
-          break;
-        case "!":
+        }
+        case "!" -> {
           if (!type.equals(Type.BOOLEAN)) {
             addError(
-                ctx,
-                Error.INVALID_TYPE,
-                "Cannot apply operator ! to type " + type + " which is not boolean",
-                type);
+                    ctx,
+                    Error.INVALID_TYPE,
+                    "Cannot apply operator ! to type " + type + " which is not boolean",
+                    type);
             type = Type.UNKNOWN;
           }
-          break;
+        }
       }
 
       ctx.setType(type);
@@ -1732,6 +1728,16 @@ public class StatementChecker extends ScopedChecker {
 
     ctx.setType(type);
 
+    if (isFoundFinally(ctx))
+      addError(
+          ctx,
+          Error.INVALID_STRUCTURE,
+          "check statement cannot branch out of a finally block to a recover");
+
+    return null;
+  }
+
+  private static boolean isFoundFinally(CheckExpressionContext ctx) {
     ParserRuleContext parent = ctx.getParent();
     boolean foundRecover = false;
     boolean foundFinally = false;
@@ -1746,27 +1752,20 @@ public class StatementChecker extends ScopedChecker {
 
     while (parent != null && !foundRecover) {
       // Trying to check out of a finally
-      if (parent instanceof ShadowParser.BlockContext
-          && parent.getParent() instanceof ShadowParser.FinallyStatementContext)
+      if (parent instanceof BlockContext
+          && parent.getParent() instanceof FinallyStatementContext)
         foundFinally = true;
 
       // Legitimate recover first (we're inside of a try that has a matching recover)
-      if (parent instanceof ShadowParser.TryStatementContext) {
-        ShadowParser.CatchStatementsContext grandparent =
+      if (parent instanceof TryStatementContext) {
+        CatchStatementsContext grandparent =
             (CatchStatementsContext) parent.getParent();
         if (grandparent.block() != null) foundRecover = true;
       }
 
       parent = parent.getParent();
     }
-
-    if (foundFinally)
-      addError(
-          ctx,
-          Error.INVALID_STRUCTURE,
-          "check statement cannot branch out of a finally block to a recover");
-
-    return null;
+    return foundFinally;
   }
 
   @Override
@@ -1792,12 +1791,6 @@ public class StatementChecker extends ScopedChecker {
       ShadowParser.PrimaryPrefixContext child = ctx.primaryPrefix();
       ctx.setType(child.getType());
       ctx.addModifiers(child.getModifiers());
-
-      if (child.spawnExpression() != null) {
-        ctx.action = true;
-        currentType.addUsedType(Type.THREAD);
-        currentType.addUsedType(Type.THREAD_CURRENT);
-      }
     }
 
     curPrefix.removeFirst(); // pop prefix type off stack
@@ -1840,6 +1833,11 @@ public class StatementChecker extends ScopedChecker {
 
     String image = ctx.getText();
 
+    if (ctx.spawnExpression() != null || ctx.checkExpression() != null || ctx.receiveExpression() != null) {
+      ShadowParser.PrimaryExpressionContext parent = (PrimaryExpressionContext) ctx.getParent();
+      parent.action = true;
+    }
+
     if (image.equals("this") || image.equals("super")) {
       if (currentType instanceof InterfaceType) {
         addError(
@@ -1855,7 +1853,7 @@ public class StatementChecker extends ScopedChecker {
         Modifiers methodModifiers = Modifiers.NO_MODIFIERS;
         if (!currentMethod.isEmpty()) methodModifiers = currentMethod.getFirst().getModifiers();
 
-        // upgrade if current method is non-mutable
+        // Upgrade if current method is non-mutable
         if (methodModifiers.isImmutable() || methodModifiers.isReadonly())
           ctx.getModifiers().upgradeToTemporaryReadonly();
       }
@@ -1868,7 +1866,7 @@ public class StatementChecker extends ScopedChecker {
       ctx.setType(ctx.conditionalExpression().getType());
       ctx.addModifiers(ctx.conditionalExpression().getModifiers());
     }
-    // literal, check expression, copy expression, cast expression,
+    // literal, check expression, copy expression, cast expression, spawn expression
     // primitive and function types, and array initializer
     else {
       Context child = (Context) ctx.getChild(0);
@@ -2288,7 +2286,7 @@ public class StatementChecker extends ScopedChecker {
         List<MethodSignature> methods = prefixType.recursivelyGetMethodOverloads(methodName);
 
         // unbound method (it gets bound when you supply arguments)
-        if (methods != null && methods.size() > 0)
+        if (methods != null && !methods.isEmpty())
           ctx.setType(new UnboundMethodType(methodName, prefixType));
         else
           addError(
@@ -2573,7 +2571,7 @@ public class StatementChecker extends ScopedChecker {
       else if (prefixNode.getModifiers().isTemporaryReadonly())
         ctx.addModifiers(Modifiers.TEMPORARY_READONLY);
 
-      if (methods != null && methods.size() > 0) {
+      if (methods != null && !methods.isEmpty()) {
         MethodSignature getter = null;
         UnboundMethodType setterName = null;
 
@@ -3016,7 +3014,7 @@ public class StatementChecker extends ScopedChecker {
             ctx,
             Error.INVALID_RETURNS,
             "Cannot use a return statement inside of a destroy definition");
-      else if (methodType.getReturnTypes().size() == 0) {
+      else if (methodType.getReturnTypes().isEmpty()) {
         if (ctx.rightSide() != null)
           addError(
               ctx,
@@ -3247,55 +3245,46 @@ public class StatementChecker extends ScopedChecker {
   public Void visitSpawnExpression(ShadowParser.SpawnExpressionContext ctx) {
     visitChildren(ctx);
 
-    Type runnerType = ctx.type().getType();
-    if (!runnerType.getClass().equals(ClassType.class)) {
-      addError(
-              ctx,
-              Error.INVALID_TYPE,
-              runnerType + " must be a class type"); // Not an interface, singleton, exception, etc.
-    }
-    else if (!runnerType.isSubtype(Type.CAN_RUN)) {
-      addError(
-          ctx,
-          Error.INVALID_TYPE,
-          runnerType + " needs to be a subtype of the " + Type.CAN_RUN + " interface");
-    }
+    currentType.addUsedType(Type.THREAD);
+    currentType.addUsedType(Type.THREAD_CURRENT);
 
-    List<ShadowException> errors = new ArrayList<>();
-    MethodSignature runnerCreateSignature =
-        runnerType.getMatchingMethod(
-            "create",
-            (SequenceType) ctx.spawnRunnerCreateCall().getType(),
-            new SequenceType(),
-            errors);
-    if (runnerCreateSignature == null) {
-      addErrors(ctx, errors);
-    } else {
-      ctx.spawnRunnerCreateCall().setSignature(runnerCreateSignature);
-    }
-
-    // we should find the thread create since we're the ones who defined it.
-    // Two overloads: Thread(CanRun) and Thread(String, CanRun)
+    ShadowParser.ConditionalExpressionContext runner;
     SequenceType sequence = new SequenceType();
-    if (ctx.StringLiteral() != null) {
-      sequence.add(new SimpleModifiedType(Type.STRING));
-    }
-    sequence.add(new SimpleModifiedType(Type.CAN_RUN));
 
-    ctx.setSignature(Type.THREAD.getMatchingMethod("create", sequence));
+    if (ctx.conditionalExpression().size() == 2) { // Optional thread name
+      ShadowParser.ConditionalExpressionContext name = ctx.conditionalExpression().get(0);
+
+      if (name.getType() != Type.STRING)
+        addError(name, Error.INVALID_TYPE, "Optional thread name must have type " + Type.STRING);
+      else
+        sequence.add(name);
+
+      runner = ctx.conditionalExpression().get(1);
+    }
+    else
+      runner = ctx.conditionalExpression().get(0);
+
+    Type runnerType = runner.getType();
+    if( !runnerType.isSubtype(Type.CAN_RUN) ) {
+      addError(
+              runner,
+          Error.INVALID_SPAWN,
+          "Type "
+              + runnerType
+              + " cannot be spawned because it is not a subtype of the "
+              + Type.CAN_RUN
+              + " interface",
+              runnerType);
+    }
+    else if(runner.getModifiers().isTypeName()) {
+      addError(runner, Error.INVALID_SPAWN, "Type name cannot be spawned", runnerType);
+    }
+    else {
+      sequence.add(runner);
+      ctx.setSignature(Type.THREAD.getMatchingMethod("create", sequence));
+    }
+
     ctx.setType(Type.THREAD);
-
-    return null;
-  }
-
-  @Override
-  public Void visitSpawnRunnerCreateCall(
-      shadow.parse.ShadowParser.SpawnRunnerCreateCallContext ctx) {
-    visitChildren(ctx);
-
-    SequenceType sequence = new SequenceType();
-    sequence.addAll(ctx.conditionalExpression());
-    ctx.setType(sequence);
 
     return null;
   }
