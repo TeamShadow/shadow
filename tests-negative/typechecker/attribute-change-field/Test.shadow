@@ -1,0 +1,11 @@
+class Test {
+
+    public main() => () {
+
+    }
+
+    [Attribute(42)]
+    public method() => () {
+        Attribute:test = 15;
+    }
+}

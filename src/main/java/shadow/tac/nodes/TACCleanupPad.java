@@ -6,29 +6,28 @@ import shadow.typecheck.type.Type;
 
 public class TACCleanupPad extends TACOperand {
 
-	public TACCleanupPad(TACNode node) {
-		super(node);
-	}	
-	
-	@Override
-	public void accept(TACVisitor visitor) throws ShadowException {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public TACOperand getOperand(int num) {
-		throw new IndexOutOfBoundsException("" + num);
-	}
+  public TACCleanupPad(TACNode node) {
+    super(node);
+  }
 
+  @Override
+  public void accept(TACVisitor visitor) throws ShadowException {
+    visitor.visit(this);
+  }
 
-	@Override
-	public Type getType() {
-		return null;
-	}
+  @Override
+  public TACOperand getOperand(int num) {
+    throw new IndexOutOfBoundsException("" + num);
+  }
 
-	@Override
-	public int getNumOperands() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+  @Override
+  public Type getType() {
+    return null;
+  }
+
+  @Override
+  public int getNumOperands() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
 }

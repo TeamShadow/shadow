@@ -4,11 +4,12 @@ bin/
 *.bc
 *.ll
 *.s
+*.o
 !*.native.ll
 *.exe
 *.out
 .DS_Store
-!Mac.ll
+!src/Mac.ll
 !Linux.ll
 !Main.ll
 !NoArguments.ll

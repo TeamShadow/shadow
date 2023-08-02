@@ -1,0 +1,19 @@
+class shadow:test@Chest <T is Treasure>
+{
+	T object; 
+	
+	public create(T value)
+	{
+		object = value; 
+	}
+	
+	public getObject() => (T)
+	{
+		return object; 
+	}
+	
+	public getValue() => (double)
+	{
+		return object->value;
+	}
+}

@@ -1,0 +1,63 @@
+/**
+ * Interface {@code FloatingPoint<T>} specifies methods that any floating
+ * point representation of a number should have. 
+ *
+ * Both the {@code double} and {@code float} types have this interface.
+ *
+ * @seeDoc double
+ * @seeDoc float
+ */
+interface shadow:standard@
+	FloatingPoint<T>
+is	Number<T>
+and CanNegate<T>
+{
+	/**
+	 * Method to determine if the number represented is a not-a-number value.
+	 * These values are used to represent the result of undefined
+	 * computations, such as the square root of a negative number or
+	 * 0.0 / 0.0.	 
+	 * @return {@code true} if the current value is not a number	 
+	 */
+	readonly isNaN() => (boolean);
+	
+	/**
+	 * Method to determine if the number represented is finite (neither
+	 * infinite nor a not-a-number value).
+	 * @return {@code true} if the current value is finite		 
+	 */
+	readonly isFinite() => (boolean);
+	
+	/**
+	 * Method to determine if the number represented is infinite but not a
+	 * not-a-number value.
+	 * @return {@code true} if the current value is infinite		 
+	 */
+	readonly isInfinite() => (boolean);
+	
+	/** 
+	 * Method to find the largest value with no fractional part that is
+	 * less than or equal to the current value.	 	
+	 * @return floor of the current value
+	 */
+	readonly floor() => (T);
+	
+	/** 
+	 * Method to find the smallest value with no fractional part that is
+	 * greater than or equal to the current value.	 	
+	 * @return ceiling of the current value
+	 */
+	readonly ceiling() => (T);
+	
+	/** 
+	 * Method to round the current value to the nearest integer.	 	 	
+	 * @return current value rounded to the nearest integer
+	 */
+	readonly round() => (T);
+
+    /**
+     * Returns a non-negative version of the current value.
+     * @return non-negative value
+     */
+    readonly  abs() => (T);
+}

@@ -1,0 +1,358 @@
+/**
+ * Class {@code code} contains the methods that can be called on {@code code}  
+ * values.
+ */
+locked immutable class shadow:standard@
+	Code
+is	Integer<code>
+and CanHash
+{
+
+	// Methods for Bitwise<byte>
+	
+	/**
+	 * Returns the bitwise complement of the {@code code} value.
+	 * @return bitwise complement 
+	 */
+	[ImportNative]
+	public bitComplement() => (code);
+	
+	/** 
+	 * Finds the result of left-shifting the bits of the {@code code} value
+	 * by an unsigned amount.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
+	[ImportNative]
+	public bitShiftLeft(uint amount) => (code);
+	
+	/** 
+	 * Finds the result of right-shifting the bits of the {@code code} value
+	 * by an unsigned amount.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
+	[ImportNative]
+	public bitShiftRight(uint amount) => (code);
+	
+	/** 
+	 * Finds the result of left-rotating the bits of the {@code code} value
+	 * by an unsigned amount.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
+	[ImportNative]
+	public bitRotateLeft(uint amount) => (code);
+	
+	/** 
+	 * Finds the result of right-rotating the bits of the {@code code} value
+	 * by an unsigned amount.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
+	[ImportNative]
+	public bitRotateRight(uint amount) => (code);
+	
+	/** 
+	 * Finds the result of left-shifting the bits of the {@code code} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
+	public bitShiftLeft(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftLeft(abs), bitShiftRight(abs);
+	}
+	
+	/** 
+	 * Finds the result of right-shifting the bits of the {@code code} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to shift
+	 * @return shifted value 
+	 */
+	public bitShiftRight(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitShiftRight(abs), bitShiftLeft(abs);
+	}
+	
+	/** 
+	 * Finds the result of left-rotating the bits of the {@code code} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
+	public bitRotateLeft(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateLeft(abs), bitRotateRight(abs);
+	}
+	
+	/** 
+	 * Finds the result of right-rotating the bits of the {@code code} value
+	 * by a signed amount which may be positive, negative, or zero.
+	 * @param amount bits to rotate
+	 * @return rotated value 
+	 */
+	public bitRotateRight(int amount) => (code)
+	{
+		uint abs = amount.abs();
+		return amount >= 0 ? bitRotateRight(abs), bitRotateLeft(abs);
+	}
+
+	// Methods for Number
+	
+	/** 
+	 * Converts the {@code code} value to a {@code byte}, which will overflow
+	 * if the value is too large to be contained in a {@code byte}. 	 
+	 * @return {@code byte} value 
+	 */
+	[ImportNative]
+	public toByte() => (byte);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code ubyte}, which will overflow
+	 * if the value is too large to be contained in a {@code ubyte}. 	 
+	 * @return {@code ubyte} value 
+	 */
+	[ImportNative]
+	public toUByte() => (ubyte);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code short}, which will overflow
+	 * if the value is too large to be contained in a {@code short}. 	 
+	 * @return {@code short} value 
+	 */
+	[ImportNative]
+	public toShort() => (short);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code ushort}, which will overflow
+	 * if the value is too large to be contained in a {@code ushort}. 	 
+	 * @return {@code ushort} value 
+	 */
+	[ImportNative]
+	public toUShort() => (ushort);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code int}, which will overflow
+	 * if the value is larger than {@code int:MAX_VALUE}. 	 
+	 * @return {@code int} value 
+	 */
+	[ImportNative]
+	public toInt() => (int);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code uint}, which involves no
+	 * underlying change in the data. 	 
+	 * @return {@code uint} value 
+	 */
+	[ImportNative]
+	public toUInt() => (uint);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code long}. 	 
+	 * @return {@code long} value 
+	 */
+	[ImportNative]
+	public toLong() => (long);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code ulong}. 	 
+	 * @return {@code ulong} value 
+	 */
+	[ImportNative]
+	public toULong() => (ulong);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code code}, which involves
+	 * no change. 	 
+	 * @return {@code code} value 
+	 */
+	[ImportNative]
+	public toCode() => (code);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code float}. 	 
+	 * @return {@code float} value 
+	 */
+	[ImportNative]
+	public toFloat() => (float);
+	
+	/** 
+	 * Converts the {@code code} value to a {@code double}. 	 
+	 * @return {@code double} value 
+	 */
+	[ImportNative]
+	public toDouble() => (double);
+	
+	/** 
+	 * Finds the minimum of the current value and another {@code code}.
+	 * @param other value
+	 * @return minimum value	 
+	 */
+	public min(code other) => (code)
+	{
+		return this < other ? this, other;
+	}
+	
+	/** 
+	 * Finds the maximum of the current value and another {@code code}.
+	 * @param other value
+	 * @return maximum value	 
+	 */
+	public max(code other) => (code)
+	{
+		return this > other ? this, other;
+	}
+	
+	// Methods for Integer<code>
+	
+	/** 
+	 * Computes the bitwise OR of the value and another {@code code} value.
+	 * @param other value to bitwise OR with
+	 * @return result of bitwise OR 
+	 */
+	[ImportNative]
+	public bitOr(code other) => (code);
+	
+	/** 
+	 * Computes the bitwise XOR of the value and another {@code code} value.
+	 * @param other value to bitwise XOR with
+	 * @return result of bitwise XOR 
+	 */
+	[ImportNative]
+	public bitXor(code other) => (code);
+	
+	/** 
+	 * Computes the bitwise AND of the value and another {@code code} value.
+	 * @param other value to bitwise AND with
+	 * @return result of bitwise AND 
+	 */
+	[ImportNative]
+	public bitAnd(code other) => (code);
+
+	// Method for CanAdd<code>
+	/**
+	 * Adds another {@code code} to the current value and returns the resulting value.	 
+	 * @param other value to add
+	 * @return sum of the two values
+	 */
+	[ImportNative]
+	public add(code other) => (code);
+	
+	// Method for  CanSubtract<code>	
+	/**
+	 * Subtracts another {@code code} from the current value and returns the resulting value.	 
+	 * @param other value to subtract
+	 * @return difference of the two values
+	 */
+	[ImportNative]
+	public subtract(code other) => (code);
+	
+	// Method for  CanMultiply<code>	
+	/**
+	 * Multiplies the current value by another {@code code} and returns the resulting value.	 
+	 * @param other value to multiply by
+	 * @return product of the two values
+	 */
+	[ImportNative]
+	public multiply(code other) => (code);
+		
+	// Method for  CanDivide<code>
+	/**
+	 * Divides the current value by another {@code code} and returns the quotient.	 
+	 * @param other value to divide by
+	 * @return quotient of the division
+	 */
+	[ImportNative]
+	public divide(code other) => (code);
+	
+	// Method for  CanModulus<code>
+	/**
+	 * Divides the current value by another {@code code} and returns the remainder.	 
+	 * @param other value to divide by
+	 * @return remainder of the division
+	 */
+	[ImportNative]
+	public modulus(code other) => (code);
+	
+	// Method for  CanCompare<code>
+	/**
+	 * Compares the current value to another {@code code}, returning {@code -1},
+	 * {@code 0}, or {@code 1}, if the current value is smaller than, equal to, or larger
+	 * than the other value, respectively.
+	 * @param other value to compare to
+	 * @return whether smaller, equal, or larger
+	 */	
+	[ImportNative]
+	public compare(code other) => (int);
+	
+	// Method for  CanEqual<code>
+	/**
+	 * Compares the current value to another {@code code}, returning {@code true}
+	 * if they represent the same number.
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
+	[ImportNative]
+	public equal(code other) => (boolean);
+
+	// Method for CanHash
+	/** 
+	 * Finds a hash value for the current value.	 
+	 * @return hash value	 
+	 */
+	public get hash() => (ulong)
+	{
+		return cast<ulong>(this);
+	}
+
+	/** 
+	 * Returns a lower-case version of this {@code code} if it represents an
+	 * upper-case Latin letter.  Otherwise, it returns the {@code code}
+	 * unchanged.  Note that this method does not currently support accented
+	 * Latin characters or non-Latin characters.  	 
+	 * @return lower-case version	 
+	 */
+	public toLowerCase() => (code)
+	{
+		if (this >= 'A' and this <= 'Z')
+			return this - 'A' + 'a';
+		return this;
+	}
+	
+	/** 
+	 * Returns an upper-case version of this {@code code} if it represents a
+	 * lower-case Latin letter.  Otherwise, it returns the {@code code}
+	 * unchanged.  Note that this method does not currently support accented
+	 * Latin characters or non-Latin characters.  	 
+	 * @return upper-case version	 
+	 */
+	public toUpperCase() => (code)
+	{
+		if (this >= 'a' and this <= 'z')
+			return this - 'a' + 'A';
+		return this;
+	}
+
+	/** 
+	 * Returns a {@code String} representation of the value, containing this
+	 * single {@code code} value.
+	 * @return  {@code String} representation
+	 */
+	public toString() => ( String )
+	{
+		code[] array = code:create[1];
+		array[0] = this;
+		return String:create(array);
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	[ExportAssembly]
+	private _shadow_standard__Code_getClass() => (Class)
+	{
+		return code:class;
+	}
+}

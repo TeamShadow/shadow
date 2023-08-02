@@ -1,0 +1,17 @@
+import shadow:io@Console;
+
+class shadow:test@ImportExportAssemblyTest
+{
+    [ImportAssembly]
+    private __shadow_test__ImportExportAssemblyTest_multiply(int a, int b) => (int);
+
+    [ExportAssembly]
+    private _shadow_test__ImportExportAssemblyTest_add(int a, int b) => (int) {
+        return a + b;
+    }
+
+	public main(String[] args) => ()
+	{
+		Console.printLine(__shadow_test__ImportExportAssemblyTest_multiply(5, 3));
+	}
+}

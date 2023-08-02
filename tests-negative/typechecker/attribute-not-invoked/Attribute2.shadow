@@ -1,0 +1,7 @@
+attribute Attribute2
+{
+    getValue() => (int)
+    {
+        return 10;
+    }
+}

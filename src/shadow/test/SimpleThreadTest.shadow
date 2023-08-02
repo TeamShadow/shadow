@@ -1,0 +1,19 @@
+import shadow:io@Console;
+
+class shadow:test@SimpleThreadTest
+{
+	class ThreadTestRunner is CanRun
+	{
+		public run() => ()
+		{
+			Console.printLine("Printing on a separate thread");
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		Thread thread = spawn(ThreadTestRunner:create());
+		thread.join();
+		Console.printLine("Joined thread");
+	}
+}

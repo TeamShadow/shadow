@@ -1,0 +1,214 @@
+/**
+ * Class {@code File} provides utilities for interacting with a file in the
+ * operating system, such as creating a new file, deleting an existing file,
+ * reading from a file, and writing to a file.
+ */
+class shadow:io@
+	File
+is	CanRead
+and CanWrite
+and CanOpen
+and CanClose
+{
+	/// handle contains OS-specific file handle information 
+	long handle = -1L;
+	get Path path;
+	
+	[ImportAssembly]
+	private readonly __shadow_io__File_exists(String path) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_io__File_open(String path, int mode) => (long);
+	[ImportAssembly]
+    private readonly __shadow_io__File_delete(String path) => ();
+	[ImportAssembly]
+	private readonly __shadow_io__File_close(long handle) => ();
+	[ImportAssembly]
+    private readonly __shadow_io__File_positionGet(long handle) => ( long );
+    [ImportAssembly]
+    private readonly __shadow_io__File_positionSet(long handle, long position) => ();
+    [ImportAssembly]
+    private readonly __shadow_io__File_sizeGet(String path) => ( long );
+    [ImportAssembly]
+    private readonly __shadow_io__File_sizeSet(long handle, long size) => ();
+    [ImportAssembly]
+    private readonly __shadow_io__File_read(long handle, ubyte[] array) => (long);
+    [ImportAssembly]
+    private readonly __shadow_io__File_write(long handle, readonly ubyte[] array, long bytes) => (long);
+
+	/**
+	 * Creates a {@code File} object associated with the file on the given
+	 * path.
+	 * @param path of the file
+	 */
+	public create( String path )
+	{
+		this(Path:create(path));
+	}
+	
+	/**
+	 * Creates a {@code File} object associated with the file specified by the
+	 * given {@code Path} object.
+	 * @param path of the file
+	 */
+	public create( Path path )
+	{
+		this:path = path;
+	}
+	
+	/**
+	 * Closes the {@code File} on destroy.
+	 */
+	public destroy
+	{
+		close();
+	}
+	
+	/**
+	 * Returns a {@code String} representation of the path of this file.
+	 */
+	public readonly toString() => ( String )
+	{
+		return #path;
+	}
+
+	/**
+	 * Determines a file in the operating system matches the
+	 * path in this {@code File} object.
+	 * @return {@code true} if the file exists
+	 */	
+	public readonly get exists() => ( boolean )
+	{
+		return __shadow_io__File_exists(#path);
+	}
+
+    /**
+     * Opens or creates a file in the operating system with the path of
+     * this {@code File} object.
+     */
+    public open() => ()
+    {
+        open(READ | WRITE);
+    }
+	
+	/**
+	 * Opens or creates a file in the operating system with the path of
+	 * this {@code File} object.
+	 */
+	public open( int mode ) => ()
+	{
+	    close();
+	    if ((mode & READ) == 0 and (mode & WRITE) == 0)
+	        throw IOException:create("File must be opened for reading, writing, or both");
+	    handle = __shadow_io__File_open(#path, mode);
+	}
+
+	public delete() => (File)
+	{
+	    close();
+	    __shadow_io__File_delete(#path);
+	    return this;
+	}
+	
+	/**
+	 * Gets the current position of the read/write pointer inside the file. 
+	 * @return position in file
+	 */
+	public get readonly position() => ( long )
+	{
+	    return __shadow_io__File_positionGet(handle);
+	}
+	
+	/**
+	 * Sets the current position of the read/write pointer inside the file. 
+	 * @param position in file
+	 */
+	public set position( long position ) => ()
+	{
+	    __shadow_io__File_positionSet(handle, position);
+	}
+	
+	/**
+	 * Gets the size of the file in bytes. 
+	 * @return file size
+	 */
+	public get readonly size() => ( long )
+	{
+        return __shadow_io__File_sizeGet(#path);
+	}
+	
+	/**
+	 * Sets the size of the file in bytes, extending or truncating it. 
+	 * @param new file size
+	 */
+	public set size( long size ) => ()
+	{
+	    boolean closed = handle == -1L;
+	    // POSIX has truncate, but Windows requires an open file for resizing.
+	    if (closed)
+	        open (WRITE);
+
+	    __shadow_io__File_sizeSet(handle, size);
+
+        if (closed)
+            close();
+	}
+	
+	/**
+	 * Reads data from the file into the buffer and updates the read pointer
+	 * location.	     
+	 * @param buffer array of {@code byte} values to hold file data
+	 * @return number of {@code byte} values successfully read, always less
+	 * than or equal the length of the buffer, or -1 if end of file has been reached
+	 */
+	public readonly read( ubyte[] buffer ) => ( long )
+	{
+	    return __shadow_io__File_read(handle,buffer);
+	}
+	
+	/**
+	 * Writes data from the buffer into the file and updates the write pointer
+	 * location.	     
+	 * @param buffer array of {@code ubyte} values to be written
+	 * @param bytes total number of bytes to write
+	 * @return number of {@code byte} values successfully written
+	 */
+	public write( readonly ubyte[] buffer, long bytes) => ( long )
+	{
+	    return __shadow_io__File_write(handle, buffer, bytes);
+	}
+
+	/**
+	 * Gets whether the file is open. This method does not distinguish between
+	 * open for reading and open for writing.
+	 */
+    public get isOpen() => (boolean)
+    {
+        return handle != -1L;
+    }
+	
+	/**
+	 * Closes the file.
+	 */
+	public close() => ()
+	{
+		if(handle != -1L) {
+			__shadow_io__File_close(handle);
+			handle = -1L;
+		}
+	}
+
+    [ExportAssembly]
+    private _shadow_io__File_throwException(String message) => ()
+    {
+        throw IOException:create(message);
+    }
+
+	/*
+	// C FRAMEWORK EXTENSIONS
+	[ExportAssembly]
+	private _shadow_io__File_setHandle(long handle) => ()
+	{
+		this:handle = handle;
+	}
+	*/
+}

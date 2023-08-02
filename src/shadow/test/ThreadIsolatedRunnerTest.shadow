@@ -1,0 +1,38 @@
+import shadow:io@Console;
+
+class shadow:test@ThreadIsolatedRunnerTest
+{
+	int y = 0;
+	
+	class ThreadIsolatedRunner is CanRun
+	{
+		int x = 0;
+		ThreadIsolatedRunnerTest outer;
+
+		public create(ThreadIsolatedRunnerTest outer)
+		{
+		   this:outer = outer;
+		}
+
+		public run() => ()
+		{
+			x += 1;
+			outer:y += 1;
+			Console.printLine(x # " " # outer:y);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		var thread1 = spawn(ThreadIsolatedRunner:create(this));
+	    thread1.join();
+
+		var thread2 = spawn(ThreadIsolatedRunner:create(this));
+		thread2.join();
+
+		var thread3 = spawn(ThreadIsolatedRunner:create(this));
+		thread3.join();
+		
+		Console.printLine(y);
+	}
+}

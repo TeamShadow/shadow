@@ -1,0 +1,198 @@
+/**
+ * Singleton {@code Console} provides methods for reading text data from
+ * {@code stdin} and writing text data to {@code stdout} and {@code stderr}.
+ * Unlike other singletons, {@code Console} is automatically created at the
+ * beginning of a Shadow console program, since its functionality is used for
+ * reporting uncaught exceptions. Some {@code Console} behavior is platform
+ * specific.
+ */
+singleton shadow:io@
+    Console
+{
+	TextInput input;
+	TextOutput output;
+	TextOutput error;
+
+    [ImportAssembly]
+    private readonly __shadow_io__Console_initialize() => ();
+
+    [ImportAssembly]
+    private readonly __shadow_io__Console_printPointer(Object object) => ();
+
+	
+	/**
+	 * Creates a new {@code Console}.
+	 */
+	public create()
+	{
+	    input = TextInput:create(StandardInput:create());
+        output = TextOutput:create(StandardOutput:create());
+	    error = TextOutput:create(StandardOutput:create(true));
+		__shadow_io__Console_initialize();
+	}
+
+	public destroy
+	{
+	}
+
+	/**
+	 * Reads the next line of text from {@code stdin}, stopping when a new line
+	 * or line feed character is reached.
+	 * @return line as a {@code String}
+	 * @return {@code true} if the end of the file was reached 
+	 */
+	public readLine() => ( String, boolean eof )
+	{
+		return input.readLine();
+	}
+	
+	/**
+	 * Reads the next white-spaced delimited text from {@code stdin}, stopping
+	 * when a space, a tab, a new line, or a line feed character is reached.	 
+	 * @return text as a {@code String}
+	 * @return {@code true} if the end of the file was reached 
+	 */
+	public readString() => ( String, boolean eof )
+	{
+		return input.readString();
+	}
+	
+	/**
+	 * Reads the next white-spaced delimited text from {@code stdin} and 
+	 * converts that value to an {@code int}.	 
+	 * @return text converted to {@code int}
+	 * @throws NumberFormatException if the text does not represent a legal
+	 * {@code int}
+	 */
+	public readInt() => ( int )
+	{
+		return input.readInt();
+	}
+	
+	/**
+	 * Reads the next white-spaced delimited text from {@code stdin} and 
+	 * converts that value to a {@code double}.	 
+	 * @return text converted to {@code double}
+	 * @throws NumberFormatException if the text does not represent a legal
+	 * {@code double}
+	 */
+	public readDouble() => ( double )
+	{
+		return input.readDouble();
+	}
+	
+	
+	/**
+	 * Reads the next UTF-8 code point from {@code stdin}.	 	 
+	 * @return character as a {@code code}
+	 * @return {@code true} if the end of the file was reached 
+	 */
+	public readCode() => ( code, boolean eof )
+	{
+		return input.readCode();
+	}
+	
+	/**
+	 * Reads the next unsigned byte from {@code stdin}.
+	 * @return next unsigned byte
+	 * @return {@code true} if the end of the file was reached 
+	 */
+	public readByte() => (ubyte, boolean eof)
+	{
+		return input.readByte();
+	}
+
+	/**
+	 * Prints an object's {@code String} representation to {@code stdout}.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
+	public print(nullable Object value) => ( Console )
+	{
+		output.write(#value);
+		output.flush();
+		return this;
+	}
+	
+	/**
+	 * Prints an object's {@code String} representation to {@code stdout},
+	 * followed by a new line character.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
+	public printLine(nullable Object value) => ( Console )
+	{
+		print(value);
+		return printLine();
+	}
+
+	[ExportAssembly]
+    public _shadow_io__Console_printLine(nullable Object value) => (Console)
+    {
+        return printLine(value);
+    }
+
+    [ExportAssembly]
+    public _shadow_io__Console_printErrorLine(nullable Object value) => (Console)
+    {
+        return printErrorLine(value);
+    }
+	
+	/**
+	 * Prints a new line character to {@code stdout}.
+	 * @return {@code Console} object 
+	 */
+	public printLine() => (Console)
+	{
+		output.writeLine();
+		output.flush();
+		return this;
+	}
+	
+	/**
+	 * Prints an object's {@code String} representation to {@code stderr}.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
+	public printError( nullable Object value ) => ( Console )
+	{
+		error.write(#value);
+		error.flush();
+		return this;
+	}
+	
+	/**
+	 * Prints an object's {@code String} representation to {@code stderr},
+	 * followed by a new line character.	 	 
+	 * @param value object to print
+	 * @return {@code Console} object 
+	 */
+	public printErrorLine( nullable Object value ) => ( Console )
+	{
+		return printError(value).printErrorLine();
+	}
+
+	/**
+	 * Prints a new line character to {@code stderr}.
+	 * @return {@code Console} object 
+	 */
+	public printErrorLine() => (Console)
+	{
+		error.writeLine();
+		error.flush();
+		return this;
+	}
+
+	public printPointer(Object object) => (Console)
+	{
+	    __shadow_io__Console_printPointer(object);
+	    return this;
+	}
+
+	[ExportAssembly]
+    private _shadow_io__Console_getInstance() => (Console)
+    {
+        Console console;
+        return console;
+    }
+}

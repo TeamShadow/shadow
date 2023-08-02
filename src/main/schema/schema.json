@@ -1,0 +1,38 @@
+{
+  "type" : "Configuration",
+  "properties": {
+    "system": {
+      "type": "Path"
+    },
+    "import": {
+      "type" : "array",
+      "items" : {
+        "type" : "Path"
+      }
+    },
+    "target" : {
+      "type" : "string"
+    },
+    "architecture" : {
+      "type" : "integer"
+    },
+    "os" : {
+      "type" : "string"
+    },
+    "opt" : {
+      "type" : "string"
+    },
+    "llc" : {
+      "type" : "string"
+    },
+    "link" : {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+      "parent" : {
+        "type" : "Path"
+      }
+    }
+  }

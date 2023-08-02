@@ -1,0 +1,7 @@
+/**
+ * {@code Attribute} is the parent type of all attributes.
+ * Note that that enums are not implemented yet.
+ */
+class shadow:standard@
+	Attribute is shadow:standard@Object
+{}

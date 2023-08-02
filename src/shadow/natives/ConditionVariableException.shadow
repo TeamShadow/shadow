@@ -1,0 +1,8 @@
+exception shadow:natives@
+	ConditionVariableException is MutexException
+{
+	public create(String message)
+	{
+		super(message);
+	}
+}

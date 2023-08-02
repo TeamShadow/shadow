@@ -1,3 +1,8 @@
 // Modifiers shouldn't be allowed
 immutable attribute Attribute {
+    int value;
+    create(int value)
+    {
+        this:value = value;
+    }
 }

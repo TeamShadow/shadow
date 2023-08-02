@@ -1,24 +1,25 @@
 package shadow.typecheck.type;
 
-/**
- * Interface for types that have been modified.
- */
+/** Interface for types that have been modified. */
 public interface ModifiedType {
-    /**
-     * Returns the underlying Shadow {@link Type}.
-     * @return the Shadow type.
-     */
-    public Type getType();
+  /**
+   * Returns the underlying Shadow {@link Type}.
+   *
+   * @return the Shadow type.
+   */
+  Type getType();
 
-    /**
-     * Sets the underlying Shadow {@link Type}.
-     * @param type the Shadow {@link Type} to set.
-     */
-    public void setType(Type type);
+  /**
+   * Sets the underlying Shadow {@link Type}.
+   *
+   * @param type the Shadow {@link Type} to set.
+   */
+  void setType(Type type);
 
-    /**
-     * Returns the modifiers for this type.
-     * @return the {@link Modifiers} for this type.
-     */
-    public Modifiers getModifiers();
+  /**
+   * Returns the modifiers for this type.
+   *
+   * @return the {@link Modifiers} for this type.
+   */
+  Modifiers getModifiers();
 }

@@ -1,0 +1,25 @@
+import shadow:io@Console;
+
+class shadow:test@SendAndReceiveTest
+{
+	class ThreadTestRunner is CanRun
+	{
+		public run() => ()
+		{
+			(String message, Thread thread) = receive<String>();
+			Console.printLine(Thread:Current->instance->name # " received: " # message # " from " # thread->name);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		Thread thread1 = spawn(ThreadTestRunner:create());
+		Thread thread2 = spawn(ThreadTestRunner:create());
+
+		send("aardvark", thread1);
+
+		Thread:Current.sleep(100); // used to avoid mixed up text
+
+		send("formulation", thread2);
+	}
+}

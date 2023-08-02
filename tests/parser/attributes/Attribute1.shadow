@@ -1,4 +1,15 @@
 attribute Attribute1 {
     double required;
-    int optional = 4;
+    int optional;
+
+    create(double required)
+    {
+        this(required, 4);
+    }
+
+    create(double required, int optional)
+    {
+        this:required = required;
+        this:optional = optional;
+    }
 }

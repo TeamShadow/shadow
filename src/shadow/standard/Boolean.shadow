@@ -1,0 +1,45 @@
+/**
+ * Class {@code boolean} contains the methods that can be called on {@code boolean}  
+ * values.
+ */
+locked immutable class shadow:standard@
+	Boolean
+is  CanEqual<boolean>
+{
+	
+	/**
+	 * Returns the negation of the current {@code boolean} value.  	  
+	 * @return negated value 
+	 */
+	public not() => ( boolean )
+	{
+		return this ? false, true;
+	}
+	
+	/** 
+	 * Returns a {@code String} representation of the {@code boolean} value.
+	 * @return  {@code "true"} or {@code "false"} 
+	 */ 
+	public toString() => ( String )
+	{
+		return this ? "true", "false";
+	}
+	
+	/**
+	 * Compares the current value to another {@code boolean}, returning {@code true}
+	 * if they are the same.	 
+	 * @param other value to compare to
+	 * @return {@code true} if identical
+	 */
+	public equal(boolean other) => (boolean)
+	{
+		return this === other;	
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	[ExportAssembly]
+	private _shadow_standard__Boolean_getClass() => (Class)
+	{
+		return boolean:class;
+	}
+}

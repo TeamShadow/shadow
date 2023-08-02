@@ -1,0 +1,34 @@
+/**
+ * Class {@code StandardInput} provides methods for reading from {@code stdin}.
+ */
+class shadow:io@
+	StandardInput
+is	CanRead
+{
+    long handle = -1L;
+
+    [ImportAssembly]
+    private readonly __shadow_io__StandardInput_setUp() => (long);
+
+    // Use the read function from File
+    [ImportAssembly]
+    private readonly __shadow_io__File_read(long handle, ubyte[] array) => (long);
+
+    /**
+	 * Creates a {@code StandardInput} object.
+	 */
+	public create()
+	{
+        handle = __shadow_io__StandardInput_setUp();
+	}
+
+    /**
+     * Method called to read data from {@code stdin}.
+     * @param buffer array of {@code ubyte} values to read data into
+     * @return number of {@code ubyte} values successfully read
+     */
+    public read( ubyte[] buffer ) => ( long )
+    {
+        return __shadow_io__File_read(handle,buffer);
+    }
+}

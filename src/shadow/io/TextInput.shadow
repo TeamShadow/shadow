@@ -1,0 +1,166 @@
+class shadow:io@
+    TextInput is
+    CanClose
+{
+    CanRead reader;
+    ubyte[] buffer = ubyte:create[1024];
+    long start = 0;
+    long end = 0;
+
+    public create(CanRead reader)
+    {
+        this:reader = reader;
+        if (reader is CanOpen)
+        {
+            CanOpen opener = cast<CanOpen>(reader);
+            if (!opener->isOpen)
+            {
+                opener.open(CanOpen:READ);
+            }
+        }
+    }
+
+    /**
+     * Reads the next line of text from the underlying reader,
+     * stopping when a new line or line feed character is reached.
+     * @return line as a {@code String}
+     * @return {@code true} if the end of the file was reached
+     */
+    public readLine() => ( String, boolean eof )
+    {
+        var string = MutableString:create();
+        ( code c, boolean eof ) = readCode();
+        while ( c != '\n' and c != '\r' and !eof )
+        {
+            string.append(c);
+            ( c, eof ) = readCode();
+        }
+
+        if(!eof and c == '\r') // Try to consume CR after LF
+        {
+            (ubyte b, eof) = readByte();
+            if(!eof and b != '\n') // If it wasn't a CR, back up
+                start -= 1;
+        }
+        return ( #string, eof );
+    }
+
+    /**
+     * Reads the next white-spaced delimited text from the underlying reader,
+     * stopping when a space, a tab, a new line, or a line feed character is
+     * reached.
+     * @return text as a {@code String}
+     * @return {@code true} if the end of the file was reached
+     */
+    public readString() => ( String, boolean eof )
+    {
+        var string = MutableString:create();
+        ( code c, boolean eof ) = readCode();
+        while( !eof and (c == '\n' or c == '\r' or c == ' ' or c == '\t'))
+            ( c, eof ) = readCode();
+        while( !eof and c != '\n' and c != '\r' and c != ' ' and c != '\t')
+        {
+            string.append(c);
+            ( c, eof ) = readCode();
+        }
+
+        if(!eof) // Back up to the whitespace
+            start -= 1;
+        return ( #string, eof );
+    }
+
+    /**
+     * Reads the next white-spaced delimited text from {@code stdin} and
+     * converts that value to an {@code int}.
+     * @return text converted to {@code int}
+     * @throws NumberFormatException if the text does not represent a legal
+     * {@code int}
+     */
+    public readInt() => ( int )
+    {
+        (String text, ) = readString();
+        return text.toInt();
+    }
+
+    /**
+     * Reads the next white-spaced delimited text from {@code stdin} and
+     * converts that value to a {@code double}.
+     * @return text converted to {@code double}
+     * @throws NumberFormatException if the text does not represent a legal
+     * {@code double}
+     */
+    public readDouble() => ( double )
+    {
+        (String text, ) = readString();
+        return text.toDouble();
+    }
+
+    /**
+     * Reads the next UTF-8 code point from {@code stdin}.
+     * @return character as a {@code code}
+     * @return {@code true} if the end of the file was reached
+     */
+    public readCode() => ( code, boolean eof )
+    {
+        uint value;
+        boolean eof;
+        (value, eof) = readByte();
+        if (value < 0 and !eof)
+        {
+            int bytes = 0;
+            ubyte mask = 1uy << 7 >> 1;
+            while ( value >= mask )
+            {
+                bytes += 1;
+                mask >>= 1;
+            }
+            value &= ~mask;
+            while ( bytes > 0 )
+            {
+                value <<= 6;
+                ubyte b;
+                ( b, eof ) = readByte();
+                value |= b & 0b00111111uy;
+                bytes -= 1;
+            }
+        }
+        return (cast<code>(value), eof);
+    }
+
+    /**
+     * Reads the next byte from {@code stdin}.
+     * @return next byte
+     * @return {@code true} if the end of the file was reached
+     */
+    public readByte() => (ubyte, boolean eof)
+    {
+        if(start < end)
+        {
+            ubyte value = buffer[start];
+            start += 1;
+            return (value, false);
+        }
+        else
+        {
+            end = reader.read(buffer);
+            if(end == -1)
+                return (0uy, true);
+
+            ubyte value = buffer[0];
+            start = 1;
+            return (value, false);
+        }
+    }
+
+    /**
+     * Close underlying reader, if possible.
+     */
+    public close() => ()
+    {
+        if (reader is CanClose)
+        {
+            CanClose closer = cast<CanClose>(reader);
+            closer.close();
+        }
+    }
+}

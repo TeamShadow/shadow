@@ -1,0 +1,136 @@
+import shadow:natives;
+
+/**
+ * @author Claude Abounegm
+ * @author Barry Wittman
+ */
+locked class shadow:utility@
+	ThreadSafeList<T>
+is List<T>
+{
+	ArrayList<T> list;
+	Mutex mutex;
+	
+	public create()
+	{
+		this:list = ArrayList<T>:create();
+		this:mutex = Mutex:create();
+	}
+	
+	public readonly get sizeLong() => (long)
+	{
+		mutex.lock();
+		var size = list->sizeLong;
+		mutex.unlock();
+		
+		return size;
+	}
+
+	public readonly get size() => (int)
+    {
+        return cast<int>(sizeLong());
+    }
+	
+	public readonly indexOf(T element) => (long)
+	{
+		mutex.lock();
+		var index = list.indexOf(element);
+		mutex.unlock();
+		
+		return index;
+	}
+	
+	public readonly contains(T element) => (boolean)
+	{
+		mutex.lock();
+		var flag = list.contains(element);
+		mutex.unlock();
+		
+		return flag;
+	}
+	
+	public readonly isEmpty() => (boolean)
+	{
+		mutex.lock();
+		var flag = list.isEmpty();
+		mutex.unlock();
+		
+		return flag;
+	}
+	
+	public readonly iterator() => (Iterator<T>)
+	{
+		mutex.lock();
+		var retVal = list.iterator();
+		mutex.unlock();
+		
+		return retVal;
+	}
+	
+	public readonly index(int key) => (T)
+	{
+		return index(cast<long>(key));
+	}
+
+	public readonly index(long key) => (T)
+    {
+        mutex.lock();
+        var index = list.index(key);
+        mutex.unlock();
+
+        return index;
+    }
+	
+	public add(T element) => (ThreadSafeList<T>)
+	{
+		mutex.lock();
+		list.add(element);
+		mutex.unlock();
+
+		return this;
+	}
+	
+	public delete(int index) => (T)
+	{
+		return delete(cast<long>(index));
+	}
+
+	public delete(long index) => (T)
+    {
+        mutex.lock();
+        var element = list.delete(index);
+        mutex.unlock();
+
+        return element;
+    }
+	
+	public remove(T element) => (boolean)
+	{
+		mutex.lock();
+		var flag = list.remove(element);
+		mutex.unlock();
+		
+		return flag;
+	}
+	
+	public clear() => (ThreadSafeList<T>)
+	{
+		mutex.lock();
+		list.clear();
+		mutex.unlock();
+		
+		return this;
+	}
+
+    public index(long key, T value) => ()
+    {
+        mutex.lock();
+        list.index(key, value);
+        mutex.unlock();
+    }
+	
+	public index(int key, T value) => ()
+	{
+		index(cast<long>(key), value);
+	}
+}

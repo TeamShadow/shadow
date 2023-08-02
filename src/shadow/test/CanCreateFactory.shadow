@@ -1,0 +1,8 @@
+class shadow:test@CanCreateFactory<T is CanCreate>
+{
+	public generate() => (T)
+	{		
+		T value = T:create();	
+		return value;
+	}
+}

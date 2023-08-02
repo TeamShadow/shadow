@@ -1,0 +1,164 @@
+/**
+ * Class {@code ConditionVariable} is an implementation of a condition variable in Shadow. A condition variable
+ * is used to wait for a specific condition to be true. It has a built-in lock (mutex) that must be acquired before
+ * the condition can be checked. If the condition isn't true, a {@code wait()} method can be called, which
+ * automatically releases the lock. Other threads can call {@code notifyAll()} to wake up threads so that they can
+ * check to see if the condition is still false before calling {@code wait()} again.
+ *
+ * Unlike {@code Mutex}, a {@code ConditionVariable} can only be locked once by a given thread.
+ *
+ * @author Barry Wittman
+ *
+ * @seeDoc shadow:standard@Thread
+ * @seeDoc shadow:standard@Mutex
+ */
+
+locked immutable class shadow:natives@
+	ConditionVariable
+{
+    [ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_initialize() => (Pointer);
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_destroy(Pointer ptr) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_lock(Pointer handle, Thread currentThread) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_unlock(Pointer handle, Thread currentThread) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_natives__ConditionVariable_wait(Pointer handle, Thread currentThread) => (boolean);
+	[ImportAssembly]
+    private readonly __shadow_natives__ConditionVariable_waitTimeout(Pointer handle, Thread currentThread, long timeEpochNow, long timeout) => (int);
+    [ImportAssembly]
+    private readonly __shadow_natives__ConditionVariable_notifyAll(Pointer handle) => ();
+
+    private constant int NOT_OWNER = 0;
+    private constant int TIMEOUT = 1;
+    private constant int WAKEUP = 2;
+
+	Pointer handle;
+
+	/**
+	* Initializes a new {@code ConditionVariable}.
+	*/
+	public create()
+	{
+		handle = __shadow_natives__ConditionVariable_initialize();
+
+        if(!handle->isValid) {
+            throw ConditionVariableException:create("An error occurred while initializing the ConditionVariable.");
+        }
+	}
+
+	public destroy
+	{
+        free();
+	}
+
+	/**
+	* Attempts to lock the mutex associated with the condition variable.
+	*
+    * @throws FreedResourceException if the condition variable has been freed.
+	*/
+	public lock() => ()
+	{
+	    handle.assertValid("ConditionVariable");
+        __shadow_natives__ConditionVariable_lock(handle, Thread:Current->instance);
+	}
+
+	/**
+	* Attempts to unlock the mutex associated with the condition variable. If the mutex has been locked multiple times
+	* by this thread, this method simply decreases the counter. The mutex is unlocked when an corresponding unlock has
+	* been called for each lock, e.g. if {@code lock()} was called twice, {@code unlock()} will unlock the mutex on
+	* its second call.
+    *
+    * @throws ConditionVariableException if the mutex is not owned by this thread.
+    * @throws FreedResourceException if the condition variable has been freed.
+	*/
+	public unlock() => ()
+	{
+		handle.assertValid("ConditionVariable");
+		if (!__shadow_natives__ConditionVariable_unlock(handle, Thread:Current->instance))
+		    throw ConditionVariableException:create("Thread '" # Thread:Current->instance->name # "' cannot unlock a ConditionVariable it does not own.");
+	}
+
+    /**
+	* Suspends the calling thread until another thread calls {@code notifyAll()} on this condition variable or
+	* {@code interrupt()} on the calling thread. The mutex associated with this condition variable {@bold must} already
+	* be locked by the calling thread.
+	*/
+	public wait() => ()
+	{
+	    handle.assertValid("ConditionVariable");
+		if (!__shadow_natives__ConditionVariable_wait(handle, Thread:Current->instance))
+		    throw ConditionVariableException:create("Thread '" # Thread:Current->instance # "' cannot wait on a ConditionVariable it does not own.");
+	}
+
+	/**
+    * Suspends the calling thread until another thread calls {@code notifyAll()} on this condition variable or
+    * {@code interrupt()} on the calling thread, or the specified amount of time elapses. The mutex associated with
+    * this condition variable {@bold must} already be locked by the calling thread.
+    *
+    * @param timeout The amount of time to wait, expressed as a TimeSpan, before timing out.
+    * @return {@code false} if the operation timed-out, otherwise {@code true}.
+    *
+    * @throws FreedResourceException if the condition variable has been freed.
+    * @throws InterruptedException if another thread requested to interrupt this thread.
+    * @throws ConditionVariableException if the thread does not own the mutex associated with the condition variable.
+    */
+    public wait(TimeSpan timeout) => (boolean)
+    {
+        handle.assertValid("ConditionVariable");
+        var now = Time.epochNow();
+        Thread current = Thread:Current->instance;
+        int result = __shadow_natives__ConditionVariable_waitTimeout(handle, current, now->totalNanoSeconds, now->totalNanoSeconds + timeout->totalNanoSeconds);
+        if (result == 0)
+            throw ConditionVariableException:create("Thread '" # current->name # "' cannot wait on a ConditionVariable it does not own.");
+        else
+            return result != TIMEOUT;
+    }
+
+	/**
+    * Suspends the calling thread until another thread calls {@code notifyAll()} on this condition variable or
+    * {@code interrupt()} on the calling thread, or the specified amount of time elapses. The mutex associated with
+    * this condition variable {@bold must} already be locked by the calling thread.
+    *
+    * @param milliseconds The amount of time to wait, in milliseconds, before timing out.
+    * @return {@code false} if the operation timed-out, otherwise {@code true}.
+    *
+    * @throws FreedResourceException if the condition variable has been freed.
+    * @throws InterruptedException if another thread requested to interrupt this thread.
+    * @throws ConditionVariableException if the thread does not own the mutex associated with the condition variable.
+    */
+    public wait(int milliseconds) => (boolean)
+    {
+        return wait(Time.fromMilliSeconds(milliseconds));
+    }
+
+	/**
+	* Wakes up all the waiting threads. The mutex associated with the condition variable must {@bold not} be locked
+	* when this happens.
+	*
+	* @throws FreedResourceException if the condition variable has been freed.
+	*/
+	public notifyAll() => ()
+	{
+	    handle.assertValid("ConditionVariable");
+        __shadow_natives__ConditionVariable_notifyAll(handle);
+	}
+
+    /**
+    * Frees the resources allocated by this {@code ConditionVariable}.
+    *
+    * @throws ConditionVariableException if the mutex associated with the condition variable is locked by another thread.
+    */
+    public free() => ()
+    {
+        if(handle->isValid)
+        {
+            if (__shadow_natives__ConditionVariable_destroy(handle))
+                handle.free();
+            else
+                throw ConditionVariableException:create("Cannot free a locked ConditionVariable.");
+        }
+    }
+}

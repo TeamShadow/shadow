@@ -1,0 +1,56 @@
+/**
+ * Singleton {@code System} provides access to a few useful system settings
+ * and values.
+ */
+immutable singleton shadow:standard@System
+{
+	[ImportAssembly]
+	private readonly __shadow_standard__System_getEpochNanoTime() => (long);
+	[ImportAssembly]
+	private readonly __shadow_standard__System_getNanoTime() => (long);
+    [ImportAssembly]
+    private readonly __shadow_standard__System_isWindows() => (boolean);
+    [ImportAssembly]
+    private readonly __shadow_standard__System_getEnvironment(String input) => (nullable String);
+    [ImportAssembly]
+    private readonly __shadow_standard__System_osName() => (String);
+    [ImportAssembly]
+    private readonly __shadow_standard__System_osVersion() => (String);
+
+	/**
+	 * Returns the number of nanoseconds elapsed since the Unix Epoch,
+	 * 12:00:00 AM January 1, 1970.  Accuracy will usually be much coarser
+	 * than nanoseconds and is dependent on hardware and software system
+	 * characteristics.
+	 * @return nanoseconds elapsed since midnight on January 1, 1970
+	 */
+	public get readonly epochNanoTime() => (long)
+	{
+		return __shadow_standard__System_getEpochNanoTime();
+	}
+	
+	public get readonly nanoTime() => (long)
+	{
+		return __shadow_standard__System_getNanoTime();
+	}
+
+	public get readonly isWindows() => (boolean)
+	{
+	    return __shadow_standard__System_isWindows();
+	}
+
+	public getEnvironment(String variable) => (nullable String)
+	{
+        return __shadow_standard__System_getEnvironment(variable);
+	}
+
+	public get osName() => (String)
+	{
+        return __shadow_standard__System_osName();
+	}
+
+	public get osVersion() => (String)
+    {
+        return __shadow_standard__System_osVersion();
+    }
+}

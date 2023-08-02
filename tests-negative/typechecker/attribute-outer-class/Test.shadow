@@ -1,0 +1,10 @@
+class Test
+{
+    // argument of type int
+    [Attribute(5)]
+    public main() => ()
+    {
+        Attribute:Inner inner = Attribute:Inner:create();
+        inner->number = 10;
+    }
+}

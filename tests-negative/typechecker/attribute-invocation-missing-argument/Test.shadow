@@ -1,0 +1,6 @@
+class Test {
+
+    [Attribute]
+    public main() => () {
+    }
+}

@@ -1,105 +1,92 @@
 package shadow.typecheck.type;
 
-import shadow.interpreter.ShadowValue;
+import shadow.interpreter.AttributeInterpreter;
+import shadow.interpreter.InterpreterException;
 import shadow.parse.ShadowParser;
 import shadow.parse.ShadowParser.AttributeInvocationContext;
 import shadow.typecheck.ErrorReporter;
-import shadow.typecheck.TypeCheckException.Error;
+import shadow.typecheck.Package;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Represents a particular invocation of an attribute type, including any fields set during that invocation. E.g.
- * {@code SomeAttribute(a = "alpha", b = 5)}.
+ * Represents a particular invocation of an attribute type. E.g. {@code SomeAttribute("alpha", 5)}.
  */
 public class AttributeInvocation {
-    private final AttributeType type;
-    private final AttributeInvocationContext invocationCtx; // The AST node for this invocation
-    private final Type enclosingType;
+  private final AttributeType type;
 
-    // Note that this does not contain the default expressions provided in the attribute declaration
-    private final Map<String, ShadowParser.VariableDeclaratorContext> fieldExpressions = new HashMap<>();
+  public AttributeInvocationContext getInvocationContext() {
+    return invocationCtx;
+  }
 
-    public AttributeInvocation(AttributeInvocationContext ctx, ErrorReporter errorReporter, MethodSignature attachedTo) {
-        // TypeUpdater.visitClassOrInterfaceType() should guarantee this is an AttributeType
-        type = (AttributeType) ctx.getType();
-        invocationCtx = ctx;
-        enclosingType = attachedTo.getOuter();
+  private final AttributeInvocationContext invocationCtx; // The AST node for this invocation
 
-        for (ShadowParser.VariableDeclaratorContext assignmentCtx : ctx.variableDeclarator()) {
-            addFieldAssignment(assignmentCtx, errorReporter);
-        }
+  public Type getEnclosingType() {
+    return enclosingType;
+  }
+
+  private final Type enclosingType;
+
+  private MethodSignature signature;
+
+  // Note that this does not contain the default expressions provided in the attribute declaration
+  private final List<ShadowParser.ConditionalExpressionContext> values = new ArrayList<>();
+
+  public AttributeInvocation(
+      AttributeInvocationContext ctx, MethodSignature attachedTo) {
+    // TypeUpdater.visitClassOrInterfaceType() should guarantee this is an AttributeType
+    type = (AttributeType) ctx.getType();
+    invocationCtx = ctx;
+    enclosingType = attachedTo.getOuter();
+
+    for (ShadowParser.ConditionalExpressionContext assignmentCtx : ctx.conditionalExpression()) {
+      addValue(assignmentCtx);
     }
+  }
 
-    /** Associates the given field assignment with its parent attribute invocation and performs sanity checks. */
-    public void addFieldAssignment(
-            ShadowParser.VariableDeclaratorContext ctx, ErrorReporter errorReporter) {
-        String fieldName = ctx.generalIdentifier().getText();
+  /**
+   * Associates the given field assignment with its parent attribute invocation and performs sanity
+   * checks.
+   */
+  public void addValue(ShadowParser.ConditionalExpressionContext ctx) {
+    values.add(ctx);
+  }
 
-        // Repeated field assignment
-        if (fieldExpressions.containsKey(fieldName)) {
-            errorReporter.addError(
-                ctx,
-                Error.REPEATED_ASSIGNMENT,
-                "Field \"" + fieldName + "\" was assigned more than once",
-                type);
-            return;
-        }
+  public void setSignature(MethodSignature signature) {
+    this.signature = signature;
+  }
 
-        fieldExpressions.put(fieldName, ctx);
+  public MethodSignature getSignature() {
+    return signature;
+  }
+
+  /** Must be called after type updating to ensure the fields of the AttributeType are populated. */
+  public void update(Package packageTree, ErrorReporter errorReporter) {
+    try {
+      AttributeInterpreter.getAttributeInvocation(this, packageTree, errorReporter);
+    } catch (InterpreterException ignored) {
     }
+  }
 
-    /** Must be called after type updating to ensure the fields of the AttributeType are populated. */
-    public void updateFieldTypes(ErrorReporter errorReporter) {
-        for (String fieldName : fieldExpressions.keySet()) {
-            ShadowParser.VariableDeclaratorContext fieldCtx = fieldExpressions.get(fieldName);
+  public List<ShadowParser.ConditionalExpressionContext> getValues() {
+    return Collections.unmodifiableList(values);
+  }
 
-            // Statement checker reports an error if this isn't true
-            if (type.containsField(fieldName)) {
-                // Enclosing type should match the method's enclosing type, not the attribute's
-                fieldCtx.setEnclosingType(enclosingType);
-                fieldCtx.setType(type.getField(fieldName).getType());
-            }
-        }
+  public AttributeType getType() {
+    return type;
+  }
 
-        // Check for missing fields (i.e. required by AttributeType but not provided in this invocation)
-        for (String requiredFieldName : type.getUninitializedFields()) {
-            if (!fieldExpressions.containsKey(requiredFieldName)) {
-                errorReporter.addError(
-                    invocationCtx, Error.UNINITIALIZED_FIELD, "A value must be provided for \""
-                        + requiredFieldName + "\" within " + type.getTypeName(), type);
-            }
-        }
+  public String getMetaFileText() {
+    String text = type.toString(Type.PACKAGES);
+    if (!values.isEmpty()) {
+      text += "(";
+      text +=
+          values.stream()
+              .map(f -> f.getInterpretedValue().toLiteral())
+              .collect(Collectors.joining(", "));
+      text += ")";
     }
-
-    public Map<String, ShadowParser.VariableDeclaratorContext> getFieldAssignments() {
-        return Collections.unmodifiableMap(fieldExpressions);
-    }
-
-    public AttributeType getType() {
-        return type;
-    }
-
-    /**
-     * Gets the interpreted value of the given field - only safe to call after constant interpretation
-     * has occurred.
-     */
-    public ShadowValue getFieldValue(String fieldName) {
-        return fieldExpressions.containsKey(fieldName)
-                ? fieldExpressions.get(fieldName).getInterpretedValue()
-                : type.getField(fieldName).getInterpretedValue();
-    }
-
-    public String getMetaFileText() {
-        String text = type.toString(Type.PACKAGES);
-        if (!fieldExpressions.isEmpty()) {
-            text += "(";
-            text += fieldExpressions.entrySet().stream()
-                    .map(f -> f.getKey() + " = " + f.getValue().getInterpretedValue().toLiteral())
-                    .collect(Collectors.joining(", "));
-            text += ")";
-        }
-        return text;
-    }
+    return text;
+  }
 }

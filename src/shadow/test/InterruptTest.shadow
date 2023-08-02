@@ -1,0 +1,66 @@
+import shadow:io@Console;
+
+class shadow:test@InterruptTest
+{
+	class ThreadSleepTestRunner is CanRun
+	{
+		public run() => ()
+		{
+			Console.printLine("waiting");
+			Thread:Current.sleep(Time.fromSeconds(10));
+			Console.printLine("done");
+		}
+	}
+	
+	class ThreadTestRunner is CanRun
+	{
+		public run() => ()
+		{
+		    Thread current = Thread:Current->instance;
+			Console.printLine("I am " # current->name);
+
+			var index = receive<int>(Thread:Current->main);
+			Console.printLine(current->name # ": " # index);
+			Thread:Current->main[index].join();
+
+			Console.printLine("I should quit before reaching this" # current->name);
+		}
+	}
+
+	public main(String[] args) => ()
+	{
+		spawn(ThreadSleepTestRunner:create()); // index: 0, id: 1
+
+		Thread:Current.sleep(10); // just enough to make sure the first thread prints "waiting"
+		
+		spawn(ThreadTestRunner:create()); // index: 1, id: 2
+
+		Thread current = Thread:Current->instance;
+
+		send(0, current[1]);
+
+		Thread:Current.sleep(10); // just enough to keep the ordering of the threads correct
+		
+		spawn(ThreadTestRunner:create()); // index: 2, id: 3
+		send(1, current[2]);
+		
+		Thread:Current.sleep(Time.fromSeconds(4));
+		current[1].interrupt();
+		Console.printLine("end");
+		
+		try {
+			current[2].join();
+		} catch(ThreadException e) {
+			if(e->actual is InterruptedException) {
+				Console.printLine("InterruptedException thrown");
+			} else {
+				throw e;
+			}
+		}
+		
+		var now = Time.epochNow();
+		current[0].join(Time.fromSeconds(1));
+		now = Time.epochNow() - now;
+		Console.printLine(now->seconds);
+	}
+}

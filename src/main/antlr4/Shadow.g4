@@ -35,7 +35,7 @@ import shadow.typecheck.type.Type;
 options {contextSuperClass=shadow.parse.Context;}
 
 compilationUnit	
-    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration | attributeDeclaration) EOF
+    :   importDeclaration* modifiers (classOrInterfaceDeclaration | enumDeclaration ) EOF
     ;
     
 importDeclaration
@@ -70,7 +70,7 @@ modifier throws ParseException
 
 classOrInterfaceDeclaration
 	:
-	('class' | 'singleton' | 'exception'| 'interface' )
+	('class' | 'singleton' | 'exception'| 'interface' | 'attribute' )
 	( unqualifiedName '@' )? Identifier typeParameters? dependencyList? VersionLiteral? isList?
 	classOrInterfaceBody
 	;
@@ -93,25 +93,6 @@ enumConstant
 	: Identifier arguments? classOrInterfaceBody?
 	;
 
-attributeDeclaration
-    :
-    'attribute' ( unqualifiedName '@' )? Identifier
-    attributeBody
-    ;
-
-attributeBody
-    :
-    '{'
-        attributeBodyDeclaration*
-    '}'
-    ;
-
-// Note that attribute fields should not have modifiers. We allow them here
-// but enforce their absence in the typechecker to provide clearer errors
-attributeBodyDeclaration
-    : modifiers fieldDeclaration
-    ;
-	
 dependencyList
 	: ':' '<' type( ',' type )* '>'
 	;
@@ -211,11 +192,9 @@ attributeInvocations
     : '[' attributeInvocation ( ',' attributeInvocation )* ']'
     ;
 
-// Parentheses are disallowed unless at least one field is being initialized. Each
-// variableDeclarator in an attribute invocation must include an assignment (enforced
-// at parse-checking time).
+// Parentheses are disallowed unless at least one argument is being passed to the create.
 attributeInvocation
-    : classOrInterfaceType ( '(' variableDeclarator ( ',' variableDeclarator )* ')' )?
+    : classOrInterfaceType ( '(' conditionalExpression ( ',' conditionalExpression )* ')' )?
     ;
 
 type
@@ -416,22 +395,15 @@ checkExpression
 copyExpression
 	: ('copy' | 'freeze' ) '(' conditionalExpression ')'
   	;
-  	
-spawnExpression
-	: 'spawn' '(' (StringLiteral ',')? type spawnRunnerCreateCall
-  	;
 
-spawnRunnerCreateCall
-	: ':' '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')' ')'
+
+receiveExpression
+	: 'receive' '*'? '<' type '>' '(' conditionalExpression? ')'
 	;
-
-/*receiveExpression
-	: 'receive' '<' type '>' '(' conditionalExpression? ')'
-	;*/
 
 primaryExpression
 locals [boolean action = false]
-	: '++'? primaryPrefix primarySuffix* //The ++ is actually an error, but caught in the ParseChecker 
+	: '++'? primaryPrefix primarySuffix* // The ++ is actually an error but caught in the ParseChecker
 	;
 
 rightSide
@@ -457,8 +429,8 @@ primaryPrefix
 	| 'super'
 	| checkExpression
 	| copyExpression
+	| receiveExpression
 	| spawnExpression
-//	| receiveExpression
 	| castExpression
 	| '(' conditionalExpression ')'
 	| primitiveType
@@ -517,11 +489,11 @@ create
 	;
 
 classSpecifier
-	: typeArguments? ':' 'class' //field, constant, or class
+	: typeArguments? ':' 'class' // field, constant, or class
 	;
 
 scopeSpecifier
-	: ':' Identifier //field, constant, or inner class
+	: ':' Identifier // field, constant, or inner class
 	;
 	
 destroy
@@ -535,7 +507,11 @@ method
 property
 	: '->' Identifier
 	;
-	
+
+spawnExpression
+	: 'spawn' ('[' conditionalExpression ']')?  '('  conditionalExpression ')'
+	;
+
 methodCall
 	: '(' ( conditionalExpression ( ',' conditionalExpression )* )? ')'
 	;
@@ -610,7 +586,7 @@ localVariableDeclaration
 	;
 	
 emptyStatement
-	: ';' // actually an error in Shadow, caught in the ParseChecker 
+	: ';' // Actually an error in Shadow, caught in the ParseChecker
 	| 'skip' ';'
 	;
 	
@@ -698,7 +674,7 @@ throwStatement
 	;
 	
 sendStatement
-	: 'send' '(' conditionalExpression ',' conditionalExpression ')' ';'
+	: 'send' '*'? '(' conditionalExpression ',' conditionalExpression ')' ';'
 	;
 	
 /* For a simpler back end, a finally statement holds

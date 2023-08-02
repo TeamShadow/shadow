@@ -1,0 +1,54 @@
+import shadow:io;
+
+class shadow:test@FileTest
+{
+	public main (String[] args) => ()
+	{	
+		if (args->size == 0)
+			throw Exception:create("No file specified!");
+
+    	try
+		{
+			var file = File:create(args[0]);
+			
+			try 
+			{	
+				file.open();
+			} 
+			catch ( IOException ex )
+			{				
+				Console.printLine("catch ( " # ex # " )");
+			}
+								
+			readonly ubyte[] chars = "Hello World!"->chars;
+			file.write(chars, chars->size);
+			file.close();
+
+
+			try
+            {
+                file.open(File:READ);
+            }
+            catch (IOException ex)
+            {
+                Console.printLine("catch ( " # ex # " )");
+            }
+
+			ubyte[] buffer = ubyte:create[chars->size];
+			file.read(buffer);
+			file.close();
+
+			Console.printLine(String:create(buffer)); // "Hello World!"
+			Console.printLine(file->size); // "Hello World!" -> 12 characters
+			Console.printLine(file->exists); // Should be true
+			
+			file.delete();
+
+			Console.printLine(file->exists); // Should be false
+		}
+		catch (IOException ex)
+		{
+			Console.printLine(ex);
+		}
+	}
+}

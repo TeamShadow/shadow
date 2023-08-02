@@ -1,0 +1,33 @@
+import shadow:io@Console;
+import shadow:natives;
+
+class shadow:test@MutexTest
+{
+	public main(String[] args) => ()
+	{
+		Console.printLine("Nested locks");
+		var mutex1 = Mutex:create();
+		var mutex2 = Mutex:create();
+		mutex2.lock();
+			mutex2.lock();
+				mutex2.lock();
+				mutex2.unlock();
+			mutex2.unlock();
+
+			mutex1.lock();
+			mutex2.lock();
+			Console.printLine("Both locks");
+			mutex1.unlock();
+			mutex2.unlock();
+		mutex2.unlock();
+		try {
+			mutex2.unlock();
+		} catch(MutexException e) {
+			Console.printLine(e);
+		}
+		Console.printLine("Done!");
+		
+		mutex1.free();
+		mutex2.free();
+	}
+}

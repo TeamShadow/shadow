@@ -1,0 +1,15 @@
+attribute Attribute
+{
+    /// @unused
+    int test;
+
+    public create(int value)
+    {
+        test = value;
+    }
+
+    public class Inner
+    {
+        get set int number;
+    }
+}

@@ -1,9 +1,0 @@
-import shadow:io@Console;
-
-class shadow:test@InterfaceConstantTest
-{
-	public main() => ()
-	{
-		Console.printLine(Interface:VALUE);	
-	}
-}

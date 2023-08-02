@@ -1,0 +1,26 @@
+/**
+ * Interface {@code CanOpen} specifies that a class can be opened.  This
+ * operation is usually applied to files, streams, network connections, and
+ * similar I/O abstractions.
+ */
+interface shadow:io@CanOpen
+{
+    // Replace with enum?
+	constant int READ = 1 << 0;
+	constant int WRITE = 1 << 1;
+
+	/**
+	 * Method called to open the I/O stream.
+	 */
+	open() => ();
+
+	/**
+     * Method called to open the I/O stream with a specific mode.
+     */
+    open(int mode) => ();
+
+    /**
+     * Method called to determine whether the I/O stream is already open.
+     */
+    get isOpen() => (boolean);
+}

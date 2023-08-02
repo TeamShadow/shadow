@@ -1,0 +1,95 @@
+/**
+ * Class {@code Pointer} is used to hold a pointer to a block of memory initialized on the heap.
+ * This eases interaction between Shadow, C, and native LLVM methods.
+ *
+ * @author Claude Abounegm
+ *
+ * @seeDoc shadow:standard@Thread
+ */
+
+ import shadow:io@Console;
+
+locked immutable class shadow:natives@
+	Pointer
+{
+	[ImportNative]
+	private invalidateAddress() => ();
+
+	[ImportAssembly]
+	private __shadow_natives__Pointer_free(long address) => ();
+	
+	long address;
+	boolean shouldFree;
+	
+	public create()
+	{
+		this(0, false);
+	}
+	
+	private create(long address, boolean shouldFree)
+	{
+		this:address = address;
+		this:shouldFree = shouldFree;
+	}
+
+	/**
+	* Gets whether this pointer is valid. i.e. has not been freed.
+	*
+	* @return {@code true} if this pointer points to valid memory; otherwise, {@code false}.
+	*/
+	public get isValid() => (boolean)
+	{
+		return (address != 0);
+	}
+	
+	/**
+	* Throws an exception if this {@code Pointer} has been freed.
+	*
+	* @throws FreedResourceException if this resource has been freed.
+	*/
+	public assertValid(String className) => ()
+	{
+		if(!isValid())
+			throw FreedResourceException:create(className);
+	}
+	
+	/**
+	* Frees the memory allocated by this pointer. Calling this method more than once does
+	* not have any side effects.
+	*/
+	public free() => ()
+	{
+		if(isValid())
+		{
+			if(shouldFree)
+			{
+				__shadow_natives__Pointer_free(address);
+			}
+			
+			invalidateAddress();
+		}
+	}
+	
+	public destroy
+	{
+		free();
+	}
+	
+	// C FRAMEWORK EXTENSIONS
+	[ExportAssembly]
+	private _shadow_natives__Pointer_create(long address, boolean shouldFree) => (Pointer)
+	{
+		return Pointer:create(address, shouldFree);
+	}
+	
+	[ExportAssembly]
+	private _shadow_natives__Pointer_extract() => (long)
+	{
+		if(!isValid()) {
+		    Console.printErrorLine("Bad pointer");
+			throw FreedResourceException:create("Pointer");
+		}
+
+		return address;
+	}
+}

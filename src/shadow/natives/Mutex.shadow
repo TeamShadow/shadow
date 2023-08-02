@@ -1,0 +1,98 @@
+/**
+ * Class {@code Mutex} is an implementation of Mutual-Exclusion in Shadow. This implementation
+ * allows nested locks, which can be useful in some scenarios, such as with recursive methods.
+ *
+ * @author Claude Abounegm
+ *
+ * @seeDoc shadow:test@MutexTest
+ *
+ * @seeDoc shadow:natives@Signaler
+ * @seeDoc shadow:standard@Thread
+ * @seeDoc shadow:standard@Mailbox
+ */
+locked immutable class shadow:natives@
+	Mutex
+{
+    [ImportAssembly]
+	private readonly __shadow_natives__Mutex_initialize() => (Pointer);
+	[ImportAssembly]
+	private readonly __shadow_natives__Mutex_destroy(Pointer handle) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_natives__Mutex_lock(Pointer handle, Thread currentThread) => ();
+	[ImportAssembly]
+	private readonly __shadow_natives__Mutex_unlock(Pointer handle, Thread currentThread) => (boolean);
+	[ImportAssembly]
+	private readonly __shadow_natives__Mutex_getOwner(Pointer handle) => (nullable Thread);
+	
+	Pointer handle;
+
+	/**
+	 * Initializes a new {@code Mutex}.
+	 */
+	public create()
+	{
+		handle = __shadow_natives__Mutex_initialize();
+		
+		if(!handle->isValid)
+			throw MutexException:create("An error occurred while initializing the Mutex.");
+	}
+
+    public destroy
+    {
+        free();
+    }
+	
+	/**
+	* Attempts to lock this mutex. If the mutex is already owned by another thread, this method
+	* blocks until the mutex becomes available. If the current thread already owns this mutex, this method will simply
+	* increase the counter. The mutex should be unlocked the same number of times it was locked.
+	*
+	* @throws FreedResourceException if the mutex has been freed.
+	*/
+	public lock() => ()
+	{
+	    handle.assertValid("Mutex");
+		__shadow_natives__Mutex_lock(handle, Thread:Current->instance);
+	}
+	
+	/**
+	* Attempts to unlock this mutex. If the mutex has been locked multiple times by this thread,
+	* this method simply decreases the counter. This mutex is unlocked when an corresponding unlock has been called
+	* for each lock. i.e. If {@code lock()} was called twice, {@code unlock()} will unlock the mutex on
+	* its second call.
+	*
+	* @throws MutexException if this mutex is not owned by this thread.
+	* @throws FreedResourceException if the mutex has been freed.
+	*/
+	public unlock() => ()
+	{
+		handle.assertValid("Mutex");
+		
+		if(!__shadow_natives__Mutex_unlock(handle, Thread:Current->instance))
+			throw MutexException:create("Thread '" # Thread:Current->instance->name # "' cannot unlock a Mutex it does not own.");
+	}
+	
+	/**
+	* Frees the resources allocated by this {@code Mutex}.
+	*
+	* @throws MutexException if the Mutex is locked by another thread.
+	*/
+	public free() => ()
+	{
+		if(handle->isValid)
+		{
+			if(Thread:Current.equal(owner()))
+				unlock();
+
+			if (__shadow_natives__Mutex_destroy(handle))
+			    handle.free();
+			else
+			    throw MutexException:create("Cannot free a locked Mutex.");
+    	}
+	}
+
+	private owner() => (nullable Thread)
+	{
+		return __shadow_natives__Mutex_getOwner(handle);
+	}
+}

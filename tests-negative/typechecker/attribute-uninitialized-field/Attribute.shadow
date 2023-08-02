@@ -1,3 +1,8 @@
 attribute Attribute {
-    int test;
+    Object test;
+
+    getValue() => (String)
+    {
+        return test.toString();
+    }
 }

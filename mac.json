@@ -1,0 +1,5 @@
+{
+  "target" : "x86_64-apple-darwin",
+  "import": {"src" : "bin"},
+  "system": ["src" , "include", "bin"]
+}

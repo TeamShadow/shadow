@@ -1,0 +1,58 @@
+import shadow:natives;
+import shadow:io;
+
+class shadow:test@ExternalsTest
+{
+	// uses shadow_ToString() to get the Shadow String, then extracts it to a C String and
+	// prints it to the console using printf()
+	[ImportAssembly]
+	private readonly __shadow_test__ExternalsTest_printfToString() => ();
+
+	// creates a Shadow String from C code
+	[ImportAssembly]
+	private readonly __shadow_test__ExternalsTest_createString() => (String);
+
+	// creates a Pointer which holds the number passed as a parameter for later use
+	[ImportAssembly]
+	private readonly __shadow_test__ExternalsTest_initPointer(int start) => (Pointer);
+	// prints the number passed earlier to the console, then calls Shadow code to print the number + offset
+	[ImportAssembly]
+	private readonly __shadow_test__ExternalsTest_printPointerData(Pointer ptr) => ();
+	
+	// prints the string representation of the Class object for ExternalsTest and all primitives
+	[ImportAssembly]
+	private readonly __shadow_test__ExternalsTest_printClasses() => ();
+	
+	immutable Pointer ptr;
+	int offset = 1000;
+	
+	public create()
+	{
+		ptr = __shadow_test__ExternalsTest_initPointer(2500);
+	}
+	
+	public main(String[] args) => ()
+	{
+	    __shadow_test__ExternalsTest_printfToString();
+		String string = __shadow_test__ExternalsTest_createString();
+		Console.printLine(string);
+		__shadow_test__ExternalsTest_printPointerData(ptr);
+		__shadow_test__ExternalsTest_printClasses();
+	}
+	
+	public readonly toString() => (String)
+	{
+		return "This is the result from running _shadowObject_toString(ref) from C!";
+	}
+	
+	[ExportAssembly]
+	private _shadow_test__ExternalsTest_printNumberWithOffset(int number) => ()
+	{
+		Console.printLine(number + offset);
+	}
+	
+	public destroy
+	{
+		ptr.free();
+	}
+}

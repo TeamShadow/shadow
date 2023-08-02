@@ -1,0 +1,16 @@
+/**
+ * Exception {@code FullMailboxException} is thrown when the Mailbox's enqueue method is called
+ * in a non-blocking call, with the backing array being full.
+ *
+ * @author Claude Abounegm
+ */
+exception shadow:standard@
+	FullMailboxException
+{
+	public create() {}
+	
+	public create(String message)
+	{
+		super(message);
+	}
+}

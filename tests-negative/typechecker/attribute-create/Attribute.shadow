@@ -1,0 +1,9 @@
+attribute Attribute
+{
+    int test;
+
+    create(int value)
+    {
+        test = value;
+    }
+}

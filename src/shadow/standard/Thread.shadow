@@ -1,0 +1,988 @@
+import shadow:utility;
+import shadow:natives;
+import shadow:io@Console;
+
+/**
+ * Class {@code Thread} provides ways to manipulate threads. 
+ * All threads are required to terminate for the main process to terminate as well.
+ * If the main method returns and there are still running threads ... what will happen?
+ *
+ * @author Claude Abounegm
+ * @author Barry Wittman
+ */
+locked class shadow:standard@
+	Thread
+is CanIndex<int, Thread>
+{
+	public constant int READY = 0;
+	public constant int RUNNING = 1;
+	public constant int WAITING = 2;
+	public constant int DEAD = 3;
+	
+	[ImportAssembly]
+	private readonly __shadow_standard__Thread_spawn() => (Pointer);
+
+	[ImportNative]
+	private get staticNextId() => (int);
+
+	// START: Private variables
+	nullable Exception ex = null;
+	ConditionVariable conditionVariable; // used for all thread-safety, sleeping, and joining
+	nullable ConditionVariable waitingVariable; // the condition variable a thread is waiting on (perhaps from another thread)
+	
+	int state;
+	boolean interrupting;
+	boolean joined;
+	CanRun runner;
+	
+	ThreadSafeList<Thread> childrenList;
+
+	//Mutex mutex;
+	//Mutex stateMutex;
+	
+	//Signaler signaler;
+    Mailbox mailbox;
+	// END: Private variables
+
+	/// Gets the Shadow-specific thread ID.
+	get int id;
+	
+
+	/**
+	* Gets the {@code Thread} which spawned this thread. The Main thread does not
+	* have a parent. Once a thread has ended, its parent is set to null.
+	*/
+	get nullable Thread parent = null;
+	
+	/**
+	* Gets the name of the thread set at spawn time. If no name is set
+	* at spawn time, the name takes the format "Thread#{id}".
+	*/
+	get String name;
+	
+	/**
+	* Gets whether this thread is running.
+	*
+	* @return {@code true} if the thread is alive; otherwise, {@code false}.
+	*/
+	public readonly get isAlive() => (boolean)
+	{
+	    return this->state != DEAD;
+	}
+
+	/// @unused
+	private set state(int state) => ()
+	{
+	    conditionVariable.lock();
+		this:state = state;
+		conditionVariable.unlock();
+	}
+	
+	/// Gets the state of this thread. It can be one of {@code READY}, {@code RUNNING}, {@code WAITING}, or {@code DEAD}.
+	public readonly get state() => (int)
+	{
+        conditionVariable.lock();
+        int result = state;
+        conditionVariable.unlock();
+        return result;
+	}
+	
+	/// Gets the string representation of the state of this thread.
+	public readonly get stateString() => (String)
+	{
+		switch(this->state)
+		{
+			case (READY)
+				return "READY";
+			
+			case (RUNNING)
+				return "RUNNING";
+				
+			case (WAITING)
+				return "WAITING";
+				
+			case (DEAD)
+				return "DEAD";
+		}
+		
+		throw InvalidOperationException:create("Invalid state");
+	}
+	
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be ran
+	* on a different thread.
+	* 
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(CanRun runner)
+	{
+		this(null, runner);
+	}
+
+	/**
+	* Creates a new {@code Thread} object which takes on a {@code CanRun}
+	* instance, containing a run function that is going to be run
+	* on a different thread, and takes a {@code String} which is the name
+	* of the thread for reference purposes.
+	* 
+	* @param name The name of the thread.
+	* @param runner The instance that contains a run function.
+	*/
+	protected create(nullable String name, CanRun runner)
+	{
+		this:id = this->staticNextId;
+
+		this:childrenList = ThreadSafeList<Thread>:create();
+		
+		try {
+			this:name = check(name);
+		} recover {
+			this:name = "Thread#" # id;
+		}
+
+        this:conditionVariable = ConditionVariable:create();
+
+		// initialize the mailbox with an initial capacity of 8, and a max capacity of 32.
+		// the mailbox doubles as more items are sent to it, until it reaches 32, and blocks
+		// if more items are added, until space becomes available again by receiving messages.
+		this:mailbox = Mailbox:create(8, 32);
+
+		if(this:id == 0) {
+			this:runner = runner;
+			this:state = RUNNING;
+		} else {
+		    // better way to clone the runner with TAC? We need to clone even the parent
+			// so there would be no variable sharing at all.
+			// Edit: No, I think Thread contents are the one things that *should* be shared in Shadow.
+			// Otherwise, how can the parent Thread have control over its children?
+			this:runner = copy(runner);
+			this:state = READY;
+			
+			this:parent = Thread:Current->instance;
+			Pointer handle = __shadow_standard__Thread_spawn();
+
+            if(!handle->isValid) {
+                throw ThreadSpawnException:create();
+            }
+
+            // This is done awkwardly in TAC generation but could come back here if leaking were allowed in creates
+            // Legal leaking could only be A) after all initialization is done and B) inside of locked methods, since
+            // non-locked methods could leak before subsequent child creates were called
+			// check(parent):childrenList.add(this);
+		}
+	}
+
+	protected addChild(Thread thread) => ()
+	{
+        childrenList.add(thread);
+	}
+	
+	/**
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
+	* 
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
+	*/
+	public join() => ()
+	{
+		join(Time->InfiniteTimeout);
+	}
+
+	/**
+	* {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
+	* Joining on a dead thread has no side effects. If the thread is terminated because of an exception, 
+	* the exception is thrown when this method is called.
+	*
+	* @param millisecondsTimeout the time to wait for in milliseconds.
+	* @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+	*
+	* @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
+	* @throws ThreadException if the thread terminated due to an exception.
+	* @throws InterruptedException if another thread requested to interrupt this thread.
+	*
+	* @seeDoc shadow:standard@ThreadException
+	*/
+	public join(int millisecondsTimeout) => (boolean)
+	{
+		return join(Time.fromMilliSeconds(millisecondsTimeout));
+	}
+
+	/**
+    * {@code Interruptible}. Suspends the execution of the calling thread until this thread terminates or until it times out.
+    * Joining on a dead thread has no side effects. If the thread is terminated because of an exception,
+    * the exception is thrown when this method is called.
+    *
+    * @param timeout the time to wait for.
+    * @return {@code true} if the join returned because of a timeout; otherwise, {@code false}.
+    *
+    * @throws InvalidOperationException if this thread is the main thread or is the same as the calling thread.
+    * @throws ThreadException if the thread terminated due to an exception.
+    * @throws InterruptedException if another thread requested to interrupt this thread.
+    *
+    * @seeDoc shadow:standard@ThreadException
+    */
+	public join(TimeSpan timeout) => (boolean)
+	{
+	    Thread currentThread = Thread:Current->instance;
+
+		if(this === Thread:Current->main)
+			throw InvalidOperationException:create("A thread cannot call join on the main thread.");
+
+		if(this === currentThread)
+			throw InvalidOperationException:create("A thread cannot call join on itself.");
+
+    	conditionVariable.lock();
+		boolean throwException = !joined;
+        long currentTime = System.epochNanoTime();
+        long finishedTime = currentTime + timeout.totalNanoSeconds();
+		boolean waiting = !timeout->isPositive or currentTime < finishedTime; // ignore time if not positive
+
+        while (state != DEAD and waiting)
+        {
+            currentThread:conditionVariable.lock();
+            currentThread:state = WAITING;
+            currentThread:waitingVariable = conditionVariable;
+
+            if (currentThread:interrupting)
+            {
+                currentThread:interrupting = false;
+                currentThread:waitingVariable = null;
+                currentThread:state = RUNNING;
+                currentThread:conditionVariable.unlock();
+                conditionVariable.unlock();
+                throw InterruptedException:create();
+            }
+            else
+                currentThread:conditionVariable.unlock();
+
+            if (timeout->isPositive)
+            {
+                conditionVariable.wait(TimeSpan:create(finishedTime - currentTime));
+                currentTime = System.epochNanoTime();
+                waiting = currentTime < finishedTime;
+            }
+            else
+                conditionVariable.wait();
+        }
+
+        joined = true;
+
+        currentThread:conditionVariable.lock();
+        currentThread:state = RUNNING;
+        currentThread:conditionVariable.unlock();
+
+		// We then check here if we have an exception. If we do, we throw it, and
+		// it is the job of runnerNative() to take care of the handling.
+		if (ex !== null and throwException)
+		{
+		    conditionVariable.unlock();
+			throw check(ex);
+		}
+
+        conditionVariable.unlock();
+
+		return !waiting;
+	}
+	
+	/**
+	* Requests this thread to be interrupted. If the thread is currently in the {@code WAITING} state, 
+	* the thread is interrupted and the method that caused the thread to be in the {@code WAITING} state
+	* raises an {@code InterruptedException}. The methods which are interruptible are {@code join()},
+	* {@code sleep()}, {@code send()}, {@code receive()}, and all their overloads.
+	* If the thread is not in the {@code WAITING} state, an interrupt flag is set, and the thread is interrupted
+	* as soon as one of the above interruptible methods above are called.
+	*
+	* @return {@code true} if the thread was marked as interrupted or {@code false} if the thread wasn't waiting.
+	*/
+	public interrupt() => ()
+	{
+		conditionVariable.lock();
+
+        // Set interrupting, even if DEAD (because it won't matter)
+        interrupting = true;
+        if (state == WAITING)
+        {
+            // Should never be null
+            ConditionVariable currentWaiting = check(waitingVariable);
+            conditionVariable.unlock();
+            currentWaiting.notifyAll();
+        }
+        else
+            conditionVariable.unlock();
+
+        // Quick explanation on how exceptions propagate:
+        //
+        // When the InterruptedException is raised, the runnerNative() catches that exception.
+        // Just like any other exception, `ex` is set to that exception, and runnerNative() then cleans
+        // up the resources it used. Since all threads get woken up after
+        // the exception `ex` has been set, all the joined thread also get an InterruptedException correctly.
+    }
+
+	/**
+	* {@code Interruptible}
+	* @throws InterruptedException
+	* @seeDoc shadow:natives@Signaler
+	*/
+	private sleep(TimeSpan timeout) => ()
+	{
+	    // Should only be called on current thread
+        conditionVariable.lock();
+        long currentTime = System.epochNanoTime();
+        long finishedTime = currentTime + timeout.totalNanoSeconds();
+        boolean sleeping = currentTime < finishedTime;
+        try
+        {
+            while (state != DEAD and sleeping)
+            {
+                state = WAITING;
+                waitingVariable = conditionVariable; // sleeping on its own condition variable
+                conditionVariable.wait(TimeSpan:create(finishedTime - currentTime));
+
+                if (interrupting)
+                {
+                    interrupting = false;
+                    throw InterruptedException:create();
+                }
+
+                currentTime = System.epochNanoTime();
+                sleeping = currentTime < finishedTime;
+            }
+        }
+        finally
+        {
+            state = RUNNING;
+            waitingVariable = null;
+            conditionVariable.unlock();
+        }
+	}
+	
+	/**
+	* {@code Interruptible}
+	* @throws InterruptedException
+	* @seeDoc shadow:natives@Signaler
+	*/
+	private sleep(int millisecondsTimeout) => ()
+	{
+		sleep(Time.fromMilliSeconds(millisecondsTimeout));
+	}
+
+	/**
+	* {@code Interruptible}. Receives data with the desired {@code expectedType}. This method will throw an exception 
+	* and will not retrieve the message if the expected type is not the same as the actual one
+	* sent by the thread. A thread can send as many messages as it desires, but the receiving thread
+	* should always receive the data in the order it was sent; otherwise, an exception is thrown.
+	* @unused
+	*
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	*/
+	protected receiveFirst(Class expectedType, boolean blocking) => (Object, Thread)
+	{
+	    conditionVariable.lock();
+		nullable Message message = null;
+
+		try
+		{
+		    message = mailbox.dequeue(expectedType);
+		}
+		catch(Exception e)
+		{
+		    conditionVariable.unlock();
+		    throw e;
+		}
+		if(!blocking)
+		{
+		    conditionVariable.unlock();
+			try
+			{
+			    Message checkedMessage = check(message);
+                return (checkedMessage->data, checkedMessage->sender);
+            }
+			recover
+			{
+			    throw EmptyMailboxException:create();
+			}
+		}
+		else
+		{
+		    try
+		    {
+                while(message === null)
+                {
+                    state = WAITING;
+                    waitingVariable = conditionVariable; // waiting on its own condition variable
+                    conditionVariable.wait();
+
+                    if (interrupting)
+                    {
+                        interrupting = false;
+                        throw InterruptedException:create();
+                    }
+
+                    message = mailbox.dequeue(expectedType);
+                }
+
+                Message checkedMessage = check(message);
+                return (checkedMessage->data, checkedMessage->sender);
+            }
+            finally
+            {
+                state = RUNNING;
+                waitingVariable = null;
+                conditionVariable.unlock();
+            }
+		}
+	}
+	
+	/**
+	* {@code Interruptible}. Receives data with the desired {@code expectedType} from the desired thread.
+	* This method will throw an exception and will not retrieve the message if the
+	* expected type is not the same as the actual one sent by the thread. A thread
+	* can send as many messages as it desires, but the receiving thread should always
+	* receive the data in the order it was sent, or otherwise an exception is thrown.
+	* @unused
+	*
+	* @throws IncompatibleMessageTypeException If the item attempted to retrieve does not have the same type as expectedType.
+	* @throws InterruptedException If this thread was interrupted while waiting on an empty mailbox.
+	* @throws IllegalArgumentException If this thread is the same as the from thread.
+	* 
+	*/
+	protected receiveFirstFrom(Class expectedType, Thread from, boolean blocking) => (Object)
+	{
+		if (from === this)
+			throw IllegalArgumentException:create("A Thread cannot receive a message from itself.");
+
+		conditionVariable.lock();
+        nullable Message message = null;
+        try
+        {
+            message = mailbox.dequeue(from, expectedType);
+        }
+        catch(Exception e)
+        {
+            conditionVariable.unlock();
+            throw e;
+        }
+
+        if(!blocking)
+        {
+            conditionVariable.unlock();
+            try
+            {
+                Message checkedMessage = check(message);
+                conditionVariable.notifyAll();
+                return checkedMessage->data;
+            }
+            recover
+            {
+                throw EmptyMailboxException:create();
+            }
+        }
+        else
+        {
+            try
+            {
+                while(message === null)
+                {
+                    state = WAITING;
+                    waitingVariable = conditionVariable; // waiting on its own condition variable
+                    conditionVariable.wait();
+
+                    if (interrupting)
+                    {
+                        interrupting = false;
+                        throw InterruptedException:create();
+                    }
+
+                    message = mailbox.dequeue(from, expectedType);
+                }
+
+                Message checkedMessage = check(message);
+                return checkedMessage->data;
+            }
+            finally
+            {
+                state = RUNNING;
+                waitingVariable = null;
+                conditionVariable.unlock();
+                conditionVariable.notifyAll();
+            }
+        }
+	}
+	
+	/**
+	* {@code Interruptible}. Sends the desired data to this thread. This method copies all the data before
+	* sending it to this thread. Thus no data is shared between two threads.
+	* This is a blocking method, and it will block if the mailbox of this thread is full.
+	* The method will immediately unblock when there is space for the item to be
+	* deposited in the mailbox. Mailbox is first come first serve, and the threads sending data
+	* will unblock in the order they were blocked in.
+	*
+	* @param data The data to be cloned and sent to this thread.
+	* 
+	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
+	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
+	*
+	* @seeDoc shadow:standard@Mailbox
+	*/
+	protected sendTo(Object data, boolean blocking) => ()
+	{
+		Thread currentThread = Thread:Current->instance;
+
+		if(this === currentThread)
+			throw InvalidOperationException:create("A thread cannot send a message to itself.");
+
+        var message = Message:create(data);
+        conditionVariable.lock();
+        if (state == DEAD)
+        {
+            conditionVariable.unlock();
+            throw InvalidOperationException:create("Cannot send a message to a dead thread.");
+        }
+
+        if(!blocking)
+        {
+            if(!mailbox.enqueue(message))
+            {
+                conditionVariable.unlock();
+                throw FullMailboxException:create();
+            }
+            else
+            {
+                conditionVariable.unlock();
+                conditionVariable.notifyAll(); // after a message is sent, a receiver might need to wake up
+            }
+        }
+        else
+        {
+            boolean done = mailbox.enqueue(message);
+
+            while(!done)
+            {
+                currentThread:conditionVariable.lock();
+                currentThread:state = WAITING;
+                currentThread:waitingVariable = conditionVariable;
+
+                if (currentThread:interrupting)
+                {
+                    currentThread:interrupting = false;
+                    conditionVariable.unlock();
+                    currentThread:state = RUNNING;
+                    currentThread:waitingVariable = null;
+                    currentThread:conditionVariable.unlock();
+                    throw InterruptedException:create();
+                }
+                else
+                    currentThread:conditionVariable.unlock();
+
+                conditionVariable.wait();
+                done = mailbox.enqueue(message);
+            }
+
+            conditionVariable.unlock();
+            conditionVariable.notifyAll(); // after a message is sent, a receiver might need to wake up
+
+            currentThread:conditionVariable.lock();
+            currentThread:state = RUNNING;
+            currentThread:waitingVariable = null;
+            currentThread:conditionVariable.unlock();
+        }
+	}
+	
+	/**
+	* This method is natively executed from the newly spawned thread.
+	* !!DO NOT MANUALLY EXECUTE!!
+	* @unused
+	*/
+	private start() => ()
+	{
+		try
+		{
+		    conditionVariable.lock();
+			state = RUNNING;
+			conditionVariable.unlock();
+			runner.run();
+		}
+		catch(Exception e)
+		{
+			ex = ThreadException:create(this, e);
+		}
+		finally
+		{
+		    conditionVariable.lock();
+			state = DEAD;
+			parent = null; // to avoid circular reference issues
+			conditionVariable.unlock();
+            conditionVariable.notifyAll();
+		}
+	}
+
+	/**
+	* Gets the number of children the thread currently has. This method should be used with caution
+	* even though it is thread safe. Since a thread can spawn threads at any time, this count can
+	* drastically change between each call.
+	*
+	* @return how many children that thread has
+	*/
+	public readonly get childrenCount() => (int)
+	{
+		return childrenList->size;
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific id.
+	*
+	* @param index the index of the child in the range [0, childrenCount).
+	* @return the n-th child {@code Thread}.
+	*/
+	public readonly childAt(int index) => (Thread)
+	{
+		return childrenList[index];
+	}
+	
+	/**
+	* Gets the n-th child that this thread spawned. This is NOT the Shadow-specific id.
+	* This is a shortcut to Thread.childAt(), to allow easy indexing of children using Thread[index].
+	*
+	* @param index the index of the child in the range [0, childrenCount).
+	* @return the n-th child {@code Thread}.
+	*/
+	public readonly index(int index) => (Thread)
+	{
+		return childAt(index);
+	}
+	
+	/**
+	* Gets the children of this thread. If {@code recurse} is true, this method
+	* will also traverse the children of the children recursively, until all children
+	* have been visited.
+	* Care should be taken using this function, as enumerating can throw an exception
+	* if the children have changed.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children(boolean recurse) => (CanIterate<Thread>)
+	{
+	    return TraverseChildren:create(this, recurse);
+	}
+	
+	/**
+	* Gets the children of this thread. This method only enumerates through the first generation
+	* children of this thread. i.e. only the thread that this thread spawned.
+	*
+	* @return {@code CanIterate<Thread>} An iterable class to be used with a foreach loop.
+	*/
+	public readonly children() => (CanIterate<Thread>)
+	{
+	    return TraverseChildren:create(this, false);
+	}
+	
+	/**
+	* Returns a string with the format: "Thread ({Thread->name}): {Thread->stateString}".
+	*/
+	public readonly toString() => (String)
+	{
+		return "Thread (" # name # "): " # this->stateString;
+	}
+
+	/// @unused
+	private waitForThreads() => ()
+	{
+		if(this !== Thread:Current.main()) {
+			throw Exception:create("waitForThreads() can only be called on the main thread.");
+		}
+		// this->state = DEAD; // necessary, maybe?
+
+	    var exceptionQueue = ArrayDeque<ThreadException>:create();
+
+		foreach(var thread in children(true)) {
+			try {
+				thread.join();
+				// will only throw an exception if the target
+				// thread had not been joined on before.
+			} catch (ThreadException e) {
+				exceptionQueue.addLast(e);
+			} catch (Exception e) {
+			    Console.printErrorLine(e);
+			}
+		}
+
+		// traverse the exceptions, if any and print them as Uncaught Thread Exceptions.
+		while(!exceptionQueue.isEmpty()) {
+			Console.printErrorLine("Uncaught " # exceptionQueue.removeFirst());
+		}
+	}
+
+	/// @unused
+	private readonly createMainThread() => (Thread)
+	{
+		return Thread:create("Thread#main", NopRunner:create()); 
+	}
+	
+	// A Runner which performs no operations. A null runner would had been preferred
+	// but Shadow does not currently support nullable interfaces, so until then, this is
+	// the most elegant solution.
+	private class NopRunner
+		is CanRun
+	{
+		public run() => () {}
+	}
+
+	// TODO: Are race conditions a problem for this class, or is the thread-safe list good enough?
+	private class TraverseChildren is CanIterate<Thread>
+	{
+		boolean recurse;
+		Thread current;
+		
+		public create(Thread current, boolean recurse)
+		{
+		    this:current = current;
+			this:recurse = recurse;
+		}
+		
+		public readonly iterator() => (Iterator<Thread>)
+		{
+			if(recurse) {
+				return RecursiveChildrenIterator:create(current);
+			}
+
+			return current:childrenList.iterator();
+		}
+		
+		private class RecursiveChildrenIterator is Iterator<Thread>
+		{
+			ArrayDeque<Thread> threadsQueue;
+			Thread current;
+			
+			public create(Thread current)
+			{
+				threadsQueue = ArrayDeque<Thread>:create();
+				this:current = current;
+			}
+			
+			public readonly hasNext() => (boolean)
+			{
+				return (!threadsQueue.isEmpty() or current->childrenCount > 0);
+			}
+			
+			public next() => (Thread)
+			{
+				// this is tricky as we need to avoid race conditions, so we add the children
+				// at the time we retrieve the next thread instead of adding them in the hasNext()
+				addChildrenToQueue(current);
+				
+				if(threadsQueue.isEmpty()) {
+					throw NoSuchElementException:create();
+				}
+				
+				current = threadsQueue.removeFirst();
+				return current;
+			}
+			
+			private addChildrenToQueue(Thread parent) => ()
+			{
+				foreach(var child in parent.children()) {
+					threadsQueue.addLast(child);
+				}
+			}
+		}
+	}
+
+	private class Mailbox
+    {
+    	nullable Message[] elements;
+    	int start;
+    	int maxCapacity;
+
+    	get int size;
+
+    	public create(int size)
+    	{
+    		this(size, size);
+    	}
+
+    	public create(int initialCapacity, int maxCapacity)
+    	{
+    		if(initialCapacity > maxCapacity)
+    			throw IllegalArgumentException:create("maxCapacity (" # maxCapacity # ") must be greater than or equal to initialCapacity (" # initialCapacity # ").");
+
+    		this:elements = Message:null[initialCapacity];
+
+    		this:start = 0;
+    		this:maxCapacity = maxCapacity;
+    		this:size = 0;
+    	}
+
+    	/**
+    	* Gets whether the backing array is full. If it is, it tries to double its size.
+    	* If the new size is bigger than the maxCapacity, the array is set to the maxCapacity.
+    	* Must be called when the mutex is already locked.
+    	*
+    	* @return {@code true} if this array cannot grow more and reached maxCapacity; otherwise, {@code false}.
+    	*/
+    	public get isFull() => (boolean)
+    	{
+            if (size == elements->size)
+            {
+                if(size == maxCapacity)
+                    return true;
+
+                int newSize = size * 2;
+                if (newSize > maxCapacity)
+                    newSize = maxCapacity;
+
+                nullable Message[] temp = Message:null[newSize];
+                for(int i = 0; i < size; i += 1)
+                    temp[i] = elements[(i + start) % size];
+
+                elements = temp;
+                start = 0;
+            }
+
+            return false;
+       }
+
+    	public enqueue(Message message) => (boolean)
+    	{
+            if(isFull())
+                return false;
+
+            elements[(start + size) % elements->size] = message;
+            size += 1;
+            return true;
+    	}
+
+    	public dequeue(Class expectedType) => (nullable Message)
+    	{
+            if(size == 0)
+                return null;
+
+            return removeAt(start, expectedType);
+    	}
+
+    	public dequeue(Thread sender, Class expectedType) => (nullable Message)
+    	{
+    		int index = -1;
+            for(int i = start; index == -1 and i < start + size; i += 1)
+            {
+                if(sender === check(elements[i % elements->size])->sender)
+                    index = i;
+            }
+
+            if(index == -1)
+                return null;
+
+            return removeAt(index, expectedType);
+    	}
+
+    	/**
+    	* Attempts to remove the Message at the specified index. This method does not
+    	* remove the item if it is not the same as the expectedType.
+    	*
+    	* Must be called when the mutex is already locked.
+    	*/
+    	public removeAt(int index, Class expectedType) => (Message)
+    	{
+            // retrieve the data and make sure that it is the same as the expectedType.
+            // the indexer also checks for out of bounds exception, so we do not need
+            // to worry about that.
+            var message = check(elements[index]);
+            var dataType = message->data.getClass();
+
+            // TODO: I'm not sure if we should use the Class methods such isSubtype() to compare
+            // instead of a naive comparison.
+            if(!dataType.isSubtype(expectedType))
+                throw IncompatibleMessageTypeException:create(expectedType, dataType);
+
+            if(index == start)
+            {
+                start = (start + 1) % elements->size;
+                elements[index] = null;
+            }
+            else
+            {
+                // we shift the array by one to the left.
+                // assuming we are deleting the second item:
+                // [1, 2, 3, 4, 5] -> [1, 3, 4, 5, null]
+                // (   size = 5  ) -> (    size = 4    )
+                for (int i = index; i < start + size - 1; i += 1)
+                    elements[i % elements->size] = elements[(i + 1) % elements->size];
+
+                // set the last item to null since it is not used anymore
+                elements[(start + size - 1) % elements->size] = null;
+            }
+
+            // decrease the size, since we deleted the item.
+            size -= 1;
+
+            return message;
+    	}
+    }
+
+    public singleton Current
+    {
+        /**
+        * Gets the current thread's actual instance.
+        *
+        * @return The instance of the current thread.
+        */
+        [ImportNative]
+        public readonly get instance() => (Thread);
+
+        [ImportAssembly]
+        private readonly __shadow_standard__Thread_Current_yield() => (boolean);
+
+        /// Gets the main thread, which is the root of all threads.
+        [ImportNative]
+        public readonly get main() => (Thread);
+
+        /**
+        * Suspends the current running thread for the specified amount of time.
+        *
+        * @param timeout The amount of time to pause this thread for.
+        */
+        public readonly sleep(TimeSpan timeout) => ()
+        {
+            instance().sleep(timeout);
+        }
+
+        /**
+        * Suspends the current running thread for {@code milliseconds} milliseconds.
+        *
+        * @param millisecondsTimeout The milliseconds to pause this thread for.
+        */
+        public readonly sleep(int millisecondsTimeout) => ()
+        {
+            instance().sleep(millisecondsTimeout);
+        }
+
+       /**
+        * Checks whether the {@code thread} is the same as the current thread.
+        *
+        * @param other The thread to compare against the current thread.
+        *
+        * @return {@code true} if the other thread is not null and is the current thread; otherwise, {@code false}.
+        */
+        public readonly equal(nullable Thread other) => (boolean)
+        {
+            return other === instance();
+        }
+
+        /**
+        * Causes the current thread to yield execution to another thread.
+        *
+        * @return {@code true} if the yield was successful; otherwise, {@code false}.
+        */
+        public readonly yield() => (boolean)
+        {
+            return __shadow_standard__Thread_Current_yield();
+        }
+    }
+}

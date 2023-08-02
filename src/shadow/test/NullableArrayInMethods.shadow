@@ -1,0 +1,16 @@
+class shadow:test@NullableArrayInMethods
+{
+	public makeArray(int value) => (nullable Object[])
+	{
+		return Object:null[value];	
+	}
+	
+	public makeString(nullable Object[] array) => (String)
+	{
+		var string = MutableString:create();
+		foreach( nullable Object object in array )
+			string.append(#object);
+	
+		return #string;	
+	}
+}

@@ -1,0 +1,19 @@
+class Test
+{
+
+    attribute InnerAttribute
+    {
+        /// @unused
+        int test;
+
+        public create(int value)
+        {
+            test = value;
+        }
+    }
+
+
+    public main() => ()
+    {
+    }
+}

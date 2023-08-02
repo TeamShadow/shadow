@@ -1,0 +1,124 @@
+/**
+ * Class {@code TextOutput} provides methods for writing text data to a
+ * {@code CanWrite} object. Output operations are buffered for performance
+ * a {@code CanWrite} object often writes to files or other high-latency
+ * devices.
+ */
+class shadow:io@
+    TextOutput is
+    CanClose
+{
+    CanWrite writer;
+    ubyte[] buffer;
+    int size = 0;
+    get String lineSeparator = "\r\n";
+
+    [ImportAssembly]
+    private readonly __shadow_io__TextOutput_getSeparator() => (String);
+
+    public create(CanWrite writer)
+    {
+        this(writer, 8192);
+    }
+
+    public create(CanWrite writer, int size)
+    {
+        // Ensure power of two
+        int realSize = 1;
+        while (realSize < size)
+            realSize <<= 1;
+
+        this:writer = writer;
+        buffer = ubyte:create[realSize];
+        lineSeparator = __shadow_io__TextOutput_getSeparator();
+
+        if (writer is CanOpen)
+        {
+            CanOpen opener = cast<CanOpen>(writer);
+            if (!opener->isOpen)
+            {
+                opener.open(CanOpen:WRITE);
+            }
+        }
+    }
+
+    /**
+     * Closes the {@code TextOutput} on destroy and flushes buffers.
+     */
+    public destroy
+    {
+        close();
+    }
+
+    /**
+	 * Writes an object's {@code String} representation, using the underlying writer.
+	 * @param value object to write
+	 * @return {@code TextOutput} object
+	 */
+    public write(nullable Object value) => (TextOutput)
+	{
+		return write(#value);
+	}
+
+	public writeLine(String value) => (TextOutput)
+    {
+        return write(value).writeLine();
+    }
+
+    /**
+     * Writes a {@code String} value with the underlying writer.
+     * This operation is buffered for performance.  Output might not occur
+     * until a {@code flush()} call.
+     * @param value {@code String} to write
+     * @return {@code Console} object
+     */
+    public write(String value) => (TextOutput)
+    {
+        immutable ubyte[] data = value->chars;
+        for (int i = 0; i < data->size; i += 1)
+        {
+            buffer[size] = data[i];
+            size += 1;
+
+            if (size == buffer->size)
+            {
+                writer.write(buffer, size);
+                size = 0;
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Writes new line characters with the underlying writer.
+     * Note that this output is platform dependent.
+     * @return {@code TextOutput} object
+     */
+    public writeLine() => (TextOutput)
+    {
+        return write(lineSeparator);
+    }
+
+    public flush() => (TextOutput)
+    {
+        if (size > 0)
+        {
+            writer.write(buffer, size);
+            size = 0;
+        }
+        return this;
+    }
+
+    /**
+     * Close underlying writer, if possible.
+     */
+    public close() => ()
+    {
+        flush();
+        if (writer is CanClose)
+        {
+            CanClose closer = cast<CanClose>(writer);
+            closer.close();
+        }
+    }
+}

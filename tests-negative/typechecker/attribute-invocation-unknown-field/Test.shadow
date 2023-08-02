@@ -1,6 +1,0 @@
-class Test {
-
-    [Attribute(test = 10)]
-    public main() => () {
-    }
-}
