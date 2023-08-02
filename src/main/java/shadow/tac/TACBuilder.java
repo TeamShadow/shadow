@@ -18,6 +18,7 @@ import shadow.typecheck.Package;
 import shadow.typecheck.type.InstantiationException;
 import shadow.typecheck.type.*;
 
+import java.security.Signature;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -3441,6 +3442,9 @@ public class TACBuilder extends ShadowBaseVisitor<Void> {
     TACOperand value = ctx.conditionalExpression().appendBefore(anchor);
     prefix = value;
     Type type = ctx.getType();
+
+
+    //TODO: IS THIS FINE??? or are there memory problems?
 
     if (!type.getModifiers().isImmutable()) { // if immutable, do nothing, the old one is fine
       TACNewObject object = new TACNewObject(anchor, Type.ADDRESS_MAP);
