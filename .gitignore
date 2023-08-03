@@ -39,3 +39,4 @@ hs_err_pid*
 # Ignore IntelliJ IDEA project files because the configuration is generated on importing the Maven project
 .idea/
 *.iml
+/docs/
