@@ -17,7 +17,6 @@ public class Arguments {
   public static final String HELP = "h";
   public static final String OUTPUT = "o";
   public static final String VERBOSE = "v";
-  public static final String RECOMPILE = "f";
   public static final String INFORMATION = "i";
   public static final String WARNING = "w";
   public static final String READABLE = "r";
@@ -30,7 +29,6 @@ public class Arguments {
   private static final String HELP_LONG = "help";
   private static final String OUTPUT_LONG = "output";
   private static final String VERBOSE_LONG = "verbose";
-  private static final String RECOMPILE_LONG = "force-recompile";
   private static final String INFORMATION_LONG = "information";
   private static final String WARNING_LONG = "warning";
   public static final String READABLE_LONG = "human-readable";
@@ -121,9 +119,6 @@ public class Arguments {
             VERBOSE_LONG,
             false,
             "Print detailed information about the compilation process"));
-    options.addOption(
-        new Option(
-            RECOMPILE, RECOMPILE_LONG, false, "Recompile all source files, even if unnecessary"));
     options.addOption(new Option(HELP, HELP_LONG, false, "Display command line options and exit"));
     options.addOption(
         new Option(

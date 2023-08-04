@@ -10,7 +10,7 @@
  * @author Barry Wittman
  *
  * @seeDoc shadow:standard@Thread
- * @seeDoc shadow:standard@Mutex
+ * @seeDoc shadow:natives@Mutex
  */
 
 locked immutable class shadow:natives@

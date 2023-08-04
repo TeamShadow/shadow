@@ -10,6 +10,7 @@ import shadow.typecheck.TypeCheckException;
 import shadow.typecheck.type.Type;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -102,11 +103,13 @@ public class DocumentationTool {
 
     startTime = System.currentTimeMillis(); // Time the documentation
 
+    Path currentDirectory = Paths.get(File.separator).toAbsolutePath().normalize();
+
     // If a directory was provided use it. Otherwise, create docs/ in the
     // current working directory
     Path outputDirectory;
     if (arguments.hasOption(DocumentationArguments.OUTPUT_DIR))
-      outputDirectory = Paths.get(arguments.getOutputDirectory()).toAbsolutePath().normalize();
+      outputDirectory = currentDirectory.resolve(arguments.getOutputDirectory()).toAbsolutePath().normalize();
     else outputDirectory = Paths.get("docs").toAbsolutePath().normalize();
 
     // Capture visible inner classes for documentation
