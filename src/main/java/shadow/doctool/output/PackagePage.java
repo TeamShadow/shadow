@@ -85,7 +85,7 @@ public class PackagePage extends Page {
     out.closeUntab();
     out.closeUntab();
 
-    fileWriter.close();
+    out.endFile();
   }
 
   private void writeHeader(HtmlWriter out) throws ShadowException {

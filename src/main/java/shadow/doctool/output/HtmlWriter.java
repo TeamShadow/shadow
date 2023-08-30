@@ -4,6 +4,7 @@ import shadow.ShadowException;
 import shadow.doctool.DocumentationException;
 import shadow.output.TabbedLineWriter;
 
+import java.io.IOException;
 import java.io.Writer;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -207,5 +208,13 @@ public class HtmlWriter {
       throw new DocumentationException("Non-alphabetic characters present in tag name");
 
     return name;
+  }
+
+  public void flush() throws IOException {
+    out.flush();
+  }
+
+  public void endFile() throws IOException {
+    out.close();
   }
 }
