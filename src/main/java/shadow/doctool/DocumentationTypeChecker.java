@@ -53,7 +53,7 @@ public class DocumentationTypeChecker {
     ErrorReporter reporter = new ErrorReporter(Loggers.DOC_TOOL);
 
     /* Collector looks over all files and creates types for everything needed. */
-    TypeCollector collector = new TypeCollector(packageTree, reporter, true, false);
+    TypeCollector collector = new TypeCollector(packageTree, reporter, true);
     /* Its return value maps all the types to their AST nodes. */
     Map<Type, Context> typeTable = collector.collectTypes(files);
 

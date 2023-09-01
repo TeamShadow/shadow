@@ -56,7 +56,6 @@ public class TypeChecker {
    * Typechecks files and all files they depend on.
    *
    * @param files files to typecheck (main file is the first)
-   * @param useSourceFiles whether the source files should be recompiled
    * @param reporter object used to report errors
    * @param typeCheckOnly whether the source files are only being type-checked
    * @return nodes list of AST nodes for the classes to be compile
@@ -66,14 +65,14 @@ public class TypeChecker {
    * @throws ConfigurationException thrown if there's a problem with Configuration
    */
   public static TypeCheckerOutput typeCheck(
-      List<Path> files, boolean useSourceFiles, ErrorReporter reporter, boolean typeCheckOnly)
+      List<Path> files, ErrorReporter reporter, boolean typeCheckOnly)
       throws ShadowException, IOException, ConfigurationException {
     Type.clearTypes();
     Package packageTree = new Package(); // Root of all packages, storing all types
 
     /* Collector looks over all files and creates types for everything needed. */
     TypeCollector collector =
-        new TypeCollector(packageTree, reporter, useSourceFiles, typeCheckOnly);
+        new TypeCollector(packageTree, reporter, typeCheckOnly);
 
     /* Its return value maps all the types to the nodes that need compiling. */
     Map<Type, Context> nodeTable = collector.collectTypes(files);

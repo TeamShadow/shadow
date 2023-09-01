@@ -50,7 +50,6 @@ public class TypeCollector extends ScopedChecker {
   private final Map<Type, Context> typeTable;
   // Map of file paths (without extensions) to nodes.
   private final Map<Path, Context> fileTable = new HashMap<>();
-  private final boolean useSourceFiles;
   private final boolean typeCheckOnly;
 
   // Holds all of the imports we know about.
@@ -124,7 +123,7 @@ public class TypeCollector extends ScopedChecker {
   }
 
   // Java is stupid
-  private static class PathWithContext {
+  public static class PathWithContext {
     public final Path source;
     public final NameContext context;
 
@@ -137,13 +136,11 @@ public class TypeCollector extends ScopedChecker {
    * Creates a new <code>TypeCollector</code> with the given tree of packages.
    *
    * @param p package tree
-   * @param useSourceFiles if true, always use <tt>.shadow</tt> instead of <tt>.meta</tt> files
    */
   public TypeCollector(
-      Package p, ErrorReporter reporter, boolean useSourceFiles, boolean typeCheckOnly)
+      Package p, ErrorReporter reporter, boolean typeCheckOnly)
       throws ConfigurationException, IOException {
     super(p, reporter);
-    this.useSourceFiles = useSourceFiles;
     this.typeCheckOnly = typeCheckOnly;
     typeTable = new HashMap<>();
 
@@ -159,11 +156,9 @@ public class TypeCollector extends ScopedChecker {
       Path standardSourcePath,
       Map<String, PathWithContext> standardImportedTypes,
       ErrorReporter reporter,
-      boolean useSourceFiles,
       boolean typeCheckOnly) {
     super(p, reporter);
     this.typeTable = typeTable;
-    this.useSourceFiles = useSourceFiles;
     this.typeCheckOnly = typeCheckOnly;
 
     // Standard imports
@@ -240,9 +235,8 @@ public class TypeCollector extends ScopedChecker {
      * figure out which files need (re)compilation and redo the whole type
      * collection process.
      */
-    if (getErrorReporter().getErrorList().size() == 0
-        && !useSourceFiles
-        && mustCompile.size() > 0) {
+    if (getErrorReporter().getErrorList().isEmpty()
+        && !mustCompile.isEmpty()) {
       // Create a new set, otherwise adding new recompilations can trigger unnecessary ones.
       Set<Path> updatedMustRecompile = new HashSet<>(mustCompile);
 
@@ -338,8 +332,7 @@ public class TypeCollector extends ScopedChecker {
 
         // If source compilation was not requested and the binaries exist
         // that are newer than the source, use those binaries.
-        if (!useSourceFiles
-            && !mustCompile.contains(canonical)
+        if (!mustCompile.contains(canonical)
             && source == null
             &&
             // Always do the full .shadow file for the main file if typechecking
@@ -358,7 +351,7 @@ public class TypeCollector extends ScopedChecker {
                         >= 0))) {
           canonicalFile = meta;
         } else mustCompile.add(canonical);
-      } else if (!useSourceFiles) canonicalFile = BaseChecker.addExtension(canonical, ".meta");
+      } else canonicalFile = BaseChecker.addExtension(canonical, ".meta");
 
       currentFile = canonicalFile;
 
@@ -381,7 +374,6 @@ public class TypeCollector extends ScopedChecker {
               standardSourcePath,
               standardImportedTypes,
               getErrorReporter(),
-              useSourceFiles,
               typeCheckOnly);
 
       // Keeping a current file gives us a file whose directory we can check against.
@@ -411,7 +403,7 @@ public class TypeCollector extends ScopedChecker {
     }
 
     Collection<Type> packageLessTypes = packageTree.getTypes();
-    if (mainType != null && packageLessTypes.size() > 0 && !packageLessTypes.contains(mainType)) {
+    if (mainType != null && !packageLessTypes.isEmpty() && !packageLessTypes.contains(mainType)) {
       // Imported class has default package but the main type doesn't.
       // The only classes without a package that will be imported will be
       // in the same directory as the main type.
@@ -1173,7 +1165,7 @@ public class TypeCollector extends ScopedChecker {
     }
     // This case is complex:
     // There's an identifier that could be a class, but it's got to have a suffix.
-    else if (prefix.generalIdentifier() != null && ctx.primarySuffix().size() > 0) {
+    else if (prefix.generalIdentifier() != null && !ctx.primarySuffix().isEmpty()) {
       String symbol = prefix.generalIdentifier().getText();
 
       // A local variable, a member variable, or a method would hide a class name

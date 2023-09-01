@@ -4,11 +4,7 @@
  *
  * @author Claude Abounegm
  *
- * @seeDoc shadow:test@MutexTest
- *
- * @seeDoc shadow:natives@Signaler
  * @seeDoc shadow:standard@Thread
- * @seeDoc shadow:standard@Mailbox
  */
 locked immutable class shadow:natives@
 	Mutex

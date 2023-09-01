@@ -47,7 +47,7 @@ public class OverviewPage extends Page {
     out.closeUntab();
     out.closeUntab();
 
-    fileWriter.close();
+    out.endFile();
   }
 
   private static void writeHeader(HtmlWriter out) throws ShadowException {

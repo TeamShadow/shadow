@@ -86,7 +86,7 @@ public class ImportTests {
     Path path = Paths.get(file).toAbsolutePath().normalize();
     Package p = new Package();
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
-    TypeCollector collector = new TypeCollector(p, reporter, false, true);
+    TypeCollector collector = new TypeCollector(p, reporter, false);
     collector.collectTypes(List.of(path));
     Type testType = collector.getMainType();
     reporter.printAndReportErrors();

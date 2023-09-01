@@ -65,7 +65,6 @@ public class Main {
   // Important, job-specific compiler flags
   private final boolean checkOnly; // Run only parser and type-checker
   private final boolean link; // Compile the given file, but do not link
-  private final boolean forceRecompile; // Recompile all source files, even if unneeded
   private final boolean humanReadable;
   private final List<Path> files = new ArrayList<>();
 
@@ -133,7 +132,6 @@ public class Main {
             !arguments.hasOption(Arguments.NO_LINK)
                     && !arguments.hasOption(Arguments.BUILD_SYSTEM)
                     && !checkOnly;
-    forceRecompile = arguments.hasOption(Arguments.RECOMPILE);
     humanReadable = arguments.hasOption(Arguments.READABLE);
 
     // Redundant for normal use, but it helps to assume warnings are not errors when running automated tests
@@ -162,12 +160,12 @@ public class Main {
                 "Input files should not be specified when building the system library");
       else
         addDirectories(
-                Configuration.getConfiguration()
+                config
                         .getSystem()
                         .get(Configuration.SOURCE)
                         .resolve("shadow"));
     } else if (fileNames.length > 0) {
-      Map<Path, Path> imports = Configuration.getConfiguration().getImport();
+      Map<Path, Path> imports = config.getImport();
       for (String file : fileNames) {
         Path path = null;
         for (Path _import : imports.keySet()) {
@@ -389,8 +387,7 @@ public class Main {
     String binaryFile = binaryPath.toString();
     linkCommand.add(binaryFile);
 
-    if (forceRecompile
-        || !Files.exists(binaryPath)
+    if (!Files.exists(binaryPath)
         || Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(cFile)) < 0) {
       logger.info("Generating assembly code for " + cFile.getFileName());
       compileCommand.set(compileCommand.size() - 2, binaryFile);
@@ -415,7 +412,7 @@ public class Main {
     // Compile the files to assembly, to be ready for linkage
     List<String> compileCommand = new ArrayList<>();
 
-    if (Configuration.getConfiguration().getOs().equals("Mac")) {
+    if (config.getOs().equals("Mac")) {
       compileCommand.add("clang");
       String[] version = System.getProperty("os.version").split("\\.");
       compileCommand.add("-mmacosx-version-min=" + version[0] + "." + version[1]);
@@ -423,7 +420,7 @@ public class Main {
     } else compileCommand.add("clang");
 
     // Architecture, optimization, and exception support
-    compileCommand.add("-m" + Configuration.getConfiguration().getArchitecture());
+    compileCommand.add("-m" + config.getArchitecture());
     compileCommand.add("-O3");
     compileCommand.add("-fexceptions");
 
@@ -441,7 +438,7 @@ public class Main {
     compileCommand.add(null); // Location for output name
     compileCommand.add(null); // Location for .c file
 
-    Map<Path, Path> imports = Configuration.getConfiguration().getImport();
+    Map<Path, Path> imports = config.getImport();
 
     for (Path cFile : cShadowFiles) {
       Path binaryPath = BaseChecker.addExtension(getBinaryPath(cFile, imports), ".o");
@@ -490,13 +487,13 @@ public class Main {
 
     // Add platform-specific system code
     linkCommand.add(
-        compileIrFile(
+            compileIrFile(
             systemSource.resolve(config.getOs() + ".ll"),
             systemBinary.resolve(config.getOs() + ".o")));
 
     // Add shared code
     linkCommand.add(
-        compileIrFile(systemSource.resolve("Shared.ll"), systemBinary.resolve("Shared.o")));
+            compileIrFile(systemSource.resolve("Shared.ll"), systemBinary.resolve("Shared.o")));
 
     ErrorReporter reporter = new ErrorReporter(Loggers.TYPE_CHECKER);
 
@@ -504,7 +501,7 @@ public class Main {
     // classes needing compilation
     TypeChecker.TypeCheckerOutput typecheckerOutput =
         TypeChecker.typeCheck(
-            files, forceRecompile, reporter, checkOnly);
+            files, reporter, checkOnly);
 
     List<Type> typesIncludingInner =
         typecheckerOutput.nodes.stream().map(Context::getType).collect(Collectors.toList());
@@ -561,8 +558,7 @@ public class Main {
           Path binaryPath = node.getBinaryPath();
 
           Path nativeFile = file.resolveSibling(className + ".native.ll");
-          Path nativeBinary = BaseChecker.changeExtension(binaryPath, ".native");
-          Path nativeObject = BaseChecker.addExtension(nativeBinary, ".o");
+          Path nativeObject = BaseChecker.changeExtension(binaryPath, ".native.o");
 
           // If the LLVM IR bitcode or compiled object code didn't exist, the full .shadow file would
           // have been used (except for attributes, which are always interpreted)
@@ -586,8 +582,7 @@ public class Main {
               linkCommand.add(compileShadowFile(file, binaryPath, module));
           }
 
-          if (Files.exists(nativeObject)) linkCommand.add(nativeObject.toString());
-          else if (Files.exists(nativeFile))
+          if (Files.exists(nativeFile))
             linkCommand.add(compileIrFile(nativeFile, nativeObject));
         }
 
@@ -711,7 +706,10 @@ public class Main {
 
   private String compileIrFile(Path irPath, Path binaryPath) throws CompileException {
     try {
-      return compileIrStream(Files.newInputStream(irPath), binaryPath);
+      if (Files.exists(binaryPath) && Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(irPath)) >= 0)
+        return binaryPath.toString();
+      else
+        return compileIrStream(Files.newInputStream(irPath), binaryPath);
     } catch (IOException e) {
       throw new CompileException("FAILED TO COMPILE " + irPath);
     }
@@ -868,7 +866,6 @@ public class Main {
    * uint toUInt).
    */
   private static String typeToFileName(Type type) {
-
     String name = type.getTypeName();
     if (type.isPrimitive()) { // hack to produce Int.ll instead of int.ll
       if (name.startsWith("u")) // UShort instead of ushort

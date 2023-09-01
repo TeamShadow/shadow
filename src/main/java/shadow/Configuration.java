@@ -79,7 +79,6 @@ public class Configuration {
   }
 
   public static final String DEFAULT_CONFIG_NAME = "shadow.json";
-  public static final String SHADOW_HOME = "SHADOW_HOME";
 
   // Reasonable collection of common Windows libraries
   // Some are included with Visual Studio, and others are in the SDK
@@ -239,7 +238,6 @@ public class Configuration {
    * 2. A file in the source directory with the default name
    * 3. A file in the running directory with the default name
    * 4. A file in the working directory with the default name
-   * 5. A file in the SHADOW_HOME directory with the default name
    */
   private static Path locateConfig(String mainFilePath, String configFilePath)
       throws FileNotFoundException, ConfigurationException {
@@ -249,7 +247,7 @@ public class Configuration {
         mainFilePath == null
             ? null
             : Paths.get(mainFilePath).toAbsolutePath().getParent().normalize();
-    Path workingDir = Paths.get("").toAbsolutePath().normalize();
+    Path workingDir = Paths.get("." + File.separator).toAbsolutePath().normalize();
     Path runningDir = getRunningDirectory().toAbsolutePath().normalize();
 
     Path defaultFile = Paths.get(DEFAULT_CONFIG_NAME);
@@ -306,12 +304,6 @@ public class Configuration {
     /// 4: Default config file, local to the working directory
     else if (Files.exists(workingDir.resolve(defaultFile))) {
       return workingDir.resolve(defaultFile);
-    }
-    /// 5. A file in the SHADOW_HOME directory with the default name
-    Map<String, String> environment = System.getenv();
-    if (environment.containsKey(SHADOW_HOME)) {
-      Path homeDir = Paths.get(environment.get(SHADOW_HOME)).toAbsolutePath().normalize();
-      if (Files.exists(homeDir.resolve(defaultFile))) return homeDir.resolve(defaultFile);
     }
 
     throw new FileNotFoundException("Configuration file does not exist");
@@ -395,7 +387,7 @@ public class Configuration {
 
     if (_import.isEmpty()) {
       // If there are no imports, add the current directory for both src and bin
-      Path currentDirectory = Paths.get("." + File.separator).toAbsolutePath().normalize();
+      Path currentDirectory = Paths.get(File.separator).toAbsolutePath().normalize();
       _import.put(currentDirectory, currentDirectory);
     }
 

@@ -158,4 +158,10 @@ public class TabbedLineWriter {
       out.close();
     }
   }
+
+  public void flush() throws IOException {
+    if (out != null) {
+      out.flush();
+    }
+  }
 }

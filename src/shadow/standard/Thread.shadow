@@ -530,7 +530,6 @@ is CanIndex<int, Thread>
 	* @throws InterruptedException If this thread was interrupted while waiting on a full mailbox.
 	* @throws InvalidOperationException if this thread is dead or is the same as the receiving one.
 	*
-	* @seeDoc shadow:standard@Mailbox
 	*/
 	protected sendTo(Object data, boolean blocking) => ()
 	{
