@@ -70,7 +70,7 @@ class shadow:io@
     }
 
     /**
-     * Reads the next white-spaced delimited text from {@code stdin} and
+     * Reads the next white-spaced delimited text from {@code reader} and
      * converts that value to an {@code int}.
      * @return text converted to {@code int}
      * @throws NumberFormatException if the text does not represent a legal
@@ -83,7 +83,7 @@ class shadow:io@
     }
 
     /**
-     * Reads the next white-spaced delimited text from {@code stdin} and
+     * Reads the next white-spaced delimited text from {@code reader} and
      * converts that value to a {@code double}.
      * @return text converted to {@code double}
      * @throws NumberFormatException if the text does not represent a legal
@@ -96,7 +96,7 @@ class shadow:io@
     }
 
     /**
-     * Reads the next UTF-8 code point from {@code stdin}.
+     * Reads the next UTF-8 code point from {@code reader}.
      * @return character as a {@code code}
      * @return {@code true} if the end of the file was reached
      */
@@ -128,7 +128,7 @@ class shadow:io@
     }
 
     /**
-     * Reads the next byte from {@code stdin}.
+     * Reads the next byte from {@code reader}.
      * @return next byte
      * @return {@code true} if the end of the file was reached
      */
