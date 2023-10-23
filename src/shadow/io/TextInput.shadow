@@ -105,7 +105,7 @@ class shadow:io@
         uint value;
         boolean eof;
         (value, eof) = readByte();
-        if (value < 0 and !eof)
+        if (value >= 128u and !eof)
         {
             int bytes = 0;
             ubyte mask = 1uy << 7 >> 1;
