@@ -22,37 +22,46 @@ class shadow:io@
 
     /**
      * Reads the next line of text from the underlying reader,
-     * stopping when a new line or line feed character is reached.
+     * stopping when a new line or line feed character is reached
+     * or when the end of the file is reached.
      * @return line as a {@code String}
-     * @return {@code true} if the end of the file was reached
+     * @throws IOException if no characters could be read before
+     * the end of the file
      */
-    public readLine() => ( String, boolean eof )
+    public readLine() => ( String )
     {
         var string = MutableString:create();
         ( code c, boolean eof ) = readCode();
+        boolean readCharacters = !eof or c == '\n' or c == '\r';
         while ( c != '\n' and c != '\r' and !eof )
         {
             string.append(c);
             ( c, eof ) = readCode();
+            readCharacters = true;
         }
 
-        if(!eof and c == '\r') // Try to consume CR after LF
+        if(!eof and c == '\r') // Try to consume LF after CR
         {
             (ubyte b, eof) = readByte();
-            if(!eof and b != '\n') // If it wasn't a CR, back up
+            if(!eof and b != '\n') // If it isn't a LF, back up
                 start -= 1;
         }
-        return ( #string, eof );
+
+        if ( !readCharacters )
+            throw EndOfFileException:create();
+
+        return #string;
     }
 
     /**
      * Reads the next white-spaced delimited text from the underlying reader,
      * stopping when a space, a tab, a new line, or a line feed character is
-     * reached.
+     * reached or when the end of the file is reached.
      * @return text as a {@code String}
-     * @return {@code true} if the end of the file was reached
+     * @throws IOException if no non-whitespace characters could be
+     * read before the end of the file
      */
-    public readString() => ( String, boolean eof )
+    public readString() => ( String )
     {
         var string = MutableString:create();
         ( code c, boolean eof ) = readCode();
@@ -64,35 +73,40 @@ class shadow:io@
             ( c, eof ) = readCode();
         }
 
-        if(!eof) // Back up to the whitespace
+        if( !eof ) // Back up to the whitespace
             start -= 1;
-        return ( #string, eof );
+        else if(string->size == 0)
+            throw EndOfFileException:create();
+
+        return #string;
     }
 
     /**
      * Reads the next white-spaced delimited text from {@code reader} and
      * converts that value to an {@code int}.
      * @return text converted to {@code int}
+     * @throws IOException if no non-whitespace characters could be
+     * read
      * @throws NumberFormatException if the text does not represent a legal
      * {@code int}
      */
     public readInt() => ( int )
     {
-        (String text, ) = readString();
-        return text.toInt();
+        return readString().toInt();
     }
 
     /**
      * Reads the next white-spaced delimited text from {@code reader} and
      * converts that value to a {@code double}.
      * @return text converted to {@code double}
+     * @throws EndOfFileException if no non-whitespace characters could be
+     * read
      * @throws NumberFormatException if the text does not represent a legal
      * {@code double}
      */
     public readDouble() => ( double )
     {
-        (String text, ) = readString();
-        return text.toDouble();
+        return readString().toDouble();
     }
 
     /**

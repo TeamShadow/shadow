@@ -58,6 +58,56 @@ class shadow:test@StringTest
 		out.printLine("q: " # q # " (" # q.getClass() # ")" );
 		
 		String word = "dysfunctional";
-		out.printLine( word.substring(3, 6) );				
+		out.printLine( word.substring(3, 6) );
+
+		try
+		{
+            int bad1 = word.toInt();
+            out.printLine(bad1);
+		}
+		catch(NumberFormatException ex)
+		{
+		    out.printLine("Format Exception 1");
+		}
+
+		try
+        {
+            int bad2 = "347X0".toInt();
+            out.printLine(bad2);
+        }
+        catch(NumberFormatException ex)
+        {
+            out.printLine("Format Exception 2");
+        }
+
+        try
+        {
+            int bad3 = "".toInt();
+            out.printLine(bad3);
+        }
+        catch(NumberFormatException ex)
+        {
+            out.printLine("Format Exception 3");
+        }
+
+        try
+        {
+            double bad4 = "".toDouble();
+            out.printLine(bad4);
+        }
+        catch(NumberFormatException ex)
+        {
+            out.printLine("Format Exception 4");
+        }
+
+        try
+        {
+            double bad5 = "-3.7F9".toDouble();
+            out.printLine(bad5);
+        }
+        catch(NumberFormatException ex)
+        {
+            out.printLine("Format Exception 5");
+        }
 	}
 }

@@ -513,6 +513,9 @@ and	CanHash
 		boolean negativeExponent = false;
 		int decimalPosition = 0;
 		int exponent = 0;
+
+		if( this->size == 0 )
+            throw NumberFormatException:create("Empty string");
 		
 		foreach( ubyte digit in data )
 		{		
@@ -575,6 +578,9 @@ and	CanHash
 		boolean negative = false;
 		ulong value = 0uL;		
 		boolean first = true;
+
+		if( this->size == 0 )
+		    throw NumberFormatException:create("Empty string");
 		
 		foreach( ubyte digit in data )
 		{
