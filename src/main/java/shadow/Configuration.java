@@ -373,6 +373,8 @@ public class Configuration {
     if (architecture == 32) linkCommand.add("-m32");
     else linkCommand.add("-m64");
 
+    //linkCommand.add( "--target=" + target);
+
     for (String path : libraryPaths) linkCommand.add("-L" + path);
 
     for (String library : libraries) linkCommand.add("-l" + library);

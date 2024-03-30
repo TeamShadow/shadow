@@ -422,6 +422,7 @@ public class Main {
 
     // Architecture, optimization, and exception support
     compileCommand.add("-m" + config.getArchitecture());
+    //compileCommand.add("--target=" + config.getTarget());
     compileCommand.add("-O3");
     compileCommand.add("-fexceptions");
 
@@ -602,9 +603,9 @@ public class Main {
     if (config.getOs().equals("Mac")) {
       return new ProcessBuilder(
               config.getClang(),
-              // "-mtriple",
-              // config.getTarget(),
+              //"--target=" + config.getTarget(),
               config.getOptimizationLevel(), /*config.getDataLayout(),*/
+              //"-m" + config.getArchitecture(),
               "-femulated-tls", // needed for Mac
               "-c",
               "-x",
@@ -619,9 +620,9 @@ public class Main {
     } else {
       return new ProcessBuilder(
               config.getClang(),
-              // "-mtriple",
-              // config.getTarget(),
+              //"--target=" + config.getTarget(),
               config.getOptimizationLevel(),
+              //"-m" + config.getArchitecture(),
               "-c",
               "-x",
               "ir",
