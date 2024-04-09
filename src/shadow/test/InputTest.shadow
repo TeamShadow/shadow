@@ -1,0 +1,26 @@
+import shadow:io;
+
+class shadow:test@InputTest
+{
+	public main (String[] args) => ()
+	{
+            int counter = 0;
+            int length = 0;
+            String firstLine = Console.readLine();
+			try
+            {
+                while (true)
+                {
+                    String word = Console.readString();
+                    counter += 1;
+                    length += word->size;
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.printLine(firstLine);
+                Console.printLine(counter);
+                Console.printLine(length);
+            }
+	}
+}

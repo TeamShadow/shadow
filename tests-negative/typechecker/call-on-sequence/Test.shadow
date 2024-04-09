@@ -6,6 +6,7 @@ class Test
 	{
 		Console reader;
 		
-		int value = reader.readLine().toInt();
+		int value = reader.readCode().toInt();
+		reader.printLine(value);
 	}
 }

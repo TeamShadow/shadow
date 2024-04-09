@@ -39,9 +39,10 @@ singleton shadow:io@
 	 * Reads the next line of text from {@code stdin}, stopping when a new line
 	 * or line feed character is reached.
 	 * @return line as a {@code String}
-	 * @return {@code true} if the end of the file was reached 
+	 * @throws EndOfFileException if no characters could be read before
+     * the end of the file
 	 */
-	public readLine() => ( String, boolean eof )
+	public readLine() => ( String )
 	{
 		return input.readLine();
 	}
@@ -50,9 +51,10 @@ singleton shadow:io@
 	 * Reads the next white-spaced delimited text from {@code stdin}, stopping
 	 * when a space, a tab, a new line, or a line feed character is reached.	 
 	 * @return text as a {@code String}
-	 * @return {@code true} if the end of the file was reached 
+     * @throws EndOfFileException if no non-whitespace characters could be
+     * read before the end of the file
 	 */
-	public readString() => ( String, boolean eof )
+	public readString() => ( String )
 	{
 		return input.readString();
 	}
@@ -63,6 +65,8 @@ singleton shadow:io@
 	 * @return text converted to {@code int}
 	 * @throws NumberFormatException if the text does not represent a legal
 	 * {@code int}
+     * @throws EndOfFileException if no non-whitespace characters could be
+     * read
 	 */
 	public readInt() => ( int )
 	{
@@ -75,12 +79,13 @@ singleton shadow:io@
 	 * @return text converted to {@code double}
 	 * @throws NumberFormatException if the text does not represent a legal
 	 * {@code double}
+	 * @throws EndOfFileException if no non-whitespace characters could be
+     * read
 	 */
 	public readDouble() => ( double )
 	{
 		return input.readDouble();
 	}
-	
 	
 	/**
 	 * Reads the next UTF-8 code point from {@code stdin}.	 	 
@@ -97,7 +102,7 @@ singleton shadow:io@
 	 * @return next unsigned byte
 	 * @return {@code true} if the end of the file was reached 
 	 */
-	public readByte() => (ubyte, boolean eof)
+	public readByte() => ( ubyte, boolean eof )
 	{
 		return input.readByte();
 	}

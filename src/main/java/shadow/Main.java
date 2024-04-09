@@ -103,6 +103,7 @@ public class Main {
     } catch (TypeCheckException e) {
       System.exit(Error.TYPE_CHECK_ERROR.ordinal());
     } catch (CompileException e) {
+      System.err.println("COMPILER ERROR: " + e.getLocalizedMessage());
       System.exit(Error.COMPILE_ERROR.ordinal());
     } catch (ShadowException e) {
       System.err.println("ERROR IN FILE: " + e.getLocalizedMessage());
@@ -421,6 +422,7 @@ public class Main {
 
     // Architecture, optimization, and exception support
     compileCommand.add("-m" + config.getArchitecture());
+    //compileCommand.add("--target=" + config.getTarget());
     compileCommand.add("-O3");
     compileCommand.add("-fexceptions");
 
@@ -601,9 +603,9 @@ public class Main {
     if (config.getOs().equals("Mac")) {
       return new ProcessBuilder(
               config.getClang(),
-              // "-mtriple",
-              // config.getTarget(),
+              //"--target=" + config.getTarget(),
               config.getOptimizationLevel(), /*config.getDataLayout(),*/
+              //"-m" + config.getArchitecture(),
               "-femulated-tls", // needed for Mac
               "-c",
               "-x",
@@ -618,9 +620,9 @@ public class Main {
     } else {
       return new ProcessBuilder(
               config.getClang(),
-              // "-mtriple",
-              // config.getTarget(),
+              //"--target=" + config.getTarget(),
               config.getOptimizationLevel(),
+              //"-m" + config.getArchitecture(),
               "-c",
               "-x",
               "ir",
@@ -634,19 +636,15 @@ public class Main {
     }
   }
 
-  private static void createDirectories(Path binaryPath) throws CompileException {
+  private static void createDirectories(Path binaryPath) throws IOException {
     Path parent = binaryPath.getParent();
     if (!Files.isDirectory(parent)) {
-      try {
         Files.createDirectories(parent);
-      } catch (IOException e) {
-        throw new CompileException("COULD NOT CREATE DIRECTORY " + parent);
-      }
     }
   }
 
   private String compileIrModule(Path shadowFile, Path binaryPath, TACModule module)
-      throws CompileException {
+      throws IOException, CompileException {
     createDirectories(binaryPath);
     String binaryFile = binaryPath.toString();
 
@@ -661,7 +659,7 @@ public class Main {
       output.close();
       if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + binaryFile);
       success = true;
-    } catch (IOException | InterruptedException e) {
+    } catch (InterruptedException e) {
       throw new CompileException("FAILED TO COMPILE " + binaryFile);
     } catch (ShadowException e) {
       logger.error("FAILED TO COMPILE " + shadowFile);
@@ -677,7 +675,7 @@ public class Main {
   }
 
   private String compileIrStream(InputStream stream, Path binaryPath)
-      throws CompileException {
+      throws IOException, CompileException {
     createDirectories(binaryPath);
     String binaryFile = binaryPath.toString();
 
@@ -689,7 +687,7 @@ public class Main {
       new Pipe(stream, compile.getOutputStream()).start();
       if (compile.waitFor() != 0) throw new CompileException("FAILED TO COMPILE " + binaryFile);
       success = true;
-    } catch (IOException | InterruptedException e) {
+    } catch (InterruptedException e) {
       throw new CompileException("FAILED TO COMPILE " + binaryFile);
     } finally {
       if (!success) {
@@ -704,19 +702,15 @@ public class Main {
     return binaryFile;
   }
 
-  private String compileIrFile(Path irPath, Path binaryPath) throws CompileException {
-    try {
+  private String compileIrFile(Path irPath, Path binaryPath) throws IOException, CompileException {
       if (Files.exists(binaryPath) && Files.getLastModifiedTime(binaryPath).compareTo(Files.getLastModifiedTime(irPath)) >= 0)
         return binaryPath.toString();
       else
         return compileIrStream(Files.newInputStream(irPath), binaryPath);
-    } catch (IOException e) {
-      throw new CompileException("FAILED TO COMPILE " + irPath);
-    }
   }
 
   private String compileShadowFile(Path shadowFile, Path binaryPath, TACModule module)
-      throws CompileException {
+      throws CompileException, IOException {
 
     if (humanReadable) {
       try {
@@ -728,7 +722,7 @@ public class Main {
         output.close();
         out.close();
         return compileIrFile(irFile, binaryPath);
-      } catch (IOException | ShadowException e) {
+      } catch (ShadowException e) {
         logger.error("FAILED TO COMPILE " + shadowFile);
         throw new CompileException(e.getMessage());
       }

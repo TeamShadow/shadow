@@ -373,6 +373,8 @@ public class Configuration {
     if (architecture == 32) linkCommand.add("-m32");
     else linkCommand.add("-m64");
 
+    //linkCommand.add( "--target=" + target);
+
     for (String path : libraryPaths) linkCommand.add("-L" + path);
 
     for (String library : libraries) linkCommand.add("-l" + library);
@@ -387,7 +389,7 @@ public class Configuration {
 
     if (_import.isEmpty()) {
       // If there are no imports, add the current directory for both src and bin
-      Path currentDirectory = Paths.get(File.separator).toAbsolutePath().normalize();
+      Path currentDirectory = Paths.get("." + File.separator).toAbsolutePath().normalize();
       _import.put(currentDirectory, currentDirectory);
     }
 

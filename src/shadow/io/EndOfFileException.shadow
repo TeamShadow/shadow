@@ -1,0 +1,17 @@
+/**
+ * Exception {@code EndOfFileException} should be thrown when
+ * an input operation tries to read past the end of a file.
+ */
+exception shadow:io@EndOfFileException is IOException
+{
+	/**
+	 * Creates an {@code EndOfFileException} with a default message.
+	 */
+	public create() { super("End of file reached"); }
+
+	/**
+	 * Creates an {@code EndOfFileException} with a specified message.
+	 * @param message message describing why the end of the file was reached
+	 */
+	public create(String message) { super(message); }
+}

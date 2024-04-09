@@ -1572,7 +1572,12 @@ public class OutputTests {
             "o: 1.23657E23 (double)",
             "p: -1.23657E-19 (double)",
             "q: -1.23657E-19 (float)",
-            "fun"));
+            "fun",
+            "Format Exception 1",
+            "Format Exception 2",
+            "Format Exception 3",
+            "Format Exception 4",
+            "Format Exception 5"));
   }
 
   @Test
@@ -1666,6 +1671,13 @@ public class OutputTests {
     args.add("shadow/test/FileTest.shadow");
     new Main(args.toArray(new String[] {})).run();
     run(new String[] {"FileTest.txt"}, formatOutputString("Hello World!", "12", "true", "false"));
+  }
+
+  @Test
+  public void testInput() throws Exception {
+    args.add("shadow/test/InputTest.shadow");
+    new Main(args.toArray(new String[] {})).run();
+    run(new String[0], formatOutputString("Here is Shakespeare:", "7", "29"), "", "Here is Shakespeare:\r\nNow \ris\tthe  winter\n of our   \r\ndiscontent ", 0);
   }
 
   @Test

@@ -267,11 +267,13 @@ shadow_long_t __shadow_io__File_read(shadow_io_File_t* _this, shadow_long_t hand
 #ifdef SHADOW_WINDOWS
     DWORD bytesRead;
     error = !ReadFile((HANDLE)handle, data.data, (DWORD)data.size, &bytesRead, NULL);
-    DWORD lastError = GetLastError();
     // End of file is not an error, return -1
-    if (bytesRead == 0 && (lastError == ERROR_HANDLE_EOF || lastError == ERROR_BROKEN_PIPE)) {
+    // Reading past the end of a pipe is like an EOF
+    if (bytesRead == 0) {
         result = -1L;
-        error = false;
+        DWORD lastError = GetLastError();
+        if (lastError == ERROR_HANDLE_EOF || lastError == ERROR_BROKEN_PIPE)
+            error = false;
     }
     else
         result = (shadow_long_t)bytesRead;
